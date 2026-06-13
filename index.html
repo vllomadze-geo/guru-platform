@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>УНИВЕРСАЛ / ГУРУ — MVP платформы</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <div class="brand-mark">G</div>
+        <div>
+          <div class="brand-title">УНИВЕРСАЛ / ГУРУ</div>
+          <div class="brand-subtitle">маркетинговая платформа</div>
+        </div>
+      </div>
+
+      <button class="side-action" id="projectBtn">Паспорт проекта</button>
+      <button class="side-action" id="metricsBtn">Метрики</button>
+      <button class="side-action" id="schemeBtn">Схема</button>
+
+      <div class="side-section-title">Gate</div>
+      <nav id="gateNav" class="gate-nav"></nav>
+
+      <div class="side-footer">
+        <div class="autosave-dot" id="autosaveDot"></div>
+        <span id="saveStatus">Автосохранение включено</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">Рабочая версия MVP</div>
+          <h1 id="pageTitle">Платформа</h1>
+        </div>
+        <div class="topbar-actions">
+          <input type="file" id="csvInput" accept=".csv,text/csv" hidden />
+          <button class="btn secondary" id="importBtn">Импорт CSV</button>
+          <button class="btn secondary" id="exportBtn">Экспорт CSV</button>
+          <button class="btn danger" id="resetBtn">Сбросить демо</button>
+        </div>
+      </header>
+
+      <section class="summary-grid" id="summaryGrid"></section>
+
+      <section class="workspace">
+        <div class="workspace-toolbar" id="workspaceToolbar">
+          <div class="search-wrap">
+            <input id="searchInput" class="search-input" placeholder="Поиск по блокам, инструкциям, доказательствам" />
+          </div>
+          <select id="statusFilter" class="select-input">
+            <option value="all">Все статусы</option>
+            <option value="not_started">Не начато</option>
+            <option value="in_progress">В работе</option>
+            <option value="ready">Готово</option>
+            <option value="needs_review">Проверить</option>
+          </select>
+          <button class="btn secondary" id="tableViewBtn">Таблица</button>
+          <button class="btn secondary" id="cardsViewBtn">Карточки</button>
+        </div>
+
+        <div id="contentArea" class="content-area"></div>
+      </section>
+    </main>
+  </div>
+
+  <template id="projectTemplate">
+    <div class="panel two-col">
+      <div>
+        <h2>Паспорт проекта</h2>
+        <p class="muted">Главные данные проекта. Эти поля потом используются в оффере, УТП, рекламе и отчётах.</p>
+      </div>
+      <div class="form-grid">
+        <label>Название проекта<input data-project="name" /></label>
+        <label>Ниша<input data-project="niche" placeholder="например: премиальная химчистка" /></label>
+        <label>Сайт<input data-project="website" placeholder="https://" /></label>
+        <label>География<input data-project="geography" placeholder="Москва, Грузия, онлайн" /></label>
+        <label>Ответственный<input data-project="owner" /></label>
+        <label>Главный CTA<input data-project="mainCta" /></label>
+        <label class="full">УТП<textarea data-project="usp" rows="3"></textarea></label>
+        <label class="full">Оффер<textarea data-project="offer" rows="3"></textarea></label>
+        <label class="full">Описание проекта<textarea data-project="description" rows="3"></textarea></label>
+      </div>
+    </div>
+  </template>
+
+  <template id="metricsTemplate">
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Метрики проекта</h2>
+          <p class="muted">Здесь фиксируются данные из Метрики, Директа, CRM и других источников.</p>
+        </div>
+        <button class="btn primary" id="addMetricRow">Добавить строку</button>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table" id="metricsTable">
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Канал</th>
+              <th>Показы</th>
+              <th>Клики</th>
+              <th>Расход</th>
+              <th>Лиды</th>
+              <th>CTR</th>
+              <th>CPA</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="chart-card">
+        <h3>Расход и лиды по каналам</h3>
+        <div id="metricsChart" class="chart"></div>
+      </div>
+    </div>
+  </template>
+
+  <script src="seed-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
