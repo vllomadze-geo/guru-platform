@@ -7,7 +7,39 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="app-shell">
+  <section class="project-launcher" id="projectLauncher">
+    <div class="launcher-inner">
+      <div class="launcher-kicker">УНИВЕРСАЛ / ГУРУ · v0.2</div>
+      <h1>Выберите проект</h1>
+      <p class="launcher-lead">Откройте рабочий интерфейс нужного проекта или создайте новый проект.</p>
+      <div class="project-grid" id="projectGrid"></div>
+    </div>
+  </section>
+
+  <div class="modal-backdrop" id="newProjectModal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <div class="eyebrow">Новый проект</div>
+          <h2>Создать проект</h2>
+        </div>
+        <button class="icon-btn" id="closeProjectModal" aria-label="Закрыть">×</button>
+      </div>
+      <div class="form-grid">
+        <label>Название проекта<input id="newProjectName" placeholder="Например: iCleaning" /></label>
+        <label>Тип проекта<input id="newProjectType" placeholder="Сайт, реклама, бренд" /></label>
+        <label class="full">Короткое описание<textarea id="newProjectDescription" rows="3" placeholder="Для чего нужен этот проект"></textarea></label>
+        <label>Ссылка на сайт<input id="newProjectWebsite" placeholder="https://" /></label>
+        <label>Иконка / буква<input id="newProjectIcon" maxlength="2" placeholder="G" /></label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn secondary" id="cancelProjectCreate">Отмена</button>
+        <button class="btn primary" id="createProjectConfirm">Создать проект</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-shell" id="appShell" hidden>
     <aside class="sidebar">
       <div class="brand-block">
         <div class="brand-mark">G</div>
@@ -17,6 +49,7 @@
         </div>
       </div>
 
+      <button class="side-action" id="switchProjectBtn">← Выбор проекта</button>
       <button class="side-action" id="projectBtn">Паспорт проекта</button>
       <button class="side-action" id="metricsBtn">Метрики</button>
       <button class="side-action" id="schemeBtn">Схема</button>
@@ -33,7 +66,7 @@
     <main class="main">
       <header class="topbar">
         <div>
-          <div class="eyebrow">Рабочая версия MVP</div>
+          <div class="eyebrow">Рабочая версия MVP · v0.2</div>
           <h1 id="pageTitle">Платформа</h1>
         </div>
         <div class="topbar-actions">

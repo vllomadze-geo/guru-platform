@@ -1,4 +1,7 @@
-const STORAGE_KEY = 'guru-platform-mvp-v1';
+const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
+const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
+const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
+const PLATFORM_VERSION = 'v0.2';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -6,12 +9,18 @@ const STATUS_LABELS = {
   needs_review: 'Проверить'
 };
 
-let state = loadState();
+let projects = loadProjects();
+let activeProjectId = null;
+let state = null;
 let activeView = 'project';
-let activeGateId = state.gates[0]?.id || null;
+let activeGateId = null;
 let layoutMode = 'cards';
 
 const els = {
+  launcher: document.getElementById('projectLauncher'),
+  projectGrid: document.getElementById('projectGrid'),
+  appShell: document.getElementById('appShell'),
+  newProjectModal: document.getElementById('newProjectModal'),
   pageTitle: document.getElementById('pageTitle'),
   gateNav: document.getElementById('gateNav'),
   contentArea: document.getElementById('contentArea'),
@@ -24,27 +33,224 @@ const els = {
   autosaveDot: document.getElementById('autosaveDot')
 };
 
-function loadState() {
+function makeId(prefix = 'id') {
+  return prefix + '-' + Date.now() + '-' + Math.random().toString(16).slice(2, 8);
+}
+
+function loadProjects() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
+    const saved = localStorage.getItem(PROJECTS_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    }
   } catch (err) {
-    console.warn('Не удалось прочитать сохранение', err);
+    console.warn('Не удалось прочитать список проектов', err);
   }
-  return structuredClone(window.GURU_SEED);
+
+  const defaultProject = {
+    id: 'project-default',
+    name: 'УНИВЕРСАЛ / ГУРУ',
+    description: 'Маркетинговая операционная система на основе CSV-чеклиста',
+    website: '',
+    type: 'Платформа',
+    icon: 'G',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  try {
+    const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (legacy && !localStorage.getItem(WORKSPACE_STORAGE_PREFIX + defaultProject.id)) {
+      localStorage.setItem(WORKSPACE_STORAGE_PREFIX + defaultProject.id, legacy);
+    } else if (!localStorage.getItem(WORKSPACE_STORAGE_PREFIX + defaultProject.id)) {
+      localStorage.setItem(WORKSPACE_STORAGE_PREFIX + defaultProject.id, JSON.stringify(structuredClone(window.GURU_SEED)));
+    }
+  } catch (err) {
+    console.warn('Не удалось выполнить миграцию старой версии', err);
+  }
+
+  localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify([defaultProject]));
+  return [defaultProject];
+}
+
+function saveProjects() {
+  localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projects));
+}
+
+function loadState(projectId) {
+  try {
+    const saved = localStorage.getItem(WORKSPACE_STORAGE_PREFIX + projectId);
+    if (saved) return migrateWorkspace(JSON.parse(saved), projectId);
+  } catch (err) {
+    console.warn('Не удалось прочитать сохранение проекта', err);
+  }
+  return createFreshWorkspace(projects.find(p => p.id === projectId));
+}
+
+function migrateWorkspace(workspace, projectId) {
+  const meta = projects.find(p => p.id === projectId);
+  workspace.project = workspace.project || {};
+  workspace.gates = workspace.gates || structuredClone(window.GURU_SEED.gates);
+  workspace.metrics = workspace.metrics || [];
+  if (meta) {
+    workspace.project.name = workspace.project.name || meta.name;
+    workspace.project.description = workspace.project.description || meta.description;
+    workspace.project.website = workspace.project.website || meta.website;
+  }
+  workspace.schemaVersion = PLATFORM_VERSION;
+  return workspace;
+}
+
+function createFreshWorkspace(meta = {}) {
+  const fresh = structuredClone(window.GURU_SEED);
+  fresh.schemaVersion = PLATFORM_VERSION;
+  fresh.project.name = meta.name || 'Новый проект';
+  fresh.project.description = meta.description || '';
+  fresh.project.website = meta.website || '';
+  fresh.project.niche = meta.type || '';
+  fresh.metrics = [];
+  return fresh;
 }
 
 function saveState() {
+  if (!state || !activeProjectId) return;
   state.updatedAt = new Date().toISOString();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  state.schemaVersion = PLATFORM_VERSION;
+  localStorage.setItem(WORKSPACE_STORAGE_PREFIX + activeProjectId, JSON.stringify(state));
+  syncActiveProjectMeta();
   els.saveStatus.textContent = 'Сохранено: ' + new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   els.autosaveDot.style.background = '#82d48d';
 }
 
+function syncActiveProjectMeta() {
+  const project = projects.find(p => p.id === activeProjectId);
+  if (!project || !state?.project) return;
+  project.name = state.project.name || project.name;
+  project.description = state.project.description || project.description;
+  project.website = state.project.website || project.website;
+  project.updatedAt = new Date().toISOString();
+  project.icon = project.icon || getProjectIcon(project.name);
+  saveProjects();
+}
+
 function flashSaving() {
+  if (!state) return;
   els.saveStatus.textContent = 'Сохраняю...';
   els.autosaveDot.style.background = '#d4b05f';
   setTimeout(saveState, 120);
+}
+
+function showLauncher() {
+  activeProjectId = null;
+  state = null;
+  activeView = 'project';
+  activeGateId = null;
+  els.appShell.hidden = true;
+  els.launcher.hidden = false;
+  renderProjectLauncher();
+}
+
+function openProject(projectId) {
+  activeProjectId = projectId;
+  state = loadState(projectId);
+  activeView = 'project';
+  activeGateId = state.gates[0]?.id || null;
+  els.launcher.hidden = true;
+  els.appShell.hidden = false;
+  saveState();
+  render();
+}
+
+function renderProjectLauncher() {
+  els.projectGrid.innerHTML = projects.map(projectCardHtml).join('') + addProjectCardHtml();
+  document.querySelectorAll('[data-open-project]').forEach(card => {
+    card.addEventListener('click', () => openProject(card.dataset.openProject));
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openProject(card.dataset.openProject);
+      }
+    });
+  });
+  document.querySelectorAll('[data-project-site]').forEach(link => {
+    link.addEventListener('click', e => e.stopPropagation());
+  });
+  document.getElementById('addProjectCard')?.addEventListener('click', showNewProjectModal);
+}
+
+function projectCardHtml(project) {
+  const website = project.website ? normalizeUrl(project.website) : '';
+  const description = project.description || 'Короткое описание проекта пока не заполнено.';
+  return `
+    <article class="project-card" data-open-project="${escapeAttr(project.id)}" role="button" tabindex="0">
+      <span class="project-avatar">${escapeHtml(project.icon || getProjectIcon(project.name))}</span>
+      <span class="project-name">${escapeHtml(project.name)}</span>
+      <span class="project-description">${escapeHtml(description)}</span>
+      ${website ? `<a class="project-site" href="${escapeAttr(website)}" target="_blank" rel="noopener" data-project-site>Открыть сайт ↗</a>` : `<span class="project-site muted-link">Ссылка не указана</span>`}
+    </article>`;
+}
+
+function addProjectCardHtml() {
+  return `
+    <button class="project-card project-card-add" id="addProjectCard">
+      <span class="project-avatar add-avatar">+</span>
+      <span class="project-name">Новый проект</span>
+      <span class="project-description">Создать отдельный рабочий интерфейс для нового сайта, бренда или кампании.</span>
+      <span class="project-site muted-link">Добавить проект</span>
+    </button>`;
+}
+
+function getProjectIcon(name = '') {
+  const trimmed = String(name).trim();
+  return (trimmed[0] || 'G').toUpperCase();
+}
+
+function normalizeUrl(url) {
+  const value = String(url || '').trim();
+  if (!value) return '';
+  return /^https?:\/\//i.test(value) ? value : 'https://' + value;
+}
+
+function showNewProjectModal() {
+  document.getElementById('newProjectName').value = '';
+  document.getElementById('newProjectType').value = '';
+  document.getElementById('newProjectDescription').value = '';
+  document.getElementById('newProjectWebsite').value = '';
+  document.getElementById('newProjectIcon').value = '';
+  els.newProjectModal.hidden = false;
+  setTimeout(() => document.getElementById('newProjectName').focus(), 0);
+}
+
+function hideNewProjectModal() {
+  els.newProjectModal.hidden = true;
+}
+
+function createProjectFromModal() {
+  const name = document.getElementById('newProjectName').value.trim();
+  const type = document.getElementById('newProjectType').value.trim();
+  const description = document.getElementById('newProjectDescription').value.trim();
+  const website = document.getElementById('newProjectWebsite').value.trim();
+  const icon = document.getElementById('newProjectIcon').value.trim().slice(0, 2).toUpperCase();
+  if (!name) {
+    alert('Введите название проекта.');
+    return;
+  }
+  const project = {
+    id: makeId('project'),
+    name,
+    type,
+    description,
+    website,
+    icon: icon || getProjectIcon(name),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  projects.push(project);
+  saveProjects();
+  localStorage.setItem(WORKSPACE_STORAGE_PREFIX + project.id, JSON.stringify(createFreshWorkspace(project)));
+  hideNewProjectModal();
+  openProject(project.id);
 }
 
 function allCards() {
@@ -424,9 +630,11 @@ function importCsvFile(file) {
 }
 
 function resetDemo() {
-  if (!confirm('Сбросить все изменения и вернуться к исходному CSV?')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  state = structuredClone(window.GURU_SEED);
+  if (!activeProjectId) return;
+  if (!confirm('Сбросить данные текущего проекта и вернуться к исходному CSV?')) return;
+  const meta = projects.find(p => p.id === activeProjectId);
+  localStorage.removeItem(WORKSPACE_STORAGE_PREFIX + activeProjectId);
+  state = createFreshWorkspace(meta);
   activeView = 'project';
   activeGateId = state.gates[0]?.id || null;
   saveState();
@@ -439,6 +647,7 @@ function escapeHtml(value) {
 function escapeAttr(value) { return escapeHtml(value).replace(/`/g, '&#96;'); }
 
 // Header and navigation events
+document.getElementById('switchProjectBtn').addEventListener('click', showLauncher);
 document.getElementById('projectBtn').addEventListener('click', () => { activeView = 'project'; render(); });
 document.getElementById('metricsBtn').addEventListener('click', () => { activeView = 'metrics'; render(); });
 document.getElementById('schemeBtn').addEventListener('click', () => { activeView = 'scheme'; render(); });
@@ -450,6 +659,14 @@ document.getElementById('tableViewBtn').addEventListener('click', () => { layout
 document.getElementById('cardsViewBtn').addEventListener('click', () => { layoutMode = 'cards'; renderGate(); });
 els.searchInput.addEventListener('input', renderGate);
 els.statusFilter.addEventListener('change', renderGate);
+document.getElementById('closeProjectModal').addEventListener('click', hideNewProjectModal);
+document.getElementById('cancelProjectCreate').addEventListener('click', hideNewProjectModal);
+document.getElementById('createProjectConfirm').addEventListener('click', createProjectFromModal);
+els.newProjectModal.addEventListener('click', e => {
+  if (e.target === els.newProjectModal) hideNewProjectModal();
+});
+document.getElementById('newProjectName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') createProjectFromModal();
+});
 
-saveState();
-render();
+showLauncher();
