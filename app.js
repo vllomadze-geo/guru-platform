@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.12';
+const PLATFORM_VERSION = 'v0.13';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -1514,11 +1514,10 @@ function gate1WorkBlockHtml(card, sectionTitle = 'Аналитика') {
       <span class="work-card-toggle">${isOpen ? 'Свернуть' : 'Раскрыть'}</span>
     </button>
     ${isOpen ? `<div class="work-card-body">
-      <div class="card-text">${escapeHtml(card.instruction || 'Инструкция пока не заполнена.')}</div>
+      ${instructionToggleHtml(card)}
       <div class="card-fields">
-        <label class="field-row">Статус${statusSelect(card)}</label>
+        <label class="field-row compact-status-row">Статус${statusSelect(card)}</label>
         ${cardUserFieldsHtml(card)}
-        ${getGate1CardMode(card) ? '' : `<label class="field-row">Размещено на странице<input data-field="pages" data-card-id="${escapeAttr(card.id)}" value="${escapeAttr(card.pages || '')}" /></label>`}
       </div>
     </div>` : ''}
   </article>`;
@@ -1564,13 +1563,15 @@ function renderGateTable(gate, cards) {
     return;
   }
   els.contentArea.innerHTML = `
-    <div class="table-scroll">
-      <table class="data-table">
-        <thead><tr><th>Блок</th><th>Инструкция</th><th>Статус</th><th>Структурированное доказательство</th></tr></thead>
+    <div class="table-scroll clean-table-wrap">
+      <table class="data-table clean-data-table">
+        <thead><tr><th>Блок</th><th>Статус</th><th>Структурированное доказательство / рабочие поля</th></tr></thead>
         <tbody>${cards.map(c => `
           <tr data-card-row="${c.id}">
-            <td class="table-title">${escapeHtml(c.title)}<div class="card-source">CSV строка ${c.sourceRow || ''}</div></td>
-            <td class="table-text">${escapeHtml(c.instruction || '')}</td>
+            <td class="table-title">
+              <div class="block-title-main">${escapeHtml(c.title)}</div>
+              ${instructionToggleHtml(c)}
+            </td>
             <td>${statusSelect(c)}</td>
             <td>${cardUserFieldsHtml(c)}</td>
           </tr>`).join('')}
@@ -1590,13 +1591,22 @@ function cardHtml(c) {
         </div>
         <span class="status-pill status-${c.status}">${STATUS_LABELS[c.status] || c.status}</span>
       </div>
-      <div class="card-text">${escapeHtml(c.instruction || 'Инструкция пока не заполнена.')}</div>
+      ${instructionToggleHtml(c)}
       <div class="card-fields">
-        <label class="field-row">Статус${statusSelect(c)}</label>
+        <label class="field-row compact-status-row">Статус${statusSelect(c)}</label>
         ${cardUserFieldsHtml(c)}
-        <label class="field-row">Размещено на странице<input data-field="pages" data-card-id="${c.id}" value="${escapeAttr(c.pages || '')}" /></label>
       </div>
     </article>`;
+}
+
+
+function instructionToggleHtml(card) {
+  const text = String(card?.instruction || '').trim();
+  if (!text) return '';
+  return `<details class="instruction-toggle">
+    <summary>Показать инструкцию</summary>
+    <div class="instruction-text">${escapeHtml(text)}</div>
+  </details>`;
 }
 
 function cardUserFieldsHtml(c) {
@@ -1605,7 +1615,13 @@ function cardUserFieldsHtml(c) {
   if (isToolStatusCard(c)) return `<div class="field-row"><span>Статусы элементов</span>${toolItemsHtml(c)}</div>`;
   if (isStartupSummaryCard(c)) return `<div class="field-row"><span>Автоматическая сводка</span>${startupSummaryHtml()}</div>`;
   if (getGate1CardMode(c)) return gate1TypedFieldsHtml(c);
-  return `<div class="field-row"><span>Рабочая фиксация</span>${instructionWorkspaceHtml(c)}${evidenceStructuredHtml(c) ? `<div class="evidence-subblock"><div class="workspace-unit-title">Структурированное доказательство</div>${evidenceStructuredHtml(c)}</div>` : ''}</div>`;
+  const evidence = evidenceStructuredHtml(c);
+  const workspace = instructionWorkspaceHtml(c);
+  if (evidence && workspace) return `<div class="field-row simplified-fields">${evidence}<details class="optional-workspace"><summary>Поля по инструкции</summary>${workspace}</details></div>`;
+  if (evidence) return `<div class="field-row simplified-fields">${evidence}</div>`;
+  if (workspace) return `<div class="field-row simplified-fields">${workspace}</div>`;
+  return '';
+
 }
 
 
@@ -2671,10 +2687,8 @@ function escapeHtml(value) {
 function escapeAttr(value) { return escapeHtml(value).replace(/`/g, '&#96;'); }
 
 // Header and navigation events
-document.getElementById('switchProjectBtn').addEventListener('click', showLauncher);
-document.getElementById('projectBtn').addEventListener('click', () => { activeView = 'project'; render(); });
-document.getElementById('metricsBtn').addEventListener('click', () => { activeView = 'metrics'; render(); });
-document.getElementById('schemeBtn').addEventListener('click', () => { activeView = 'scheme'; render(); });
+document.getElementById('switchProjectBtn')?.addEventListener('click', showLauncher);
+document.getElementById('projectBtn')?.addEventListener('click', () => { activeView = 'project'; render(); });
 document.getElementById('importBtn').addEventListener('click', () => els.csvInput.click());
 els.csvInput.addEventListener('change', e => e.target.files[0] && importCsvFile(e.target.files[0]));
 document.getElementById('exportBtn').addEventListener('click', exportCsv);
