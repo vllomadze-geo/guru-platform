@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.2';
+const PLATFORM_VERSION = 'v0.3';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -98,6 +98,7 @@ function migrateWorkspace(workspace, projectId) {
     workspace.project.description = workspace.project.description || meta.description;
     workspace.project.website = workspace.project.website || meta.website;
   }
+  initializeEvidenceStructure(workspace);
   workspace.schemaVersion = PLATFORM_VERSION;
   return workspace;
 }
@@ -110,11 +111,13 @@ function createFreshWorkspace(meta = {}) {
   fresh.project.website = meta.website || '';
   fresh.project.niche = meta.type || '';
   fresh.metrics = [];
+  initializeEvidenceStructure(fresh);
   return fresh;
 }
 
 function saveState() {
   if (!state || !activeProjectId) return;
+  syncEvidenceTexts();
   state.updatedAt = new Date().toISOString();
   state.schemaVersion = PLATFORM_VERSION;
   localStorage.setItem(WORKSPACE_STORAGE_PREFIX + activeProjectId, JSON.stringify(state));
@@ -166,12 +169,6 @@ function renderProjectLauncher() {
   els.projectGrid.innerHTML = projects.map(projectCardHtml).join('') + addProjectCardHtml();
   document.querySelectorAll('[data-open-project]').forEach(card => {
     card.addEventListener('click', () => openProject(card.dataset.openProject));
-    card.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        openProject(card.dataset.openProject);
-      }
-    });
   });
   document.querySelectorAll('[data-project-site]').forEach(link => {
     link.addEventListener('click', e => e.stopPropagation());
@@ -183,12 +180,12 @@ function projectCardHtml(project) {
   const website = project.website ? normalizeUrl(project.website) : '';
   const description = project.description || 'Короткое описание проекта пока не заполнено.';
   return `
-    <article class="project-card" data-open-project="${escapeAttr(project.id)}" role="button" tabindex="0">
+    <button class="project-card" data-open-project="${escapeAttr(project.id)}">
       <span class="project-avatar">${escapeHtml(project.icon || getProjectIcon(project.name))}</span>
       <span class="project-name">${escapeHtml(project.name)}</span>
       <span class="project-description">${escapeHtml(description)}</span>
       ${website ? `<a class="project-site" href="${escapeAttr(website)}" target="_blank" rel="noopener" data-project-site>Открыть сайт ↗</a>` : `<span class="project-site muted-link">Ссылка не указана</span>`}
-    </article>`;
+    </button>`;
 }
 
 function addProjectCardHtml() {
@@ -264,6 +261,120 @@ function countByStatus(cards = allCards()) {
   }, {});
 }
 
+
+function normalizeAspectKey(label = '') {
+  return String(label || '')
+    .trim()
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+    .replace(/[«»"'`]/g, '')
+    .replace(/[^a-zа-я0-9]+/gi, '_')
+    .replace(/^_+|_+$/g, '') || 'aspect';
+}
+
+function extractEvidenceFields(raw = '') {
+  const text = String(raw || '').trim();
+  if (!text) return [];
+  const fields = [];
+  const lines = text.split(/\r?\n/);
+  let current = null;
+  lines.forEach(line => {
+    const match = line.match(/^\s*([^:\n]{2,120})\s*:\s*(.*)$/);
+    if (match) {
+      current = {
+        key: normalizeAspectKey(match[1]),
+        label: match[1].trim(),
+        value: (match[2] || '').trim()
+      };
+      fields.push(current);
+    } else if (current && line.trim()) {
+      current.value = [current.value, line.trim()].filter(Boolean).join('\n');
+    }
+  });
+  if (!fields.length && text) {
+    const label = text.replace(/:$/,'').trim();
+    fields.push({ key: normalizeAspectKey(label), label, value: '' });
+  }
+  return fields;
+}
+
+function initializeEvidenceStructure(workspace) {
+  workspace.sharedEvidence = workspace.sharedEvidence || {};
+  (workspace.gates || []).forEach(gate => {
+    (gate.cards || []).forEach(card => {
+      const parsed = extractEvidenceFields(card.evidence || '');
+      if (!Array.isArray(card.evidenceFields) || !card.evidenceFields.length) {
+        card.evidenceFields = parsed.map(item => ({ key: item.key, label: item.label }));
+      }
+      parsed.forEach(item => {
+        if (item.value && !workspace.sharedEvidence[item.key]) workspace.sharedEvidence[item.key] = item.value;
+      });
+      if (!Array.isArray(card.evidenceFields)) card.evidenceFields = [];
+    });
+  });
+  syncEvidenceTexts(workspace);
+}
+
+function ensureEvidenceFields(card) {
+  if (!card) return [];
+  if (!Array.isArray(card.evidenceFields) || !card.evidenceFields.length) {
+    card.evidenceFields = extractEvidenceFields(card.evidence || '').map(item => ({ key: item.key, label: item.label }));
+  }
+  return card.evidenceFields || [];
+}
+
+function getEvidenceValue(key, workspace = state) {
+  if (!workspace) return '';
+  workspace.sharedEvidence = workspace.sharedEvidence || {};
+  return workspace.sharedEvidence[key] || '';
+}
+
+function setEvidenceValue(key, value, workspace = state) {
+  if (!workspace) return;
+  workspace.sharedEvidence = workspace.sharedEvidence || {};
+  workspace.sharedEvidence[key] = value;
+  syncEvidenceTexts(workspace);
+}
+
+function composeEvidenceText(card, workspace = state) {
+  const fields = ensureEvidenceFields(card);
+  if (!fields.length) return card?.evidence || '';
+  return fields.map(field => `${field.label}:\n${getEvidenceValue(field.key, workspace)}`).join('\n\n');
+}
+
+function syncEvidenceTexts(workspace = state) {
+  if (!workspace?.gates) return;
+  workspace.gates.forEach(gate => {
+    gate.cards.forEach(card => {
+      card.evidence = composeEvidenceText(card, workspace);
+    });
+  });
+}
+
+function getEvidenceCatalog() {
+  const catalog = new Map();
+  allCards().forEach(card => {
+    ensureEvidenceFields(card).forEach(field => {
+      if (!catalog.has(field.key)) {
+        catalog.set(field.key, { key: field.key, label: field.label, cards: [] });
+      }
+      catalog.get(field.key).cards.push({ title: card.title, gateTitle: card.gateTitle, cardId: card.id });
+    });
+  });
+  return Array.from(catalog.values()).sort((a, b) => a.label.localeCompare(b.label, 'ru'));
+}
+
+function evidenceStructuredHtml(card) {
+  const fields = ensureEvidenceFields(card);
+  if (!fields.length) return `<textarea data-field="evidence" data-card-id="${card.id}" rows="3">${escapeHtml(card.evidence || '')}</textarea>`;
+  return `<div class="evidence-fields">${fields.map(field => `
+    <label class="evidence-item">
+      <span class="evidence-title">${escapeHtml(field.label)}</span>
+      <textarea data-evidence-key="${escapeAttr(field.key)}" data-card-id="${escapeAttr(card.id)}" rows="3">${escapeHtml(getEvidenceValue(field.key))}</textarea>
+      <span class="evidence-sync">единое поле проекта · обновляется во всех блоках</span>
+    </label>`).join('')}</div>`;
+}
+
 function getProgress(cards = allCards()) {
   if (!cards.length) return 0;
   return Math.round((cards.filter(c => c.status === 'ready').length / cards.length) * 100);
@@ -275,6 +386,7 @@ function render() {
   if (activeView === 'project') renderProject();
   if (activeView === 'metrics') renderMetrics();
   if (activeView === 'scheme') renderScheme();
+  if (activeView === 'evidence') renderEvidenceIndex();
   if (activeView === 'gate') renderGate();
 }
 
@@ -339,7 +451,7 @@ function renderGate() {
   let cards = gate.cards;
   if (filter !== 'all') cards = cards.filter(c => c.status === filter);
   if (query) {
-    cards = cards.filter(c => [c.title, c.instruction, c.evidence, c.pages, c.notes].join(' ').toLowerCase().includes(query));
+    cards = cards.filter(c => [c.title, c.instruction, composeEvidenceText(c), c.pages, c.notes].join(' ').toLowerCase().includes(query));
   }
   if (layoutMode === 'table') renderGateTable(gate, cards);
   else renderGateCards(gate, cards);
@@ -358,13 +470,13 @@ function renderGateTable(gate, cards) {
   els.contentArea.innerHTML = `
     <div class="table-scroll">
       <table class="data-table">
-        <thead><tr><th>Блок</th><th>Инструкция</th><th>Статус</th><th>Доказательство</th><th>Комментарий</th></tr></thead>
+        <thead><tr><th>Блок</th><th>Инструкция</th><th>Статус</th><th>Структурированное доказательство</th><th>Комментарий</th></tr></thead>
         <tbody>${cards.map(c => `
           <tr data-card-row="${c.id}">
             <td class="table-title">${escapeHtml(c.title)}<div class="card-source">CSV строка ${c.sourceRow || ''}</div></td>
             <td class="table-text">${escapeHtml(c.instruction || '')}</td>
             <td>${statusSelect(c)}</td>
-            <td><textarea data-field="evidence" data-card-id="${c.id}">${escapeHtml(c.evidence || '')}</textarea></td>
+            <td>${evidenceStructuredHtml(c)}</td>
             <td><textarea data-field="notes" data-card-id="${c.id}">${escapeHtml(c.notes || '')}</textarea></td>
           </tr>`).join('')}
         </tbody>
@@ -386,7 +498,7 @@ function cardHtml(c) {
       <div class="card-text">${escapeHtml(c.instruction || 'Инструкция пока не заполнена.')}</div>
       <div class="card-fields">
         <label class="field-row">Статус${statusSelect(c)}</label>
-        <label class="field-row">Доказательство<textarea data-field="evidence" data-card-id="${c.id}" rows="3">${escapeHtml(c.evidence || '')}</textarea></label>
+        <div class="field-row"><span>Доказательство</span>${evidenceStructuredHtml(c)}</div>
         <label class="field-row">Размещено на странице<input data-field="pages" data-card-id="${c.id}" value="${escapeAttr(c.pages || '')}" /></label>
         <label class="field-row">Комментарий<textarea data-field="notes" data-card-id="${c.id}" rows="3">${escapeHtml(c.notes || '')}</textarea></label>
       </div>
@@ -400,9 +512,13 @@ function statusSelect(c) {
 }
 
 function bindCardInputs() {
-  document.querySelectorAll('[data-card-id]').forEach(input => {
+  document.querySelectorAll('[data-card-id][data-field]').forEach(input => {
     input.addEventListener('input', updateCardFromInput);
     input.addEventListener('change', updateCardFromInput);
+  });
+  document.querySelectorAll('[data-evidence-key]').forEach(input => {
+    input.addEventListener('input', updateEvidenceFromInput);
+    input.addEventListener('change', updateEvidenceFromInput);
   });
 }
 
@@ -421,6 +537,48 @@ function updateCardFromInput(e) {
   card[field] = e.target.value;
   flashSaving();
   if (field === 'status') render();
+}
+
+function updateEvidenceFromInput(e) {
+  const key = e.target.dataset.evidenceKey;
+  if (!key) return;
+  setEvidenceValue(key, e.target.value);
+  document.querySelectorAll(`[data-evidence-key="${CSS.escape(key)}"]`).forEach(input => {
+    if (input !== e.target) input.value = e.target.value;
+  });
+  flashSaving();
+}
+
+function renderEvidenceIndex() {
+  activeView = 'evidence';
+  setToolbarVisible(false);
+  els.pageTitle.textContent = 'Доказательства';
+  const catalog = getEvidenceCatalog();
+  if (!catalog.length) {
+    els.contentArea.innerHTML = '<div class="empty">В текущем проекте пока нет структурированных доказательств.</div>';
+    return;
+  }
+  els.contentArea.innerHTML = `
+    <div class="panel evidence-index">
+      <div class="panel-head">
+        <div>
+          <h2>Единые данные доказательств</h2>
+          <p class="muted">Каждое поле хранится один раз на уровне проекта. Если изменить значение здесь или в карточке блока, оно обновится во всех местах, где используется тот же заголовок.</p>
+        </div>
+      </div>
+      <div class="evidence-index-grid">
+        ${catalog.map(item => `
+          <label class="evidence-index-item">
+            <span class="evidence-title">${escapeHtml(item.label)}</span>
+            <textarea data-evidence-key="${escapeAttr(item.key)}" rows="4">${escapeHtml(getEvidenceValue(item.key))}</textarea>
+            <span class="evidence-sync">используется в блоках: ${escapeHtml(item.cards.map(c => c.title).slice(0, 4).join(' · '))}${item.cards.length > 4 ? ' · ...' : ''}</span>
+          </label>`).join('')}
+      </div>
+    </div>`;
+  document.querySelectorAll('[data-evidence-key]').forEach(input => {
+    input.addEventListener('input', updateEvidenceFromInput);
+    input.addEventListener('change', updateEvidenceFromInput);
+  });
 }
 
 function renderMetrics() {
@@ -541,11 +699,19 @@ function renderScheme() {
 }
 
 function exportCsv() {
+  syncEvidenceTexts();
   const rows = [];
   rows.push(['gate', 'block', 'instruction', 'status', 'evidence', 'pages', 'notes', 'source_row']);
   state.gates.forEach(g => {
     g.cards.forEach(c => rows.push([g.title, c.title, c.instruction || '', STATUS_LABELS[c.status] || c.status, c.evidence || '', c.pages || '', c.notes || '', c.sourceRow || '']));
   });
+  const catalog = getEvidenceCatalog();
+  if (catalog.length) {
+    rows.push([]);
+    rows.push(['SHARED_EVIDENCE']);
+    rows.push(['key', 'title', 'value', 'used_in_blocks']);
+    catalog.forEach(item => rows.push([item.key, item.label, getEvidenceValue(item.key), item.cards.map(c => c.title).join(' | ')]));
+  }
   if (state.metrics?.length) {
     rows.push([]);
     rows.push(['METRICS']);
@@ -614,6 +780,7 @@ function importCsvFile(file) {
         instruction: r[1] || '',
         status: 'not_started',
         evidence: r[3] || '',
+        evidenceFields: extractEvidenceFields(r[3] || '').map(item => ({ key: item.key, label: item.label })),
         pages: r[5] || '',
         notes: '',
         fields: {},
@@ -621,6 +788,7 @@ function importCsvFile(file) {
       }))
     };
     if (replace) state.gates = [importedGate]; else state.gates.push(importedGate);
+    initializeEvidenceStructure(state);
     activeView = 'gate';
     activeGateId = importedGate.id;
     flashSaving();
@@ -651,6 +819,7 @@ document.getElementById('switchProjectBtn').addEventListener('click', showLaunch
 document.getElementById('projectBtn').addEventListener('click', () => { activeView = 'project'; render(); });
 document.getElementById('metricsBtn').addEventListener('click', () => { activeView = 'metrics'; render(); });
 document.getElementById('schemeBtn').addEventListener('click', () => { activeView = 'scheme'; render(); });
+document.getElementById('evidenceBtn').addEventListener('click', () => { activeView = 'evidence'; render(); });
 document.getElementById('importBtn').addEventListener('click', () => els.csvInput.click());
 els.csvInput.addEventListener('change', e => e.target.files[0] && importCsvFile(e.target.files[0]));
 document.getElementById('exportBtn').addEventListener('click', exportCsv);
