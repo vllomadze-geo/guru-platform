@@ -9,7 +9,7 @@
 <body>
   <section class="project-launcher" id="projectLauncher">
     <div class="launcher-inner">
-      <div class="launcher-kicker">УНИВЕРСАЛ / ГУРУ · v0.3</div>
+      <div class="launcher-kicker">УНИВЕРСАЛ / ГУРУ · v0.4</div>
       <h1>Выберите проект</h1>
       <p class="launcher-lead">Откройте рабочий интерфейс нужного проекта или создайте новый проект.</p>
       <div class="project-grid" id="projectGrid"></div>
@@ -27,10 +27,15 @@
       </div>
       <div class="form-grid">
         <label>Название проекта<input id="newProjectName" placeholder="Например: iCleaning" /></label>
-        <label>Тип проекта<input id="newProjectType" placeholder="Сайт, реклама, бренд" /></label>
-        <label class="full">Короткое описание<textarea id="newProjectDescription" rows="3" placeholder="Для чего нужен этот проект"></textarea></label>
+        <label>Тип / ниша проекта<input id="newProjectType" placeholder="Сайт, реклама, бренд, премиальная химчистка" /></label>
         <label>Ссылка на сайт<input id="newProjectWebsite" placeholder="https://" /></label>
+        <label>География<input id="newProjectGeography" placeholder="Москва, Грузия, онлайн" /></label>
+        <label>Ответственный<input id="newProjectOwner" placeholder="Маркетолог, менеджер, команда" /></label>
+        <label>Главный CTA<input id="newProjectMainCta" placeholder="Например: Рассчитать стоимость" /></label>
         <label>Иконка / буква<input id="newProjectIcon" maxlength="2" placeholder="G" /></label>
+        <label class="full">УТП<textarea id="newProjectUsp" rows="3" placeholder="Главное отличие проекта"></textarea></label>
+        <label class="full">Оффер<textarea id="newProjectOffer" rows="3" placeholder="Что получает клиент"></textarea></label>
+        <label class="full">Короткое описание<textarea id="newProjectDescription" rows="3" placeholder="Для чего нужен этот проект"></textarea></label>
       </div>
       <div class="modal-actions">
         <button class="btn secondary" id="cancelProjectCreate">Отмена</button>
@@ -42,9 +47,9 @@
   <div class="app-shell" id="appShell" hidden>
     <aside class="sidebar">
       <div class="brand-block">
-        <div class="brand-mark">G</div>
+        <div class="brand-mark" id="brandMark">G</div>
         <div>
-          <div class="brand-title">УНИВЕРСАЛ / ГУРУ</div>
+          <div class="brand-title" id="brandTitle">УНИВЕРСАЛ / ГУРУ</div>
           <div class="brand-subtitle">маркетинговая платформа</div>
         </div>
       </div>
@@ -67,13 +72,14 @@
     <main class="main">
       <header class="topbar">
         <div>
-          <div class="eyebrow">Рабочая версия MVP · v0.3</div>
+          <div class="eyebrow">Рабочая версия MVP · v0.4</div>
           <h1 id="pageTitle">Платформа</h1>
         </div>
         <div class="topbar-actions">
           <input type="file" id="csvInput" accept=".csv,text/csv" hidden />
           <button class="btn secondary" id="importBtn">Импорт CSV</button>
           <button class="btn secondary" id="exportBtn">Экспорт CSV</button>
+          <button class="btn secondary" id="exportPdfBtn">Экспорт в PDF</button>
           <button class="btn danger" id="resetBtn">Сбросить демо</button>
         </div>
       </header>

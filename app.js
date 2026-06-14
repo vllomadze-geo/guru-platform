@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.3';
+const PLATFORM_VERSION = 'v0.4';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -30,7 +30,9 @@ const els = {
   workspaceToolbar: document.getElementById('workspaceToolbar'),
   csvInput: document.getElementById('csvInput'),
   saveStatus: document.getElementById('saveStatus'),
-  autosaveDot: document.getElementById('autosaveDot')
+  autosaveDot: document.getElementById('autosaveDot'),
+  brandTitle: document.getElementById('brandTitle'),
+  brandMark: document.getElementById('brandMark')
 };
 
 function makeId(prefix = 'id') {
@@ -97,8 +99,17 @@ function migrateWorkspace(workspace, projectId) {
     workspace.project.name = workspace.project.name || meta.name;
     workspace.project.description = workspace.project.description || meta.description;
     workspace.project.website = workspace.project.website || meta.website;
+    workspace.project.niche = workspace.project.niche || meta.niche || meta.type || '';
+    workspace.project.geography = workspace.project.geography || meta.geography || '';
+    workspace.project.owner = workspace.project.owner || meta.owner || '';
+    workspace.project.mainCta = workspace.project.mainCta || meta.mainCta || '';
+    workspace.project.usp = workspace.project.usp || meta.usp || '';
+    workspace.project.offer = workspace.project.offer || meta.offer || '';
   }
+  prepareSystemCards(workspace);
   initializeEvidenceStructure(workspace);
+  syncProjectPassportCard(workspace);
+  recalculateAllStatuses(workspace);
   workspace.schemaVersion = PLATFORM_VERSION;
   return workspace;
 }
@@ -109,14 +120,23 @@ function createFreshWorkspace(meta = {}) {
   fresh.project.name = meta.name || 'Новый проект';
   fresh.project.description = meta.description || '';
   fresh.project.website = meta.website || '';
-  fresh.project.niche = meta.type || '';
+  fresh.project.niche = meta.niche || meta.type || '';
+  fresh.project.geography = meta.geography || '';
+  fresh.project.owner = meta.owner || '';
+  fresh.project.mainCta = meta.mainCta || '';
+  fresh.project.usp = meta.usp || '';
+  fresh.project.offer = meta.offer || '';
   fresh.metrics = [];
+  prepareSystemCards(fresh);
   initializeEvidenceStructure(fresh);
+  syncProjectPassportCard(fresh);
   return fresh;
 }
 
 function saveState() {
   if (!state || !activeProjectId) return;
+  syncProjectPassportCard(state);
+  recalculateAllStatuses(state);
   syncEvidenceTexts();
   state.updatedAt = new Date().toISOString();
   state.schemaVersion = PLATFORM_VERSION;
@@ -132,6 +152,13 @@ function syncActiveProjectMeta() {
   project.name = state.project.name || project.name;
   project.description = state.project.description || project.description;
   project.website = state.project.website || project.website;
+  project.niche = state.project.niche || project.niche || project.type || '';
+  project.type = state.project.niche || project.type || '';
+  project.geography = state.project.geography || project.geography || '';
+  project.owner = state.project.owner || project.owner || '';
+  project.mainCta = state.project.mainCta || project.mainCta || '';
+  project.usp = state.project.usp || project.usp || '';
+  project.offer = state.project.offer || project.offer || '';
   project.updatedAt = new Date().toISOString();
   project.icon = project.icon || getProjectIcon(project.name);
   saveProjects();
@@ -214,6 +241,11 @@ function showNewProjectModal() {
   document.getElementById('newProjectType').value = '';
   document.getElementById('newProjectDescription').value = '';
   document.getElementById('newProjectWebsite').value = '';
+  document.getElementById('newProjectGeography').value = '';
+  document.getElementById('newProjectOwner').value = '';
+  document.getElementById('newProjectMainCta').value = '';
+  document.getElementById('newProjectUsp').value = '';
+  document.getElementById('newProjectOffer').value = '';
   document.getElementById('newProjectIcon').value = '';
   els.newProjectModal.hidden = false;
   setTimeout(() => document.getElementById('newProjectName').focus(), 0);
@@ -228,6 +260,11 @@ function createProjectFromModal() {
   const type = document.getElementById('newProjectType').value.trim();
   const description = document.getElementById('newProjectDescription').value.trim();
   const website = document.getElementById('newProjectWebsite').value.trim();
+  const geography = document.getElementById('newProjectGeography').value.trim();
+  const owner = document.getElementById('newProjectOwner').value.trim();
+  const mainCta = document.getElementById('newProjectMainCta').value.trim();
+  const usp = document.getElementById('newProjectUsp').value.trim();
+  const offer = document.getElementById('newProjectOffer').value.trim();
   const icon = document.getElementById('newProjectIcon').value.trim().slice(0, 2).toUpperCase();
   if (!name) {
     alert('Введите название проекта.');
@@ -237,8 +274,14 @@ function createProjectFromModal() {
     id: makeId('project'),
     name,
     type,
+    niche: type,
     description,
     website,
+    geography,
+    owner,
+    mainCta,
+    usp,
+    offer,
     icon: icon || getProjectIcon(name),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -262,6 +305,242 @@ function countByStatus(cards = allCards()) {
 }
 
 
+
+const TOOL_CARD_CONFIG = {
+  'Текущее состояние сайта': ['Страницы сайта', 'Главные посадочные', 'Формы', 'CTA', 'Контакты', 'Блоки доверия', 'Мобильная версия'],
+  'Текущая инфраструктура маркетинга': ['Яндекс Метрика', 'Цели Метрики', 'CRM', 'Формы', 'UTM', 'Уведомления', 'Рекламные кабинеты', 'Таблицы'],
+  'Текущие каналы и рекламные материалы': ['Яндекс Директ', 'РСЯ', 'Медийная реклама', 'SEO', 'Карты', 'Баннеры', 'Объявления', 'Видео', 'Тексты']
+};
+
+
+const TOOL_EVIDENCE_FIELD_CONFIG = {
+  'Текущее состояние сайта': ['какой сайт на старте', 'что в нём уже работает', 'что в нём не работает'],
+  'Текущая инфраструктура маркетинга': ['какая инфраструктура уже есть', 'чего не хватает'],
+  'Текущие каналы и рекламные материалы': ['список текущих каналов', 'список текущих кампаний', 'список текущих стартовых креативов']
+};
+
+const PROJECT_PASSPORT_FIELDS = [
+  ['name', 'Название проекта'],
+  ['niche', 'Ниша'],
+  ['website', 'Сайт'],
+  ['geography', 'География'],
+  ['owner', 'Ответственный'],
+  ['mainCta', 'Главный CTA'],
+  ['usp', 'УТП'],
+  ['offer', 'Оффер'],
+  ['description', 'Описание проекта']
+];
+
+function isProjectPassportCard(card) {
+  return card?.title === 'Паспорт проекта';
+}
+
+function isStartupSummaryCard(card) {
+  return card?.title === 'Проблемы и ограничения на старте';
+}
+
+function isToolStatusCard(card) {
+  return Boolean(card?.title && TOOL_CARD_CONFIG[card.title]);
+}
+
+function prepareSystemCards(workspace) {
+  if (!workspace?.gates) return;
+  workspace.gates.forEach(gate => {
+    gate.cards.forEach(card => {
+      if (isToolStatusCard(card)) {
+        ensureToolItems(card);
+        if (TOOL_EVIDENCE_FIELD_CONFIG[card.title]) {
+          card.evidenceFields = TOOL_EVIDENCE_FIELD_CONFIG[card.title].map(label => ({ key: normalizeAspectKey(label), label }));
+        }
+      }
+      if (isStartupSummaryCard(card)) card.isAutoSummary = true;
+    });
+  });
+}
+
+function ensureToolItems(card) {
+  const config = TOOL_CARD_CONFIG[card.title] || [];
+  if (!Array.isArray(card.toolItems)) card.toolItems = [];
+  const existing = new Map(card.toolItems.map(item => [item.name, item]));
+  card.toolItems = config.map(name => {
+    const prev = existing.get(name) || {};
+    return { name, status: prev.status || '', comment: prev.comment || '' };
+  });
+  card.evidenceFields = card.evidenceFields || [];
+  return card.toolItems;
+}
+
+function syncProjectPassportCard(workspace = state) {
+  if (!workspace?.gates) return;
+  const card = workspace.gates.flatMap(g => g.cards).find(isProjectPassportCard);
+  if (!card) return;
+  const project = workspace.project || {};
+  card.evidenceFields = [];
+  card.evidence = PROJECT_PASSPORT_FIELDS
+    .map(([key, label]) => `${label}:\n${project[key] || ''}`)
+    .join('\n\n');
+}
+
+function updateProjectChrome() {
+  const project = projects.find(p => p.id === activeProjectId);
+  const name = state?.project?.name || project?.name || 'Проект';
+  const icon = project?.icon || getProjectIcon(name);
+  if (els.brandTitle) els.brandTitle.textContent = name;
+  if (els.brandMark) els.brandMark.textContent = icon;
+}
+
+function hasFinalPeriod(text = '') {
+  const value = String(text || '').trim();
+  if (!value) return false;
+  return value.endsWith('.');
+}
+
+function textValuesForStatus(card, workspace = state) {
+  if (!card) return [];
+  if (isProjectPassportCard(card)) {
+    const project = workspace?.project || {};
+    return PROJECT_PASSPORT_FIELDS.map(([key]) => project[key] || '');
+  }
+  if (isStartupSummaryCard(card)) {
+    return startupSummaryRows(workspace).map(row => row.value);
+  }
+  const fields = ensureEvidenceFields(card);
+  if (fields.length) return fields.map(field => getEvidenceValue(field.key, workspace));
+  return [card.evidence || ''];
+}
+
+function recalculateStatusForCard(card, workspace = state) {
+  if (!card) return;
+  if (isProjectPassportCard(card)) {
+    const project = workspace?.project || {};
+    const required = PROJECT_PASSPORT_FIELDS.map(([key]) => String(project[key] || '').trim());
+    const nonEmpty = required.filter(Boolean);
+    const longTexts = ['usp', 'offer', 'description'].map(key => String(project[key] || '').trim()).filter(Boolean);
+    if (!nonEmpty.length) card.status = 'not_started';
+    else if (nonEmpty.length === required.length && longTexts.every(hasFinalPeriod)) card.status = 'ready';
+    else card.status = 'in_progress';
+    return;
+  }
+  if (isToolStatusCard(card)) {
+    const items = ensureToolItems(card);
+    const chosen = items.filter(item => item.status === 'implemented' || item.status === 'not_implemented');
+    const values = ensureEvidenceFields(card).map(field => String(getEvidenceValue(field.key, workspace) || '').trim());
+    const nonEmptyEvidence = values.filter(Boolean);
+    const hasAny = chosen.length || nonEmptyEvidence.length || items.some(item => item.comment);
+    const evidenceReady = values.length ? (nonEmptyEvidence.length === values.length && nonEmptyEvidence.every(hasFinalPeriod)) : true;
+    if (!hasAny) card.status = 'not_started';
+    else if (chosen.length === items.length && evidenceReady) card.status = 'ready';
+    else card.status = 'in_progress';
+    return;
+  }
+  if (isStartupSummaryCard(card)) {
+    const toolCards = allCardsFromWorkspace(workspace).filter(isToolStatusCard);
+    const items = toolCards.flatMap(c => ensureToolItems(c));
+    const chosen = items.filter(item => item.status === 'implemented' || item.status === 'not_implemented');
+    if (!chosen.length) card.status = 'not_started';
+    else if (chosen.length === items.length) card.status = 'ready';
+    else card.status = 'in_progress';
+    return;
+  }
+  const values = textValuesForStatus(card, workspace).map(v => String(v || '').trim());
+  const nonEmpty = values.filter(Boolean);
+  if (!nonEmpty.length) card.status = 'not_started';
+  else if (nonEmpty.length === values.length && nonEmpty.every(hasFinalPeriod)) card.status = 'ready';
+  else card.status = 'in_progress';
+}
+
+function recalculateAllStatuses(workspace = state) {
+  if (!workspace?.gates) return;
+  allCardsFromWorkspace(workspace).forEach(card => recalculateStatusForCard(card, workspace));
+}
+
+function allCardsFromWorkspace(workspace = state) {
+  return (workspace?.gates || []).flatMap(g => g.cards.map(c => { c.gateId = g.id; c.gateTitle = g.title; return c; }));
+}
+
+function projectPassportFieldsHtml() {
+  const project = state.project || {};
+  return `<div class="project-passport-sync">
+    <div class="sync-note">Единые данные проекта. Если изменить значение здесь, оно обновится в паспорте проекта, стартовой карточке и связанных блоках.</div>
+    <div class="form-grid compact-form">
+      ${PROJECT_PASSPORT_FIELDS.map(([key, label]) => {
+        const isLong = ['usp','offer','description'].includes(key);
+        const value = project[key] || '';
+        return `<label class="${isLong ? 'full' : ''}">${escapeHtml(label)}${isLong
+          ? `<textarea data-project-inline="${escapeAttr(key)}" rows="3">${escapeHtml(value)}</textarea>`
+          : `<input data-project-inline="${escapeAttr(key)}" value="${escapeAttr(value)}" />`}</label>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function toolItemsHtml(card) {
+  const items = ensureToolItems(card);
+  return `<div class="tool-status-list">
+    <div class="sync-note">Каждый инструмент, страница или платформа фиксируется отдельной строкой.</div>
+    <table class="mini-table">
+      <thead><tr><th>Элемент</th><th>Статус</th><th>Комментарий</th></tr></thead>
+      <tbody>${items.map((item, index) => `<tr>
+        <td>${escapeHtml(item.name)}</td>
+        <td><select data-tool-card-id="${escapeAttr(card.id)}" data-tool-index="${index}" data-tool-field="status">
+          <option value="" ${!item.status ? 'selected' : ''}>Выбрать</option>
+          <option value="implemented" ${item.status === 'implemented' ? 'selected' : ''}>Реализовано</option>
+          <option value="not_implemented" ${item.status === 'not_implemented' ? 'selected' : ''}>Не реализовано</option>
+        </select></td>
+        <td><input data-tool-card-id="${escapeAttr(card.id)}" data-tool-index="${index}" data-tool-field="comment" value="${escapeAttr(item.comment || '')}" placeholder="Краткое уточнение" /></td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function startupSummaryRows(workspace = state) {
+  return allCardsFromWorkspace(workspace)
+    .filter(isToolStatusCard)
+    .flatMap(card => ensureToolItems(card).map(item => ({
+      group: card.title,
+      name: item.name,
+      implemented: item.status === 'implemented',
+      selected: item.status === 'implemented' || item.status === 'not_implemented',
+      value: item.status === 'implemented' ? 'Да' : 'Нет',
+      comment: item.comment || ''
+    })));
+}
+
+function startupSummaryHtml() {
+  const rows = startupSummaryRows(state);
+  if (!rows.length) return '<div class="empty compact-empty">Нет данных для автоматической сводки.</div>';
+  return `<div class="startup-summary">
+    <div class="sync-note">Автоматическая сводка по данным из блоков выше. Реализовано = «Да», не реализовано или не выбрано = «Нет».</div>
+    <table class="mini-table">
+      <thead><tr><th>Блок</th><th>Элемент</th><th>Есть на старте</th><th>Комментарий</th></tr></thead>
+      <tbody>${rows.map(row => `<tr>
+        <td>${escapeHtml(row.group)}</td>
+        <td>${escapeHtml(row.name)}</td>
+        <td><span class="yesno ${row.implemented ? 'yes' : 'no'}">${row.implemented ? 'Да' : 'Нет'}</span></td>
+        <td>${escapeHtml(row.comment)}</td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function formatStructuredEvidencePlain(card, workspace = state) {
+  if (isProjectPassportCard(card)) {
+    const project = workspace.project || {};
+    return PROJECT_PASSPORT_FIELDS.map(([key, label]) => `${label}: ${project[key] || ''}`).join('\n');
+  }
+  if (isToolStatusCard(card)) {
+    const evidencePart = ensureEvidenceFields(card).map(field => `${field.label}: ${getEvidenceValue(field.key, workspace)}`).join('\n');
+    const toolPart = ensureToolItems(card).map(item => `${item.name}: ${item.status === 'implemented' ? 'Реализовано' : item.status === 'not_implemented' ? 'Не реализовано' : 'Не выбрано'}${item.comment ? ' — ' + item.comment : ''}`).join('\n');
+    return [evidencePart, toolPart].filter(Boolean).join('\n\n');
+  }
+  if (isStartupSummaryCard(card)) {
+    return startupSummaryRows(workspace).map(row => `${row.name}: ${row.implemented ? 'Да' : 'Нет'}`).join('\n');
+  }
+  const fields = ensureEvidenceFields(card);
+  if (fields.length) return fields.map(field => `${field.label}: ${getEvidenceValue(field.key, workspace)}`).join('\n');
+  return card.evidence || '';
+}
+
 function normalizeAspectKey(label = '') {
   return String(label || '')
     .trim()
@@ -278,7 +557,10 @@ function extractEvidenceFields(raw = '') {
   const fields = [];
   const lines = text.split(/\r?\n/);
   let current = null;
+  let previousWasBlank = true;
   lines.forEach(line => {
+    const clean = line.trim();
+    if (!clean) { previousWasBlank = true; return; }
     const match = line.match(/^\s*([^:\n]{2,120})\s*:\s*(.*)$/);
     if (match) {
       current = {
@@ -287,15 +569,27 @@ function extractEvidenceFields(raw = '') {
         value: (match[2] || '').trim()
       };
       fields.push(current);
-    } else if (current && line.trim()) {
-      current.value = [current.value, line.trim()].filter(Boolean).join('\n');
+    } else if (looksLikeEvidenceHeading(clean, previousWasBlank)) {
+      current = { key: normalizeAspectKey(clean), label: clean, value: '' };
+      fields.push(current);
+    } else if (current) {
+      current.value = [current.value, clean].filter(Boolean).join('\n');
     }
+    previousWasBlank = false;
   });
   if (!fields.length && text) {
     const label = text.replace(/:$/,'').trim();
     fields.push({ key: normalizeAspectKey(label), label, value: '' });
   }
   return fields;
+}
+
+function looksLikeEvidenceHeading(text, previousWasBlank) {
+  if (!text || text.length > 120) return false;
+  if (/[.!?]$/.test(text)) return false;
+  if (/[,;]/.test(text)) return false;
+  if (previousWasBlank) return true;
+  return /^(что|кто|кому|какой|какая|какие|какое|где|зачем|почему|ради|список|чего)\b/i.test(text);
 }
 
 function initializeEvidenceStructure(workspace) {
@@ -381,6 +675,7 @@ function getProgress(cards = allCards()) {
 }
 
 function render() {
+  updateProjectChrome();
   renderSummary();
   renderGateNav();
   if (activeView === 'project') renderProject();
@@ -435,6 +730,7 @@ function renderProject() {
     input.value = state.project[key] || '';
     input.addEventListener('input', () => {
       state.project[key] = input.value;
+      syncProjectPassportCard(state);
       flashSaving();
     });
   });
@@ -476,7 +772,7 @@ function renderGateTable(gate, cards) {
             <td class="table-title">${escapeHtml(c.title)}<div class="card-source">CSV строка ${c.sourceRow || ''}</div></td>
             <td class="table-text">${escapeHtml(c.instruction || '')}</td>
             <td>${statusSelect(c)}</td>
-            <td>${evidenceStructuredHtml(c)}</td>
+            <td>${cardUserFieldsHtml(c)}</td>
             <td><textarea data-field="notes" data-card-id="${c.id}">${escapeHtml(c.notes || '')}</textarea></td>
           </tr>`).join('')}
         </tbody>
@@ -498,17 +794,24 @@ function cardHtml(c) {
       <div class="card-text">${escapeHtml(c.instruction || 'Инструкция пока не заполнена.')}</div>
       <div class="card-fields">
         <label class="field-row">Статус${statusSelect(c)}</label>
-        <div class="field-row"><span>Доказательство</span>${evidenceStructuredHtml(c)}</div>
+        ${cardUserFieldsHtml(c)}
         <label class="field-row">Размещено на странице<input data-field="pages" data-card-id="${c.id}" value="${escapeAttr(c.pages || '')}" /></label>
         <label class="field-row">Комментарий<textarea data-field="notes" data-card-id="${c.id}" rows="3">${escapeHtml(c.notes || '')}</textarea></label>
       </div>
     </article>`;
 }
 
+function cardUserFieldsHtml(c) {
+  if (isProjectPassportCard(c)) return `<div class="field-row"><span>Паспорт проекта</span>${projectPassportFieldsHtml()}</div>`;
+  if (isToolStatusCard(c)) return `<div class="field-row"><span>Доказательство</span>${evidenceStructuredHtml(c)}</div><div class="field-row"><span>Инструменты / платформы / страницы</span>${toolItemsHtml(c)}</div>`;
+  if (isStartupSummaryCard(c)) return `<div class="field-row"><span>Автоматическая сводка</span>${startupSummaryHtml()}</div>`;
+  return `<div class="field-row"><span>Доказательство</span>${evidenceStructuredHtml(c)}</div>`;
+}
+
 function statusSelect(c) {
-  return `<select data-field="status" data-card-id="${c.id}">
+  return `<select data-field="status" data-card-id="${c.id}" disabled title="Статус рассчитывается автоматически">
     ${Object.entries(STATUS_LABELS).map(([key, label]) => `<option value="${key}" ${c.status === key ? 'selected' : ''}>${label}</option>`).join('')}
-  </select>`;
+  </select><span class="evidence-sync">Статус рассчитывается автоматически</span>`;
 }
 
 function bindCardInputs() {
@@ -519,6 +822,14 @@ function bindCardInputs() {
   document.querySelectorAll('[data-evidence-key]').forEach(input => {
     input.addEventListener('input', updateEvidenceFromInput);
     input.addEventListener('change', updateEvidenceFromInput);
+  });
+  document.querySelectorAll('[data-project-inline]').forEach(input => {
+    input.addEventListener('input', updateProjectFromInline);
+    input.addEventListener('change', updateProjectFromInline);
+  });
+  document.querySelectorAll('[data-tool-card-id]').forEach(input => {
+    input.addEventListener('input', updateToolItemFromInput);
+    input.addEventListener('change', updateToolItemFromInput);
   });
 }
 
@@ -535,6 +846,7 @@ function updateCardFromInput(e) {
   if (!card) return;
   const field = e.target.dataset.field;
   card[field] = e.target.value;
+  recalculateStatusForCard(card);
   flashSaving();
   if (field === 'status') render();
 }
@@ -546,7 +858,32 @@ function updateEvidenceFromInput(e) {
   document.querySelectorAll(`[data-evidence-key="${CSS.escape(key)}"]`).forEach(input => {
     if (input !== e.target) input.value = e.target.value;
   });
+  recalculateAllStatuses(state);
   flashSaving();
+}
+
+function updateProjectFromInline(e) {
+  const key = e.target.dataset.projectInline;
+  if (!key) return;
+  state.project[key] = e.target.value;
+  syncProjectPassportCard(state);
+  recalculateAllStatuses(state);
+  flashSaving();
+}
+
+function updateToolItemFromInput(e) {
+  const card = findCard(e.target.dataset.toolCardId);
+  if (!card) return;
+  const index = Number(e.target.dataset.toolIndex);
+  const field = e.target.dataset.toolField;
+  ensureToolItems(card);
+  if (!card.toolItems[index]) return;
+  card.toolItems[index][field] = e.target.value;
+  recalculateStatusForCard(card);
+  const summaryCard = allCardsFromWorkspace(state).find(isStartupSummaryCard);
+  if (summaryCard) recalculateStatusForCard(summaryCard);
+  flashSaving();
+  render();
 }
 
 function renderEvidenceIndex() {
@@ -698,6 +1035,49 @@ function renderScheme() {
     </div>`;
 }
 
+
+function exportPdfReport() {
+  syncProjectPassportCard(state);
+  recalculateAllStatuses(state);
+  syncEvidenceTexts(state);
+  const rows = [];
+  state.gates.forEach(gate => {
+    gate.cards.forEach(card => {
+      rows.push({
+        gate: gate.title,
+        title: card.title,
+        status: STATUS_LABELS[card.status] || card.status,
+        evidence: formatStructuredEvidencePlain(card, state),
+        notes: card.notes || ''
+      });
+    });
+  });
+  const projectName = escapeHtml(state.project?.name || 'Проект');
+  const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Отчёт ГУРУ — ${projectName}</title>
+    <style>
+      body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#1f1b16;margin:28px;background:#fff;}
+      h1{font-size:24px;margin:0 0 6px;} .meta{color:#756c61;margin-bottom:20px;font-size:12px;}
+      table{width:100%;border-collapse:collapse;font-size:11px;} th,td{border:1px solid #ded8ce;padding:8px;vertical-align:top;text-align:left;}
+      th{background:#f4f1ec;text-transform:uppercase;letter-spacing:.04em;font-size:10px;} .gate-row td{background:#fbfaf8;font-weight:700;}
+      .evidence{white-space:pre-wrap;} .notes{white-space:pre-wrap;} @page{size:A4;margin:12mm;}
+    </style></head><body>
+    <h1>Отчёт ГУРУ: ${projectName}</h1>
+    <div class="meta">Экспорт содержит только: название блока, статус, структурированное доказательство, комментарий.</div>
+    <table><thead><tr><th>Название блока</th><th>Статус</th><th>Структурированное доказательство</th><th>Комментарий</th></tr></thead><tbody>
+    ${rows.map((row, index, arr) => `${index === 0 || row.gate !== arr[index-1].gate ? `<tr class="gate-row"><td colspan="4">${escapeHtml(row.gate)}</td></tr>` : ''}<tr><td>${escapeHtml(row.title)}</td><td>${escapeHtml(row.status)}</td><td class="evidence">${escapeHtml(row.evidence)}</td><td class="notes">${escapeHtml(row.notes)}</td></tr>`).join('')}
+    </tbody></table>
+    <script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script>
+    </body></html>`;
+  const reportWindow = window.open('', '_blank');
+  if (!reportWindow) {
+    alert('Браузер заблокировал окно печати. Разрешите всплывающие окна и повторите экспорт.');
+    return;
+  }
+  reportWindow.document.open();
+  reportWindow.document.write(html);
+  reportWindow.document.close();
+}
+
 function exportCsv() {
   syncEvidenceTexts();
   const rows = [];
@@ -823,6 +1203,7 @@ document.getElementById('evidenceBtn').addEventListener('click', () => { activeV
 document.getElementById('importBtn').addEventListener('click', () => els.csvInput.click());
 els.csvInput.addEventListener('change', e => e.target.files[0] && importCsvFile(e.target.files[0]));
 document.getElementById('exportBtn').addEventListener('click', exportCsv);
+document.getElementById('exportPdfBtn').addEventListener('click', exportPdfReport);
 document.getElementById('resetBtn').addEventListener('click', resetDemo);
 document.getElementById('tableViewBtn').addEventListener('click', () => { layoutMode = 'table'; renderGate(); });
 document.getElementById('cardsViewBtn').addEventListener('click', () => { layoutMode = 'cards'; renderGate(); });

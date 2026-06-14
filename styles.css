@@ -302,3 +302,60 @@ textarea { resize: vertical; min-height: 76px; }
 .evidence-index-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .evidence-index-item { border: 1px solid var(--line); border-radius: 16px; background: var(--panel-soft); padding: 14px; }
 @media (max-width: 900px) { .evidence-index-grid { grid-template-columns: 1fr; } }
+
+.project-passport-sync { display: grid; gap: 12px; }
+.sync-note {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 500;
+  background: #f4f1ec;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.compact-form { gap: 10px; }
+.compact-form label { color: var(--text); }
+.tool-status-list, .startup-summary { display: grid; gap: 10px; }
+.mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  font-size: 13px;
+}
+.mini-table th, .mini-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 9px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.mini-table th {
+  background: var(--panel-soft);
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.mini-table tr:last-child td { border-bottom: 0; }
+.mini-table select, .mini-table input { min-width: 150px; }
+.yesno {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-weight: 800;
+  font-size: 12px;
+}
+.yesno.yes { background: #dfeee4; color: var(--ready); }
+.yesno.no { background: #f2dedb; color: var(--danger); }
+.compact-empty { padding: 16px; }
+select:disabled {
+  background: #f4f1ec;
+  color: var(--muted);
+  cursor: not-allowed;
+}
