@@ -1,13 +1,16 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.13';
+const PLATFORM_VERSION = 'v0.14';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
   ready: 'Готово',
   needs_review: 'Проверить'
 };
+
+const V14_PAGE_BLOCK_TITLES = ['ГЛАВНАЯ','СПИСОК / КАТЕГОРИЯ','СТРАНИЦА УСЛУГИ','КАРТОЧКА ТОВАРА','СТАТЬЯ БЛОГА','О НАС','КОНТАКТЫ','ДОСТАВКА / ГАРАНТИИ','ПОЛИТИКА','404','THANK YOU PAGE ⚠️','ЛЕНДИНГ'];
+const V14_REMOVED_GATE1_BLOCKS = ['Блок А: Сниппет','Блок Б: Финальный CTA'];
 
 let projects = loadProjects();
 let activeProjectId = null;
@@ -2708,3 +2711,572 @@ document.getElementById('newProjectName').addEventListener('keydown', e => {
 });
 
 showLauncher();
+
+/* v0.14 — Context-first simplification overrides */
+
+function isRemovedGate1StandaloneBlock(card) {
+  const title = normalizeGateTitle(card?.title || '');
+  return V14_REMOVED_GATE1_BLOCKS.some(item => title === normalizeGateTitle(item));
+}
+
+function isPageContextCard(card) {
+  const title = normalizeGateTitle(card?.title || '');
+  const gate = card?.gateId || '';
+  if (V14_PAGE_BLOCK_TITLES.some(item => title === normalizeGateTitle(item))) return true;
+  if (gate === 'gate-2' && /tilda|сайт|страниц|форма|cta|кнопк|мобильн/.test(title)) return true;
+  if (gate === 'gate-4' && /посадоч|страниц|смысловой каркас|психосло|форма|мобильн/.test(title)) return true;
+  return false;
+}
+
+function isAnalyticsContextCard(card) {
+  const text = normalizeGateTitle([card?.title, card?.instruction].join(' '));
+  return /метрик|аналитик|вебвизор|utm|цели|событ|директ|ads|рся|seo|вебмастер|search console|analytics|crm|лид|форм|коллтрекинг|sitemap|robots|ssl|редирект|pagespeed|wordstat|частот|кластер|семантик|спрос|cpa|drr|aov|ltv|маржин/.test(text);
+}
+
+function isStrategyContextCard(card) {
+  return card?.gateId === 'gate-3' || /стратег|воронк|этап|матрица|сегмент|оффер|утп|целевая|аудитор/.test(normalizeGateTitle([card?.title, card?.instruction].join(' ')));
+}
+
+function isImplementationContextCard(card) {
+  return card?.gateId === 'gate-4' || /реализац|готов|запуск|qa|креатив|собран|привязан|подключен|выбран|зафиксирован/.test(normalizeGateTitle([card?.title, card?.instruction].join(' ')));
+}
+
+function isTaskContextCard(card) {
+  return /задач|архив|дата реализации|регулярные|проектные|реализован/.test(normalizeGateTitle(card?.title || ''));
+}
+
+function getGate1Sections(gate, visibleCards = gate.cards) {
+  const visibleIds = new Set((visibleCards || []).filter(card => !isRemovedGate1StandaloneBlock(card)).map(card => card.id));
+  const starts = GATE1_SUBBLOCKS.map(config => {
+    const index = gate.cards.findIndex(card => {
+      const title = normalizeGateTitle(card.title);
+      return config.aliases.some(alias => title === normalizeGateTitle(alias));
+    });
+    return { ...config, index };
+  });
+  return starts.map((config, order) => {
+    const startIndex = config.index;
+    const nextKnown = starts.slice(order + 1).map(item => item.index).find(index => index > startIndex);
+    const endIndex = nextKnown ?? gate.cards.length;
+    const headerCard = startIndex >= 0 ? gate.cards[startIndex] : null;
+    const allInnerCards = startIndex >= 0 ? gate.cards.slice(startIndex + 1, endIndex).filter(card => !isRemovedGate1StandaloneBlock(card)) : [];
+    const filteredInnerCards = allInnerCards.filter(card => visibleIds.has(card.id));
+    return { ...config, headerCard, allInnerCards, filteredInnerCards };
+  });
+}
+
+function getGate1CardMode(card) {
+  if (isRemovedGate1StandaloneBlock(card)) return null;
+  if (!isGate1Card(card) || !card?.title) return null;
+  const title = normalizeGateTitle(card.title);
+  if (GATE1_PAGE_STRUCTURE_TITLES.some(page => title === normalizeGateTitle(page))) return 'page_structure';
+  if (getComparisonConfig(card)) return 'comparison';
+  if (getGate1LinkStatusType(card)) return 'links';
+  return null;
+}
+
+function ensureSemanticUiState() {
+  ensureUiState(state);
+  state.ui.semanticAccordion = state.ui.semanticAccordion || {};
+}
+
+function getSemanticAccordionState(gateId) {
+  ensureSemanticUiState();
+  state.ui.semanticAccordion[gateId] = state.ui.semanticAccordion[gateId] || { sections: {}, cards: {} };
+  return state.ui.semanticAccordion[gateId];
+}
+
+function isSemanticAccordionGate(gate) {
+  return ['gate-2','gate-3','gate-4'].includes(gate?.id);
+}
+
+function getSemanticGateSections(gate, visibleCards = gate.cards) {
+  const visibleIds = new Set((visibleCards || []).map(card => card.id));
+  if (gate.id === 'gate-2') return getNumberedHeaderSections(gate, visibleIds);
+  if (gate.id === 'gate-3') return getManualSemanticSections(gate, visibleIds, [
+    { key:'funnel_map', title:'Воронка и карта решений', match:/список этапов|карта воронки|матрица/i },
+    { key:'funnel_stages', title:'Этапы воронки', match:/этап/i },
+    { key:'strategy_base', title:'Стратегическая сборка', match:/.*/i }
+  ]);
+  if (gate.id === 'gate-4') return getManualSemanticSections(gate, visibleIds, [
+    { key:'realization_map', title:'Карта реализации', match:/карта реализации/i },
+    { key:'strategic_base', title:'Стратегический фундамент', match:/продукт|оффер|сегмент|целевое действие/i },
+    { key:'landing_site', title:'Посадочная и сайт', match:/посадоч|страниц|каркас|психосло|формы|контакты|мобильн/i },
+    { key:'measurement_leads', title:'Измерение и лиды', match:/метрик|цели|utm|лид|статус|crm/i },
+    { key:'creative_ads', title:'Креативы и рекламные сущности', match:/креатив|рекламн|посадки|бюджет/i },
+    { key:'launch_ready', title:'Запусковая готовность', match:/qa|менеджер|запуск/i }
+  ]);
+  return [];
+}
+
+function getNumberedHeaderSections(gate, visibleIds) {
+  const sections = [];
+  let current = null;
+  gate.cards.forEach(card => {
+    const isHeader = /^\s*\d+\.\s+/.test(card.title || '');
+    if (isHeader) {
+      current = { key: 'sec-' + sections.length, title: card.title.replace(/^\s*\d+\.\s+/, '').trim(), headerCard: card, allInnerCards: [], filteredInnerCards: [] };
+      sections.push(current);
+    } else {
+      if (!current) {
+        current = { key: 'sec-' + sections.length, title: 'Рабочие блоки', headerCard: null, allInnerCards: [], filteredInnerCards: [] };
+        sections.push(current);
+      }
+      current.allInnerCards.push(card);
+      if (visibleIds.has(card.id)) current.filteredInnerCards.push(card);
+    }
+  });
+  return sections.filter(section => section.allInnerCards.length || section.headerCard);
+}
+
+function getManualSemanticSections(gate, visibleIds, rules) {
+  const sections = rules.map(rule => ({ ...rule, headerCard: null, allInnerCards: [], filteredInnerCards: [] }));
+  gate.cards.forEach(card => {
+    const target = sections.find(section => section.match.test(card.title || '')) || sections[sections.length - 1];
+    target.allInnerCards.push(card);
+    if (visibleIds.has(card.id)) target.filteredInnerCards.push(card);
+  });
+  return sections.filter(section => section.allInnerCards.length);
+}
+
+function renderGateTable(gate, cards) {
+  if (isGate1Analytics(gate)) {
+    renderGate1Accordion(gate, cards);
+    return;
+  }
+  if (isSemanticAccordionGate(gate)) {
+    renderSemanticGateAccordion(gate, cards);
+    return;
+  }
+  els.contentArea.innerHTML = `
+    <div class="table-scroll clean-table-wrap">
+      <table class="data-table clean-data-table v14-clean-table">
+        <thead><tr><th>Блок</th><th>Статус</th><th>Рабочие поля</th></tr></thead>
+        <tbody>${cards.map(c => `
+          <tr data-card-row="${c.id}">
+            <td class="table-title">
+              <div class="block-title-main">${escapeHtml(c.title)}</div>
+              ${instructionToggleHtml(c)}
+            </td>
+            <td>${statusSelect(c)}</td>
+            <td>${cardUserFieldsHtml(c)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  bindCardInputs();
+}
+
+function renderSemanticGateAccordion(gate, cards) {
+  const sections = getSemanticGateSections(gate, cards);
+  const acc = getSemanticAccordionState(gate.id);
+  els.contentArea.innerHTML = `<div class="semantic-accordion v14-semantic">
+    <div class="analytics-intro compact-intro">
+      <div class="analytics-path">${escapeHtml(gate.title)}</div>
+      <h2>${escapeHtml(gate.title)}</h2>
+      <p class="muted">Блоки сгруппированы по смыслу. Внутри каждого блока показываются только поля, которые нужны для его задачи.</p>
+    </div>
+    ${sections.map(section => {
+      const isOpen = Boolean(acc.sections[section.key]);
+      const status = getSectionStatus(section.allInnerCards);
+      const cardsToShow = section.filteredInnerCards;
+      return `<section class="analytics-subblock semantic-subblock ${isOpen ? 'is-open is-active' : ''}">
+        <button class="subblock-header" data-semantic-toggle-section="${escapeAttr(gate.id)}::${escapeAttr(section.key)}">
+          <span class="subblock-main">
+            <span class="analytics-path">${escapeHtml(gate.title)} → ${escapeHtml(section.title)}</span>
+            <span class="subblock-title">${escapeHtml(section.title)}</span>
+            <span class="subblock-progress">${escapeHtml(getSectionProgressText(section.allInnerCards))}</span>
+          </span>
+          <span class="status-pill status-${status}">${STATUS_LABELS[status] || status}</span>
+          <span class="subblock-toggle">${isOpen ? 'Закрыть' : 'Открыть'}</span>
+        </button>
+        ${isOpen ? `<div class="subblock-body">
+          ${cardsToShow.length ? cardsToShow.map(card => semanticWorkBlockHtml(gate, section.title, card)).join('') : '<div class="empty compact-empty">По текущему фильтру внутри подблока ничего не найдено.</div>'}
+        </div>` : ''}
+      </section>`;
+    }).join('')}
+  </div>`;
+  bindSemanticAccordion(gate.id);
+  bindCardInputs();
+}
+
+function semanticWorkBlockHtml(gate, sectionTitle, card) {
+  const acc = getSemanticAccordionState(gate.id);
+  const isOpen = Boolean(acc.cards[card.id]);
+  return `<article class="work-accordion-card semantic-work-card ${isOpen ? 'is-open is-active' : ''}" data-card="${escapeAttr(card.id)}">
+    <button class="work-card-header" data-semantic-toggle-card="${escapeAttr(gate.id)}::${escapeAttr(card.id)}">
+      <span class="work-card-main">
+        <span class="analytics-path">${escapeHtml(gate.title)} → ${escapeHtml(sectionTitle)} → ${escapeHtml(card.title)}</span>
+        <span class="work-card-title">${escapeHtml(card.title)}</span>
+        <span class="work-card-preview">${escapeHtml(cardPreviewText(card))}</span>
+      </span>
+      <span class="status-pill status-${card.status}">${STATUS_LABELS[card.status] || card.status}</span>
+      <span class="work-card-toggle">${isOpen ? 'Свернуть' : 'Раскрыть'}</span>
+    </button>
+    ${isOpen ? `<div class="work-card-body">
+      ${instructionToggleHtml(card)}
+      <div class="card-fields v14-context-fields">${cardUserFieldsHtml(card)}</div>
+    </div>` : ''}
+  </article>`;
+}
+
+function bindSemanticAccordion(gateId) {
+  document.querySelectorAll('[data-semantic-toggle-section]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const [gid, key] = btn.dataset.semanticToggleSection.split('::');
+      const acc = getSemanticAccordionState(gid || gateId);
+      acc.sections[key] = !acc.sections[key];
+      saveState();
+      renderGate();
+    });
+  });
+  document.querySelectorAll('[data-semantic-toggle-card]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const [gid, cardId] = btn.dataset.semanticToggleCard.split('::');
+      const acc = getSemanticAccordionState(gid || gateId);
+      acc.cards[cardId] = !acc.cards[cardId];
+      saveState();
+      renderGate();
+    });
+  });
+}
+
+function cardUserFieldsHtml(c) {
+  if (isProjectPassportCard(c)) return `<div class="field-row"><span>Паспорт проекта</span>${projectPassportFieldsHtml()}</div>`;
+  if (isCurrentResultsCard(c)) return `<div class="field-row"><span>Показатели</span>${currentResultsHtml(c)}</div>`;
+  if (isToolStatusCard(c)) return `<div class="field-row"><span>Статусы элементов</span>${toolItemsHtml(c)}</div>`;
+  if (isStartupSummaryCard(c)) return `<div class="field-row"><span>Автоматическая сводка</span>${startupSummaryHtml()}</div>`;
+  if (getGate1CardMode(c)) return gate1TypedFieldsHtml(c);
+  if (isPageContextCard(c)) return contextPageFieldsHtml(c);
+  if (isImplementationContextCard(c)) return implementationFieldsHtml(c);
+  if (isStrategyContextCard(c)) return strategyFieldsHtml(c);
+  if (isAnalyticsContextCard(c)) return contextualInstructionWorkspaceHtml(c);
+  if (isTaskContextCard(c)) return taskFieldsHtml(c);
+  const evidence = evidenceStructuredHtml(c);
+  return evidence ? `<div class="field-row simplified-fields">${evidence}</div>` : '';
+}
+
+function contextualInstructionWorkspaceHtml(card) {
+  const rows = ensureInstructionWorkspace(card).filter(row => row.element || row.tool || row.serviceUrl);
+  if (!rows.length) return evidenceStructuredHtml(card);
+  card.instructionRows = rows;
+  return `<div class="field-row simplified-fields">${instructionWorkspaceHtml(card)}</div>`;
+}
+
+function ensureContextPageRows(card) {
+  if (!Array.isArray(card.pageRows) || !card.pageRows.length) card.pageRows = [createPageStructureRow(defaultPageNameForCard(card), true)];
+  card.pageRows.forEach(row => normalizePageStructureRow(row, card));
+  return card.pageRows;
+}
+
+function contextPageFieldsHtml(card) {
+  const rows = ensureContextPageRows(card);
+  return `<div class="field-row"><span>Структура страницы</span><div class="typed-block pages-block contextual-pages">
+    ${rows.map((row, pageIndex) => pageStructureCardHtml(card, row, pageIndex, false)).join('')}
+  </div></div>`;
+}
+
+function pageStructureStatus(row) {
+  const checks = [
+    Boolean(String(row.url || '').trim()),
+    Boolean(row.urlStatus),
+    evaluateLength(row.h1, 10, 90).ok,
+    evaluateLength(row.title, 20, 90).ok,
+    evaluateLength(row.description, 50, 200).ok,
+    row.ctaMode === 'not_needed' ? true : Boolean(String(row.finalCta || '').trim())
+  ];
+  const filled = checks.filter(Boolean).length;
+  if (!filled) return 'not_started';
+  if (filled === checks.length) return 'ready';
+  return 'in_progress';
+}
+
+function pageTemplateContext(card) {
+  const title = normalizeGateTitle(card?.title || '');
+  if (title === normalizeGateTitle('ГЛАВНАЯ')) return 'home';
+  if (/контак/.test(title)) return 'contacts';
+  if (/категор|список|каталог/.test(title)) return 'catalog';
+  if (/товар|карточка/.test(title)) return 'product';
+  if (/услуг/.test(title)) return 'service';
+  if (/лендинг|посадоч/.test(title)) return 'landing';
+  return 'standard';
+}
+
+function ensurePageContextFields(row, context) {
+  row.contextFields = row.contextFields || {};
+  const defs = pageContextDefinitions(context);
+  defs.forEach(def => { if (row.contextFields[def.key] === undefined) row.contextFields[def.key] = ''; });
+  return defs;
+}
+
+function pageContextDefinitions(context) {
+  const base = [
+    { group:'SEO и базовая структура', key:'snippetMeaning', label:'Основной смысл страницы', type:'textarea' },
+    { group:'SEO и базовая структура', key:'seoIssues', label:'Проблемы страницы', type:'input' }
+  ];
+  if (context === 'home') return [
+    { group:'Герой-экран', key:'heroH1', label:'H1', type:'input' },
+    { group:'Герой-экран', key:'heroUsp', label:'УТП', type:'textarea' },
+    { group:'Герой-экран', key:'heroVisual', label:'Визуал', type:'input' },
+    { group:'Герой-экран', key:'heroProof', label:'Соцдоказательство', type:'input' },
+    { group:'Герой-экран', key:'heroMiniBlocks', label:'Мини-блоки: доставка / сроки / гарантия / оплата', type:'textarea' },
+    { group:'Герой-экран', key:'primaryButton', label:'Основная кнопка', type:'input' },
+    { group:'Герой-экран', key:'secondaryButton', label:'Альтернативная кнопка', type:'input' },
+    { group:'Навигация по сегментам', key:'segmentTitle', label:'Заголовок', type:'input' },
+    { group:'Навигация по сегментам', key:'segmentCards', label:'Карточки сегментов и ссылки', type:'textarea' },
+    { group:'О компании', key:'aboutTitle', label:'Заголовок', type:'input' },
+    { group:'О компании', key:'aboutFacts', label:'3 фактоида', type:'textarea' },
+    { group:'О компании', key:'aboutText', label:'Короткий текст о подходе', type:'textarea' },
+    { group:'О компании', key:'trustBadges', label:'Сертификаты / награды / значки доверия', type:'textarea' },
+    { group:'Кейсы', key:'cases', label:'3–4 примера: название / категория / результат', type:'textarea' },
+    { group:'Кейсы', key:'portfolioButton', label:'Кнопка портфолио', type:'input' },
+    { group:'Процесс работы', key:'processTitle', label:'Заголовок', type:'input' },
+    { group:'Процесс работы', key:'processSteps', label:'3–5 шагов и срок по каждому шагу', type:'textarea' },
+    { group:'Процесс работы', key:'processButton', label:'Кнопка под схемой', type:'input' },
+    { group:'Выгоды', key:'benefits', label:'3 тезиса с конкретной выгодой', type:'textarea' },
+    { group:'Отзывы', key:'reviews', label:'Яндекс / Google Reviews или 3 цитаты', type:'textarea' },
+    { group:'Отзывы', key:'reviewsButton', label:'Кнопка «Читать все отзывы»', type:'input' },
+    ...base
+  ];
+  if (context === 'contacts') return [
+    { group:'Контакты', key:'phone', label:'Телефон', type:'input' },
+    { group:'Контакты', key:'messengers', label:'Мессенджеры', type:'input' },
+    { group:'Контакты', key:'address', label:'Адрес / карта', type:'input' },
+    { group:'Контакты', key:'hours', label:'График работы', type:'input' },
+    { group:'Контакты', key:'form', label:'Форма связи', type:'textarea' },
+    ...base
+  ];
+  if (context === 'catalog') return [
+    { group:'Каталог', key:'categoryLogic', label:'Логика категорий', type:'textarea' },
+    { group:'Каталог', key:'filters', label:'Фильтры / сортировка', type:'textarea' },
+    { group:'Каталог', key:'cards', label:'Карточки каталога', type:'textarea' },
+    { group:'Каталог', key:'catalogCta', label:'CTA каталога', type:'input' },
+    ...base
+  ];
+  if (context === 'product') return [
+    { group:'Карточка', key:'gallery', label:'Галерея / визуал', type:'input' },
+    { group:'Карточка', key:'price', label:'Цена / условия', type:'input' },
+    { group:'Карточка', key:'characteristics', label:'Характеристики', type:'textarea' },
+    { group:'Карточка', key:'availability', label:'Наличие / сроки', type:'input' },
+    { group:'Карточка', key:'productCta', label:'Кнопка действия', type:'input' },
+    ...base
+  ];
+  if (context === 'service' || context === 'landing') return [
+    { group:'Услуга / посадочная', key:'serviceProblem', label:'Проблема клиента', type:'textarea' },
+    { group:'Услуга / посадочная', key:'serviceOffer', label:'Оффер страницы', type:'textarea' },
+    { group:'Услуга / посадочная', key:'serviceProof', label:'Доказательства / кейсы', type:'textarea' },
+    { group:'Услуга / посадочная', key:'serviceSteps', label:'Процесс / этапы', type:'textarea' },
+    { group:'Услуга / посадочная', key:'serviceCta', label:'Основной CTA', type:'input' },
+    ...base
+  ];
+  return base;
+}
+
+function pageStructureCardHtml(card, row, pageIndex, repeatable) {
+  const context = pageTemplateContext(card);
+  const defs = ensurePageContextFields(row, context);
+  const snippet = snippetForPage(row);
+  const grouped = defs.reduce((acc, def) => { (acc[def.group] = acc[def.group] || []).push(def); return acc; }, {});
+  return `<section class="page-structure-card v14-page-card">
+    <div class="page-structure-head">
+      <input class="page-name-input" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="name" value="${escapeAttr(row.name || '')}" placeholder="Название страницы" ${row.fixed ? 'readonly' : ''} />
+      <span class="status-pill status-${pageStructureStatus(row)}">${STATUS_LABELS[pageStructureStatus(row)]}</span>
+      ${repeatable ? `<button class="small-btn danger-mini" data-remove-gate1-page="${escapeAttr(card.id)}" data-index="${pageIndex}" ${rowsSafeLength(card.pageRows) <= 1 ? 'disabled' : ''}>×</button>` : ''}
+    </div>
+    <div class="page-grid compact-page-grid">
+      <label>Ссылка<input list="projectUrlOptions" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
+      <label>Статус страницы<select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="urlStatus">${linkStatusOptionsHtml('works', row.urlStatus)}</select></label>
+      <label>H1 <small>10–90 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="h1" value="${escapeAttr(row.h1 || '')}" />${pageFieldStatusHtml(row.h1, 10, 90)}</label>
+      <label>Title <small>20–90 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="title" value="${escapeAttr(row.title || '')}" />${pageFieldStatusHtml(row.title, 20, 90)}</label>
+      <label class="full">Description <small>50–200 знаков</small><textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="description" rows="2">${escapeHtml(row.description || '')}</textarea>${pageFieldStatusHtml(row.description, 50, 200)}</label>
+    </div>
+    <div class="page-context-groups">
+      ${Object.entries(grouped).map(([group, items]) => `<details class="page-context-group" open>
+        <summary>${escapeHtml(group)}</summary>
+        <div class="page-context-grid">${items.map(def => pageContextFieldHtml(card, pageIndex, row, def)).join('')}</div>
+      </details>`).join('')}
+    </div>
+    <div class="embedded-block clean-embedded">
+      <h4>Сниппет страницы</h4>
+      <div class="snippet-preview">${snippet ? escapeHtml(snippet) : 'Соберётся из H1, Title, Description, смысла и оффера страницы.'}</div>
+    </div>
+    <div class="embedded-block clean-embedded">
+      <h4>Финальный CTA</h4>
+      <select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="ctaMode">
+        <option value="needed" ${row.ctaMode !== 'not_needed' ? 'selected' : ''}>Нужен</option>
+        <option value="not_needed" ${row.ctaMode === 'not_needed' ? 'selected' : ''}>Не нужен</option>
+      </select>
+      ${row.ctaMode === 'not_needed' ? '' : `<textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="finalCta" rows="2" placeholder="Текст финального CTA">${escapeHtml(row.finalCta || '')}</textarea>`}
+    </div>
+  </section>`;
+}
+
+function pageContextFieldHtml(card, pageIndex, row, def) {
+  const value = row.contextFields?.[def.key] || '';
+  const common = `data-page-context-card-id="${escapeAttr(card.id)}" data-page-context-index="${pageIndex}" data-page-context-key="${escapeAttr(def.key)}"`;
+  if (def.type === 'textarea') return `<label class="full">${escapeHtml(def.label)}<textarea ${common} rows="2">${escapeHtml(value)}</textarea></label>`;
+  return `<label>${escapeHtml(def.label)}<input ${common} value="${escapeAttr(value)}" /></label>`;
+}
+
+function snippetForPage(row) {
+  const ctx = row.contextFields || {};
+  const parts = [row.title, row.description, row.h1, ctx.heroUsp, ctx.serviceOffer, ctx.snippetMeaning, ctx.productCta, row.finalCta].map(v => String(v || '').trim()).filter(Boolean);
+  return truncateText(parts.join(' · '), 260);
+}
+
+function typedDataPlain(card) {
+  const mode = getGate1CardMode(card);
+  ensureGate1TypedData(card);
+  if (mode === 'links') return (card.linkRows || []).map((row, i) => `${i + 1}. ${row.url || 'URL не указан'} — ${row.status || 'статус не выбран'}${row.comment ? ` — ${row.comment}` : ''}`).join('\n');
+  if (mode === 'comparison') return (card.comparisonRows || []).map(row => `${row.label}: ${row.value || 'не заполнено'} ${row.unit || ''} / норма ${row.norm} / ${evaluateComparisonRow(row).label}${row.comment ? ` / ${row.comment}` : ''}`).join('\n');
+  if (mode === 'page_structure') return (card.pageRows || []).map(row => `${row.name}: ${row.url || 'URL не указан'} / ${row.urlStatus || 'статус не выбран'}\nH1: ${row.h1 || ''}\nTitle: ${row.title || ''}\nDescription: ${row.description || ''}\nСниппет: ${snippetForPage(row)}\nФинальный CTA: ${row.ctaMode === 'not_needed' ? 'не нужен' : (row.finalCta || 'не заполнен')}`).join('\n\n');
+  return '';
+}
+
+function gate1PageStructureHtml(card) {
+  const rows = card.pageRows || [];
+  const repeatable = isRepeatablePageCard(card);
+  return `<div class="typed-block pages-block contextual-pages">
+    ${rows.map((row, pageIndex) => pageStructureCardHtml(card, row, pageIndex, repeatable)).join('')}
+    ${repeatable ? `<button class="small-btn add-inline-btn" data-add-gate1-page="${escapeAttr(card.id)}">+ Добавить страницу</button>` : ''}
+  </div>`;
+}
+
+function strategyFieldsHtml(card) {
+  card.strategyFields = card.strategyFields || { decision:'', source:'', nextStep:'' };
+  return `<div class="strategy-fields context-panel">
+    <div class="context-source">
+      <strong>Автоконтекст проекта</strong>
+      <span>Продукт: ${escapeHtml(getEvidenceValue('cto-prodaem') || state.project?.description || 'не заполнено')}</span>
+      <span>Аудитория: ${escapeHtml(getEvidenceValue('komu-prodaem') || 'не заполнено')}</span>
+      <span>УТП: ${escapeHtml(state.project?.usp || getEvidenceValue('utp') || 'не заполнено')}</span>
+      <span>Оффер: ${escapeHtml(state.project?.offer || 'не заполнено')}</span>
+    </div>
+    <label>Стратегическое решение<textarea data-strategy-card-id="${escapeAttr(card.id)}" data-strategy-field="decision" rows="3">${escapeHtml(card.strategyFields.decision || '')}</textarea></label>
+    <label>Источник решения<input data-strategy-card-id="${escapeAttr(card.id)}" data-strategy-field="source" value="${escapeAttr(card.strategyFields.source || '')}" placeholder="спрос, боль, конкурент, экономика" /></label>
+    <label>Следующий шаг<input data-strategy-card-id="${escapeAttr(card.id)}" data-strategy-field="nextStep" value="${escapeAttr(card.strategyFields.nextStep || '')}" /></label>
+  </div>`;
+}
+
+function implementationFieldsHtml(card) {
+  card.implementationFields = card.implementationFields || { what:'', where:'', output:'', comment:'' };
+  return `<div class="implementation-fields context-panel">
+    <label>Что реализовать<textarea data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="what" rows="2">${escapeHtml(card.implementationFields.what || '')}</textarea></label>
+    <label>Где реализовать<input data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="where" value="${escapeAttr(card.implementationFields.where || '')}" placeholder="страница / канал / кампания" /></label>
+    <label>Результат на выходе<input data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="output" value="${escapeAttr(card.implementationFields.output || '')}" /></label>
+    <label>Комментарий<input data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="comment" value="${escapeAttr(card.implementationFields.comment || '')}" placeholder="если нужен" /></label>
+  </div>`;
+}
+
+function taskFieldsHtml(card) {
+  card.taskFields = card.taskFields || { due:'', result:'', comment:'' };
+  return `<div class="task-fields context-panel">
+    <label>Дата / период<input data-task-card-id="${escapeAttr(card.id)}" data-task-field="due" value="${escapeAttr(card.taskFields.due || '')}" /></label>
+    <label>Результат<input data-task-card-id="${escapeAttr(card.id)}" data-task-field="result" value="${escapeAttr(card.taskFields.result || '')}" /></label>
+    <label>Комментарий<input data-task-card-id="${escapeAttr(card.id)}" data-task-field="comment" value="${escapeAttr(card.taskFields.comment || '')}" placeholder="если нужен" /></label>
+  </div>`;
+}
+
+function bindCardInputs() {
+  document.querySelectorAll('[data-card-id][data-field]').forEach(input => {
+    input.addEventListener('input', updateCardFromInput);
+    input.addEventListener('change', updateCardFromInput);
+  });
+  document.querySelectorAll('[data-evidence-key]').forEach(input => {
+    input.addEventListener('input', updateEvidenceFromInput);
+    input.addEventListener('change', updateEvidenceFromInput);
+  });
+  document.querySelectorAll('[data-project-inline]').forEach(input => {
+    input.addEventListener('input', updateProjectFromInline);
+    input.addEventListener('change', updateProjectFromInline);
+  });
+  document.querySelectorAll('[data-tool-card-id]').forEach(input => {
+    input.addEventListener('input', updateToolItemFromInput);
+    input.addEventListener('change', updateToolItemFromInput);
+  });
+  document.querySelectorAll('[data-current-result-card-id]').forEach(input => {
+    input.addEventListener('input', updateCurrentResultFromInput);
+    input.addEventListener('change', updateCurrentResultFromInput);
+  });
+  document.querySelectorAll('[data-instruction-row-card-id]').forEach(input => {
+    input.addEventListener('input', updateInstructionRow);
+    input.addEventListener('change', updateInstructionRow);
+  });
+  document.querySelectorAll('[data-inline-tool]').forEach(input => input.addEventListener('change', updateInlineTool));
+  document.querySelectorAll('[data-tool-workspace-card-id]').forEach(input => {
+    input.addEventListener('input', updateToolWorkspaceRow);
+    input.addEventListener('change', updateToolWorkspaceRow);
+  });
+  document.querySelectorAll('[data-gate1-link-card-id]').forEach(input => {
+    input.addEventListener('input', updateGate1LinkRow);
+    input.addEventListener('change', updateGate1LinkRow);
+  });
+  document.querySelectorAll('[data-add-gate1-link]').forEach(btn => btn.addEventListener('click', () => addGate1LinkRow(btn.dataset.addGate1Link)));
+  document.querySelectorAll('[data-remove-gate1-link]').forEach(btn => btn.addEventListener('click', () => removeGate1LinkRow(btn.dataset.removeGate1Link, Number(btn.dataset.index))));
+  document.querySelectorAll('[data-gate1-comparison-card-id]').forEach(input => {
+    input.addEventListener('input', updateGate1ComparisonRow);
+    input.addEventListener('change', updateGate1ComparisonRow);
+  });
+  document.querySelectorAll('[data-gate1-page-card-id]').forEach(input => {
+    input.addEventListener('input', updateGate1PageRow);
+    input.addEventListener('change', updateGate1PageRow);
+  });
+  document.querySelectorAll('[data-page-context-card-id]').forEach(input => {
+    input.addEventListener('input', updatePageContextField);
+    input.addEventListener('change', updatePageContextField);
+  });
+  document.querySelectorAll('[data-add-gate1-page]').forEach(btn => btn.addEventListener('click', () => addGate1PageRow(btn.dataset.addGate1Page)));
+  document.querySelectorAll('[data-remove-gate1-page]').forEach(btn => btn.addEventListener('click', () => removeGate1PageRow(btn.dataset.removeGate1Page, Number(btn.dataset.index))));
+  document.querySelectorAll('[data-strategy-card-id]').forEach(input => {
+    input.addEventListener('input', updateStrategyField);
+    input.addEventListener('change', updateStrategyField);
+  });
+  document.querySelectorAll('[data-implementation-card-id]').forEach(input => {
+    input.addEventListener('input', updateImplementationField);
+    input.addEventListener('change', updateImplementationField);
+  });
+  document.querySelectorAll('[data-task-card-id]').forEach(input => {
+    input.addEventListener('input', updateTaskField);
+    input.addEventListener('change', updateTaskField);
+  });
+}
+
+function updatePageContextField(e) {
+  const card = findCard(e.target.dataset.pageContextCardId);
+  if (!card) return;
+  const index = Number(e.target.dataset.pageContextIndex);
+  const key = e.target.dataset.pageContextKey;
+  const rows = card.pageRows || [];
+  if (!rows[index]) return;
+  rows[index].contextFields = rows[index].contextFields || {};
+  rows[index].contextFields[key] = e.target.value;
+  recalculateStatusForCard(card);
+  flashSaving();
+}
+
+function updateStrategyField(e) {
+  const card = findCard(e.target.dataset.strategyCardId);
+  if (!card) return;
+  card.strategyFields = card.strategyFields || {};
+  card.strategyFields[e.target.dataset.strategyField] = e.target.value;
+  recalculateStatusForCard(card);
+  flashSaving();
+}
+
+function updateImplementationField(e) {
+  const card = findCard(e.target.dataset.implementationCardId);
+  if (!card) return;
+  card.implementationFields = card.implementationFields || {};
+  card.implementationFields[e.target.dataset.implementationField] = e.target.value;
+  recalculateStatusForCard(card);
+  flashSaving();
+}
+
+function updateTaskField(e) {
+  const card = findCard(e.target.dataset.taskCardId);
+  if (!card) return;
+  card.taskFields = card.taskFields || {};
+  card.taskFields[e.target.dataset.taskField] = e.target.value;
+  recalculateStatusForCard(card);
+  flashSaving();
+}

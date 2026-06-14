@@ -915,3 +915,39 @@ select:disabled {
   .clean-data-table { min-width: 650px; }
   .main { padding: 14px; }
 }
+
+/* v0.14 context-first interface */
+.v14-clean-table th:nth-child(1) { width: 28%; }
+.v14-clean-table th:nth-child(2) { width: 130px; }
+.v14-semantic { display: grid; gap: 14px; }
+.semantic-subblock .subblock-header { border-left: 4px solid transparent; }
+.semantic-subblock.is-active .subblock-header { border-left-color: var(--accent); }
+.semantic-work-card { border-left: 3px solid transparent; }
+.semantic-work-card.is-active { border-left-color: var(--accent); }
+.compact-intro { margin-bottom: 4px; }
+.v14-context-fields { display: grid; gap: 14px; }
+.context-panel { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.context-panel label { display: grid; gap: 6px; font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.context-panel textarea, .context-panel input { text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--text); }
+.context-source { grid-column: 1 / -1; display: grid; gap: 6px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel-soft); }
+.context-source strong { color: var(--text); font-size: 13px; }
+.context-source span { color: var(--muted); font-size: 12px; }
+.v14-page-card { background: #fff; border-radius: 16px; border: 1px solid var(--line); }
+.compact-page-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.page-context-groups { display: grid; gap: 10px; margin-top: 12px; }
+.page-context-group { border: 1px solid var(--line); border-radius: 14px; background: var(--panel-soft); padding: 10px 12px; }
+.page-context-group summary { cursor: pointer; font-size: 13px; font-weight: 900; color: var(--text); }
+.page-context-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+.page-context-grid label { display: grid; gap: 6px; font-size: 12px; color: var(--muted); font-weight: 800; }
+.page-context-grid label.full { grid-column: 1 / -1; }
+.clean-embedded { margin-top: 12px; }
+.clean-embedded h4 { margin-bottom: 8px; }
+.instruction-workspace .workspace-unit-title { font-weight: 900; color: var(--text); margin-bottom: 8px; }
+.contextual-pages .inline-tools, .contextual-pages .tool-workspace-table { display: none !important; }
+.status-ready, .result-ok { background: #d9fbe2 !important; color: #057a2a !important; border-color: #52c76f !important; }
+.status-in_progress, .result-neutral { background: #fff4cc !important; color: #9a6400 !important; border-color: #f2c94c !important; }
+.status-not_started { background: #eef1f5 !important; color: #596274 !important; border-color: #c8ced8 !important; }
+.status-needs_review, .result-bad { background: #ffe1df !important; color: #b42318 !important; border-color: #ff8a80 !important; }
+@media (max-width: 900px) {
+  .context-panel, .compact-page-grid, .page-context-grid { grid-template-columns: 1fr; }
+}
