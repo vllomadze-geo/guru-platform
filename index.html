@@ -9,7 +9,7 @@
 <body>
   <section class="project-launcher" id="projectLauncher">
     <div class="launcher-inner">
-      <div class="launcher-kicker">УНИВЕРСАЛ / ГУРУ · v0.4</div>
+      <div class="launcher-kicker">УНИВЕРСАЛ / ГУРУ · v0.5</div>
       <h1>Выберите проект</h1>
       <p class="launcher-lead">Откройте рабочий интерфейс нужного проекта или создайте новый проект.</p>
       <div class="project-grid" id="projectGrid"></div>
@@ -72,14 +72,14 @@
     <main class="main">
       <header class="topbar">
         <div>
-          <div class="eyebrow">Рабочая версия MVP · v0.4</div>
+          <div class="eyebrow">Рабочая версия MVP · v0.5</div>
           <h1 id="pageTitle">Платформа</h1>
         </div>
         <div class="topbar-actions">
           <input type="file" id="csvInput" accept=".csv,text/csv" hidden />
           <button class="btn secondary" id="importBtn">Импорт CSV</button>
           <button class="btn secondary" id="exportBtn">Экспорт CSV</button>
-          <button class="btn secondary" id="exportPdfBtn">Экспорт в PDF</button>
+          <button class="btn secondary" id="exportPdfBtn">Экспорт PDF текущего Gate</button>
           <button class="btn danger" id="resetBtn">Сбросить демо</button>
         </div>
       </header>
@@ -108,21 +108,37 @@
   </div>
 
   <template id="projectTemplate">
-    <div class="panel two-col">
-      <div>
-        <h2>Паспорт проекта</h2>
-        <p class="muted">Главные данные проекта. Эти поля потом используются в оффере, УТП, рекламе и отчётах.</p>
+    <div class="panel project-passport-panel">
+      <div class="panel-head">
+        <div>
+          <h2>Паспорт проекта</h2>
+          <p class="muted">Главные данные проекта, стартовая ситуация и итог после выполненных работ.</p>
+        </div>
       </div>
-      <div class="form-grid">
+
+      <div class="form-grid passport-meta-grid">
         <label>Название проекта<input data-project="name" /></label>
         <label>Ниша<input data-project="niche" placeholder="например: премиальная химчистка" /></label>
         <label>Сайт<input data-project="website" placeholder="https://" /></label>
         <label>География<input data-project="geography" placeholder="Москва, Грузия, онлайн" /></label>
         <label>Ответственный<input data-project="owner" /></label>
-        <label>Главный CTA<input data-project="mainCta" /></label>
-        <label class="full">УТП<textarea data-project="usp" rows="3"></textarea></label>
-        <label class="full">Оффер<textarea data-project="offer" rows="3"></textarea></label>
-        <label class="full">Описание проекта<textarea data-project="description" rows="3"></textarea></label>
+      </div>
+
+      <div class="passport-compare-grid">
+        <section class="passport-column">
+          <h3>До начала работ</h3>
+          <label>Главный CTA<input data-project="mainCta" /></label>
+          <label>УТП<textarea data-project="usp" rows="3"></textarea></label>
+          <label>Оффер<textarea data-project="offer" rows="3"></textarea></label>
+          <label>Описание проекта<textarea data-project="description" rows="3"></textarea></label>
+        </section>
+        <section class="passport-column">
+          <h3>После завершения работ</h3>
+          <label>Главный CTA<input data-project="afterMainCta" /></label>
+          <label>УТП<textarea data-project="afterUsp" rows="3"></textarea></label>
+          <label>Оффер<textarea data-project="afterOffer" rows="3"></textarea></label>
+          <label>Описание проекта<textarea data-project="afterDescription" rows="3"></textarea></label>
+        </section>
       </div>
     </div>
   </template>

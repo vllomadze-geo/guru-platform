@@ -359,3 +359,34 @@ select:disabled {
   color: var(--muted);
   cursor: not-allowed;
 }
+
+.project-passport-panel { display: grid; gap: 18px; }
+.passport-meta-grid { margin-bottom: 6px; }
+.passport-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.passport-column {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel-soft);
+  padding: 16px;
+}
+.passport-column h3 { margin-bottom: 4px; }
+.passport-column label {
+  display: grid;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 13px;
+}
+.compact-compare { margin-top: 10px; }
+.current-results { overflow: auto; }
+.current-results-table { min-width: 820px; }
+.current-results-table td:first-child { font-weight: 800; min-width: 180px; }
+.current-results-table input { min-width: 130px; }
+@media (max-width: 900px) {
+  .passport-compare-grid { grid-template-columns: 1fr; }
+}

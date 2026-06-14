@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.4';
+const PLATFORM_VERSION = 'v0.5';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -105,6 +105,10 @@ function migrateWorkspace(workspace, projectId) {
     workspace.project.mainCta = workspace.project.mainCta || meta.mainCta || '';
     workspace.project.usp = workspace.project.usp || meta.usp || '';
     workspace.project.offer = workspace.project.offer || meta.offer || '';
+    workspace.project.afterMainCta = workspace.project.afterMainCta || meta.afterMainCta || '';
+    workspace.project.afterUsp = workspace.project.afterUsp || meta.afterUsp || '';
+    workspace.project.afterOffer = workspace.project.afterOffer || meta.afterOffer || '';
+    workspace.project.afterDescription = workspace.project.afterDescription || meta.afterDescription || '';
   }
   prepareSystemCards(workspace);
   initializeEvidenceStructure(workspace);
@@ -126,6 +130,10 @@ function createFreshWorkspace(meta = {}) {
   fresh.project.mainCta = meta.mainCta || '';
   fresh.project.usp = meta.usp || '';
   fresh.project.offer = meta.offer || '';
+  fresh.project.afterMainCta = meta.afterMainCta || '';
+  fresh.project.afterUsp = meta.afterUsp || '';
+  fresh.project.afterOffer = meta.afterOffer || '';
+  fresh.project.afterDescription = meta.afterDescription || '';
   fresh.metrics = [];
   prepareSystemCards(fresh);
   initializeEvidenceStructure(fresh);
@@ -159,6 +167,10 @@ function syncActiveProjectMeta() {
   project.mainCta = state.project.mainCta || project.mainCta || '';
   project.usp = state.project.usp || project.usp || '';
   project.offer = state.project.offer || project.offer || '';
+  project.afterMainCta = state.project.afterMainCta || project.afterMainCta || '';
+  project.afterUsp = state.project.afterUsp || project.afterUsp || '';
+  project.afterOffer = state.project.afterOffer || project.afterOffer || '';
+  project.afterDescription = state.project.afterDescription || project.afterDescription || '';
   project.updatedAt = new Date().toISOString();
   project.icon = project.icon || getProjectIcon(project.name);
   saveProjects();
@@ -282,6 +294,10 @@ function createProjectFromModal() {
     mainCta,
     usp,
     offer,
+    afterMainCta: '',
+    afterUsp: '',
+    afterOffer: '',
+    afterDescription: '',
     icon: icon || getProjectIcon(name),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -319,16 +335,46 @@ const TOOL_EVIDENCE_FIELD_CONFIG = {
   'Текущие каналы и рекламные материалы': ['список текущих каналов', 'список текущих кампаний', 'список текущих стартовых креативов']
 };
 
-const PROJECT_PASSPORT_FIELDS = [
+const CURRENT_RESULTS_METRICS = [
+  { key: 'traffic', label: 'Трафик', type: 'number' },
+  { key: 'impressions', label: 'Показы', type: 'number' },
+  { key: 'clicks', label: 'Клики', type: 'number' },
+  { key: 'ctr', label: 'CTR', type: 'number' },
+  { key: 'leads', label: 'Заявки', type: 'number' },
+  { key: 'calls', label: 'Звонки', type: 'number' },
+  { key: 'cpl_cpa', label: 'CPL или CPA', type: 'number' },
+  { key: 'conversion', label: 'Конверсия', type: 'number' },
+  { key: 'cost', label: 'Расход', type: 'number' },
+  { key: 'lead_quality', label: 'Качество лидов', type: 'text' },
+  { key: 'sales', label: 'Продажи, если доступны', type: 'number' }
+];
+
+const PROJECT_META_FIELDS = [
   ['name', 'Название проекта'],
   ['niche', 'Ниша'],
   ['website', 'Сайт'],
   ['geography', 'География'],
-  ['owner', 'Ответственный'],
+  ['owner', 'Ответственный']
+];
+
+const PROJECT_BEFORE_FIELDS = [
   ['mainCta', 'Главный CTA'],
   ['usp', 'УТП'],
   ['offer', 'Оффер'],
   ['description', 'Описание проекта']
+];
+
+const PROJECT_AFTER_FIELDS = [
+  ['afterMainCta', 'Главный CTA'],
+  ['afterUsp', 'УТП'],
+  ['afterOffer', 'Оффер'],
+  ['afterDescription', 'Описание проекта']
+];
+
+const PROJECT_PASSPORT_FIELDS = [
+  ...PROJECT_META_FIELDS,
+  ...PROJECT_BEFORE_FIELDS,
+  ...PROJECT_AFTER_FIELDS
 ];
 
 function isProjectPassportCard(card) {
@@ -343,6 +389,10 @@ function isToolStatusCard(card) {
   return Boolean(card?.title && TOOL_CARD_CONFIG[card.title]);
 }
 
+function isCurrentResultsCard(card) {
+  return card?.title === 'Текущие результаты';
+}
+
 function prepareSystemCards(workspace) {
   if (!workspace?.gates) return;
   workspace.gates.forEach(gate => {
@@ -353,6 +403,7 @@ function prepareSystemCards(workspace) {
           card.evidenceFields = TOOL_EVIDENCE_FIELD_CONFIG[card.title].map(label => ({ key: normalizeAspectKey(label), label }));
         }
       }
+      if (isCurrentResultsCard(card)) ensureCurrentResults(card);
       if (isStartupSummaryCard(card)) card.isAutoSummary = true;
     });
   });
@@ -370,15 +421,33 @@ function ensureToolItems(card) {
   return card.toolItems;
 }
 
+function ensureCurrentResults(card) {
+  if (!Array.isArray(card.currentResults)) card.currentResults = [];
+  const existing = new Map(card.currentResults.map(item => [item.key, item]));
+  card.currentResults = CURRENT_RESULTS_METRICS.map(metric => {
+    const prev = existing.get(metric.key) || {};
+    return {
+      key: metric.key,
+      label: metric.label,
+      type: metric.type,
+      value: prev.value || '',
+      period: prev.period || '',
+      comment: prev.comment || ''
+    };
+  });
+  return card.currentResults;
+}
+
 function syncProjectPassportCard(workspace = state) {
   if (!workspace?.gates) return;
   const card = workspace.gates.flatMap(g => g.cards).find(isProjectPassportCard);
   if (!card) return;
   const project = workspace.project || {};
   card.evidenceFields = [];
-  card.evidence = PROJECT_PASSPORT_FIELDS
-    .map(([key, label]) => `${label}:\n${project[key] || ''}`)
-    .join('\n\n');
+  const base = PROJECT_META_FIELDS.map(([key, label]) => `${label}:\n${project[key] || ''}`);
+  const before = PROJECT_BEFORE_FIELDS.map(([key, label]) => `До начала работ / ${label}:\n${project[key] || ''}`);
+  const after = PROJECT_AFTER_FIELDS.map(([key, label]) => `После завершения работ / ${label}:\n${project[key] || ''}`);
+  card.evidence = [...base, ...before, ...after].join('\n\n');
 }
 
 function updateProjectChrome() {
@@ -404,6 +473,9 @@ function textValuesForStatus(card, workspace = state) {
   if (isStartupSummaryCard(card)) {
     return startupSummaryRows(workspace).map(row => row.value);
   }
+  if (isCurrentResultsCard(card)) {
+    return ensureCurrentResults(card).map(row => [row.value, row.period, row.comment].join(' '));
+  }
   const fields = ensureEvidenceFields(card);
   if (fields.length) return fields.map(field => getEvidenceValue(field.key, workspace));
   return [card.evidence || ''];
@@ -415,7 +487,7 @@ function recalculateStatusForCard(card, workspace = state) {
     const project = workspace?.project || {};
     const required = PROJECT_PASSPORT_FIELDS.map(([key]) => String(project[key] || '').trim());
     const nonEmpty = required.filter(Boolean);
-    const longTexts = ['usp', 'offer', 'description'].map(key => String(project[key] || '').trim()).filter(Boolean);
+    const longTexts = ['usp', 'offer', 'description', 'afterUsp', 'afterOffer', 'afterDescription'].map(key => String(project[key] || '').trim()).filter(Boolean);
     if (!nonEmpty.length) card.status = 'not_started';
     else if (nonEmpty.length === required.length && longTexts.every(hasFinalPeriod)) card.status = 'ready';
     else card.status = 'in_progress';
@@ -442,6 +514,15 @@ function recalculateStatusForCard(card, workspace = state) {
     else card.status = 'in_progress';
     return;
   }
+  if (isCurrentResultsCard(card)) {
+    const rows = ensureCurrentResults(card);
+    const filled = rows.filter(row => String(row.value || '').trim() || String(row.period || '').trim() || String(row.comment || '').trim());
+    const missingPeriod = rows.some(row => String(row.value || '').trim() && !String(row.period || '').trim());
+    if (!filled.length) card.status = 'not_started';
+    else if (missingPeriod) card.status = 'in_progress';
+    else card.status = 'ready';
+    return;
+  }
   const values = textValuesForStatus(card, workspace).map(v => String(v || '').trim());
   const nonEmpty = values.filter(Boolean);
   if (!nonEmpty.length) card.status = 'not_started';
@@ -460,16 +541,27 @@ function allCardsFromWorkspace(workspace = state) {
 
 function projectPassportFieldsHtml() {
   const project = state.project || {};
+  const inputHtml = ([key, label], prefix = '') => {
+    const isLong = ['usp','offer','description','afterUsp','afterOffer','afterDescription'].includes(key);
+    const value = project[key] || '';
+    const title = prefix ? `${prefix} / ${label}` : label;
+    return `<label>${escapeHtml(title)}${isLong
+      ? `<textarea data-project-inline="${escapeAttr(key)}" rows="3">${escapeHtml(value)}</textarea>`
+      : `<input data-project-inline="${escapeAttr(key)}" value="${escapeAttr(value)}" />`}</label>`;
+  };
   return `<div class="project-passport-sync">
-    <div class="sync-note">Единые данные проекта. Если изменить значение здесь, оно обновится в паспорте проекта, стартовой карточке и связанных блоках.</div>
-    <div class="form-grid compact-form">
-      ${PROJECT_PASSPORT_FIELDS.map(([key, label]) => {
-        const isLong = ['usp','offer','description'].includes(key);
-        const value = project[key] || '';
-        return `<label class="${isLong ? 'full' : ''}">${escapeHtml(label)}${isLong
-          ? `<textarea data-project-inline="${escapeAttr(key)}" rows="3">${escapeHtml(value)}</textarea>`
-          : `<input data-project-inline="${escapeAttr(key)}" value="${escapeAttr(value)}" />`}</label>`;
-      }).join('')}
+    <div class="form-grid compact-form passport-meta-grid">
+      ${PROJECT_META_FIELDS.map(field => inputHtml(field)).join('')}
+    </div>
+    <div class="passport-compare-grid compact-compare">
+      <section class="passport-column">
+        <h3>До начала работ</h3>
+        ${PROJECT_BEFORE_FIELDS.map(field => inputHtml(field)).join('')}
+      </section>
+      <section class="passport-column">
+        <h3>После завершения работ</h3>
+        ${PROJECT_AFTER_FIELDS.map(field => inputHtml(field)).join('')}
+      </section>
     </div>
   </div>`;
 }
@@ -477,7 +569,6 @@ function projectPassportFieldsHtml() {
 function toolItemsHtml(card) {
   const items = ensureToolItems(card);
   return `<div class="tool-status-list">
-    <div class="sync-note">Каждый инструмент, страница или платформа фиксируется отдельной строкой.</div>
     <table class="mini-table">
       <thead><tr><th>Элемент</th><th>Статус</th><th>Комментарий</th></tr></thead>
       <tbody>${items.map((item, index) => `<tr>
@@ -510,7 +601,6 @@ function startupSummaryHtml() {
   const rows = startupSummaryRows(state);
   if (!rows.length) return '<div class="empty compact-empty">Нет данных для автоматической сводки.</div>';
   return `<div class="startup-summary">
-    <div class="sync-note">Автоматическая сводка по данным из блоков выше. Реализовано = «Да», не реализовано или не выбрано = «Нет».</div>
     <table class="mini-table">
       <thead><tr><th>Блок</th><th>Элемент</th><th>Есть на старте</th><th>Комментарий</th></tr></thead>
       <tbody>${rows.map(row => `<tr>
@@ -526,7 +616,13 @@ function startupSummaryHtml() {
 function formatStructuredEvidencePlain(card, workspace = state) {
   if (isProjectPassportCard(card)) {
     const project = workspace.project || {};
-    return PROJECT_PASSPORT_FIELDS.map(([key, label]) => `${label}: ${project[key] || ''}`).join('\n');
+    const meta = PROJECT_META_FIELDS.map(([key, label]) => `${label}: ${project[key] || ''}`);
+    const before = PROJECT_BEFORE_FIELDS.map(([key, label]) => `До начала работ / ${label}: ${project[key] || ''}`);
+    const after = PROJECT_AFTER_FIELDS.map(([key, label]) => `После завершения работ / ${label}: ${project[key] || ''}`);
+    return [...meta, ...before, ...after].join('\n');
+  }
+  if (isCurrentResultsCard(card)) {
+    return ensureCurrentResults(card).map(row => `${row.label}: ${row.value || ''}${row.period ? ' | период: ' + row.period : ''}${row.comment ? ' | комментарий: ' + row.comment : ''}`).join('\n');
   }
   if (isToolStatusCard(card)) {
     const evidencePart = ensureEvidenceFields(card).map(field => `${field.label}: ${getEvidenceValue(field.key, workspace)}`).join('\n');
@@ -665,7 +761,6 @@ function evidenceStructuredHtml(card) {
     <label class="evidence-item">
       <span class="evidence-title">${escapeHtml(field.label)}</span>
       <textarea data-evidence-key="${escapeAttr(field.key)}" data-card-id="${escapeAttr(card.id)}" rows="3">${escapeHtml(getEvidenceValue(field.key))}</textarea>
-      <span class="evidence-sync">единое поле проекта · обновляется во всех блоках</span>
     </label>`).join('')}</div>`;
 }
 
@@ -686,6 +781,12 @@ function render() {
 }
 
 function renderSummary() {
+  if (activeView !== 'project') {
+    els.summaryGrid.hidden = true;
+    els.summaryGrid.innerHTML = '';
+    return;
+  }
+  els.summaryGrid.hidden = false;
   const cards = allCards();
   const counts = countByStatus(cards);
   const gatesCount = state.gates.length;
@@ -803,15 +904,31 @@ function cardHtml(c) {
 
 function cardUserFieldsHtml(c) {
   if (isProjectPassportCard(c)) return `<div class="field-row"><span>Паспорт проекта</span>${projectPassportFieldsHtml()}</div>`;
-  if (isToolStatusCard(c)) return `<div class="field-row"><span>Доказательство</span>${evidenceStructuredHtml(c)}</div><div class="field-row"><span>Инструменты / платформы / страницы</span>${toolItemsHtml(c)}</div>`;
+  if (isCurrentResultsCard(c)) return `<div class="field-row"><span>Показатели</span>${currentResultsHtml(c)}</div>`;
+  if (isToolStatusCard(c)) return `<div class="field-row"><span>Доказательство</span>${evidenceStructuredHtml(c)}</div><div class="field-row"><span>Статусы элементов</span>${toolItemsHtml(c)}</div>`;
   if (isStartupSummaryCard(c)) return `<div class="field-row"><span>Автоматическая сводка</span>${startupSummaryHtml()}</div>`;
   return `<div class="field-row"><span>Доказательство</span>${evidenceStructuredHtml(c)}</div>`;
+}
+
+function currentResultsHtml(card) {
+  const rows = ensureCurrentResults(card);
+  return `<div class="current-results">
+    <table class="mini-table current-results-table">
+      <thead><tr><th>Показатель</th><th>Значение</th><th>Период</th><th>Комментарий</th></tr></thead>
+      <tbody>${rows.map((row, index) => `<tr>
+        <td>${escapeHtml(row.label)}</td>
+        <td><input ${row.type === 'number' ? 'type="number"' : ''} data-current-result-card-id="${escapeAttr(card.id)}" data-current-result-index="${index}" data-current-result-field="value" value="${escapeAttr(row.value || '')}" placeholder="${row.type === 'number' ? 'число' : 'текст'}" /></td>
+        <td><input data-current-result-card-id="${escapeAttr(card.id)}" data-current-result-index="${index}" data-current-result-field="period" value="${escapeAttr(row.period || '')}" placeholder="например: 1–31 мая" /></td>
+        <td><input data-current-result-card-id="${escapeAttr(card.id)}" data-current-result-index="${index}" data-current-result-field="comment" value="${escapeAttr(row.comment || '')}" placeholder="короткий комментарий" /></td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>`;
 }
 
 function statusSelect(c) {
   return `<select data-field="status" data-card-id="${c.id}" disabled title="Статус рассчитывается автоматически">
     ${Object.entries(STATUS_LABELS).map(([key, label]) => `<option value="${key}" ${c.status === key ? 'selected' : ''}>${label}</option>`).join('')}
-  </select><span class="evidence-sync">Статус рассчитывается автоматически</span>`;
+  </select>`;
 }
 
 function bindCardInputs() {
@@ -830,6 +947,10 @@ function bindCardInputs() {
   document.querySelectorAll('[data-tool-card-id]').forEach(input => {
     input.addEventListener('input', updateToolItemFromInput);
     input.addEventListener('change', updateToolItemFromInput);
+  });
+  document.querySelectorAll('[data-current-result-card-id]').forEach(input => {
+    input.addEventListener('input', updateCurrentResultFromInput);
+    input.addEventListener('change', updateCurrentResultFromInput);
   });
 }
 
@@ -886,6 +1007,18 @@ function updateToolItemFromInput(e) {
   render();
 }
 
+function updateCurrentResultFromInput(e) {
+  const card = findCard(e.target.dataset.currentResultCardId);
+  if (!card) return;
+  const index = Number(e.target.dataset.currentResultIndex);
+  const field = e.target.dataset.currentResultField;
+  ensureCurrentResults(card);
+  if (!card.currentResults[index]) return;
+  card.currentResults[index][field] = e.target.value;
+  recalculateStatusForCard(card);
+  flashSaving();
+}
+
 function renderEvidenceIndex() {
   activeView = 'evidence';
   setToolbarVisible(false);
@@ -900,7 +1033,7 @@ function renderEvidenceIndex() {
       <div class="panel-head">
         <div>
           <h2>Единые данные доказательств</h2>
-          <p class="muted">Каждое поле хранится один раз на уровне проекта. Если изменить значение здесь или в карточке блока, оно обновится во всех местах, где используется тот же заголовок.</p>
+          <p class="muted">Здесь собраны структурированные поля доказательств проекта.</p>
         </div>
       </div>
       <div class="evidence-index-grid">
@@ -908,7 +1041,6 @@ function renderEvidenceIndex() {
           <label class="evidence-index-item">
             <span class="evidence-title">${escapeHtml(item.label)}</span>
             <textarea data-evidence-key="${escapeAttr(item.key)}" rows="4">${escapeHtml(getEvidenceValue(item.key))}</textarea>
-            <span class="evidence-sync">используется в блоках: ${escapeHtml(item.cards.map(c => c.title).slice(0, 4).join(' · '))}${item.cards.length > 4 ? ' · ...' : ''}</span>
           </label>`).join('')}
       </div>
     </div>`;
@@ -1040,31 +1172,34 @@ function exportPdfReport() {
   syncProjectPassportCard(state);
   recalculateAllStatuses(state);
   syncEvidenceTexts(state);
-  const rows = [];
-  state.gates.forEach(gate => {
-    gate.cards.forEach(card => {
-      rows.push({
-        gate: gate.title,
-        title: card.title,
-        status: STATUS_LABELS[card.status] || card.status,
-        evidence: formatStructuredEvidencePlain(card, state),
-        notes: card.notes || ''
-      });
-    });
-  });
+  const currentGate = activeView === 'gate'
+    ? state.gates.find(gate => gate.id === activeGateId)
+    : state.gates[0];
+  if (!currentGate) {
+    alert('Не найден текущий Gate для экспорта.');
+    return;
+  }
+  const rows = currentGate.cards.map(card => ({
+    gate: currentGate.title,
+    title: card.title,
+    status: STATUS_LABELS[card.status] || card.status,
+    evidence: formatStructuredEvidencePlain(card, state),
+    notes: card.notes || ''
+  }));
   const projectName = escapeHtml(state.project?.name || 'Проект');
-  const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Отчёт ГУРУ — ${projectName}</title>
+  const gateTitle = escapeHtml(currentGate.title);
+  const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Отчёт ГУРУ — ${projectName} — ${gateTitle}</title>
     <style>
       body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#1f1b16;margin:28px;background:#fff;}
-      h1{font-size:24px;margin:0 0 6px;} .meta{color:#756c61;margin-bottom:20px;font-size:12px;}
+      h1{font-size:24px;margin:0 0 6px;} h2{font-size:16px;margin:0 0 14px;color:#756c61}.meta{color:#756c61;margin-bottom:20px;font-size:12px;}
       table{width:100%;border-collapse:collapse;font-size:11px;} th,td{border:1px solid #ded8ce;padding:8px;vertical-align:top;text-align:left;}
-      th{background:#f4f1ec;text-transform:uppercase;letter-spacing:.04em;font-size:10px;} .gate-row td{background:#fbfaf8;font-weight:700;}
-      .evidence{white-space:pre-wrap;} .notes{white-space:pre-wrap;} @page{size:A4;margin:12mm;}
+      th{background:#f4f1ec;text-transform:uppercase;letter-spacing:.04em;font-size:10px;}.evidence{white-space:pre-wrap;}.notes{white-space:pre-wrap;}@page{size:A4;margin:12mm;}
     </style></head><body>
     <h1>Отчёт ГУРУ: ${projectName}</h1>
-    <div class="meta">Экспорт содержит только: название блока, статус, структурированное доказательство, комментарий.</div>
+    <h2>${gateTitle}</h2>
+    <div class="meta">Экспорт содержит только текущий Gate и колонки: название блока, статус, структурированное доказательство, комментарий.</div>
     <table><thead><tr><th>Название блока</th><th>Статус</th><th>Структурированное доказательство</th><th>Комментарий</th></tr></thead><tbody>
-    ${rows.map((row, index, arr) => `${index === 0 || row.gate !== arr[index-1].gate ? `<tr class="gate-row"><td colspan="4">${escapeHtml(row.gate)}</td></tr>` : ''}<tr><td>${escapeHtml(row.title)}</td><td>${escapeHtml(row.status)}</td><td class="evidence">${escapeHtml(row.evidence)}</td><td class="notes">${escapeHtml(row.notes)}</td></tr>`).join('')}
+    ${rows.map(row => `<tr><td>${escapeHtml(row.title)}</td><td>${escapeHtml(row.status)}</td><td class="evidence">${escapeHtml(row.evidence)}</td><td class="notes">${escapeHtml(row.notes)}</td></tr>`).join('')}
     </tbody></table>
     <script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script>
     </body></html>`;
