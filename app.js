@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.5';
+const PLATFORM_VERSION = 'v0.6';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -101,7 +101,6 @@ function migrateWorkspace(workspace, projectId) {
     workspace.project.website = workspace.project.website || meta.website;
     workspace.project.niche = workspace.project.niche || meta.niche || meta.type || '';
     workspace.project.geography = workspace.project.geography || meta.geography || '';
-    workspace.project.owner = workspace.project.owner || meta.owner || '';
     workspace.project.mainCta = workspace.project.mainCta || meta.mainCta || '';
     workspace.project.usp = workspace.project.usp || meta.usp || '';
     workspace.project.offer = workspace.project.offer || meta.offer || '';
@@ -126,7 +125,6 @@ function createFreshWorkspace(meta = {}) {
   fresh.project.website = meta.website || '';
   fresh.project.niche = meta.niche || meta.type || '';
   fresh.project.geography = meta.geography || '';
-  fresh.project.owner = meta.owner || '';
   fresh.project.mainCta = meta.mainCta || '';
   fresh.project.usp = meta.usp || '';
   fresh.project.offer = meta.offer || '';
@@ -163,7 +161,6 @@ function syncActiveProjectMeta() {
   project.niche = state.project.niche || project.niche || project.type || '';
   project.type = state.project.niche || project.type || '';
   project.geography = state.project.geography || project.geography || '';
-  project.owner = state.project.owner || project.owner || '';
   project.mainCta = state.project.mainCta || project.mainCta || '';
   project.usp = state.project.usp || project.usp || '';
   project.offer = state.project.offer || project.offer || '';
@@ -273,7 +270,6 @@ function createProjectFromModal() {
   const description = document.getElementById('newProjectDescription').value.trim();
   const website = document.getElementById('newProjectWebsite').value.trim();
   const geography = document.getElementById('newProjectGeography').value.trim();
-  const owner = document.getElementById('newProjectOwner').value.trim();
   const mainCta = document.getElementById('newProjectMainCta').value.trim();
   const usp = document.getElementById('newProjectUsp').value.trim();
   const offer = document.getElementById('newProjectOffer').value.trim();
@@ -290,7 +286,6 @@ function createProjectFromModal() {
     description,
     website,
     geography,
-    owner,
     mainCta,
     usp,
     offer,
@@ -353,8 +348,7 @@ const PROJECT_META_FIELDS = [
   ['name', 'Название проекта'],
   ['niche', 'Ниша'],
   ['website', 'Сайт'],
-  ['geography', 'География'],
-  ['owner', 'Ответственный']
+  ['geography', 'География']
 ];
 
 const PROJECT_BEFORE_FIELDS = [
@@ -399,9 +393,8 @@ function prepareSystemCards(workspace) {
     gate.cards.forEach(card => {
       if (isToolStatusCard(card)) {
         ensureToolItems(card);
-        if (TOOL_EVIDENCE_FIELD_CONFIG[card.title]) {
-          card.evidenceFields = TOOL_EVIDENCE_FIELD_CONFIG[card.title].map(label => ({ key: normalizeAspectKey(label), label }));
-        }
+        card.evidenceFields = [];
+        card.evidence = '';
       }
       if (isCurrentResultsCard(card)) ensureCurrentResults(card);
       if (isStartupSummaryCard(card)) card.isAutoSummary = true;
@@ -417,7 +410,8 @@ function ensureToolItems(card) {
     const prev = existing.get(name) || {};
     return { name, status: prev.status || '', comment: prev.comment || '' };
   });
-  card.evidenceFields = card.evidenceFields || [];
+  card.evidenceFields = [];
+  card.evidence = '';
   return card.toolItems;
 }
 
@@ -438,8 +432,30 @@ function ensureCurrentResults(card) {
   return card.currentResults;
 }
 
+
+function getSharedEvidenceByLabels(workspace, labels = []) {
+  for (const label of labels) {
+    const key = normalizeAspectKey(label);
+    const value = workspace?.sharedEvidence?.[key];
+    if (String(value || '').trim()) return value;
+  }
+  return '';
+}
+
+function syncProjectBeforeFromPositioning(workspace = state) {
+  if (!workspace) return;
+  workspace.project = workspace.project || {};
+  workspace.sharedEvidence = workspace.sharedEvidence || {};
+  const descriptionFallback = workspace.project.description || '';
+  workspace.project.mainCta = getSharedEvidenceByLabels(workspace, ['главный CTA', 'список текущих CTA', 'CTA', 'основной CTA']) || workspace.project.mainCta || '';
+  workspace.project.usp = getSharedEvidenceByLabels(workspace, ['УТП', 'позиционирования', 'стартовая формулировка', 'главное УТП']) || workspace.project.usp || '';
+  workspace.project.offer = getSharedEvidenceByLabels(workspace, ['оффер', 'список текущих офферов', 'текущие офферы']) || workspace.project.offer || '';
+  workspace.project.description = getSharedEvidenceByLabels(workspace, ['описание проекта', 'стартовая формулировка', 'позиционирования']) || descriptionFallback;
+}
+
 function syncProjectPassportCard(workspace = state) {
   if (!workspace?.gates) return;
+  syncProjectBeforeFromPositioning(workspace);
   const card = workspace.gates.flatMap(g => g.cards).find(isProjectPassportCard);
   if (!card) return;
   const project = workspace.project || {};
@@ -496,12 +512,8 @@ function recalculateStatusForCard(card, workspace = state) {
   if (isToolStatusCard(card)) {
     const items = ensureToolItems(card);
     const chosen = items.filter(item => item.status === 'implemented' || item.status === 'not_implemented');
-    const values = ensureEvidenceFields(card).map(field => String(getEvidenceValue(field.key, workspace) || '').trim());
-    const nonEmptyEvidence = values.filter(Boolean);
-    const hasAny = chosen.length || nonEmptyEvidence.length || items.some(item => item.comment);
-    const evidenceReady = values.length ? (nonEmptyEvidence.length === values.length && nonEmptyEvidence.every(hasFinalPeriod)) : true;
-    if (!hasAny) card.status = 'not_started';
-    else if (chosen.length === items.length && evidenceReady) card.status = 'ready';
+    if (!chosen.length) card.status = 'not_started';
+    else if (chosen.length === items.length) card.status = 'ready';
     else card.status = 'in_progress';
     return;
   }
@@ -540,14 +552,17 @@ function allCardsFromWorkspace(workspace = state) {
 }
 
 function projectPassportFieldsHtml() {
+  syncProjectBeforeFromPositioning(state);
   const project = state.project || {};
-  const inputHtml = ([key, label], prefix = '') => {
+  const inputHtml = ([key, label], prefix = '', options = {}) => {
     const isLong = ['usp','offer','description','afterUsp','afterOffer','afterDescription'].includes(key);
     const value = project[key] || '';
     const title = prefix ? `${prefix} / ${label}` : label;
+    const readonly = options.readonly ? ' readonly' : '';
+    const dataAttr = options.readonly ? '' : ` data-project-inline="${escapeAttr(key)}"`;
     return `<label>${escapeHtml(title)}${isLong
-      ? `<textarea data-project-inline="${escapeAttr(key)}" rows="3">${escapeHtml(value)}</textarea>`
-      : `<input data-project-inline="${escapeAttr(key)}" value="${escapeAttr(value)}" />`}</label>`;
+      ? `<textarea${dataAttr}${readonly} rows="3">${escapeHtml(value)}</textarea>`
+      : `<input${dataAttr}${readonly} value="${escapeAttr(value)}" />`}</label>`;
   };
   return `<div class="project-passport-sync">
     <div class="form-grid compact-form passport-meta-grid">
@@ -556,7 +571,7 @@ function projectPassportFieldsHtml() {
     <div class="passport-compare-grid compact-compare">
       <section class="passport-column">
         <h3>До начала работ</h3>
-        ${PROJECT_BEFORE_FIELDS.map(field => inputHtml(field)).join('')}
+        ${PROJECT_BEFORE_FIELDS.map(field => inputHtml(field, '', { readonly: true })).join('')}
       </section>
       <section class="passport-column">
         <h3>После завершения работ</h3>
@@ -736,7 +751,12 @@ function syncEvidenceTexts(workspace = state) {
   if (!workspace?.gates) return;
   workspace.gates.forEach(gate => {
     gate.cards.forEach(card => {
-      card.evidence = composeEvidenceText(card, workspace);
+      if (isToolStatusCard(card)) {
+        card.evidenceFields = [];
+        card.evidence = '';
+      } else {
+        card.evidence = composeEvidenceText(card, workspace);
+      }
     });
   });
 }
@@ -905,7 +925,7 @@ function cardHtml(c) {
 function cardUserFieldsHtml(c) {
   if (isProjectPassportCard(c)) return `<div class="field-row"><span>Паспорт проекта</span>${projectPassportFieldsHtml()}</div>`;
   if (isCurrentResultsCard(c)) return `<div class="field-row"><span>Показатели</span>${currentResultsHtml(c)}</div>`;
-  if (isToolStatusCard(c)) return `<div class="field-row"><span>Доказательство</span>${evidenceStructuredHtml(c)}</div><div class="field-row"><span>Статусы элементов</span>${toolItemsHtml(c)}</div>`;
+  if (isToolStatusCard(c)) return `<div class="field-row"><span>Статусы элементов</span>${toolItemsHtml(c)}</div>`;
   if (isStartupSummaryCard(c)) return `<div class="field-row"><span>Автоматическая сводка</span>${startupSummaryHtml()}</div>`;
   return `<div class="field-row"><span>Доказательство</span>${evidenceStructuredHtml(c)}</div>`;
 }
@@ -976,6 +996,7 @@ function updateEvidenceFromInput(e) {
   const key = e.target.dataset.evidenceKey;
   if (!key) return;
   setEvidenceValue(key, e.target.value);
+  syncProjectBeforeFromPositioning(state);
   document.querySelectorAll(`[data-evidence-key="${CSS.escape(key)}"]`).forEach(input => {
     if (input !== e.target) input.value = e.target.value;
   });
@@ -1218,7 +1239,7 @@ function exportCsv() {
   const rows = [];
   rows.push(['gate', 'block', 'instruction', 'status', 'evidence', 'pages', 'notes', 'source_row']);
   state.gates.forEach(g => {
-    g.cards.forEach(c => rows.push([g.title, c.title, c.instruction || '', STATUS_LABELS[c.status] || c.status, c.evidence || '', c.pages || '', c.notes || '', c.sourceRow || '']));
+    g.cards.forEach(c => rows.push([g.title, c.title, c.instruction || '', STATUS_LABELS[c.status] || c.status, formatStructuredEvidencePlain(c, state), c.pages || '', c.notes || '', c.sourceRow || '']));
   });
   const catalog = getEvidenceCatalog();
   if (catalog.length) {
