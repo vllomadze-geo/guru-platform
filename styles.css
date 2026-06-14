@@ -418,3 +418,136 @@ select:disabled {
   .subblock-header, .work-card-header { grid-template-columns: 1fr; }
   .subblock-toggle, .work-card-toggle { width: fit-content; }
 }
+
+/* v0.8, Gate 1 typed data structures */
+.typed-block {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+}
+.typed-table input,
+.typed-table select,
+.page-grid input,
+.page-grid select,
+.page-grid textarea,
+.page-structure-card textarea,
+.page-structure-card input,
+.page-structure-card select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px 10px;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+  box-sizing: border-box;
+}
+.typed-table th,
+.typed-table td {
+  vertical-align: top;
+}
+.add-inline-btn {
+  justify-self: start;
+  font-weight: 700;
+}
+.danger-mini {
+  color: #8a2d2d;
+  min-width: 34px;
+}
+.danger-mini:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+.result-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  margin-top: 6px;
+}
+.result-ok {
+  background: #dff3e3;
+  color: #225d2c;
+}
+.result-bad {
+  background: #f8d9d6;
+  color: #84251d;
+}
+.result-neutral {
+  background: #ece7df;
+  color: var(--muted);
+}
+.pages-block {
+  gap: 18px;
+}
+.page-structure-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel-soft);
+  padding: 14px;
+  display: grid;
+  gap: 14px;
+}
+.page-structure-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-name-input {
+  font-weight: 800;
+  font-size: 15px;
+  flex: 1;
+}
+.page-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.page-grid label,
+.page-comment {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+.page-grid label.full,
+.page-comment.full {
+  grid-column: 1 / -1;
+}
+.page-grid small {
+  font-weight: 600;
+  color: var(--muted);
+}
+.embedded-block {
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  background: #fff;
+  display: grid;
+  gap: 8px;
+}
+.embedded-block h4 {
+  margin: 0;
+  font-size: 13px;
+}
+.snippet-preview {
+  min-height: 44px;
+  border-radius: 12px;
+  background: #f4f1ec;
+  color: var(--text);
+  padding: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.inline-radio {
+  display: block;
+}
+@media (max-width: 900px) {
+  .page-grid { grid-template-columns: 1fr; }
+  .page-structure-head { align-items: stretch; flex-direction: column; }
+}

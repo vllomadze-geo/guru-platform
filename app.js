@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.7';
+const PLATFORM_VERSION = 'v0.8';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -251,7 +251,6 @@ function showNewProjectModal() {
   document.getElementById('newProjectDescription').value = '';
   document.getElementById('newProjectWebsite').value = '';
   document.getElementById('newProjectGeography').value = '';
-  document.getElementById('newProjectOwner').value = '';
   document.getElementById('newProjectMainCta').value = '';
   document.getElementById('newProjectUsp').value = '';
   document.getElementById('newProjectOffer').value = '';
@@ -406,6 +405,202 @@ const GATE1_UNIT_ECONOMICS_CARDS = [
 ];
 
 
+const GATE1_FIXED_PAGE_TITLES = ['ГЛАВНАЯ', 'КОНТАКТЫ'];
+const GATE1_REPEATABLE_PAGE_TITLES = ['СПИСОК / КАТЕГОРИЯ', 'СТРАНИЦА УСЛУГИ', 'КАРТОЧКА ТОВАРА', 'СТАТЬЯ БЛОГА', 'ЛЕНДИНГ'];
+const GATE1_PAGE_STRUCTURE_TITLES = [
+  ...GATE1_FIXED_PAGE_TITLES,
+  ...GATE1_REPEATABLE_PAGE_TITLES,
+  'О НАС', 'ДОСТАВКА / ГАРАНТИИ', 'ПОЛИТИКА', '404', 'THANK YOU PAGE ⚠️'
+];
+
+const GATE1_LINK_STATUS_OPTIONS = {
+  works: ['Работает', 'Не работает'],
+  placed: ['Размещена', 'Не размещена'],
+  indexed: ['Индексирована', 'Не индексирована'],
+  filled: ['Заполнена', 'Не заполнена']
+};
+
+const GATE1_LINK_STATUS_BY_TITLE = [
+  { match: /robots|sitemap|редирект|ssl|cwv|pagespeed|мета|meta|изображения|404|thank you|cookie|футер|согласие/i, type: 'works' },
+  { match: /индекс|яндекс вебмастер/i, type: 'indexed' },
+  { match: /каналы размещения|публикац|баннер|объявлен|изображения для объявлений/i, type: 'placed' },
+  { match: /партн|коллаб|инструментирование|utm|qr|crm/i, type: 'filled' }
+];
+
+const GATE1_COMPARISON_CONFIGS = [
+  {
+    match: /cwv|pagespeed|скорость/i,
+    metrics: [
+      { key: 'performance', label: 'Performance Score', norm: '≥ 90', threshold: 90, direction: 'min', unit: '' },
+      { key: 'lcp', label: 'LCP', norm: '≤ 2.5 сек', threshold: 2.5, direction: 'max', unit: 'сек' },
+      { key: 'inp', label: 'INP', norm: '≤ 200 мс', threshold: 200, direction: 'max', unit: 'мс' },
+      { key: 'cls', label: 'CLS', norm: '≤ 0.1', threshold: 0.1, direction: 'max', unit: '' }
+    ]
+  },
+  {
+    match: /частотность|прогноз|стоимости|клики|переходы/i,
+    metrics: [
+      { key: 'impressions_forecast', label: 'Прогноз показов', norm: '> 0', threshold: 0, direction: 'min_exclusive', unit: '' },
+      { key: 'clicks_forecast', label: 'Прогноз кликов', norm: '> 0', threshold: 0, direction: 'min_exclusive', unit: '' },
+      { key: 'forecast_cpa', label: 'Прогноз CPA', norm: '≤ целевого CPA', threshold: 0, direction: 'custom', unit: '₽' }
+    ]
+  }
+];
+
+function isGate1Card(card) {
+  return Boolean(card?.gateId === 'gate-1' || normalizeGateTitle(card?.gateTitle || '').includes(normalizeGateTitle(GATE1_ANALYTICS_TITLE)) || (state?.gates?.find(g => isGate1Analytics(g) && g.cards.some(c => c.id === card?.id))));
+}
+
+function getGate1CardMode(card) {
+  if (!isGate1Card(card) || !card?.title) return null;
+  const title = normalizeGateTitle(card.title);
+  if (GATE1_PAGE_STRUCTURE_TITLES.some(page => title === normalizeGateTitle(page))) return 'page_structure';
+  if (getComparisonConfig(card)) return 'comparison';
+  if (getGate1LinkStatusType(card)) return 'links';
+  return null;
+}
+
+function getGate1LinkStatusType(card) {
+  const title = card?.title || '';
+  const found = GATE1_LINK_STATUS_BY_TITLE.find(rule => rule.match.test(title));
+  return found?.type || null;
+}
+
+function getComparisonConfig(card) {
+  const title = card?.title || '';
+  return GATE1_COMPARISON_CONFIGS.find(config => config.match.test(title)) || null;
+}
+
+function defaultPageNameForCard(card) {
+  const title = String(card?.title || '').trim();
+  if (normalizeGateTitle(title) === normalizeGateTitle('ГЛАВНАЯ')) return 'Главная страница';
+  if (normalizeGateTitle(title) === normalizeGateTitle('КОНТАКТЫ')) return 'Контакты';
+  return title || 'Страница';
+}
+
+function isRepeatablePageCard(card) {
+  const title = normalizeGateTitle(card?.title || '');
+  return GATE1_REPEATABLE_PAGE_TITLES.some(item => title === normalizeGateTitle(item));
+}
+
+function ensureGate1TypedData(card) {
+  const mode = getGate1CardMode(card);
+  if (!mode) return;
+  if (mode === 'links') {
+    if (!Array.isArray(card.linkRows) || !card.linkRows.length) {
+      card.linkRows = [{ url: '', status: '', comment: '' }];
+    }
+  }
+  if (mode === 'comparison') {
+    const config = getComparisonConfig(card);
+    const existing = new Map((card.comparisonRows || []).map(row => [row.key, row]));
+    card.comparisonRows = (config?.metrics || []).map(metric => {
+      const prev = existing.get(metric.key) || {};
+      return { ...metric, value: prev.value || '', comment: prev.comment || '' };
+    });
+  }
+  if (mode === 'page_structure') {
+    if (!Array.isArray(card.pageRows) || !card.pageRows.length) {
+      card.pageRows = [createPageStructureRow(defaultPageNameForCard(card), !isRepeatablePageCard(card))];
+    }
+    card.pageRows.forEach(row => normalizePageStructureRow(row, card));
+  }
+}
+
+function createPageStructureRow(name = 'Страница', fixed = false) {
+  return {
+    id: makeId('page'),
+    name,
+    fixed: Boolean(fixed),
+    url: '',
+    urlStatus: '',
+    h1: '',
+    title: '',
+    description: '',
+    body: '',
+    offer: '',
+    ctaMode: 'needed',
+    finalCta: '',
+    comment: ''
+  };
+}
+
+function normalizePageStructureRow(row, card) {
+  row.id = row.id || makeId('page');
+  row.name = row.name || defaultPageNameForCard(card);
+  row.fixed = Boolean(row.fixed);
+  row.url = row.url || '';
+  row.urlStatus = row.urlStatus || '';
+  row.h1 = row.h1 || '';
+  row.title = row.title || '';
+  row.description = row.description || '';
+  row.body = row.body || '';
+  row.offer = row.offer || '';
+  row.ctaMode = row.ctaMode || 'needed';
+  row.finalCta = row.finalCta || '';
+  row.comment = row.comment || '';
+  return row;
+}
+
+function evaluateLength(value, min, max) {
+  const len = String(value || '').trim().length;
+  if (!len) return { ok: false, label: 'Не заполнено', len };
+  if (min && len < min) return { ok: false, label: `Мало: ${len}`, len };
+  if (max && len > max) return { ok: false, label: `Много: ${len}`, len };
+  return { ok: true, label: `ОК: ${len}`, len };
+}
+
+function evaluateComparisonRow(row) {
+  const raw = String(row.value || '').replace(',', '.').trim();
+  if (!raw) return { ok: null, label: 'Не заполнено' };
+  const value = Number(raw);
+  if (!Number.isFinite(value)) return { ok: false, label: 'Нужно число' };
+  if (row.direction === 'min') return { ok: value >= row.threshold, label: value >= row.threshold ? 'Соответствует' : 'Требует улучшения' };
+  if (row.direction === 'min_exclusive') return { ok: value > row.threshold, label: value > row.threshold ? 'Соответствует' : 'Требует улучшения' };
+  if (row.direction === 'max') return { ok: value <= row.threshold, label: value <= row.threshold ? 'Соответствует' : 'Требует улучшения' };
+  return { ok: null, label: 'Проверьте вручную' };
+}
+
+function snippetForPage(row) {
+  const parts = [row.title, row.description, row.h1, row.offer, row.body].map(v => String(v || '').trim()).filter(Boolean);
+  return truncateText(parts.join(' · '), 260);
+}
+
+function pageStructureStatus(row) {
+  const checks = [
+    Boolean(String(row.url || '').trim()),
+    Boolean(row.urlStatus),
+    evaluateLength(row.h1, 20, 70).ok,
+    evaluateLength(row.title, 30, 70).ok,
+    evaluateLength(row.description, 70, 180).ok,
+    evaluateLength(row.body, 300, 0).ok,
+    row.ctaMode === 'not_needed' ? true : Boolean(String(row.finalCta || '').trim())
+  ];
+  const filled = checks.filter(Boolean).length;
+  if (!filled) return 'not_started';
+  if (filled === checks.length) return 'ready';
+  return 'in_progress';
+}
+
+function typedDataPlain(card) {
+  const mode = getGate1CardMode(card);
+  ensureGate1TypedData(card);
+  if (mode === 'links') {
+    return (card.linkRows || []).map((row, i) => `${i + 1}. ${row.url || 'URL не указан'} — ${row.status || 'статус не выбран'}${row.comment ? ` — ${row.comment}` : ''}`).join('\n');
+  }
+  if (mode === 'comparison') {
+    return (card.comparisonRows || []).map(row => {
+      const result = evaluateComparisonRow(row).label;
+      return `${row.label}: ${row.value || 'не заполнено'} ${row.unit || ''} / норма ${row.norm} / ${result}${row.comment ? ` / ${row.comment}` : ''}`;
+    }).join('\n');
+  }
+  if (mode === 'page_structure') {
+    return (card.pageRows || []).map(row => `${row.name}: ${row.url || 'URL не указан'} / ${row.urlStatus || 'статус не выбран'}\nH1: ${row.h1 || ''}\nTitle: ${row.title || ''}\nDescription: ${row.description || ''}\nСниппет: ${snippetForPage(row)}\nФинальный CTA: ${row.ctaMode === 'not_needed' ? 'не нужен' : (row.finalCta || 'не заполнен')}\nКомментарий: ${row.comment || ''}`).join('\n\n');
+  }
+  return '';
+}
+
+
 function normalizeGateTitle(title = '') {
   return String(title || '')
     .trim()
@@ -449,7 +644,7 @@ function ensureGate1Structure(workspace = state) {
       pages: '',
       notes: '',
       fields: {},
-      sourceRow: 'v0.7-' + (index + 1),
+      sourceRow: 'v0.8-' + (index + 1),
       generatedBy: 'gate1-unit-economics'
     }));
   if (cardsToAdd.length) gate.cards.splice(unitHeaderIndex + 1, 0, ...cardsToAdd);
@@ -501,7 +696,8 @@ function truncateText(text = '', limit = 160) {
 }
 
 function cardPreviewText(card) {
-  const evidence = truncateText(formatStructuredEvidencePlain(card, state), 150);
+  const typed = getGate1CardMode(card) ? typedDataPlain(card) : '';
+  const evidence = truncateText(typed || formatStructuredEvidencePlain(card, state), 150);
   const notes = truncateText(card.notes || '', 120);
   if (evidence && notes) return `${evidence} · Комментарий: ${notes}`;
   return evidence || notes || 'Краткий результат пока не заполнен.';
@@ -535,6 +731,7 @@ function prepareSystemCards(workspace) {
         card.evidence = '';
       }
       if (isCurrentResultsCard(card)) ensureCurrentResults(card);
+      ensureGate1TypedData(card);
       if (isStartupSummaryCard(card)) card.isAutoSummary = true;
     });
   });
@@ -673,6 +870,36 @@ function recalculateStatusForCard(card, workspace = state) {
     else card.status = 'ready';
     return;
   }
+  const gate1Mode = getGate1CardMode(card);
+  if (gate1Mode) {
+    ensureGate1TypedData(card);
+    if (gate1Mode === 'links') {
+      const rows = card.linkRows || [];
+      const touched = rows.filter(row => String(row.url || '').trim() || row.status || String(row.comment || '').trim()).length;
+      const complete = rows.filter(row => String(row.url || '').trim() && row.status).length;
+      if (!touched) card.status = 'not_started';
+      else if (complete === rows.length) card.status = 'ready';
+      else card.status = 'in_progress';
+      return;
+    }
+    if (gate1Mode === 'comparison') {
+      const rows = card.comparisonRows || [];
+      const touched = rows.filter(row => String(row.value || '').trim()).length;
+      const done = rows.filter(row => evaluateComparisonRow(row).ok === true).length;
+      if (!touched) card.status = 'not_started';
+      else if (done === rows.length) card.status = 'ready';
+      else card.status = 'in_progress';
+      return;
+    }
+    if (gate1Mode === 'page_structure') {
+      const rows = card.pageRows || [];
+      const statuses = rows.map(pageStructureStatus);
+      if (statuses.every(status => status === 'not_started')) card.status = 'not_started';
+      else if (statuses.every(status => status === 'ready')) card.status = 'ready';
+      else card.status = 'in_progress';
+      return;
+    }
+  }
   const values = textValuesForStatus(card, workspace).map(v => String(v || '').trim());
   const nonEmpty = values.filter(Boolean);
   if (!nonEmpty.length) card.status = 'not_started';
@@ -767,6 +994,7 @@ function startupSummaryHtml() {
 }
 
 function formatStructuredEvidencePlain(card, workspace = state) {
+  if (getGate1CardMode(card)) return typedDataPlain(card);
   if (isProjectPassportCard(card)) {
     const project = workspace.project || {};
     const meta = PROJECT_META_FIELDS.map(([key, label]) => `${label}: ${project[key] || ''}`);
@@ -892,6 +1120,8 @@ function syncEvidenceTexts(workspace = state) {
       if (isToolStatusCard(card)) {
         card.evidenceFields = [];
         card.evidence = '';
+      } else if (getGate1CardMode(card)) {
+        card.evidence = typedDataPlain(card);
       } else {
         card.evidence = composeEvidenceText(card, workspace);
       }
@@ -1062,7 +1292,7 @@ function gate1WorkBlockHtml(card) {
       <div class="card-fields">
         <label class="field-row">Статус${statusSelect(card)}</label>
         ${cardUserFieldsHtml(card)}
-        <label class="field-row">Размещено на странице<input data-field="pages" data-card-id="${escapeAttr(card.id)}" value="${escapeAttr(card.pages || '')}" /></label>
+        ${getGate1CardMode(card) ? '' : `<label class="field-row">Размещено на странице<input data-field="pages" data-card-id="${escapeAttr(card.id)}" value="${escapeAttr(card.pages || '')}" /></label>`}
         <label class="field-row">Комментарий<textarea data-field="notes" data-card-id="${escapeAttr(card.id)}" rows="3">${escapeHtml(card.notes || '')}</textarea></label>
       </div>
     </div>` : ''}
@@ -1151,8 +1381,111 @@ function cardUserFieldsHtml(c) {
   if (isCurrentResultsCard(c)) return `<div class="field-row"><span>Показатели</span>${currentResultsHtml(c)}</div>`;
   if (isToolStatusCard(c)) return `<div class="field-row"><span>Статусы элементов</span>${toolItemsHtml(c)}</div>`;
   if (isStartupSummaryCard(c)) return `<div class="field-row"><span>Автоматическая сводка</span>${startupSummaryHtml()}</div>`;
+  if (getGate1CardMode(c)) return gate1TypedFieldsHtml(c);
   return `<div class="field-row"><span>Доказательство</span>${evidenceStructuredHtml(c)}</div>`;
 }
+
+
+function gate1TypedFieldsHtml(card) {
+  const mode = getGate1CardMode(card);
+  ensureGate1TypedData(card);
+  if (mode === 'links') return `<div class="field-row"><span>Ссылки и статусы</span>${gate1LinkRowsHtml(card)}</div>`;
+  if (mode === 'comparison') return `<div class="field-row"><span>Сравнительные показатели</span>${gate1ComparisonRowsHtml(card)}</div>`;
+  if (mode === 'page_structure') return `<div class="field-row"><span>Структура страниц</span>${gate1PageStructureHtml(card)}</div>`;
+  return '';
+}
+
+function linkStatusOptionsHtml(type, value) {
+  const options = GATE1_LINK_STATUS_OPTIONS[type] || GATE1_LINK_STATUS_OPTIONS.works;
+  return `<option value="" ${!value ? 'selected' : ''}>Выбрать</option>${options.map(option => `<option value="${escapeAttr(option)}" ${value === option ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}`;
+}
+
+function gate1LinkRowsHtml(card) {
+  const type = getGate1LinkStatusType(card) || 'works';
+  const rows = card.linkRows || [];
+  return `<div class="typed-block link-rows-block">
+    <table class="mini-table typed-table">
+      <thead><tr><th>Ссылка</th><th>Статус</th><th>Комментарий</th><th></th></tr></thead>
+      <tbody>${rows.map((row, index) => `<tr>
+        <td><input data-gate1-link-card-id="${escapeAttr(card.id)}" data-gate1-link-index="${index}" data-gate1-link-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" /></td>
+        <td><select data-gate1-link-card-id="${escapeAttr(card.id)}" data-gate1-link-index="${index}" data-gate1-link-field="status">${linkStatusOptionsHtml(type, row.status)}</select></td>
+        <td><input data-gate1-link-card-id="${escapeAttr(card.id)}" data-gate1-link-index="${index}" data-gate1-link-field="comment" value="${escapeAttr(row.comment || '')}" placeholder="краткое уточнение" /></td>
+        <td><button class="small-btn danger-mini" data-remove-gate1-link="${escapeAttr(card.id)}" data-index="${index}" ${rows.length <= 1 ? 'disabled' : ''}>×</button></td>
+      </tr>`).join('')}</tbody>
+    </table>
+    <button class="small-btn add-inline-btn" data-add-gate1-link="${escapeAttr(card.id)}">+ Добавить ссылку</button>
+  </div>`;
+}
+
+function gate1ComparisonRowsHtml(card) {
+  const rows = card.comparisonRows || [];
+  return `<div class="typed-block comparison-block">
+    <table class="mini-table typed-table">
+      <thead><tr><th>Показатель</th><th>Значение</th><th>Норма</th><th>Результат</th><th>Комментарий</th></tr></thead>
+      <tbody>${rows.map((row, index) => {
+        const result = evaluateComparisonRow(row);
+        const resultClass = result.ok === true ? 'ok' : result.ok === false ? 'bad' : 'neutral';
+        return `<tr>
+          <td>${escapeHtml(row.label)}</td>
+          <td><input type="number" step="any" data-gate1-comparison-card-id="${escapeAttr(card.id)}" data-gate1-comparison-index="${index}" data-gate1-comparison-field="value" value="${escapeAttr(row.value || '')}" placeholder="значение" /></td>
+          <td>${escapeHtml(row.norm)}</td>
+          <td><span class="result-pill result-${resultClass}">${escapeHtml(result.label)}</span></td>
+          <td><input data-gate1-comparison-card-id="${escapeAttr(card.id)}" data-gate1-comparison-index="${index}" data-gate1-comparison-field="comment" value="${escapeAttr(row.comment || '')}" placeholder="что улучшить" /></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function pageFieldStatusHtml(value, min, max) {
+  const result = evaluateLength(value, min, max);
+  const cls = result.ok ? 'ok' : 'bad';
+  return `<span class="result-pill result-${cls}">${escapeHtml(result.label)}</span>`;
+}
+
+function gate1PageStructureHtml(card) {
+  const rows = card.pageRows || [];
+  const repeatable = isRepeatablePageCard(card);
+  return `<div class="typed-block pages-block">
+    ${rows.map((row, pageIndex) => pageStructureCardHtml(card, row, pageIndex, repeatable)).join('')}
+    ${repeatable ? `<button class="small-btn add-inline-btn" data-add-gate1-page="${escapeAttr(card.id)}">+ Добавить страницу</button>` : ''}
+  </div>`;
+}
+
+function pageStructureCardHtml(card, row, pageIndex, repeatable) {
+  const snippet = snippetForPage(row);
+  return `<section class="page-structure-card">
+    <div class="page-structure-head">
+      <input class="page-name-input" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="name" value="${escapeAttr(row.name || '')}" placeholder="Название страницы" ${row.fixed ? 'readonly' : ''} />
+      <span class="status-pill status-${pageStructureStatus(row)}">${STATUS_LABELS[pageStructureStatus(row)]}</span>
+      ${repeatable ? `<button class="small-btn danger-mini" data-remove-gate1-page="${escapeAttr(card.id)}" data-index="${pageIndex}" ${rowsSafeLength(card.pageRows) <= 1 ? 'disabled' : ''}>×</button>` : ''}
+    </div>
+    <div class="page-grid">
+      <label>Ссылка<input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" /></label>
+      <label>Статус URL<select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="urlStatus">${linkStatusOptionsHtml('works', row.urlStatus)}</select></label>
+      <label>H1 <small>20–70 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="h1" value="${escapeAttr(row.h1 || '')}" />${pageFieldStatusHtml(row.h1, 20, 70)}</label>
+      <label>Title <small>30–70 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="title" value="${escapeAttr(row.title || '')}" />${pageFieldStatusHtml(row.title, 30, 70)}</label>
+      <label class="full">Description <small>70–180 знаков</small><textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="description" rows="2">${escapeHtml(row.description || '')}</textarea>${pageFieldStatusHtml(row.description, 70, 180)}</label>
+      <label class="full">Основной текст <small>минимум 300 знаков</small><textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="body" rows="4">${escapeHtml(row.body || '')}</textarea>${pageFieldStatusHtml(row.body, 300, 0)}</label>
+      <label class="full">Оффер страницы<textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="offer" rows="2">${escapeHtml(row.offer || '')}</textarea></label>
+    </div>
+    <div class="embedded-block">
+      <h4>Блок А: Сниппет</h4>
+      <div class="snippet-preview">${snippet ? escapeHtml(snippet) : 'Сниппет появится после заполнения H1, Title, Description, смысла и оффера страницы.'}</div>
+    </div>
+    <div class="embedded-block">
+      <h4>Блок Б: Финальный CTA</h4>
+      <label class="inline-radio"><select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="ctaMode">
+        <option value="needed" ${row.ctaMode !== 'not_needed' ? 'selected' : ''}>Финальный CTA нужен</option>
+        <option value="not_needed" ${row.ctaMode === 'not_needed' ? 'selected' : ''}>Финальный CTA не нужен</option>
+      </select></label>
+      ${row.ctaMode === 'not_needed' ? '' : `<textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="finalCta" rows="2" placeholder="Текст финального CTA">${escapeHtml(row.finalCta || '')}</textarea>`}
+    </div>
+    <label class="full page-comment">Комментарий<input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="comment" value="${escapeAttr(row.comment || '')}" placeholder="короткое уточнение" /></label>
+  </section>`;
+}
+
+function rowsSafeLength(rows) { return Array.isArray(rows) ? rows.length : 0; }
 
 function currentResultsHtml(card) {
   const rows = ensureCurrentResults(card);
@@ -1196,6 +1529,26 @@ function bindCardInputs() {
     input.addEventListener('input', updateCurrentResultFromInput);
     input.addEventListener('change', updateCurrentResultFromInput);
   });
+  bindGate1TypedInputs();
+}
+
+function bindGate1TypedInputs() {
+  document.querySelectorAll('[data-gate1-link-card-id]').forEach(input => {
+    input.addEventListener('input', updateGate1LinkRow);
+    input.addEventListener('change', updateGate1LinkRow);
+  });
+  document.querySelectorAll('[data-add-gate1-link]').forEach(btn => btn.addEventListener('click', () => addGate1LinkRow(btn.dataset.addGate1Link)));
+  document.querySelectorAll('[data-remove-gate1-link]').forEach(btn => btn.addEventListener('click', () => removeGate1LinkRow(btn.dataset.removeGate1Link, Number(btn.dataset.index))));
+  document.querySelectorAll('[data-gate1-comparison-card-id]').forEach(input => {
+    input.addEventListener('input', updateGate1ComparisonRow);
+    input.addEventListener('change', updateGate1ComparisonRow);
+  });
+  document.querySelectorAll('[data-gate1-page-card-id]').forEach(input => {
+    input.addEventListener('input', updateGate1PageRow);
+    input.addEventListener('change', updateGate1PageRow);
+  });
+  document.querySelectorAll('[data-add-gate1-page]').forEach(btn => btn.addEventListener('click', () => addGate1PageRow(btn.dataset.addGate1Page)));
+  document.querySelectorAll('[data-remove-gate1-page]').forEach(btn => btn.addEventListener('click', () => removeGate1PageRow(btn.dataset.removeGate1Page, Number(btn.dataset.index))));
 }
 
 function findCard(cardId) {
@@ -1262,6 +1615,85 @@ function updateCurrentResultFromInput(e) {
   card.currentResults[index][field] = e.target.value;
   recalculateStatusForCard(card);
   flashSaving();
+}
+
+
+function updateGate1LinkRow(e) {
+  const card = findCard(e.target.dataset.gate1LinkCardId);
+  if (!card) return;
+  ensureGate1TypedData(card);
+  const index = Number(e.target.dataset.gate1LinkIndex);
+  const field = e.target.dataset.gate1LinkField;
+  if (!card.linkRows[index]) return;
+  card.linkRows[index][field] = e.target.value;
+  recalculateStatusForCard(card);
+  flashSaving();
+}
+
+function addGate1LinkRow(cardId) {
+  const card = findCard(cardId);
+  if (!card) return;
+  ensureGate1TypedData(card);
+  card.linkRows.push({ url: '', status: '', comment: '' });
+  flashSaving();
+  renderGate();
+}
+
+function removeGate1LinkRow(cardId, index) {
+  const card = findCard(cardId);
+  if (!card) return;
+  ensureGate1TypedData(card);
+  if (card.linkRows.length <= 1) return;
+  card.linkRows.splice(index, 1);
+  recalculateStatusForCard(card);
+  flashSaving();
+  renderGate();
+}
+
+function updateGate1ComparisonRow(e) {
+  const card = findCard(e.target.dataset.gate1ComparisonCardId);
+  if (!card) return;
+  ensureGate1TypedData(card);
+  const index = Number(e.target.dataset.gate1ComparisonIndex);
+  const field = e.target.dataset.gate1ComparisonField;
+  if (!card.comparisonRows[index]) return;
+  card.comparisonRows[index][field] = e.target.value;
+  recalculateStatusForCard(card);
+  flashSaving();
+  renderGate();
+}
+
+function updateGate1PageRow(e) {
+  const card = findCard(e.target.dataset.gate1PageCardId);
+  if (!card) return;
+  ensureGate1TypedData(card);
+  const index = Number(e.target.dataset.gate1PageIndex);
+  const field = e.target.dataset.gate1PageField;
+  if (!card.pageRows[index]) return;
+  card.pageRows[index][field] = e.target.value;
+  recalculateStatusForCard(card);
+  flashSaving();
+  if (['h1','title','description','body','offer','ctaMode','finalCta'].includes(field)) renderGate();
+}
+
+function addGate1PageRow(cardId) {
+  const card = findCard(cardId);
+  if (!card) return;
+  ensureGate1TypedData(card);
+  card.pageRows.push(createPageStructureRow(defaultPageNameForCard(card), false));
+  flashSaving();
+  renderGate();
+}
+
+function removeGate1PageRow(cardId, index) {
+  const card = findCard(cardId);
+  if (!card) return;
+  ensureGate1TypedData(card);
+  if (!Array.isArray(card.pageRows) || card.pageRows.length <= 1) return;
+  card.pageRows.splice(index, 1);
+  recalculateStatusForCard(card);
+  flashSaving();
+  renderGate();
 }
 
 function renderEvidenceIndex() {
