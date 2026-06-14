@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.11';
+const PLATFORM_VERSION = 'v0.12';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -467,6 +467,65 @@ function toolNameByKey(key) {
   return tool?.name || key || '';
 }
 
+
+const SERVICE_LINKS = {
+  yandex_webmaster: { label: 'Яндекс Вебмастер', url: 'https://webmaster.yandex.ru/' },
+  google_search_console: { label: 'Google Search Console', url: 'https://search.google.com/search-console' },
+  yandex_direct: { label: 'Яндекс Директ', url: 'https://direct.yandex.ru/' },
+  google_ads: { label: 'Google Ads', url: 'https://ads.google.com/' },
+  yandex_metrika: { label: 'Яндекс Метрика', url: 'https://metrika.yandex.ru/' },
+  google_analytics: { label: 'Google Analytics', url: 'https://analytics.google.com/' },
+  yandex_wordstat: { label: 'Яндекс Wordstat', url: 'https://wordstat.yandex.ru/' },
+  yandex_business: { label: 'Яндекс Бизнес', url: 'https://business.yandex.ru/' },
+  google_pagespeed: { label: 'PageSpeed Insights', url: 'https://pagespeed.web.dev/' }
+};
+
+const INSTRUCTION_STATUS_OPTIONS = [
+  ['', 'Выбрать'],
+  ['works', 'Работает'],
+  ['not_works', 'Не работает'],
+  ['placed', 'Размещено'],
+  ['not_placed', 'Не размещено'],
+  ['indexed', 'Индексировано'],
+  ['not_indexed', 'Не индексировано'],
+  ['filled', 'Заполнено'],
+  ['not_filled', 'Не заполнено'],
+  ['ok', 'ОК'],
+  ['problem', 'Есть проблема']
+];
+
+function serviceLinkByToolKey(key) {
+  return SERVICE_LINKS[key] || null;
+}
+
+function toolKeyByName(name = '') {
+  const text = normalizeGateTitle(name);
+  if (/google search console|search console|gsc/.test(text)) return 'google_search_console';
+  if (/google ads|гугл ads|google реклама/.test(text)) return 'google_ads';
+  if (/google analytics|ga4|гугл аналитик/.test(text)) return 'google_analytics';
+  if (/pagespeed|page speed|cwv/.test(text)) return 'google_pagespeed';
+  if (/wordstat|вордстат/.test(text)) return 'yandex_wordstat';
+  if (/яндекс вебмастер|webmaster|вебмастер/.test(text)) return 'yandex_webmaster';
+  if (/яндекс директ|direct/.test(text)) return 'yandex_direct';
+  if (/яндекс метрик|metrika|метрик/.test(text)) return 'yandex_metrika';
+  if (/яндекс бизнес|business/.test(text)) return 'yandex_business';
+  return '';
+}
+
+function serviceLinkByName(name = '') {
+  const key = toolKeyByName(name);
+  return key ? SERVICE_LINKS[key] : null;
+}
+
+function instructionStatusOptionsHtml(value = '') {
+  return INSTRUCTION_STATUS_OPTIONS.map(([key, label]) => `<option value="${escapeAttr(key)}" ${value === key ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('');
+}
+
+function instructionStatusLabel(value = '') {
+  const found = INSTRUCTION_STATUS_OPTIONS.find(([key]) => key === value);
+  return found?.[1] || value || 'Не заполнено';
+}
+
 function normalizeUrlValue(url = '') {
   return String(url || '').trim();
 }
@@ -875,6 +934,8 @@ function prepareSystemCards(workspace) {
   ensureUiState(workspace);
   workspace.gates.forEach(gate => {
     gate.cards.forEach(card => {
+      card.gateId = gate.id;
+      card.gateTitle = gate.title;
       if (isToolStatusCard(card)) {
         ensureToolItems(card);
         card.evidenceFields = [];
@@ -882,6 +943,7 @@ function prepareSystemCards(workspace) {
       }
       if (isCurrentResultsCard(card)) ensureCurrentResults(card);
       ensureGate1TypedData(card);
+      ensureInstructionWorkspace(card);
       if (isStartupSummaryCard(card)) card.isAutoSummary = true;
     });
   });
@@ -1052,6 +1114,16 @@ function recalculateStatusForCard(card, workspace = state) {
       return;
     }
   }
+  const instructionRows = ensureInstructionWorkspace(card);
+  if (instructionRows.length) {
+    const touchedRows = instructionRows.filter(row => String(row.link || '').trim() || row.status || String(row.result || '').trim() || String(row.comment || '').trim());
+    const completeRows = instructionRows.filter(row => row.status && String(row.result || '').trim());
+    const evidenceValues = ensureEvidenceFields(card).map(field => String(getEvidenceValue(field.key, workspace) || '').trim()).filter(Boolean);
+    if (!touchedRows.length && !evidenceValues.length) card.status = 'not_started';
+    else if (completeRows.length === instructionRows.length) card.status = 'ready';
+    else card.status = 'in_progress';
+    return;
+  }
   const values = textValuesForStatus(card, workspace).map(v => String(v || '').trim());
   const nonEmpty = values.filter(Boolean);
   if (!nonEmpty.length) card.status = 'not_started';
@@ -1165,9 +1237,10 @@ function formatStructuredEvidencePlain(card, workspace = state) {
   if (isStartupSummaryCard(card)) {
     return startupSummaryRows(workspace).map(row => `${row.name}: ${row.implemented ? 'Да' : 'Нет'}`).join('\n');
   }
+  const instructionPart = instructionWorkspacePlain(card);
   const fields = ensureEvidenceFields(card);
-  if (fields.length) return fields.map(field => `${field.label}: ${getEvidenceValue(field.key, workspace)}`).join('\n');
-  return card.evidence || '';
+  const evidencePart = fields.length ? fields.map(field => `${field.label}: ${getEvidenceValue(field.key, workspace)}`).join('\n') : (card.evidence || '');
+  return [instructionPart, evidencePart].filter(Boolean).join('\n\n');
 }
 
 function normalizeAspectKey(label = '') {
@@ -1532,10 +1605,177 @@ function cardUserFieldsHtml(c) {
   if (isToolStatusCard(c)) return `<div class="field-row"><span>Статусы элементов</span>${toolItemsHtml(c)}</div>`;
   if (isStartupSummaryCard(c)) return `<div class="field-row"><span>Автоматическая сводка</span>${startupSummaryHtml()}</div>`;
   if (getGate1CardMode(c)) return gate1TypedFieldsHtml(c);
-  return `<div class="field-row"><span>Доказательство</span>${evidenceStructuredHtml(c)}</div>`;
+  return `<div class="field-row"><span>Рабочая фиксация</span>${instructionWorkspaceHtml(c)}${evidenceStructuredHtml(c) ? `<div class="evidence-subblock"><div class="workspace-unit-title">Структурированное доказательство</div>${evidenceStructuredHtml(c)}</div>` : ''}</div>`;
 }
 
 
+
+
+function extractInstructionSection(text = '', title = '') {
+  const re = new RegExp(title + '\\s*:\\s*([\\s\\S]*?)(?=\\n\\s*(Инструменты|Отвечает за|Совет|Инструкция|Что должно быть на выходе|Время|Идеал|Суть)\\s*:|$)', 'i');
+  const match = String(text || '').match(re);
+  return match ? match[1].trim() : '';
+}
+
+function splitInstructionActions(text = '') {
+  const source = String(text || '').replace(/\r/g, '');
+  const lines = source.split('\n').map(line => line.trim()).filter(Boolean);
+  const numbered = lines
+    .filter(line => /^\d+[.)]\s+/.test(line))
+    .map(line => line.replace(/^\d+[.)]\s+/, '').trim());
+  if (numbered.length) return numbered;
+  return lines
+    .filter(line => /→|провер|зафикс|подключ|собрать|заполн|указать|выбрать|создать|подготов|перенест|сверить|настроить|открыть/i.test(line))
+    .slice(0, 8);
+}
+
+function extractToolsFromInstruction(text = '') {
+  const full = String(text || '');
+  const section = extractInstructionSection(full, 'Инструменты') || '';
+  const source = section || full;
+  const variants = [
+    ['Яндекс Вебмастер', /яндекс\s+вебмастер|webmaster/i],
+    ['Google Search Console', /google\s+search\s+console|search\s+console|gsc/i],
+    ['Яндекс Директ', /яндекс\s+директ|директ/i],
+    ['Google Ads', /google\s+ads|гугл\s+ads/i],
+    ['Яндекс Метрика', /яндекс\s+метрик|метрик[аи]/i],
+    ['Google Analytics', /google\s+analytics|ga4/i],
+    ['Яндекс Wordstat', /wordstat|вордстат/i],
+    ['PageSpeed Insights', /pagespeed|page\s*speed|cwv/i],
+    ['CRM', /\bcrm\b|црм/i],
+    ['Формы', /форм[ыа]/i],
+    ['Коллтрекинг', /коллтрекинг|calltracking/i],
+    ['UTM', /\butm\b/i]
+  ];
+  const found = [];
+  variants.forEach(([name, re]) => { if (re.test(source) && !found.includes(name)) found.push(name); });
+  return found;
+}
+
+function inferStatusKindFromText(text = '') {
+  const value = normalizeGateTitle(text);
+  if (/индекс/.test(value)) return 'indexed';
+  if (/размещ|публикац|баннер|объявлен/.test(value)) return 'placed';
+  if (/заполн|подключ|настро|utm|crm|форм/.test(value)) return 'filled';
+  return 'works';
+}
+
+function createInstructionRow(card, partial = {}) {
+  const label = partial.element || partial.tool || card?.title || 'Рабочий элемент';
+  const service = partial.serviceUrl ? { url: partial.serviceUrl, label: partial.serviceLabel || partial.tool || 'Сервис' } : serviceLinkByName(label);
+  return {
+    id: partial.id || makeId('instr'),
+    element: label,
+    tool: partial.tool || '',
+    serviceUrl: service?.url || '',
+    serviceLabel: service?.label || partial.tool || '',
+    link: partial.link || '',
+    statusKind: partial.statusKind || inferStatusKindFromText(label + ' ' + (card?.title || '')),
+    status: partial.status || '',
+    result: partial.result || '',
+    comment: partial.comment || ''
+  };
+}
+
+function inferInstructionRows(card) {
+  const instruction = card?.instruction || '';
+  const rows = [];
+  const tools = extractToolsFromInstruction(instruction);
+  tools.forEach(tool => rows.push(createInstructionRow(card, { element: tool, tool })));
+
+  const instructionPart = extractInstructionSection(instruction, 'Инструкция') || instruction;
+  splitInstructionActions(instructionPart).forEach(action => {
+    const toolMatch = action.split('→')[0]?.trim();
+    const tool = serviceLinkByName(toolMatch) ? toolMatch : '';
+    const element = truncateText(action, 120);
+    rows.push(createInstructionRow(card, { element, tool, statusKind: inferStatusKindFromText(action) }));
+  });
+
+  const output = extractInstructionSection(instruction, 'Что должно быть на выходе');
+  if (output) rows.push(createInstructionRow(card, { element: 'Итоговый результат блока', result: '', comment: truncateText(output, 120), statusKind: 'filled' }));
+
+  if (!rows.length) rows.push(createInstructionRow(card, { element: card?.title || 'Рабочий результат', statusKind: 'filled' }));
+
+  const unique = [];
+  const seen = new Set();
+  rows.forEach(row => {
+    const key = normalizeAspectKey([row.element, row.tool].filter(Boolean).join(' '));
+    if (seen.has(key)) return;
+    seen.add(key);
+    row.key = key;
+    unique.push(row);
+  });
+  return unique.slice(0, 12);
+}
+
+function isSystemSpecialCard(card) {
+  return isProjectPassportCard(card) || isCurrentResultsCard(card) || isToolStatusCard(card) || isStartupSummaryCard(card) || Boolean(getGate1CardMode(card));
+}
+
+function ensureInstructionWorkspace(card) {
+  if (!card || isSystemSpecialCard(card)) return [];
+  const inferred = inferInstructionRows(card);
+  const existing = Array.isArray(card.instructionRows) ? new Map(card.instructionRows.map(row => [row.key || row.id || normalizeAspectKey(row.element), row])) : new Map();
+  card.instructionRows = inferred.map(row => {
+    const prev = existing.get(row.key) || {};
+    return {
+      ...row,
+      id: prev.id || row.id,
+      link: prev.link || row.link || '',
+      status: prev.status || row.status || '',
+      result: prev.result || row.result || '',
+      comment: prev.comment || row.comment || ''
+    };
+  });
+  return card.instructionRows;
+}
+
+function instructionWorkspacePlain(card) {
+  const rows = ensureInstructionWorkspace(card);
+  if (!rows.length) return '';
+  return rows.map(row => [
+    row.element,
+    row.tool ? `инструмент: ${row.tool}` : '',
+    row.serviceUrl ? `сервис: ${row.serviceUrl}` : '',
+    row.link ? `ссылка: ${row.link}` : '',
+    row.status ? `статус: ${instructionStatusLabel(row.status)}` : '',
+    row.result ? `результат: ${row.result}` : '',
+    row.comment ? `комментарий: ${row.comment}` : ''
+  ].filter(Boolean).join(' | ')).join('\n');
+}
+
+function instructionWorkspaceHtml(card) {
+  const rows = ensureInstructionWorkspace(card);
+  if (!rows.length) return '';
+  return `<div class="instruction-workspace">
+    <div class="workspace-unit-title">Рабочие элементы из инструкции</div>
+    <table class="mini-table typed-table instruction-table">
+      <thead><tr><th>Элемент</th><th>Сервис</th><th>Ссылка / отчёт</th><th>Статус</th><th>Результат</th><th>Комментарий</th></tr></thead>
+      <tbody>${rows.map((row, index) => `<tr>
+        <td>${escapeHtml(row.element || '')}${row.tool ? `<small>${escapeHtml(row.tool)}</small>` : ''}</td>
+        <td>${row.serviceUrl ? `<a href="${escapeAttr(row.serviceUrl)}" target="_blank" rel="noopener">${escapeHtml(row.serviceLabel || 'Открыть')}</a>` : '<span class="muted">Не требуется</span>'}</td>
+        <td><input data-instruction-row-card-id="${escapeAttr(card.id)}" data-instruction-row-index="${index}" data-instruction-row-field="link" value="${escapeAttr(row.link || '')}" placeholder="ссылка, если нужна" /></td>
+        <td><select data-instruction-row-card-id="${escapeAttr(card.id)}" data-instruction-row-index="${index}" data-instruction-row-field="status">${instructionStatusOptionsHtml(row.status)}</select></td>
+        <td><input data-instruction-row-card-id="${escapeAttr(card.id)}" data-instruction-row-index="${index}" data-instruction-row-field="result" value="${escapeAttr(row.result || '')}" placeholder="результат проверки" /></td>
+        <td><input data-instruction-row-card-id="${escapeAttr(card.id)}" data-instruction-row-index="${index}" data-instruction-row-field="comment" value="${escapeAttr(row.comment || '')}" placeholder="краткое уточнение" /></td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function updateInstructionRow(e) {
+  const card = findCard(e.target.dataset.instructionRowCardId);
+  if (!card) return;
+  const index = Number(e.target.dataset.instructionRowIndex);
+  const field = e.target.dataset.instructionRowField;
+  const rows = ensureInstructionWorkspace(card);
+  if (!rows[index]) return;
+  rows[index][field] = e.target.value;
+  if (field === 'link') addOrUpdateProjectLink(e.target.value, { comment: rows[index].comment, status: instructionStatusLabel(rows[index].status), source: rows[index].tool });
+  recalculateStatusForCard(card);
+  flashSaving();
+  if (field === 'status') renderGate();
+}
 
 function relevantToolsForCard(card) {
   const mode = getGate1CardMode(card);
@@ -1571,19 +1811,17 @@ function toolWorkspaceHtml(card) {
   if (!tools.length) return '';
   const workspace = ensureToolWorkspace(card);
   return `<div class="tool-workspace">
-    <div class="tool-workspace-title">Рабочие пространства включённых инструментов</div>
-    <table class="mini-table typed-table">
-      <thead><tr><th>Инструмент</th><th>Статус проверки</th><th>Данные / ссылка на отчёт</th><th>Комментарий</th></tr></thead>
+    <div class="tool-workspace-title">Рабочее пространство включённых инструментов</div>
+    <table class="mini-table typed-table tool-workspace-table">
+      <thead><tr><th>Инструмент</th><th>Сервис</th><th>Статус</th><th>Ссылка / данные / результат</th><th>Комментарий</th></tr></thead>
       <tbody>${tools.map(tool => {
         const row = workspace[tool.key] || {};
+        const service = serviceLinkByToolKey(tool.key);
         return `<tr>
           <td>${escapeHtml(tool.name)}</td>
-          <td><select data-tool-workspace-card-id="${escapeAttr(card.id)}" data-tool-workspace-key="${escapeAttr(tool.key)}" data-tool-workspace-field="status">
-            <option value="" ${!row.status ? 'selected' : ''}>Не заполнено</option>
-            <option value="ok" ${row.status === 'ok' ? 'selected' : ''}>Проверено</option>
-            <option value="problem" ${row.status === 'problem' ? 'selected' : ''}>Есть проблема</option>
-          </select></td>
-          <td><input data-tool-workspace-card-id="${escapeAttr(card.id)}" data-tool-workspace-key="${escapeAttr(tool.key)}" data-tool-workspace-field="value" value="${escapeAttr(row.value || '')}" placeholder="данные, отчёт или ссылка" /></td>
+          <td>${service ? `<a href="${escapeAttr(service.url)}" target="_blank" rel="noopener">${escapeHtml(service.label)}</a>` : '<span class="muted">Внутренний источник</span>'}</td>
+          <td><select data-tool-workspace-card-id="${escapeAttr(card.id)}" data-tool-workspace-key="${escapeAttr(tool.key)}" data-tool-workspace-field="status">${instructionStatusOptionsHtml(row.status || '')}</select></td>
+          <td><input data-tool-workspace-card-id="${escapeAttr(card.id)}" data-tool-workspace-key="${escapeAttr(tool.key)}" data-tool-workspace-field="value" value="${escapeAttr(row.value || '')}" placeholder="ссылка на отчёт, данные или результат проверки" /></td>
           <td><input data-tool-workspace-card-id="${escapeAttr(card.id)}" data-tool-workspace-key="${escapeAttr(tool.key)}" data-tool-workspace-field="comment" value="${escapeAttr(row.comment || '')}" placeholder="краткое уточнение" /></td>
         </tr>`;
       }).join('')}</tbody>
@@ -1803,6 +2041,10 @@ function bindCardInputs() {
   document.querySelectorAll('[data-current-result-card-id]').forEach(input => {
     input.addEventListener('input', updateCurrentResultFromInput);
     input.addEventListener('change', updateCurrentResultFromInput);
+  });
+  document.querySelectorAll('[data-instruction-row-card-id]').forEach(input => {
+    input.addEventListener('input', updateInstructionRow);
+    input.addEventListener('change', updateInstructionRow);
   });
   bindGate1TypedInputs();
 }
