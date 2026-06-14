@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.8';
+const PLATFORM_VERSION = 'v0.9';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -32,7 +32,9 @@ const els = {
   saveStatus: document.getElementById('saveStatus'),
   autosaveDot: document.getElementById('autosaveDot'),
   brandTitle: document.getElementById('brandTitle'),
-  brandMark: document.getElementById('brandMark')
+  brandMark: document.getElementById('brandMark'),
+  linkBankBtn: document.getElementById('linkBankBtn'),
+  toolsBtn: document.getElementById('toolsBtn')
 };
 
 function makeId(prefix = 'id') {
@@ -95,6 +97,8 @@ function migrateWorkspace(workspace, projectId) {
   workspace.project = workspace.project || {};
   workspace.gates = workspace.gates || structuredClone(window.GURU_SEED.gates);
   workspace.metrics = workspace.metrics || [];
+  workspace.linkBank = Array.isArray(workspace.linkBank) ? workspace.linkBank : [];
+  workspace.tools = normalizeProjectTools(workspace.tools);
   if (meta) {
     workspace.project.name = workspace.project.name || meta.name;
     workspace.project.description = workspace.project.description || meta.description;
@@ -111,6 +115,7 @@ function migrateWorkspace(workspace, projectId) {
   }
   prepareSystemCards(workspace);
   initializeEvidenceStructure(workspace);
+  harvestKnownLinks(workspace);
   syncProjectPassportCard(workspace);
   recalculateAllStatuses(workspace);
   workspace.schemaVersion = PLATFORM_VERSION;
@@ -133,8 +138,11 @@ function createFreshWorkspace(meta = {}) {
   fresh.project.afterOffer = meta.afterOffer || '';
   fresh.project.afterDescription = meta.afterDescription || '';
   fresh.metrics = [];
+  fresh.linkBank = [];
+  fresh.tools = defaultProjectTools();
   prepareSystemCards(fresh);
   initializeEvidenceStructure(fresh);
+  harvestKnownLinks(fresh);
   syncProjectPassportCard(fresh);
   return fresh;
 }
@@ -142,6 +150,7 @@ function createFreshWorkspace(meta = {}) {
 function saveState() {
   if (!state || !activeProjectId) return;
   syncProjectPassportCard(state);
+  harvestKnownLinks(state);
   recalculateAllStatuses(state);
   syncEvidenceTexts();
   state.updatedAt = new Date().toISOString();
@@ -420,6 +429,147 @@ const GATE1_LINK_STATUS_OPTIONS = {
   filled: ['Заполнена', 'Не заполнена']
 };
 
+const DEFAULT_PROJECT_TOOLS = [
+  { key: 'yandex_webmaster', group: 'SEO и индексация', name: 'Яндекс Вебмастер', enabled: true },
+  { key: 'google_search_console', group: 'SEO и индексация', name: 'Google Search Console', enabled: false },
+  { key: 'yandex_direct', group: 'Реклама', name: 'Яндекс Директ', enabled: true },
+  { key: 'google_ads', group: 'Реклама', name: 'Google Ads', enabled: false },
+  { key: 'yandex_metrika', group: 'Аналитика', name: 'Яндекс Метрика', enabled: true },
+  { key: 'google_analytics', group: 'Аналитика', name: 'Google Analytics', enabled: false },
+  { key: 'crm', group: 'CRM и лиды', name: 'CRM', enabled: true },
+  { key: 'forms', group: 'CRM и лиды', name: 'Формы', enabled: true },
+  { key: 'calltracking', group: 'CRM и лиды', name: 'Коллтрекинг', enabled: false }
+];
+
+function defaultProjectTools() {
+  return DEFAULT_PROJECT_TOOLS.map(tool => ({ ...tool }));
+}
+
+
+function normalizeProjectTools(tools) {
+  const defaults = defaultProjectTools();
+  const saved = Array.isArray(tools) ? new Map(tools.map(tool => [tool.key, tool])) : new Map();
+  return defaults.map(tool => {
+    const prev = saved.get(tool.key) || {};
+    return { ...tool, enabled: typeof prev.enabled === 'boolean' ? prev.enabled : tool.enabled, comment: prev.comment || '' };
+  });
+}
+
+function enabledTools() {
+  return (state?.tools || []).filter(tool => tool.enabled);
+}
+
+function toolOptionsHtml(value = '', allowEmpty = true) {
+  const tools = enabledTools();
+  return `${allowEmpty ? '<option value="">Источник не выбран</option>' : ''}${tools.map(tool => `<option value="${escapeAttr(tool.key)}" ${value === tool.key ? 'selected' : ''}>${escapeHtml(tool.name)}</option>`).join('')}`;
+}
+
+function toolNameByKey(key) {
+  const tool = (state?.tools || []).find(item => item.key === key);
+  return tool?.name || key || '';
+}
+
+function normalizeUrlValue(url = '') {
+  return String(url || '').trim();
+}
+
+function linkStatusToSeoPatch(status = '') {
+  if (status === 'Работает') return { availability: 'works' };
+  if (status === 'Не работает') return { availability: 'not_works', errors: 'has_errors' };
+  if (status === 'Индексирована') return { indexation: 'indexed' };
+  if (status === 'Не индексирована') return { indexation: 'not_indexed' };
+  if (status === 'Размещена' || status === 'Заполнена') return { visibility: 'visible' };
+  if (status === 'Не размещена' || status === 'Не заполнена') return { visibility: 'not_visible' };
+  return {};
+}
+
+function defaultSeoStatus() {
+  return { availability: '', indexation: '', visibility: '', errors: '' };
+}
+
+function addOrUpdateProjectLink(rawUrl, patch = {}, workspace = state) {
+  if (!workspace) return null;
+  const url = normalizeUrlValue(rawUrl);
+  if (!url) return null;
+  workspace.linkBank = Array.isArray(workspace.linkBank) ? workspace.linkBank : [];
+  let link = workspace.linkBank.find(item => normalizeUrlValue(item.url) === url);
+  if (!link) {
+    link = { id: makeId('link'), url, comment: '', seo: defaultSeoStatus(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    workspace.linkBank.push(link);
+  }
+  if (patch.comment !== undefined && patch.comment !== '') link.comment = patch.comment;
+  if (patch.source !== undefined && patch.source !== '') link.source = patch.source;
+  if (patch.status !== undefined && patch.status !== '') link.lastStatus = patch.status;
+  link.seo = { ...defaultSeoStatus(), ...(link.seo || {}), ...(patch.seo || {}), ...linkStatusToSeoPatch(patch.status) };
+  link.updatedAt = new Date().toISOString();
+  return link;
+}
+
+function removeProjectLink(url, workspace = state) {
+  if (!workspace?.linkBank) return;
+  const target = normalizeUrlValue(url);
+  workspace.linkBank = workspace.linkBank.filter(link => normalizeUrlValue(link.url) !== target);
+}
+
+function getProjectLink(url, workspace = state) {
+  const target = normalizeUrlValue(url);
+  return (workspace?.linkBank || []).find(link => normalizeUrlValue(link.url) === target) || null;
+}
+
+function linkSeoScore(link) {
+  const seo = link?.seo || {};
+  const problems = [seo.availability === 'not_works', seo.indexation === 'not_indexed', seo.visibility === 'not_visible', seo.errors === 'has_errors'].filter(Boolean).length;
+  const positives = [seo.availability === 'works', seo.indexation === 'indexed', seo.visibility === 'visible', seo.errors === 'no_errors'].filter(Boolean).length;
+  if (problems) return { tone: 'bad', label: 'Есть проблема' };
+  if (positives >= 3) return { tone: 'good', label: 'SEO OK' };
+  if (positives) return { tone: 'warn', label: 'Частично OK' };
+  return { tone: 'neutral', label: 'SEO не проверено' };
+}
+
+function seoIndicatorHtml(url) {
+  const link = getProjectLink(url);
+  if (!link) return '<span class="seo-indicator neutral">SEO не проверено</span>';
+  const score = linkSeoScore(link);
+  const seo = link.seo || {};
+  const title = [
+    seo.availability ? `Доступность: ${seoLabel('availability', seo.availability)}` : '',
+    seo.indexation ? `Индексация: ${seoLabel('indexation', seo.indexation)}` : '',
+    seo.visibility ? `SEO-видимость: ${seoLabel('visibility', seo.visibility)}` : '',
+    seo.errors ? `Ошибки: ${seoLabel('errors', seo.errors)}` : ''
+  ].filter(Boolean).join(' · ');
+  return `<span class="seo-indicator ${score.tone}" title="${escapeAttr(title || 'SEO-статусы не заполнены')}">${escapeHtml(score.label)}</span>`;
+}
+
+function seoLabel(group, value) {
+  const map = {
+    availability: { works: 'Работает', not_works: 'Не работает' },
+    indexation: { indexed: 'Индексирована', not_indexed: 'Не индексирована' },
+    visibility: { visible: 'Видна', not_visible: 'Не видна' },
+    errors: { no_errors: 'Нет', has_errors: 'Есть' }
+  };
+  return map[group]?.[value] || value || '';
+}
+
+function projectUrlDatalistHtml() {
+  const links = state?.linkBank || [];
+  if (!links.length) return '';
+  return `<datalist id="projectUrlOptions">${links.map(link => `<option value="${escapeAttr(link.url)}">${escapeHtml(link.comment || link.url)}</option>`).join('')}</datalist>`;
+}
+
+function harvestKnownLinks(workspace = state) {
+  if (!workspace?.gates) return;
+  workspace.linkBank = Array.isArray(workspace.linkBank) ? workspace.linkBank : [];
+  workspace.gates.forEach(gate => gate.cards.forEach(card => {
+    if (Array.isArray(card.linkRows)) {
+      card.linkRows.forEach(row => addOrUpdateProjectLink(row.url, { status: row.status, comment: row.comment, source: row.source }, workspace));
+    }
+    if (Array.isArray(card.pageRows)) {
+      card.pageRows.forEach(row => addOrUpdateProjectLink(row.url, { status: row.urlStatus, comment: row.comment, source: row.source }, workspace));
+    }
+  }));
+}
+
+
 const GATE1_LINK_STATUS_BY_TITLE = [
   { match: /robots|sitemap|редирект|ssl|cwv|pagespeed|мета|meta|изображения|404|thank you|cookie|футер|согласие/i, type: 'works' },
   { match: /индекс|яндекс вебмастер/i, type: 'indexed' },
@@ -488,7 +638,7 @@ function ensureGate1TypedData(card) {
   if (!mode) return;
   if (mode === 'links') {
     if (!Array.isArray(card.linkRows) || !card.linkRows.length) {
-      card.linkRows = [{ url: '', status: '', comment: '' }];
+      card.linkRows = [{ url: '', status: '', source: '', comment: '' }];
     }
   }
   if (mode === 'comparison') {
@@ -521,6 +671,7 @@ function createPageStructureRow(name = 'Страница', fixed = false) {
     offer: '',
     ctaMode: 'needed',
     finalCta: '',
+    source: '',
     comment: ''
   };
 }
@@ -538,6 +689,7 @@ function normalizePageStructureRow(row, card) {
   row.offer = row.offer || '';
   row.ctaMode = row.ctaMode || 'needed';
   row.finalCta = row.finalCta || '';
+  row.source = row.source || '';
   row.comment = row.comment || '';
   return row;
 }
@@ -570,6 +722,7 @@ function pageStructureStatus(row) {
   const checks = [
     Boolean(String(row.url || '').trim()),
     Boolean(row.urlStatus),
+    enabledTools().length ? Boolean(row.source) : true,
     evaluateLength(row.h1, 20, 70).ok,
     evaluateLength(row.title, 30, 70).ok,
     evaluateLength(row.description, 70, 180).ok,
@@ -586,7 +739,7 @@ function typedDataPlain(card) {
   const mode = getGate1CardMode(card);
   ensureGate1TypedData(card);
   if (mode === 'links') {
-    return (card.linkRows || []).map((row, i) => `${i + 1}. ${row.url || 'URL не указан'} — ${row.status || 'статус не выбран'}${row.comment ? ` — ${row.comment}` : ''}`).join('\n');
+    return (card.linkRows || []).map((row, i) => `${i + 1}. ${row.url || 'URL не указан'} — ${row.status || 'статус не выбран'}${row.source ? ` / источник: ${toolNameByKey(row.source)}` : ''}${row.comment ? ` — ${row.comment}` : ''}`).join('\n');
   }
   if (mode === 'comparison') {
     return (card.comparisonRows || []).map(row => {
@@ -595,7 +748,7 @@ function typedDataPlain(card) {
     }).join('\n');
   }
   if (mode === 'page_structure') {
-    return (card.pageRows || []).map(row => `${row.name}: ${row.url || 'URL не указан'} / ${row.urlStatus || 'статус не выбран'}\nH1: ${row.h1 || ''}\nTitle: ${row.title || ''}\nDescription: ${row.description || ''}\nСниппет: ${snippetForPage(row)}\nФинальный CTA: ${row.ctaMode === 'not_needed' ? 'не нужен' : (row.finalCta || 'не заполнен')}\nКомментарий: ${row.comment || ''}`).join('\n\n');
+    return (card.pageRows || []).map(row => `${row.name}: ${row.url || 'URL не указан'} / ${row.urlStatus || 'статус не выбран'}${row.source ? ` / источник: ${toolNameByKey(row.source)}` : ''}\nH1: ${row.h1 || ''}\nTitle: ${row.title || ''}\nDescription: ${row.description || ''}\nСниппет: ${snippetForPage(row)}\nФинальный CTA: ${row.ctaMode === 'not_needed' ? 'не нужен' : (row.finalCta || 'не заполнен')}\nКомментарий: ${row.comment || ''}`).join('\n\n');
   }
   return '';
 }
@@ -875,8 +1028,9 @@ function recalculateStatusForCard(card, workspace = state) {
     ensureGate1TypedData(card);
     if (gate1Mode === 'links') {
       const rows = card.linkRows || [];
-      const touched = rows.filter(row => String(row.url || '').trim() || row.status || String(row.comment || '').trim()).length;
-      const complete = rows.filter(row => String(row.url || '').trim() && row.status).length;
+      const needsSource = enabledTools().length > 0;
+      const touched = rows.filter(row => String(row.url || '').trim() || row.status || row.source || String(row.comment || '').trim()).length;
+      const complete = rows.filter(row => String(row.url || '').trim() && row.status && (!needsSource || row.source)).length;
       if (!touched) card.status = 'not_started';
       else if (complete === rows.length) card.status = 'ready';
       else card.status = 'in_progress';
@@ -1165,6 +1319,8 @@ function render() {
   if (activeView === 'metrics') renderMetrics();
   if (activeView === 'scheme') renderScheme();
   if (activeView === 'evidence') renderEvidenceIndex();
+  if (activeView === 'linkBank') renderLinkBank();
+  if (activeView === 'tools') renderTools();
   if (activeView === 'gate') renderGate();
 }
 
@@ -1403,17 +1559,24 @@ function linkStatusOptionsHtml(type, value) {
 function gate1LinkRowsHtml(card) {
   const type = getGate1LinkStatusType(card) || 'works';
   const rows = card.linkRows || [];
+  const toolRequired = enabledTools().length > 0;
   return `<div class="typed-block link-rows-block">
-    <table class="mini-table typed-table">
-      <thead><tr><th>Ссылка</th><th>Статус</th><th>Комментарий</th><th></th></tr></thead>
+    ${projectUrlDatalistHtml()}
+    <table class="mini-table typed-table link-bank-table">
+      <thead><tr><th>Ссылка</th><th>Источник</th><th>Статус</th><th>SEO</th><th>Комментарий</th><th></th></tr></thead>
       <tbody>${rows.map((row, index) => `<tr>
-        <td><input data-gate1-link-card-id="${escapeAttr(card.id)}" data-gate1-link-index="${index}" data-gate1-link-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" /></td>
+        <td><input list="projectUrlOptions" data-gate1-link-card-id="${escapeAttr(card.id)}" data-gate1-link-index="${index}" data-gate1-link-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" /></td>
+        <td><select data-gate1-link-card-id="${escapeAttr(card.id)}" data-gate1-link-index="${index}" data-gate1-link-field="source">${toolOptionsHtml(row.source || '', true)}</select>${toolRequired && !row.source ? '<div class="field-hint warning">Выберите источник</div>' : ''}</td>
         <td><select data-gate1-link-card-id="${escapeAttr(card.id)}" data-gate1-link-index="${index}" data-gate1-link-field="status">${linkStatusOptionsHtml(type, row.status)}</select></td>
+        <td>${seoIndicatorHtml(row.url)}</td>
         <td><input data-gate1-link-card-id="${escapeAttr(card.id)}" data-gate1-link-index="${index}" data-gate1-link-field="comment" value="${escapeAttr(row.comment || '')}" placeholder="краткое уточнение" /></td>
         <td><button class="small-btn danger-mini" data-remove-gate1-link="${escapeAttr(card.id)}" data-index="${index}" ${rows.length <= 1 ? 'disabled' : ''}>×</button></td>
       </tr>`).join('')}</tbody>
     </table>
-    <button class="small-btn add-inline-btn" data-add-gate1-link="${escapeAttr(card.id)}">+ Добавить ссылку</button>
+    <div class="typed-actions">
+      <button class="small-btn add-inline-btn" data-add-gate1-link="${escapeAttr(card.id)}">+ Добавить ссылку</button>
+      <span class="muted mini-note">Ссылки сохраняются в общей базе проекта и доступны в других блоках.</span>
+    </div>
   </div>`;
 }
 
@@ -1461,8 +1624,9 @@ function pageStructureCardHtml(card, row, pageIndex, repeatable) {
       ${repeatable ? `<button class="small-btn danger-mini" data-remove-gate1-page="${escapeAttr(card.id)}" data-index="${pageIndex}" ${rowsSafeLength(card.pageRows) <= 1 ? 'disabled' : ''}>×</button>` : ''}
     </div>
     <div class="page-grid">
-      <label>Ссылка<input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" /></label>
-      <label>Статус URL<select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="urlStatus">${linkStatusOptionsHtml('works', row.urlStatus)}</select></label>
+      <label>Ссылка<input list="projectUrlOptions" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
+      <label>Источник<select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="source">${toolOptionsHtml(row.source || '', true)}</select></label>
+      <label>Статус URL<select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="urlStatus">${linkStatusOptionsHtml('works', row.urlStatus)}</select>${seoIndicatorHtml(row.url)}</label>
       <label>H1 <small>20–70 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="h1" value="${escapeAttr(row.h1 || '')}" />${pageFieldStatusHtml(row.h1, 20, 70)}</label>
       <label>Title <small>30–70 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="title" value="${escapeAttr(row.title || '')}" />${pageFieldStatusHtml(row.title, 30, 70)}</label>
       <label class="full">Description <small>70–180 знаков</small><textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="description" rows="2">${escapeHtml(row.description || '')}</textarea>${pageFieldStatusHtml(row.description, 70, 180)}</label>
@@ -1626,15 +1790,17 @@ function updateGate1LinkRow(e) {
   const field = e.target.dataset.gate1LinkField;
   if (!card.linkRows[index]) return;
   card.linkRows[index][field] = e.target.value;
+  addOrUpdateProjectLink(card.linkRows[index].url, { status: card.linkRows[index].status, comment: card.linkRows[index].comment, source: card.linkRows[index].source });
   recalculateStatusForCard(card);
   flashSaving();
+  if (['url','status','source'].includes(field)) renderGate();
 }
 
 function addGate1LinkRow(cardId) {
   const card = findCard(cardId);
   if (!card) return;
   ensureGate1TypedData(card);
-  card.linkRows.push({ url: '', status: '', comment: '' });
+  card.linkRows.push({ url: '', status: '', source: '', comment: '' });
   flashSaving();
   renderGate();
 }
@@ -1671,9 +1837,10 @@ function updateGate1PageRow(e) {
   const field = e.target.dataset.gate1PageField;
   if (!card.pageRows[index]) return;
   card.pageRows[index][field] = e.target.value;
+  addOrUpdateProjectLink(card.pageRows[index].url, { status: card.pageRows[index].urlStatus, comment: card.pageRows[index].comment, source: card.pageRows[index].source });
   recalculateStatusForCard(card);
   flashSaving();
-  if (['h1','title','description','body','offer','ctaMode','finalCta'].includes(field)) renderGate();
+  if (['url','urlStatus','source','h1','title','description','body','offer','ctaMode','finalCta'].includes(field)) renderGate();
 }
 
 function addGate1PageRow(cardId) {
@@ -1725,6 +1892,130 @@ function renderEvidenceIndex() {
     input.addEventListener('input', updateEvidenceFromInput);
     input.addEventListener('change', updateEvidenceFromInput);
   });
+}
+
+
+function renderLinkBank() {
+  activeView = 'linkBank';
+  setToolbarVisible(false);
+  harvestKnownLinks(state);
+  els.pageTitle.textContent = 'Ссылки проекта';
+  const links = state.linkBank || [];
+  els.contentArea.innerHTML = `
+    <div class="panel link-bank-panel">
+      <div class="panel-head">
+        <div>
+          <h2>Единая база ссылок проекта</h2>
+          <p class="muted">Все URL, введённые в Gate 1, сохраняются здесь и предлагаются в следующих блоках.</p>
+        </div>
+        <button class="btn primary" id="addProjectLinkBtn">+ Добавить ссылку</button>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table link-bank-table">
+          <thead><tr><th>URL</th><th>Доступность</th><th>Индексация</th><th>SEO-видимость</th><th>Ошибки</th><th>Комментарий</th><th></th></tr></thead>
+          <tbody>${links.map((link, index) => linkBankRowHtml(link, index)).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+  document.getElementById('addProjectLinkBtn')?.addEventListener('click', () => {
+    state.linkBank = state.linkBank || [];
+    state.linkBank.push({ id: makeId('link'), url: '', comment: '', seo: defaultSeoStatus(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    flashSaving();
+    renderLinkBank();
+  });
+  document.querySelectorAll('[data-link-bank-index]').forEach(input => {
+    input.addEventListener('input', updateLinkBankFromInput);
+    input.addEventListener('change', updateLinkBankFromInput);
+  });
+  document.querySelectorAll('[data-remove-link-bank]').forEach(btn => btn.addEventListener('click', () => {
+    const index = Number(btn.dataset.removeLinkBank);
+    state.linkBank.splice(index, 1);
+    flashSaving();
+    renderLinkBank();
+  }));
+}
+
+function linkBankRowHtml(link, index) {
+  const seo = { ...defaultSeoStatus(), ...(link.seo || {}) };
+  return `<tr>
+    <td><input data-link-bank-index="${index}" data-link-bank-field="url" value="${escapeAttr(link.url || '')}" placeholder="https://" /></td>
+    <td><select data-link-bank-index="${index}" data-link-bank-field="availability">${seoOptionsHtml('availability', seo.availability)}</select></td>
+    <td><select data-link-bank-index="${index}" data-link-bank-field="indexation">${seoOptionsHtml('indexation', seo.indexation)}</select></td>
+    <td><select data-link-bank-index="${index}" data-link-bank-field="visibility">${seoOptionsHtml('visibility', seo.visibility)}</select></td>
+    <td><select data-link-bank-index="${index}" data-link-bank-field="errors">${seoOptionsHtml('errors', seo.errors)}</select></td>
+    <td><input data-link-bank-index="${index}" data-link-bank-field="comment" value="${escapeAttr(link.comment || '')}" placeholder="краткое уточнение" /> ${seoIndicatorHtml(link.url)}</td>
+    <td><button class="small-btn danger-mini" data-remove-link-bank="${index}">×</button></td>
+  </tr>`;
+}
+
+function seoOptionsHtml(group, value) {
+  const groups = {
+    availability: [['', 'Не проверено'], ['works', 'Работает'], ['not_works', 'Не работает']],
+    indexation: [['', 'Не проверено'], ['indexed', 'Индексирована'], ['not_indexed', 'Не индексирована']],
+    visibility: [['', 'Не проверено'], ['visible', 'Видна'], ['not_visible', 'Не видна']],
+    errors: [['', 'Не проверено'], ['no_errors', 'Нет'], ['has_errors', 'Есть']]
+  };
+  return (groups[group] || groups.availability).map(([key, label]) => `<option value="${escapeAttr(key)}" ${value === key ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('');
+}
+
+function updateLinkBankFromInput(e) {
+  const index = Number(e.target.dataset.linkBankIndex);
+  const field = e.target.dataset.linkBankField;
+  if (!state.linkBank?.[index]) return;
+  const link = state.linkBank[index];
+  if (['availability','indexation','visibility','errors'].includes(field)) {
+    link.seo = { ...defaultSeoStatus(), ...(link.seo || {}) };
+    link.seo[field] = e.target.value;
+  } else {
+    link[field] = e.target.value;
+  }
+  link.updatedAt = new Date().toISOString();
+  flashSaving();
+}
+
+function renderTools() {
+  activeView = 'tools';
+  setToolbarVisible(false);
+  state.tools = normalizeProjectTools(state.tools);
+  els.pageTitle.textContent = 'Инструменты проекта';
+  const groups = {};
+  state.tools.forEach(tool => {
+    groups[tool.group] = groups[tool.group] || [];
+    groups[tool.group].push(tool);
+  });
+  els.contentArea.innerHTML = `
+    <div class="panel tools-panel">
+      <div class="panel-head">
+        <div>
+          <h2>Источники данных и инструменты</h2>
+          <p class="muted">Включённые инструменты учитываются в блоках. Отключённые не мешают статусу «Готово».</p>
+        </div>
+      </div>
+      <div class="tools-grid">
+        ${Object.entries(groups).map(([group, tools]) => `<section class="tool-group"><h3>${escapeHtml(group)}</h3>${tools.map(tool => toolRowHtml(tool)).join('')}</section>`).join('')}
+      </div>
+    </div>`;
+  document.querySelectorAll('[data-project-tool]').forEach(input => input.addEventListener('change', updateProjectTool));
+}
+
+function toolRowHtml(tool) {
+  return `<label class="tool-toggle-row">
+    <span><strong>${escapeHtml(tool.name)}</strong><small>${tool.enabled ? 'включён, учитывается в блоках' : 'отключён, не влияет на готовность'}</small></span>
+    <select data-project-tool="${escapeAttr(tool.key)}">
+      <option value="enabled" ${tool.enabled ? 'selected' : ''}>Включён</option>
+      <option value="disabled" ${!tool.enabled ? 'selected' : ''}>Отключён</option>
+    </select>
+  </label>`;
+}
+
+function updateProjectTool(e) {
+  const key = e.target.dataset.projectTool;
+  const tool = state.tools.find(item => item.key === key);
+  if (!tool) return;
+  tool.enabled = e.target.value === 'enabled';
+  recalculateAllStatuses(state);
+  flashSaving();
+  renderTools();
 }
 
 function renderMetrics() {
@@ -1904,6 +2195,21 @@ function exportCsv() {
     rows.push(['key', 'title', 'value', 'used_in_blocks']);
     catalog.forEach(item => rows.push([item.key, item.label, getEvidenceValue(item.key), item.cards.map(c => c.title).join(' | ')]));
   }
+  if (state.linkBank?.length) {
+    rows.push([]);
+    rows.push(['PROJECT_LINK_BANK']);
+    rows.push(['url', 'availability', 'indexation', 'visibility', 'errors', 'comment', 'source']);
+    state.linkBank.forEach(link => {
+      const seo = link.seo || {};
+      rows.push([link.url || '', seoLabel('availability', seo.availability), seoLabel('indexation', seo.indexation), seoLabel('visibility', seo.visibility), seoLabel('errors', seo.errors), link.comment || '', toolNameByKey(link.source || '')]);
+    });
+  }
+  if (state.tools?.length) {
+    rows.push([]);
+    rows.push(['PROJECT_TOOLS']);
+    rows.push(['group', 'tool', 'enabled']);
+    state.tools.forEach(tool => rows.push([tool.group, tool.name, tool.enabled ? 'Включён' : 'Отключён']));
+  }
   if (state.metrics?.length) {
     rows.push([]);
     rows.push(['METRICS']);
@@ -2012,6 +2318,8 @@ document.getElementById('projectBtn').addEventListener('click', () => { activeVi
 document.getElementById('metricsBtn').addEventListener('click', () => { activeView = 'metrics'; render(); });
 document.getElementById('schemeBtn').addEventListener('click', () => { activeView = 'scheme'; render(); });
 document.getElementById('evidenceBtn').addEventListener('click', () => { activeView = 'evidence'; render(); });
+els.linkBankBtn?.addEventListener('click', () => { activeView = 'linkBank'; render(); });
+els.toolsBtn?.addEventListener('click', () => { activeView = 'tools'; render(); });
 document.getElementById('importBtn').addEventListener('click', () => els.csvInput.click());
 els.csvInput.addEventListener('change', e => e.target.files[0] && importCsvFile(e.target.files[0]));
 document.getElementById('exportBtn').addEventListener('click', exportCsv);
