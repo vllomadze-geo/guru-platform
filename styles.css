@@ -390,3 +390,31 @@ select:disabled {
 @media (max-width: 900px) {
   .passport-compare-grid { grid-template-columns: 1fr; }
 }
+
+/* v0.7 Gate 1 accordion */
+.analytics-accordion { display: grid; gap: 14px; }
+.analytics-intro { border: 1px solid var(--line); border-radius: 18px; background: #fff; padding: 18px; }
+.analytics-intro h2 { margin-bottom: 8px; }
+.analytics-subblock { border: 1px solid var(--line); border-radius: 18px; background: var(--panel-soft); overflow: hidden; }
+.subblock-header, .work-card-header {
+  width: 100%; border: 0; background: transparent; color: var(--text); cursor: pointer;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 14px; align-items: center; text-align: left;
+}
+.subblock-header { padding: 18px; }
+.subblock-header:hover, .work-card-header:hover { background: rgba(255,255,255,.52); }
+.subblock-main, .work-card-main { display: grid; gap: 6px; min-width: 0; }
+.subblock-title { font-size: 18px; font-weight: 900; }
+.subblock-progress, .work-card-preview { color: var(--muted); font-size: 13px; line-height: 1.35; }
+.subblock-toggle, .work-card-toggle {
+  border: 1px solid var(--line); border-radius: 999px; padding: 7px 11px; background: #fff; font-size: 12px; font-weight: 800; white-space: nowrap;
+}
+.subblock-body { display: grid; gap: 10px; padding: 0 14px 14px; }
+.work-accordion-card { border: 1px solid var(--line); border-radius: 16px; background: #fff; overflow: hidden; }
+.work-card-header { padding: 14px; }
+.work-card-title { font-weight: 850; }
+.work-card-body { border-top: 1px solid var(--line); padding: 14px; display: grid; gap: 12px; background: #fff; }
+.compact-empty { padding: 22px; border: 1px dashed var(--line); border-radius: 14px; background: #fff; }
+@media (max-width: 760px) {
+  .subblock-header, .work-card-header { grid-template-columns: 1fr; }
+  .subblock-toggle, .work-card-toggle { width: fit-content; }
+}

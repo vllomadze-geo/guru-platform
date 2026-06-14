@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.6';
+const PLATFORM_VERSION = 'v0.7';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -371,6 +371,142 @@ const PROJECT_PASSPORT_FIELDS = [
   ...PROJECT_AFTER_FIELDS
 ];
 
+
+const GATE1_ANALYTICS_TITLE = '1. Аналитика';
+const GATE1_SUBBLOCKS = [
+  {
+    key: 'site_audit',
+    title: 'Аудит сайта',
+    aliases: ['аудит сайта']
+  },
+  {
+    key: 'demand_semantics',
+    title: 'Спрос: семантика, кластеризация, намерения',
+    aliases: ['спрос: семантика, кластеризация, намерения']
+  },
+  {
+    key: 'pain_jtbd_offer',
+    title: 'Боль → JTBD → офер',
+    aliases: ['боль → jtbd → офер', 'боль -> jtbd -> офер']
+  },
+  {
+    key: 'unit_economics',
+    title: 'Юнит-экономика: целевые CPA/DRR, AOV/LTV, маржинальность',
+    aliases: ['юнит-экономика: целевые cpa/drr, aov/ltv, маржинальность']
+  }
+];
+
+const GATE1_UNIT_ECONOMICS_CARDS = [
+  ['Целевой CPA', 'Зафиксировать допустимую стоимость привлечения заявки или клиента. Указать расчёт, источник данных и ограничение по бюджету.'],
+  ['DRR', 'Зафиксировать допустимую долю рекламных расходов в выручке. Указать целевой процент и период оценки.'],
+  ['AOV', 'Зафиксировать средний чек проекта. Указать источник расчёта и период.'],
+  ['LTV', 'Зафиксировать ожидаемую ценность клиента за весь период работы. Указать метод расчёта и допущения.'],
+  ['Маржинальность', 'Зафиксировать маржинальность продукта или услуги. Указать, какие расходы учитываются.'],
+  ['Ограничения по экономике', 'Зафиксировать финансовые ограничения: минимальный чек, предельный CPA, бюджет, сезонность, узкие места продаж.']
+];
+
+
+function normalizeGateTitle(title = '') {
+  return String(title || '')
+    .trim()
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+    .replace(/->/g, '→')
+    .replace(/\s+/g, ' ');
+}
+
+function isGate1Analytics(gate) {
+  return Boolean(gate && (gate.id === 'gate-1' || normalizeGateTitle(gate.title).includes(normalizeGateTitle(GATE1_ANALYTICS_TITLE))));
+}
+
+function ensureUiState(workspace = state) {
+  if (!workspace) return;
+  workspace.ui = workspace.ui || {};
+  workspace.ui.gate1Accordion = workspace.ui.gate1Accordion || {};
+  workspace.ui.gate1Accordion.subblocks = workspace.ui.gate1Accordion.subblocks || {};
+  workspace.ui.gate1Accordion.cards = workspace.ui.gate1Accordion.cards || {};
+}
+
+function ensureGate1Structure(workspace = state) {
+  const gate = workspace?.gates?.find(isGate1Analytics);
+  if (!gate || !Array.isArray(gate.cards)) return;
+  const unitHeaderIndex = gate.cards.findIndex(card => normalizeGateTitle(card.title) === normalizeGateTitle(GATE1_SUBBLOCKS[3].title));
+  if (unitHeaderIndex < 0) return;
+  const existingTitles = new Set(gate.cards.map(card => normalizeGateTitle(card.title)));
+  const cardsToAdd = GATE1_UNIT_ECONOMICS_CARDS
+    .filter(([title]) => !existingTitles.has(normalizeGateTitle(title)))
+    .map(([title, instruction], index) => ({
+      id: 'gate1-unit-' + normalizeAspectKey(title),
+      title,
+      instruction,
+      status: 'not_started',
+      evidence: 'значение:\nпериод:\nкомментарий:',
+      evidenceFields: [
+        { key: normalizeAspectKey(title + ' значение'), label: 'Значение' },
+        { key: normalizeAspectKey(title + ' период'), label: 'Период' },
+        { key: normalizeAspectKey(title + ' комментарий'), label: 'Комментарий' }
+      ],
+      pages: '',
+      notes: '',
+      fields: {},
+      sourceRow: 'v0.7-' + (index + 1),
+      generatedBy: 'gate1-unit-economics'
+    }));
+  if (cardsToAdd.length) gate.cards.splice(unitHeaderIndex + 1, 0, ...cardsToAdd);
+}
+
+function getGate1Sections(gate, visibleCards = gate.cards) {
+  const visibleIds = new Set((visibleCards || []).map(card => card.id));
+  const starts = GATE1_SUBBLOCKS.map(config => {
+    const index = gate.cards.findIndex(card => {
+      const title = normalizeGateTitle(card.title);
+      return config.aliases.some(alias => title === normalizeGateTitle(alias));
+    });
+    return { ...config, index };
+  });
+  return starts.map((config, order) => {
+    const startIndex = config.index;
+    const nextKnown = starts.slice(order + 1).map(item => item.index).find(index => index > startIndex);
+    const endIndex = nextKnown ?? gate.cards.length;
+    const headerCard = startIndex >= 0 ? gate.cards[startIndex] : null;
+    const allInnerCards = startIndex >= 0 ? gate.cards.slice(startIndex + 1, endIndex) : [];
+    const filteredInnerCards = allInnerCards.filter(card => visibleIds.has(card.id));
+    return { ...config, headerCard, allInnerCards, filteredInnerCards };
+  });
+}
+
+function getSectionStatus(cards) {
+  if (!cards.length) return 'not_started';
+  const ready = cards.filter(card => card.status === 'ready').length;
+  const touched = cards.filter(card => card.status && card.status !== 'not_started').length;
+  if (ready === cards.length) return 'ready';
+  if (touched > 0) return 'in_progress';
+  return 'not_started';
+}
+
+function getSectionProgressText(cards) {
+  const ready = cards.filter(card => card.status === 'ready').length;
+  return `${ready} из ${cards.length} блоков готово`;
+}
+
+function getGate1AccordionState() {
+  ensureUiState(state);
+  return state.ui.gate1Accordion;
+}
+
+function truncateText(text = '', limit = 160) {
+  const clean = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!clean) return '';
+  return clean.length > limit ? clean.slice(0, limit - 1).trim() + '…' : clean;
+}
+
+function cardPreviewText(card) {
+  const evidence = truncateText(formatStructuredEvidencePlain(card, state), 150);
+  const notes = truncateText(card.notes || '', 120);
+  if (evidence && notes) return `${evidence} · Комментарий: ${notes}`;
+  return evidence || notes || 'Краткий результат пока не заполнен.';
+}
+
 function isProjectPassportCard(card) {
   return card?.title === 'Паспорт проекта';
 }
@@ -389,6 +525,8 @@ function isCurrentResultsCard(card) {
 
 function prepareSystemCards(workspace) {
   if (!workspace?.gates) return;
+  ensureGate1Structure(workspace);
+  ensureUiState(workspace);
   workspace.gates.forEach(gate => {
     gate.cards.forEach(card => {
       if (isToolStatusCard(card)) {
@@ -874,7 +1012,89 @@ function renderGate() {
   else renderGateCards(gate, cards);
 }
 
+
+function renderGate1Accordion(gate, cards) {
+  const sections = getGate1Sections(gate, cards);
+  const accState = getGate1AccordionState();
+  const queryActive = els.searchInput.value.trim() || els.statusFilter.value !== 'all';
+  els.contentArea.innerHTML = `<div class="analytics-accordion">
+    <div class="analytics-intro">
+      <h2>Gate 1, Аналитика</h2>
+      <p class="muted">Работа разбита на четыре крупных подблока. Откройте только тот раздел, с которым работаете сейчас.</p>
+    </div>
+    ${sections.map(section => {
+      const sectionOpen = Boolean(accState.subblocks[section.key]);
+      const status = getSectionStatus(section.allInnerCards);
+      const displayCards = queryActive ? section.filteredInnerCards : section.allInnerCards;
+      return `<section class="analytics-subblock ${sectionOpen ? 'is-open' : ''}">
+        <button class="subblock-header" data-gate1-toggle-section="${escapeAttr(section.key)}">
+          <span class="subblock-main">
+            <span class="subblock-title">${escapeHtml(section.title)}</span>
+            <span class="subblock-progress">${escapeHtml(getSectionProgressText(section.allInnerCards))}</span>
+          </span>
+          <span class="status-pill status-${status}">${STATUS_LABELS[status] || status}</span>
+          <span class="subblock-toggle">${sectionOpen ? 'Закрыть' : 'Открыть'}</span>
+        </button>
+        ${sectionOpen ? `<div class="subblock-body">
+          ${displayCards.length ? displayCards.map(card => gate1WorkBlockHtml(card)).join('') : '<div class="empty compact-empty">По текущему фильтру внутри подблока ничего не найдено.</div>'}
+        </div>` : ''}
+      </section>`;
+    }).join('')}
+  </div>`;
+  bindGate1Accordion();
+  bindCardInputs();
+}
+
+function gate1WorkBlockHtml(card) {
+  const accState = getGate1AccordionState();
+  const isOpen = Boolean(accState.cards[card.id]);
+  return `<article class="work-accordion-card ${isOpen ? 'is-open' : ''}" data-card="${escapeAttr(card.id)}">
+    <button class="work-card-header" data-gate1-toggle-card="${escapeAttr(card.id)}">
+      <span class="work-card-main">
+        <span class="work-card-title">${escapeHtml(card.title)}</span>
+        <span class="work-card-preview">${escapeHtml(cardPreviewText(card))}</span>
+      </span>
+      <span class="status-pill status-${card.status}">${STATUS_LABELS[card.status] || card.status}</span>
+      <span class="work-card-toggle">${isOpen ? 'Свернуть' : 'Раскрыть'}</span>
+    </button>
+    ${isOpen ? `<div class="work-card-body">
+      <div class="card-text">${escapeHtml(card.instruction || 'Инструкция пока не заполнена.')}</div>
+      <div class="card-fields">
+        <label class="field-row">Статус${statusSelect(card)}</label>
+        ${cardUserFieldsHtml(card)}
+        <label class="field-row">Размещено на странице<input data-field="pages" data-card-id="${escapeAttr(card.id)}" value="${escapeAttr(card.pages || '')}" /></label>
+        <label class="field-row">Комментарий<textarea data-field="notes" data-card-id="${escapeAttr(card.id)}" rows="3">${escapeHtml(card.notes || '')}</textarea></label>
+      </div>
+    </div>` : ''}
+  </article>`;
+}
+
+function bindGate1Accordion() {
+  document.querySelectorAll('[data-gate1-toggle-section]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.gate1ToggleSection;
+      const accState = getGate1AccordionState();
+      accState.subblocks[key] = !accState.subblocks[key];
+      saveState();
+      renderGate();
+    });
+  });
+  document.querySelectorAll('[data-gate1-toggle-card]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cardId = btn.dataset.gate1ToggleCard;
+      const accState = getGate1AccordionState();
+      accState.cards[cardId] = !accState.cards[cardId];
+      saveState();
+      renderGate();
+    });
+  });
+}
+
 function renderGateCards(gate, cards) {
+  if (isGate1Analytics(gate)) {
+    renderGate1Accordion(gate, cards);
+    return;
+  }
   if (!cards.length) {
     els.contentArea.innerHTML = '<div class="empty">По текущему фильтру ничего не найдено.</div>';
     return;
@@ -884,6 +1104,10 @@ function renderGateCards(gate, cards) {
 }
 
 function renderGateTable(gate, cards) {
+  if (isGate1Analytics(gate)) {
+    renderGate1Accordion(gate, cards);
+    return;
+  }
   els.contentArea.innerHTML = `
     <div class="table-scroll">
       <table class="data-table">
