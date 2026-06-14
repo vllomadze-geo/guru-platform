@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.9';
+const PLATFORM_VERSION = 'v0.10';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -32,9 +32,7 @@ const els = {
   saveStatus: document.getElementById('saveStatus'),
   autosaveDot: document.getElementById('autosaveDot'),
   brandTitle: document.getElementById('brandTitle'),
-  brandMark: document.getElementById('brandMark'),
-  linkBankBtn: document.getElementById('linkBankBtn'),
-  toolsBtn: document.getElementById('toolsBtn')
+  brandMark: document.getElementById('brandMark')
 };
 
 function makeId(prefix = 'id') {
@@ -1318,9 +1316,6 @@ function render() {
   if (activeView === 'project') renderProject();
   if (activeView === 'metrics') renderMetrics();
   if (activeView === 'scheme') renderScheme();
-  if (activeView === 'evidence') renderEvidenceIndex();
-  if (activeView === 'linkBank') renderLinkBank();
-  if (activeView === 'tools') renderTools();
   if (activeView === 'gate') renderGate();
 }
 
@@ -1562,6 +1557,7 @@ function gate1LinkRowsHtml(card) {
   const toolRequired = enabledTools().length > 0;
   return `<div class="typed-block link-rows-block">
     ${projectUrlDatalistHtml()}
+    ${inlineToolControlsHtml()}
     <table class="mini-table typed-table link-bank-table">
       <thead><tr><th>Ссылка</th><th>Источник</th><th>Статус</th><th>SEO</th><th>Комментарий</th><th></th></tr></thead>
       <tbody>${rows.map((row, index) => `<tr>
@@ -1575,9 +1571,35 @@ function gate1LinkRowsHtml(card) {
     </table>
     <div class="typed-actions">
       <button class="small-btn add-inline-btn" data-add-gate1-link="${escapeAttr(card.id)}">+ Добавить ссылку</button>
-      <span class="muted mini-note">Ссылки сохраняются в общей базе проекта и доступны в других блоках.</span>
     </div>
   </div>`;
+}
+
+
+function inlineToolControlsHtml() {
+  state.tools = normalizeProjectTools(state.tools);
+  const groups = {};
+  state.tools.forEach(tool => {
+    groups[tool.group] = groups[tool.group] || [];
+    groups[tool.group].push(tool);
+  });
+  return `<div class="inline-tools">
+    <div class="inline-tools-title">Источники данных</div>
+    <div class="inline-tools-grid">
+      ${Object.entries(groups).map(([group, tools]) => `<div class="inline-tool-group"><span>${escapeHtml(group)}</span>${tools.map(tool => `<label class="inline-tool-toggle"><input type="checkbox" data-inline-tool="${escapeAttr(tool.key)}" ${tool.enabled ? 'checked' : ''} /> ${escapeHtml(tool.name)}</label>`).join('')}</div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function updateInlineTool(e) {
+  const key = e.target.dataset.inlineTool;
+  state.tools = normalizeProjectTools(state.tools);
+  const tool = state.tools.find(item => item.key === key);
+  if (!tool) return;
+  tool.enabled = e.target.checked;
+  recalculateAllStatuses(state);
+  flashSaving();
+  renderGate();
 }
 
 function gate1ComparisonRowsHtml(card) {
@@ -1610,6 +1632,7 @@ function gate1PageStructureHtml(card) {
   const rows = card.pageRows || [];
   const repeatable = isRepeatablePageCard(card);
   return `<div class="typed-block pages-block">
+    ${inlineToolControlsHtml()}
     ${rows.map((row, pageIndex) => pageStructureCardHtml(card, row, pageIndex, repeatable)).join('')}
     ${repeatable ? `<button class="small-btn add-inline-btn" data-add-gate1-page="${escapeAttr(card.id)}">+ Добавить страницу</button>` : ''}
   </div>`;
@@ -1703,6 +1726,7 @@ function bindGate1TypedInputs() {
   });
   document.querySelectorAll('[data-add-gate1-link]').forEach(btn => btn.addEventListener('click', () => addGate1LinkRow(btn.dataset.addGate1Link)));
   document.querySelectorAll('[data-remove-gate1-link]').forEach(btn => btn.addEventListener('click', () => removeGate1LinkRow(btn.dataset.removeGate1Link, Number(btn.dataset.index))));
+  document.querySelectorAll('[data-inline-tool]').forEach(input => input.addEventListener('change', updateInlineTool));
   document.querySelectorAll('[data-gate1-comparison-card-id]').forEach(input => {
     input.addEventListener('input', updateGate1ComparisonRow);
     input.addEventListener('change', updateGate1ComparisonRow);
@@ -2317,9 +2341,6 @@ document.getElementById('switchProjectBtn').addEventListener('click', showLaunch
 document.getElementById('projectBtn').addEventListener('click', () => { activeView = 'project'; render(); });
 document.getElementById('metricsBtn').addEventListener('click', () => { activeView = 'metrics'; render(); });
 document.getElementById('schemeBtn').addEventListener('click', () => { activeView = 'scheme'; render(); });
-document.getElementById('evidenceBtn').addEventListener('click', () => { activeView = 'evidence'; render(); });
-els.linkBankBtn?.addEventListener('click', () => { activeView = 'linkBank'; render(); });
-els.toolsBtn?.addEventListener('click', () => { activeView = 'tools'; render(); });
 document.getElementById('importBtn').addEventListener('click', () => els.csvInput.click());
 els.csvInput.addEventListener('change', e => e.target.files[0] && importCsvFile(e.target.files[0]));
 document.getElementById('exportBtn').addEventListener('click', exportCsv);

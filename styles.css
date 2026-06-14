@@ -552,7 +552,7 @@ select:disabled {
   .page-structure-head { align-items: stretch; flex-direction: column; }
 }
 
-/* v0.9, глобальная база ссылок и инструменты */
+/* v0.9/v0.10, глобальная база ссылок и встроенные источники */
 .typed-actions {
   display: flex;
   align-items: center;
@@ -643,4 +643,47 @@ select:disabled {
 }
 @media (max-width: 900px) {
   .tools-grid { grid-template-columns: 1fr; }
+}
+
+
+/* v0.10, встроенное управление источниками без отдельных окон */
+.inline-tools {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  background: #fafafa;
+  margin-bottom: 14px;
+}
+.inline-tools-title {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.inline-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+.inline-tool-group {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.inline-tool-group > span {
+  font-weight: 700;
+  color: var(--text);
+}
+.inline-tool-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text);
+}
+.inline-tool-toggle input {
+  width: auto;
 }
