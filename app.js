@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.10';
+const PLATFORM_VERSION = 'v0.11';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -14,7 +14,7 @@ let activeProjectId = null;
 let state = null;
 let activeView = 'project';
 let activeGateId = null;
-let layoutMode = 'cards';
+let layoutMode = 'table';
 
 const els = {
   launcher: document.getElementById('projectLauncher'),
@@ -850,7 +850,6 @@ function cardPreviewText(card) {
   const typed = getGate1CardMode(card) ? typedDataPlain(card) : '';
   const evidence = truncateText(typed || formatStructuredEvidencePlain(card, state), 150);
   const notes = truncateText(card.notes || '', 120);
-  if (evidence && notes) return `${evidence} · Комментарий: ${notes}`;
   return evidence || notes || 'Краткий результат пока не заполнен.';
 }
 
@@ -1027,10 +1026,10 @@ function recalculateStatusForCard(card, workspace = state) {
     if (gate1Mode === 'links') {
       const rows = card.linkRows || [];
       const needsSource = enabledTools().length > 0;
-      const touched = rows.filter(row => String(row.url || '').trim() || row.status || row.source || String(row.comment || '').trim()).length;
+      const touched = rows.filter(row => String(row.url || '').trim() || row.status || row.source || String(row.comment || '').trim()).length || (toolWorkspaceTouched(card) ? 1 : 0);
       const complete = rows.filter(row => String(row.url || '').trim() && row.status && (!needsSource || row.source)).length;
       if (!touched) card.status = 'not_started';
-      else if (complete === rows.length) card.status = 'ready';
+      else if (complete === rows.length && toolWorkspaceIsComplete(card)) card.status = 'ready';
       else card.status = 'in_progress';
       return;
     }
@@ -1038,16 +1037,17 @@ function recalculateStatusForCard(card, workspace = state) {
       const rows = card.comparisonRows || [];
       const touched = rows.filter(row => String(row.value || '').trim()).length;
       const done = rows.filter(row => evaluateComparisonRow(row).ok === true).length;
-      if (!touched) card.status = 'not_started';
-      else if (done === rows.length) card.status = 'ready';
+      const toolTouched = toolWorkspaceTouched(card);
+      if (!touched && !toolTouched) card.status = 'not_started';
+      else if (done === rows.length && toolWorkspaceIsComplete(card)) card.status = 'ready';
       else card.status = 'in_progress';
       return;
     }
     if (gate1Mode === 'page_structure') {
       const rows = card.pageRows || [];
       const statuses = rows.map(pageStructureStatus);
-      if (statuses.every(status => status === 'not_started')) card.status = 'not_started';
-      else if (statuses.every(status => status === 'ready')) card.status = 'ready';
+      if (statuses.every(status => status === 'not_started') && !toolWorkspaceTouched(card)) card.status = 'not_started';
+      else if (statuses.every(status => status === 'ready') && toolWorkspaceIsComplete(card)) card.status = 'ready';
       else card.status = 'in_progress';
       return;
     }
@@ -1389,8 +1389,7 @@ function renderGate() {
   if (query) {
     cards = cards.filter(c => [c.title, c.instruction, composeEvidenceText(c), c.pages, c.notes].join(' ').toLowerCase().includes(query));
   }
-  if (layoutMode === 'table') renderGateTable(gate, cards);
-  else renderGateCards(gate, cards);
+  renderGateTable(gate, cards);
 }
 
 
@@ -1400,16 +1399,18 @@ function renderGate1Accordion(gate, cards) {
   const queryActive = els.searchInput.value.trim() || els.statusFilter.value !== 'all';
   els.contentArea.innerHTML = `<div class="analytics-accordion">
     <div class="analytics-intro">
+      <div class="analytics-path">Gate 1 → Аналитика</div>
       <h2>Gate 1, Аналитика</h2>
-      <p class="muted">Работа разбита на четыре крупных подблока. Откройте только тот раздел, с которым работаете сейчас.</p>
+      <p class="muted">Сначала видны четыре смысловых уровня. Раскрытый уровень становится главным рабочим полем, вложенность читается через сетку, отступы и активные состояния.</p>
     </div>
     ${sections.map(section => {
       const sectionOpen = Boolean(accState.subblocks[section.key]);
       const status = getSectionStatus(section.allInnerCards);
       const displayCards = queryActive ? section.filteredInnerCards : section.allInnerCards;
-      return `<section class="analytics-subblock ${sectionOpen ? 'is-open' : ''}">
+      return `<section class="analytics-subblock ${sectionOpen ? 'is-open is-active' : ''}">
         <button class="subblock-header" data-gate1-toggle-section="${escapeAttr(section.key)}">
           <span class="subblock-main">
+            <span class="analytics-path">Gate 1 → ${escapeHtml(section.title)}</span>
             <span class="subblock-title">${escapeHtml(section.title)}</span>
             <span class="subblock-progress">${escapeHtml(getSectionProgressText(section.allInnerCards))}</span>
           </span>
@@ -1417,7 +1418,7 @@ function renderGate1Accordion(gate, cards) {
           <span class="subblock-toggle">${sectionOpen ? 'Закрыть' : 'Открыть'}</span>
         </button>
         ${sectionOpen ? `<div class="subblock-body">
-          ${displayCards.length ? displayCards.map(card => gate1WorkBlockHtml(card)).join('') : '<div class="empty compact-empty">По текущему фильтру внутри подблока ничего не найдено.</div>'}
+          ${displayCards.length ? displayCards.map(card => gate1WorkBlockHtml(card, section.title)).join('') : '<div class="empty compact-empty">По текущему фильтру внутри подблока ничего не найдено.</div>'}
         </div>` : ''}
       </section>`;
     }).join('')}
@@ -1426,12 +1427,13 @@ function renderGate1Accordion(gate, cards) {
   bindCardInputs();
 }
 
-function gate1WorkBlockHtml(card) {
+function gate1WorkBlockHtml(card, sectionTitle = 'Аналитика') {
   const accState = getGate1AccordionState();
   const isOpen = Boolean(accState.cards[card.id]);
-  return `<article class="work-accordion-card ${isOpen ? 'is-open' : ''}" data-card="${escapeAttr(card.id)}">
+  return `<article class="work-accordion-card ${isOpen ? 'is-open is-active' : ''}" data-card="${escapeAttr(card.id)}">
     <button class="work-card-header" data-gate1-toggle-card="${escapeAttr(card.id)}">
       <span class="work-card-main">
+        <span class="analytics-path">Gate 1 → ${escapeHtml(sectionTitle)} → ${escapeHtml(card.title)}</span>
         <span class="work-card-title">${escapeHtml(card.title)}</span>
         <span class="work-card-preview">${escapeHtml(cardPreviewText(card))}</span>
       </span>
@@ -1444,7 +1446,6 @@ function gate1WorkBlockHtml(card) {
         <label class="field-row">Статус${statusSelect(card)}</label>
         ${cardUserFieldsHtml(card)}
         ${getGate1CardMode(card) ? '' : `<label class="field-row">Размещено на странице<input data-field="pages" data-card-id="${escapeAttr(card.id)}" value="${escapeAttr(card.pages || '')}" /></label>`}
-        <label class="field-row">Комментарий<textarea data-field="notes" data-card-id="${escapeAttr(card.id)}" rows="3">${escapeHtml(card.notes || '')}</textarea></label>
       </div>
     </div>` : ''}
   </article>`;
@@ -1492,14 +1493,13 @@ function renderGateTable(gate, cards) {
   els.contentArea.innerHTML = `
     <div class="table-scroll">
       <table class="data-table">
-        <thead><tr><th>Блок</th><th>Инструкция</th><th>Статус</th><th>Структурированное доказательство</th><th>Комментарий</th></tr></thead>
+        <thead><tr><th>Блок</th><th>Инструкция</th><th>Статус</th><th>Структурированное доказательство</th></tr></thead>
         <tbody>${cards.map(c => `
           <tr data-card-row="${c.id}">
             <td class="table-title">${escapeHtml(c.title)}<div class="card-source">CSV строка ${c.sourceRow || ''}</div></td>
             <td class="table-text">${escapeHtml(c.instruction || '')}</td>
             <td>${statusSelect(c)}</td>
             <td>${cardUserFieldsHtml(c)}</td>
-            <td><textarea data-field="notes" data-card-id="${c.id}">${escapeHtml(c.notes || '')}</textarea></td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -1522,7 +1522,6 @@ function cardHtml(c) {
         <label class="field-row">Статус${statusSelect(c)}</label>
         ${cardUserFieldsHtml(c)}
         <label class="field-row">Размещено на странице<input data-field="pages" data-card-id="${c.id}" value="${escapeAttr(c.pages || '')}" /></label>
-        <label class="field-row">Комментарий<textarea data-field="notes" data-card-id="${c.id}" rows="3">${escapeHtml(c.notes || '')}</textarea></label>
       </div>
     </article>`;
 }
@@ -1536,6 +1535,80 @@ function cardUserFieldsHtml(c) {
   return `<div class="field-row"><span>Доказательство</span>${evidenceStructuredHtml(c)}</div>`;
 }
 
+
+
+function relevantToolsForCard(card) {
+  const mode = getGate1CardMode(card);
+  const title = normalizeGateTitle(card?.title || '');
+  const groups = new Set();
+  if (mode === 'page_structure') groups.add('SEO и индексация');
+  if (mode === 'comparison') {
+    if (/cwv|pagespeed|скорость/.test(title)) groups.add('SEO и индексация');
+    if (/частотность|прогноз|клики|стоимости|переходы/.test(title)) groups.add('Реклама');
+  }
+  if (mode === 'links') {
+    const type = getGate1LinkStatusType(card);
+    if (type === 'indexed' || /robots|sitemap|редирект|ssl|404/.test(title)) groups.add('SEO и индексация');
+    else if (type === 'placed') groups.add('Реклама');
+    else if (type === 'filled') {
+      groups.add('Аналитика');
+      groups.add('CRM и лиды');
+    } else groups.add('SEO и индексация');
+  }
+  return (state.tools || []).filter(tool => tool.enabled && groups.has(tool.group));
+}
+
+function ensureToolWorkspace(card) {
+  card.toolWorkspace = card.toolWorkspace || {};
+  relevantToolsForCard(card).forEach(tool => {
+    card.toolWorkspace[tool.key] = card.toolWorkspace[tool.key] || { status: '', value: '', comment: '' };
+  });
+  return card.toolWorkspace;
+}
+
+function toolWorkspaceHtml(card) {
+  const tools = relevantToolsForCard(card);
+  if (!tools.length) return '';
+  const workspace = ensureToolWorkspace(card);
+  return `<div class="tool-workspace">
+    <div class="tool-workspace-title">Рабочие пространства включённых инструментов</div>
+    <table class="mini-table typed-table">
+      <thead><tr><th>Инструмент</th><th>Статус проверки</th><th>Данные / ссылка на отчёт</th><th>Комментарий</th></tr></thead>
+      <tbody>${tools.map(tool => {
+        const row = workspace[tool.key] || {};
+        return `<tr>
+          <td>${escapeHtml(tool.name)}</td>
+          <td><select data-tool-workspace-card-id="${escapeAttr(card.id)}" data-tool-workspace-key="${escapeAttr(tool.key)}" data-tool-workspace-field="status">
+            <option value="" ${!row.status ? 'selected' : ''}>Не заполнено</option>
+            <option value="ok" ${row.status === 'ok' ? 'selected' : ''}>Проверено</option>
+            <option value="problem" ${row.status === 'problem' ? 'selected' : ''}>Есть проблема</option>
+          </select></td>
+          <td><input data-tool-workspace-card-id="${escapeAttr(card.id)}" data-tool-workspace-key="${escapeAttr(tool.key)}" data-tool-workspace-field="value" value="${escapeAttr(row.value || '')}" placeholder="данные, отчёт или ссылка" /></td>
+          <td><input data-tool-workspace-card-id="${escapeAttr(card.id)}" data-tool-workspace-key="${escapeAttr(tool.key)}" data-tool-workspace-field="comment" value="${escapeAttr(row.comment || '')}" placeholder="краткое уточнение" /></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function toolWorkspaceIsComplete(card) {
+  const tools = relevantToolsForCard(card);
+  if (!tools.length) return true;
+  const workspace = ensureToolWorkspace(card);
+  return tools.every(tool => {
+    const row = workspace[tool.key] || {};
+    return Boolean(row.status && String(row.value || '').trim());
+  });
+}
+
+function toolWorkspaceTouched(card) {
+  const tools = relevantToolsForCard(card);
+  const workspace = ensureToolWorkspace(card);
+  return tools.some(tool => {
+    const row = workspace[tool.key] || {};
+    return Boolean(row.status || String(row.value || '').trim() || String(row.comment || '').trim());
+  });
+}
 
 function gate1TypedFieldsHtml(card) {
   const mode = getGate1CardMode(card);
@@ -1558,13 +1631,13 @@ function gate1LinkRowsHtml(card) {
   return `<div class="typed-block link-rows-block">
     ${projectUrlDatalistHtml()}
     ${inlineToolControlsHtml()}
+    ${toolWorkspaceHtml(card)}
     <table class="mini-table typed-table link-bank-table">
-      <thead><tr><th>Ссылка</th><th>Источник</th><th>Статус</th><th>SEO</th><th>Комментарий</th><th></th></tr></thead>
+      <thead><tr><th>Ссылка</th><th>Источник</th><th>Статус</th><th>Комментарий</th><th></th></tr></thead>
       <tbody>${rows.map((row, index) => `<tr>
         <td><input list="projectUrlOptions" data-gate1-link-card-id="${escapeAttr(card.id)}" data-gate1-link-index="${index}" data-gate1-link-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" /></td>
         <td><select data-gate1-link-card-id="${escapeAttr(card.id)}" data-gate1-link-index="${index}" data-gate1-link-field="source">${toolOptionsHtml(row.source || '', true)}</select>${toolRequired && !row.source ? '<div class="field-hint warning">Выберите источник</div>' : ''}</td>
         <td><select data-gate1-link-card-id="${escapeAttr(card.id)}" data-gate1-link-index="${index}" data-gate1-link-field="status">${linkStatusOptionsHtml(type, row.status)}</select></td>
-        <td>${seoIndicatorHtml(row.url)}</td>
         <td><input data-gate1-link-card-id="${escapeAttr(card.id)}" data-gate1-link-index="${index}" data-gate1-link-field="comment" value="${escapeAttr(row.comment || '')}" placeholder="краткое уточнение" /></td>
         <td><button class="small-btn danger-mini" data-remove-gate1-link="${escapeAttr(card.id)}" data-index="${index}" ${rows.length <= 1 ? 'disabled' : ''}>×</button></td>
       </tr>`).join('')}</tbody>
@@ -1584,7 +1657,7 @@ function inlineToolControlsHtml() {
     groups[tool.group].push(tool);
   });
   return `<div class="inline-tools">
-    <div class="inline-tools-title">Источники данных</div>
+    <div class="inline-tools-title">Включённые источники внутри блока</div>
     <div class="inline-tools-grid">
       ${Object.entries(groups).map(([group, tools]) => `<div class="inline-tool-group"><span>${escapeHtml(group)}</span>${tools.map(tool => `<label class="inline-tool-toggle"><input type="checkbox" data-inline-tool="${escapeAttr(tool.key)}" ${tool.enabled ? 'checked' : ''} /> ${escapeHtml(tool.name)}</label>`).join('')}</div>`).join('')}
     </div>
@@ -1602,9 +1675,23 @@ function updateInlineTool(e) {
   renderGate();
 }
 
+function updateToolWorkspaceRow(e) {
+  const card = findCard(e.target.dataset.toolWorkspaceCardId);
+  if (!card) return;
+  const key = e.target.dataset.toolWorkspaceKey;
+  const field = e.target.dataset.toolWorkspaceField;
+  card.toolWorkspace = card.toolWorkspace || {};
+  card.toolWorkspace[key] = card.toolWorkspace[key] || { status: '', value: '', comment: '' };
+  card.toolWorkspace[key][field] = e.target.value;
+  recalculateStatusForCard(card);
+  flashSaving();
+}
+
 function gate1ComparisonRowsHtml(card) {
   const rows = card.comparisonRows || [];
   return `<div class="typed-block comparison-block">
+    ${inlineToolControlsHtml()}
+    ${toolWorkspaceHtml(card)}
     <table class="mini-table typed-table">
       <thead><tr><th>Показатель</th><th>Значение</th><th>Норма</th><th>Результат</th><th>Комментарий</th></tr></thead>
       <tbody>${rows.map((row, index) => {
@@ -1633,6 +1720,7 @@ function gate1PageStructureHtml(card) {
   const repeatable = isRepeatablePageCard(card);
   return `<div class="typed-block pages-block">
     ${inlineToolControlsHtml()}
+    ${toolWorkspaceHtml(card)}
     ${rows.map((row, pageIndex) => pageStructureCardHtml(card, row, pageIndex, repeatable)).join('')}
     ${repeatable ? `<button class="small-btn add-inline-btn" data-add-gate1-page="${escapeAttr(card.id)}">+ Добавить страницу</button>` : ''}
   </div>`;
@@ -1727,6 +1815,10 @@ function bindGate1TypedInputs() {
   document.querySelectorAll('[data-add-gate1-link]').forEach(btn => btn.addEventListener('click', () => addGate1LinkRow(btn.dataset.addGate1Link)));
   document.querySelectorAll('[data-remove-gate1-link]').forEach(btn => btn.addEventListener('click', () => removeGate1LinkRow(btn.dataset.removeGate1Link, Number(btn.dataset.index))));
   document.querySelectorAll('[data-inline-tool]').forEach(input => input.addEventListener('change', updateInlineTool));
+  document.querySelectorAll('[data-tool-workspace-card-id]').forEach(input => {
+    input.addEventListener('input', updateToolWorkspaceRow);
+    input.addEventListener('change', updateToolWorkspaceRow);
+  });
   document.querySelectorAll('[data-gate1-comparison-card-id]').forEach(input => {
     input.addEventListener('input', updateGate1ComparisonRow);
     input.addEventListener('change', updateGate1ComparisonRow);
@@ -2134,7 +2226,7 @@ function renderScheme() {
     <div class="panel scheme">
       <div>
         <h2>Как данные проходят через систему</h2>
-        <p class="muted">Gate идут последовательно. В каждом Gate есть карточки. Карточки сохраняют статус, доказательство, комментарий и связь со страницей или кампанией.</p>
+        <p class="muted">Gate идут последовательно. В каждом Gate есть рабочие блоки. Данные вводятся один раз и автоматически используются в связанных местах.</p>
       </div>
       <div class="flow">
         ${state.gates.map((g, i) => `
@@ -2346,8 +2438,7 @@ els.csvInput.addEventListener('change', e => e.target.files[0] && importCsvFile(
 document.getElementById('exportBtn').addEventListener('click', exportCsv);
 document.getElementById('exportPdfBtn').addEventListener('click', exportPdfReport);
 document.getElementById('resetBtn').addEventListener('click', resetDemo);
-document.getElementById('tableViewBtn').addEventListener('click', () => { layoutMode = 'table'; renderGate(); });
-document.getElementById('cardsViewBtn').addEventListener('click', () => { layoutMode = 'cards'; renderGate(); });
+
 els.searchInput.addEventListener('input', renderGate);
 els.statusFilter.addEventListener('change', renderGate);
 document.getElementById('closeProjectModal').addEventListener('click', hideNewProjectModal);
