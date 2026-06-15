@@ -3280,3 +3280,144 @@ function updateTaskField(e) {
   recalculateStatusForCard(card);
   flashSaving();
 }
+
+/* v0.15 — контекстный блок Robots.txt Яндекс: только Яндекс Вебмастер */
+function isRobotsYandexCard(card) {
+  return Boolean(isGate1Card(card) && /robots\.txt\s*яндекс/i.test(String(card?.title || '')));
+}
+
+const ROBOTS_YANDEX_DEFAULTS = {
+  siteUrl: '',
+  robotsUrl: '',
+  fileStatus: '',
+  analysisStatus: '',
+  importantPagesOpen: '',
+  servicePagesClosed: '',
+  sitemapInRobots: '',
+  evidenceUrl: '',
+  comment: ''
+};
+
+const ROBOTS_YANDEX_INSTRUCTION = `Суть:
+Проверить доступность и корректность файла robots.txt для Яндекса.
+
+Контур блока:
+URL сайта → Яндекс Вебмастер → статус файла → результат анализа → доказательство.
+
+Поля блока:
+URL сайта, URL robots.txt, Яндекс Вебмастер, статус файла, статус анализа, важные страницы открыты, служебные страницы закрыты, Sitemap указан, ссылка на проверку / скрин / отчёт, комментарий при проблеме.`;
+
+function ensureRobotsYandexFields(card) {
+  if (!card) return ROBOTS_YANDEX_DEFAULTS;
+  card.instruction = ROBOTS_YANDEX_INSTRUCTION;
+  card.robotsYandex = { ...ROBOTS_YANDEX_DEFAULTS, ...(card.robotsYandex || {}) };
+  return card.robotsYandex;
+}
+
+const __guruPrevGetGate1CardModeV15 = getGate1CardMode;
+getGate1CardMode = function(card) {
+  if (isRobotsYandexCard(card)) return 'robots_yandex';
+  return __guruPrevGetGate1CardModeV15(card);
+};
+
+const __guruPrevEnsureGate1TypedDataV15 = ensureGate1TypedData;
+ensureGate1TypedData = function(card) {
+  if (isRobotsYandexCard(card)) {
+    ensureRobotsYandexFields(card);
+    return;
+  }
+  return __guruPrevEnsureGate1TypedDataV15(card);
+};
+
+const ROBOTS_YANDEX_STATUS = {
+  fileStatus: [['', 'Выбрать'], ['found', 'Найден'], ['not_found', 'Не найден']],
+  analysisStatus: [['', 'Выбрать'], ['correct', 'Корректен'], ['errors', 'Есть ошибки']],
+  importantPagesOpen: [['', 'Выбрать'], ['yes', 'Да'], ['no', 'Нет']],
+  servicePagesClosed: [['', 'Выбрать'], ['yes', 'Да'], ['no', 'Нет']],
+  sitemapInRobots: [['', 'Выбрать'], ['yes', 'Да'], ['no', 'Нет']]
+};
+
+function robotsYandexSelect(field, value) {
+  return `<select data-robots-yandex-field="${escapeAttr(field)}">${ROBOTS_YANDEX_STATUS[field].map(([key, label]) => `<option value="${escapeAttr(key)}" ${value === key ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}</select>`;
+}
+
+function robotsYandexResultClass(field, value) {
+  if (!value) return 'neutral';
+  if (field === 'fileStatus') return value === 'found' ? 'ok' : 'bad';
+  if (field === 'analysisStatus') return value === 'correct' ? 'ok' : 'bad';
+  if (['importantPagesOpen', 'servicePagesClosed', 'sitemapInRobots'].includes(field)) return value === 'yes' ? 'ok' : 'bad';
+  return 'neutral';
+}
+
+function robotsYandexFieldsHtml(card) {
+  const fields = ensureRobotsYandexFields(card);
+  const service = serviceLinkByToolKey('yandex_webmaster') || { label: 'Яндекс Вебмастер', url: 'https://webmaster.yandex.ru/' };
+  const statusChip = (field, label) => `<span class="result-pill result-${robotsYandexResultClass(field, fields[field])}">${escapeHtml(label)}</span>`;
+  return `<div class="robots-yandex-workspace context-panel">
+    <div class="workspace-unit-title">Контур проверки: URL → Яндекс Вебмастер → статус файла → результат анализа → доказательство</div>
+    <div class="robots-yandex-grid">
+      <label>URL сайта<input list="projectUrlOptions" data-robots-yandex-field="siteUrl" value="${escapeAttr(fields.siteUrl || state?.project?.website || '')}" placeholder="https://site.ru" />${projectUrlDatalistHtml()}</label>
+      <label>URL robots.txt<input list="projectUrlOptions" data-robots-yandex-field="robotsUrl" value="${escapeAttr(fields.robotsUrl || '')}" placeholder="https://site.ru/robots.txt" /></label>
+      <label>Инструмент проверки<div class="static-tool-link"><a href="${escapeAttr(service.url)}" target="_blank" rel="noopener">${escapeHtml(service.label)}</a></div></label>
+      <label>Статус файла${robotsYandexSelect('fileStatus', fields.fileStatus)}${statusChip('fileStatus', fields.fileStatus === 'found' ? 'Найден' : fields.fileStatus === 'not_found' ? 'Не найден' : 'Не выбран')}</label>
+      <label>Статус анализа${robotsYandexSelect('analysisStatus', fields.analysisStatus)}${statusChip('analysisStatus', fields.analysisStatus === 'correct' ? 'Корректен' : fields.analysisStatus === 'errors' ? 'Есть ошибки' : 'Не выбран')}</label>
+      <label>Важные страницы открыты${robotsYandexSelect('importantPagesOpen', fields.importantPagesOpen)}${statusChip('importantPagesOpen', fields.importantPagesOpen === 'yes' ? 'Да' : fields.importantPagesOpen === 'no' ? 'Нет' : 'Не выбран')}</label>
+      <label>Служебные страницы закрыты${robotsYandexSelect('servicePagesClosed', fields.servicePagesClosed)}${statusChip('servicePagesClosed', fields.servicePagesClosed === 'yes' ? 'Да' : fields.servicePagesClosed === 'no' ? 'Нет' : 'Не выбран')}</label>
+      <label>Sitemap указан в robots.txt${robotsYandexSelect('sitemapInRobots', fields.sitemapInRobots)}${statusChip('sitemapInRobots', fields.sitemapInRobots === 'yes' ? 'Да' : fields.sitemapInRobots === 'no' ? 'Нет' : 'Не выбран')}</label>
+      <label class="full">Ссылка на проверку / скрин / отчёт<input data-robots-yandex-field="evidenceUrl" value="${escapeAttr(fields.evidenceUrl || '')}" placeholder="ссылка на проверку, скрин или отчёт" /></label>
+      <label class="full">Комментарий, только если есть проблема<input data-robots-yandex-field="comment" value="${escapeAttr(fields.comment || '')}" placeholder="короткое уточнение" /></label>
+    </div>
+  </div>`;
+}
+
+const __guruPrevGate1TypedFieldsHtmlV15 = gate1TypedFieldsHtml;
+gate1TypedFieldsHtml = function(card) {
+  const mode = getGate1CardMode(card);
+  ensureGate1TypedData(card);
+  if (mode === 'robots_yandex') return `<div class="field-row"><span>Robots.txt Яндекс</span>${robotsYandexFieldsHtml(card)}</div>`;
+  return __guruPrevGate1TypedFieldsHtmlV15(card);
+};
+
+function robotsYandexStatus(card) {
+  const fields = ensureRobotsYandexFields(card);
+  const values = ['siteUrl', 'robotsUrl', 'fileStatus', 'analysisStatus', 'importantPagesOpen', 'servicePagesClosed', 'sitemapInRobots', 'evidenceUrl'].map(key => String(fields[key] || '').trim());
+  const filled = values.filter(Boolean).length;
+  if (!filled && !String(fields.comment || '').trim()) return 'not_started';
+  const hasProblem = fields.fileStatus === 'not_found' || fields.analysisStatus === 'errors' || fields.importantPagesOpen === 'no' || fields.servicePagesClosed === 'no' || fields.sitemapInRobots === 'no';
+  if (filled === values.length && !hasProblem) return 'ready';
+  return 'in_progress';
+}
+
+const __guruPrevRecalculateStatusForCardV15 = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isRobotsYandexCard(card)) {
+    card.status = robotsYandexStatus(card);
+    return;
+  }
+  return __guruPrevRecalculateStatusForCardV15(card, workspace);
+};
+
+function updateRobotsYandexField(target) {
+  const card = allCardsFromWorkspace(state).find(isRobotsYandexCard);
+  if (!card) return;
+  const field = target.dataset.robotsYandexField;
+  const fields = ensureRobotsYandexFields(card);
+  fields[field] = target.value;
+  if (field === 'siteUrl' || field === 'robotsUrl') addOrUpdateProjectLink(target.value, { comment: field === 'robotsUrl' ? 'robots.txt' : 'URL сайта', source: 'Яндекс Вебмастер' });
+  recalculateStatusForCard(card);
+  flashSaving();
+  renderGate();
+}
+
+document.addEventListener('change', event => {
+  if (event.target?.dataset?.robotsYandexField) updateRobotsYandexField(event.target);
+});
+
+document.addEventListener('input', event => {
+  if (event.target?.dataset?.robotsYandexField && event.target.tagName !== 'SELECT') updateRobotsYandexField(event.target);
+});
+
+(function markV15() {
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.15'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.15'); });
+})();
