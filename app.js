@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.32';
+const PLATFORM_VERSION = 'v0.33';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -7577,7 +7577,7 @@ renderGateNav = function() {
 
 
 /* =========================================================
-   v0.32 — Gate 7: живой журнал задач
+   v0.33 — Gate 7 deploy/version hotfix
    ========================================================= */
 const GATE7_BASE_SECTIONS = [
   { id: 'backlog', title: 'Бэклог', hint: 'Задачи, которые нужно зафиксировать, но ещё не ставить в работу.' },
@@ -7880,7 +7880,7 @@ renderGateNav = function() {
   });
 };
 
-(function markV32() {
-  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.32'); });
-  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.32'); });
+(function markV33() {
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.33'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.33'); });
 })();
