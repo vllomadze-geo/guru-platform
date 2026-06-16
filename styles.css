@@ -1498,3 +1498,17 @@ select:disabled {
 .v23-form-consent-inline{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid #e8ded1}
 .v23-consent-summary .mini-table{margin-top:12px}
 @media (max-width: 900px){.v23-legal-grid,.v23-legal-checklist,.v23-form-consent-inline{grid-template-columns:1fr}.v23-legal-head,.v23-summary-head{flex-direction:column}}
+
+
+/* v0.24 — SSL / HTTPS compact site-level block */
+.ssl-https-field-row{display:block!important;margin-top:10px}
+.ssl-https-workspace{max-width:70%;border:1px solid #e5ddd2;border-radius:18px;padding:16px;background:#fffdf9;box-shadow:0 12px 30px rgba(27,20,14,.05)}
+.ssl-https-workspace.is-ok{border-color:#16a34a;background:#f2fbf5}
+.ssl-https-workspace.is-attention{border-color:#f97316;background:#fff7ed}
+.ssl-https-workspace.is-issue{border-color:#dc2626;background:#fff5f5}
+.ssl-https-grid{display:grid;grid-template-columns:1fr 220px;gap:12px}
+.ssl-https-grid label{display:flex;flex-direction:column;gap:6px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6f655b;font-weight:700}
+.ssl-https-grid .full{grid-column:1 / -1}
+.ssl-https-grid input,.ssl-https-grid select{height:38px;border:1px solid #e2d8cc;border-radius:10px;background:#fff;color:#2b251f;padding:0 12px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:600}
+.ssl-https-body .compact-status-row{display:none}
+@media (max-width:900px){.ssl-https-workspace{max-width:100%}.ssl-https-grid{grid-template-columns:1fr}}

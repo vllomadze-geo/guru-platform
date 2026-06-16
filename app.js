@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.20';
+const PLATFORM_VERSION = 'v0.24';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -5221,3 +5221,177 @@ document.addEventListener('change', event => {
 document.addEventListener('input', event => {
   if (event.target?.dataset?.v23LegalField && event.target.tagName !== 'SELECT') updateV23LegalTrustField(event.target);
 });
+
+
+/* v0.24 — SSL / HTTPS: compact site-level block */
+STATUS_LABELS.needs_attention = 'Требует внимания';
+STATUS_LABELS.problem = 'Проблема';
+
+function isSslHttpsCard(card) {
+  const title = String(card?.title || '');
+  return Boolean(isGate1Card(card) && /ssl|https|ssl shopper/i.test(title));
+}
+
+const SSL_HTTPS_INSTRUCTION = `Суть:
+Проверить, что сайт безопасно открывается по HTTPS, сертификат валиден, цепочка корректна и браузер не показывает предупреждения.
+
+Формула блока:
+Домен → SSL-статус → доказательство → автоматический статус.
+
+Не входит в блок:
+Яндекс Вебмастер, Google Search Console, реклама, аналитика, CRM, формы, коллтрекинг и таблицы источников.`;
+
+function cloneSslHttpsDefaults() {
+  return { domain: '', status: '', result: '' };
+}
+
+function normalizeSslHttpsStatus(value = '') {
+  const v = String(value || '').trim().toLowerCase();
+  if (['ok', 'ready', 'valid', 'works', 'correct', 'yes', 'https'].includes(v)) return 'ok';
+  if (['attention', 'warning', 'soon', 'expires_soon', 'needs_attention', 'needs_review'].includes(v)) return 'attention';
+  if (['error', 'issue', 'expired', 'mismatch', 'untrusted', 'no_https', 'bad', 'problem'].includes(v)) return 'error';
+  return value || '';
+}
+
+function ensureSslHttpsFields(card) {
+  if (!card) return cloneSslHttpsDefaults();
+  card.title = 'SSL / HTTPS';
+  card.instruction = SSL_HTTPS_INSTRUCTION;
+  if (!card.sslHttps) {
+    const defaults = cloneSslHttpsDefaults();
+    const oldTyped = card.gate1Typed || {};
+    const oldLinks = Array.isArray(oldTyped.links) ? oldTyped.links : [];
+    const firstLink = oldLinks.find(row => String(row?.url || '').trim()) || {};
+    defaults.domain = firstLink.url || card.pages || state?.project?.website || '';
+    defaults.status = normalizeSslHttpsStatus(firstLink.status || oldTyped.status || '');
+    defaults.result = firstLink.comment || oldTyped.result || card.evidence || '';
+    card.sslHttps = defaults;
+  }
+  card.sslHttps.status = normalizeSslHttpsStatus(card.sslHttps.status || '');
+  return card.sslHttps;
+}
+
+const __guruPrevGetGate1CardModeV24 = getGate1CardMode;
+getGate1CardMode = function(card) {
+  if (isSslHttpsCard(card)) return 'ssl_https';
+  return __guruPrevGetGate1CardModeV24(card);
+};
+
+const __guruPrevEnsureGate1TypedDataV24 = ensureGate1TypedData;
+ensureGate1TypedData = function(card) {
+  if (isSslHttpsCard(card)) {
+    ensureSslHttpsFields(card);
+    return;
+  }
+  return __guruPrevEnsureGate1TypedDataV24(card);
+};
+
+function sslHttpsSelect(value) {
+  const options = [
+    ['', 'Не проверено'],
+    ['ok', 'ОК'],
+    ['attention', 'Требует внимания'],
+    ['error', 'Ошибка']
+  ];
+  return `<select class="ssl-https-select" data-ssl-https-field="status">
+    ${options.map(([key, label]) => `<option value="${escapeAttr(key)}" ${value === key ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}
+  </select>`;
+}
+
+function sslHttpsFieldsHtml(card) {
+  const fields = ensureSslHttpsFields(card);
+  const tone = fields.status === 'ok' ? 'is-ok' : fields.status === 'attention' ? 'is-attention' : fields.status === 'error' ? 'is-issue' : '';
+  return `<div class="ssl-https-workspace context-panel ${tone}">
+    <div class="ssl-https-grid">
+      <label>Проверяемый домен<input list="projectUrlOptions" data-ssl-https-field="domain" value="${escapeAttr(fields.domain || '')}" placeholder="https://site.ru" />${projectUrlDatalistHtml()}</label>
+      <label>Статус SSL${sslHttpsSelect(fields.status || '')}</label>
+      <label class="full">Доказательство / результат<input data-ssl-https-field="result" value="${escapeAttr(fields.result || '')}" placeholder="срок действия, ошибка, ссылка на отчёт или скрин" /></label>
+    </div>
+  </div>`;
+}
+
+const __guruPrevGate1TypedFieldsHtmlV24 = gate1TypedFieldsHtml;
+gate1TypedFieldsHtml = function(card) {
+  const mode = getGate1CardMode(card);
+  ensureGate1TypedData(card);
+  if (mode === 'ssl_https') return `<div class="field-row ssl-https-field-row">${sslHttpsFieldsHtml(card)}</div>`;
+  return __guruPrevGate1TypedFieldsHtmlV24(card);
+};
+
+function sslHttpsStatus(card) {
+  const fields = ensureSslHttpsFields(card);
+  const domainFilled = Boolean(String(fields.domain || '').trim());
+  const resultFilled = Boolean(String(fields.result || '').trim());
+  if (!domainFilled) return 'not_started';
+  if (fields.status === 'error') return 'problem';
+  if (fields.status === 'attention') return 'needs_attention';
+  if (fields.status === 'ok' && resultFilled) return 'ready';
+  return 'in_progress';
+}
+
+const __guruPrevRecalculateStatusForCardV24 = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isSslHttpsCard(card)) {
+    card.status = sslHttpsStatus(card);
+    return;
+  }
+  return __guruPrevRecalculateStatusForCardV24(card, workspace);
+};
+
+function updateSslHttpsField(target) {
+  const cardId = target.closest('[data-card]')?.dataset?.card;
+  const card = cardId ? findCard(cardId) : allCardsFromWorkspace(state).find(isSslHttpsCard);
+  if (!card) return;
+  const fields = ensureSslHttpsFields(card);
+  const field = target.dataset.sslHttpsField;
+  fields[field] = target.value;
+  if (field === 'domain') addOrUpdateProjectLink(target.value, { comment: 'SSL / HTTPS', source: 'SSL' });
+  recalculateStatusForCard(card);
+  flashSaving();
+  renderGate();
+}
+
+const __guruPrevTypedDataPlainV24 = typedDataPlain;
+typedDataPlain = function(card) {
+  if (getGate1CardMode(card) === 'ssl_https') {
+    const fields = ensureSslHttpsFields(card);
+    const statusLabel = fields.status === 'ok' ? 'ОК' : fields.status === 'attention' ? 'требует внимания' : fields.status === 'error' ? 'ошибка' : 'не проверено';
+    return [`Домен: ${fields.domain || 'не указан'}`, `Статус SSL: ${statusLabel}`, `Доказательство: ${fields.result || 'не указано'}`].join('\n');
+  }
+  return __guruPrevTypedDataPlainV24(card);
+};
+
+const __guruPrevGate1WorkBlockHtmlV24 = gate1WorkBlockHtml;
+gate1WorkBlockHtml = function(card, sectionTitle = 'Аналитика') {
+  if (!isSslHttpsCard(card)) return __guruPrevGate1WorkBlockHtmlV24(card, sectionTitle);
+  const accState = getGate1AccordionState();
+  const isOpen = Boolean(accState.cards[card.id]);
+  return `<article class="work-accordion-card ${isOpen ? 'is-open is-active' : ''}" data-card="${escapeAttr(card.id)}">
+    <button class="work-card-header" data-gate1-toggle-card="${escapeAttr(card.id)}">
+      <span class="work-card-main">
+        <span class="analytics-path">Gate 1 → ${escapeHtml(sectionTitle)} → ${escapeHtml(card.title)}</span>
+        <span class="work-card-title">${escapeHtml(card.title)}</span>
+        <span class="work-card-preview">${escapeHtml(cardPreviewText(card))}</span>
+      </span>
+      <span class="status-pill status-${card.status}">${STATUS_LABELS[card.status] || card.status}</span>
+      <span class="work-card-toggle">${isOpen ? 'Свернуть' : 'Раскрыть'}</span>
+    </button>
+    ${isOpen ? `<div class="work-card-body ssl-https-body">
+      ${instructionToggleHtml(card)}
+      <div class="card-fields">${cardUserFieldsHtml(card)}</div>
+    </div>` : ''}
+  </article>`;
+};
+
+document.addEventListener('change', event => {
+  if (event.target?.dataset?.sslHttpsField) updateSslHttpsField(event.target);
+});
+
+document.addEventListener('input', event => {
+  if (event.target?.dataset?.sslHttpsField && event.target.tagName !== 'SELECT') updateSslHttpsField(event.target);
+});
+
+(function markV24() {
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.24'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.24'); });
+})();
