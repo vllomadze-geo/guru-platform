@@ -1193,3 +1193,14 @@ select:disabled {
   .server-response-workspace { max-width: 100%; }
   .server-response-grid { grid-template-columns: 1fr; }
 }
+
+/* v0.20 page-centric audit */
+.v20-page-card { border-left: 3px solid #111827; }
+.page-audit-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.page-audit-grid .full { grid-column: 1 / -1; }
+.audit-summary-block { display: grid; gap: 12px; }
+.summary-note { font-size: 13px; color: var(--muted); }
+.audit-summary-table td { vertical-align: middle; }
+.status-problem { background: #dc2626 !important; color: #fff !important; border-color: #dc2626 !important; }
+.status-needs_attention { background: #f97316 !important; color: #fff !important; border-color: #f97316 !important; }
+@media (max-width: 820px) { .page-audit-grid { grid-template-columns: 1fr; } }

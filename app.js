@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.19';
+const PLATFORM_VERSION = 'v0.20';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -4089,4 +4089,308 @@ document.addEventListener('input', event => {
 (function markV19() {
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.19'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.19'); });
+})();
+
+/* v0.20 — Audit site: page-centric SEO/CWV/images, site-level checks remain compact */
+STATUS_LABELS.problem = 'Проблема';
+STATUS_LABELS.needs_attention = 'Требует внимания';
+
+const V20_AUDIT_SUMMARY_TITLES = [
+  'Meta Robots SEO META in 1 CLICK',
+  'CWV PageSpeed Insights',
+  'Изображения SEO META in 1 CLICK'
+];
+
+function isPageAuditSummaryCard(card) {
+  const title = normalizeGateTitle(card?.title || '');
+  return V20_AUDIT_SUMMARY_TITLES.some(item => title === normalizeGateTitle(item));
+}
+
+function auditSummaryType(card) {
+  const title = normalizeGateTitle(card?.title || '');
+  if (title === normalizeGateTitle('Meta Robots SEO META in 1 CLICK')) return 'metaRobotsStatus';
+  if (title === normalizeGateTitle('CWV PageSpeed Insights')) return 'cwvStatus';
+  if (title === normalizeGateTitle('Изображения SEO META in 1 CLICK')) return 'imagesStatus';
+  return '';
+}
+
+function auditSummaryLabel(type) {
+  if (type === 'metaRobotsStatus') return 'Meta Robots';
+  if (type === 'cwvStatus') return 'CWV';
+  if (type === 'imagesStatus') return 'Изображения';
+  return 'Проверка';
+}
+
+function v20EnsurePageAuditFields(row) {
+  row.contextFields = row.contextFields || {};
+  row.metaRobotsStatus = row.metaRobotsStatus || '';
+  row.cwvStatus = row.cwvStatus || '';
+  row.imagesStatus = row.imagesStatus || '';
+  row.auditEvidence = row.auditEvidence || '';
+  return row;
+}
+
+const __guruPrevNormalizePageStructureRowV20 = normalizePageStructureRow;
+normalizePageStructureRow = function(row, card) {
+  const normalized = __guruPrevNormalizePageStructureRowV20(row, card);
+  return v20EnsurePageAuditFields(normalized);
+};
+
+const __guruPrevEnsureGate1TypedDataV20 = ensureGate1TypedData;
+ensureGate1TypedData = function(card) {
+  if (isPageAuditSummaryCard(card)) return;
+  __guruPrevEnsureGate1TypedDataV20(card);
+  if (getGate1CardMode(card) === 'page_structure') {
+    (card.pageRows || []).forEach(v20EnsurePageAuditFields);
+  }
+};
+
+const __guruPrevGetGate1CardModeV20 = getGate1CardMode;
+getGate1CardMode = function(card) {
+  if (isPageAuditSummaryCard(card)) return 'page_audit_summary';
+  return __guruPrevGetGate1CardModeV20(card);
+};
+
+function auditStatusOptions(value, type) {
+  let options = [['', 'Не проверено']];
+  if (type === 'meta') {
+    options = options.concat([
+      ['ok', 'Индексация разрешена'],
+      ['closed', 'Закрыта от индексации'],
+      ['error', 'Ошибка']
+    ]);
+  } else if (type === 'cwv') {
+    options = options.concat([
+      ['ok', 'ОК'],
+      ['improve', 'Требует улучшения'],
+      ['error', 'Проблема']
+    ]);
+  } else {
+    options = options.concat([
+      ['ok', 'ОК'],
+      ['improve', 'Требует улучшения'],
+      ['error', 'Критичные ошибки']
+    ]);
+  }
+  return `<option value="" ${!value ? 'selected' : ''}>${options[0][1]}</option>${options.slice(1).map(([key, label]) => `<option value="${escapeAttr(key)}" ${value === key ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}`;
+}
+
+function auditStatusChip(value) {
+  const label = value === 'ok' ? 'ОК' : value === 'improve' ? 'Требует улучшения' : value === 'closed' ? 'Закрыта' : value === 'error' ? 'Проблема' : 'Не проверено';
+  const cls = value === 'ok' ? 'ready' : value === 'improve' || value === 'closed' ? 'needs_attention' : value === 'error' ? 'problem' : 'not_started';
+  return `<span class="status-pill status-${cls}">${escapeHtml(label)}</span>`;
+}
+
+const __guruPrevPageStructureStatusV20 = pageStructureStatus;
+pageStructureStatus = function(row) {
+  v20EnsurePageAuditFields(row);
+  const url = String(row.url || '').trim();
+  if (!url) return 'not_started';
+  if ([row.metaRobotsStatus, row.cwvStatus, row.imagesStatus].includes('error')) return 'problem';
+  if ([row.cwvStatus, row.imagesStatus, row.metaRobotsStatus].includes('improve') || row.metaRobotsStatus === 'closed') return 'needs_attention';
+  const checks = [
+    Boolean(url),
+    evaluateLength(row.h1, 10, 90).ok,
+    evaluateLength(row.title, 20, 90).ok,
+    evaluateLength(row.description, 50, 200).ok,
+    row.metaRobotsStatus === 'ok',
+    row.cwvStatus === 'ok',
+    row.imagesStatus === 'ok',
+    Boolean(String(row.auditEvidence || '').trim()),
+    row.ctaMode === 'not_needed' ? true : Boolean(String(row.finalCta || '').trim())
+  ];
+  const filled = checks.filter(Boolean).length;
+  if (filled === checks.length) return 'ready';
+  return 'in_progress';
+};
+
+const __guruPrevPageContextDefinitionsV20 = pageContextDefinitions;
+pageContextDefinitions = function(context) {
+  const defs = __guruPrevPageContextDefinitionsV20(context);
+  return defs.filter(def => !['seoIssues'].includes(def.key));
+};
+
+function pageAuditControlsHtml(card, row, pageIndex) {
+  v20EnsurePageAuditFields(row);
+  return `<details class="page-context-group page-audit-group" open>
+    <summary>SEO, скорость, изображения и доказательство</summary>
+    <div class="page-audit-grid">
+      <label>Meta Robots<select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="metaRobotsStatus">${auditStatusOptions(row.metaRobotsStatus, 'meta')}</select></label>
+      <label>CWV<select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="cwvStatus">${auditStatusOptions(row.cwvStatus, 'cwv')}</select></label>
+      <label>Изображения<select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="imagesStatus">${auditStatusOptions(row.imagesStatus, 'images')}</select></label>
+      <label class="full">Доказательство<input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="auditEvidence" value="${escapeAttr(row.auditEvidence || '')}" placeholder="ссылка на отчёт или скрин" /></label>
+    </div>
+  </details>`;
+}
+
+pageStructureCardHtml = function(card, row, pageIndex, repeatable) {
+  const context = pageTemplateContext(card);
+  const defs = ensurePageContextFields(row, context);
+  v20EnsurePageAuditFields(row);
+  const snippet = snippetForPage(row);
+  const grouped = defs.reduce((acc, def) => { (acc[def.group] = acc[def.group] || []).push(def); return acc; }, {});
+  const pageStatus = pageStructureStatus(row);
+  return `<section class="page-structure-card v20-page-card" data-page-source-card="${escapeAttr(card.id)}">
+    <div class="page-structure-head">
+      <input class="page-name-input" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="name" value="${escapeAttr(row.name || '')}" placeholder="Название страницы" ${row.fixed ? 'readonly' : ''} />
+      <span class="status-pill status-${pageStatus}">${STATUS_LABELS[pageStatus] || pageStatus}</span>
+      ${repeatable ? `<button class="small-btn danger-mini" data-remove-gate1-page="${escapeAttr(card.id)}" data-index="${pageIndex}" ${rowsSafeLength(card.pageRows) <= 1 ? 'disabled' : ''}>×</button>` : ''}
+    </div>
+    <div class="page-grid compact-page-grid">
+      <label>URL<input list="projectUrlOptions" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
+      <label>H1 <small>10–90 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="h1" value="${escapeAttr(row.h1 || '')}" />${pageFieldStatusHtml(row.h1, 10, 90)}</label>
+      <label>Title <small>20–90 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="title" value="${escapeAttr(row.title || '')}" />${pageFieldStatusHtml(row.title, 20, 90)}</label>
+      <label class="full">Description <small>50–200 знаков</small><textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="description" rows="2">${escapeHtml(row.description || '')}</textarea>${pageFieldStatusHtml(row.description, 50, 200)}</label>
+    </div>
+    <div class="page-context-groups">
+      ${Object.entries(grouped).map(([group, items]) => `<details class="page-context-group" open>
+        <summary>${escapeHtml(group)}</summary>
+        <div class="page-context-grid">${items.map(def => pageContextFieldHtml(card, pageIndex, row, def)).join('')}</div>
+      </details>`).join('')}
+      <details class="page-context-group" open>
+        <summary>Snippet</summary>
+        <div class="snippet-preview">${snippet ? escapeHtml(snippet) : 'Соберётся из H1, Title, Description, смысла и оффера страницы.'}</div>
+      </details>
+      <details class="page-context-group" open>
+        <summary>Финальный CTA</summary>
+        <div class="page-context-grid">
+          <label>Нужен ли CTA<select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="ctaMode">
+            <option value="needed" ${row.ctaMode !== 'not_needed' ? 'selected' : ''}>Нужен</option>
+            <option value="not_needed" ${row.ctaMode === 'not_needed' ? 'selected' : ''}>Не нужен</option>
+          </select></label>
+          ${row.ctaMode === 'not_needed' ? '' : `<label class="full">Текст CTA<textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="finalCta" rows="2">${escapeHtml(row.finalCta || '')}</textarea></label>`}
+        </div>
+      </details>
+      ${pageAuditControlsHtml(card, row, pageIndex)}
+    </div>
+  </section>`;
+};
+
+function allAuditPageCards() {
+  const gate = state?.gates?.find(isGate1Analytics);
+  if (!gate) return [];
+  return gate.cards.filter(card => getGate1CardMode(card) === 'page_structure');
+}
+
+function auditSummaryRows(type) {
+  return allAuditPageCards().flatMap(card => {
+    ensureGate1TypedData(card);
+    return (card.pageRows || []).map((row, index) => {
+      v20EnsurePageAuditFields(row);
+      return { card, row, index, value: row[type] || '' };
+    });
+  });
+}
+
+function auditSummaryCardStatus(card) {
+  const type = auditSummaryType(card);
+  const rows = auditSummaryRows(type).filter(item => String(item.row.url || '').trim());
+  if (!rows.length) return 'not_started';
+  if (rows.some(item => item.value === 'error')) return 'problem';
+  if (rows.some(item => item.value === 'improve' || item.value === 'closed')) return 'needs_attention';
+  if (rows.every(item => item.value === 'ok')) return 'ready';
+  return 'in_progress';
+}
+
+function auditSummaryHtml(card) {
+  const type = auditSummaryType(card);
+  const rows = auditSummaryRows(type);
+  const label = auditSummaryLabel(type);
+  if (!rows.length) return '<div class="empty compact-empty">Страницы ещё не заведены.</div>';
+  return `<div class="audit-summary-block">
+    <div class="summary-note">Сводка по страницам. Ручное заполнение выполняется внутри карточки конкретной страницы.</div>
+    <table class="mini-table typed-table audit-summary-table">
+      <thead><tr><th>Страница</th><th>URL</th><th>${escapeHtml(label)}</th><th>Переход</th></tr></thead>
+      <tbody>${rows.map(item => `<tr>
+        <td>${escapeHtml(item.row.name || item.card.title)}</td>
+        <td>${item.row.url ? escapeHtml(item.row.url) : '<span class="muted">URL не указан</span>'}</td>
+        <td>${auditStatusChip(item.value)}</td>
+        <td><button class="small-btn" data-open-audit-page="${escapeAttr(item.card.id)}">Открыть страницу</button></td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+const __guruPrevGate1TypedFieldsHtmlV20 = gate1TypedFieldsHtml;
+gate1TypedFieldsHtml = function(card) {
+  const mode = getGate1CardMode(card);
+  if (mode === 'page_audit_summary') return `<div class="field-row audit-summary-row">${auditSummaryHtml(card)}</div>`;
+  return __guruPrevGate1TypedFieldsHtmlV20(card);
+};
+
+const __guruPrevRecalculateStatusForCardV20 = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isPageAuditSummaryCard(card)) {
+    card.status = auditSummaryCardStatus(card);
+    return;
+  }
+  if (getGate1CardMode(card) === 'page_structure') {
+    ensureGate1TypedData(card);
+    const statuses = (card.pageRows || []).map(pageStructureStatus);
+    if (statuses.some(status => status === 'problem')) card.status = 'problem';
+    else if (statuses.some(status => status === 'needs_attention')) card.status = 'needs_attention';
+    else if (statuses.every(status => status === 'not_started')) card.status = 'not_started';
+    else if (statuses.every(status => status === 'ready')) card.status = 'ready';
+    else card.status = 'in_progress';
+    return;
+  }
+  return __guruPrevRecalculateStatusForCardV20(card, workspace);
+};
+
+const __guruPrevTypedDataPlainV20 = typedDataPlain;
+typedDataPlain = function(card) {
+  if (getGate1CardMode(card) === 'page_audit_summary') {
+    const type = auditSummaryType(card);
+    return auditSummaryRows(type).map(item => `${item.row.name || item.card.title}: ${auditStatusChipText(item.value)}`).join('\n');
+  }
+  if (getGate1CardMode(card) === 'page_structure') {
+    ensureGate1TypedData(card);
+    return (card.pageRows || []).map(row => `${row.name}: ${row.url || 'URL не указан'}\nH1: ${row.h1 || ''}\nTitle: ${row.title || ''}\nDescription: ${row.description || ''}\nSnippet: ${snippetForPage(row)}\nФинальный CTA: ${row.ctaMode === 'not_needed' ? 'не нужен' : (row.finalCta || 'не заполнен')}\nMeta Robots: ${auditChipText(row.metaRobotsStatus, 'meta')}\nCWV: ${auditChipText(row.cwvStatus, 'cwv')}\nИзображения: ${auditChipText(row.imagesStatus, 'images')}\nДоказательство: ${row.auditEvidence || ''}`).join('\n\n');
+  }
+  return __guruPrevTypedDataPlainV20(card);
+};
+
+function auditChipText(value, type) {
+  if (!value) return 'не проверено';
+  if (value === 'ok') return 'ОК';
+  if (value === 'improve') return 'требует улучшения';
+  if (value === 'closed') return 'закрыта от индексации';
+  if (value === 'error') return 'проблема';
+  return value;
+}
+function auditSummaryChipText(value) { return auditChipText(value); }
+function auditStatusChipText(value) { return auditChipText(value); }
+
+const __guruPrevUpdateGate1PageRowV20 = updateGate1PageRow;
+updateGate1PageRow = function(e) {
+  __guruPrevUpdateGate1PageRowV20(e);
+  const field = e.target.dataset.gate1PageField;
+  if (['metaRobotsStatus','cwvStatus','imagesStatus','auditEvidence'].includes(field)) renderGate();
+};
+
+function openAuditPageCard(cardId) {
+  activeView = 'gate';
+  activeGateId = 'gate-1';
+  const acc = getGate1AccordionState();
+  acc.subblocks.site_audit = true;
+  acc.cards[cardId] = true;
+  saveState();
+  render();
+  setTimeout(() => {
+    const node = document.querySelector(`[data-card="${CSS.escape(cardId)}"]`);
+    if (node) node.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+}
+
+document.addEventListener('click', event => {
+  const btn = event.target.closest('[data-open-audit-page]');
+  if (!btn) return;
+  event.preventDefault();
+  event.stopPropagation();
+  openAuditPageCard(btn.dataset.openAuditPage);
+});
+
+(function markV20() {
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.20'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.20'); });
 })();
