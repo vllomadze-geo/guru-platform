@@ -1153,3 +1153,43 @@ select:disabled {
 .sitemap-system-card.is-ok { border-color: #16a34a; background: #f2fbf5; }
 .sitemap-system-card.is-issue { border-color: #dc2626; background: #fff5f5; }
 .sitemap-field-row { margin-top: 10px; }
+
+
+/* v0.19 — Redirects / server response compact block */
+.status-needs_attention { background: #f97316 !important; color: #fff !important; border-color: #f97316 !important; }
+.server-response-field-row { margin-top: 10px; }
+.server-response-workspace {
+  width: min(100%, 980px);
+  max-width: 70%;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+}
+.server-response-workspace.is-ok { border-color: #16a34a; background: #f2fbf5; }
+.server-response-workspace.is-attention { border-color: #f97316; background: #fff7ed; }
+.server-response-workspace.is-issue { border-color: #dc2626; background: #fff5f5; }
+.server-response-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(180px, .45fr);
+  gap: 12px;
+  align-items: end;
+}
+.server-response-grid label {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  font-weight: 900;
+}
+.server-response-grid .server-result-field { grid-column: 1 / -1; }
+.server-response-select,
+.server-response-grid input {
+  min-height: 40px;
+}
+.server-response-body .compact-status-row { display: none; }
+@media (max-width: 980px) {
+  .server-response-workspace { max-width: 100%; }
+  .server-response-grid { grid-template-columns: 1fr; }
+}

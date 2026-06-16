@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.17';
+const PLATFORM_VERSION = 'v0.19';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -3915,4 +3915,178 @@ document.addEventListener('input', event => {
 (function markV18() {
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.18'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.18'); });
+})();
+
+
+/* v0.19 — Редиректы / Проверка ответа сервера: один URL, ответ сервера, доказательство */
+STATUS_LABELS.problem = 'Проблема';
+STATUS_LABELS.needs_attention = 'Требует внимания';
+
+function isServerResponseCard(card) {
+  const title = String(card?.title || '').toLowerCase();
+  return Boolean(isGate1Card(card) && (/редирект/.test(title) || /ответ\s+сервера/.test(title) || /проверка\s+ответа/.test(title)));
+}
+
+const SERVER_RESPONSE_INSTRUCTION = `Суть:
+Проверить технический ответ конкретного URL: код ответа, финальный URL и корректность цепочки переходов.
+
+Логика:
+URL → ответ сервера → доказательство → автоматический статус.
+
+Не входит в базовый блок:
+Яндекс / Google карточки, реклама, аналитика, CRM, формы, коллтрекинг, массовая проверка всех URL, время ответа, индексация, canonical.`;
+
+function cloneServerResponseDefaults() {
+  return { url: '', response: '', result: '' };
+}
+
+function normalizeServerResponseValue(value = '') {
+  const v = String(value || '').trim().toLowerCase();
+  if (['ok', '200', '301', 'works', 'ready', 'correct'].includes(v)) return 'ok';
+  if (['attention', 'warning', '302', 'long_chain', 'mixed', 'needs_attention', 'needs_review'].includes(v)) return 'attention';
+  if (['error', 'issue', '404', '403', '500', 'cycle', 'bad', 'not_working'].includes(v)) return 'error';
+  return value || '';
+}
+
+function ensureServerResponseFields(card) {
+  if (!card) return cloneServerResponseDefaults();
+  card.title = 'Редиректы / Проверка ответа сервера';
+  card.instruction = SERVER_RESPONSE_INSTRUCTION;
+  if (!card.serverResponse) {
+    const defaults = cloneServerResponseDefaults();
+    const oldTyped = card.gate1Typed || {};
+    const oldLinks = Array.isArray(oldTyped.links) ? oldTyped.links : [];
+    const oldFirstUrl = oldLinks.find(row => String(row?.url || '').trim()) || {};
+    defaults.url = oldFirstUrl.url || '';
+    defaults.response = normalizeServerResponseValue(oldFirstUrl.status || oldTyped.status || '');
+    defaults.result = oldFirstUrl.comment || oldTyped.result || '';
+    card.serverResponse = defaults;
+  }
+  card.serverResponse.response = normalizeServerResponseValue(card.serverResponse.response || '');
+  return card.serverResponse;
+}
+
+const __guruPrevGetGate1CardModeV19 = getGate1CardMode;
+getGate1CardMode = function(card) {
+  if (isServerResponseCard(card)) return 'server_response';
+  return __guruPrevGetGate1CardModeV19(card);
+};
+
+const __guruPrevEnsureGate1TypedDataV19 = ensureGate1TypedData;
+ensureGate1TypedData = function(card) {
+  if (isServerResponseCard(card)) {
+    ensureServerResponseFields(card);
+    return;
+  }
+  return __guruPrevEnsureGate1TypedDataV19(card);
+};
+
+function serverResponseSelect(value) {
+  const options = [
+    ['', 'Выбрать'],
+    ['ok', 'ОК'],
+    ['attention', 'Требует внимания'],
+    ['error', 'Ошибка']
+  ];
+  return `<select class="server-response-select" data-server-response-field="response">
+    ${options.map(([key, label]) => `<option value="${escapeAttr(key)}" ${value === key ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}
+  </select>`;
+}
+
+function serverResponseFieldsHtml(card) {
+  const fields = ensureServerResponseFields(card);
+  const tone = fields.response === 'ok' ? 'is-ok' : fields.response === 'attention' ? 'is-attention' : fields.response === 'error' ? 'is-issue' : '';
+  return `<div class="server-response-workspace context-panel ${tone}">
+    <div class="server-response-grid">
+      <label>Проверяемый URL<input list="projectUrlOptions" data-server-response-field="url" value="${escapeAttr(fields.url || '')}" placeholder="https://site.ru/page" />${projectUrlDatalistHtml()}</label>
+      <label>Ответ сервера${serverResponseSelect(fields.response || '')}</label>
+      <label class="server-result-field">Результат проверки<input data-server-response-field="result" value="${escapeAttr(fields.result || '')}" placeholder="код ответа, финальный URL, ссылка на скрин или отчёт" /></label>
+    </div>
+  </div>`;
+}
+
+const __guruPrevGate1TypedFieldsHtmlV19 = gate1TypedFieldsHtml;
+gate1TypedFieldsHtml = function(card) {
+  const mode = getGate1CardMode(card);
+  ensureGate1TypedData(card);
+  if (mode === 'server_response') return `<div class="field-row server-response-field-row">${serverResponseFieldsHtml(card)}</div>`;
+  return __guruPrevGate1TypedFieldsHtmlV19(card);
+};
+
+function serverResponseStatus(card) {
+  const fields = ensureServerResponseFields(card);
+  const urlFilled = Boolean(String(fields.url || '').trim());
+  const resultFilled = Boolean(String(fields.result || '').trim());
+  if (!urlFilled) return 'not_started';
+  if (fields.response === 'error') return 'problem';
+  if (fields.response === 'attention') return 'needs_attention';
+  if (fields.response === 'ok' && resultFilled) return 'ready';
+  return 'in_progress';
+}
+
+const __guruPrevRecalculateStatusForCardV19 = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isServerResponseCard(card)) {
+    card.status = serverResponseStatus(card);
+    return;
+  }
+  return __guruPrevRecalculateStatusForCardV19(card, workspace);
+};
+
+function updateServerResponseField(target) {
+  const cardId = target.closest('[data-card]')?.dataset?.card;
+  const card = cardId ? findCard(cardId) : allCardsFromWorkspace(state).find(isServerResponseCard);
+  if (!card) return;
+  const fields = ensureServerResponseFields(card);
+  const field = target.dataset.serverResponseField;
+  fields[field] = target.value;
+  if (field === 'url') addOrUpdateProjectLink(target.value, { comment: 'проверка ответа сервера', source: 'Редиректы' });
+  recalculateStatusForCard(card);
+  flashSaving();
+  renderGate();
+}
+
+const __guruPrevTypedDataPlainV19 = typedDataPlain;
+typedDataPlain = function(card) {
+  if (getGate1CardMode(card) === 'server_response') {
+    const fields = ensureServerResponseFields(card);
+    const statusLabel = fields.response === 'ok' ? 'ОК' : fields.response === 'attention' ? 'требует внимания' : fields.response === 'error' ? 'ошибка' : 'не выбран';
+    return [`URL: ${fields.url || 'не указан'}`, `Ответ сервера: ${statusLabel}`, `Результат: ${fields.result || 'не указан'}`].join('\n');
+  }
+  return __guruPrevTypedDataPlainV19(card);
+};
+
+const __guruPrevGate1WorkBlockHtmlV19 = gate1WorkBlockHtml;
+gate1WorkBlockHtml = function(card, sectionTitle = 'Аналитика') {
+  if (!isServerResponseCard(card)) return __guruPrevGate1WorkBlockHtmlV19(card, sectionTitle);
+  const accState = getGate1AccordionState();
+  const isOpen = Boolean(accState.cards[card.id]);
+  return `<article class="work-accordion-card ${isOpen ? 'is-open is-active' : ''}" data-card="${escapeAttr(card.id)}">
+    <button class="work-card-header" data-gate1-toggle-card="${escapeAttr(card.id)}">
+      <span class="work-card-main">
+        <span class="analytics-path">Gate 1 → ${escapeHtml(sectionTitle)} → ${escapeHtml(card.title)}</span>
+        <span class="work-card-title">${escapeHtml(card.title)}</span>
+        <span class="work-card-preview">${escapeHtml(cardPreviewText(card))}</span>
+      </span>
+      <span class="status-pill status-${card.status}">${STATUS_LABELS[card.status] || card.status}</span>
+      <span class="work-card-toggle">${isOpen ? 'Свернуть' : 'Раскрыть'}</span>
+    </button>
+    ${isOpen ? `<div class="work-card-body server-response-body">
+      ${instructionToggleHtml(card)}
+      <div class="card-fields">${cardUserFieldsHtml(card)}</div>
+    </div>` : ''}
+  </article>`;
+};
+
+document.addEventListener('change', event => {
+  if (event.target?.dataset?.serverResponseField) updateServerResponseField(event.target);
+});
+
+document.addEventListener('input', event => {
+  if (event.target?.dataset?.serverResponseField && event.target.tagName !== 'SELECT') updateServerResponseField(event.target);
+});
+
+(function markV19() {
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.19'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.19'); });
 })();
