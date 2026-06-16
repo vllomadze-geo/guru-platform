@@ -1756,3 +1756,46 @@ select:disabled {
 .gate6-plan-table tr{cursor:pointer}.gate6-plan-table tr:hover td{background:#f8fafc}.linklike{border:0;background:transparent;color:var(--ink);font:800 13px/1.3 var(--font-ui);padding:0;cursor:pointer;text-align:left}.linklike:hover{text-decoration:underline}.mini-text{font-size:11px;margin-top:3px}
 @media(max-width:1100px){.gate6-event-decision{grid-template-columns:1fr 1fr}.gate6-context-grid,.gate6-season-context{grid-template-columns:1fr}}
 @media(max-width:720px){.gate6-intro,.gate6-season-body,.gate6-plan{padding:14px}.gate6-season-head{padding:14px}.gate6-event-decision{grid-template-columns:1fr}.gate6-intro h2{font-size:21px}.gate6-formula span{font-size:10px;padding:6px 8px}}
+
+/* =========================================================
+   v0.31 · Gate 6 quarterly calendar cleanup
+   ========================================================= */
+.gate6-quarterly .gate6-formula span{background:#fff;border-color:#d8dee8;color:#536071}
+.gate6-quarter-list{display:grid;gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}
+.gate6-quarter-row{display:grid;grid-template-columns:110px minmax(190px,1.2fr) 130px minmax(220px,1.5fr) 120px 150px;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);font-size:12px;line-height:1.35;color:var(--ink)}
+.gate6-quarter-row:last-child{border-bottom:0}
+.gate6-quarter-row-head{background:#f8fafc;color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+.gate6-event-compact{background:#fff;border-bottom:1px solid var(--line)}
+.gate6-event-compact:last-child{border-bottom:0}
+.gate6-event-compact>summary{list-style:none;cursor:pointer;margin:0}
+.gate6-event-compact>summary::-webkit-details-marker{display:none}
+.gate6-event-compact[open]>summary{background:#f8fafc}
+.gate6-event-name{font-weight:850;color:var(--ink)}
+.gate6-date{font-family:var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);font-weight:750;color:#475569}
+.gate6-event-detail{padding:14px 14px 16px;background:#fff;border-top:1px solid var(--line);display:grid;gap:12px}
+.gate6-event-reason{font-size:13px;line-height:1.45;color:var(--ink);background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:11px 12px}
+.gate6-event-reason b{color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.06em;margin-right:6px}
+.gate6-event-three-fields{display:grid;grid-template-columns:220px minmax(220px,1fr) minmax(260px,1.2fr);gap:12px;align-items:start}
+.gate6-quarter-context{grid-template-columns:1fr 1fr}
+.gate6-quarter-context p{margin:0}
+.gate6-quarterly .gate6-plan-table td:nth-child(5){max-width:360px;white-space:normal}
+@media(max-width:980px){
+  .gate6-quarter-row{grid-template-columns:90px minmax(160px,1fr) 115px minmax(180px,1fr) 105px 130px;gap:8px;font-size:11.5px}
+  .gate6-event-three-fields{grid-template-columns:1fr 1fr}
+  .gate6-event-three-fields .gate6-field:last-child{grid-column:1/-1}
+}
+@media(max-width:720px){
+  .gate6-quarter-row-head{display:none}
+  .gate6-event-compact{border:1px solid var(--line);border-radius:14px;margin:10px;background:#fff;overflow:hidden}
+  .gate6-quarter-list{border:0;background:transparent;gap:10px}
+  .gate6-quarter-row{display:grid;grid-template-columns:1fr;border:0;padding:12px;gap:6px}
+  .gate6-event-summary span{display:block}
+  .gate6-event-summary span:nth-child(1)::before{content:'Дата: ';font-weight:850;color:var(--muted)}
+  .gate6-event-summary span:nth-child(2)::before{content:'Событие: ';font-weight:850;color:var(--muted)}
+  .gate6-event-summary span:nth-child(3)::before{content:'Решение: ';font-weight:850;color:var(--muted)}
+  .gate6-event-summary span:nth-child(4)::before{content:'Кампания: ';font-weight:850;color:var(--muted)}
+  .gate6-event-summary span:nth-child(5)::before{content:'Дедлайн: ';font-weight:850;color:var(--muted)}
+  .gate6-event-summary span:nth-child(6)::before{content:'Статус: ';font-weight:850;color:var(--muted);margin-right:6px}
+  .gate6-event-three-fields,.gate6-quarter-context{grid-template-columns:1fr}
+  .gate6-season-body.gate6-quarter-body{padding:10px}
+}

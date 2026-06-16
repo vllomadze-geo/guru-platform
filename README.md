@@ -1,6 +1,6 @@
-# ГУРУ, MVP платформы v0.30
+# ГУРУ, MVP платформы v0.31
 
-## Что изменено в v0.30
+## Что изменено в v0.31
 
 Пересобран **Gate 6 → Маркетинговый календарь событий**.
 
@@ -56,4 +56,9 @@
 
 Загрузите содержимое папки `guru_platform_v30` в GitHub-репозиторий `guru-platform` и сделайте commit:
 
-`Update to v0.30: rebuild Gate 6 marketing calendar route`
+`Update to v0.31: rebuild Gate 6 marketing calendar route`
+
+
+## v0.31
+
+Gate 6 rebuilt as a quarterly campaign-decision calendar. Seasons are no longer the main containers. Q1–Q4 are used as the primary accordion containers; seasonal phase remains only as contextual guidance inside the quarter. Event cards were reduced to three working fields: Decision, Campaign, Preparation. Quarter accordion state is now keyed by unique quarterId, so Q1 / “Зима” can be closed normally and state does not break after saving.

@@ -7217,3 +7217,360 @@ renderGateNav = function() {
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.30'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.30'); });
 })();
+
+/* =========================================================
+   v0.31 · Gate 6 — Quarterly decision calendar
+   Logic: quarter → event → decision → campaign → preparation → launch
+   Fix: accordion state is bound to unique quarterId, not to season label/state.
+   ========================================================= */
+
+const GATE6_QUARTERS = [
+  {
+    key: 'q1',
+    title: 'Q1 · январь, февраль, март',
+    phase: 'зима и ранняя весна: перегрузка, износ, эксперименты, ошибки, социальные выходы',
+    hint: 'Сезонная подсказка: продаётся не чистка, а контроль, экспертиза, предотвращение ущерба и защита от ошибок.',
+    events: [
+      { key: 'new_year', date: '1 января', name: 'Новый год', seed: 'Post-Stress Check-Up после перегруза праздников, поездок и снижения контроля. Персонально 1:1, без слов «акция» и «предложение».' },
+      { key: 'christmas', date: '7 января', name: 'Рождество', seed: 'Silent Service Mode: эмоциональный спад и потребность в такте. Только входящие запросы, контроль тишины.' },
+      { key: 'old_new_year', date: '13 января', name: 'Старый Новый год', seed: 'Deferred Decision Reminder: мягкое напоминание «вы планировали — мы зафиксировали». Без CTA и дедлайнов.' },
+      { key: 'epiphany', date: '19 января', name: 'Крещение', seed: 'Risk Advisory: холод, соль, влага и недооценка накопленного ущерба. Фактический материал без DIY-инструкций.' },
+      { key: 'tatiana', date: '25 января', name: 'Татьянин день', seed: 'Формирование привычки долгосрочного ухода. Образовательный контент про уход как инвестицию, без офферов.' },
+      { key: 'valentine', date: '14 февраля', name: 'День святого Валентина', seed: 'Paired Asset Care: парные и статусные объекты, подарки, совместные покупки. Индивидуальные сценарии обслуживания.' },
+      { key: 'maslenitsa_q1', date: 'подвижная дата', name: 'Масленица', seed: 'Pre-Spring Reset: переход от зимней усталости к активности. Профилактический сценарий без акций.' },
+      { key: 'defender_day', date: '23 февраля', name: 'День защитника Отечества', seed: 'Business Appearance Control: возврат к рабочему ритму. Сохранение формы, структуры и имиджа деловых вещей.' },
+      { key: 'march_8', date: '8 марта', name: 'Международный женский день', seed: 'Risk-Free Appearance Protocol: социальный выход, мероприятия, публичность. Индивидуальный сценарий с контролем рисков.' }
+    ]
+  },
+  {
+    key: 'q2',
+    title: 'Q2 · апрель, май, июнь',
+    phase: 'весна → лето: публичность, смена гардероба, мероприятия, рост внимания к внешнему виду',
+    hint: 'Сезонная подсказка: продаётся соответствие стандартам и социальному контексту, а не отдельная услуга.',
+    events: [
+      { key: 'april_1', date: '1 апреля', name: 'День смеха', seed: 'Anti-DIY Education: последствия самостоятельных экспериментов. Без юмора, без снижения статуса бренда.' },
+      { key: 'cosmonautics', date: '12 апреля', name: 'День космонавтики', seed: 'Process Transparency: доверие к технологиям и системам. Демонстрация протоколов, этапов и контроля качества.' },
+      { key: 'easter_q2', date: 'подвижная дата', name: 'Пасха', seed: 'Symbolic Clean Reset: внутреннее обновление. Спокойный имиджевый контент без прямых продаж.' },
+      { key: 'may_1', date: '1 мая', name: 'Праздник Весны и Труда', seed: 'Seasonal Maintenance Protocol: плановое сезонное обслуживание при смене климата и гардероба.' },
+      { key: 'may_9', date: '9 мая', name: 'День Победы', seed: 'Reputation Silence Rule: период общественной чувствительности. Коммерческие сообщения не запускать.' },
+      { key: 'russia_day', date: '12 июня', name: 'День России', seed: 'Brand Standard Reinforcement: стандарты сервиса, ответственность, качество без коммерческого давления.' },
+      { key: 'june_22', date: '22 июня', name: 'День памяти и скорби', seed: 'Absolute Marketing Silence: репутационная норма. Любые коммерческие публикации исключить.' },
+      { key: 'youth_day', date: '27 июня', name: 'День молодёжи', seed: 'Early Habit Formation: культура обращения с ценными вещами, образовательный контент.' }
+    ]
+  },
+  {
+    key: 'q3',
+    title: 'Q3 · июль, август, сентябрь',
+    phase: 'лето и начало осени: отпуска, расфокус, дача, жара, школа, возврат к структуре',
+    hint: 'Сезонная подсказка: летом продаётся сохранность во время отсутствия контроля, к сентябрю — порядок, структура и зрелость выбора.',
+    events: [
+      { key: 'family_day', date: '8 июля', name: 'День семьи, любви и верности', seed: 'Family Asset Strategy: долгосрочная забота и семейные сценарии обслуживания.' },
+      { key: 'flag_day', date: '22 августа', name: 'День флага России', seed: 'Stability & Trust Signal: имиджевый контент без офферов, доверие перед осенним циклом.' },
+      { key: 'knowledge_day', date: '1 сентября', name: 'День знаний', seed: 'Authority Re-Anchoring: возврат к структуре и правилам. Гайды, объяснение процессов и стандартов.' },
+      { key: 'icleaning_birthday', date: '9 сентября', name: 'День рождения iCleaning', seed: 'Heritage & Proof: кейсы, цифры, процессы. Запрет на скидки, фокус на зрелости системы.' },
+      { key: 'moscow_day', date: '13–14 сентября', name: 'День города Москвы', seed: 'Local Belonging Pattern: сервис как часть городской среды, локальный контекст без дешёвого инфоповода.' }
+    ]
+  },
+  {
+    key: 'q4',
+    title: 'Q4 · октябрь, ноябрь, декабрь',
+    phase: 'осень → зима: рациональность, контроль, регламенты, подготовка к нагрузке',
+    hint: 'Сезонная подсказка: продаются прозрачность правил, гарантии, ответственность, подготовка к зимнему износу и снятие тревоги.',
+    events: [
+      { key: 'autumn_control', date: 'октябрь', name: 'Подготовка к зимнему сезону', seed: 'Winter Load Preparation: профилактика перед влагой, солью, холодом и высокой нагрузкой на вещи.' },
+      { key: 'unity_day', date: '4 ноября', name: 'День народного единства', seed: 'Consistency Signal: стабильность, системность, зрелость бренда без агрессивных офферов.' },
+      { key: 'black_friday', date: 'ноябрь', name: 'Чёрная пятница', seed: 'Reputation Filter: использовать только если есть премиальная логика ценности. Не превращать коммуникацию в скидочный шум.' },
+      { key: 'constitution_day', date: '12 декабря', name: 'День Конституции РФ', seed: 'Rule Transparency: публикация правил, гарантий, ответственности и прозрачных условий сервиса.' },
+      { key: 'new_year_preparation', date: 'декабрь', name: 'Подготовка к Новому году', seed: 'Pre-Holiday Control: подготовка вещей и процессов до праздничной перегрузки, дедлайны без истерики и скидочного давления.' }
+    ]
+  }
+];
+
+function gate6CurrentQuarterKeyV31() {
+  const m = new Date().getMonth();
+  if (m <= 2) return 'q1';
+  if (m <= 5) return 'q2';
+  if (m <= 8) return 'q3';
+  return 'q4';
+}
+function gate6QuarterEventKey(quarterKey, eventKey) { return quarterKey + '__' + eventKey; }
+function gate6FindEvent(fullKey) {
+  for (const quarter of GATE6_QUARTERS) {
+    const ev = quarter.events.find(e => gate6QuarterEventKey(quarter.key, e.key) === fullKey);
+    if (ev) return { quarter, event: ev };
+  }
+  return null;
+}
+function ensureGate6State() {
+  state.gate6Calendar = state.gate6Calendar || {};
+  const g6 = state.gate6Calendar;
+  g6.context = g6.context || {};
+  if (!g6.context.period) g6.context.period = 'Год / квартал';
+  if (!g6.context.project) g6.context.project = state.project?.name || '';
+  if (!g6.context.audience) g6.context.audience = 'Премиальные клиенты, владельцы ценных вещей, деловой гардероб, семейные клиенты';
+  if (!g6.context.channels) g6.context.channels = 'Сайт, email, push, Telegram, реклама, соцсети, персонально 1:1';
+  g6.openQuarters = g6.openQuarters || {};
+  g6.openEvents = g6.openEvents || {};
+  g6.events = g6.events || {};
+  GATE6_QUARTERS.forEach(quarter => quarter.events.forEach(ev => {
+    const key = gate6QuarterEventKey(quarter.key, ev.key);
+    const old = g6.events[key] || {};
+    if (!('decision' in old) && old.relevance) old.decision = old.relevance === 'not_relevant' ? 'not_use' : (old.relevance === 'relevant' ? 'use' : 'question');
+    if (!old.campaign && (old.segment || old.offer || old.channel)) old.campaign = [old.segment, old.offer, old.channel].filter(Boolean).join(', ');
+    if (!old.preparation && (old.materialsDeadline || old.deadlineDate || old.materialState)) old.preparation = [old.materialsDeadline, old.deadlineDate ? 'дедлайн ' + old.deadlineDate : '', old.materialState === 'ready' ? 'материалы готовы' : ''].filter(Boolean).join(', ');
+    g6.events[key] = Object.assign({ decision: '', campaign: '', preparation: '' }, old);
+  }));
+  if (!Object.values(g6.openQuarters).some(Boolean)) {
+    const first = getGate6FirstUnfinishedQuarterKey() || gate6CurrentQuarterKeyV31();
+    g6.openQuarters[first] = true;
+  }
+  return g6;
+}
+function gate6Text(v) { return String(v || '').trim(); }
+function gate6PrepReady(prep) { return /\b(готов|готово|готовы|готова|запущено|запуск готов)\b/i.test(gate6Text(prep)); }
+function gate6ExtractDeadline(prep) {
+  const s = gate6Text(prep);
+  const m = s.match(/20\d{2}-\d{2}-\d{2}|\b\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?\b|\b\d{1,2}\s+(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)\b/i);
+  return m ? m[0] : '';
+}
+function gate6DeadlineSoonFromPrep(prep) {
+  const d = gate6ExtractDeadline(prep);
+  if (!d || !/^20\d{2}-\d{2}-\d{2}$/.test(d)) return false;
+  const days = gate6DaysUntil(d);
+  return days >= 0 && days <= 7;
+}
+function gate6EventStatus(item) {
+  if (!item) return 'not_started';
+  if (item.decision === 'not_use') return 'excluded';
+  if (!gate6Text(item.decision)) return 'not_started';
+  if (!gate6Text(item.campaign)) return 'in_progress';
+  if (!gate6Text(item.preparation)) return 'in_progress';
+  if (gate6DeadlineSoonFromPrep(item.preparation) && !gate6PrepReady(item.preparation)) return 'problem';
+  if (gate6PrepReady(item.preparation)) return 'ready_launch';
+  return 'ready_prepare';
+}
+function gate6QuarterStatus(quarter) {
+  const g6 = ensureGate6State();
+  const statuses = quarter.events.map(ev => gate6EventStatus(g6.events[gate6QuarterEventKey(quarter.key, ev.key)]));
+  if (statuses.includes('problem')) return 'problem';
+  if (statuses.some(s => s === 'ready_prepare' || s === 'ready_launch')) return 'ready';
+  if (statuses.some(s => s === 'in_progress')) return 'in_progress';
+  return 'not_started';
+}
+function getGate6Status() {
+  const g6 = ensureGate6State();
+  if (!gate6Text(g6.context.period) || !gate6Text(g6.context.project) || !gate6Text(g6.context.audience)) return 'not_started';
+  const statuses = GATE6_QUARTERS.flatMap(q => q.events.map(ev => gate6EventStatus(g6.events[gate6QuarterEventKey(q.key, ev.key)])));
+  if (statuses.includes('problem')) return 'problem';
+  if (statuses.some(s => s === 'ready_prepare' || s === 'ready_launch')) return 'ready';
+  if (statuses.some(s => s === 'in_progress' || s === 'excluded')) return 'in_progress';
+  return 'not_started';
+}
+function getGate6Progress() {
+  const g6 = ensureGate6State();
+  const statuses = GATE6_QUARTERS.flatMap(q => q.events.map(ev => gate6EventStatus(g6.events[gate6QuarterEventKey(q.key, ev.key)]))).filter(s => s !== 'excluded');
+  if (!statuses.length) return 0;
+  return Math.round((statuses.filter(s => s === 'ready_prepare' || s === 'ready_launch').length / statuses.length) * 100);
+}
+function getGate6FirstUnfinishedQuarterKey() {
+  const g6 = state?.gate6Calendar;
+  if (!g6?.events) return gate6CurrentQuarterKeyV31();
+  const current = gate6CurrentQuarterKeyV31();
+  const ordered = [...GATE6_QUARTERS.filter(q => q.key === current), ...GATE6_QUARTERS.filter(q => q.key !== current)];
+  for (const quarter of ordered) {
+    const unfinished = quarter.events.some(ev => !['ready_prepare', 'ready_launch', 'excluded'].includes(gate6EventStatus(g6.events[gate6QuarterEventKey(quarter.key, ev.key)])));
+    if (unfinished) return quarter.key;
+  }
+  return current;
+}
+function gate6DecisionText(value) {
+  if (value === 'use') return 'использовать';
+  if (value === 'not_use') return 'не использовать';
+  if (value === 'question') return 'под вопросом';
+  return '—';
+}
+function gate6CompactCampaign(row) {
+  const txt = gate6Text(row.campaign);
+  if (!txt) return '—';
+  return txt.length > 72 ? txt.slice(0, 69) + '…' : txt;
+}
+function renderGate6Calendar(gate) {
+  const g6 = ensureGate6State();
+  const status = getGate6Status();
+  const plan = gate6CampaignPlan();
+  els.contentArea.innerHTML = `<div class="gate6-calendar gate6-quarterly">
+    <section class="gate6-intro">
+      <div class="gate6-intro-top">
+        <div>
+          <div class="analytics-path">Gate 6 → Маркетинговый календарь событий</div>
+          <h2>Маркетинговый календарь событий</h2>
+          <p class="muted">Не анкета и не таблица дат. Квартальный маршрут: квартал → событие → решение → кампания → подготовка → запуск.</p>
+        </div>
+        ${gate6StatusPill(status)}
+      </div>
+      <div class="gate6-formula"><span>квартал</span><span>событие</span><span>решение</span><span>кампания</span><span>подготовка</span><span>запуск</span></div>
+      <div class="gate6-context-grid">
+        <label class="gate6-field">Период<input data-g6-context="period" value="${escapeAttr(g6.context.period)}" placeholder="год / квартал"></label>
+        <label class="gate6-field">Проект<input data-g6-context="project" value="${escapeAttr(g6.context.project)}" placeholder="бренд / сайт / услуга"></label>
+        <label class="gate6-field">Главная аудитория<input data-g6-context="audience" value="${escapeAttr(g6.context.audience)}" placeholder="для кого ищем поводы"></label>
+        <label class="gate6-field">Каналы<input data-g6-context="channels" value="${escapeAttr(g6.context.channels)}" placeholder="сайт / email / push / Telegram / реклама / соцсети"></label>
+      </div>
+    </section>
+    <section class="gate6-seasons gate6-quarters">
+      ${GATE6_QUARTERS.map(q => gate6QuarterHtml(q)).join('')}
+    </section>
+    <section class="gate6-plan">
+      <div class="gate6-section-head"><div><h3>Финальный план кампаний</h3><p class="muted">Сюда попадают только события, где есть решение, кампания или подготовка. Это запускной план, а не архив дат.</p></div><span class="gate6-count">${plan.length} кампаний</span></div>
+      ${gate6PlanTable(plan)}
+    </section>
+  </div>`;
+  bindGate6Events();
+}
+function gate6QuarterHtml(quarter) {
+  const g6 = ensureGate6State();
+  const open = Boolean(g6.openQuarters[quarter.key]);
+  const status = gate6QuarterStatus(quarter);
+  const ready = quarter.events.filter(ev => ['ready_prepare', 'ready_launch'].includes(gate6EventStatus(g6.events[gate6QuarterEventKey(quarter.key, ev.key)]))).length;
+  return `<section class="gate6-season gate6-quarter ${open ? 'is-open' : ''}" data-g6-quarter="${escapeAttr(quarter.key)}">
+    <button type="button" class="gate6-season-head" data-g6-open-quarter="${escapeAttr(quarter.key)}">
+      <span class="gate6-season-main"><span class="gate6-season-title">${escapeHtml(quarter.title)}</span><span class="gate6-season-meta">Фаза: ${escapeHtml(quarter.phase)} · готово ${ready}/${quarter.events.length}</span></span>
+      ${gate6StatusPill(status)}
+      <span class="gate6-toggle">${open ? 'Свернуть' : 'Открыть'}</span>
+    </button>
+    ${open ? `<div class="gate6-season-body gate6-quarter-body">
+      <div class="gate6-season-context gate6-quarter-context"><div><b>Сезонная подсказка</b><p>${escapeHtml(quarter.hint)}</p></div><div><b>Правило квартала</b><p>Выбирать только события с понятным поводом, сегментом, кампанией и сроком подготовки.</p></div></div>
+      <div class="gate6-quarter-list"><div class="gate6-quarter-row gate6-quarter-row-head"><span>Дата</span><span>Событие</span><span>Решение</span><span>Кампания</span><span>Дедлайн</span><span>Статус</span></div>${quarter.events.map(ev => gate6EventHtml(quarter, ev)).join('')}</div>
+    </div>` : ''}
+  </section>`;
+}
+function gate6EventHtml(quarter, ev) {
+  const g6 = ensureGate6State();
+  const key = gate6QuarterEventKey(quarter.key, ev.key);
+  const item = g6.events[key] || {};
+  const status = gate6EventStatus(item);
+  const open = Boolean(g6.openEvents[key]);
+  const deadline = gate6ExtractDeadline(item.preparation) || '—';
+  return `<details class="gate6-event-compact" id="g6-${escapeAttr(key)}" data-g6-event-detail="${escapeAttr(key)}" ${open ? 'open' : ''}>
+    <summary class="gate6-quarter-row gate6-event-summary">
+      <span class="gate6-date">${escapeHtml(ev.date)}</span>
+      <span class="gate6-event-name">${escapeHtml(ev.name)}</span>
+      <span>${escapeHtml(gate6DecisionText(item.decision))}</span>
+      <span>${escapeHtml(gate6CompactCampaign(item))}</span>
+      <span>${escapeHtml(deadline)}</span>
+      <span>${gate6StatusPill(status)}</span>
+    </summary>
+    <div class="gate6-event-detail">
+      <div class="gate6-event-reason"><b>Суть повода:</b> ${escapeHtml(ev.seed)}</div>
+      <div class="gate6-event-three-fields">
+        <label class="gate6-field compact">Решение<select data-g6-decision="${escapeAttr(key)}">
+          ${gate6Option('', 'Выбрать решение', item.decision)}
+          ${gate6Option('use', 'Использовать', item.decision)}
+          ${gate6Option('not_use', 'Не использовать', item.decision)}
+          ${gate6Option('question', 'Под вопросом', item.decision)}
+        </select></label>
+        <label class="gate6-field compact">Кампания<input data-g6-field="${escapeAttr(key)}" data-field="campaign" value="${escapeAttr(item.campaign || '')}" placeholder="сегмент + офер + канал одной строкой"></label>
+        <label class="gate6-field compact">Подготовка<textarea data-g6-field="${escapeAttr(key)}" data-field="preparation" rows="2" placeholder="материал + дедлайн + готовность">${escapeHtml(item.preparation || '')}</textarea></label>
+      </div>
+    </div>
+  </details>`;
+}
+function gate6CampaignPlan() {
+  const g6 = ensureGate6State();
+  const out = [];
+  GATE6_QUARTERS.forEach(quarter => quarter.events.forEach(ev => {
+    const key = gate6QuarterEventKey(quarter.key, ev.key);
+    const item = g6.events[key] || {};
+    const status = gate6EventStatus(item);
+    const hasWork = item.decision || item.campaign || item.preparation;
+    if (!hasWork || status === 'excluded') return;
+    out.push({ key, quarter: quarter.title, date: ev.date, event: ev.name, decision: gate6DecisionText(item.decision), campaign: item.campaign, preparation: item.preparation, deadline: gate6ExtractDeadline(item.preparation), status });
+  }));
+  return out;
+}
+function gate6PlanTable(rows) {
+  if (!rows.length) return '<div class="empty compact-empty">План пока пуст. Откройте квартал, выберите событие и заполните 3 поля: решение, кампания, подготовка.</div>';
+  return `<div class="table-scroll gate6-plan-table"><table class="data-table clean-data-table"><thead><tr><th>Дата</th><th>Событие</th><th>Решение</th><th>Кампания</th><th>Подготовка</th><th>Дедлайн</th><th>Статус</th></tr></thead><tbody>${rows.map(row => `<tr data-g6-jump="${escapeAttr(row.key)}"><td>${escapeHtml(row.date)}</td><td class="table-title"><button class="linklike" data-g6-jump-btn="${escapeAttr(row.key)}">${escapeHtml(row.event)}</button><div class="muted mini-text">${escapeHtml(row.quarter)}</div></td><td>${escapeHtml(row.decision || '—')}</td><td>${escapeHtml(row.campaign || '—')}</td><td>${escapeHtml(row.preparation || '—')}</td><td>${escapeHtml(row.deadline || '—')}</td><td>${gate6StatusPill(row.status)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function bindGate6Events() {
+  document.querySelectorAll('[data-g6-context]').forEach(input => input.addEventListener('input', () => {
+    const g6 = ensureGate6State();
+    g6.context[input.dataset.g6Context] = input.value;
+    saveState();
+  }));
+  document.querySelectorAll('[data-g6-open-quarter]').forEach(btn => btn.addEventListener('click', () => {
+    const g6 = ensureGate6State();
+    const key = btn.dataset.g6OpenQuarter;
+    const next = !g6.openQuarters[key];
+    const oneAtATime = window.matchMedia && window.matchMedia('(max-width: 720px)').matches;
+    if (oneAtATime && next) g6.openQuarters = {};
+    g6.openQuarters[key] = next;
+    saveState();
+    renderGate();
+  }));
+  document.querySelectorAll('[data-g6-event-detail]').forEach(detail => detail.addEventListener('toggle', () => {
+    const g6 = ensureGate6State();
+    g6.openEvents[detail.dataset.g6EventDetail] = detail.open;
+    saveState();
+  }));
+  document.querySelectorAll('[data-g6-decision]').forEach(input => input.addEventListener('change', () => {
+    const g6 = ensureGate6State();
+    const key = input.dataset.g6Decision;
+    g6.events[key] = g6.events[key] || {};
+    g6.events[key].decision = input.value;
+    saveState();
+    renderGate();
+  }));
+  document.querySelectorAll('[data-g6-field]').forEach(input => {
+    const saveField = () => {
+      const g6 = ensureGate6State();
+      const key = input.dataset.g6Field;
+      const field = input.dataset.field;
+      g6.events[key] = g6.events[key] || {};
+      g6.events[key][field] = input.value;
+      saveState();
+    };
+    input.addEventListener('input', saveField);
+    input.addEventListener('blur', () => { saveField(); renderGate(); });
+  });
+  document.querySelectorAll('[data-g6-jump-btn]').forEach(btn => btn.addEventListener('click', () => {
+    const found = gate6FindEvent(btn.dataset.g6JumpBtn);
+    if (!found) return;
+    const g6 = ensureGate6State();
+    g6.openQuarters = Object.assign({}, g6.openQuarters, { [found.quarter.key]: true });
+    g6.openEvents[btn.dataset.g6JumpBtn] = true;
+    saveState();
+    renderGate();
+    setTimeout(() => document.getElementById('g6-' + btn.dataset.g6JumpBtn)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 40);
+  }));
+}
+
+const __guruPrevRenderGateTableV31 = renderGateTable;
+renderGateTable = function(gate, cards) {
+  if (isGate6Calendar(gate)) {
+    renderGate6Calendar(gate, cards);
+    return;
+  }
+  __guruPrevRenderGateTableV31(gate, cards);
+};
+
+const __guruPrevRenderGateNavV31 = renderGateNav;
+renderGateNav = function() {
+  els.gateNav.innerHTML = state.gates.map(g => {
+    const progress = g.id === 'gate-5' ? getGate5Progress() : (g.id === 'gate-6' ? getGate6Progress() : getProgress(g.cards));
+    const cls = activeView === 'gate' && activeGateId === g.id ? 'active' : '';
+    const countText = g.id === 'gate-5' ? '5 подблоков' : (g.id === 'gate-6' ? '4 квартала' : g.cards.length + ' блоков');
+    return `<button class="gate-btn ${cls}" data-gate-id="${escapeAttr(g.id)}">${escapeHtml(g.title)}<span class="small">${countText}, готово ${progress}%</span></button>`;
+  }).join('');
+  document.querySelectorAll('[data-gate-id]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeView = 'gate';
+      activeGateId = btn.dataset.gateId;
+      render();
+    });
+  });
+};
+
+(function markV31() {
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.31'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.31'); });
+})();
