@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.27';
+const PLATFORM_VERSION = 'v0.28';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -1456,12 +1456,16 @@ function renderProject() {
 function renderGate() {
   activeView = 'gate';
   setToolbarVisible(true);
-  const gate = state.gates.find(g => g.id === activeGateId) || state.gates[0];
-  if (!gate) return;
+  const gate = state.gates.find(g => g.id === activeGateId);
+  if (!gate) {
+    els.pageTitle.textContent = 'Gate не найден';
+    els.contentArea.innerHTML = '<div class="empty">Выбранный Gate не найден. Выберите нужный Gate в левом меню.</div>';
+    return;
+  }
   els.pageTitle.textContent = gate.title;
   const query = els.searchInput.value.trim().toLowerCase();
   const filter = els.statusFilter.value;
-  let cards = gate.cards;
+  let cards = Array.isArray(gate.cards) ? gate.cards : [];
   if (filter !== 'all') cards = cards.filter(c => c.status === filter);
   if (query) {
     cards = cards.filter(c => [c.title, c.instruction, composeEvidenceText(c), c.pages, c.notes].join(' ').toLowerCase().includes(query));
@@ -3501,6 +3505,7 @@ function renderSemanticGateAccordion(gate, cards) {
     ${sections.map(section => {
       const isOpen = Boolean(acc.sections[section.key]);
       const status = getSectionStatus(section.allInnerCards);
+      const progressText = getSectionProgressText(section.allInnerCards);
       const cardsToShow = section.filteredInnerCards;
       return `<section class="analytics-subblock semantic-subblock ${isOpen ? 'is-open is-active' : ''}">
         <button class="subblock-header" data-semantic-toggle-section="${escapeAttr(gate.id)}::${escapeAttr(section.key)}">

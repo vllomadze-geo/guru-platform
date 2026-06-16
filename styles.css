@@ -1554,3 +1554,43 @@ select:disabled {
 .pain-step-body .demand-step-body { border-top:0; }
 .pain-step .demand-field textarea { min-height:86px; }
 @media (max-width: 900px) { .pain-step-body .demand-step-body { grid-template-columns:1fr; } }
+
+/* v0.27 — Unit economics route */
+.unit-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+.unit-summary-grid > div,
+.unit-promo-split > div {
+  border: 1px solid var(--border, rgba(148, 163, 184, .28));
+  border-radius: 16px;
+  padding: 14px;
+  background: rgba(255,255,255,.03);
+}
+.unit-summary-grid span,
+.unit-promo-split span {
+  display: block;
+  font-size: 12px;
+  color: var(--muted, #94a3b8);
+  margin-bottom: 6px;
+}
+.unit-summary-grid strong {
+  font-size: 20px;
+  line-height: 1.2;
+}
+.unit-promo-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+.unit-promo-split p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+@media (max-width: 760px) {
+  .unit-summary-grid,
+  .unit-promo-split { grid-template-columns: 1fr; }
+}
