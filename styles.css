@@ -1146,3 +1146,10 @@ select:disabled {
     flex-wrap: wrap;
   }
 }
+
+
+/* v0.18 — Sitemap.xml uses the same minimal grid as Robots.txt */
+.sitemap-v18 .robots-url-field input { background: #fff; }
+.sitemap-system-card.is-ok { border-color: #16a34a; background: #f2fbf5; }
+.sitemap-system-card.is-issue { border-color: #dc2626; background: #fff5f5; }
+.sitemap-field-row { margin-top: 10px; }

@@ -3712,3 +3712,207 @@ recalculateStatusForCard = function(card, workspace = state) {
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.17'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.17'); });
 })();
+
+
+/* v0.18 — Sitemap.xml: минимальный блок, один URL, Яндекс/Google по выбору */
+function isSitemapUnifiedCard(card) {
+  const title = String(card?.title || '');
+  return Boolean(isGate1Card(card) && /sitemap\.xml|sitemap/i.test(title) && !/robots/i.test(title));
+}
+
+const SITEMAP_UNIFIED_DEFAULTS = {
+  url: '',
+  systems: {
+    yandex: { enabled: true, status: '', evidence: '' },
+    google: { enabled: false, status: '', evidence: '' }
+  }
+};
+
+const SITEMAP_UNIFIED_INSTRUCTION = `Суть:
+Проверить доступность и корректность sitemap.xml только в тех поисковых системах, где проект реально продвигается.
+
+Логика:
+Один URL sitemap.xml → выбор системы Яндекс / Google → статус проверки → доказательство.
+
+Не входит в базовый блок:
+реклама, аналитика, CRM, формы, коллтрекинг, количество страниц, Lastmod, сравнение sitemap и индекса, Sitemap в robots.txt.`;
+
+function cloneSitemapUnifiedDefaults() {
+  return JSON.parse(JSON.stringify(SITEMAP_UNIFIED_DEFAULTS));
+}
+
+function normalizeSitemapUnifiedStatus(value = '') {
+  const v = String(value || '').trim();
+  if (['correct', 'found', 'ok', 'ready', 'yes', 'works', 'indexed', 'placed'].includes(v)) return 'ok';
+  if (['errors', 'not_found', 'bad', 'no', 'issue', 'not_working', 'not_indexed', 'not_placed'].includes(v)) return 'issue';
+  return v || '';
+}
+
+function ensureSitemapUnifiedFields(card) {
+  if (!card) return cloneSitemapUnifiedDefaults();
+  card.title = 'Sitemap.xml';
+  card.instruction = SITEMAP_UNIFIED_INSTRUCTION;
+  if (!card.sitemapUnified) {
+    const defaults = cloneSitemapUnifiedDefaults();
+    const oldTyped = card.gate1Typed || {};
+    const oldLinks = Array.isArray(oldTyped.links) ? oldTyped.links : [];
+    const oldFirstUrl = oldLinks.find(row => String(row?.url || '').trim())?.url || '';
+    defaults.url = oldFirstUrl || '';
+    const yandexWorkspace = oldTyped.toolWorkspace?.yandex_webmaster || oldTyped.toolWorkspace?.yandex || {};
+    if (yandexWorkspace.status || yandexWorkspace.result || yandexWorkspace.link) {
+      defaults.systems.yandex.enabled = true;
+      defaults.systems.yandex.status = normalizeSitemapUnifiedStatus(yandexWorkspace.status);
+      defaults.systems.yandex.evidence = yandexWorkspace.result || yandexWorkspace.link || '';
+    }
+    card.sitemapUnified = defaults;
+  }
+  card.sitemapUnified.systems = {
+    ...cloneSitemapUnifiedDefaults().systems,
+    ...(card.sitemapUnified.systems || {})
+  };
+  return card.sitemapUnified;
+}
+
+const __guruPrevGetGate1CardModeV18 = getGate1CardMode;
+getGate1CardMode = function(card) {
+  if (isSitemapUnifiedCard(card)) return 'sitemap_unified';
+  return __guruPrevGetGate1CardModeV18(card);
+};
+
+const __guruPrevEnsureGate1TypedDataV18 = ensureGate1TypedData;
+ensureGate1TypedData = function(card) {
+  if (isSitemapUnifiedCard(card)) {
+    ensureSitemapUnifiedFields(card);
+    return;
+  }
+  return __guruPrevEnsureGate1TypedDataV18(card);
+};
+
+function sitemapUnifiedSystemLabel(systemKey) {
+  return systemKey === 'yandex' ? 'Яндекс' : 'Google';
+}
+
+function sitemapUnifiedServiceLabel(systemKey) {
+  return systemKey === 'yandex' ? 'Яндекс Вебмастер' : 'Google Search Console';
+}
+
+function sitemapUnifiedSelect(systemKey, value) {
+  const options = [
+    ['', 'Не проверено'],
+    ['ok', 'ОК'],
+    ['issue', 'Ошибка']
+  ];
+  return `<select class="robots-status-select" data-sitemap-unified-system="${escapeAttr(systemKey)}" data-sitemap-unified-field="status">
+    ${options.map(([key, label]) => `<option value="${escapeAttr(key)}" ${value === key ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}
+  </select>`;
+}
+
+function sitemapUnifiedSystemCardHtml(systemKey, data) {
+  const tone = data.status === 'ok' ? 'is-ok' : data.status === 'issue' ? 'is-issue' : '';
+  return `<section class="robots-system-card robots-system-card-v17 sitemap-system-card ${tone}">
+    <div class="robots-system-head compact-head">
+      <h4>${escapeHtml(sitemapUnifiedSystemLabel(systemKey))}</h4>
+      <span>${escapeHtml(sitemapUnifiedServiceLabel(systemKey))}</span>
+    </div>
+    <div class="robots-system-fields robots-system-fields-v17">
+      <label>Статус проверки${sitemapUnifiedSelect(systemKey, data.status || '')}</label>
+      <label>Доказательство / результат<input data-sitemap-unified-system="${escapeAttr(systemKey)}" data-sitemap-unified-field="evidence" value="${escapeAttr(data.evidence || '')}" placeholder="ссылка на отчёт, скрин или короткий вывод" /></label>
+    </div>
+  </section>`;
+}
+
+function sitemapUnifiedFieldsHtml(card) {
+  const fields = ensureSitemapUnifiedFields(card);
+  const systems = fields.systems || {};
+  const enabledSystems = ['yandex', 'google'].filter(key => systems[key]?.enabled);
+  return `<div class="robots-unified-workspace robots-v17 sitemap-v18 context-panel">
+    <div class="robots-top-grid">
+      <label class="robots-url-field">URL sitemap.xml<input list="projectUrlOptions" data-sitemap-unified-field="url" value="${escapeAttr(fields.url || '')}" placeholder="https://site.ru/sitemap.xml" />${projectUrlDatalistHtml()}</label>
+      <div class="robots-system-switches" aria-label="Системы проверки sitemap.xml">
+        <label class="system-toggle ${systems.yandex?.enabled ? 'is-active' : ''}"><input type="checkbox" data-sitemap-unified-system="yandex" data-sitemap-unified-field="enabled" ${systems.yandex?.enabled ? 'checked' : ''} /> Яндекс</label>
+        <label class="system-toggle ${systems.google?.enabled ? 'is-active' : ''}"><input type="checkbox" data-sitemap-unified-system="google" data-sitemap-unified-field="enabled" ${systems.google?.enabled ? 'checked' : ''} /> Google</label>
+      </div>
+    </div>
+    <div class="robots-system-grid robots-system-grid-v17 ${enabledSystems.length === 1 ? 'one-card' : ''}">
+      ${enabledSystems.map(key => sitemapUnifiedSystemCardHtml(key, systems[key])).join('')}
+    </div>
+  </div>`;
+}
+
+const __guruPrevGate1TypedFieldsHtmlV18 = gate1TypedFieldsHtml;
+gate1TypedFieldsHtml = function(card) {
+  const mode = getGate1CardMode(card);
+  ensureGate1TypedData(card);
+  if (mode === 'sitemap_unified') return `<div class="field-row robots-field-row sitemap-field-row">${sitemapUnifiedFieldsHtml(card)}</div>`;
+  return __guruPrevGate1TypedFieldsHtmlV18(card);
+};
+
+function sitemapUnifiedStatus(card) {
+  const fields = ensureSitemapUnifiedFields(card);
+  const urlFilled = Boolean(String(fields.url || '').trim());
+  const enabled = ['yandex', 'google'].filter(key => fields.systems?.[key]?.enabled);
+  if (!urlFilled) return 'not_started';
+  if (!enabled.length) return 'in_progress';
+  if (enabled.some(key => fields.systems?.[key]?.status === 'issue')) return 'problem';
+  const allReady = enabled.every(key => {
+    const s = fields.systems[key] || {};
+    return s.status === 'ok' && Boolean(String(s.evidence || '').trim());
+  });
+  return allReady ? 'ready' : 'in_progress';
+}
+
+const __guruPrevRecalculateStatusForCardV18 = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isSitemapUnifiedCard(card)) {
+    card.status = sitemapUnifiedStatus(card);
+    return;
+  }
+  return __guruPrevRecalculateStatusForCardV18(card, workspace);
+};
+
+function updateSitemapUnifiedField(target) {
+  const cardId = target.closest('[data-card]')?.dataset?.card;
+  const card = cardId ? findCard(cardId) : allCardsFromWorkspace(state).find(isSitemapUnifiedCard);
+  if (!card) return;
+  const fields = ensureSitemapUnifiedFields(card);
+  const systemKey = target.dataset.sitemapUnifiedSystem;
+  const field = target.dataset.sitemapUnifiedField;
+  if (systemKey) {
+    fields.systems[systemKey] = fields.systems[systemKey] || { enabled: false, status: '', evidence: '' };
+    fields.systems[systemKey][field] = field === 'enabled' ? target.checked : target.value;
+  } else {
+    fields[field] = target.value;
+    if (field === 'url') addOrUpdateProjectLink(target.value, { comment: 'sitemap.xml', source: 'Sitemap.xml' });
+  }
+  recalculateStatusForCard(card);
+  flashSaving();
+  renderGate();
+}
+
+const __guruPrevTypedDataPlainV18 = typedDataPlain;
+typedDataPlain = function(card) {
+  if (getGate1CardMode(card) === 'sitemap_unified') {
+    const fields = ensureSitemapUnifiedFields(card);
+    const enabled = ['yandex', 'google'].filter(key => fields.systems?.[key]?.enabled);
+    const lines = [`URL sitemap.xml: ${fields.url || 'не указан'}`];
+    enabled.forEach(key => {
+      const s = fields.systems[key] || {};
+      lines.push(`${sitemapUnifiedSystemLabel(key)}: ${s.status === 'ok' ? 'ОК' : s.status === 'issue' ? 'ошибка' : 'не проверено'}${s.evidence ? ` / доказательство: ${s.evidence}` : ''}`);
+    });
+    return lines.join('\n');
+  }
+  return __guruPrevTypedDataPlainV18(card);
+};
+
+document.addEventListener('change', event => {
+  if (event.target?.dataset?.sitemapUnifiedField) updateSitemapUnifiedField(event.target);
+});
+
+document.addEventListener('input', event => {
+  if (event.target?.dataset?.sitemapUnifiedField && event.target.type !== 'checkbox' && event.target.tagName !== 'SELECT') updateSitemapUnifiedField(event.target);
+});
+
+(function markV18() {
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.18'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.18'); });
+})();
