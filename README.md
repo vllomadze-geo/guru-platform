@@ -1,28 +1,43 @@
-# ГУРУ, MVP платформы v0.33
+# ГУРУ, v1.0 Supabase connection test
 
-## Что изменено в v0.33
+## Что изменено
 
-Исправление для ситуации, когда GitHub уже содержит v0.32, но production продолжает показывать v0.31.
+- Видимая версия интерфейса поднята до `v1.0`.
+- Добавлен индикатор подключения Supabase в верхней части рабочего интерфейса.
+- Добавлена serverless-функция Vercel: `api/supabase-test.js`.
+- Функция проверяет переменные Vercel:
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- Функция пробует прочитать таблицу `guru_projects`.
+- Логика Gate 0–7 не изменялась.
 
-### Что сделано
+## Возможные статусы
 
-- Видимая версия интерфейса поднята до `v0.33` в `index.html` и `app.js`.
-- `styles.css`, `seed-data.js` и `app.js` подключены с cache-busting параметром `?v=0.33`.
-- Gate 7 сохраняет логику v0.32: живой журнал задач.
-- Добавлена проверочная версия, чтобы сразу понять, какой файл реально загрузился в production.
+- `Supabase: подключено` — сайт видит Supabase и таблицу `guru_projects`.
+- `Supabase: подключено, строк не видно` — подключение есть, но ключ не видит строку проекта, чаще всего из-за RLS.
+- `Supabase: подключено, доступ закрыт RLS` — база доступна, но политики безопасности закрывают чтение.
+- `Supabase: переменные не найдены` — в Vercel не добавлены переменные окружения.
+- `Supabase: функция недоступна` — serverless-функция `/api/supabase-test` не задеплоилась.
 
-## Критерий готовности
+## Как обновить
 
-На production-сайте сверху должно отображаться:
+Загрузить в GitHub содержимое папки `guru_platform_v1_0_supabase_test`:
 
 ```text
-Рабочая версия MVP · v0.33
+README.md
+app.js
+styles.css
+index.html
+seed-data.js
+supabase-test.js
+api/
+data/
 ```
 
-Gate 7 должен открываться как живой журнал задач, а не как старая форма.
-
-## Commit
+Commit:
 
 ```text
-Update to v0.33: force production version refresh
+Update to v1.0: add Supabase connection test
 ```
+
+После деплоя открыть production-сайт и проверить статус Supabase.
