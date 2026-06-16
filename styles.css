@@ -951,3 +951,86 @@ select:disabled {
 @media (max-width: 900px) {
   .context-panel, .compact-page-grid, .page-context-grid { grid-template-columns: 1fr; }
 }
+
+/* v0.16 Robots.txt, compact contextual block */
+.robots-unified-workspace {
+  display: grid;
+  gap: 14px;
+}
+.robots-unified-line {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+}
+.robots-url-field input {
+  width: 100%;
+}
+.robots-system-switches {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 2px;
+}
+.robots-system-switches label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.robots-system-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 12px;
+}
+.robots-system-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+.robots-system-card.is-ok { border-color: rgba(33, 150, 83, .48); }
+.robots-system-card.is-issue { border-color: rgba(210, 64, 64, .55); }
+.robots-system-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.robots-system-head h4 {
+  margin: 0 0 3px;
+  font-size: 15px;
+}
+.robots-system-head span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.robots-system-fields {
+  display: grid;
+  grid-template-columns: minmax(160px, .65fr) minmax(220px, 1fr);
+  gap: 10px;
+}
+.robots-system-fields label {
+  display: grid;
+  gap: 6px;
+}
+@media (max-width: 980px) {
+  .robots-unified-line,
+  .robots-system-grid,
+  .robots-system-fields {
+    grid-template-columns: 1fr;
+  }
+  .robots-system-switches {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}

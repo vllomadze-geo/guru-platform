@@ -3421,3 +3421,213 @@ document.addEventListener('input', event => {
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.15'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.15'); });
 })();
+
+/* v0.16 — единый компактный блок Robots.txt: один URL, Яндекс/Google по выбору */
+function isRobotsUnifiedCard(card) {
+  return Boolean(isGate1Card(card) && /robots\.txt/i.test(String(card?.title || '')));
+}
+
+const ROBOTS_UNIFIED_DEFAULTS = {
+  url: '',
+  systems: {
+    yandex: { enabled: true, status: '', evidence: '' },
+    google: { enabled: false, status: '', evidence: '' }
+  }
+};
+
+const ROBOTS_UNIFIED_INSTRUCTION = `Суть:
+Проверить доступность и корректность robots.txt только в тех поисковых системах, где проект реально продвигается.
+
+Логика:
+Один URL robots.txt → выбор систем Яндекс / Google → статус проверки по каждой выбранной системе → доказательство.
+
+Статус блока:
+Считаются только выбранные системы. Если система отключена, она не влияет на готовность блока.`;
+
+function cloneRobotsUnifiedDefaults() {
+  return JSON.parse(JSON.stringify(ROBOTS_UNIFIED_DEFAULTS));
+}
+
+function normalizeRobotsUnifiedStatus(value = '') {
+  const v = String(value || '').trim();
+  if (['correct', 'found', 'ok', 'ready', 'yes', 'works', 'indexed'].includes(v)) return 'ok';
+  if (['errors', 'not_found', 'bad', 'no', 'issue', 'not_working', 'not_indexed'].includes(v)) return 'issue';
+  return v || '';
+}
+
+function ensureRobotsUnifiedFields(card) {
+  if (!card) return cloneRobotsUnifiedDefaults();
+  card.title = 'Robots.txt';
+  card.instruction = ROBOTS_UNIFIED_INSTRUCTION;
+  if (!card.robotsUnified) {
+    const defaults = cloneRobotsUnifiedDefaults();
+    const old = card.robotsYandex || {};
+    if (old.siteUrl || old.robotsUrl || old.fileStatus || old.analysisStatus || old.evidenceUrl) {
+      defaults.url = old.robotsUrl || old.siteUrl || '';
+      defaults.systems.yandex.enabled = true;
+      defaults.systems.yandex.status = normalizeRobotsUnifiedStatus(old.analysisStatus || old.fileStatus);
+      defaults.systems.yandex.evidence = old.evidenceUrl || '';
+    }
+    card.robotsUnified = defaults;
+  }
+  card.robotsUnified.systems = {
+    ...cloneRobotsUnifiedDefaults().systems,
+    ...(card.robotsUnified.systems || {})
+  };
+  return card.robotsUnified;
+}
+
+const __guruPrevGetGate1CardModeV16 = getGate1CardMode;
+getGate1CardMode = function(card) {
+  if (isRobotsUnifiedCard(card)) return 'robots_unified';
+  return __guruPrevGetGate1CardModeV16(card);
+};
+
+const __guruPrevEnsureGate1TypedDataV16 = ensureGate1TypedData;
+ensureGate1TypedData = function(card) {
+  if (isRobotsUnifiedCard(card)) {
+    ensureRobotsUnifiedFields(card);
+    return;
+  }
+  return __guruPrevEnsureGate1TypedDataV16(card);
+};
+
+function robotsUnifiedSystemLabel(systemKey) {
+  return systemKey === 'yandex' ? 'Яндекс' : 'Google';
+}
+
+function robotsUnifiedServiceLabel(systemKey) {
+  return systemKey === 'yandex' ? 'Яндекс Вебмастер' : 'Google Search Console';
+}
+
+function robotsUnifiedSelect(systemKey, value) {
+  const options = [
+    ['', 'Выбрать'],
+    ['ok', 'Проверка пройдена'],
+    ['issue', 'Есть проблема']
+  ];
+  return `<select data-robots-unified-system="${escapeAttr(systemKey)}" data-robots-unified-field="status">
+    ${options.map(([key, label]) => `<option value="${escapeAttr(key)}" ${value === key ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}
+  </select>`;
+}
+
+function robotsUnifiedStatusChip(status) {
+  if (!status) return '<span class="result-pill result-neutral">Не выбран</span>';
+  if (status === 'ok') return '<span class="result-pill result-ok">Проверка пройдена</span>';
+  return '<span class="result-pill result-bad">Есть проблема</span>';
+}
+
+function robotsUnifiedSystemCardHtml(systemKey, data) {
+  return `<section class="robots-system-card ${data.status === 'ok' ? 'is-ok' : data.status === 'issue' ? 'is-issue' : ''}">
+    <div class="robots-system-head">
+      <div>
+        <h4>${escapeHtml(robotsUnifiedSystemLabel(systemKey))}</h4>
+        <span>${escapeHtml(robotsUnifiedServiceLabel(systemKey))}</span>
+      </div>
+      ${robotsUnifiedStatusChip(data.status)}
+    </div>
+    <div class="robots-system-fields">
+      <label>Статус проверки${robotsUnifiedSelect(systemKey, data.status || '')}</label>
+      <label>Доказательство<input data-robots-unified-system="${escapeAttr(systemKey)}" data-robots-unified-field="evidence" value="${escapeAttr(data.evidence || '')}" placeholder="ссылка на отчёт, скрин или результат проверки" /></label>
+    </div>
+  </section>`;
+}
+
+function robotsUnifiedFieldsHtml(card) {
+  const fields = ensureRobotsUnifiedFields(card);
+  const systems = fields.systems || {};
+  const enabledSystems = ['yandex', 'google'].filter(key => systems[key]?.enabled);
+  return `<div class="robots-unified-workspace context-panel">
+    <div class="robots-unified-line">
+      <label class="robots-url-field">URL robots.txt<input list="projectUrlOptions" data-robots-unified-field="url" value="${escapeAttr(fields.url || state?.project?.website || '')}" placeholder="https://site.ru/robots.txt" />${projectUrlDatalistHtml()}</label>
+      <div class="robots-system-switches" aria-label="Выбор поисковых систем">
+        <label><input type="checkbox" data-robots-unified-system="yandex" data-robots-unified-field="enabled" ${systems.yandex?.enabled ? 'checked' : ''} /> Яндекс</label>
+        <label><input type="checkbox" data-robots-unified-system="google" data-robots-unified-field="enabled" ${systems.google?.enabled ? 'checked' : ''} /> Google</label>
+      </div>
+    </div>
+    <div class="robots-system-grid">
+      ${enabledSystems.length ? enabledSystems.map(key => robotsUnifiedSystemCardHtml(key, systems[key])).join('') : '<div class="empty compact-empty">Выберите Яндекс, Google или обе системы для проверки robots.txt.</div>'}
+    </div>
+  </div>`;
+}
+
+const __guruPrevGate1TypedFieldsHtmlV16 = gate1TypedFieldsHtml;
+gate1TypedFieldsHtml = function(card) {
+  const mode = getGate1CardMode(card);
+  ensureGate1TypedData(card);
+  if (mode === 'robots_unified') return `<div class="field-row"><span>Robots.txt</span>${robotsUnifiedFieldsHtml(card)}</div>`;
+  return __guruPrevGate1TypedFieldsHtmlV16(card);
+};
+
+function robotsUnifiedStatus(card) {
+  const fields = ensureRobotsUnifiedFields(card);
+  const urlFilled = Boolean(String(fields.url || '').trim());
+  const enabled = ['yandex', 'google'].filter(key => fields.systems?.[key]?.enabled);
+  const anySystemTouched = ['yandex', 'google'].some(key => {
+    const s = fields.systems?.[key] || {};
+    return s.enabled || s.status || s.evidence;
+  });
+  if (!urlFilled && !anySystemTouched) return 'not_started';
+  if (!urlFilled || !enabled.length) return 'in_progress';
+  const allSelectedFilled = enabled.every(key => {
+    const s = fields.systems[key] || {};
+    return Boolean(String(s.status || '').trim()) && Boolean(String(s.evidence || '').trim());
+  });
+  return allSelectedFilled ? 'ready' : 'in_progress';
+}
+
+const __guruPrevRecalculateStatusForCardV16 = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isRobotsUnifiedCard(card)) {
+    card.status = robotsUnifiedStatus(card);
+    return;
+  }
+  return __guruPrevRecalculateStatusForCardV16(card, workspace);
+};
+
+function updateRobotsUnifiedField(target) {
+  const cardId = target.closest('[data-card]')?.dataset?.card;
+  const card = cardId ? findCard(cardId) : allCardsFromWorkspace(state).find(isRobotsUnifiedCard);
+  if (!card) return;
+  const fields = ensureRobotsUnifiedFields(card);
+  const systemKey = target.dataset.robotsUnifiedSystem;
+  const field = target.dataset.robotsUnifiedField;
+  if (systemKey) {
+    fields.systems[systemKey] = fields.systems[systemKey] || { enabled: false, status: '', evidence: '' };
+    fields.systems[systemKey][field] = field === 'enabled' ? target.checked : target.value;
+  } else {
+    fields[field] = target.value;
+    if (field === 'url') addOrUpdateProjectLink(target.value, { comment: 'robots.txt', source: 'Robots.txt' });
+  }
+  recalculateStatusForCard(card);
+  flashSaving();
+  renderGate();
+}
+
+const __guruPrevTypedDataPlainV16 = typedDataPlain;
+typedDataPlain = function(card) {
+  if (getGate1CardMode(card) === 'robots_unified') {
+    const fields = ensureRobotsUnifiedFields(card);
+    const enabled = ['yandex', 'google'].filter(key => fields.systems?.[key]?.enabled);
+    const lines = [`URL: ${fields.url || 'не указан'}`];
+    enabled.forEach(key => {
+      const s = fields.systems[key] || {};
+      lines.push(`${robotsUnifiedSystemLabel(key)}: ${s.status === 'ok' ? 'проверка пройдена' : s.status === 'issue' ? 'есть проблема' : 'статус не выбран'}${s.evidence ? ` / доказательство: ${s.evidence}` : ''}`);
+    });
+    return lines.join('\n');
+  }
+  return __guruPrevTypedDataPlainV16(card);
+};
+
+document.addEventListener('change', event => {
+  if (event.target?.dataset?.robotsUnifiedField) updateRobotsUnifiedField(event.target);
+});
+
+document.addEventListener('input', event => {
+  if (event.target?.dataset?.robotsUnifiedField && event.target.type !== 'checkbox' && event.target.tagName !== 'SELECT') updateRobotsUnifiedField(event.target);
+});
+
+(function markV16() {
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.16'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.16'); });
+})();
