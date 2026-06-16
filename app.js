@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.14';
+const PLATFORM_VERSION = 'v0.17';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -3630,4 +3630,85 @@ document.addEventListener('input', event => {
 (function markV16() {
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.16'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.16'); });
+})();
+
+
+/* v0.17 — Robots.txt: сетка 3 уровня, один URL, выбранные системы, автоматический статус */
+STATUS_LABELS.problem = 'Проблема';
+
+function robotsUnifiedSelect(systemKey, value) {
+  const options = [
+    ['', 'Не проверено'],
+    ['ok', 'ОК'],
+    ['issue', 'Ошибка']
+  ];
+  return `<select class="robots-status-select" data-robots-unified-system="${escapeAttr(systemKey)}" data-robots-unified-field="status">
+    ${options.map(([key, label]) => `<option value="${escapeAttr(key)}" ${value === key ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')}
+  </select>`;
+}
+
+function robotsUnifiedSystemCardHtml(systemKey, data) {
+  const tone = data.status === 'ok' ? 'is-ok' : data.status === 'issue' ? 'is-issue' : '';
+  return `<section class="robots-system-card robots-system-card-v17 ${tone}">
+    <div class="robots-system-head compact-head">
+      <h4>${escapeHtml(robotsUnifiedSystemLabel(systemKey))}</h4>
+      <span>${escapeHtml(robotsUnifiedServiceLabel(systemKey))}</span>
+    </div>
+    <div class="robots-system-fields robots-system-fields-v17">
+      <label>Статус проверки${robotsUnifiedSelect(systemKey, data.status || '')}</label>
+      <label>Доказательство<input data-robots-unified-system="${escapeAttr(systemKey)}" data-robots-unified-field="evidence" value="${escapeAttr(data.evidence || '')}" placeholder="ссылка на отчёт, скрин или проверку" /></label>
+    </div>
+  </section>`;
+}
+
+function robotsUnifiedFieldsHtml(card) {
+  const fields = ensureRobotsUnifiedFields(card);
+  const systems = fields.systems || {};
+  const enabledSystems = ['yandex', 'google'].filter(key => systems[key]?.enabled);
+  return `<div class="robots-unified-workspace robots-v17 context-panel">
+    <div class="robots-top-grid">
+      <label class="robots-url-field">URL robots.txt<input list="projectUrlOptions" data-robots-unified-field="url" value="${escapeAttr(fields.url || '')}" placeholder="https://site.ru/robots.txt" />${projectUrlDatalistHtml()}</label>
+      <div class="robots-system-switches" aria-label="Системы проверки">
+        <label class="system-toggle ${systems.yandex?.enabled ? 'is-active' : ''}"><input type="checkbox" data-robots-unified-system="yandex" data-robots-unified-field="enabled" ${systems.yandex?.enabled ? 'checked' : ''} /> Яндекс</label>
+        <label class="system-toggle ${systems.google?.enabled ? 'is-active' : ''}"><input type="checkbox" data-robots-unified-system="google" data-robots-unified-field="enabled" ${systems.google?.enabled ? 'checked' : ''} /> Google</label>
+      </div>
+    </div>
+    <div class="robots-system-grid robots-system-grid-v17 ${enabledSystems.length === 1 ? 'one-card' : ''}">
+      ${enabledSystems.map(key => robotsUnifiedSystemCardHtml(key, systems[key])).join('')}
+    </div>
+  </div>`;
+}
+
+gate1TypedFieldsHtml = function(card) {
+  const mode = getGate1CardMode(card);
+  ensureGate1TypedData(card);
+  if (mode === 'robots_unified') return `<div class="field-row robots-field-row">${robotsUnifiedFieldsHtml(card)}</div>`;
+  return __guruPrevGate1TypedFieldsHtmlV16(card);
+};
+
+function robotsUnifiedStatus(card) {
+  const fields = ensureRobotsUnifiedFields(card);
+  const urlFilled = Boolean(String(fields.url || '').trim());
+  const enabled = ['yandex', 'google'].filter(key => fields.systems?.[key]?.enabled);
+  if (!urlFilled) return 'not_started';
+  if (!enabled.length) return 'in_progress';
+  if (enabled.some(key => fields.systems?.[key]?.status === 'issue')) return 'problem';
+  const allReady = enabled.every(key => {
+    const s = fields.systems[key] || {};
+    return s.status === 'ok' && Boolean(String(s.evidence || '').trim());
+  });
+  return allReady ? 'ready' : 'in_progress';
+}
+
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isRobotsUnifiedCard(card)) {
+    card.status = robotsUnifiedStatus(card);
+    return;
+  }
+  return __guruPrevRecalculateStatusForCardV16(card, workspace);
+};
+
+(function markV17() {
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.17'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.17'); });
 })();
