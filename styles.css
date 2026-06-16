@@ -1354,3 +1354,130 @@ select:disabled {
   .route-top-grid,.route-section-grid,.route-tech-grid{grid-template-columns:1fr;}
   .guru-route-card{padding:14px;}
 }
+
+/* v0.22 — page-specific route templates */
+.v22-page-card{
+  border-left:4px solid #111827;
+  background:#fffdf8;
+}
+.v22-route-card-head{
+  grid-template-columns:minmax(0,1fr) auto auto;
+}
+.v22-page-type{
+  margin-top:6px;
+  font-size:12px;
+  color:#8b6d46;
+  font-weight:700;
+}
+.v22-route-top-grid{
+  grid-template-columns:minmax(280px,.8fr) minmax(320px,1.2fr);
+}
+.v22-route-section summary{
+  padding:13px 14px;
+}
+.v22-route-section summary .v22-section-title{
+  flex:1;
+  font-weight:820;
+}
+.v22-section-status{
+  flex:0 0 auto;
+}
+.v22-section-body{
+  display:grid;
+  gap:14px;
+}
+.v22-section-guidance{
+  display:grid;
+  grid-template-columns:1fr 1.2fr 1fr;
+  gap:12px;
+  padding:12px;
+  border-radius:14px;
+  background:#f8f3ea;
+  border:1px solid rgba(34,28,22,.08);
+}
+.v22-section-guidance strong{
+  display:block;
+  margin-bottom:5px;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.07em;
+  color:#7b5d38;
+}
+.v22-section-guidance p,
+.v22-section-guidance ul{
+  margin:0;
+  color:#3a2d21;
+  font-size:13px;
+  line-height:1.45;
+}
+.v22-section-guidance ul{
+  padding-left:18px;
+  display:grid;
+  gap:3px;
+}
+.v22-section-mode{
+  max-width:320px;
+}
+.v22-route-fields{
+  align-items:start;
+}
+.v22-section-skipped{
+  padding:12px 14px;
+  border-radius:12px;
+  background:#f3f4f6;
+  color:#6b7280;
+  font-size:13px;
+  font-weight:700;
+}
+.v22-tech-control{
+  display:grid;
+  gap:12px;
+  padding:14px;
+  border:1px solid rgba(34,28,22,.11);
+  border-radius:16px;
+  background:#fff;
+}
+.v22-tech-head{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  align-items:center;
+  border-bottom:1px solid rgba(34,28,22,.08);
+  padding-bottom:10px;
+}
+.v22-tech-head strong{
+  font-size:14px;
+  color:#2c2117;
+}
+.v22-tech-head span{
+  color:#827464;
+  font-size:12px;
+}
+.v22-snippet-preview{
+  margin-top:6px;
+}
+.v22-route-section.status-ready > summary{
+  border-left:4px solid #16a34a;
+}
+.v22-route-section.status-in_progress > summary{
+  border-left:4px solid #f97316;
+}
+.v22-route-section.status-not_started > summary{
+  border-left:4px solid #9ca3af;
+}
+.v22-route-section.status-problem > summary{
+  border-left:4px solid #dc2626;
+}
+@media (max-width: 980px){
+  .v22-route-top-grid,
+  .v22-section-guidance{
+    grid-template-columns:1fr;
+  }
+  .v22-route-card-head{
+    grid-template-columns:1fr;
+  }
+  .v22-tech-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}

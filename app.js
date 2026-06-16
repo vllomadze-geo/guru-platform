@@ -4587,3 +4587,366 @@ pageStructureStatus = function(row) {
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.21'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.21'); });
 })();
+
+/* v0.22 — Page-specific route templates: не анкета, а маршрут по типу страницы */
+function v22NormalizePageTitle(value = '') {
+  return normalizeGateTitle(String(value || '').replace(/⚠️/g, '').trim());
+}
+
+function pageTemplateContext(card) {
+  const title = v22NormalizePageTitle(card?.title || '');
+  if (title === v22NormalizePageTitle('ГЛАВНАЯ')) return 'home';
+  if (title.includes('лендинг')) return 'landing';
+  if (title.includes('thank you')) return 'thankyou';
+  if (title === '404' || title.includes('404')) return 'notfound';
+  if (title.includes('политик')) return 'policy';
+  if (title.includes('доставка') || title.includes('гаранти')) return 'delivery';
+  if (title.includes('контакт')) return 'contacts';
+  if (title.includes('о нас')) return 'about';
+  if (title.includes('статья') || title.includes('блог')) return 'blog';
+  if (title.includes('карточка товара') || title.includes('товар')) return 'product';
+  if (title.includes('страница услуги') || title.includes('услуг')) return 'service';
+  if (title.includes('список') || title.includes('категор') || title.includes('каталог')) return 'catalog';
+  return 'standard';
+}
+
+function v22PageTemplates() {
+  return {
+    home: {
+      type: 'Главная',
+      orientir: 'Коммерческая точка входа. За 3 секунды объясняет, кто вы, для кого и почему вам можно доверять.',
+      sections: [
+        { key:'home_hero', title:'1. Hero-экран', task:'Сразу объяснить, кто вы, для кого и почему стоит остаться.', checklist:['H1 с результатом и адресатом','УТП без абстракций','Визуал результата или продукта','Соцдоказательство','Основная и альтернативная кнопки'], standard:'На первом экране понятно предложение, доверие и первое действие.', fields:[rowField('h1','H1','10–90 знаков'), ctxField('heroUsp','УТП','1 ясное обещание результата','textarea'), ctxField('heroVisual','Визуал','Что показываем на первом экране'), ctxField('heroProof','Соцдоказательство','Рейтинг / логотипы / кейс / цифра'), ctxField('heroMiniBlocks','Мини-блок: доставка / сроки / гарантия / оплата','Коротко по пунктам','textarea'), ctxField('primaryButton','Основная кнопка','Главное действие'), ctxField('secondaryButton','Альтернативная кнопка','Мягкое действие')] },
+        { key:'home_segments', title:'2. Навигация по сегментам', task:'Помочь пользователю быстро выбрать свой сценарий.', checklist:['Заголовок выбора','3–6 карточек сегментов','Фото + название + ссылка в каждой карточке'], standard:'Пользователь за один экран понимает, куда ему перейти.', fields:[ctxField('segmentTitle','Заголовок','Объясняет логику выбора'), ctxField('segmentCards','Карточки сегментов','Фото + название + ссылка','textarea')] },
+        { key:'home_about', title:'3. О компании', task:'Показать доверие и масштаб без длинного текста.', checklist:['Заголовок доверия','3 фактоида','Короткий текст о подходе','Сертификаты / награды / знаки доверия'], standard:'Блок отвечает, почему компании можно доверять.', fields:[ctxField('aboutTitle','Заголовок','Смысл доверия'), ctxField('aboutFacts','3 фактоида','Цифры / опыт / масштаб','textarea'), ctxField('aboutText','Короткий текст','2–4 предложения','textarea'), ctxField('trustBadges','Доказательства','Сертификаты / награды / знаки доверия','textarea')] },
+        { key:'home_cases', title:'4. Кейсы', task:'Показать реальные результаты и снять страх «не получится».', checklist:['3–4 примера','Название кейса','Категория','Результат','CTA на портфолио'], standard:'Кейсы показывают конкретный результат, а не просто факт работы.', fields:[ctxField('cases','Кейсы','Название + категория + результат','textarea'), ctxField('portfolioButton','CTA на портфолио','Кнопка или ссылка')] },
+        { key:'home_process', title:'5. Процесс работы', task:'Снять неопределённость и показать порядок действий.', checklist:['3–5 шагов','Что происходит на каждом шаге','Срок по каждому шагу','CTA под схемой'], standard:'Пользователь понимает, что будет после заявки.', fields:[ctxField('processTitle','Заголовок','Процесс простым языком'), ctxField('processSteps','3–5 шагов','Название + что происходит + срок','textarea'), ctxField('processButton','CTA под схемой','Следующее действие')] },
+        { key:'home_benefits', title:'6. Выгоды', task:'Сформулировать пользу для клиента, а не свойства компании.', checklist:['Заголовок','3 конкретные выгоды','Каждая выгода привязана к результату клиента'], standard:'Выгоды отвечают на вопрос «что я получу».', fields:[ctxField('benefits','3 конкретные выгоды','Без общих слов','textarea')] },
+        { key:'home_reviews', title:'7. Отзывы', task:'Добавить внешнее доверие перед финальным действием.', checklist:['Виджет Яндекс / Google или 3 цитаты','Кнопка «Читать все отзывы»'], standard:'Отзывы выглядят проверяемо и связаны с реальными клиентами.', fields:[ctxField('reviews','Отзывы','Виджет или 3 цитаты','textarea'), ctxField('reviewsButton','CTA читать все отзывы','Кнопка или ссылка')] },
+        finalCtaSection('home_final_cta')
+      ]
+    },
+    landing: {
+      type: 'Лендинг',
+      orientir: 'Ситуативная конверсионная страница под одну задачу. Без лишней навигации и отвлекающих элементов.',
+      sections: [
+        { key:'landing_hero', title:'1. Герой', task:'За 3 секунды передать оффер и вызвать первое действие.', checklist:['H1: результат + для кого + срок/условия','Подзаголовок: 1–2 конкретные выгоды','Визуал результата или продукта','Соцдоказательство','Мини-блок: срок / гарантия / условие','Одна яркая кнопка','Нет глобального меню'], standard:'Первый экран продаёт действие без отвлечений.', fields:[rowField('h1','H1','Результат + для кого + срок/условия'), ctxField('landingSubhead','Подзаголовок','1–2 конкретные выгоды'), ctxField('landingVisual','Визуал','Фото/видео результата или продукта'), ctxField('landingSocialProof','Соцдоказательство','Рейтинг / факты / логотипы'), ctxField('landingMiniBlock','Мини-блок','Срок / гарантия / условие','textarea'), ctxField('landingMainButton','Кнопка','Получить / Записаться / Рассчитать')] },
+        { key:'landing_social', title:'2. Быстрый соцдок', task:'Сразу после героя убрать сомнение «а вы вообще кто».', checklist:['Полоса логотипов клиентов / партнёров / СМИ','3 цифры: клиенты / опыт / довольные','Формат узкий, без много места'], standard:'Первое доверие видно без скролла вглубь.', fields:[ctxField('landingLogos','Логотипы / партнёры / СМИ','Кого показываем','textarea'), ctxField('landingNumbers','3 цифры','X клиентов / X лет / X% довольных','textarea')] },
+        { key:'landing_pains', title:'3. Боли', task:'Показать, что мы понимаем проблему клиента.', checklist:['Заголовок боли','3–5 болей','Визуальный разделитель или иконки','Переход к решению'], standard:'Клиент узнаёт свою ситуацию.', fields:[ctxField('landingPainTitle','Заголовок боли','Ситуация клиента'), ctxField('landingPains','3–5 болей','Заголовок + 1–2 предложения','textarea'), ctxField('landingPainBridge','Переход к решению','Короткий мост к офферу','textarea')] },
+        { key:'landing_solution', title:'4. Оффер / Решение', task:'Показать продукт как прямой ответ на боль.', checklist:['Заголовок: как это решает боль','Описание продукта / услуги','Формула результата: было → стало','CTA повтор'], standard:'Понятно, что именно получит клиент.', fields:[ctxField('landingSolutionTitle','Заголовок решения','Как решает боль'), ctxField('landingSolutionText','Описание продукта/услуги','Что именно, как работает, что получает клиент','textarea'), ctxField('landingResultFormula','Формула результата','Было → стало / до → после'), ctxField('landingSolutionCta','CTA повтор','Получить / Попробовать')] },
+        { key:'landing_process', title:'5. Как это работает', task:'Снять страх, что это сложно, долго или непонятно.', checklist:['Заголовок','3–5 шагов','Иконка + заголовок + 1 предложение + срок','Акцент на простоте первого шага'], standard:'Процесс выглядит простым и безопасным.', fields:[ctxField('landingProcessTitle','Заголовок','3 шага до результата / Как мы работаем'), ctxField('landingProcessSteps','3–5 шагов','Иконка + заголовок + предложение + срок','textarea')] },
+        { key:'landing_cases', title:'6. Результаты / Кейсы', task:'Закрыть страх «вдруг не сработает».', checklist:['2–4 кейса','Ситуация → что сделали → результат в цифрах','Формат до/после, если есть','Цитата клиента','CTA повтор'], standard:'Есть доказательство реального результата.', fields:[ctxField('landingCases','2–4 кейса','Ситуация → действие → результат','textarea'), ctxField('landingClientQuote','Цитата клиента','Фото и имя, если возможно','textarea'), ctxField('landingCasesCta','CTA повтор','Следующее действие')] },
+        { key:'landing_packages', title:'7. Пакеты / Вариации', task:'Дать выбор без перегруза.', checklist:['2–4 варианта','Название + для кого + что входит + цена/от X','Рекомендованный вариант','CTA у каждой карточки'], standard:'Выбор есть, но не создаёт паралич выбора.', fields:[ctxField('landingPackages','2–4 варианта','Название + кому + что входит + цена','textarea'), ctxField('landingRecommended','Рекомендованный вариант','Лейбл «Популярный»')] },
+        { key:'landing_price', title:'8. Цена / Форма захвата', task:'Закрыть возражение по деньгам или снизить барьер первого шага.', checklist:['Цена открыта или цена по запросу','Что входит + бонус + гарантия + дедлайн','Короткая форма','Обещание времени ответа','Один из двух вариантов, не оба'], standard:'Пользователь понимает следующий шаг и не боится формы.', fields:[ctxField('landingPrice','Цена / условия','Цена + что входит + гарантия','textarea'), ctxField('landingForm','Форма','Имя + телефон / рассчитать стоимость'), ctxField('landingAnswerPromise','Обещание ответа','Ответим за X минут')] },
+        { key:'landing_faq', title:'9. FAQ', task:'Снять последние возражения без менеджера.', checklist:['5–8 вопросов','Цена / сроки / гарантия / оплата / возврат / что если не подойдёт','Аккордеон','Кнопка: остался вопрос?'], standard:'FAQ отвечает на реальные возражения.', fields:[ctxField('landingFaq','5–8 вопросов','Вопрос + короткий ответ','textarea'), ctxField('landingFaqButton','Кнопка','Остался вопрос? Напишите нам')] },
+        finalCtaSection('landing_final_cta')
+      ]
+    },
+    service: {
+      type: 'Страница услуги',
+      orientir: 'Обязательная конверсионная страница. Проводит клиента от боли до заявки, не уводя со страницы.',
+      sections: [
+        { key:'service_hero', title:'1. Герой', task:'С первого экрана передать УТП, доверие и первое действие.', checklist:['H1: фраза УТП под конкретную услугу','Подзаголовок: 1–2 ключевые выгоды','Соцдок: рейтинг / логотипы / кейс-тиндер','Мини-блок: доставка / сроки / гарантия / оплата','Основная кнопка'], standard:'Первый экран сразу объясняет услугу и действие.', fields:[rowField('h1','H1','УТП под конкретную услугу'), ctxField('serviceSubhead','Подзаголовок','1–2 ключевые выгоды'), ctxField('serviceSocialProof','Соцдок','Рейтинг / логотипы / кейс'), ctxField('serviceMiniBlock','Мини-блок','Доставка / сроки / гарантия / оплата','textarea'), ctxField('serviceHeroButton','Кнопка','Основное действие')] },
+        { key:'service_pain_solution', title:'2. Боли → Решение', task:'Зацепить болью и сразу показать выход.', checklist:['Заголовок блока','2–3 формулы: боль → решение','Мини-доказательства под каждой болью','Кнопка'], standard:'Проблема и решение понятны без длинного текста.', fields:[ctxField('servicePainTitle','Заголовок блока','Боль клиента'), ctxField('servicePainSolutions','2–3 формулы','Боль → решение + доказательство','textarea'), ctxField('servicePainButton','Кнопка','Следующее действие')] },
+        { key:'service_cases', title:'3. Кейсы', task:'Показать реальный результат и закрыть страх.', checklist:['2–4 кейса','Формат до / после / результат','Отзывы с фото клиента','Формат слайдера или сетки'], standard:'Кейсы доказывают, что услуга работает.', fields:[ctxField('serviceCases','2–4 кейса','До / после / результат','textarea'), ctxField('serviceReviews','Отзывы клиентов','Фото + цитата','textarea'), ctxField('serviceCasesFormat','Формат','Слайдер или сетка')] },
+        { key:'service_process', title:'4. Как работаем', task:'Убрать неопределённость, клиент должен знать, что будет дальше.', checklist:['Заголовок','3–5 шагов','Шаг → ожидаемый результат → срок','Видео-демо 15–30 сек, если есть','Кнопки'], standard:'Процесс прозрачен и снижает страх заявки.', fields:[ctxField('serviceProcessTitle','Заголовок','Как работаем'), ctxField('serviceProcessSteps','3–5 шагов','Шаг → результат → срок','textarea'), ctxField('serviceVideo','Видео-демо','15–30 сек, если применимо'), ctxField('serviceProcessButtons','Кнопки','Оформить заявку / консультация')] },
+        { key:'service_packages', title:'5. Вариации / Пакеты', task:'Дать выбор под разные потребности и бюджеты.', checklist:['Общий заголовок + подзаголовок','3–7 карточек','Название + для кого + что входит','Кнопка у каждой карточки'], standard:'Пакеты помогают выбрать, но не перегружают.', fields:[ctxField('servicePackagesTitle','Заголовок','Общий заголовок + подзаголовок'), ctxField('servicePackages','3–7 карточек','Название + для кого + состав','textarea')] },
+        { key:'service_price', title:'6. Цена', task:'Закрыть возражение по деньгам, показать ценность, не просто цифру.', checklist:['Заголовок','Цена + что входит','Бонус / спецпредложение','Гарантия + условия оплаты','Калькулятор, если применимо','Кнопки'], standard:'Цена выглядит как ценность, а не сухая сумма.', fields:[ctxField('servicePriceTitle','Заголовок','Про ценность'), ctxField('servicePrice','Цена + что входит','Цена, состав, условия','textarea'), ctxField('serviceBonus','Бонус / спецпредложение','Если есть'), ctxField('servicePayment','Гарантия + условия оплаты','Оплата / возврат / безопасность','textarea'), ctxField('serviceCalculator','Калькулятор','Если применимо'), ctxField('servicePriceButtons','Кнопки','Оформить заявку / консультация')] },
+        { key:'service_faq', title:'7. FAQ', task:'Снять оставшиеся возражения без участия менеджера.', checklist:['6–10 вопросов','Сроки / гарантия / оплата / возврат / безопасность','Аккордеон','Кнопка задать вопрос'], standard:'FAQ закрывает частые сомнения.', fields:[ctxField('serviceFaq','6–10 вопросов','Вопрос + ответ','textarea'), ctxField('serviceFaqButton','Кнопка','Не нашли ответ? Задать вопрос')] },
+        { key:'service_contacts', title:'8. Контакты / Связаться', task:'Финальный захват максимально простым способом связи.', checklist:['Форма: имя + телефон + сообщение','Телефон кликабельный','Мессенджеры','Часы работы + обещание времени ответа'], standard:'Пользователь может связаться одним действием.', fields:[ctxField('serviceContactForm','Форма','Имя + телефон + опционально сообщение','textarea'), ctxField('serviceContactPhone','Телефон','Кликабельный'), ctxField('serviceContactMessengers','Мессенджеры','WhatsApp / Telegram'), ctxField('serviceContactHours','Часы работы','Время ответа')] },
+        { key:'service_cross', title:'9. Финальный экран + другие услуги', task:'Повторить УТП и удержать перелинковкой.', checklist:['УТП в 1–2 строки','Гарантия + кнопка','Блок других услуг: 3–6 карточек'], standard:'Есть финальный захват и продолжение маршрута.', fields:[ctxField('serviceFinalOffer','Финальное УТП','1–2 строки + гарантия'), ctxField('serviceOtherServices','Другие услуги','3–6 карточек с УТП','textarea')] }
+      ]
+    },
+    catalog: {
+      type: 'Список / категория',
+      orientir: 'Навигационная страница. Разводит трафик по нужным разделам и удерживает тех, кто ещё выбирает.',
+      sections: [
+        { key:'catalog_hero', title:'1. Герой', task:'Подтвердить, что пользователь попал в нужный раздел.', checklist:['H1: название категории + гео/уточнение','Intro: 2–3 предложения о разделе'], standard:'Сразу ясно, что это за категория и кому она подходит.', fields:[rowField('h1','H1','Название категории + гео/уточнение'), ctxField('catalogIntro','Intro','2–3 предложения','textarea')] },
+        { key:'catalog_filters', title:'2. Фильтры + сетка', task:'Упростить выбор и дать достаточно информации для клика.', checklist:['Фильтры: табы / теги / сортировка, если позиций больше 10','Карточка: фото + категория + H3 + атрибуты + CTA'], standard:'Пользователь быстро находит подходящий вариант.', fields:[ctxField('catalogFilters','Фильтры','Табы / теги / сортировка','textarea'), ctxField('catalogCards','Карточки','Фото + категория + H3 + атрибуты + CTA','textarea')] },
+        { key:'catalog_lead_magnet', title:'3. Лид-магнит врезка', task:'Поймать тех, кто устал листать или не может выбрать.', checklist:['Вставляется после 3–6 карточки','Заголовок «Не знаете что выбрать?»','Кнопка консультации'], standard:'Есть мягкий захват для неопределившихся.', fields:[ctxField('catalogLeadMagnetPlace','Место вставки','После 3–6 карточки'), ctxField('catalogLeadMagnetTitle','Заголовок','Не знаете что выбрать?'), ctxField('catalogLeadMagnetButton','Кнопка','Получить консультацию')] },
+        { key:'catalog_pagination', title:'4. Пагинация + перелинковка', task:'Техническая навигация и удержание, если категория не подошла.', checklist:['Показать ещё AJAX для UX','Числовая пагинация для роботов','Смотрите также: 3–4 смежные категории','Финальный CTA'], standard:'Навигация удобна человеку и понятна поисковым системам.', fields:[ctxField('catalogPagination','Пагинация','AJAX + числовая пагинация','textarea'), ctxField('catalogRelated','Смотрите также','3–4 смежные категории','textarea'), ctxField('catalogFinalCta','Финальный CTA','Если нужен')] }
+      ]
+    },
+    product: {
+      type: 'Карточка товара',
+      orientir: 'Обязательная e-commerce страница. Даёт всё необходимое для решения о покупке на одном экране.',
+      sections: [
+        { key:'product_first_screen', title:'1. Первый экран', task:'Показать товар и дать всё для принятия решения без ухода со страницы.', checklist:['Левая колонка: галерея + миниатюры + лейблы','Правая колонка: H1 + рейтинг + краткое описание + цена + наличие + кнопки','Мини-блок доверия'], standard:'Покупатель видит товар, цену, наличие и действие.', fields:[ctxField('productGallery','Левая колонка','Галерея + миниатюры + лейблы','textarea'), rowField('h1','H1','Название товара'), ctxField('productRating','Рейтинг','Рейтинг и отзывы'), ctxField('productShortDescription','Краткое описание','2–3 буллита','textarea'), ctxField('productPrice','Цена','Текущая + старая зачёркнутая, если есть'), ctxField('productAvailability','Наличие','Наличие / сроки'), ctxField('productButtons','Кнопки','В корзину / Купить'), ctxField('productTrustMini','Мини-блок доверия','Гарантия / доставка / возврат','textarea')] },
+        { key:'product_content', title:'2. Контент товара', task:'Продать через эмоцию и закрыть рациональные вопросы.', checklist:['Вкладки: описание / характеристики / комплектация / отзывы','Описание: проблема + формула было → стало + lifestyle-фото','Характеристики: таблица параметров','Комплектация: список или фото-раскладка'], standard:'Страница отвечает и эмоцией, и фактами.', fields:[ctxField('productTabs','Вкладки','Описание / характеристики / комплектация / отзывы','textarea'), ctxField('productDescription','Описание','Проблема + было→стало + lifestyle','textarea'), ctxField('productCharacteristics','Характеристики','Таблица параметров','textarea'), ctxField('productSet','Комплектация','Список или фото-раскладка','textarea')] },
+        { key:'product_tail', title:'3. Конверсионный хвост', task:'Увеличить чек и не отпустить, если не купил.', checklist:['Cross-sell: 3–4 карточки аксессуаров + кнопка добавить','Отзывы / UGC','Доставка и оплата','Вы недавно смотрели'], standard:'Есть допродажа, доверие и возвращение к выбору.', fields:[ctxField('productCrossSell','Cross-sell','3–4 аксессуара + кнопка','textarea'), ctxField('productUgc','Отзывы / UGC','Рейтинг + фото + список отзывов','textarea'), ctxField('productDeliveryPayment','Доставка и оплата','Способы + сроки + возврат','textarea'), ctxField('productViewed','Вы недавно смотрели','Карусель просмотренных')] }
+      ]
+    },
+    blog: {
+      type: 'Статья блога',
+      orientir: 'Вторичная трафиковая страница. Привлекает SEO-трафик и конвертирует читателя в лида.',
+      sections: [
+        { key:'blog_hero', title:'1. Герой + введение', task:'Заголовком продать клик, введением удержать.', checklist:['H1: главный ключ + интрига / цифра','Хлебные крошки + автор + дата + время чтения','Уникальное cover-фото','Лид-абзац: проблема + обещание решения','TOC: якорные ссылки'], standard:'Читатель понимает тему, пользу и структуру статьи.', fields:[rowField('h1','H1','Ключ + интрига / цифра'), ctxField('blogMeta','Крошки + автор + дата + время чтения','Навигационная мета-информация','textarea'), ctxField('blogCover','Cover-фото','Уникальное, не стоковое'), ctxField('blogLead','Лид-абзац','Проблема + обещание решения','textarea'), ctxField('blogToc','TOC','Якорные ссылки на разделы','textarea')] },
+        { key:'blog_body', title:'2. Тело + экспертные вставки', task:'Передать экспертность с конкретной пользой.', checklist:['Абзацы до 5 строк','H2/H3 со вторичными ключами','Чередование текста и списков','Pro Tips','Визуалы: скриншоты / графики / примеры'], standard:'Статья читается легко и доказывает экспертизу.', fields:[ctxField('blogBodyStructure','Структура текста','Абзацы, H2/H3, списки','textarea'), ctxField('blogProTips','Pro Tips','Блоки с советом эксперта','textarea'), ctxField('blogVisuals','Визуалы','Скриншоты / графики / подписи','textarea')] },
+        { key:'blog_conversion', title:'3. Конверсия внутри статьи', task:'Поймать горячих читателей и удержать остальных.', checklist:['Mid-CTA после 1–2 раздела','FAQ 5–7 вопросов','Заключение: 3–4 вывода','Bottom CTA'], standard:'Статья не только информирует, но и ведёт к заявке.', fields:[ctxField('blogMidCta','Mid-CTA','Баннер с контекстным оффером','textarea'), ctxField('blogFaq','FAQ','5–7 вопросов','textarea'), ctxField('blogConclusion','Заключение','3–4 вывода списком','textarea'), ctxField('blogBottomCta','Bottom CTA','Текст + форма + кнопка')] },
+        { key:'blog_eat', title:'4. E-E-A-T + удержание', task:'Доказать, что писал эксперт, и не отпустить с сайта.', checklist:['Карточка автора','Соцсети','Читать далее: 3 релевантные статьи'], standard:'Есть авторство, доверие и перелинковка.', fields:[ctxField('blogAuthorCard','Карточка автора','Фото + должность + био + соцсети','textarea'), ctxField('blogRelated','Читать далее','3 релевантные статьи','textarea')] }
+      ]
+    },
+    about: {
+      type: 'О нас',
+      orientir: 'Вторичная доверительная страница. Превращает безликое «мы» в живых людей и продаёт экспертность.',
+      sections: [
+        { key:'about_hero', title:'1. Герой + факты', task:'Быстро передать масштаб и зачем работает компания.', checklist:['H1: миссия, не название компании','Реальное фото команды или процесса','3–4 фактоида: год / объём / дифференциатор / локация'], standard:'Сразу видно, кто стоит за бизнесом.', fields:[rowField('h1','H1','Формулировка миссии'), ctxField('aboutHeroPhoto','Фото команды или процесса','Реальное фото'), ctxField('aboutFactoids','3–4 фактоида','Год / объём / отличие / локация','textarea')] },
+        { key:'about_people', title:'2. Люди + процесс', task:'Показать лицо бренда и систему за ним.', checklist:['Фото основателя + прямая речь','Команда: фото + роли','Backstage: фото/видео процесса + системность результата'], standard:'Компания выглядит живой и управляемой.', fields:[ctxField('aboutFounder','Основатель','Фото + речь 3–5 строк','textarea'), ctxField('aboutTeam','Команда','Фото + роли','textarea'), ctxField('aboutBackstage','Backstage','Фото/видео процесса + что делает результат системным','textarea')] },
+        { key:'about_trust_cta', title:'3. Доверие + CTA', task:'Финальное социальное доказательство и захват.', checklist:['Лого-стена клиентов','Сертификаты / награды / лицензии','Финальный CTA'], standard:'Страница закрывает доверие и ведёт к действию.', fields:[ctxField('aboutClientWall','Лого-стена клиентов','Кого показываем','textarea'), ctxField('aboutCertificates','Сертификаты / награды / лицензии','Проверяемые доказательства','textarea'), ctxField('aboutFinalCta','Финальный CTA','Следующее действие')] }
+      ]
+    },
+    contacts: {
+      type: 'Контакты',
+      orientir: 'Обязательная сервисная страница. Обеспечивает максимальную доступность и подтверждает легальность бизнеса.',
+      sections: [
+        { key:'contacts_communication', title:'1. Связь', task:'Любой способ связи в одно касание.', checklist:['Телефон кликабельный, крупно','Мессенджеры WhatsApp + Telegram','Email','Часы работы'], standard:'Пользователь сразу видит, как связаться.', fields:[ctxField('contactsPhone','Телефон','Кликабельный, крупно'), ctxField('contactsMessengers','Мессенджеры','WhatsApp + Telegram'), ctxField('contactsEmail','Email','Рабочий email'), ctxField('contactsHours','Часы работы','Понятный график')] },
+        { key:'contacts_map', title:'2. Карта + реквизиты', task:'Local SEO + доверие для B2B.', checklist:['Интерактивная карта, не скриншот','Полный адрес + схема проезда','Юрлицо + ИНН + ОГРН','Форма с согласием'], standard:'Контакты подтверждают реальность и легальность компании.', fields:[ctxField('contactsMap','Интерактивная карта','Ссылка/виджет, не скриншот'), ctxField('contactsAddress','Адрес + схема проезда','Полный адрес'), ctxField('contactsLegal','Юрлицо + ИНН + ОГРН','Реквизиты','textarea'), ctxField('contactsForm','Форма','Имя + Email + тема + чекбокс согласия','textarea')] }
+      ]
+    },
+    delivery: {
+      type: 'Доставка / гарантии',
+      orientir: 'Рекомендуемая сервисная страница. Снимает страхи о том, что будет после оплаты.',
+      sections: [
+        { key:'delivery_service', title:'1. Процесс передачи результата', task:'Снять страхи: что получу, когда, и что если что-то пойдёт не так.', checklist:['Форматы передачи результата','Сроки в таблице','Гарантии: качество + хранение + конфиденциальность','Оплата: способы + предоплата/постоплата'], standard:'Пользователь понимает условия до обращения.', fields:[ctxField('deliveryFormats','Форматы передачи результата','Ссылка / файл / самовывоз','textarea'), ctxField('deliveryTiming','Сроки','Таблица тип → срок','textarea'), ctxField('deliveryGuarantees','Гарантии','Качество + хранение + конфиденциальность','textarea'), ctxField('deliveryPayment','Оплата','Способы + предоплата/постоплата','textarea')] }
+      ]
+    },
+    policy: {
+      type: 'Политика',
+      orientir: 'Обязательная юридическая страница. Защищает от штрафов по 152-ФЗ и разблокирует рекламные кабинеты.',
+      sections: [
+        { key:'policy_legal', title:'1. Юридическая защита сбора данных', task:'Закрыть требования для форм и рекламы.', checklist:['Кто мы: название + адрес + ИНН + email ответственного','Какие данные собираем и зачем','Cookies: сервисы + инструкция отключения','Права пользователя: срок хранения + право удаления'], standard:'Политика покрывает формы, cookies и рекламные требования.', fields:[ctxField('policyWho','Кто мы','Название + адрес + ИНН + email','textarea'), ctxField('policyData','Какие данные','Список + зачем','textarea'), ctxField('policyCookies','Cookies','Сервисы + инструкция отключения','textarea'), ctxField('policyRights','Права пользователя','Срок хранения + право удаления','textarea')] }
+      ]
+    },
+    notfound: {
+      type: '404',
+      orientir: 'Техническая удерживающая страница. Не даёт пользователю уйти, когда он попал в тупик.',
+      sections: [
+        { key:'notfound_exit', title:'1. Выход из тупика', task:'Не дать закрыть вкладку и предложить продолжение.', checklist:['H1: «Страница не найдена», нейтральный тон','Строка поиска по сайту','Кнопка на главную','Ссылки на топ-разделы'], standard:'Пользователь получает понятный выход.', fields:[rowField('h1','H1','Страница не найдена, нейтрально'), ctxField('notfoundSearch','Поиск по сайту','Есть / нет'), ctxField('notfoundHomeButton','Кнопка на главную','Текст кнопки'), ctxField('notfoundTopLinks','Топ-разделы','3–6 ссылок','textarea')] }
+      ]
+    },
+    thankyou: {
+      type: 'Thank You Page',
+      orientir: 'Обязательная аналитическая страница. На ней настраивается цель в Метрике для обучения Директа.',
+      sections: [
+        { key:'thankyou_confirm', title:'1. Подтверждение заявки', task:'Подтвердить заявку и прогреть горячего клиента.', checklist:['H1 «Спасибо» + зелёная галочка','Текст: кто / когда / как свяжется','Прогрев: Telegram / портфолио / полезный контент','URL /thank-you → цель в Метрике'], standard:'Пользователь понимает, что заявка принята, а аналитика получает цель.', fields:[rowField('h1','H1','Спасибо + зелёная галочка'), ctxField('thankyouText','Текст подтверждения','Кто / когда / как свяжется','textarea'), ctxField('thankyouWarmup','Прогрев','Telegram / портфолио / полезный контент','textarea'), ctxField('thankyouGoal','Цель в Метрике','URL /thank-you → цель')] }
+      ]
+    },
+    standard: {
+      type: 'Страница',
+      orientir: 'Рабочая страница сайта. Фиксирует содержание, SEO-основу, техническое состояние и конверсионное действие.',
+      sections: [
+        { key:'standard_content', title:'1. Контент и задача', task:'Понять, какую роль выполняет страница.', checklist:['H1','Краткое описание','Главное действие','Доказательство'], standard:'Страница имеет понятную задачу и результат.', fields:[rowField('h1','H1','Главный заголовок'), ctxField('standardRole','Роль страницы','Зачем нужна страница','textarea'), ctxField('standardMainAction','Главное действие','Что должен сделать пользователь'), ctxField('standardProof','Доказательство','Ссылка / скрин / факт','textarea')] }
+      ]
+    }
+  };
+}
+
+function ctxField(key, label, standard, type = 'input') { return { kind:'context', key, label, standard, type, required:true }; }
+function rowField(field, label, standard, type = 'input') { return { kind:'row', field, label, standard, type, required:true }; }
+function finalCtaSection(key) {
+  return { key, title:'Финальный CTA', task:'Последний шанс захватить тех, кто дошёл до конца.', checklist:['Повтор главного оффера в 1–2 строки','Усилитель: гарантия / бонус / дедлайн / ограничение мест','Форма или кнопка максимально простые','Альтернатива: WhatsApp / Telegram, если форма не подходит'], standard:'В конце страницы есть понятное действие или осознанное решение, что CTA не нужен.', fields:[ctxField(`${key}_headline`,'Заголовок','Повтор главного оффера'), ctxField(`${key}_button`,'Основная кнопка','Максимально конкретное действие'), ctxField(`${key}_alt`,'Альтернативное действие','WhatsApp / Telegram / звонок, если нужно')] };
+}
+
+function v22TemplateForCard(card) {
+  const context = pageTemplateContext(card);
+  const templates = v22PageTemplates();
+  return templates[context] || templates.standard;
+}
+
+function v22PageTypeLabel(card) {
+  return v22TemplateForCard(card).type;
+}
+
+function pageRouteOrientir(card, row) {
+  return v22TemplateForCard(card).orientir;
+}
+
+function v22IsFilled(value) {
+  return String(value || '').trim().length > 0;
+}
+
+function v22GetFieldValue(row, field) {
+  if (field.kind === 'row') return row[field.field];
+  row.contextFields = row.contextFields || {};
+  return row.contextFields[field.key];
+}
+
+function v22SectionMode(row, section) {
+  row.contextFields = row.contextFields || {};
+  return row.contextFields[`${section.key}__mode`] || 'needed';
+}
+
+function v22SectionStatus(row, section) {
+  if (v22SectionMode(row, section) === 'not_needed') return 'ready';
+  const requiredFields = (section.fields || []).filter(field => field.required !== false);
+  const checks = requiredFields.map(field => v22IsFilled(v22GetFieldValue(row, field)));
+  const resultFilled = v22IsFilled(row.contextFields?.[`${section.key}__result`]);
+  const proofFilled = v22IsFilled(row.contextFields?.[`${section.key}__proof`]);
+  const all = checks.concat([resultFilled, proofFilled]);
+  const filled = all.filter(Boolean).length;
+  if (!filled) return 'not_started';
+  if (filled === all.length) return 'ready';
+  return 'in_progress';
+}
+
+function v22SectionStatusLabel(row, section) {
+  if (v22SectionMode(row, section) === 'not_needed') return 'Не нужна';
+  const status = v22SectionStatus(row, section);
+  return STATUS_LABELS[status] || status;
+}
+
+function v22SectionFieldHtml(card, pageIndex, row, field) {
+  if (field.kind === 'row') return rowInputField(card, pageIndex, row, field.field, field.label, field.standard, field.type, field.type === 'textarea' ? 'full' : '');
+  return contextInputField(card, pageIndex, row, field.key, field.label, field.standard, field.type, field.type === 'textarea' ? 'full' : '');
+}
+
+function v22SectionMetaInput(card, pageIndex, row, section, suffix, label, standard, type = 'textarea') {
+  const key = `${section.key}__${suffix}`;
+  return contextInputField(card, pageIndex, row, key, label, standard, type, 'full');
+}
+
+function v22RouteSectionHtml(card, row, pageIndex, section, open = false) {
+  row.contextFields = row.contextFields || {};
+  const modeKey = `${section.key}__mode`;
+  const mode = v22SectionMode(row, section);
+  const status = v22SectionStatus(row, section);
+  return `<details class="route-section v22-route-section status-${status}" ${open ? 'open' : ''}>
+    <summary>
+      <span class="v22-section-title">${escapeHtml(section.title)}</span>
+      <span class="v22-section-status status-pill status-${status}">${escapeHtml(v22SectionStatusLabel(row, section))}</span>
+    </summary>
+    <div class="route-section-body v22-section-body">
+      <div class="v22-section-guidance">
+        <div><strong>Задача</strong><p>${escapeHtml(section.task || '')}</p></div>
+        <div><strong>Чек-пункты</strong><ul>${(section.checklist || []).map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>
+        <div><strong>Стандарт готовности</strong><p>${escapeHtml(section.standard || '')}</p></div>
+      </div>
+      <label class="route-field v22-section-mode"><span>Нужна ли секция</span><small>Если секция не нужна, она не влияет на готовность страницы.</small><select data-page-context-card-id="${escapeAttr(card.id)}" data-page-context-index="${pageIndex}" data-page-context-key="${escapeAttr(modeKey)}">
+        <option value="needed" ${mode !== 'not_needed' ? 'selected' : ''}>Нужна</option>
+        <option value="not_needed" ${mode === 'not_needed' ? 'selected' : ''}>Не нужна</option>
+      </select></label>
+      ${mode === 'not_needed' ? `<div class="v22-section-skipped">Секция исключена из расчёта готовности страницы.</div>` : `<div class="route-section-grid v22-route-fields">
+        ${(section.fields || []).map(field => v22SectionFieldHtml(card, pageIndex, row, field)).join('')}
+        ${v22SectionMetaInput(card, pageIndex, row, section, 'result', 'Результат секции', 'Коротко зафиксируйте, что должно быть на странице.', 'textarea')}
+        ${v22SectionMetaInput(card, pageIndex, row, section, 'proof', 'Доказательство', 'Ссылка на макет, скрин, отчёт или короткое подтверждение.', 'input')}
+      </div>`}
+    </div>
+  </details>`;
+}
+
+function v22SeoSnippetSection(card, row, pageIndex, open = false) {
+  const section = { key:'seo_snippet', title:'SEO-сниппет', task:'Собрать поисковый вид страницы из H1, Title и Description.', checklist:['Title отражает смысл страницы','Description объясняет ценность и действие','Snippet читается как короткое предложение'], standard:'Страница понятно выглядит в поиске и не требует отдельного блока сниппета.', fields:[rowField('title','Title','20–90 знаков. SEO-заголовок страницы.'), rowField('description','Description','50–200 знаков. SEO-описание страницы.','textarea')] };
+  const snippet = snippetForPage(row);
+  const base = v22RouteSectionHtml(card, row, pageIndex, section, open);
+  return base.replace('</div>\n  </details>', `<div class="snippet-preview route-snippet v22-snippet-preview full"><strong>Snippet</strong><span>${snippet ? escapeHtml(snippet) : 'Соберётся из H1, Title, Description, смысла и оффера страницы.'}</span></div></div>\n  </details>`);
+}
+
+function v22FinalCtaSection(card, row, pageIndex, open = false) {
+  const status = row.ctaMode === 'not_needed' ? 'ready' : (v22IsFilled(row.finalCta) ? 'ready' : 'not_started');
+  return `<details class="route-section v22-route-section status-${status}" ${open ? 'open' : ''}>
+    <summary><span class="v22-section-title">Финальный CTA</span><span class="v22-section-status status-pill status-${status}">${row.ctaMode === 'not_needed' ? 'Не нужен' : (STATUS_LABELS[status] || status)}</span></summary>
+    <div class="route-section-body v22-section-body">
+      <div class="v22-section-guidance">
+        <div><strong>Задача</strong><p>Последний шанс захватить тех, кто дошёл до конца страницы.</p></div>
+        <div><strong>Чек-пункты</strong><ul><li>Повтор главного оффера</li><li>Основная кнопка</li><li>Альтернативное действие, если нужно</li></ul></div>
+        <div><strong>Стандарт готовности</strong><p>Пользователь понимает, что делать дальше.</p></div>
+      </div>
+      ${finalCtaRouteHtml(card, row, pageIndex)}
+    </div>
+  </details>`;
+}
+
+function v22TechnicalControlHtml(card, row, pageIndex) {
+  return `<section class="v22-tech-control">
+    <div class="v22-tech-head">
+      <strong>Технический контроль</strong>
+      <span>Компактная проверка страницы, без отдельной простыни.</span>
+    </div>
+    ${pageAuditControlsCompactHtml(card, row, pageIndex)}
+  </section>`;
+}
+
+function v22RouteSectionsHtml(card, row, pageIndex) {
+  const template = v22TemplateForCard(card);
+  const sections = [...(template.sections || [])];
+  const statuses = sections.map(section => v22SectionStatus(row, section));
+  let firstOpen = statuses.findIndex(status => status !== 'ready');
+  const html = sections.map((section, index) => v22RouteSectionHtml(card, row, pageIndex, section, index === firstOpen)).join('');
+  const seoOpen = firstOpen === -1 && (!v22IsFilled(row.title) || !v22IsFilled(row.description));
+  const ctaOpen = firstOpen === -1 && row.ctaMode !== 'not_needed' && !v22IsFilled(row.finalCta) && !seoOpen;
+  return html + v22SeoSnippetSection(card, row, pageIndex, seoOpen) + v22FinalCtaSection(card, row, pageIndex, ctaOpen) + v22TechnicalControlHtml(card, row, pageIndex);
+}
+
+pageStructureCardHtml = function(card, row, pageIndex, repeatable) {
+  v20EnsurePageAuditFields(row);
+  row.contextFields = row.contextFields || {};
+  const pageStatus = pageStructureStatus(row);
+  const template = v22TemplateForCard(card);
+  const nameValue = row.name || card.title || template.type || 'Страница';
+  return `<section class="page-structure-card guru-route-card v22-page-card" data-page-source-card="${escapeAttr(card.id)}">
+    <div class="route-card-head v22-route-card-head">
+      <div>
+        <div class="route-kicker">Ориентир → секции страницы → чек-пункты → стандарт → доказательство → статус</div>
+        <input class="page-name-input route-page-name" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="name" value="${escapeAttr(nameValue)}" placeholder="Название страницы" ${row.fixed ? 'readonly' : ''} />
+        <div class="v22-page-type">Тип страницы: ${escapeHtml(template.type || 'Страница')}</div>
+      </div>
+      <span class="status-pill status-${pageStatus}">${STATUS_LABELS[pageStatus] || pageStatus}</span>
+      ${repeatable ? `<button class="small-btn danger-mini" data-remove-gate1-page="${escapeAttr(card.id)}" data-index="${pageIndex}" ${rowsSafeLength(card.pageRows) <= 1 ? 'disabled' : ''}>×</button>` : ''}
+    </div>
+    <div class="route-top-grid v22-route-top-grid">
+      <label class="route-field route-url"><span>URL</span><small>Адрес страницы, которую проверяем.</small><input list="projectUrlOptions" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
+      <div class="route-orientir"><strong>Краткий ориентир</strong><span>${escapeHtml(template.orientir || pageRouteOrientir(card, row))}</span></div>
+    </div>
+    <div class="route-sections v22-route-sections">${v22RouteSectionsHtml(card, row, pageIndex)}</div>
+  </section>`;
+};
+
+const __guruPrevPageStructureStatusV22 = pageStructureStatus;
+pageStructureStatus = function(row) {
+  v20EnsurePageAuditFields(row);
+  if (!v22IsFilled(row.url)) return 'not_started';
+  if ([row.metaRobotsStatus, row.cwvStatus, row.imagesStatus].includes('error')) return 'problem';
+  if ([row.cwvStatus, row.imagesStatus].includes('improve') || row.metaRobotsStatus === 'closed') return 'needs_attention';
+  const template = v22PageTemplates()[pageTemplateContext({ title: row.name || '' })] || null;
+  // Actual card context is not available here, so route section readiness is evaluated by keys present on the row.
+  const context = row.contextFields || {};
+  const sectionKeys = Object.keys(context).filter(key => key.endsWith('__result')).map(key => key.replace(/__result$/, ''));
+  const requiredSectionsReady = sectionKeys.length ? sectionKeys.every(key => context[`${key}__mode`] === 'not_needed' || (v22IsFilled(context[`${key}__result`]) && v22IsFilled(context[`${key}__proof`]))) : false;
+  const seoReady = v22IsFilled(row.h1) && v22IsFilled(row.title) && v22IsFilled(row.description);
+  const ctaReady = row.ctaMode === 'not_needed' || v22IsFilled(row.finalCta);
+  const techReady = row.metaRobotsStatus === 'ok' && row.cwvStatus === 'ok' && row.imagesStatus === 'ok' && v22IsFilled(row.auditEvidence);
+  if (requiredSectionsReady && seoReady && ctaReady && techReady) return 'ready';
+  return 'in_progress';
+};
+
+const __guruPrevTypedDataPlainV22 = typedDataPlain;
+typedDataPlain = function(card) {
+  if (getGate1CardMode(card) === 'page_structure') {
+    ensureGate1TypedData(card);
+    return (card.pageRows || []).map(row => {
+      const ctx = row.contextFields || {};
+      const sections = Object.keys(ctx).filter(key => key.endsWith('__result')).map(key => key.replace(/__result$/, '')).map(key => `${key}: ${ctx[`${key}__mode`] === 'not_needed' ? 'не нужна' : (ctx[`${key}__result`] || 'не заполнено')} / доказательство: ${ctx[`${key}__proof`] || 'нет'}`).join('\n');
+      return `${row.name || card.title}: ${row.url || 'URL не указан'}\nH1: ${row.h1 || ''}\nTitle: ${row.title || ''}\nDescription: ${row.description || ''}\nSnippet: ${snippetForPage(row)}\nФинальный CTA: ${row.ctaMode === 'not_needed' ? 'не нужен' : (row.finalCta || 'не заполнен')}\n${sections}\nMeta Robots: ${auditChipText(row.metaRobotsStatus, 'meta')}\nCWV: ${auditChipText(row.cwvStatus, 'cwv')}\nИзображения: ${auditChipText(row.imagesStatus, 'images')}\nДоказательство: ${row.auditEvidence || ''}`;
+    }).join('\n\n');
+  }
+  return __guruPrevTypedDataPlainV22(card);
+};
+
+const __guruPrevUpdatePageContextFieldV22 = updatePageContextField;
+updatePageContextField = function(e) {
+  __guruPrevUpdatePageContextFieldV22(e);
+  const key = e.target.dataset.pageContextKey || '';
+  if (key.endsWith('__mode')) renderGate();
+};
+
+(function markV22() {
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.22'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.22'); });
+})();
+
+const __guruPrevUpdatePageContextFieldV22b = updatePageContextField;
+updatePageContextField = function(e) {
+  __guruPrevUpdatePageContextFieldV22b(e);
+  const key = e.target.dataset.pageContextKey || '';
+  if ((key.endsWith('__mode') || key.endsWith('__result') || key.endsWith('__proof')) && e.type === 'change') renderGate();
+};
