@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.25';
+const PLATFORM_VERSION = 'v0.27';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -6016,4 +6016,379 @@ document.addEventListener('input', event => {
 (function markV24() {
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.24'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.24'); });
+})();
+
+
+/* v0.27 — Юнит-экономика: один маршрут от чека к CPA/CPL и решению о запуске */
+
+const UNIT_ECONOMICS_DEFAULT = {
+  product: '',
+  period: '',
+  salesModel: '',
+  finalCpaCpl: '',
+  sections: {},
+  openSection: ''
+};
+
+const UNIT_ECONOMICS_SECTIONS = [
+  {
+    key: 'revenue_aov',
+    title: '1. Выручка / AOV',
+    orient: 'Понять, сколько приносит одна продажа до рекламных расходов.',
+    standard: 'Понятен средний чек, источник данных и период оценки.',
+    fields: [
+      ['aov', 'Средний чек'],
+      ['source', 'Источник данных'],
+      ['period', 'Период'],
+      ['comment', 'Комментарий']
+    ]
+  },
+  {
+    key: 'margin',
+    title: '2. Маржинальность',
+    orient: 'Понять, сколько денег остаётся после себестоимости и переменных расходов.',
+    standard: 'Понятна маржа, переменные расходы и валовая прибыль с продажи.',
+    fields: [
+      ['marginPercent', 'Маржа %'],
+      ['variableCosts', 'Себестоимость / переменные расходы'],
+      ['grossProfit', 'Валовая прибыль с продажи'],
+      ['comment', 'Комментарий']
+    ]
+  },
+  {
+    key: 'ltv',
+    title: '3. LTV',
+    orient: 'Понять, считаем экономику по первой продаже или по долгой ценности клиента.',
+    standard: 'Зафиксированы повторные покупки, среднее число покупок, LTV и допущение.',
+    fields: [
+      ['repeatPurchases', 'Повторные покупки'],
+      ['avgPurchaseCount', 'Среднее число покупок'],
+      ['ltv', 'LTV'],
+      ['assumption', 'Допущение']
+    ]
+  },
+  {
+    key: 'drr',
+    title: '4. Допустимый DRR',
+    orient: 'Определить безопасную долю выручки, которую можно отдавать рекламе.',
+    standard: 'Есть целевой DRR, причина лимита, безопасный коридор и статус риска.',
+    fields: [
+      ['targetDrr', 'Целевой DRR'],
+      ['limitReason', 'Причина лимита'],
+      ['safeCorridor', 'Безопасный коридор'],
+      ['riskStatus', 'Статус риска']
+    ]
+  },
+  {
+    key: 'cpa_cpl',
+    title: '5. Целевой CPA / CPL',
+    orient: 'Рассчитать, сколько можно платить за клиента и за заявку.',
+    standard: 'Есть конверсия из лида в продажу, допустимый CPA, допустимый CPL и решение.',
+    fields: [
+      ['leadToSaleConversion', 'Конверсия из лида в продажу'],
+      ['allowedCpa', 'Допустимый CPA'],
+      ['allowedCpl', 'Допустимый CPL'],
+      ['decision', 'Решение']
+    ]
+  },
+  {
+    key: 'economic_limits',
+    title: '6. Ограничения по экономике',
+    orient: 'Отделить направления, которые можно запускать в рекламу, от экономически опасных.',
+    standard: 'Понятно, что продвигать, что исключить, какой нужен тестовый бюджет и где риск.',
+    fields: [
+      ['promoteAllowed', 'Что можно продвигать'],
+      ['promoteForbidden', 'Что нельзя продвигать'],
+      ['minTestBudget', 'Минимальный бюджет теста'],
+      ['risk', 'Риск']
+    ]
+  }
+];
+
+function ensureUnitEconomicsState() {
+  if (!state) return structuredClone(UNIT_ECONOMICS_DEFAULT);
+  state.unitEconomicsRoute = state.unitEconomicsRoute || structuredClone(UNIT_ECONOMICS_DEFAULT);
+  state.unitEconomicsRoute.sections = state.unitEconomicsRoute.sections || {};
+  UNIT_ECONOMICS_SECTIONS.forEach(section => {
+    state.unitEconomicsRoute.sections[section.key] = state.unitEconomicsRoute.sections[section.key] || {};
+    section.fields.forEach(([key]) => { state.unitEconomicsRoute.sections[section.key][key] = state.unitEconomicsRoute.sections[section.key][key] || ''; });
+    state.unitEconomicsRoute.sections[section.key].evidence = state.unitEconomicsRoute.sections[section.key].evidence || '';
+  });
+  return state.unitEconomicsRoute;
+}
+
+function parseUnitNumber(value) {
+  const cleaned = String(value || '').replace(/\s/g, '').replace(',', '.').replace(/[^0-9.-]/g, '');
+  const number = Number(cleaned);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function parseUnitRate(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return 0;
+  const number = parseUnitNumber(raw);
+  if (!number) return 0;
+  if (raw.includes('%') || number > 1) return number / 100;
+  return number;
+}
+
+function formatUnitMoney(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) return '—';
+  return Math.round(number).toLocaleString('ru-RU') + ' ₽';
+}
+
+function unitEconomicsComputed() {
+  const route = ensureUnitEconomicsState();
+  const revenue = route.sections.revenue_aov || {};
+  const margin = route.sections.margin || {};
+  const drr = route.sections.drr || {};
+  const cpa = route.sections.cpa_cpl || {};
+  const limits = route.sections.economic_limits || {};
+  const aov = parseUnitNumber(revenue.aov);
+  const marginRate = parseUnitRate(margin.marginPercent);
+  const drrRate = parseUnitRate(drr.targetDrr);
+  const conversionRate = parseUnitRate(cpa.leadToSaleConversion);
+  const grossProfit = parseUnitNumber(margin.grossProfit) || (aov && marginRate ? aov * marginRate : 0);
+  const allowedCpaAuto = aov && marginRate && drrRate ? aov * marginRate * drrRate : 0;
+  const allowedCpaManual = parseUnitNumber(cpa.allowedCpa);
+  const allowedCpa = allowedCpaManual || allowedCpaAuto;
+  const allowedCplAuto = allowedCpa && conversionRate ? allowedCpa * conversionRate : 0;
+  const allowedCplManual = parseUnitNumber(cpa.allowedCpl);
+  const allowedCpl = allowedCplManual || allowedCplAuto;
+  const marginProblem = Boolean(marginRate && marginRate < 0.1);
+  const riskText = [drr.riskStatus, limits.risk, cpa.decision].join(' ').toLowerCase();
+  const explicitProblem = /слишком низк|не запуск|нельзя|убыт|критич|выше допустим|проблем/i.test(riskText);
+  return { aov, marginRate, drrRate, conversionRate, grossProfit, allowedCpa, allowedCpl, marginProblem, explicitProblem };
+}
+
+function unitSectionFilled(section) {
+  const route = ensureUnitEconomicsState();
+  const data = route.sections?.[section.key] || {};
+  const filledFields = section.fields.filter(([key]) => String(data[key] || '').trim()).length;
+  if (section.key === 'revenue_aov') return Boolean(String(data.aov || '').trim() && String(data.period || '').trim());
+  if (section.key === 'margin') return Boolean(String(data.marginPercent || '').trim() && (String(data.grossProfit || '').trim() || String(data.variableCosts || '').trim()));
+  if (section.key === 'drr') return Boolean(String(data.targetDrr || '').trim());
+  if (section.key === 'cpa_cpl') return Boolean((String(data.allowedCpa || '').trim() || unitEconomicsComputed().allowedCpa) && (String(data.allowedCpl || '').trim() || unitEconomicsComputed().allowedCpl) && String(data.decision || '').trim());
+  if (section.key === 'economic_limits') return Boolean(String(data.promoteAllowed || '').trim() || String(data.promoteForbidden || '').trim());
+  return filledFields >= Math.min(2, section.fields.length);
+}
+
+function unitSectionTouched(section) {
+  const route = ensureUnitEconomicsState();
+  const data = route.sections?.[section.key] || {};
+  return section.fields.some(([key]) => String(data[key] || '').trim()) || String(data.evidence || '').trim();
+}
+
+function unitSectionStatus(section) {
+  if (unitSectionFilled(section)) return 'ready';
+  if (unitSectionTouched(section)) return 'in_progress';
+  return 'not_started';
+}
+
+function unitEconomicsChecks() {
+  const route = ensureUnitEconomicsState();
+  const c = unitEconomicsComputed();
+  const issues = [];
+  const revenue = route.sections.revenue_aov || {};
+  const margin = route.sections.margin || {};
+  const cpa = route.sections.cpa_cpl || {};
+  if (!String(route.product || '').trim()) issues.push({ level: 'problem', text: 'Нет продукта / услуги — экономику нельзя считать.' });
+  if (!String(revenue.aov || '').trim()) issues.push({ level: 'in_progress', text: 'Нет AOV / среднего чека.' });
+  if (String(revenue.aov || '').trim() && !String(margin.marginPercent || '').trim()) issues.push({ level: 'in_progress', text: 'Есть AOV, но нет маржинальности.' });
+  if (String(revenue.aov || '').trim() && String(margin.marginPercent || '').trim() && !c.allowedCpa && !String(cpa.allowedCpa || '').trim()) issues.push({ level: 'in_progress', text: 'Есть AOV и маржа, но не рассчитан CPA / CPL.' });
+  if (c.marginProblem) issues.push({ level: 'problem', text: 'Маржа слишком низкая для безопасного запуска рекламы.' });
+  if (c.explicitProblem) issues.push({ level: 'problem', text: 'В решении или рисках указано экономическое ограничение.' });
+  return issues;
+}
+
+function getUnitEconomicsStatus() {
+  const route = ensureUnitEconomicsState();
+  if (!String(route.product || '').trim()) return 'not_started';
+  const issues = unitEconomicsChecks();
+  if (issues.some(i => i.level === 'problem')) return 'problem';
+  const cpaData = route.sections.cpa_cpl || {};
+  const c = unitEconomicsComputed();
+  if ((c.allowedCpa || String(cpaData.allowedCpa || '').trim()) && (c.allowedCpl || String(cpaData.allowedCpl || '').trim()) && String(cpaData.decision || '').trim()) return 'ready';
+  return 'in_progress';
+}
+
+function getUnitEconomicsProgressText() {
+  const ready = UNIT_ECONOMICS_SECTIONS.filter(unitSectionFilled).length;
+  return `${ready} из ${UNIT_ECONOMICS_SECTIONS.length} разделов готово`;
+}
+
+function firstIncompleteUnitSectionKey() {
+  const found = UNIT_ECONOMICS_SECTIONS.find(section => !unitSectionFilled(section));
+  return found?.key || 'cpa_cpl';
+}
+
+function unitInput(name, label, type = 'text', placeholder = '') {
+  const route = ensureUnitEconomicsState();
+  const value = route[name] || '';
+  const tag = type === 'textarea'
+    ? `<textarea data-unit-field="${escapeAttr(name)}" placeholder="${escapeAttr(placeholder)}">${escapeHtml(value)}</textarea>`
+    : `<input data-unit-field="${escapeAttr(name)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(placeholder)}" />`;
+  return `<label class="demand-field"><span>${escapeHtml(label)}</span>${tag}</label>`;
+}
+
+function renderUnitEconomicsRoute(section) {
+  const route = ensureUnitEconomicsState();
+  const status = getUnitEconomicsStatus();
+  const issues = unitEconomicsChecks();
+  const openSection = route.openSection || firstIncompleteUnitSectionKey();
+  const c = unitEconomicsComputed();
+  const drrLabel = c.drrRate ? Math.round(c.drrRate * 1000) / 10 + '%' : '—';
+  const cplDecision = route.sections?.cpa_cpl?.decision || '—';
+  return `<div class="demand-route unit-economics-route">
+    <div class="demand-route-head">
+      <div>
+        <div class="analytics-path">Gate 1 → Юнит-экономика</div>
+        <h3>Юнит-экономика: решение о запуске рекламы</h3>
+        <p class="muted">Чек → маржа → LTV → DRR → CPA/CPL → решение о запуске.</p>
+      </div>
+      <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+    </div>
+    <section class="demand-frame">
+      <div class="demand-section-title"><div><h4>Верх блока</h4><p class="muted">Главный итог — сколько можно платить за заявку / клиента и можно ли запускать рекламу.</p></div></div>
+      <div class="demand-grid three">
+        ${unitInput('product', 'Продукт / услуга', 'text', 'что считаем')}
+        ${unitInput('period', 'Период оценки', 'text', 'месяц / квартал / сезон')}
+        ${unitInput('salesModel', 'Модель продажи', 'text', 'заявка / звонок / покупка / бронь')}
+        ${unitInput('finalCpaCpl', 'Финальный допустимый CPA / CPL', 'textarea', 'главный итог блока')}
+      </div>
+    </section>
+    <section class="unit-result context-panel">
+      <div class="demand-section-title"><div><h4>Финальный результат</h4><p class="muted">Расчёт обновляется из AOV, маржи, DRR и конверсии.</p></div></div>
+      <div class="unit-summary-grid">
+        <div><span>Допустимый CPA</span><strong>${escapeHtml(formatUnitMoney(c.allowedCpa))}</strong></div>
+        <div><span>Допустимый CPL</span><strong>${escapeHtml(formatUnitMoney(c.allowedCpl))}</strong></div>
+        <div><span>Допустимый DRR</span><strong>${escapeHtml(drrLabel)}</strong></div>
+        <div><span>Решение</span><strong>${escapeHtml(cplDecision)}</strong></div>
+      </div>
+      <div class="unit-promo-split">
+        <div><span>Что можно продвигать</span><p>${escapeHtml(route.sections?.economic_limits?.promoteAllowed || '—')}</p></div>
+        <div><span>Что нельзя продвигать</span><p>${escapeHtml(route.sections?.economic_limits?.promoteForbidden || '—')}</p></div>
+      </div>
+    </section>
+    <div class="demand-steps unit-steps">
+      ${UNIT_ECONOMICS_SECTIONS.map(item => unitSectionHtml(route, item, openSection === item.key)).join('')}
+    </div>
+    <section class="demand-checks ${issues.length ? '' : 'is-ok'}">
+      <h4>Автоматические проверки</h4>
+      ${issues.length ? issues.map(issue => `<div class="demand-check ${issue.level}">${escapeHtml(issue.text)}</div>`).join('') : '<div class="demand-check ready">Критичных ошибок нет. Проверьте итоговое решение и ограничения.</div>'}
+    </section>
+  </div>`;
+}
+
+function unitSectionHtml(route, section, isOpen) {
+  const data = route.sections?.[section.key] || {};
+  const status = unitSectionStatus(section);
+  return `<article class="demand-step unit-step ${isOpen ? 'is-open' : ''}">
+    <button class="demand-step-head" data-unit-toggle-section="${escapeAttr(section.key)}">
+      <span><strong>${escapeHtml(section.title)}</strong><small>${escapeHtml(section.orient)}</small></span>
+      <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+    </button>
+    ${isOpen ? `<div class="pain-step-body">
+      <div class="pain-standard"><strong>Стандарт готовности:</strong> ${escapeHtml(section.standard)}</div>
+      <div class="demand-step-body">
+        ${section.fields.map(([key, label]) => `<label class="demand-field"><span>${escapeHtml(label)}</span><textarea data-unit-section="${escapeAttr(section.key)}" data-unit-section-field="${escapeAttr(key)}" placeholder="результат">${escapeHtml(data[key] || '')}</textarea></label>`).join('')}
+        <label class="demand-field"><span>Доказательство</span><textarea data-unit-section="${escapeAttr(section.key)}" data-unit-section-field="evidence" placeholder="ссылка, источник расчёта или короткий вывод">${escapeHtml(data.evidence || '')}</textarea></label>
+      </div>
+    </div>` : ''}
+  </article>`;
+}
+
+function bindUnitEconomicsRouteEvents() {
+  document.querySelectorAll('[data-unit-field]').forEach(input => {
+    input.addEventListener('input', e => {
+      const route = ensureUnitEconomicsState();
+      route[e.target.dataset.unitField] = e.target.value;
+      saveState();
+    });
+    input.addEventListener('change', e => {
+      const route = ensureUnitEconomicsState();
+      route[e.target.dataset.unitField] = e.target.value;
+      saveState();
+      renderGate();
+    });
+  });
+  document.querySelectorAll('[data-unit-toggle-section]').forEach(btn => btn.addEventListener('click', () => {
+    const route = ensureUnitEconomicsState();
+    route.openSection = route.openSection === btn.dataset.unitToggleSection ? '' : btn.dataset.unitToggleSection;
+    saveState();
+    renderGate();
+  }));
+  document.querySelectorAll('[data-unit-section]').forEach(input => {
+    input.addEventListener('input', e => {
+      const route = ensureUnitEconomicsState();
+      const section = e.target.dataset.unitSection;
+      const field = e.target.dataset.unitSectionField;
+      route.sections[section] = route.sections[section] || {};
+      route.sections[section][field] = e.target.value;
+      saveState();
+    });
+    input.addEventListener('change', e => {
+      const route = ensureUnitEconomicsState();
+      const section = e.target.dataset.unitSection;
+      const field = e.target.dataset.unitSectionField;
+      route.sections[section] = route.sections[section] || {};
+      route.sections[section][field] = e.target.value;
+      saveState();
+      renderGate();
+    });
+  });
+}
+
+const __guruPrevRenderGate1AccordionV27 = renderGate1Accordion;
+renderGate1Accordion = function(gate, cards) {
+  const sections = getGate1Sections(gate, cards);
+  const accState = getGate1AccordionState();
+  const queryActive = els.searchInput.value.trim() || els.statusFilter.value !== 'all';
+  els.contentArea.innerHTML = `<div class="analytics-accordion">
+    <div class="analytics-intro">
+      <div class="analytics-path">Gate 1 → Аналитика</div>
+      <h2>Gate 1, Аналитика</h2>
+      <p class="muted">Сначала видны четыре смысловых уровня. Раскрытый уровень становится главным рабочим полем.</p>
+    </div>
+    ${sections.map(section => {
+      const sectionOpen = Boolean(accState.subblocks[section.key]);
+      const status = section.key === 'demand_semantics' ? getDemandRouteStatus()
+        : section.key === 'pain_jtbd_offer' ? getPainOfferStatus()
+        : section.key === 'unit_economics' ? getUnitEconomicsStatus()
+        : getSectionStatus(section.allInnerCards);
+      const progressText = section.key === 'demand_semantics' ? getDemandProgressText()
+        : section.key === 'pain_jtbd_offer' ? getPainOfferProgressText()
+        : section.key === 'unit_economics' ? getUnitEconomicsProgressText()
+        : getSectionProgressText(section.allInnerCards);
+      const displayCards = queryActive ? section.filteredInnerCards : section.allInnerCards;
+      return `<section class="analytics-subblock ${sectionOpen ? 'is-open is-active' : ''}">
+        <button class="subblock-header" data-gate1-toggle-section="${escapeAttr(section.key)}">
+          <span class="subblock-main">
+            <span class="analytics-path">Gate 1 → ${escapeHtml(section.title)}</span>
+            <span class="subblock-title">${escapeHtml(section.title)}</span>
+            <span class="subblock-progress">${escapeHtml(progressText)}</span>
+          </span>
+          <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+          <span class="subblock-toggle">${sectionOpen ? 'Закрыть' : 'Открыть'}</span>
+        </button>
+        ${sectionOpen ? `<div class="subblock-body">
+          ${section.key === 'demand_semantics' ? renderDemandRoute(section)
+            : section.key === 'pain_jtbd_offer' ? renderPainOfferRoute(section)
+            : section.key === 'unit_economics' ? renderUnitEconomicsRoute(section)
+            : (displayCards.length ? displayCards.map(card => gate1WorkBlockHtml(card, section.title)).join('') : '<div class="empty compact-empty">По текущему фильтру внутри подблока ничего не найдено.</div>')}
+        </div>` : ''}
+      </section>`;
+    }).join('')}
+  </div>`;
+  bindGate1Accordion();
+  bindDemandRouteEvents();
+  bindPainOfferRouteEvents();
+  bindUnitEconomicsRouteEvents();
+  bindCardInputs();
+};
+
+(function markV27() {
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.27'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.27'); });
 })();
