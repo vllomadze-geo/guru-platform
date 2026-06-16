@@ -1654,6 +1654,276 @@ function demandInput(name, label, type = 'text', placeholder = '') {
   return `<label class="demand-field"><span>${escapeHtml(label)}</span>${tag}</label>`;
 }
 
+
+
+const PAIN_OFFER_DEFAULT = {
+  product: '',
+  landing: '',
+  mainSegment: '',
+  finalOffer: '',
+  sections: {},
+  openSection: ''
+};
+
+const PAIN_OFFER_SECTIONS = [
+  {
+    key: 'search_demand',
+    title: '1. Поисковый спрос',
+    orient: 'Понять, что люди уже ищут, какими словами формулируют задачу и какой интент стоит за спросом.',
+    standard: 'Есть ядро запросов, частотность / динамика, интент и короткий вывод по спросу.',
+    fields: [
+      ['queries', 'Основные запросы'],
+      ['frequency', 'Частотность / динамика'],
+      ['intent', 'Интент'],
+      ['conclusion', 'Вывод']
+    ]
+  },
+  {
+    key: 'competitor_offer',
+    title: '2. Конкурентное предложение',
+    orient: 'Понять, что рынок уже обещает клиенту и где есть возможность отличиться.',
+    standard: 'Зафиксированы конкуренты, повторяющиеся обещания, слабые места и точка отличия.',
+    fields: [
+      ['competitors', 'Основные конкуренты'],
+      ['repeatedPromises', 'Повторяющиеся обещания'],
+      ['weakSpots', 'Слабые места'],
+      ['differentiation', 'Возможность отличиться']
+    ]
+  },
+  {
+    key: 'pains_reasons',
+    title: '3. Боли и причины спроса',
+    orient: 'Вытащить не абстрактные боли, а реальные причины, из-за которых человек ищет решение.',
+    standard: 'Есть явные боли, скрытые боли, причина спроса и одна сильнейшая боль.',
+    fields: [
+      ['explicitPains', 'Явные боли'],
+      ['hiddenPains', 'Скрытые боли'],
+      ['reason', 'Причина спроса'],
+      ['mainPain', 'Сильнейшая боль']
+    ]
+  },
+  {
+    key: 'jtbd',
+    title: '4. JTBD',
+    orient: 'Собрать работу клиента в формате ситуации, действия и желаемого результата.',
+    standard: 'Заполнены функциональная, эмоциональная, социальная работа и главный JTBD по формуле.',
+    fields: [
+      ['functionalJob', 'Функциональная работа'],
+      ['emotionalJob', 'Эмоциональная работа'],
+      ['socialJob', 'Социальная работа'],
+      ['mainJtbd', 'Главный JTBD: Когда [ситуация], я хочу [действие], чтобы [результат].']
+    ]
+  },
+  {
+    key: 'segments_personas',
+    title: '5. ЦА, сегменты и персоны',
+    orient: 'Разделить аудиторию по сценариям выбора, триггерам и критериям решения.',
+    standard: 'Есть сегменты спроса, персоны, триггеры выбора и критерии выбора.',
+    fields: [
+      ['segments', 'Сегменты спроса'],
+      ['personas', 'Персоны'],
+      ['triggers', 'Триггеры выбора'],
+      ['criteria', 'Критерии выбора']
+    ]
+  },
+  {
+    key: 'offer',
+    title: '6. Офер',
+    orient: 'Собрать обещание результата для конкретного сегмента на основе боли и JTBD.',
+    standard: 'Есть сегмент, обещание результата, доказательство, CTA и финальная формула офера.',
+    fields: [
+      ['forWhom', 'Для кого'],
+      ['resultPromise', 'Обещание результата'],
+      ['proof', 'Доказательство'],
+      ['cta', 'CTA'],
+      ['offerFormula', 'Финальная формула: Для [сегмент] мы помогаем получить [результат] без [главный страх / барьер].']
+    ]
+  },
+  {
+    key: 'collaboration',
+    title: '7. Коллаборационный потенциал',
+    orient: 'Найти партнёров и внешние точки усиления офера без раздувания рекламного бюджета.',
+    standard: 'Есть потенциальные партнёры, выгода для них, формат коллаборации и приоритет.',
+    fields: [
+      ['partners', 'Потенциальные партнёры'],
+      ['partnerBenefit', 'Почему им выгодно'],
+      ['format', 'Формат коллаборации'],
+      ['priority', 'Приоритет']
+    ]
+  }
+];
+
+function ensurePainOfferState() {
+  if (!state) return structuredClone(PAIN_OFFER_DEFAULT);
+  state.painOfferRoute = state.painOfferRoute || structuredClone(PAIN_OFFER_DEFAULT);
+  state.painOfferRoute.sections = state.painOfferRoute.sections || {};
+  PAIN_OFFER_SECTIONS.forEach(section => {
+    state.painOfferRoute.sections[section.key] = state.painOfferRoute.sections[section.key] || {};
+    section.fields.forEach(([key]) => { state.painOfferRoute.sections[section.key][key] = state.painOfferRoute.sections[section.key][key] || ''; });
+    state.painOfferRoute.sections[section.key].evidence = state.painOfferRoute.sections[section.key].evidence || '';
+  });
+  return state.painOfferRoute;
+}
+
+function painSectionFilled(section) {
+  const route = ensurePainOfferState();
+  const data = route.sections?.[section.key] || {};
+  const filledFields = section.fields.filter(([key]) => String(data[key] || '').trim()).length;
+  return filledFields >= Math.min(2, section.fields.length) && String(data.evidence || '').trim();
+}
+
+function painSectionTouched(section) {
+  const route = ensurePainOfferState();
+  const data = route.sections?.[section.key] || {};
+  return section.fields.some(([key]) => String(data[key] || '').trim()) || String(data.evidence || '').trim();
+}
+
+function painSectionStatus(section) {
+  if (painSectionFilled(section)) return 'ready';
+  if (painSectionTouched(section)) return 'in_progress';
+  return 'not_started';
+}
+
+function painOfferChecks() {
+  const route = ensurePainOfferState();
+  const issues = [];
+  if (!String(route.product || '').trim()) issues.push({ level:'problem', text:'Нет продукта / услуги — маршрут офера не начат.' });
+  const offer = route.sections.offer || {};
+  const pains = route.sections.pains_reasons || {};
+  const jtbd = route.sections.jtbd || {};
+  if (String(route.finalOffer || '').trim() || String(offer.offerFormula || '').trim()) {
+    if (!String(pains.mainPain || '').trim() || !String(jtbd.mainJtbd || '').trim()) {
+      issues.push({ level:'problem', text:'Нет связи между болью, JTBD и офером.' });
+    }
+    if (!String(offer.cta || '').trim()) issues.push({ level:'in_progress', text:'Есть офер, но нет CTA.' });
+    if (!String(offer.proof || '').trim() && !String(offer.evidence || '').trim()) issues.push({ level:'in_progress', text:'Есть офер, но нет доказательства.' });
+  }
+  return issues;
+}
+
+function getPainOfferStatus() {
+  const route = ensurePainOfferState();
+  if (!String(route.product || '').trim()) return 'not_started';
+  const issues = painOfferChecks();
+  if (issues.some(i => i.level === 'problem')) return 'problem';
+  const readyCount = PAIN_OFFER_SECTIONS.filter(painSectionFilled).length;
+  const hasFinal = String(route.finalOffer || '').trim() || String(route.sections?.offer?.offerFormula || '').trim();
+  if (hasFinal && String(route.sections?.offer?.proof || '').trim() && String(route.sections?.offer?.cta || '').trim()) return 'ready';
+  if (readyCount > 0) return 'in_progress';
+  return 'in_progress';
+}
+
+function getPainOfferProgressText() {
+  const ready = PAIN_OFFER_SECTIONS.filter(painSectionFilled).length;
+  return `${ready} из ${PAIN_OFFER_SECTIONS.length} разделов готово`;
+}
+
+function firstIncompletePainSectionKey(route) {
+  const found = PAIN_OFFER_SECTIONS.find(section => !painSectionFilled(section));
+  return found?.key || 'offer';
+}
+
+function painInput(name, label, type = 'text', placeholder = '') {
+  const route = ensurePainOfferState();
+  const value = route[name] || '';
+  const tag = type === 'textarea'
+    ? `<textarea data-pain-field="${escapeAttr(name)}" placeholder="${escapeAttr(placeholder)}">${escapeHtml(value)}</textarea>`
+    : `<input data-pain-field="${escapeAttr(name)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(placeholder)}" />`;
+  return `<label class="demand-field"><span>${escapeHtml(label)}</span>${tag}</label>`;
+}
+
+function renderPainOfferRoute(section) {
+  const route = ensurePainOfferState();
+  const status = getPainOfferStatus();
+  const issues = painOfferChecks();
+  const openSection = route.openSection || firstIncompletePainSectionKey(route);
+  return `<div class="demand-route pain-offer-route">
+    <div class="demand-route-head">
+      <div>
+        <div class="analytics-path">Gate 1 → ${escapeHtml(section.title)}</div>
+        <h3>Боль → JTBD → офер</h3>
+        <p class="muted">Цель: превратить спрос, боли и конкурентную среду в готовый офер по сегментам.</p>
+      </div>
+      <span class="status-pill status-${status}">${STATUS_LABELS[status] || status}</span>
+    </div>
+    <section class="demand-frame">
+      <div class="demand-section-title"><div><h4>Верх блока</h4><p class="muted">Главный результат маршрута — финальный офер.</p></div></div>
+      <div class="demand-grid three">
+        ${painInput('product', 'Продукт / услуга', 'text', 'что анализируем')}
+        ${painInput('landing', 'Посадочная / проект', 'text', 'к чему относится офер')}
+        ${painInput('mainSegment', 'Главный сегмент', 'text', 'для кого делаем')}
+        ${painInput('finalOffer', 'Финальный офер', 'textarea', 'главный результат блока')}
+      </div>
+    </section>
+    <div class="demand-steps pain-steps">
+      ${PAIN_OFFER_SECTIONS.map(item => painOfferSectionHtml(route, item, openSection === item.key)).join('')}
+    </div>
+    <section class="demand-checks ${issues.length ? '' : 'is-ok'}">
+      <h4>Автоматические проверки</h4>
+      ${issues.length ? issues.map(issue => `<div class="demand-check ${issue.level}">${escapeHtml(issue.text)}</div>`).join('') : '<div class="demand-check ready">Критичных ошибок нет. Проверьте связку: спрос → боль → JTBD → офер → CTA.</div>'}
+    </section>
+  </div>`;
+}
+
+function painOfferSectionHtml(route, section, isOpen) {
+  const data = route.sections?.[section.key] || {};
+  const status = painSectionStatus(section);
+  return `<article class="demand-step pain-step ${isOpen ? 'is-open' : ''}">
+    <button class="demand-step-head" data-pain-toggle-section="${escapeAttr(section.key)}">
+      <span><strong>${escapeHtml(section.title)}</strong><small>${escapeHtml(section.orient)}</small></span>
+      <span class="status-pill status-${status}">${STATUS_LABELS[status] || status}</span>
+    </button>
+    ${isOpen ? `<div class="pain-step-body">
+      <div class="pain-standard"><strong>Стандарт готовности:</strong> ${escapeHtml(section.standard)}</div>
+      <div class="demand-step-body">
+        ${section.fields.map(([key, label]) => `<label class="demand-field"><span>${escapeHtml(label)}</span><textarea data-pain-section="${escapeAttr(section.key)}" data-pain-section-field="${escapeAttr(key)}" placeholder="результат">${escapeHtml(data[key] || '')}</textarea></label>`).join('')}
+        <label class="demand-field"><span>Доказательство</span><textarea data-pain-section="${escapeAttr(section.key)}" data-pain-section-field="evidence" placeholder="ссылка, скрин, вывод или источник">${escapeHtml(data.evidence || '')}</textarea></label>
+      </div>
+    </div>` : ''}
+  </article>`;
+}
+
+function bindPainOfferRouteEvents() {
+  document.querySelectorAll('[data-pain-field]').forEach(input => {
+    input.addEventListener('input', e => {
+      const route = ensurePainOfferState();
+      route[e.target.dataset.painField] = e.target.value;
+      saveState();
+    });
+    input.addEventListener('change', e => {
+      const route = ensurePainOfferState();
+      route[e.target.dataset.painField] = e.target.value;
+      saveState();
+      renderGate();
+    });
+  });
+  document.querySelectorAll('[data-pain-toggle-section]').forEach(btn => btn.addEventListener('click', () => {
+    const route = ensurePainOfferState();
+    route.openSection = route.openSection === btn.dataset.painToggleSection ? '' : btn.dataset.painToggleSection;
+    saveState();
+    renderGate();
+  }));
+  document.querySelectorAll('[data-pain-section]').forEach(input => {
+    input.addEventListener('input', e => {
+      const route = ensurePainOfferState();
+      const section = e.target.dataset.painSection;
+      const field = e.target.dataset.painSectionField;
+      route.sections[section] = route.sections[section] || {};
+      route.sections[section][field] = e.target.value;
+      saveState();
+    });
+    input.addEventListener('change', e => {
+      const route = ensurePainOfferState();
+      const section = e.target.dataset.painSection;
+      const field = e.target.dataset.painSectionField;
+      route.sections[section] = route.sections[section] || {};
+      route.sections[section][field] = e.target.value;
+      saveState();
+      renderGate();
+    });
+  });
+}
+
 function renderDemandRoute(section) {
   const route = ensureDemandRouteState();
   const status = getDemandRouteStatus();
@@ -1830,8 +2100,8 @@ function renderGate1Accordion(gate, cards) {
     </div>
     ${sections.map(section => {
       const sectionOpen = Boolean(accState.subblocks[section.key]);
-      const status = section.key === 'demand_semantics' ? getDemandRouteStatus() : getSectionStatus(section.allInnerCards);
-      const progressText = section.key === 'demand_semantics' ? getDemandProgressText() : getSectionProgressText(section.allInnerCards);
+      const status = section.key === 'demand_semantics' ? getDemandRouteStatus() : section.key === 'pain_jtbd_offer' ? getPainOfferStatus() : getSectionStatus(section.allInnerCards);
+      const progressText = section.key === 'demand_semantics' ? getDemandProgressText() : section.key === 'pain_jtbd_offer' ? getPainOfferProgressText() : getSectionProgressText(section.allInnerCards);
       const displayCards = queryActive ? section.filteredInnerCards : section.allInnerCards;
       return `<section class="analytics-subblock ${sectionOpen ? 'is-open is-active' : ''}">
         <button class="subblock-header" data-gate1-toggle-section="${escapeAttr(section.key)}">
@@ -1844,13 +2114,14 @@ function renderGate1Accordion(gate, cards) {
           <span class="subblock-toggle">${sectionOpen ? 'Закрыть' : 'Открыть'}</span>
         </button>
         ${sectionOpen ? `<div class="subblock-body">
-          ${section.key === 'demand_semantics' ? renderDemandRoute(section) : (displayCards.length ? displayCards.map(card => gate1WorkBlockHtml(card, section.title)).join('') : '<div class="empty compact-empty">По текущему фильтру внутри подблока ничего не найдено.</div>')}
+          ${section.key === 'demand_semantics' ? renderDemandRoute(section) : section.key === 'pain_jtbd_offer' ? renderPainOfferRoute(section) : (displayCards.length ? displayCards.map(card => gate1WorkBlockHtml(card, section.title)).join('') : '<div class="empty compact-empty">По текущему фильтру внутри подблока ничего не найдено.</div>')}
         </div>` : ''}
       </section>`;
     }).join('')}
   </div>`;
   bindGate1Accordion();
   bindDemandRouteEvents();
+  bindPainOfferRouteEvents();
   bindCardInputs();
 }
 
