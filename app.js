@@ -4950,3 +4950,274 @@ updatePageContextField = function(e) {
   const key = e.target.dataset.pageContextKey || '';
   if ((key.endsWith('__mode') || key.endsWith('__result') || key.endsWith('__proof')) && e.type === 'change') renderGate();
 };
+
+
+/* v0.23 — Юридико-доверительный контроль: cookie/footer компактно, согласия внутри страниц + сводка */
+(function markV23() {
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.23'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.23'); });
+})();
+
+const V23_LEGAL_COOKIE_TITLE = 'Cookie-баннер';
+const V23_LEGAL_FOOTER_TITLE = 'Футер: Политика + Реквизиты';
+const V23_FORM_CONSENT_TITLE = 'Согласие в формах';
+
+function isV23CookieCard(card) { return normalizeGateTitle(card?.title || '') === normalizeGateTitle(V23_LEGAL_COOKIE_TITLE); }
+function isV23FooterCard(card) { return normalizeGateTitle(card?.title || '') === normalizeGateTitle(V23_LEGAL_FOOTER_TITLE); }
+function isV23FormConsentSummaryCard(card) { return normalizeGateTitle(card?.title || '') === normalizeGateTitle(V23_FORM_CONSENT_TITLE); }
+function isV23LegalTrustCard(card) { return isV23CookieCard(card) || isV23FooterCard(card); }
+
+const __guruPrevGetGate1CardModeV23 = getGate1CardMode;
+getGate1CardMode = function(card) {
+  if (isV23CookieCard(card)) return 'legal_cookie';
+  if (isV23FooterCard(card)) return 'legal_footer';
+  if (isV23FormConsentSummaryCard(card)) return 'form_consent_summary';
+  return __guruPrevGetGate1CardModeV23(card);
+};
+
+function ensureV23LegalTrustFields(card, type) {
+  card.legalTrust = card.legalTrust || {};
+  card.legalTrust.type = type;
+  card.legalTrust.url = card.legalTrust.url || '';
+  card.legalTrust.status = card.legalTrust.status || '';
+  card.legalTrust.evidence = card.legalTrust.evidence || '';
+  card.legalTrust.checks = card.legalTrust.checks || {};
+  const checklist = v23LegalChecklist(type);
+  checklist.forEach(item => {
+    if (card.legalTrust.checks[item.key] === undefined) card.legalTrust.checks[item.key] = false;
+  });
+  return card.legalTrust;
+}
+
+function v23LegalChecklist(type) {
+  if (type === 'cookie') return [
+    { key:'shown', label:'баннер показывается' },
+    { key:'clearText', label:'текст понятный' },
+    { key:'policyLink', label:'есть ссылка на политику' },
+    { key:'notBlocking', label:'баннер не перекрывает ключевое действие' }
+  ];
+  return [
+    { key:'policyLink', label:'есть ссылка на политику' },
+    { key:'legalDetails', label:'есть реквизиты / юридические данные' },
+    { key:'contacts', label:'есть контакты' },
+    { key:'linksOpen', label:'ссылки открываются' }
+  ];
+}
+
+function v23LegalStatusOptions(value) {
+  const options = [
+    ['', 'Не проверено'],
+    ['ok', 'ОК'],
+    ['error', 'Ошибка']
+  ];
+  return options.map(([key, label]) => `<option value="${escapeAttr(key)}" ${value === key ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('');
+}
+
+function v23LegalTrustStatus(card) {
+  const type = isV23CookieCard(card) ? 'cookie' : 'footer';
+  const fields = ensureV23LegalTrustFields(card, type);
+  const hasUrl = String(fields.url || '').trim().length > 0;
+  const hasEvidence = String(fields.evidence || '').trim().length > 0;
+  if (!hasUrl && !fields.status && !hasEvidence) return 'not_started';
+  if (fields.status === 'error') return 'problem';
+  if (fields.status === 'ok' && hasEvidence) return 'ready';
+  return 'in_progress';
+}
+
+function v23LegalTrustHtml(card, type) {
+  const fields = ensureV23LegalTrustFields(card, type);
+  const title = type === 'cookie' ? 'Cookie-баннер' : 'Футер: Политика + Реквизиты';
+  const essence = type === 'cookie'
+    ? 'Проверить, что на сайте есть понятное уведомление о cookie / обработке данных и ссылка на политику.'
+    : 'Проверить, что в подвале сайта есть юридическая база и доверительные данные компании.';
+  const urlLabel = type === 'cookie' ? 'URL проверки' : 'URL проверки';
+  return `<div class="legal-trust-card context-panel v23-legal-card">
+    <div class="v23-legal-head">
+      <div>
+        <strong>${escapeHtml(title)}</strong>
+        <span>${escapeHtml(essence)}</span>
+      </div>
+      <span class="status-pill status-${v23LegalTrustStatus(card)}">${escapeHtml(STATUS_LABELS[v23LegalTrustStatus(card)] || v23LegalTrustStatus(card))}</span>
+    </div>
+    <div class="v23-legal-grid">
+      <label><span>${escapeHtml(urlLabel)}</span><input list="projectUrlOptions" data-v23-legal-field="url" value="${escapeAttr(fields.url || '')}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
+      <label><span>${type === 'cookie' ? 'Статус cookie-баннера' : 'Статус футера'}</span><select data-v23-legal-field="status">${v23LegalStatusOptions(fields.status || '')}</select></label>
+      <label class="full"><span>Доказательство / результат</span><input data-v23-legal-field="evidence" value="${escapeAttr(fields.evidence || '')}" placeholder="скрин + короткий вывод" /></label>
+    </div>
+    <div class="v23-legal-checklist">
+      ${v23LegalChecklist(type).map(item => `<label class="v23-check"><input type="checkbox" data-v23-legal-check="${escapeAttr(item.key)}" ${fields.checks?.[item.key] ? 'checked' : ''} /><span>${escapeHtml(item.label)}</span></label>`).join('')}
+    </div>
+  </div>`;
+}
+
+function updateV23LegalTrustField(target) {
+  const cardId = target.closest('[data-card]')?.dataset?.card;
+  const card = cardId ? findCard(cardId) : null;
+  if (!card || !isV23LegalTrustCard(card)) return;
+  const type = isV23CookieCard(card) ? 'cookie' : 'footer';
+  const fields = ensureV23LegalTrustFields(card, type);
+  const field = target.dataset.v23LegalField;
+  fields[field] = target.value;
+  if (field === 'url') addOrUpdateProjectLink(target.value, { comment: type === 'cookie' ? 'проверка cookie-баннера' : 'проверка футера' });
+  recalculateStatusForCard(card);
+  flashSaving();
+  if (field === 'status') renderGate();
+}
+
+function updateV23LegalTrustCheck(target) {
+  const cardId = target.closest('[data-card]')?.dataset?.card;
+  const card = cardId ? findCard(cardId) : null;
+  if (!card || !isV23LegalTrustCard(card)) return;
+  const type = isV23CookieCard(card) ? 'cookie' : 'footer';
+  const fields = ensureV23LegalTrustFields(card, type);
+  fields.checks[target.dataset.v23LegalCheck] = target.checked;
+  flashSaving();
+}
+
+function v23FormConsentLabel(status, hasForm) {
+  if (hasForm === 'no') return 'формы нет';
+  if (status === 'ok') return 'ОК';
+  if (status === 'error') return 'Ошибка';
+  return 'Не проверено';
+}
+
+function v23FormConsentStatusClass(status, hasForm) {
+  if (hasForm === 'no') return 'not_started';
+  if (status === 'ok') return 'ready';
+  if (status === 'error') return 'problem';
+  return 'not_started';
+}
+
+const __guruPrevV20EnsurePageAuditFieldsV23 = v20EnsurePageAuditFields;
+v20EnsurePageAuditFields = function(row) {
+  const normalized = __guruPrevV20EnsurePageAuditFieldsV23(row);
+  normalized.hasForm = normalized.hasForm || '';
+  normalized.formConsentStatus = normalized.formConsentStatus || '';
+  normalized.formConsentEvidence = normalized.formConsentEvidence || '';
+  normalized.formConsentIssue = normalized.formConsentIssue || '';
+  return normalized;
+};
+
+const __guruPrevPageAuditControlsCompactHtmlV23 = pageAuditControlsCompactHtml;
+pageAuditControlsCompactHtml = function(card, row, pageIndex) {
+  v20EnsurePageAuditFields(row);
+  const base = __guruPrevPageAuditControlsCompactHtmlV23(card, row, pageIndex);
+  const consent = `<div class="v23-form-consent-inline">
+    <label><span>Форма на странице</span><select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="hasForm">
+      <option value="" ${!row.hasForm ? 'selected' : ''}>Не проверено</option>
+      <option value="yes" ${row.hasForm === 'yes' ? 'selected' : ''}>Есть форма</option>
+      <option value="no" ${row.hasForm === 'no' ? 'selected' : ''}>Формы нет</option>
+    </select></label>
+    ${row.hasForm === 'yes' ? `<label><span>Согласие в форме</span><select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="formConsentStatus">
+      <option value="" ${!row.formConsentStatus ? 'selected' : ''}>Не проверено</option>
+      <option value="ok" ${row.formConsentStatus === 'ok' ? 'selected' : ''}>ОК</option>
+      <option value="error" ${row.formConsentStatus === 'error' ? 'selected' : ''}>Ошибка</option>
+    </select></label>
+    <label><span>Доказательство согласия</span><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="formConsentEvidence" value="${escapeAttr(row.formConsentEvidence || '')}" placeholder="скрин формы" /></label>
+    <label><span>Причина, если проблема</span><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="formConsentIssue" value="${escapeAttr(row.formConsentIssue || '')}" placeholder="короткая причина" /></label>` : ''}
+  </div>`;
+  return base.replace('</div>', consent + '</div>');
+};
+
+function v23AllPageRowsForConsent() {
+  return allAuditPageCards().flatMap(card => {
+    ensureGate1TypedData(card);
+    return (card.pageRows || []).map((row, index) => {
+      v20EnsurePageAuditFields(row);
+      return { card, row, index };
+    });
+  });
+}
+
+function v23FormConsentSummaryStatus(card) {
+  const rows = v23AllPageRowsForConsent().filter(item => String(item.row.url || '').trim() || item.row.hasForm);
+  if (!rows.length) return 'not_started';
+  if (rows.some(item => item.row.hasForm === 'yes' && item.row.formConsentStatus === 'error')) return 'problem';
+  const relevant = rows.filter(item => item.row.hasForm === 'yes');
+  if (!relevant.length && rows.some(item => item.row.hasForm === 'no')) return 'ready';
+  if (relevant.length && relevant.every(item => item.row.formConsentStatus === 'ok' && String(item.row.formConsentEvidence || '').trim())) return 'ready';
+  return 'in_progress';
+}
+
+function v23FormConsentSummaryHtml(card) {
+  const rows = v23AllPageRowsForConsent();
+  if (!rows.length) return '<div class="empty compact-empty">Страницы ещё не заведены.</div>';
+  return `<div class="form-consent-summary context-panel v23-consent-summary">
+    <div class="v23-summary-head">
+      <strong>Согласие в формах</strong>
+      <span>Сводка проблем. Заполнение выполняется внутри конкретной страницы и формы.</span>
+      <span class="status-pill status-${v23FormConsentSummaryStatus(card)}">${escapeHtml(STATUS_LABELS[v23FormConsentSummaryStatus(card)] || v23FormConsentSummaryStatus(card))}</span>
+    </div>
+    <table class="mini-table typed-table">
+      <thead><tr><th>Страница</th><th>Форма</th><th>Статус</th><th>Проблема / доказательство</th><th>Переход</th></tr></thead>
+      <tbody>${rows.map(item => {
+        const label = v23FormConsentLabel(item.row.formConsentStatus, item.row.hasForm);
+        const cls = v23FormConsentStatusClass(item.row.formConsentStatus, item.row.hasForm);
+        const proof = item.row.hasForm === 'yes'
+          ? (item.row.formConsentStatus === 'error' ? (item.row.formConsentIssue || 'причина не указана') : (item.row.formConsentEvidence || 'доказательство не указано'))
+          : '';
+        return `<tr>
+          <td>${escapeHtml(item.row.name || item.card.title)}</td>
+          <td>${item.row.hasForm === 'yes' ? 'есть форма' : item.row.hasForm === 'no' ? 'формы нет' : 'не проверено'}</td>
+          <td><span class="status-pill status-${cls}">${escapeHtml(label)}</span></td>
+          <td>${escapeHtml(proof)}</td>
+          <td><button class="small-btn" data-open-audit-page="${escapeAttr(item.card.id)}">Открыть страницу</button></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+const __guruPrevGate1TypedFieldsHtmlV23 = gate1TypedFieldsHtml;
+gate1TypedFieldsHtml = function(card) {
+  const mode = getGate1CardMode(card);
+  if (mode === 'legal_cookie') return `<div class="field-row v23-legal-row">${v23LegalTrustHtml(card, 'cookie')}</div>`;
+  if (mode === 'legal_footer') return `<div class="field-row v23-legal-row">${v23LegalTrustHtml(card, 'footer')}</div>`;
+  if (mode === 'form_consent_summary') return `<div class="field-row v23-legal-row">${v23FormConsentSummaryHtml(card)}</div>`;
+  return __guruPrevGate1TypedFieldsHtmlV23(card);
+};
+
+const __guruPrevRecalculateStatusForCardV23 = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  const mode = getGate1CardMode(card);
+  if (mode === 'legal_cookie' || mode === 'legal_footer') {
+    card.status = v23LegalTrustStatus(card);
+    return;
+  }
+  if (mode === 'form_consent_summary') {
+    card.status = v23FormConsentSummaryStatus(card);
+    return;
+  }
+  return __guruPrevRecalculateStatusForCardV23(card, workspace);
+};
+
+const __guruPrevTypedDataPlainV23 = typedDataPlain;
+typedDataPlain = function(card) {
+  const mode = getGate1CardMode(card);
+  if (mode === 'legal_cookie' || mode === 'legal_footer') {
+    const type = mode === 'legal_cookie' ? 'cookie' : 'footer';
+    const fields = ensureV23LegalTrustFields(card, type);
+    const checks = v23LegalChecklist(type).map(item => `${item.label}: ${fields.checks?.[item.key] ? 'да' : 'нет'}`).join('; ');
+    return `URL: ${fields.url || ''}\nСтатус: ${fields.status || 'не проверено'}\nДоказательство: ${fields.evidence || ''}\nЧек-пункты: ${checks}`;
+  }
+  if (mode === 'form_consent_summary') {
+    return v23AllPageRowsForConsent().map(item => `${item.row.name || item.card.title}: ${v23FormConsentLabel(item.row.formConsentStatus, item.row.hasForm)}${item.row.formConsentIssue ? ` / ${item.row.formConsentIssue}` : ''}`).join('\n');
+  }
+  return __guruPrevTypedDataPlainV23(card);
+};
+
+const __guruPrevUpdateGate1PageRowV23 = updateGate1PageRow;
+updateGate1PageRow = function(e) {
+  __guruPrevUpdateGate1PageRowV23(e);
+  const field = e.target.dataset.gate1PageField;
+  if (['hasForm','formConsentStatus','formConsentEvidence','formConsentIssue'].includes(field)) renderGate();
+};
+
+document.addEventListener('change', event => {
+  if (event.target?.dataset?.v23LegalField) updateV23LegalTrustField(event.target);
+  if (event.target?.dataset?.v23LegalCheck) updateV23LegalTrustCheck(event.target);
+});
+
+document.addEventListener('input', event => {
+  if (event.target?.dataset?.v23LegalField && event.target.tagName !== 'SELECT') updateV23LegalTrustField(event.target);
+});

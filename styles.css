@@ -1481,3 +1481,20 @@ select:disabled {
     flex-direction:column;
   }
 }
+
+/* v0.23 — compact legal/trust control */
+.v23-legal-row{display:block!important}
+.v23-legal-card,.v23-consent-summary{border:1px solid #e5ddd2;border-radius:18px;padding:16px;background:#fffdf9;box-shadow:0 12px 30px rgba(27,20,14,.05)}
+.v23-legal-head,.v23-summary-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px}
+.v23-legal-head strong,.v23-summary-head strong{display:block;font-size:16px;line-height:1.2;margin-bottom:4px}
+.v23-legal-head span:not(.status-pill),.v23-summary-head span:not(.status-pill){display:block;color:#6f655b;font-size:13px;line-height:1.4}
+.v23-legal-grid{display:grid;grid-template-columns:1fr 220px;gap:12px;margin-bottom:12px}
+.v23-legal-grid label,.v23-form-consent-inline label{display:flex;flex-direction:column;gap:6px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6f655b;font-weight:700}
+.v23-legal-grid input,.v23-legal-grid select,.v23-form-consent-inline input,.v23-form-consent-inline select{height:38px;border:1px solid #e2d8cc;border-radius:10px;background:#fff;color:#2b251f;padding:0 12px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:600}
+.v23-legal-grid .full{grid-column:1 / -1}
+.v23-legal-checklist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.v23-check{display:flex!important;align-items:center;gap:8px!important;border:1px solid #ede4d9;border-radius:12px;padding:10px 12px;background:#faf7f1;font-size:13px!important;text-transform:none!important;letter-spacing:0!important;color:#2b251f!important;font-weight:600!important}
+.v23-check input{width:16px;height:16px;accent-color:#1f7a3f}
+.v23-form-consent-inline{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid #e8ded1}
+.v23-consent-summary .mini-table{margin-top:12px}
+@media (max-width: 900px){.v23-legal-grid,.v23-legal-checklist,.v23-form-consent-inline{grid-template-columns:1fr}.v23-legal-head,.v23-summary-head{flex-direction:column}}
