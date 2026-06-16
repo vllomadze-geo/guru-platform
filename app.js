@@ -4394,3 +4394,196 @@ document.addEventListener('click', event => {
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.20'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.20'); });
 })();
+
+/* v0.21 — Page cards as GURU route: ориентир → действие → стандарт → доказательство → статус */
+function pageRouteOrientir(card, row) {
+  const context = pageTemplateContext(card);
+  const name = String(row?.name || card?.title || '').trim();
+  if (context === 'home' || normalizeGateTitle(name) === normalizeGateTitle('Главная')) {
+    return 'Коммерческая точка входа. За 3 секунды объясняет, кто вы, для кого и почему вам можно доверять.';
+  }
+  if (context === 'contacts') return 'Точка доверия и связи. Помогает быстро понять, как связаться, где вы находитесь и какие действия доступны.';
+  if (context === 'catalog') return 'Навигационная страница выбора. Помогает быстро перейти к нужной категории, товару или услуге.';
+  if (context === 'product') return 'Страница решения о покупке. Показывает ценность, условия, доказательства и действие.';
+  if (context === 'service') return 'Страница услуги. Объясняет проблему, решение, результат, процесс и следующий шаг.';
+  if (context === 'landing') return 'Посадочная страница. Ведёт пользователя от боли и оффера к конкретному действию.';
+  return 'Рабочая страница сайта. Фиксирует содержание, SEO-основу, техническое состояние и конверсионное действие.';
+}
+
+function rowInputField(card, pageIndex, row, field, label, standard, type = 'input', extra = '') {
+  const value = row[field] || '';
+  const attr = `data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="${escapeAttr(field)}"`;
+  const check = field === 'h1' ? pageFieldStatusHtml(value, 10, 90) : field === 'title' ? pageFieldStatusHtml(value, 20, 90) : field === 'description' ? pageFieldStatusHtml(value, 50, 200) : '';
+  if (type === 'textarea') {
+    return `<label class="route-field ${extra}"><span>${escapeHtml(label)}</span><small>${escapeHtml(standard || '')}</small><textarea ${attr} rows="2">${escapeHtml(value)}</textarea>${check}</label>`;
+  }
+  return `<label class="route-field ${extra}"><span>${escapeHtml(label)}</span><small>${escapeHtml(standard || '')}</small><input ${attr} value="${escapeAttr(value)}" />${check}</label>`;
+}
+
+function contextInputField(card, pageIndex, row, key, label, standard, type = 'input', extra = '') {
+  row.contextFields = row.contextFields || {};
+  const value = row.contextFields[key] || '';
+  const attr = `data-page-context-card-id="${escapeAttr(card.id)}" data-page-context-index="${pageIndex}" data-page-context-key="${escapeAttr(key)}"`;
+  if (type === 'textarea') {
+    return `<label class="route-field ${extra}"><span>${escapeHtml(label)}</span><small>${escapeHtml(standard || '')}</small><textarea ${attr} rows="2">${escapeHtml(value)}</textarea></label>`;
+  }
+  return `<label class="route-field ${extra}"><span>${escapeHtml(label)}</span><small>${escapeHtml(standard || '')}</small><input ${attr} value="${escapeAttr(value)}" /></label>`;
+}
+
+function routeSection(title, body, open = false) {
+  return `<details class="route-section" ${open ? 'open' : ''}>
+    <summary><span>${escapeHtml(title)}</span><strong>Открыть</strong></summary>
+    <div class="route-section-body">${body}</div>
+  </details>`;
+}
+
+function homeRouteSectionsHtml(card, row, pageIndex) {
+  const sections = [];
+  sections.push(routeSection('1. Hero-экран', `<div class="route-section-grid">
+    ${rowInputField(card, pageIndex, row, 'h1', 'H1', '10–90 знаков. Кто вы, для кого и в чём ценность.')}
+    ${contextInputField(card, pageIndex, row, 'heroUsp', 'УТП', '1 ясное обещание без абстракций.', 'textarea')}
+    ${contextInputField(card, pageIndex, row, 'heroVisual', 'Визуал', 'Что должно быть видно на первом экране.')}
+    ${contextInputField(card, pageIndex, row, 'heroProof', 'Соцдоказательство', 'Факт доверия: рейтинг, отзыв, кейс, цифра.')}
+    ${contextInputField(card, pageIndex, row, 'heroMiniBlocks', 'Мини-блок: доставка / сроки / гарантия / оплата', 'Коротко, по пунктам.', 'textarea', 'full')}
+    ${contextInputField(card, pageIndex, row, 'primaryButton', 'Основная кнопка', 'Главное действие пользователя.')}
+    ${contextInputField(card, pageIndex, row, 'secondaryButton', 'Альтернативная кнопка', 'Мягкое действие, если пользователь не готов.')}
+  </div>`, true));
+
+  sections.push(routeSection('2. Навигация по сегментам', `<div class="route-section-grid">
+    ${contextInputField(card, pageIndex, row, 'segmentTitle', 'Заголовок', 'Объясняет, как выбрать нужное направление.')}
+    ${contextInputField(card, pageIndex, row, 'segmentCards', '3–6 карточек сегментов', 'В каждой карточке: фото + название + ссылка.', 'textarea', 'full')}
+  </div>`));
+
+  sections.push(routeSection('3. О компании', `<div class="route-section-grid">
+    ${contextInputField(card, pageIndex, row, 'aboutTitle', 'Заголовок', 'Не общий лозунг, а смысл доверия.')}
+    ${contextInputField(card, pageIndex, row, 'aboutFacts', '3 факта', 'Цифры, опыт, масштаб, специализация.', 'textarea')}
+    ${contextInputField(card, pageIndex, row, 'aboutText', 'Короткий текст', 'Подход компании в 2–4 предложениях.', 'textarea')}
+    ${contextInputField(card, pageIndex, row, 'trustBadges', 'Доказательства', 'Сертификаты / награды / знаки доверия.', 'textarea')}
+  </div>`));
+
+  sections.push(routeSection('4. Кейсы', `<div class="route-section-grid">
+    ${contextInputField(card, pageIndex, row, 'cases', '3–4 сильных кейса', 'Название + категория + результат.', 'textarea', 'full')}
+    ${contextInputField(card, pageIndex, row, 'portfolioButton', 'CTA на портфолио', 'Кнопка к подробным кейсам.')}
+  </div>`));
+
+  sections.push(routeSection('5. Процесс работы', `<div class="route-section-grid">
+    ${contextInputField(card, pageIndex, row, 'processTitle', 'Заголовок', 'Показывает понятный порядок работы.')}
+    ${contextInputField(card, pageIndex, row, 'processSteps', '3–5 шагов', 'Название шага + что происходит + срок.', 'textarea', 'full')}
+    ${contextInputField(card, pageIndex, row, 'processButton', 'CTA под схемой', 'Следующий шаг после процесса.')}
+  </div>`));
+
+  sections.push(routeSection('6. Выгоды', `<div class="route-section-grid">
+    ${contextInputField(card, pageIndex, row, 'benefits', '3 конкретные выгоды', 'Не свойства, а польза для клиента.', 'textarea', 'full')}
+  </div>`));
+
+  sections.push(routeSection('7. Отзывы', `<div class="route-section-grid">
+    ${contextInputField(card, pageIndex, row, 'reviews', 'Отзывы', 'Виджет Яндекс / Google или 3 ручные цитаты.', 'textarea', 'full')}
+    ${contextInputField(card, pageIndex, row, 'reviewsButton', 'CTA читать все отзывы', 'Ссылка или текст кнопки.')}
+  </div>`));
+
+  sections.push(routeSection('8. Финальный CTA', finalCtaRouteHtml(card, row, pageIndex)));
+  sections.push(routeSection('SEO-сниппет', snippetRouteHtml(card, row, pageIndex)));
+  sections.push(routeSection('Технический контроль', pageAuditControlsCompactHtml(card, row, pageIndex)));
+  return sections.join('');
+}
+
+function genericRouteSectionsHtml(card, row, pageIndex) {
+  const context = pageTemplateContext(card);
+  const defs = ensurePageContextFields(row, context);
+  const grouped = defs.reduce((acc, def) => { (acc[def.group] = acc[def.group] || []).push(def); return acc; }, {});
+  const sections = Object.entries(grouped).map(([group, items], idx) => routeSection(group, `<div class="route-section-grid">${items.map(def => contextInputField(card, pageIndex, row, def.key, def.label, routeStandardForDef(def), def.type, def.type === 'textarea' ? 'full' : '')).join('')}</div>`, idx === 0));
+  sections.push(routeSection('SEO-сниппет', snippetRouteHtml(card, row, pageIndex)));
+  sections.push(routeSection('Финальный CTA', finalCtaRouteHtml(card, row, pageIndex)));
+  sections.push(routeSection('Технический контроль', pageAuditControlsCompactHtml(card, row, pageIndex)));
+  return sections.join('');
+}
+
+function routeStandardForDef(def) {
+  if (/смысл|текст|проблем|оффер|доказ|кейс|шаг|карточ/i.test(def.label)) return 'Коротко, проверяемо, без общего текста.';
+  if (/cta|кноп/i.test(def.label)) return 'Конкретное действие пользователя.';
+  if (/ссылка|адрес|карта/i.test(def.label)) return 'URL или точное значение.';
+  return 'Заполнить только то, что нужно для этой страницы.';
+}
+
+function snippetRouteHtml(card, row, pageIndex) {
+  const snippet = snippetForPage(row);
+  return `<div class="route-section-grid">
+    ${rowInputField(card, pageIndex, row, 'title', 'Title', '20–90 знаков. SEO-заголовок страницы.')}
+    ${rowInputField(card, pageIndex, row, 'description', 'Description', '50–200 знаков. SEO-описание страницы.', 'textarea', 'full')}
+    <div class="snippet-preview route-snippet full"><strong>Snippet</strong><span>${snippet ? escapeHtml(snippet) : 'Соберётся из H1, Title, Description, смысла страницы и оффера.'}</span></div>
+  </div>`;
+}
+
+function finalCtaRouteHtml(card, row, pageIndex) {
+  return `<div class="route-section-grid">
+    <label class="route-field"><span>Нужен ли финальный CTA</span><small>Если CTA не нужен, он не влияет на готовность страницы.</small><select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="ctaMode">
+      <option value="needed" ${row.ctaMode !== 'not_needed' ? 'selected' : ''}>Нужен</option>
+      <option value="not_needed" ${row.ctaMode === 'not_needed' ? 'selected' : ''}>Не нужен</option>
+    </select></label>
+    ${row.ctaMode === 'not_needed' ? '' : rowInputField(card, pageIndex, row, 'finalCta', 'Текст финального CTA', 'Заголовок + основная кнопка + альтернативное действие.', 'textarea', 'full')}
+  </div>`;
+}
+
+function pageAuditControlsCompactHtml(card, row, pageIndex) {
+  v20EnsurePageAuditFields(row);
+  return `<div class="route-tech-grid">
+    <label><span>Meta Robots</span><select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="metaRobotsStatus">${auditStatusOptions(row.metaRobotsStatus, 'meta')}</select></label>
+    <label><span>CWV</span><select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="cwvStatus">${auditStatusOptions(row.cwvStatus, 'cwv')}</select></label>
+    <label><span>Изображения</span><select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="imagesStatus">${auditStatusOptions(row.imagesStatus, 'images')}</select></label>
+    <label><span>Доказательство</span><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="auditEvidence" value="${escapeAttr(row.auditEvidence || '')}" placeholder="ссылка на отчёт / скрин" /></label>
+  </div>`;
+}
+
+pageStructureCardHtml = function(card, row, pageIndex, repeatable) {
+  const context = pageTemplateContext(card);
+  v20EnsurePageAuditFields(row);
+  row.contextFields = row.contextFields || {};
+  const pageStatus = pageStructureStatus(row);
+  const nameValue = row.name || card.title || 'Страница';
+  const routeHtml = context === 'home' ? homeRouteSectionsHtml(card, row, pageIndex) : genericRouteSectionsHtml(card, row, pageIndex);
+  return `<section class="page-structure-card guru-route-card v21-page-card" data-page-source-card="${escapeAttr(card.id)}">
+    <div class="route-card-head">
+      <div>
+        <div class="route-kicker">Ориентир → действие → стандарт → доказательство → статус</div>
+        <input class="page-name-input route-page-name" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="name" value="${escapeAttr(nameValue)}" placeholder="Название страницы" ${row.fixed ? 'readonly' : ''} />
+      </div>
+      <span class="status-pill status-${pageStatus}">${STATUS_LABELS[pageStatus] || pageStatus}</span>
+      ${repeatable ? `<button class="small-btn danger-mini" data-remove-gate1-page="${escapeAttr(card.id)}" data-index="${pageIndex}" ${rowsSafeLength(card.pageRows) <= 1 ? 'disabled' : ''}>×</button>` : ''}
+    </div>
+    <div class="route-top-grid">
+      <label class="route-field route-url"><span>URL</span><small>Адрес страницы, которую проверяем.</small><input list="projectUrlOptions" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
+      <div class="route-orientir"><strong>Краткий ориентир</strong><span>${escapeHtml(pageRouteOrientir(card, row))}</span></div>
+    </div>
+    <div class="route-sections">${routeHtml}</div>
+  </section>`;
+};
+
+const __guruPrevPageStructureStatusV21 = pageStructureStatus;
+pageStructureStatus = function(row) {
+  v20EnsurePageAuditFields(row);
+  const url = String(row.url || '').trim();
+  if (!url) return 'not_started';
+  if ([row.metaRobotsStatus, row.cwvStatus, row.imagesStatus].includes('error')) return 'problem';
+  if ([row.cwvStatus, row.imagesStatus].includes('improve') || row.metaRobotsStatus === 'closed') return 'needs_attention';
+  const ctx = row.contextFields || {};
+  const baseChecks = [
+    evaluateLength(row.h1, 10, 90).ok,
+    evaluateLength(row.title, 20, 90).ok,
+    evaluateLength(row.description, 50, 200).ok,
+    row.metaRobotsStatus === 'ok',
+    row.cwvStatus === 'ok',
+    row.imagesStatus === 'ok',
+    Boolean(String(row.auditEvidence || '').trim()),
+    row.ctaMode === 'not_needed' ? true : Boolean(String(row.finalCta || '').trim())
+  ];
+  const homeKeys = ['heroUsp','primaryButton','segmentCards','aboutFacts','cases','processSteps','benefits','reviews'];
+  const homeChecks = homeKeys.map(key => Boolean(String(ctx[key] || '').trim()));
+  const checks = homeChecks.some(Boolean) ? baseChecks.concat(homeChecks) : baseChecks;
+  if (checks.every(Boolean)) return 'ready';
+  return 'in_progress';
+};
+
+(function markV21() {
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.21'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.21'); });
+})();
