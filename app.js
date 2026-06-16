@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.28';
+const PLATFORM_VERSION = 'v0.29';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -6024,7 +6024,7 @@ document.addEventListener('input', event => {
 })();
 
 
-/* v0.27 — Юнит-экономика: один маршрут от чека к CPA/CPL и решению о запуске */
+/* v0.29 — Юнит-экономика: один маршрут от чека к CPA/CPL и решению о запуске */
 
 const UNIT_ECONOMICS_DEFAULT = {
   product: '',
@@ -6394,6 +6394,447 @@ renderGate1Accordion = function(gate, cards) {
 };
 
 (function markV27() {
-  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.27'); });
-  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.27'); });
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.29'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.29'); });
+})();
+
+/* v0.29 — Gate 5 integrated advertising reporting loop */
+STATUS_LABELS.needs_attention = STATUS_LABELS.needs_attention || 'Требует внимания';
+
+const GATE5_REPORTS = {
+  perf: { title: 'Перфоманс-кампании', short: 'Перфоманс', desc: 'расход, показы, клики, конверсии, кампании, группы и объявления' },
+  query: { title: 'Поисковые запросы', short: 'Запросы', desc: 'реальные запросы, кандидаты на минус-слова и слабые зоны' },
+  placement: { title: 'Условия показа', short: 'Условия', desc: 'таргетинги, фразы, автотаргетинг и причины показа' }
+};
+
+function gate5BlankState() {
+  return {
+    ui: { openBlock: 'setup' },
+    setup: { projectName: '', campaigns: {}, groups: {}, ads: {} },
+    reports: { perf: [], query: [], placement: [] },
+    imports: {},
+    goals: [],
+    links: [],
+    pending: {}
+  };
+}
+
+function ensureGate5State() {
+  state.gate5 = state.gate5 || gate5BlankState();
+  state.gate5.ui = state.gate5.ui || { openBlock: 'setup' };
+  state.gate5.setup = state.gate5.setup || { projectName: '', campaigns: {}, groups: {}, ads: {} };
+  state.gate5.setup.campaigns = state.gate5.setup.campaigns || {};
+  state.gate5.setup.groups = state.gate5.setup.groups || {};
+  state.gate5.setup.ads = state.gate5.setup.ads || {};
+  state.gate5.reports = state.gate5.reports || { perf: [], query: [], placement: [] };
+  state.gate5.reports.perf = Array.isArray(state.gate5.reports.perf) ? state.gate5.reports.perf : [];
+  state.gate5.reports.query = Array.isArray(state.gate5.reports.query) ? state.gate5.reports.query : [];
+  state.gate5.reports.placement = Array.isArray(state.gate5.reports.placement) ? state.gate5.reports.placement : [];
+  state.gate5.imports = state.gate5.imports || {};
+  state.gate5.goals = Array.isArray(state.gate5.goals) ? state.gate5.goals : [];
+  state.gate5.links = Array.isArray(state.gate5.links) ? state.gate5.links : [];
+  state.gate5.pending = state.gate5.pending || {};
+  return state.gate5;
+}
+
+function g5Esc(value) { return escapeHtml(value == null ? '' : value); }
+function g5Attr(value) { return escapeAttr(value == null ? '' : value); }
+function g5Slug(value) { return String(value || '').trim().toLowerCase().replace(/[^a-zа-яё0-9]+/gi, '_').replace(/^_+|_+$/g, '').slice(0, 80) || 'unknown'; }
+function g5Num(value) {
+  if (value == null) return 0;
+  let s = String(value).trim();
+  if (!s || s === '-' || s === '—') return 0;
+  s = s.replace(/[\s\u00a0\u202f₽%]/g, '').replace(',', '.');
+  const x = parseFloat(s);
+  return Number.isFinite(x) ? x : 0;
+}
+function g5Div(a, b) { return b ? a / b : 0; }
+function g5Int(value) { return Math.round(value || 0).toLocaleString('ru-RU'); }
+function g5Rub(value) { return Math.round(value || 0).toLocaleString('ru-RU') + ' ₽'; }
+function g5Pct(value) { return ((value || 0) * 100).toFixed(1).replace('.', ',') + '%'; }
+function g5DateTime(iso) { try { return iso ? new Date(iso).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'; } catch (_) { return iso || '—'; } }
+function g5ParseDate(value) {
+  let s = String(value || '').trim();
+  if (!s || /итого|total/i.test(s)) return '';
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})/);
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+}
+function g5NormHeader(value) { return String(value || '').trim().toLowerCase().replace(/["«»]/g, '').replace(/ё/g, 'е').replace(/[,.;:()]/g, ' ').replace(/\s+/g, ' ').trim(); }
+function g5FindCol(headers, aliases, contains = false) {
+  const normalized = headers.map(g5NormHeader);
+  const needles = aliases.map(g5NormHeader);
+  for (const needle of needles) {
+    const exact = normalized.indexOf(needle);
+    if (exact >= 0) return exact;
+  }
+  if (contains) {
+    for (let i = 0; i < normalized.length; i += 1) {
+      if (needles.some(needle => normalized[i].includes(needle))) return i;
+    }
+  }
+  return -1;
+}
+function g5Col(headers, exact, contains) {
+  const i = g5FindCol(headers, exact || []);
+  return i >= 0 ? i : g5FindCol(headers, contains || exact || [], true);
+}
+function g5MapColumns(headers) {
+  return {
+    date: g5Col(headers, ['День', 'Дата', 'Date'], ['день', 'дата', 'date']),
+    campaignId: g5Col(headers, ['№ Кампании','№ кампании','№ Компании','Номер кампании','Campaign ID','ID Campaign'], ['№ камп','номер камп','campaign id','id campaign']),
+    campaignName: g5Col(headers, ['Название кампании','Название компании','Кампания','Campaign Name'], ['название камп','campaign name']),
+    groupId: g5Col(headers, ['№ Группы','№ группы','Номер группы','Group ID','ID Group'], ['№ групп','номер групп','group id','id group']),
+    groupName: g5Col(headers, ['Название группы','Название группы объявлений','Группа','Group Name','Ad Group'], ['название групп','group name','ad group']),
+    adId: g5Col(headers, ['№ Объявления','№ объявления','Номер объявления','Ad ID','ID Ad'], ['№ объяв','номер объяв','ad id','id ad']),
+    adTitle: g5Col(headers, ['Заголовок объявления','Заголовок 1','Заголовок','Название объявления','Ad Title','Title'], ['заголовок','ad title','название объяв']),
+    landing: g5Col(headers, ['Посадочная','Посадочная страница','URL','Landing Page','Ссылка'], ['посадоч','url','landing','ссылка']),
+    query: g5Col(headers, ['Поисковый запрос','Search Query','Запрос'], ['поисковый запрос','search query','запрос']),
+    conditionType: g5Col(headers, ['Тип условия показа','Тип условия','Condition Type'], ['тип условия','condition type']),
+    conditionName: g5Col(headers, ['Условие показа','Ключевая фраза','Фраза','Keyword','Condition'], ['условие показа','ключевая фраза','keyword','condition']),
+    impressions: g5Col(headers, ['Показы','Impressions'], ['показы','impressions']),
+    clicks: g5Col(headers, ['Клики','Clicks'], ['клики','clicks']),
+    spend: g5Col(headers, ['Расход','Расход ₽','Расход, ₽','Cost','Spend'], ['расход','cost','spend']),
+    conversions: g5ConvCol(headers)
+  };
+}
+function g5ConvCol(headers) {
+  let exact = g5Col(headers, ['Конверсии', 'Conversions', 'Лиды', 'Leads'], ['конверсии', 'conversions', 'лиды', 'leads']);
+  if (exact >= 0) return exact;
+  for (let i = 0; i < headers.length; i += 1) {
+    const h = g5NormHeader(headers[i]);
+    if (h.includes('конверс') && !h.includes('%') && !h.includes('cpa') && !h.includes('цена')) return i;
+  }
+  return -1;
+}
+function g5DetectDelimiter(line) {
+  const variants = [',', ';', '\t'];
+  let best = ',', bestCount = -1;
+  variants.forEach(delim => {
+    let count = 0, quote = false;
+    for (let i = 0; i < line.length; i += 1) {
+      const c = line[i];
+      if (c === '"') quote = !quote;
+      else if (c === delim && !quote) count += 1;
+    }
+    if (count > bestCount) { best = delim; bestCount = count; }
+  });
+  return best;
+}
+function g5ParseCSV(text) {
+  text = String(text || '').replace(/^\uFEFF/, '');
+  const delim = g5DetectDelimiter(text.split(/\r?\n/)[0] || ',');
+  const rows = [];
+  let row = [], cell = '', quoted = false;
+  for (let i = 0; i < text.length; i += 1) {
+    const c = text[i];
+    if (c === '"') {
+      if (quoted && text[i + 1] === '"') { cell += '"'; i += 1; }
+      else quoted = !quoted;
+    } else if (c === delim && !quoted) {
+      row.push(cell); cell = '';
+    } else if ((c === '\n' || c === '\r') && !quoted) {
+      if (c === '\r' && text[i + 1] === '\n') i += 1;
+      row.push(cell);
+      if (row.some(x => String(x).trim())) rows.push(row.map(x => String(x).trim()));
+      row = []; cell = '';
+    } else cell += c;
+  }
+  row.push(cell);
+  if (row.some(x => String(x).trim())) rows.push(row.map(x => String(x).trim()));
+  return rows;
+}
+async function g5ReadTableFile(file) {
+  const name = (file.name || '').toLowerCase();
+  const buf = await file.arrayBuffer();
+  if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+    if (!window.XLSX) throw new Error('XLSX-библиотека не загрузилась. Сохрани файл как CSV или проверь интернет.');
+    const wb = XLSX.read(buf, { type: 'array', cellDates: false });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    return XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false });
+  }
+  const bytes = new Uint8Array(buf);
+  let text;
+  if (bytes[0] === 0xFF && bytes[1] === 0xFE) text = new TextDecoder('utf-16le').decode(bytes.subarray(2));
+  else if (bytes[0] === 0xFE && bytes[1] === 0xFF) text = new TextDecoder('utf-16be').decode(bytes.subarray(2));
+  else text = new TextDecoder('utf-8').decode(bytes[(bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) ? 'subarray' : 'slice']((bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) ? 3 : 0));
+  return g5ParseCSV(text);
+}
+function g5BestHeaderRow(rows, kind = 'report') {
+  let best = 0, scoreMax = -1;
+  for (let i = 0; i < Math.min(rows.length, 35); i += 1) {
+    const cols = g5MapColumns(rows[i] || []);
+    let score = 0;
+    ['campaignId','campaignName','groupId','groupName','adId','adTitle'].forEach(k => { if (cols[k] >= 0) score += 1; });
+    if (kind === 'report') ['date','impressions','clicks','spend','conversions'].forEach(k => { if (cols[k] >= 0) score += 2; });
+    if (kind === 'structure') ['campaignId','groupId','adId'].forEach(k => { if (cols[k] >= 0) score += 2; });
+    if (score > scoreMax) { best = i; scoreMax = score; }
+  }
+  return best;
+}
+function g5Cell(row, index) { return index >= 0 && index < row.length ? String(row[index] || '').trim() : ''; }
+function g5RecordId(id, name, prefix) { return String(id || '').trim() || `${prefix}_${g5Slug(name)}`; }
+function g5ExtractRows(rows, kind = 'report') {
+  const hi = g5BestHeaderRow(rows, kind === 'structure' ? 'structure' : 'report');
+  const headers = rows[hi] || [];
+  const c = g5MapColumns(headers);
+  const out = [];
+  for (let i = hi + 1; i < rows.length; i += 1) {
+    const row = rows[i] || [];
+    const first = row.find(x => String(x).trim()) || '';
+    if (/^итого$|^total$/i.test(String(first).trim())) continue;
+    const rec = {
+      date: g5ParseDate(g5Cell(row, c.date)),
+      campaignId: g5Cell(row, c.campaignId),
+      campaignName: g5Cell(row, c.campaignName),
+      groupId: g5Cell(row, c.groupId),
+      groupName: g5Cell(row, c.groupName),
+      adId: g5Cell(row, c.adId),
+      adTitle: g5Cell(row, c.adTitle),
+      landing: g5Cell(row, c.landing),
+      query: g5Cell(row, c.query),
+      conditionType: g5Cell(row, c.conditionType),
+      conditionName: g5Cell(row, c.conditionName),
+      impressions: g5Num(g5Cell(row, c.impressions)),
+      clicks: g5Num(g5Cell(row, c.clicks)),
+      spend: g5Num(g5Cell(row, c.spend)),
+      conversions: g5Num(g5Cell(row, c.conversions))
+    };
+    if (!rec.campaignId && rec.campaignName) rec.campaignId = g5RecordId('', rec.campaignName, 'camp');
+    if (!rec.groupId && rec.groupName) rec.groupId = g5RecordId('', `${rec.campaignId}_${rec.groupName}`, 'grp');
+    if (!rec.adId && rec.adTitle) rec.adId = g5RecordId('', `${rec.groupId}_${rec.adTitle}`, 'ad');
+    if (!rec.date) rec.date = new Date().toISOString().slice(0, 10);
+    if (kind === 'structure' && !(rec.campaignId || rec.campaignName || rec.groupId || rec.groupName || rec.adId || rec.adTitle)) continue;
+    if (kind === 'query' && !rec.query) continue;
+    if (kind === 'placement' && !(rec.conditionType || rec.conditionName)) continue;
+    if (kind !== 'structure' && !(rec.impressions || rec.clicks || rec.spend || rec.conversions)) continue;
+    out.push(rec);
+  }
+  const dates = out.map(x => x.date).filter(Boolean).sort();
+  return { records: out, cols: c, headers, meta: { rows: out.length, from: dates[0] || '', to: dates[dates.length - 1] || '', uploadedAt: new Date().toISOString() } };
+}
+function g5SyncStructure(records) {
+  const g5 = ensureGate5State();
+  (records || []).forEach(r => {
+    const campaignId = g5RecordId(r.campaignId, r.campaignName, 'camp');
+    if (campaignId || r.campaignName) g5.setup.campaigns[campaignId] = { id: campaignId, name: r.campaignName || campaignId };
+    const groupId = r.groupId ? g5RecordId(r.groupId, r.groupName, 'grp') : '';
+    if (groupId) g5.setup.groups[groupId] = { id: groupId, campaignId, name: r.groupName || groupId, landing: r.landing || '' };
+    const adId = r.adId ? g5RecordId(r.adId, r.adTitle, 'ad') : '';
+    if (adId) g5.setup.ads[adId] = { id: adId, campaignId, groupId, title: r.adTitle || adId, landing: r.landing || '' };
+  });
+}
+function g5AddM(dst, src) { dst.impressions = (dst.impressions || 0) + g5Num(src.impressions); dst.clicks = (dst.clicks || 0) + g5Num(src.clicks); dst.spend = (dst.spend || 0) + g5Num(src.spend); dst.conversions = (dst.conversions || 0) + g5Num(src.conversions); return dst; }
+function g5Metrics(obj) { const im = g5Num(obj.impressions), cl = g5Num(obj.clicks), sp = g5Num(obj.spend), cv = g5Num(obj.conversions); return { impressions: im, clicks: cl, spend: sp, conversions: cv, ctr: g5Div(cl, im), cr: g5Div(cv, cl), cpa: g5Div(sp, cv) }; }
+function g5ActiveGoal() { const g5 = ensureGate5State(); return g5.goals.slice().sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0] || null; }
+function g5LatestLink() { const g5 = ensureGate5State(); return g5.links.slice().sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0] || null; }
+function g5BuildModel() {
+  const g5 = ensureGate5State();
+  const model = { total: { impressions: 0, clicks: 0, spend: 0, conversions: 0 }, campaigns: {}, groups: {}, ads: {}, queries: [], placements: [] };
+  function ensureCampaign(id, name) { id = g5RecordId(id, name, 'camp'); const item = model.campaigns[id] || { id, name: name || g5.setup.campaigns[id]?.name || id, impressions: 0, clicks: 0, spend: 0, conversions: 0 }; if (name) item.name = name; model.campaigns[id] = item; return item; }
+  function ensureGroup(id, campaignId, name, landing) { id = g5RecordId(id, `${campaignId}_${name || 'group'}`, 'grp'); const item = model.groups[id] || { id, campaignId, name: name || g5.setup.groups[id]?.name || id, landing: landing || g5.setup.groups[id]?.landing || '', impressions: 0, clicks: 0, spend: 0, conversions: 0 }; model.groups[id] = item; return item; }
+  function ensureAd(id, campaignId, groupId, title, landing) { id = g5RecordId(id, `${groupId}_${title || 'ad'}`, 'ad'); const item = model.ads[id] || { id, campaignId, groupId, title: title || g5.setup.ads[id]?.title || id, landing: landing || g5.setup.ads[id]?.landing || '', impressions: 0, clicks: 0, spend: 0, conversions: 0 }; model.ads[id] = item; return item; }
+  Object.values(g5.setup.campaigns).forEach(c => ensureCampaign(c.id, c.name));
+  Object.values(g5.setup.groups).forEach(gr => ensureGroup(gr.id, gr.campaignId, gr.name, gr.landing));
+  Object.values(g5.setup.ads).forEach(a => ensureAd(a.id, a.campaignId, a.groupId, a.title, a.landing));
+  g5.reports.perf.forEach(r => {
+    const cid = g5RecordId(r.campaignId, r.campaignName, 'camp');
+    const gid = g5RecordId(r.groupId, `${cid}_${r.groupName || 'group'}`, 'grp');
+    const aid = r.adId ? g5RecordId(r.adId, r.adTitle, 'ad') : '';
+    g5AddM(ensureCampaign(cid, r.campaignName), r);
+    g5AddM(ensureGroup(gid, cid, r.groupName || 'Кампания целиком', r.landing), r);
+    if (aid) g5AddM(ensureAd(aid, cid, gid, r.adTitle || aid, r.landing), r);
+    g5AddM(model.total, r);
+  });
+  g5.reports.query.forEach(r => { model.queries.push(r); });
+  g5.reports.placement.forEach(r => { model.placements.push(r); });
+  return model;
+}
+function g5RowMetrics(row) { const m = g5Metrics(row); return { spend: g5Rub(m.spend), impressions: g5Int(m.impressions), clicks: g5Int(m.clicks), conversions: g5Int(m.conversions), ctr: g5Pct(m.ctr), cr: g5Pct(m.cr), cpa: m.conversions ? g5Rub(m.cpa) : '—' }; }
+function g5Finance() {
+  const model = g5BuildModel();
+  const link = g5LatestLink();
+  const revenue = link ? (g5Num(link.actualRevenue) || g5Num(link.orders) * (g5Num(link.avgCheck) || g5Num(link.minCheck))) : 0;
+  const marginRate = link ? g5Num(link.margin) / 100 : 0;
+  const gross = revenue * (marginRate || 1);
+  const spend = model.total.spend;
+  const leads = model.total.conversions;
+  const orders = link ? g5Num(link.orders) : 0;
+  return { model, link, revenue, gross, spend, leads, orders, cpa: g5Div(spend, leads), cac: g5Div(spend, orders), roas: g5Div(revenue, spend), drr: g5Div(spend, revenue), roi: g5Div((marginRate ? gross : revenue) - spend, spend) };
+}
+function g5ProblemStatusForMetric(metric, target) {
+  if (!target || !metric) return 'in_progress';
+  return metric <= target ? 'ready' : 'problem';
+}
+function getGate5Status() {
+  const g5 = ensureGate5State();
+  const hasReports = Object.values(g5.reports).some(arr => Array.isArray(arr) && arr.length);
+  const hasStructure = Object.keys(g5.setup.campaigns).length || Object.keys(g5.setup.groups).length || Object.keys(g5.setup.ads).length;
+  const goal = g5ActiveGoal();
+  const link = g5LatestLink();
+  const f = g5Finance();
+  if (!hasReports && !hasStructure) return 'not_started';
+  if (hasStructure && !goal) return 'in_progress';
+  if (hasReports && goal && !link) return 'in_progress';
+  if (goal && ((goal.cpa && f.cpa > goal.cpa) || (goal.cac && f.cac > goal.cac) || (goal.drr && f.drr > goal.drr / 100))) return 'problem';
+  if (hasReports && goal && link && f.revenue) return 'ready';
+  return 'in_progress';
+}
+function getGate5BlockStatus(key) {
+  const g5 = ensureGate5State();
+  const f = g5Finance();
+  const goal = g5ActiveGoal();
+  if (key === 'setup') return Object.keys(g5.setup.campaigns).length || Object.keys(g5.setup.groups).length || Object.keys(g5.setup.ads).length ? 'ready' : 'not_started';
+  if (key === 'input') return Object.values(g5.reports).some(x => x.length) ? (goal ? 'ready' : 'in_progress') : 'not_started';
+  if (key === 'ad') return g5.reports.perf.length ? (f.cpa && goal?.cpa && f.cpa > goal.cpa ? 'problem' : 'ready') : 'not_started';
+  if (key === 'bridge') return g5LatestLink() ? 'ready' : (f.leads ? 'in_progress' : 'not_started');
+  if (key === 'finance') return f.revenue ? (goal && ((goal.cpa && f.cpa > goal.cpa) || (goal.cac && f.cac > goal.cac) || (goal.drr && f.drr > goal.drr / 100)) ? 'problem' : 'ready') : 'not_started';
+  return 'not_started';
+}
+function getGate5Progress() { const ready = ['setup','input','ad','bridge','finance'].filter(key => getGate5BlockStatus(key) === 'ready').length; return Math.round((ready / 5) * 100); }
+
+function renderGate5Integrated(gate) {
+  const g5 = ensureGate5State();
+  const f = g5Finance();
+  const m = g5Metrics(f.model.total);
+  const status = getGate5Status();
+  els.contentArea.innerHTML = `<div class="gate5-loop">
+    <section class="gate5-intro">
+      <div class="gate5-intro-top">
+        <div>
+          <div class="analytics-path">Gate 5 → Оценка и оптимизация</div>
+          <h2>Оценка и оптимизация, постоянная петля</h2>
+          <p class="muted">Инструмент рекламной отчётности встроен в общий интерфейс ГУРУ. Нет отдельного header, тёмной темы и автономной навигации. Внутренние разделы стали подблоками Gate 5.</p>
+        </div>
+        <span class="status-pill status-${status}">${g5Esc(STATUS_LABELS[status] || status)}</span>
+      </div>
+      <div class="gate5-formula"><span>данные</span><span>цель</span><span>реклама</span><span>лиды</span><span>заказы</span><span>финансы</span><span>решение</span><span>следующая оптимизация</span></div>
+      <div class="gate5-kpis">
+        <div class="gate5-kpi"><span>Расход</span><strong>${g5Rub(m.spend)}</strong><small>из отчёта рекламы</small></div>
+        <div class="gate5-kpi"><span>Лиды</span><strong>${g5Int(m.conversions)}</strong><small>конверсии / цели</small></div>
+        <div class="gate5-kpi"><span>CPA</span><strong>${m.conversions ? g5Rub(m.cpa) : '—'}</strong><small>расход / лиды</small></div>
+        <div class="gate5-kpi"><span>Заказы</span><strong>${g5Int(f.orders)}</strong><small>из бизнес-связки</small></div>
+        <div class="gate5-kpi"><span>ROI</span><strong>${f.spend ? g5Pct(f.roi) : '—'}</strong><small>финансовый итог</small></div>
+      </div>
+    </section>
+    ${g5AccordionBlock('setup', '1. Настройка отчётности', 'Структура кампаний распознана: кампании, группы, объявления и ключи связки.', renderGate5Setup())}
+    ${g5AccordionBlock('input', '2. Ввод данных', 'Отчёты и цели загружены, период анализа зафиксирован.', renderGate5Input())}
+    ${g5AccordionBlock('ad', '3. Рекламная оценка', 'Понятно, что работает, а что сливает бюджет.', renderGate5Ad())}
+    ${g5AccordionBlock('bridge', '4. Связка с бизнесом', 'Лиды связаны с заказами, выручкой и конверсией лид → заказ.', renderGate5Bridge())}
+    ${g5AccordionBlock('finance', '5. Финансовая оценка', 'Понятно, окупается реклама или нет: CPA, CAC, ROAS, DRR, ROI и решение.', renderGate5Finance())}
+  </div>`;
+  bindGate5Events();
+}
+function g5AccordionBlock(key, title, desc, body) {
+  const g5 = ensureGate5State();
+  const open = g5.ui.openBlock === key;
+  const status = getGate5BlockStatus(key);
+  return `<section class="gate5-block ${open ? 'is-open' : ''}">
+    <button class="gate5-block-head" data-gate5-open="${g5Attr(key)}">
+      <span><span class="gate5-block-title">${g5Esc(title)}</span><span class="gate5-block-desc">${g5Esc(desc)}</span></span>
+      <span class="status-pill status-${status}">${g5Esc(STATUS_LABELS[status] || status)}</span>
+      <span class="gate5-block-toggle">${open ? 'Свернуть' : 'Открыть'}</span>
+    </button>
+    ${open ? `<div class="gate5-block-body">${body}</div>` : ''}
+  </section>`;
+}
+function renderGate5Setup() {
+  const g5 = ensureGate5State();
+  const c = Object.values(g5.setup.campaigns), gr = Object.values(g5.setup.groups), a = Object.values(g5.setup.ads);
+  return `<div class="gate5-grid-2">
+    <div class="gate5-card"><h4>Импорт структуры</h4><p>Загрузите XLSX / CSV со столбцами: № кампании, название кампании, № группы, название группы, № объявления, заголовок.</p>
+      <div class="gate5-fileline"><label class="gate5-field">Файл структуры<input type="file" data-gate5-import="structure" accept=".xlsx,.xls,.csv,.tsv,.txt"></label><button class="btn secondary" data-gate5-clear="structure">Очистить структуру</button></div>
+    </div>
+    <div class="gate5-card"><h4>Что распознано</h4><p>Кампаний: <b>${c.length}</b>. Групп: <b>${gr.length}</b>. Объявлений: <b>${a.length}</b>.</p><div class="gate5-note">Ключ связки: № кампании → № группы → № объявления.</div></div>
+  </div>${g5StructureTable()}`;
+}
+function g5StructureTable() {
+  const g5 = ensureGate5State();
+  const rows = Object.values(g5.setup.ads).slice(0, 80).map(a => `<tr><td>${g5Esc(a.campaignId)}</td><td>${g5Esc(g5.setup.campaigns[a.campaignId]?.name || '—')}</td><td>${g5Esc(a.groupId)}</td><td>${g5Esc(g5.setup.groups[a.groupId]?.name || '—')}</td><td>${g5Esc(a.id)}</td><td>${g5Esc(a.title)}</td></tr>`).join('');
+  const empty = Object.keys(g5.setup.ads).length ? '' : '<tr><td colspan="6">Структура ещё не импортирована.</td></tr>';
+  return `<div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>№ кампании</th><th>Кампания</th><th>№ группы</th><th>Группа</th><th>№ объявления</th><th>Объявление</th></tr></thead><tbody>${rows || empty}</tbody></table></div>`;
+}
+function renderGate5Input() {
+  const g5 = ensureGate5State();
+  return `<div class="gate5-report-list">${Object.entries(GATE5_REPORTS).map(([key, rep]) => {
+    const meta = g5.imports[key];
+    return `<div class="gate5-report-card"><h4>${g5Esc(rep.title)}</h4><small>${g5Esc(rep.desc)}</small><small>${meta ? `Загружен: ${g5DateTime(meta.uploadedAt)} · строк: ${meta.rows}` : 'Не загружен'}</small><div class="gate5-fileline"><label class="gate5-field">Файл<input type="file" data-gate5-import="${g5Attr(key)}" accept=".xlsx,.xls,.csv,.tsv,.txt"></label><button class="btn secondary" data-gate5-clear="${g5Attr(key)}">Очистить</button></div></div>`;
+  }).join('')}</div>${g5GoalFormAndHistory()}`;
+}
+function g5GoalFormAndHistory() {
+  const goal = g5ActiveGoal();
+  const rows = ensureGate5State().goals.slice().sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))).map(g => `<tr><td>${g5DateTime(g.createdAt)}</td><td>${g5Int(g.leads)}</td><td>${g5Rub(g.cpa)}</td><td>${g5Rub(g.cac)}</td><td>${g.drr ? g.drr + '%' : '—'}</td><td>${g5Esc(g.comment || '—')}</td></tr>`).join('');
+  return `<div class="gate5-card" style="margin-top:12px"><h4>Цели</h4><p>Цели нужны, чтобы статусы стали управленческими, а не просто отчётными.</p><div class="gate5-grid-4" style="margin-top:10px">
+    <label class="gate5-field">Лиды<input data-gate5-goal="leads" inputmode="numeric"></label>
+    <label class="gate5-field">CPA ₽<input data-gate5-goal="cpa" inputmode="decimal"></label>
+    <label class="gate5-field">CAC ₽<input data-gate5-goal="cac" inputmode="decimal"></label>
+    <label class="gate5-field">DRR %<input data-gate5-goal="drr" inputmode="decimal"></label>
+  </div><label class="gate5-field" style="margin-top:10px">Комментарий<input data-gate5-goal="comment"></label><div class="gate5-actions"><button class="btn primary" data-gate5-save-goal>Сохранить цель</button></div>${goal ? `<div class="gate5-note gate5-good">Активная цель: ${g5Int(goal.leads)} лидов · CPA ${g5Rub(goal.cpa)} · CAC ${g5Rub(goal.cac)} · DRR ${goal.drr || '—'}%</div>` : '<div class="gate5-note">Цель ещё не задана.</div>'}</div><div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Дата</th><th>Лиды</th><th>CPA</th><th>CAC</th><th>DRR</th><th>Комментарий</th></tr></thead><tbody>${rows || '<tr><td colspan="6">Истории целей пока нет.</td></tr>'}</tbody></table></div>`;
+}
+function renderGate5Ad() {
+  const model = g5BuildModel();
+  const rows = Object.values(model.campaigns).filter(x => x.spend || x.clicks || x.conversions).sort((a,b)=>b.spend-a.spend).map(c => { const r = g5RowMetrics(c); const st = g5AdRowStatus(c); return `<tr><td><b>${g5Esc(c.name)}</b><br><span class="gate5-muted">${g5Esc(c.id)}</span></td><td>${r.spend}</td><td>${r.impressions}</td><td>${r.clicks}</td><td>${r.ctr}</td><td>${r.conversions}</td><td>${r.cr}</td><td>${r.cpa}</td><td><span class="status-pill status-${st}">${g5Esc(STATUS_LABELS[st] || st)}</span></td></tr>`; }).join('');
+  const problemQueries = ensureGate5State().reports.query.filter(q => q.spend && !q.conversions).sort((a,b)=>b.spend-a.spend).slice(0,30);
+  return `<div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Кампания</th><th>Расход</th><th>Показы</th><th>Клики</th><th>CTR</th><th>Лиды</th><th>CR</th><th>CPA</th><th>Статус</th></tr></thead><tbody>${rows || '<tr><td colspan="9">Отчёт рекламы ещё не загружен.</td></tr>'}</tbody></table></div><h4 style="margin-top:16px">Проблемные зоны</h4>${g5ProblemsTable(problemQueries)}`;
+}
+function g5AdRowStatus(row) { const goal = g5ActiveGoal(); const m = g5Metrics(row); if (goal?.cpa && m.cpa && m.cpa > goal.cpa) return 'problem'; if (m.conversions) return 'ready'; if (m.spend) return 'needs_review'; return 'in_progress'; }
+function g5ProblemsTable(rows) { return `<div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Запрос / условие</th><th>Кампания</th><th>Расход</th><th>Клики</th><th>Лиды</th><th>Решение</th></tr></thead><tbody>${rows.map(q => `<tr><td>${g5Esc(q.query || q.conditionName || '—')}</td><td>${g5Esc(q.campaignName || q.campaignId || '—')}</td><td>${g5Rub(q.spend)}</td><td>${g5Int(q.clicks)}</td><td>${g5Int(q.conversions)}</td><td><span class="status-pill status-needs_review">Проверить / минусовать</span></td></tr>`).join('') || '<tr><td colspan="6">Проблемные запросы появятся после загрузки отчёта поисковых запросов.</td></tr>'}</tbody></table></div>`; }
+function renderGate5Bridge() {
+  const f = g5Finance();
+  const link = g5LatestLink();
+  const rows = ensureGate5State().links.slice().sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))).map(l => { const revenue = g5Num(l.actualRevenue) || g5Num(l.orders) * (g5Num(l.avgCheck) || g5Num(l.minCheck)); const cac = g5Div(g5Num(l.adSpend), g5Num(l.orders)); return `<tr><td>${g5DateTime(l.createdAt)}</td><td>${g5Int(l.leads)}</td><td>${g5Int(l.orders)}</td><td>${g5Pct(g5Div(l.orders,l.leads))}</td><td>${g5Rub(l.adSpend)}</td><td>${g5Rub(cac)}</td><td>${g5Rub(revenue)}</td><td>${g5Esc(l.comment || '—')}</td></tr>`; }).join('');
+  return `<div class="gate5-grid-4"><label class="gate5-field">Лиды<input data-gate5-link="leads" value="${g5Attr(f.leads)}"></label><label class="gate5-field">Заказы<input data-gate5-link="orders" inputmode="numeric"></label><label class="gate5-field">Средний чек ₽<input data-gate5-link="avgCheck" inputmode="decimal"></label><label class="gate5-field">Фактическая выручка ₽<input data-gate5-link="actualRevenue" inputmode="decimal"></label></div><div class="gate5-grid-4" style="margin-top:10px"><label class="gate5-field">Расход рекламы<input data-gate5-link="adSpend" value="${g5Attr(Math.round(f.spend))}"></label><label class="gate5-field">Маржинальность %<input data-gate5-link="margin" inputmode="decimal"></label><label class="gate5-field">Минимальный чек ₽<input data-gate5-link="minCheck" inputmode="decimal"></label><label class="gate5-field">Комментарий<input data-gate5-link="comment"></label></div><div class="gate5-actions"><button class="btn primary" data-gate5-save-link>Сохранить связку</button></div>${link ? `<div class="gate5-note gate5-good">Последняя связка: ${g5Int(link.leads)} лидов → ${g5Int(link.orders)} заказов.</div>` : '<div class="gate5-note">Связка с заказами ещё не сохранена.</div>'}<div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Дата</th><th>Лиды</th><th>Заказы</th><th>Лид → заказ</th><th>Расход</th><th>CAC</th><th>Выручка</th><th>Комментарий</th></tr></thead><tbody>${rows || '<tr><td colspan="8">Истории связки пока нет.</td></tr>'}</tbody></table></div>`;
+}
+function renderGate5Finance() {
+  const f = g5Finance();
+  const goal = g5ActiveGoal();
+  const status = getGate5Status();
+  let decision = 'Нет данных для решения';
+  if (f.revenue && status === 'ready') decision = 'Масштабировать / удерживать';
+  if (f.revenue && status === 'problem') decision = 'Оптимизировать или остановить';
+  if (f.spend && !f.revenue) decision = 'Нужна связка с заказами';
+  return `<div class="gate5-grid-4"><div class="gate5-kpi"><span>CPA</span><strong>${f.cpa ? g5Rub(f.cpa) : '—'}</strong><small>цель ${goal?.cpa ? g5Rub(goal.cpa) : '—'}</small></div><div class="gate5-kpi"><span>CAC</span><strong>${f.cac ? g5Rub(f.cac) : '—'}</strong><small>цель ${goal?.cac ? g5Rub(goal.cac) : '—'}</small></div><div class="gate5-kpi"><span>ROAS</span><strong>${f.roas ? f.roas.toFixed(2).replace('.', ',') + '×' : '—'}</strong><small>выручка / расход</small></div><div class="gate5-kpi"><span>DRR</span><strong>${f.drr ? g5Pct(f.drr) : '—'}</strong><small>цель ${goal?.drr ? goal.drr + '%' : '—'}</small></div></div><div class="gate5-decision ${status === 'problem' ? 'gate5-problem' : status === 'ready' ? 'gate5-good' : 'gate5-warning'}" style="margin-top:14px"><strong>${g5Esc(decision)}</strong><p class="gate5-muted">ROI: ${f.spend ? g5Pct(f.roi) : '—'}. Решение строится из связки: рекламные отчёты → цели → лиды → заказы → выручка.</p></div>${g5FinanceChecks()}`;
+}
+function g5FinanceChecks() { const f = g5Finance(); const goal = g5ActiveGoal(); const checks = []; if (!f.spend) checks.push(['not_started','Нет загруженных рекламных отчётов.']); if (!goal) checks.push(['in_progress','Нет целей CPA / CAC / DRR.']); if (!g5LatestLink()) checks.push(['in_progress','Нет связки лидов с заказами и выручкой.']); if (goal?.cpa && f.cpa > goal.cpa) checks.push(['problem','CPA выше допустимого значения.']); if (goal?.cac && f.cac > goal.cac) checks.push(['problem','CAC выше допустимого значения.']); if (goal?.drr && f.drr > goal.drr / 100) checks.push(['problem','DRR выше допустимого значения.']); if (!checks.length) checks.push(['ready','Критичных финансовых проблем не найдено.']); return `<div class="gate5-checks">${checks.map(([st, text]) => `<div class="gate5-check"><span class="status-pill status-${st}">${g5Esc(STATUS_LABELS[st] || st)}</span> ${g5Esc(text)}</div>`).join('')}</div>`; }
+function bindGate5Events() {
+  document.querySelectorAll('[data-gate5-open]').forEach(btn => btn.addEventListener('click', () => { const g5 = ensureGate5State(); g5.ui.openBlock = g5.ui.openBlock === btn.dataset.gate5Open ? '' : btn.dataset.gate5Open; saveState(); renderGate(); }));
+  document.querySelectorAll('[data-gate5-import]').forEach(input => input.addEventListener('change', async e => { const kind = e.target.dataset.gate5Import; const file = e.target.files?.[0]; if (!file) return; try { const rows = await g5ReadTableFile(file); const ex = g5ExtractRows(rows, kind === 'structure' ? 'structure' : kind); const g5 = ensureGate5State(); if (kind === 'structure') { g5SyncStructure(ex.records); } else { g5.reports[kind] = ex.records; g5.imports[kind] = { ...ex.meta, type: kind }; g5SyncStructure(ex.records); } saveState(); renderGate(); } catch (err) { alert(err.message || 'Не удалось импортировать файл'); } }));
+  document.querySelectorAll('[data-gate5-clear]').forEach(btn => btn.addEventListener('click', () => { const kind = btn.dataset.gate5Clear; const g5 = ensureGate5State(); if (kind === 'structure') { g5.setup = { projectName: '', campaigns: {}, groups: {}, ads: {} }; } else { g5.reports[kind] = []; delete g5.imports[kind]; } saveState(); renderGate(); }));
+  document.querySelector('[data-gate5-save-goal]')?.addEventListener('click', () => { const goal = { id: makeId('g5-goal'), createdAt: new Date().toISOString() }; document.querySelectorAll('[data-gate5-goal]').forEach(input => { goal[input.dataset.gate5Goal] = ['comment'].includes(input.dataset.gate5Goal) ? input.value : g5Num(input.value); }); ensureGate5State().goals.push(goal); saveState(); renderGate(); });
+  document.querySelector('[data-gate5-save-link]')?.addEventListener('click', () => { const link = { id: makeId('g5-link'), createdAt: new Date().toISOString() }; document.querySelectorAll('[data-gate5-link]').forEach(input => { link[input.dataset.gate5Link] = ['comment'].includes(input.dataset.gate5Link) ? input.value : g5Num(input.value); }); ensureGate5State().links.push(link); saveState(); renderGate(); });
+}
+
+const __guruPrevRenderGateTableV29 = renderGateTable;
+renderGateTable = function(gate, cards) {
+  if (gate && gate.id === 'gate-5') {
+    renderGate5Integrated(gate, cards);
+    return;
+  }
+  __guruPrevRenderGateTableV29(gate, cards);
+};
+
+const __guruPrevRenderGateNavV29 = renderGateNav;
+renderGateNav = function() {
+  els.gateNav.innerHTML = state.gates.map(g => {
+    const progress = g.id === 'gate-5' ? getGate5Progress() : getProgress(g.cards);
+    const cls = activeView === 'gate' && activeGateId === g.id ? 'active' : '';
+    return `<button class="gate-btn ${cls}" data-gate-id="${g.id}">${escapeHtml(g.title)}<span class="small">${g.id === 'gate-5' ? '5 подблоков' : g.cards.length + ' блоков'}, готово ${progress}%</span></button>`;
+  }).join('');
+  document.querySelectorAll('[data-gate-id]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeView = 'gate';
+      activeGateId = btn.dataset.gateId;
+      render();
+    });
+  });
+};
+
+(function markV29() {
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.29'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.29'); });
 })();
