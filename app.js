@@ -1,12 +1,13 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.24';
+const PLATFORM_VERSION = 'v0.25';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
   ready: 'Готово',
-  needs_review: 'Проверить'
+  needs_review: 'Проверить',
+  problem: 'Проблема'
 };
 
 const V14_PAGE_BLOCK_TITLES = ['ГЛАВНАЯ','СПИСОК / КАТЕГОРИЯ','СТРАНИЦА УСЛУГИ','КАРТОЧКА ТОВАРА','СТАТЬЯ БЛОГА','О НАС','КОНТАКТЫ','ДОСТАВКА / ГАРАНТИИ','ПОЛИТИКА','404','THANK YOU PAGE ⚠️','ЛЕНДИНГ'];
@@ -1469,6 +1470,354 @@ function renderGate() {
 }
 
 
+
+
+const DEMAND_ROUTE_DEFAULT = {
+  promoted: '',
+  excluded: '',
+  geo: '',
+  language: '',
+  adSystem: 'yandex',
+  yandexCampaignType: 'search_rsya',
+  googleCampaignType: 'search_display',
+  landing: '',
+  goal: '',
+  targetCpa: '',
+  steps: {},
+  groups: []
+};
+
+const DEMAND_ROUTE_STEPS = [
+  {
+    key: 'frames',
+    title: '1. Рамки продвижения',
+    task: 'Зафиксировать границы кампании: что продвигаем, что исключаем, куда ведём трафик и какой результат нужен.',
+    fields: [
+      ['value_proposition', 'Что считаем главным продуктом / услугой'],
+      ['limitations', 'Ограничения и исключения'],
+      ['success_metric', 'Целевое действие и критерий успеха']
+    ]
+  },
+  {
+    key: 'audience_language',
+    title: '2. Язык аудитории',
+    task: 'Перевести продукт на язык клиента: как он сам формулирует проблему, услугу и желаемый результат.',
+    fields: [
+      ['phrases', 'Фразы аудитории'],
+      ['pain_words', 'Слова боли'],
+      ['commercial_words', 'Коммерческие уточнения']
+    ]
+  },
+  {
+    key: 'intents',
+    title: '3. Намерения',
+    task: 'Разделить спрос по намерениям, чтобы не смешивать горячие заявки, сравнение, информацию и мусор.',
+    fields: [
+      ['hot_intents', 'Горячие интенты'],
+      ['compare_intents', 'Сравнение / выбор'],
+      ['trash_intents', 'Мусорные интенты']
+    ]
+  },
+  {
+    key: 'clusters',
+    title: '4. Кластеры / группы',
+    task: 'Собрать группы, в которых у каждой есть интент, посадочная и понятная логика показа.',
+    fields: [
+      ['cluster_logic', 'Правило группировки'],
+      ['landing_match', 'Соответствие посадочным'],
+      ['priority_groups', 'Приоритетные группы']
+    ]
+  },
+  {
+    key: 'economics',
+    title: '5. Оценка спроса и экономики',
+    task: 'Проверить, может ли спрос дать результат в рамках целевого CPL / CPA.',
+    fields: [
+      ['demand_volume', 'Оценка спроса'],
+      ['forecast_cpa', 'Прогноз CPL / CPA'],
+      ['decision', 'Решение по запуску / ограничению']
+    ]
+  },
+  {
+    key: 'group_content',
+    title: '6. Наполнение групп',
+    task: 'Заполнить группы ключами, минусами, аудиториями, объявлениями и дополнениями под выбранные системы.',
+    fields: [
+      ['search_logic', 'Поиск / Search: ключи, минусы, объявления'],
+      ['display_logic', 'РСЯ / Display: аудитории, исключения, креативы'],
+      ['assets_logic', 'Дополнения / assets']
+    ]
+  },
+  {
+    key: 'launch_package',
+    title: '7. Запускной пакет',
+    task: 'Собрать финальную таблицу, достаточную для запуска кампании без повторного разбора семантики.',
+    fields: [
+      ['launch_ready', 'Что готово к запуску'],
+      ['risks', 'Что требует решения'],
+      ['handoff', 'Что передаём на настройку']
+    ]
+  }
+];
+
+function ensureDemandRouteState() {
+  if (!state) return structuredClone(DEMAND_ROUTE_DEFAULT);
+  state.demandRoute = state.demandRoute || structuredClone(DEMAND_ROUTE_DEFAULT);
+  state.demandRoute.steps = state.demandRoute.steps || {};
+  state.demandRoute.groups = Array.isArray(state.demandRoute.groups) ? state.demandRoute.groups : [];
+  DEMAND_ROUTE_STEPS.forEach(step => {
+    state.demandRoute.steps[step.key] = state.demandRoute.steps[step.key] || {};
+    step.fields.forEach(([key]) => { state.demandRoute.steps[step.key][key] = state.demandRoute.steps[step.key][key] || ''; });
+  });
+  return state.demandRoute;
+}
+
+function demandSearchEnabled(route) {
+  return route.adSystem === 'yandex' || route.adSystem === 'both' || route.adSystem === 'google' || route.adSystem === 'yandex_google'
+    ? ((route.adSystem === 'yandex' || route.adSystem === 'both') && /search|поиск/.test(route.yandexCampaignType || '')) || ((route.adSystem === 'google' || route.adSystem === 'both') && /search/.test(route.googleCampaignType || ''))
+    : false;
+}
+
+function demandDisplayEnabled(route) {
+  return ((route.adSystem === 'yandex' || route.adSystem === 'both') && /rsya|рся/.test(route.yandexCampaignType || '')) || ((route.adSystem === 'google' || route.adSystem === 'both') && /display/.test(route.googleCampaignType || ''));
+}
+
+function demandSystemLabel(value) {
+  return ({ yandex: 'Яндекс', google: 'Google', both: 'Яндекс + Google' })[value] || 'Яндекс';
+}
+
+function demandCampaignTypeLabel(route) {
+  const parts = [];
+  if (route.adSystem === 'yandex' || route.adSystem === 'both') parts.push('Яндекс: ' + ({ search:'Поиск', rsya:'РСЯ', search_rsya:'Поиск + РСЯ' }[route.yandexCampaignType] || 'Поиск + РСЯ'));
+  if (route.adSystem === 'google' || route.adSystem === 'both') parts.push('Google: ' + ({ search:'Search', display:'Display', search_display:'Search + Display' }[route.googleCampaignType] || 'Search + Display'));
+  return parts.join(' · ');
+}
+
+function demandGroupHasSearchNeed(route, group) {
+  return demandSearchEnabled(route) && /поиск|search|оба|поиск \+ рся|search \+ display|универс/.test(normalizeGateTitle(group.type || ''));
+}
+
+function demandGroupHasDisplayNeed(route, group) {
+  return demandDisplayEnabled(route) && /рся|display|оба|поиск \+ рся|search \+ display|универс/.test(normalizeGateTitle(group.type || ''));
+}
+
+function demandChecks() {
+  const route = ensureDemandRouteState();
+  const issues = [];
+  if (!String(route.promoted || '').trim()) issues.push({ level: 'problem', text: 'Нет «что продвигаем» — нельзя собирать семантику.' });
+  if (!String(route.excluded || '').trim()) issues.push({ level: 'needs_review', text: 'Нет «что не продвигаем» — высокий риск мусорного спроса.' });
+  if (!String(route.landing || '').trim()) issues.push({ level: 'problem', text: 'Нет посадочной страницы для запуска.' });
+  (route.groups || []).forEach((group, index) => {
+    const name = group.name || `Группа ${index + 1}`;
+    if (!String(group.intent || '').trim()) issues.push({ level: 'problem', text: `${name}: нет интента.` });
+    if (!String(group.landing || route.landing || '').trim()) issues.push({ level: 'problem', text: `${name}: нет посадочной.` });
+    if (demandGroupHasSearchNeed(route, group) && !String(group.keywords || '').trim()) issues.push({ level: 'problem', text: `${name}: включён Поиск / Search, но нет ключевых фраз.` });
+    if (demandGroupHasDisplayNeed(route, group) && !String(group.audience || '').trim()) issues.push({ level: 'problem', text: `${name}: включена РСЯ / Display, но нет аудитории.` });
+    if (!String(group.negatives || '').trim()) issues.push({ level: 'needs_review', text: `${name}: нет минус-фраз / negatives.` });
+    if (!String(group.ad || '').trim()) issues.push({ level: 'in_progress', text: `${name}: нет объявления.` });
+    const target = Number(String(route.targetCpa || '').replace(/[^0-9.,]/g, '').replace(',', '.'));
+    const forecast = Number(String(group.forecastCpa || '').replace(/[^0-9.,]/g, '').replace(',', '.'));
+    if (target && forecast && forecast > target) issues.push({ level: 'needs_review', text: `${name}: прогноз CPA выше нормы.` });
+  });
+  return issues;
+}
+
+function getDemandRouteStatus() {
+  const route = ensureDemandRouteState();
+  if (!String(route.promoted || '').trim() && !String(route.excluded || '').trim() && !String(route.landing || '').trim()) return 'not_started';
+  const issues = demandChecks();
+  if (issues.some(i => i.level === 'problem')) return 'problem';
+  if (!(route.groups || []).length) return 'in_progress';
+  if (issues.some(i => i.level === 'needs_review')) return 'needs_review';
+  if (issues.some(i => i.level === 'in_progress')) return 'in_progress';
+  return 'ready';
+}
+
+function getDemandProgressText() {
+  const route = ensureDemandRouteState();
+  const completed = DEMAND_ROUTE_STEPS.filter(step => step.fields.some(([key]) => String(route.steps?.[step.key]?.[key] || '').trim())).length;
+  const groups = (route.groups || []).length;
+  return `${completed} из ${DEMAND_ROUTE_STEPS.length} шагов заполнено · ${groups} групп`; 
+}
+
+function firstIncompleteDemandStepKey(route) {
+  const found = DEMAND_ROUTE_STEPS.find(step => !step.fields.some(([key]) => String(route.steps?.[step.key]?.[key] || '').trim()));
+  return found?.key || 'launch_package';
+}
+
+function demandInput(name, label, type = 'text', placeholder = '') {
+  const route = ensureDemandRouteState();
+  const value = route[name] || '';
+  const tag = type === 'textarea'
+    ? `<textarea data-demand-field="${escapeAttr(name)}" placeholder="${escapeAttr(placeholder)}">${escapeHtml(value)}</textarea>`
+    : `<input data-demand-field="${escapeAttr(name)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(placeholder)}" />`;
+  return `<label class="demand-field"><span>${escapeHtml(label)}</span>${tag}</label>`;
+}
+
+function renderDemandRoute(section) {
+  const route = ensureDemandRouteState();
+  const status = getDemandRouteStatus();
+  const issues = demandChecks();
+  const openStep = route.openStep || firstIncompleteDemandStepKey(route);
+  const groups = route.groups || [];
+  return `<div class="demand-route">
+    <div class="demand-route-head">
+      <div>
+        <div class="analytics-path">Gate 1 → Спрос</div>
+        <h3>Спрос: подготовка кампании к запуску</h3>
+        <p class="muted">Рамки → язык аудитории → намерения → группы → экономика → объявления → запуск.</p>
+      </div>
+      <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+    </div>
+
+    <section class="demand-frame">
+      <div class="demand-grid three">
+        ${demandInput('promoted', 'Что продвигаем', 'text', 'продукт / услуга')}
+        ${demandInput('excluded', 'Что не продвигаем', 'text', 'мусор, вакансии, обучение, бесплатное')}
+        ${demandInput('geo', 'Гео', 'text', 'город / регион / страна')}
+        ${demandInput('language', 'Язык', 'text', 'если нужен для Google')}
+        <label class="demand-field"><span>Рекламная система</span><select data-demand-field="adSystem">
+          <option value="yandex" ${route.adSystem === 'yandex' ? 'selected' : ''}>Яндекс</option>
+          <option value="google" ${route.adSystem === 'google' ? 'selected' : ''}>Google</option>
+          <option value="both" ${route.adSystem === 'both' ? 'selected' : ''}>Яндекс + Google</option>
+        </select></label>
+        <label class="demand-field"><span>Цель</span><input data-demand-field="goal" value="${escapeAttr(route.goal || '')}" placeholder="заявка / звонок / покупка" /></label>
+        ${route.adSystem === 'yandex' || route.adSystem === 'both' ? `<label class="demand-field"><span>Яндекс: тип кампании</span><select data-demand-field="yandexCampaignType">
+          <option value="search" ${route.yandexCampaignType === 'search' ? 'selected' : ''}>Поиск</option>
+          <option value="rsya" ${route.yandexCampaignType === 'rsya' ? 'selected' : ''}>РСЯ</option>
+          <option value="search_rsya" ${route.yandexCampaignType === 'search_rsya' ? 'selected' : ''}>Поиск + РСЯ</option>
+        </select></label>` : ''}
+        ${route.adSystem === 'google' || route.adSystem === 'both' ? `<label class="demand-field"><span>Google: тип кампании</span><select data-demand-field="googleCampaignType">
+          <option value="search" ${route.googleCampaignType === 'search' ? 'selected' : ''}>Search</option>
+          <option value="display" ${route.googleCampaignType === 'display' ? 'selected' : ''}>Display</option>
+          <option value="search_display" ${route.googleCampaignType === 'search_display' ? 'selected' : ''}>Search + Display</option>
+        </select></label>` : ''}
+        ${demandInput('landing', 'Посадочная', 'text', 'URL страницы')}
+        ${demandInput('targetCpa', 'Целевой CPL / CPA', 'text', 'если известен')}
+      </div>
+    </section>
+
+    <div class="demand-steps">
+      ${DEMAND_ROUTE_STEPS.map(step => demandStepHtml(route, step, openStep === step.key)).join('')}
+    </div>
+
+    <section class="demand-launch-table">
+      <div class="demand-section-title">
+        <div><h4>Финальная таблица запуска</h4><p class="muted">Одна карта спроса даёт выход под Яндекс и Google без отдельных больших веток.</p></div>
+        <button class="small-btn" data-add-demand-group>+ Добавить группу</button>
+      </div>
+      <div class="table-scroll"><table class="mini-table typed-table demand-table">
+        <thead><tr><th>Группа / Campaign</th><th>Тип</th><th>Интент</th><th>Посадочная</th><th>Ключи / Keywords</th><th>Минусы / Negatives</th><th>Аудитория</th><th>Объявление</th><th>Дополнения / Assets</th><th>CPA прогноз</th><th>Статус</th><th></th></tr></thead>
+        <tbody>${groups.map((group, index) => demandGroupRowHtml(group, index, route)).join('') || `<tr><td colspan="12" class="muted">Добавьте первую группу, чтобы собрать запускной пакет.</td></tr>`}</tbody>
+      </table></div>
+    </section>
+
+    <section class="demand-checks ${issues.length ? '' : 'is-ok'}">
+      <h4>Автоматические проверки</h4>
+      ${issues.length ? issues.map(issue => `<div class="demand-check ${issue.level}">${escapeHtml(issue.text)}</div>`).join('') : '<div class="demand-check ready">Критичных ошибок нет. Проверьте финальный запускной пакет.</div>'}
+    </section>
+  </div>`;
+}
+
+function demandStepHtml(route, step, isOpen) {
+  const data = route.steps?.[step.key] || {};
+  const filled = step.fields.some(([key]) => String(data[key] || '').trim());
+  return `<article class="demand-step ${isOpen ? 'is-open' : ''}">
+    <button class="demand-step-head" data-demand-toggle-step="${escapeAttr(step.key)}">
+      <span><strong>${escapeHtml(step.title)}</strong><small>${escapeHtml(step.task)}</small></span>
+      <span class="status-pill status-${filled ? 'ready' : 'not_started'}">${filled ? 'Заполнено' : 'Не начато'}</span>
+    </button>
+    ${isOpen ? `<div class="demand-step-body">
+      ${step.fields.map(([key, label]) => `<label class="demand-field"><span>${escapeHtml(label)}</span><textarea data-demand-step="${escapeAttr(step.key)}" data-demand-step-field="${escapeAttr(key)}" placeholder="результат шага">${escapeHtml(data[key] || '')}</textarea></label>`).join('')}
+    </div>` : ''}
+  </article>`;
+}
+
+function demandGroupRowHtml(group, index, route) {
+  const selectedType = group.type || (demandSearchEnabled(route) && demandDisplayEnabled(route) ? 'universal' : demandSearchEnabled(route) ? 'search' : 'display');
+  const showSearch = selectedType === 'search' || selectedType === 'universal';
+  const showDisplay = selectedType === 'display' || selectedType === 'universal';
+  const rowStatus = demandSingleGroupStatus(route, group);
+  return `<tr>
+    <td><input data-demand-group-index="${index}" data-demand-group-field="name" value="${escapeAttr(group.name || '')}" placeholder="название группы" /></td>
+    <td><select data-demand-group-index="${index}" data-demand-group-field="type">
+      <option value="search" ${selectedType === 'search' ? 'selected' : ''}>Поиск / Search</option>
+      <option value="display" ${selectedType === 'display' ? 'selected' : ''}>РСЯ / Display</option>
+      <option value="universal" ${selectedType === 'universal' ? 'selected' : ''}>Поиск + РСЯ / Search + Display</option>
+    </select></td>
+    <td><input data-demand-group-index="${index}" data-demand-group-field="intent" value="${escapeAttr(group.intent || '')}" placeholder="интент" /></td>
+    <td><input data-demand-group-index="${index}" data-demand-group-field="landing" value="${escapeAttr(group.landing || route.landing || '')}" placeholder="URL" /></td>
+    <td><textarea data-demand-group-index="${index}" data-demand-group-field="keywords" ${showSearch ? '' : 'disabled'} placeholder="ключи / keywords">${escapeHtml(group.keywords || '')}</textarea></td>
+    <td><textarea data-demand-group-index="${index}" data-demand-group-field="negatives" placeholder="минусы / negatives">${escapeHtml(group.negatives || '')}</textarea></td>
+    <td><textarea data-demand-group-index="${index}" data-demand-group-field="audience" ${showDisplay ? '' : 'disabled'} placeholder="аудитория РСЯ / Display">${escapeHtml(group.audience || '')}</textarea></td>
+    <td><textarea data-demand-group-index="${index}" data-demand-group-field="ad" placeholder="объявление / RSA">${escapeHtml(group.ad || '')}</textarea></td>
+    <td><textarea data-demand-group-index="${index}" data-demand-group-field="assets" placeholder="быстрые ссылки / callouts / assets">${escapeHtml(group.assets || '')}</textarea></td>
+    <td><input data-demand-group-index="${index}" data-demand-group-field="forecastCpa" value="${escapeAttr(group.forecastCpa || '')}" placeholder="₽" /></td>
+    <td><span class="status-pill status-${rowStatus}">${escapeHtml(STATUS_LABELS[rowStatus] || rowStatus)}</span></td>
+    <td><button class="small-btn danger-mini" data-remove-demand-group="${index}">×</button></td>
+  </tr>`;
+}
+
+function demandSingleGroupStatus(route, group) {
+  if (!String(group.intent || '').trim() || !String(group.landing || route.landing || '').trim()) return 'problem';
+  if (demandGroupHasSearchNeed(route, group) && !String(group.keywords || '').trim()) return 'problem';
+  if (demandGroupHasDisplayNeed(route, group) && !String(group.audience || '').trim()) return 'problem';
+  if (!String(group.negatives || '').trim()) return 'needs_review';
+  if (!String(group.ad || '').trim()) return 'in_progress';
+  return 'ready';
+}
+
+function bindDemandRouteEvents() {
+  document.querySelectorAll('[data-demand-field]').forEach(input => input.addEventListener('input', e => {
+    const route = ensureDemandRouteState();
+    route[e.target.dataset.demandField] = e.target.value;
+    saveState();
+    renderGate();
+  }));
+  document.querySelectorAll('[data-demand-field]').forEach(input => input.addEventListener('change', e => {
+    const route = ensureDemandRouteState();
+    route[e.target.dataset.demandField] = e.target.value;
+    saveState();
+    renderGate();
+  }));
+  document.querySelectorAll('[data-demand-toggle-step]').forEach(btn => btn.addEventListener('click', () => {
+    const route = ensureDemandRouteState();
+    route.openStep = route.openStep === btn.dataset.demandToggleStep ? '' : btn.dataset.demandToggleStep;
+    saveState();
+    renderGate();
+  }));
+  document.querySelectorAll('[data-demand-step]').forEach(input => input.addEventListener('input', e => {
+    const route = ensureDemandRouteState();
+    route.steps[e.target.dataset.demandStep] = route.steps[e.target.dataset.demandStep] || {};
+    route.steps[e.target.dataset.demandStep][e.target.dataset.demandStepField] = e.target.value;
+    saveState();
+  }));
+  document.querySelector('[data-add-demand-group]')?.addEventListener('click', () => {
+    const route = ensureDemandRouteState();
+    route.groups.push({ id: makeId('demand-group'), name: '', type: demandSearchEnabled(route) && demandDisplayEnabled(route) ? 'universal' : demandSearchEnabled(route) ? 'search' : 'display', intent: '', landing: route.landing || '', keywords: '', negatives: '', audience: '', ad: '', assets: '', forecastCpa: '' });
+    saveState();
+    renderGate();
+  });
+  document.querySelectorAll('[data-demand-group-field]').forEach(input => input.addEventListener('input', updateDemandGroupField));
+  document.querySelectorAll('[data-demand-group-field]').forEach(input => input.addEventListener('change', updateDemandGroupField));
+  document.querySelectorAll('[data-remove-demand-group]').forEach(btn => btn.addEventListener('click', () => {
+    const route = ensureDemandRouteState();
+    route.groups.splice(Number(btn.dataset.removeDemandGroup), 1);
+    saveState();
+    renderGate();
+  }));
+}
+
+function updateDemandGroupField(e) {
+  const route = ensureDemandRouteState();
+  const index = Number(e.target.dataset.demandGroupIndex);
+  const field = e.target.dataset.demandGroupField;
+  route.groups[index] = route.groups[index] || {};
+  route.groups[index][field] = e.target.value;
+  saveState();
+  if (field === 'type') renderGate();
+}
+
 function renderGate1Accordion(gate, cards) {
   const sections = getGate1Sections(gate, cards);
   const accState = getGate1AccordionState();
@@ -1481,25 +1830,27 @@ function renderGate1Accordion(gate, cards) {
     </div>
     ${sections.map(section => {
       const sectionOpen = Boolean(accState.subblocks[section.key]);
-      const status = getSectionStatus(section.allInnerCards);
+      const status = section.key === 'demand_semantics' ? getDemandRouteStatus() : getSectionStatus(section.allInnerCards);
+      const progressText = section.key === 'demand_semantics' ? getDemandProgressText() : getSectionProgressText(section.allInnerCards);
       const displayCards = queryActive ? section.filteredInnerCards : section.allInnerCards;
       return `<section class="analytics-subblock ${sectionOpen ? 'is-open is-active' : ''}">
         <button class="subblock-header" data-gate1-toggle-section="${escapeAttr(section.key)}">
           <span class="subblock-main">
             <span class="analytics-path">Gate 1 → ${escapeHtml(section.title)}</span>
             <span class="subblock-title">${escapeHtml(section.title)}</span>
-            <span class="subblock-progress">${escapeHtml(getSectionProgressText(section.allInnerCards))}</span>
+            <span class="subblock-progress">${escapeHtml(progressText)}</span>
           </span>
           <span class="status-pill status-${status}">${STATUS_LABELS[status] || status}</span>
           <span class="subblock-toggle">${sectionOpen ? 'Закрыть' : 'Открыть'}</span>
         </button>
         ${sectionOpen ? `<div class="subblock-body">
-          ${displayCards.length ? displayCards.map(card => gate1WorkBlockHtml(card, section.title)).join('') : '<div class="empty compact-empty">По текущему фильтру внутри подблока ничего не найдено.</div>'}
+          ${section.key === 'demand_semantics' ? renderDemandRoute(section) : (displayCards.length ? displayCards.map(card => gate1WorkBlockHtml(card, section.title)).join('') : '<div class="empty compact-empty">По текущему фильтру внутри подблока ничего не найдено.</div>')}
         </div>` : ''}
       </section>`;
     }).join('')}
   </div>`;
   bindGate1Accordion();
+  bindDemandRouteEvents();
   bindCardInputs();
 }
 
@@ -2885,7 +3236,7 @@ function renderSemanticGateAccordion(gate, cards) {
           <span class="subblock-main">
             <span class="analytics-path">${escapeHtml(gate.title)} → ${escapeHtml(section.title)}</span>
             <span class="subblock-title">${escapeHtml(section.title)}</span>
-            <span class="subblock-progress">${escapeHtml(getSectionProgressText(section.allInnerCards))}</span>
+            <span class="subblock-progress">${escapeHtml(progressText)}</span>
           </span>
           <span class="status-pill status-${status}">${STATUS_LABELS[status] || status}</span>
           <span class="subblock-toggle">${isOpen ? 'Закрыть' : 'Открыть'}</span>
