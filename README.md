@@ -1,6 +1,6 @@
-# ГУРУ, MVP платформы v0.31
+# ГУРУ, MVP платформы v0.32
 
-## Что изменено в v0.31
+## Что изменено в v0.32
 
 Пересобран **Gate 6 → Маркетинговый календарь событий**.
 
@@ -56,9 +56,23 @@
 
 Загрузите содержимое папки `guru_platform_v30` в GitHub-репозиторий `guru-platform` и сделайте commit:
 
-`Update to v0.31: rebuild Gate 6 marketing calendar route`
+`Update to v0.32: rebuild Gate 6 marketing calendar route`
 
 
-## v0.31
+## v0.32
 
 Gate 6 rebuilt as a quarterly campaign-decision calendar. Seasons are no longer the main containers. Q1–Q4 are used as the primary accordion containers; seasonal phase remains only as contextual guidance inside the quarter. Event cards were reduced to three working fields: Decision, Campaign, Preparation. Quarter accordion state is now keyed by unique quarterId, so Q1 / “Зима” can be closed normally and state does not break after saving.
+
+
+## v0.32
+
+Gate 7 «Отчёты и журнал выполнения» пересобран как живой журнал задач:
+
+- верхняя панель: период, фильтр статуса, + задача, + раздел, экспорт PDF / CSV;
+- базовые разделы: Бэклог, Нужно было вчера, Задачи на реализацию, Реализовано;
+- внутри «Задачи на реализацию»: Регулярные задачи и Проектные задачи;
+- минимальная строка: дата, задача, где, статус, результат, комментарий;
+- задачи создаются, удаляются, перемещаются между разделами и меняют статус прямо в строке;
+- при статусе «Готово» задача автоматически переносится в «Реализовано»;
+- пользовательские разделы можно создавать и удалять после подтверждения;
+- добавлен экспорт журнала в CSV и PDF.

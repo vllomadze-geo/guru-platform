@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v0.30';
+const PLATFORM_VERSION = 'v0.32';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -7573,4 +7573,314 @@ renderGateNav = function() {
 (function markV31() {
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.31'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.31'); });
+})();
+
+
+/* =========================================================
+   v0.32 — Gate 7: живой журнал задач
+   ========================================================= */
+const GATE7_BASE_SECTIONS = [
+  { id: 'backlog', title: 'Бэклог', hint: 'Задачи, которые нужно зафиксировать, но ещё не ставить в работу.' },
+  { id: 'yesterday', title: 'Нужно было вчера', hint: 'Срочные задачи, которые уже давят на результат.' },
+  { id: 'implementation_regular', title: 'Регулярные задачи', parent: 'Задачи на реализацию', hint: 'Повторяемые задачи: отчёты, проверки, регулярные публикации.' },
+  { id: 'implementation_project', title: 'Проектные задачи', parent: 'Задачи на реализацию', hint: 'Разовые задачи по проекту, сайту, рекламе или коммуникациям.' },
+  { id: 'done', title: 'Реализовано', hint: 'Завершённые задачи с зафиксированным результатом.' }
+];
+const GATE7_STATUSES = [
+  ['not_started', 'Не начато'],
+  ['in_progress', 'В работе'],
+  ['ready', 'Готово'],
+  ['problem', 'Проблема'],
+  ['postponed', 'Отложено']
+];
+function isGate7Journal(gate) {
+  return gate?.id === 'gate-7' || /Отчёты и журнал выполнения/i.test(gate?.title || '');
+}
+function gate7Today() {
+  return new Date().toISOString().slice(0, 10);
+}
+function ensureGate7State() {
+  if (!state.gate7Journal) {
+    state.gate7Journal = {
+      ui: { period: 'month', statusFilter: 'all', openSections: { backlog: true, yesterday: true, implementation_regular: true, implementation_project: true, done: true } },
+      customSections: [],
+      tasks: []
+    };
+  }
+  state.gate7Journal.ui = state.gate7Journal.ui || { period: 'month', statusFilter: 'all', openSections: {} };
+  state.gate7Journal.ui.openSections = state.gate7Journal.ui.openSections || {};
+  state.gate7Journal.customSections = Array.isArray(state.gate7Journal.customSections) ? state.gate7Journal.customSections : [];
+  state.gate7Journal.tasks = Array.isArray(state.gate7Journal.tasks) ? state.gate7Journal.tasks : [];
+  return state.gate7Journal;
+}
+function gate7Sections() {
+  const g7 = ensureGate7State();
+  return [...GATE7_BASE_SECTIONS, ...g7.customSections.map(s => ({ ...s, custom: true, hint: s.hint || 'Пользовательский раздел журнала.' }))];
+}
+function gate7SectionTitle(sectionId) {
+  return gate7Sections().find(s => s.id === sectionId)?.title || 'Бэклог';
+}
+function gate7StatusLabel(status) {
+  return (GATE7_STATUSES.find(s => s[0] === status) || GATE7_STATUSES[0])[1];
+}
+function gate7StatusPill(status) {
+  const cls = status === 'ready' ? 'ready' : status === 'problem' ? 'problem' : status === 'in_progress' ? 'progress' : status === 'postponed' ? 'postponed' : 'neutral';
+  return `<span class="gate7-status ${cls}">${escapeHtml(gate7StatusLabel(status))}</span>`;
+}
+function gate7TaskStatus(task) {
+  return task?.status || 'not_started';
+}
+function gate7IsOverdue(task) {
+  return task?.date && task.date < gate7Today() && gate7TaskStatus(task) !== 'ready' && task.sectionId !== 'done';
+}
+function gate7VisibleTasks(sectionId) {
+  const g7 = ensureGate7State();
+  const filter = g7.ui.statusFilter || 'all';
+  return g7.tasks
+    .filter(t => (t.sectionId || 'backlog') === sectionId)
+    .filter(t => {
+      if (filter === 'all') return true;
+      if (filter === 'overdue') return gate7IsOverdue(t);
+      return gate7TaskStatus(t) === filter;
+    })
+    .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || String(a.createdAt || '').localeCompare(String(b.createdAt || '')));
+}
+function gate7Stats() {
+  const tasks = ensureGate7State().tasks;
+  const total = tasks.length;
+  const ready = tasks.filter(t => gate7TaskStatus(t) === 'ready' || t.sectionId === 'done').length;
+  const progress = tasks.filter(t => gate7TaskStatus(t) === 'in_progress').length;
+  const problems = tasks.filter(t => gate7TaskStatus(t) === 'problem' || gate7IsOverdue(t)).length;
+  return { total, ready, progress, problems, percent: total ? Math.round((ready / total) * 100) : 0 };
+}
+function getGate7Status() {
+  const st = gate7Stats();
+  if (!st.total) return 'not_started';
+  if (st.problems) return 'problem';
+  if (st.ready && st.ready === st.total) return 'ready';
+  return 'in_progress';
+}
+function getGate7Progress() {
+  return gate7Stats().percent;
+}
+function renderGate7Journal(gate) {
+  const g7 = ensureGate7State();
+  const st = gate7Stats();
+  els.contentArea.innerHTML = `<div class="gate7-journal">
+    <section class="gate7-top">
+      <div class="gate7-titlebox">
+        <div class="analytics-path">Gate 7 → Отчёты и журнал выполнения</div>
+        <h2>Отчёты и журнал выполнения</h2>
+        <p class="muted">Не анкета, не CRM и не Trello-клон. Рабочая формула: задача → где реализовать → статус → результат → дата реализации.</p>
+      </div>
+      ${gate7StatusPill(getGate7Status() === 'ready' ? 'ready' : getGate7Status() === 'problem' ? 'problem' : getGate7Status() === 'in_progress' ? 'in_progress' : 'not_started')}
+    </section>
+    <section class="gate7-toolbar">
+      <label>Период<select data-g7-ui="period">
+        ${gate7Option('day', 'День', g7.ui.period)}
+        ${gate7Option('week', 'Неделя', g7.ui.period)}
+        ${gate7Option('month', 'Месяц', g7.ui.period)}
+      </select></label>
+      <label>Фильтр статуса<select data-g7-ui="statusFilter">
+        ${gate7Option('all', 'Все', g7.ui.statusFilter)}
+        ${gate7Option('in_progress', 'В работе', g7.ui.statusFilter)}
+        ${gate7Option('ready', 'Готово', g7.ui.statusFilter)}
+        ${gate7Option('overdue', 'Просрочено', g7.ui.statusFilter)}
+      </select></label>
+      <button class="primary-btn" type="button" data-g7-add-task>+ задача</button>
+      <button class="secondary-btn" type="button" data-g7-add-section>+ раздел</button>
+      <button class="secondary-btn" type="button" data-g7-export-pdf>Экспорт PDF</button>
+      <button class="secondary-btn" type="button" data-g7-export-csv>Экспорт CSV</button>
+    </section>
+    <section class="gate7-summary">
+      <div><b>${st.total}</b><span>задач всего</span></div>
+      <div><b>${st.progress}</b><span>в работе</span></div>
+      <div><b>${st.ready}</b><span>реализовано</span></div>
+      <div class="${st.problems ? 'danger' : ''}"><b>${st.problems}</b><span>проблем / просрочек</span></div>
+    </section>
+    <section class="gate7-sections">
+      ${gate7SectionGroupHtml('Бэклог', ['backlog'])}
+      ${gate7SectionGroupHtml('Нужно было вчера', ['yesterday'])}
+      ${gate7SectionGroupHtml('Задачи на реализацию', ['implementation_regular', 'implementation_project'])}
+      ${gate7SectionGroupHtml('Пользовательские разделы', g7.customSections.map(s => s.id), true)}
+      ${gate7SectionGroupHtml('Реализовано', ['done'])}
+    </section>
+  </div>`;
+  bindGate7Journal();
+}
+function gate7Option(value, label, current) {
+  return `<option value="${escapeAttr(value)}" ${String(current || '') === String(value) ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+}
+function gate7SectionGroupHtml(title, ids, customGroup = false) {
+  const sections = gate7Sections().filter(s => ids.includes(s.id));
+  if (!sections.length && customGroup) return '';
+  return `<div class="gate7-section-group"><h3>${escapeHtml(title)}</h3>${sections.map(gate7SectionHtml).join('')}</div>`;
+}
+function gate7SectionHtml(section) {
+  const g7 = ensureGate7State();
+  const open = g7.ui.openSections[section.id] !== false;
+  const tasks = gate7VisibleTasks(section.id);
+  const allCount = g7.tasks.filter(t => (t.sectionId || 'backlog') === section.id).length;
+  return `<section class="gate7-section ${open ? 'is-open' : ''}" data-g7-section="${escapeAttr(section.id)}">
+    <button type="button" class="gate7-section-head" data-g7-toggle-section="${escapeAttr(section.id)}">
+      <span><b>${escapeHtml(section.title)}</b><em>${escapeHtml(section.hint || '')}</em></span>
+      <span class="gate7-section-meta">${allCount} задач · ${open ? 'Свернуть' : 'Открыть'}</span>
+    </button>
+    ${open ? `<div class="gate7-section-body">
+      ${section.custom ? `<button class="text-danger small-action" type="button" data-g7-delete-section="${escapeAttr(section.id)}">Удалить раздел</button>` : ''}
+      ${gate7TaskListHtml(section, tasks)}
+    </div>` : ''}
+  </section>`;
+}
+function gate7TaskListHtml(section, tasks) {
+  if (!tasks.length) return `<div class="empty compact-empty">Задач нет. Нажмите «+ задача» или переместите задачу в этот раздел.</div>`;
+  return `<div class="gate7-task-table">
+    <div class="gate7-task-row gate7-task-head"><span>Дата</span><span>Задача</span><span>Где</span><span>Статус</span><span>Результат</span><span>Комментарий</span><span>Действия</span></div>
+    ${tasks.map(gate7TaskRowHtml).join('')}
+  </div>`;
+}
+function gate7TaskRowHtml(task) {
+  const overdue = gate7IsOverdue(task);
+  const status = gate7TaskStatus(task);
+  return `<div class="gate7-task-row ${overdue ? 'is-overdue' : ''}" data-g7-task="${escapeAttr(task.id)}">
+    <label><span>Дата</span><input type="date" data-g7-task-field="date" value="${escapeAttr(task.date || '')}"></label>
+    <label><span>Задача</span><input data-g7-task-field="task" value="${escapeAttr(task.task || '')}" placeholder="Что сделать"></label>
+    <label><span>Где</span><input data-g7-task-field="where" value="${escapeAttr(task.where || '')}" placeholder="сайт / реклама / email / подрядчик"></label>
+    <label><span>Статус</span><select data-g7-task-field="status">${GATE7_STATUSES.map(s => gate7Option(s[0], s[1], status)).join('')}</select></label>
+    <label><span>Результат</span><input data-g7-task-field="result" value="${escapeAttr(task.result || '')}" placeholder="что сделано"></label>
+    <label><span>Комментарий</span><input data-g7-task-field="comment" value="${escapeAttr(task.comment || '')}" placeholder="коротко, если нужно"></label>
+    <div class="gate7-actions">
+      ${gate7StatusPill(overdue ? 'problem' : status)}
+      <select data-g7-move>${gate7Sections().map(s => gate7Option(s.id, s.title, task.sectionId || 'backlog')).join('')}</select>
+      <button class="icon-btn danger" type="button" title="Удалить задачу" data-g7-delete-task>×</button>
+    </div>
+  </div>`;
+}
+function bindGate7Journal() {
+  document.querySelectorAll('[data-g7-ui]').forEach(input => input.addEventListener('change', () => {
+    const g7 = ensureGate7State();
+    g7.ui[input.dataset.g7Ui] = input.value;
+    saveState();
+    renderGate();
+  }));
+  document.querySelector('[data-g7-add-task]')?.addEventListener('click', () => {
+    const g7 = ensureGate7State();
+    g7.tasks.unshift({ id: makeId('g7-task'), sectionId: 'backlog', date: gate7Today(), task: '', where: '', status: 'not_started', result: '', comment: '', createdAt: new Date().toISOString() });
+    g7.ui.openSections.backlog = true;
+    saveState();
+    renderGate();
+  });
+  document.querySelector('[data-g7-add-section]')?.addEventListener('click', () => {
+    const name = prompt('Название нового раздела:');
+    if (!name) return;
+    const g7 = ensureGate7State();
+    const id = makeId('g7-section');
+    g7.customSections.push({ id, title: name.trim() });
+    g7.ui.openSections[id] = true;
+    saveState();
+    renderGate();
+  });
+  document.querySelectorAll('[data-g7-toggle-section]').forEach(btn => btn.addEventListener('click', () => {
+    const g7 = ensureGate7State();
+    const id = btn.dataset.g7ToggleSection;
+    g7.ui.openSections[id] = g7.ui.openSections[id] === false;
+    saveState();
+    renderGate();
+  }));
+  document.querySelectorAll('[data-g7-delete-section]').forEach(btn => btn.addEventListener('click', () => {
+    const g7 = ensureGate7State();
+    const id = btn.dataset.g7DeleteSection;
+    const tasks = g7.tasks.filter(t => t.sectionId === id);
+    if (tasks.length && !confirm('В разделе есть задачи. Переместить их в «Бэклог» и удалить раздел?')) return;
+    tasks.forEach(t => t.sectionId = 'backlog');
+    g7.customSections = g7.customSections.filter(s => s.id !== id);
+    delete g7.ui.openSections[id];
+    saveState();
+    renderGate();
+  }));
+  document.querySelectorAll('[data-g7-task]').forEach(row => {
+    const id = row.dataset.g7Task;
+    row.querySelectorAll('[data-g7-task-field]').forEach(input => {
+      const saveTaskField = () => {
+        const task = ensureGate7State().tasks.find(t => t.id === id);
+        if (!task) return;
+        const field = input.dataset.g7TaskField;
+        task[field] = input.value;
+        if (field === 'status' && input.value === 'ready') {
+          task.sectionId = 'done';
+          task.completedAt = task.completedAt || gate7Today();
+        }
+        saveState();
+      };
+      input.addEventListener('input', saveTaskField);
+      input.addEventListener('change', () => { saveTaskField(); renderGate(); });
+      input.addEventListener('blur', saveTaskField);
+    });
+    row.querySelector('[data-g7-move]')?.addEventListener('change', e => {
+      const task = ensureGate7State().tasks.find(t => t.id === id);
+      if (!task) return;
+      task.sectionId = e.target.value;
+      if (task.sectionId === 'done') task.status = 'ready';
+      saveState();
+      renderGate();
+    });
+    row.querySelector('[data-g7-delete-task]')?.addEventListener('click', () => {
+      if (!confirm('Удалить задачу?')) return;
+      const g7 = ensureGate7State();
+      g7.tasks = g7.tasks.filter(t => t.id !== id);
+      saveState();
+      renderGate();
+    });
+  });
+  document.querySelector('[data-g7-export-csv]')?.addEventListener('click', gate7ExportCsv);
+  document.querySelector('[data-g7-export-pdf]')?.addEventListener('click', gate7ExportPdf);
+}
+function gate7ExportRows() {
+  const g7 = ensureGate7State();
+  return g7.tasks.map(t => [t.date || '', t.task || '', t.where || '', gate7StatusLabel(gate7TaskStatus(t)), t.result || '', t.comment || '', gate7SectionTitle(t.sectionId || 'backlog')]);
+}
+function gate7ExportCsv() {
+  const rows = [['Дата', 'Задача', 'Где', 'Статус', 'Результат', 'Комментарий', 'Раздел'], ...gate7ExportRows()];
+  downloadText('guru-gate7-task-journal.csv', toCsv(rows));
+}
+function gate7ExportPdf() {
+  const rows = gate7ExportRows();
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Gate 7 · Журнал выполнения</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h1{font-size:22px}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #ddd;padding:6px;text-align:left;vertical-align:top}th{background:#f3f3f3}</style></head><body><h1>Gate 7 · Отчёты и журнал выполнения</h1><p>Создать → выполнить → зафиксировать результат → перенести в реализовано.</p><table><thead><tr><th>Дата</th><th>Задача</th><th>Где</th><th>Статус</th><th>Результат</th><th>Комментарий</th><th>Раздел</th></tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${escapeHtml(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></body></html>`;
+  const w = window.open('', '_blank');
+  if (!w) return alert('Браузер заблокировал окно печати. Разрешите всплывающие окна.');
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => w.print(), 200);
+}
+
+const __guruPrevRenderGateTableV32 = renderGateTable;
+renderGateTable = function(gate, cards) {
+  if (isGate7Journal(gate)) {
+    renderGate7Journal(gate, cards);
+    return;
+  }
+  __guruPrevRenderGateTableV32(gate, cards);
+};
+
+const __guruPrevRenderGateNavV32 = renderGateNav;
+renderGateNav = function() {
+  els.gateNav.innerHTML = state.gates.map(g => {
+    const progress = g.id === 'gate-5' ? getGate5Progress() : (g.id === 'gate-6' ? getGate6Progress() : (g.id === 'gate-7' ? getGate7Progress() : getProgress(g.cards)));
+    const cls = activeView === 'gate' && activeGateId === g.id ? 'active' : '';
+    const countText = g.id === 'gate-5' ? '5 подблоков' : (g.id === 'gate-6' ? '4 квартала' : (g.id === 'gate-7' ? 'живой журнал' : g.cards.length + ' блоков'));
+    return `<button class="gate-btn ${cls}" data-gate-id="${escapeAttr(g.id)}">${escapeHtml(g.title)}<span class="small">${countText}, готово ${progress}%</span></button>`;
+  }).join('');
+  document.querySelectorAll('[data-gate-id]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeView = 'gate';
+      activeGateId = btn.dataset.gateId;
+      render();
+    });
+  });
+};
+
+(function markV32() {
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.32'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+/g, 'v0.32'); });
 })();
