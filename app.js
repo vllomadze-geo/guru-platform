@@ -1285,12 +1285,15 @@ function ctxPill(ctx, key, label) {
   return `<span class="ctx-item"><span class="ctx-label">${escapeHtml(label)}</span><span class="ctx-value">${escapeHtml(short)}</span><span class="ctx-source">${escapeHtml(item.source)}</span></span>`;
 }
 
-function systemContextBannerHtml(keys, title) {
+function systemContextBannerHtml(keys, title, forceOpen = false) {
   const ctx = getSystemContext();
   const items = keys.filter(([k]) => ctx[k]).map(([k, label]) => ctxPill(ctx, k, label));
   if (!items.length) return '';
+  const filled = items.filter(i => !i.includes('ctx-na')).length;
+  if (filled === 0) return '';
   const heading = title || 'Связанные данные проекта';
-  return `<details class="system-context-banner" open><summary>${escapeHtml(heading)} <small>${items.filter(i => !i.includes('ctx-na')).length} из ${items.length} заполнено</small></summary><div class="ctx-grid">${items.join('')}</div></details>`;
+  const openAttr = forceOpen ? ' open' : '';
+  return `<details class="system-context-banner"${openAttr}><summary>${escapeHtml(heading)} <small>${filled} из ${items.length} заполнено</small></summary><div class="ctx-grid">${items.join('')}</div></details>`;
 }
 
 function systemContextPlaceholder(key) {
@@ -3911,10 +3914,8 @@ function cardUserFieldsHtml(c) {
   if (isStrategyContextCard(c)) return strategyFieldsHtml(c);
   if (isAnalyticsContextCard(c)) return contextualInstructionWorkspaceHtml(c);
   if (isTaskContextCard(c)) return taskFieldsHtml(c);
-  const ctxKeys = cardContextKeysForTitle(c.title);
-  const ctxBanner = ctxKeys.length ? systemContextBannerHtml(ctxKeys, 'Связанные данные') : '';
   const evidence = evidenceStructuredHtml(c);
-  return evidence ? `${ctxBanner}<div class="field-row simplified-fields">${evidence}</div>` : ctxBanner;
+  return evidence ? `<div class="field-row simplified-fields">${evidence}</div>` : '';
 }
 
 function contextualInstructionWorkspaceHtml(card) {
@@ -4129,7 +4130,6 @@ function strategyFieldsHtml(card) {
 function implementationFieldsHtml(card) {
   card.implementationFields = card.implementationFields || { what:'', where:'', output:'', comment:'' };
   return `<div class="implementation-fields context-panel">
-    ${systemContextBannerHtml([['usp', 'УТП'], ['offer', 'Оффер'], ['cta', 'CTA'], ['offerFormula', 'Формула офера'], ['website', 'Сайт']], 'Контекст проекта')}
     <label>Что реализовать<textarea data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="what" rows="2">${escapeHtml(card.implementationFields.what || '')}</textarea></label>
     <label>Где реализовать<input data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="where" value="${escapeAttr(card.implementationFields.where || '')}" placeholder="страница / канал / кампания" /></label>
     <label>Результат на выходе<input data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="output" value="${escapeAttr(card.implementationFields.output || '')}" /></label>
