@@ -9219,3 +9219,11 @@ window.__yandexCheckScheduled = false;
 document.addEventListener('DOMContentLoaded', () => {
   handleYandexCallback();
 });
+
+// Хук: проверяем подключение после того как проект открылся
+const _openProjectOrig = openProject;
+function openProject(projectId) {
+  _openProjectOrig(projectId);
+  // Небольшая задержка чтобы DOM успел отрендериться
+  setTimeout(() => checkYandexConnection(), 600);
+}
