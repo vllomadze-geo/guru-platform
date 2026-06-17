@@ -3618,7 +3618,8 @@ function importCsvFile(file) {
 
 function resetDemo() {
   if (!activeProjectId) return;
-  if (!confirm('Сбросить данные текущего проекта и вернуться к исходному CSV?')) return;
+  if (!confirm('Удалить все данные текущего проекта?')) return;
+  if (!confirm('Вы уверены? Это действие нельзя отменить.')) return;
   const meta = projects.find(p => p.id === activeProjectId);
   localStorage.removeItem(WORKSPACE_STORAGE_PREFIX + activeProjectId);
   state = createFreshWorkspace(meta);
