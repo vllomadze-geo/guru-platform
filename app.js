@@ -381,6 +381,217 @@ const PROJECT_PASSPORT_FIELDS = [
   ...PROJECT_AFTER_FIELDS
 ];
 
+const FIELD_STANDARDS = {
+  name: {
+    label: 'Название проекта',
+    formula: 'Бренд + сфера деятельности (или только бренд, если он уже говорит за себя)',
+    example: 'iCleaning — премиальная химчистка',
+    reference: 'Джобс: «Название должно быть запоминающимся и вызывать ассоциацию с продуктом»',
+    min: 3, max: 60
+  },
+  niche: {
+    label: 'Ниша',
+    formula: 'Тип бизнеса + уточнение сегмента + [уровень]',
+    example: 'Премиальная химчистка мебели и ковров',
+    reference: 'Траут «Позиционирование»: ниша = место в сознании клиента, которое вы занимаете',
+    min: 10, max: 80
+  },
+  website: {
+    label: 'Сайт',
+    formula: 'Полный URL с протоколом',
+    example: 'https://icleaning.ru',
+    min: 10, max: 120
+  },
+  geography: {
+    label: 'География',
+    formula: 'Город / регион / страна / «онлайн»',
+    example: 'Москва и МО',
+    min: 2, max: 60
+  },
+  mainCta: {
+    label: 'Главный CTA',
+    formula: 'Глагол действия + результат + [усилитель / снятие барьера]',
+    example: 'Рассчитать стоимость за 2 минуты',
+    reference: 'Джобс: кнопка = одно действие, ноль сомнений. Бернейс: CTA снимает барьер, а не давит. Огилви: «Никогда не используйте обманчивых заголовков»',
+    min: 10, max: 45
+  },
+  usp: {
+    label: 'УТП',
+    formula: 'Формула Россера Ривса: [уникальность] + [конкретная выгода] + [для кого]',
+    example: 'Химчистка мебели за 2 часа с гарантией результата — или повторно бесплатно',
+    reference: 'Ривз «Реальность в рекламе»: УТП = то, чего конкурент не может или не хочет предложить. Джобс: «Одно предложение — одна мысль». Бернейс: «Инженерия согласия — это управление восприятием через факт, а не через давление»',
+    min: 40, max: 150
+  },
+  offer: {
+    label: 'Оффер',
+    formula: '[Результат для клиента] + [для кого] + [срок / условие] + [доказательство / гарантия]',
+    example: 'Получите дизайн-проект кухни за 3 дня — замер бесплатно, 200+ реализованных проектов',
+    reference: 'Хопкинс «Научная реклама»: оффер — это конкретное предложение, которое можно проверить. Бернейс: оффер = инженерия согласия через выгоду, а не манипуляцию. Огилви: «Покажите результат, не обещайте чудо»',
+    min: 60, max: 200
+  },
+  description: {
+    label: 'Описание проекта',
+    formula: '[Кто мы] + [что делаем] + [для кого] + [ключевой результат]',
+    example: 'Премиальная химчистка мебели и ковров в Москве для частных клиентов и отелей',
+    reference: 'Огилви: «Расскажите правду, но сделайте её интересной». Джобс: описание = elevator pitch за 10 секунд',
+    min: 40, max: 200
+  },
+  afterMainCta: {
+    label: 'CTA (после работ)',
+    formula: 'Глагол действия + результат + [усилитель]',
+    example: 'Записаться на бесплатную диагностику',
+    reference: 'Сравните с «до» — CTA должен стать конкретнее и точнее после работ',
+    min: 10, max: 45
+  },
+  afterUsp: {
+    label: 'УТП (после работ)',
+    formula: '[Уникальность] + [конкретная выгода] + [для кого] — уточнённое после анализа',
+    example: 'Единственная химчистка в Москве с гарантией удаления 97% пятен за 1 визит',
+    reference: 'Ривз: после работ УТП должно опираться на реальные цифры и доказательства, а не на гипотезы',
+    min: 40, max: 150
+  },
+  afterOffer: {
+    label: 'Оффер (после работ)',
+    formula: '[Результат] + [для кого] + [срок] + [доказательство] — уточнённый после аналитики',
+    example: 'Химчистка дивана за 2 часа — если пятно останется, повторная обработка бесплатно',
+    reference: 'Хопкинс: лучший оффер — тот, который подкреплён реальными кейсами и цифрами из вашей практики',
+    min: 60, max: 200
+  },
+  afterDescription: {
+    label: 'Описание (после работ)',
+    formula: '[Кто мы] + [что делаем] + [для кого] + [доказанный результат]',
+    example: 'Химчистка мебели iCleaning — 1200+ клиентов в Москве, средняя оценка 4.9 из 5',
+    reference: 'Огилви: после работ описание должно содержать факты, не прилагательные',
+    min: 40, max: 200
+  },
+  h1: {
+    label: 'H1',
+    formula: '[Ключевое слово] + [выгода / результат] + [гео, если релевантно]',
+    example: 'Химчистка мебели в Москве — результат за 2 часа',
+    reference: 'Один H1 на страницу. Бернейс: заголовок формирует первое впечатление',
+    min: 20, max: 70
+  },
+  title: {
+    label: 'Title',
+    formula: '[Ключ в начале] + [выгода] + [бренд]',
+    example: 'Химчистка мебели на дому — от 1500₽ | iCleaning Москва',
+    reference: 'Огилви: Title — это реклама вашей страницы в поисковой выдаче. 50–60 символов',
+    min: 30, max: 70
+  },
+  metaDescription: {
+    label: 'Description',
+    formula: '[Проблема / запрос] + [решение] + [CTA]',
+    example: 'Нужна химчистка дивана? Выезд за 1 час, результат сразу. Рассчитайте стоимость онлайн.',
+    reference: 'Мета-описание не влияет на ранжирование, но влияет на CTR. 70–180 символов',
+    min: 70, max: 180
+  },
+  heroUsp: {
+    label: 'УТП героя',
+    formula: '[Одно обещание результата] — без «высококачественного сервиса»',
+    example: 'Ваш диван будет как новый через 2 часа',
+    reference: 'Джобс: первый экран = одна мысль, один визуал, одно действие',
+    min: 20, max: 100
+  },
+  serviceOffer: {
+    label: 'Оффер страницы',
+    formula: '[Что получает клиент] + [за какой срок] + [на каких условиях]',
+    example: 'Профессиональная химчистка ковра с выездом на дом — результат через 3 часа',
+    reference: 'Хопкинс: каждая страница услуги — это отдельное рекламное объявление',
+    min: 30, max: 160
+  },
+  serviceCta: {
+    label: 'CTA страницы',
+    formula: '[Глагол] + [что получит клиент]',
+    example: 'Заказать выезд мастера',
+    reference: 'Один главный CTA на экран. Альтернативный — мессенджер',
+    min: 8, max: 40
+  },
+  offerFormula: {
+    label: 'Формула офера',
+    formula: 'Для [сегмент] мы помогаем получить [результат] без [главный страх / барьер]',
+    example: 'Для владельцев квартир мы помогаем вернуть мебели первоначальный вид без химического запаха и ожидания',
+    reference: 'JTBD-подход: офер строится от работы клиента, а не от характеристик продукта',
+    min: 40, max: 200
+  },
+  resultPromise: {
+    label: 'Обещание результата',
+    formula: '[Что изменится] + [через какое время] + [как это ощущается]',
+    example: 'Диван без пятен и запаха через 2 часа — можно пользоваться сразу',
+    reference: 'Бернейс: обещание должно быть проверяемым фактом, а не эмоциональным лозунгом',
+    min: 20, max: 120
+  },
+  proof: {
+    label: 'Доказательство',
+    formula: '[Цифра / факт / кейс / отзыв] — конкретное, проверяемое',
+    example: '1200 клиентов за 2024 год, средняя оценка 4.9 на Яндексе',
+    reference: 'Хопкинс: «Конкретные факты говорят, а обобщения — нет»',
+    min: 10, max: 160
+  }
+};
+
+function getFieldStandard(key) {
+  return FIELD_STANDARDS[key] || null;
+}
+
+function charCounterHtml(value, min, max, fieldKey) {
+  const len = String(value || '').trim().length;
+  let cls = 'is-empty';
+  if (len > 0 && min && len < min) cls = 'is-short';
+  else if (len > 0 && max && len > max) cls = 'is-long';
+  else if (len > 0) cls = 'is-ok';
+  const pct = max ? Math.min(100, Math.round((len / max) * 100)) : 0;
+  const rangeText = min && max ? `${min}–${max}` : (max ? `до ${max}` : (min ? `от ${min}` : ''));
+  return `<span class="char-counter ${cls}" data-char-counter="${escapeAttr(fieldKey || '')}"><span class="char-bar"><span class="char-bar-fill" style="width:${pct}%"></span></span>${len}${rangeText ? ` / ${rangeText}` : ''} зн.</span>`;
+}
+
+function fieldHintBtnHtml(fieldKey) {
+  const std = getFieldStandard(fieldKey);
+  if (!std) return '';
+  return `<span class="field-hint-wrap" data-hint-field="${escapeAttr(fieldKey)}"><button type="button" class="field-hint-btn" data-hint-toggle="${escapeAttr(fieldKey)}" title="Стандарт: ${escapeAttr(std.label)}">?</button><div class="field-hint-popup"><div class="hint-formula">${escapeHtml(std.formula)}</div>${std.example ? `<div class="hint-example">«${escapeHtml(std.example)}»</div>` : ''}${std.min || std.max ? `<div class="hint-limits">${std.min && std.max ? `${std.min}–${std.max} символов` : (std.max ? `до ${std.max} символов` : `от ${std.min} символов`)}</div>` : ''}${std.reference ? `<div class="hint-reference">${escapeHtml(std.reference)}</div>` : ''}</div></span>`;
+}
+
+function fieldLabelWithHint(label, fieldKey) {
+  const hint = fieldHintBtnHtml(fieldKey);
+  if (!hint) return escapeHtml(label);
+  return `<span class="passport-field-label">${escapeHtml(label)}${hint}</span>`;
+}
+
+function bindFieldHints() {
+  document.querySelectorAll('[data-hint-toggle]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      const wrap = btn.closest('.field-hint-wrap');
+      if (!wrap) return;
+      const wasOpen = wrap.classList.contains('is-open');
+      document.querySelectorAll('.field-hint-wrap.is-open').forEach(el => el.classList.remove('is-open'));
+      if (!wasOpen) wrap.classList.add('is-open');
+    });
+  });
+}
+
+function bindLiveCharCounters() {
+  document.querySelectorAll('[data-char-field]').forEach(input => {
+    input.addEventListener('input', () => {
+      const fieldKey = input.dataset.charField;
+      const std = getFieldStandard(fieldKey);
+      if (!std) return;
+      const counter = document.querySelector(`[data-char-counter="${fieldKey}"]`);
+      if (!counter) return;
+      const len = String(input.value || '').trim().length;
+      let cls = 'is-empty';
+      if (len > 0 && std.min && len < std.min) cls = 'is-short';
+      else if (len > 0 && std.max && len > std.max) cls = 'is-long';
+      else if (len > 0) cls = 'is-ok';
+      counter.className = 'char-counter ' + cls;
+      const pct = std.max ? Math.min(100, Math.round((len / std.max) * 100)) : 0;
+      const fill = counter.querySelector('.char-bar-fill');
+      if (fill) fill.style.width = pct + '%';
+      const rangeText = std.min && std.max ? `${std.min}–${std.max}` : (std.max ? `до ${std.max}` : (std.min ? `от ${std.min}` : ''));
+      counter.lastChild.textContent = `${len}${rangeText ? ` / ${rangeText}` : ''} зн.`;
+    });
+  });
+}
 
 const GATE1_ANALYTICS_TITLE = '1. Аналитика';
 const GATE1_SUBBLOCKS = [
@@ -1153,11 +1364,14 @@ function projectPassportFieldsHtml() {
     const title = prefix ? `${prefix} / ${label}` : label;
     const readonly = options.readonly ? ' readonly' : '';
     const dataAttr = options.readonly ? '' : ` data-project-inline="${escapeAttr(key)}"`;
-    return `<label>${escapeHtml(title)}${isLong
-      ? `<textarea${dataAttr}${readonly} rows="3">${escapeHtml(value)}</textarea>`
-      : `<input${dataAttr}${readonly} value="${escapeAttr(value)}" />`}</label>`;
+    const charFieldAttr = getFieldStandard(key) && !options.readonly ? ` data-char-field="${escapeAttr(key)}"` : '';
+    const std = getFieldStandard(key);
+    const counter = std && (std.min || std.max) ? charCounterHtml(value, std.min, std.max, key) : '';
+    return `<label>${fieldLabelWithHint(title, key)}${isLong
+      ? `<textarea${dataAttr}${charFieldAttr}${readonly} rows="3">${escapeHtml(value)}</textarea>`
+      : `<input${dataAttr}${charFieldAttr}${readonly} value="${escapeAttr(value)}" />`}${counter}</label>`;
   };
-  return `<div class="project-passport-sync">
+  const html = `<div class="project-passport-sync">
     <div class="form-grid compact-form passport-meta-grid">
       ${PROJECT_META_FIELDS.map(field => inputHtml(field)).join('')}
     </div>
@@ -1172,6 +1386,8 @@ function projectPassportFieldsHtml() {
       </section>
     </div>
   </div>`;
+  setTimeout(() => { bindFieldHints(); bindLiveCharCounters(); }, 0);
+  return html;
 }
 
 function toolItemsHtml(card) {
@@ -1394,6 +1610,7 @@ function render() {
   if (activeView === 'metrics') renderMetrics();
   if (activeView === 'scheme') renderScheme();
   if (activeView === 'gate') renderGate();
+  setTimeout(() => { bindFieldHints(); bindLiveCharCounters(); }, 0);
 }
 
 function renderSummary() {
@@ -1880,8 +2097,13 @@ function painOfferSectionHtml(route, section, isOpen) {
     ${isOpen ? `<div class="pain-step-body">
       <div class="pain-standard"><strong>Стандарт готовности:</strong> ${escapeHtml(section.standard)}</div>
       <div class="demand-step-body">
-        ${section.fields.map(([key, label]) => `<label class="demand-field"><span>${escapeHtml(label)}</span><textarea data-pain-section="${escapeAttr(section.key)}" data-pain-section-field="${escapeAttr(key)}" placeholder="результат">${escapeHtml(data[key] || '')}</textarea></label>`).join('')}
-        <label class="demand-field"><span>Доказательство</span><textarea data-pain-section="${escapeAttr(section.key)}" data-pain-section-field="evidence" placeholder="ссылка, скрин, вывод или источник">${escapeHtml(data.evidence || '')}</textarea></label>
+        ${section.fields.map(([key, label]) => {
+          const std = getFieldStandard(key);
+          const lbl = std ? fieldLabelWithHint(label, key) : `<span>${escapeHtml(label)}</span>`;
+          const counter = std && (std.min || std.max) ? charCounterHtml(data[key] || '', std.min, std.max, 'pain_' + section.key + '_' + key) : '';
+          return `<label class="demand-field">${lbl}<textarea data-pain-section="${escapeAttr(section.key)}" data-pain-section-field="${escapeAttr(key)}" placeholder="результат">${escapeHtml(data[key] || '')}</textarea>${counter}</label>`;
+        }).join('')}
+        <label class="demand-field"><span>${fieldLabelWithHint('Доказательство', 'proof')}</span><textarea data-pain-section="${escapeAttr(section.key)}" data-pain-section-field="evidence" placeholder="ссылка, скрин, вывод или источник">${escapeHtml(data.evidence || '')}</textarea></label>
       </div>
     </div>` : ''}
   </article>`;
@@ -3713,9 +3935,9 @@ function pageStructureCardHtml(card, row, pageIndex, repeatable) {
     <div class="page-grid compact-page-grid">
       <label>Ссылка<input list="projectUrlOptions" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
       <label>Статус страницы<select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="urlStatus">${linkStatusOptionsHtml('works', row.urlStatus)}</select></label>
-      <label>H1 <small>10–90 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="h1" value="${escapeAttr(row.h1 || '')}" />${pageFieldStatusHtml(row.h1, 10, 90)}</label>
-      <label>Title <small>20–90 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="title" value="${escapeAttr(row.title || '')}" />${pageFieldStatusHtml(row.title, 20, 90)}</label>
-      <label class="full">Description <small>50–200 знаков</small><textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="description" rows="2">${escapeHtml(row.description || '')}</textarea>${pageFieldStatusHtml(row.description, 50, 200)}</label>
+      <label>${fieldLabelWithHint('H1', 'h1')}<input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="h1" value="${escapeAttr(row.h1 || '')}" />${charCounterHtml(row.h1, 20, 70, 'h1_' + card.id + '_' + pageIndex)}</label>
+      <label>${fieldLabelWithHint('Title', 'title')}<input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="title" value="${escapeAttr(row.title || '')}" />${charCounterHtml(row.title, 30, 70, 'title_' + card.id + '_' + pageIndex)}</label>
+      <label class="full">${fieldLabelWithHint('Description', 'metaDescription')}<textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="description" rows="2">${escapeHtml(row.description || '')}</textarea>${charCounterHtml(row.description, 70, 180, 'desc_' + card.id + '_' + pageIndex)}</label>
     </div>
     <div class="page-context-groups">
       ${Object.entries(grouped).map(([group, items]) => `<details class="page-context-group" open>
@@ -3741,8 +3963,12 @@ function pageStructureCardHtml(card, row, pageIndex, repeatable) {
 function pageContextFieldHtml(card, pageIndex, row, def) {
   const value = row.contextFields?.[def.key] || '';
   const common = `data-page-context-card-id="${escapeAttr(card.id)}" data-page-context-index="${pageIndex}" data-page-context-key="${escapeAttr(def.key)}"`;
-  if (def.type === 'textarea') return `<label class="full">${escapeHtml(def.label)}<textarea ${common} rows="2">${escapeHtml(value)}</textarea></label>`;
-  return `<label>${escapeHtml(def.label)}<input ${common} value="${escapeAttr(value)}" /></label>`;
+  const hintKey = def.key;
+  const std = getFieldStandard(hintKey);
+  const labelHtml = std ? fieldLabelWithHint(def.label, hintKey) : escapeHtml(def.label);
+  const counter = std && (std.min || std.max) ? charCounterHtml(value, std.min, std.max, hintKey + '_' + card.id + '_' + pageIndex) : '';
+  if (def.type === 'textarea') return `<label class="full">${labelHtml}<textarea ${common} rows="2">${escapeHtml(value)}</textarea>${counter}</label>`;
+  return `<label>${labelHtml}<input ${common} value="${escapeAttr(value)}" />${counter}</label>`;
 }
 
 function snippetForPage(row) {
@@ -3866,6 +4092,8 @@ function bindCardInputs() {
     input.addEventListener('input', updateTaskField);
     input.addEventListener('change', updateTaskField);
   });
+  bindFieldHints();
+  bindLiveCharCounters();
 }
 
 function updatePageContextField(e) {
@@ -4865,9 +5093,9 @@ pageStructureCardHtml = function(card, row, pageIndex, repeatable) {
     </div>
     <div class="page-grid compact-page-grid">
       <label>URL<input list="projectUrlOptions" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
-      <label>H1 <small>10–90 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="h1" value="${escapeAttr(row.h1 || '')}" />${pageFieldStatusHtml(row.h1, 10, 90)}</label>
-      <label>Title <small>20–90 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="title" value="${escapeAttr(row.title || '')}" />${pageFieldStatusHtml(row.title, 20, 90)}</label>
-      <label class="full">Description <small>50–200 знаков</small><textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="description" rows="2">${escapeHtml(row.description || '')}</textarea>${pageFieldStatusHtml(row.description, 50, 200)}</label>
+      <label>${fieldLabelWithHint('H1', 'h1')}<input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="h1" value="${escapeAttr(row.h1 || '')}" />${charCounterHtml(row.h1, 20, 70, 'h1_' + card.id + '_' + pageIndex)}</label>
+      <label>${fieldLabelWithHint('Title', 'title')}<input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="title" value="${escapeAttr(row.title || '')}" />${charCounterHtml(row.title, 30, 70, 'title_' + card.id + '_' + pageIndex)}</label>
+      <label class="full">${fieldLabelWithHint('Description', 'metaDescription')}<textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="description" rows="2">${escapeHtml(row.description || '')}</textarea>${charCounterHtml(row.description, 70, 180, 'desc_' + card.id + '_' + pageIndex)}</label>
     </div>
     <div class="page-context-groups">
       ${Object.entries(grouped).map(([group, items]) => `<details class="page-context-group" open>
@@ -7879,6 +8107,12 @@ renderGateNav = function() {
     });
   });
 };
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.field-hint-wrap')) {
+    document.querySelectorAll('.field-hint-wrap.is-open').forEach(el => el.classList.remove('is-open'));
+  }
+});
 
 (function markV33() {
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+|v1\.0/g, 'v1.0'); });

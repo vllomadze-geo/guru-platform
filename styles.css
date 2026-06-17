@@ -1807,6 +1807,33 @@ select:disabled {
 @media(max-width:980px){.gate7-summary{grid-template-columns:repeat(2,1fr)}.gate7-task-row{grid-template-columns:1fr}.gate7-task-head{display:none}.gate7-task-row label span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.07em;font-weight:800}.gate7-actions{justify-content:space-between;flex-wrap:wrap}.gate7-actions select{flex:1}.gate7-top{display:grid}.gate7-toolbar{display:grid;grid-template-columns:1fr 1fr}.gate7-toolbar button{width:100%}}@media(max-width:620px){.gate7-toolbar,.gate7-summary{grid-template-columns:1fr}.gate7-top{padding:16px}.gate7-top h2{font-size:23px}}
 
 
+/* v1.0 Field hints & standards */
+.field-hint-wrap{position:relative;display:inline-flex;align-items:center;gap:6px}
+.field-hint-btn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line,#d4cfc6);background:#fff;color:var(--muted,#8a857c);font-size:11px;font-weight:900;cursor:pointer;flex-shrink:0;transition:border-color .15s,color .15s,background .15s}
+.field-hint-btn:hover,.field-hint-wrap.is-open .field-hint-btn{border-color:var(--text,#1f1b16);color:var(--text,#1f1b16);background:rgba(31,27,22,.06)}
+.field-hint-popup{display:none;position:absolute;left:28px;top:-8px;z-index:100;width:340px;background:#fff;border:1px solid var(--line,#d4cfc6);border-radius:16px;padding:16px;box-shadow:0 8px 32px rgba(31,27,22,.12);font-size:12px;line-height:1.55;color:var(--text,#1f1b16)}
+.field-hint-wrap.is-open .field-hint-popup{display:block}
+.field-hint-popup::before{content:'';position:absolute;left:-7px;top:14px;width:12px;height:12px;background:#fff;border-left:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
+.hint-formula{font-weight:800;margin-bottom:8px;color:var(--text)}
+.hint-example{background:rgba(246,243,238,.7);border:1px solid var(--line,#e4ded4);border-radius:10px;padding:10px;margin:8px 0;font-style:italic;color:#5f5a52}
+.hint-reference{color:var(--muted,#8a857c);font-size:11px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.hint-limits{display:inline-flex;gap:4px;font-size:11px;font-weight:700;color:var(--muted);margin-top:4px}
+.char-counter{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;margin-top:4px;transition:background .2s,color .2s}
+.char-counter.is-empty{background:rgba(117,123,131,.1);color:#8a857c}
+.char-counter.is-short{background:rgba(207,155,44,.14);color:#9b6a00}
+.char-counter.is-ok{background:rgba(45,138,79,.12);color:#247246}
+.char-counter.is-long{background:rgba(203,64,64,.12);color:#a33131}
+.char-counter .char-bar{width:48px;height:4px;border-radius:2px;background:rgba(117,123,131,.18);overflow:hidden;display:inline-block}
+.char-counter .char-bar-fill{height:100%;border-radius:2px;transition:width .2s,background .2s}
+.char-counter.is-empty .char-bar-fill{width:0;background:#b0aba3}
+.char-counter.is-short .char-bar-fill{background:#cf9b2c}
+.char-counter.is-ok .char-bar-fill{background:#2d8a4f}
+.char-counter.is-long .char-bar-fill{background:#cb4040}
+label .char-counter{display:flex}
+label .field-hint-wrap{margin-bottom:4px}
+.passport-field-label{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+@media(max-width:720px){.field-hint-popup{left:auto;right:0;width:280px}.field-hint-popup::before{display:none}}
+
 /* v1.0 Supabase connection test */
 .supabase-status {
   display: inline-flex;
