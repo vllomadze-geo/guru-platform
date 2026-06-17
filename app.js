@@ -534,6 +534,30 @@ function getFieldStandard(key) {
   return FIELD_STANDARDS[key] || null;
 }
 
+function standardByLabel(label) {
+  const l = String(label || '').toLowerCase();
+  if (/h1|заголовок\s*h1|главный заголовок/.test(l)) return 'h1';
+  if (/title|тайтл|мета.?title/.test(l)) return 'title';
+  if (/description|дескрипшн|мета.?опис/.test(l)) return 'metaDescription';
+  if (/формула\s*оф+ера|оф+ер.?формула/.test(l)) return 'offerFormula';
+  if (/обещание\s*результата|результат.*обещ/.test(l)) return 'resultPromise';
+  if (/доказательств|пруф|proof/.test(l)) return 'proof';
+  if (/cta|призыв|кнопк/.test(l)) return 'mainCta';
+  if (/утп|уник.*предлож|преимущ/.test(l)) return 'usp';
+  if (/оф+ер/.test(l)) return 'offer';
+  if (/ниша/.test(l)) return 'niche';
+  if (/описание/.test(l)) return 'description';
+  if (/географ|гео\b|регион|город/.test(l)) return 'geography';
+  if (/сайт|url|ссылка/.test(l)) return 'website';
+  if (/назван.*проект|бренд/.test(l)) return 'name';
+  return null;
+}
+
+function evidenceFieldStandard(field) {
+  if (FIELD_STANDARDS[field.key]) return field.key;
+  return standardByLabel(field.label);
+}
+
 function charCounterHtml(value, min, max, fieldKey) {
   const len = String(value || '').trim().length;
   let cls = 'is-empty';
@@ -574,24 +598,33 @@ function bindFieldHints() {
 function bindLiveCharCounters() {
   document.querySelectorAll('[data-char-field]').forEach(input => {
     input.addEventListener('input', () => {
-      const fieldKey = input.dataset.charField;
-      const std = getFieldStandard(fieldKey);
+      const std = getFieldStandard(input.dataset.charField);
       if (!std) return;
-      const counter = document.querySelector(`[data-char-counter="${fieldKey}"]`);
-      if (!counter) return;
-      const len = String(input.value || '').trim().length;
-      let cls = 'is-empty';
-      if (len > 0 && std.min && len < std.min) cls = 'is-short';
-      else if (len > 0 && std.max && len > std.max) cls = 'is-long';
-      else if (len > 0) cls = 'is-ok';
-      counter.className = 'char-counter ' + cls;
-      const pct = std.max ? Math.min(100, Math.round((len / std.max) * 100)) : 0;
-      const fill = counter.querySelector('.char-bar-fill');
-      if (fill) fill.style.width = pct + '%';
-      const rangeText = std.min && std.max ? `${std.min}–${std.max}` : (std.max ? `до ${std.max}` : (std.min ? `от ${std.min}` : ''));
-      counter.lastChild.textContent = `${len}${rangeText ? ` / ${rangeText}` : ''} зн.`;
+      updateCharCounter(input, input.dataset.charField, std);
     });
   });
+  document.querySelectorAll('[data-evidence-key][data-char-min]').forEach(input => {
+    input.addEventListener('input', () => {
+      const std = { min: Number(input.dataset.charMin), max: Number(input.dataset.charMax) };
+      updateCharCounter(input, input.dataset.evidenceKey, std);
+    });
+  });
+}
+
+function updateCharCounter(input, fieldKey, std) {
+  const counter = document.querySelector(`[data-char-counter="${fieldKey}"]`);
+  if (!counter) return;
+  const len = String(input.value || '').trim().length;
+  let cls = 'is-empty';
+  if (len > 0 && std.min && len < std.min) cls = 'is-short';
+  else if (len > 0 && std.max && len > std.max) cls = 'is-long';
+  else if (len > 0) cls = 'is-ok';
+  counter.className = 'char-counter ' + cls;
+  const pct = std.max ? Math.min(100, Math.round((len / std.max) * 100)) : 0;
+  const fill = counter.querySelector('.char-bar-fill');
+  if (fill) fill.style.width = pct + '%';
+  const rangeText = std.min && std.max ? `${std.min}–${std.max}` : (std.max ? `до ${std.max}` : (std.min ? `от ${std.min}` : ''));
+  counter.lastChild.textContent = `${len}${rangeText ? ` / ${rangeText}` : ''} зн.`;
 }
 
 const GATE1_ANALYTICS_TITLE = '1. Аналитика';
@@ -1678,11 +1711,19 @@ function getEvidenceCatalog() {
 function evidenceStructuredHtml(card) {
   const fields = ensureEvidenceFields(card);
   if (!fields.length) return `<textarea data-field="evidence" data-card-id="${card.id}" rows="3">${escapeHtml(card.evidence || '')}</textarea>`;
-  return `<div class="evidence-fields">${fields.map(field => `
+  return `<div class="evidence-fields">${fields.map(field => {
+    const stdKey = evidenceFieldStandard(field);
+    const std = stdKey ? FIELD_STANDARDS[stdKey] : null;
+    const value = getEvidenceValue(field.key);
+    const hint = std ? fieldHintBtnHtml(stdKey) : '';
+    const counter = std ? charCounterHtml(value, std.min, std.max, field.key) : '';
+    return `
     <label class="evidence-item">
-      <span class="evidence-title">${escapeHtml(field.label)}</span>
-      <textarea data-evidence-key="${escapeAttr(field.key)}" data-card-id="${escapeAttr(card.id)}" rows="3">${escapeHtml(getEvidenceValue(field.key))}</textarea>
-    </label>`).join('')}</div>`;
+      <span class="evidence-title">${escapeHtml(field.label)}${hint}</span>
+      <textarea data-evidence-key="${escapeAttr(field.key)}" data-card-id="${escapeAttr(card.id)}" ${std ? `data-char-min="${std.min}" data-char-max="${std.max}"` : ''} rows="3">${escapeHtml(value)}</textarea>
+      ${counter}
+    </label>`;
+  }).join('')}</div>`;
 }
 
 function getProgress(cards = allCards()) {
