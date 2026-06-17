@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/supabase-test.js": {
+      "regions": ["fra1"]
+    }
+  }
+}
