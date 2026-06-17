@@ -1215,6 +1215,90 @@ function syncProjectBeforeFromPositioning(workspace = state) {
   workspace.project.description = getSharedEvidenceByLabels(workspace, ['описание проекта', 'стартовая формулировка', 'позиционирования']) || descriptionFallback;
 }
 
+function getSystemContext(workspace = state) {
+  if (!workspace) return {};
+  const p = workspace.project || {};
+  const se = workspace.sharedEvidence || {};
+  const pain = workspace.painOfferRoute || {};
+  const painSections = pain.sections || {};
+  const demand = workspace.demandRoute || {};
+  const demandSteps = demand.steps || {};
+  const ev = (keys) => { for (const k of keys) { const v = se[normalizeAspectKey(k)]; if (String(v || '').trim()) return v; } return ''; };
+
+  const product = pain.product || p.description || ev(['что продаём', 'cto-prodaem', 'основной продукт']) || '';
+  const segment = pain.mainSegment || ev(['кому продаём', 'komu-prodaem', 'приоритетный сегмент']) || '';
+  const mainPain = (painSections.pains_reasons || {}).mainPain || ev(['сильнейшая боль']) || '';
+  const jtbd = (painSections.jtbd || {}).mainJtbd || ev(['главный jtbd']) || '';
+  const offerFormula = pain.finalOffer || (painSections.offer || {}).offerFormula || '';
+  const cta = (painSections.offer || {}).cta || p.afterMainCta || p.mainCta || ev(['главный CTA', 'CTA']) || '';
+  const proofText = (painSections.offer || {}).proof || ev(['доказательство']) || '';
+  const usp = p.afterUsp || p.usp || ev(['УТП', 'главное УТП', 'позиционирования']) || '';
+  const offer = p.afterOffer || p.offer || ev(['оффер', 'список текущих офферов']) || '';
+  const targetCpa = demand.targetCpa || ev(['целевой cpa', 'целевой_cpa_значение']) || '';
+  const website = p.website || demand.landing || '';
+  const geography = p.geography || demand.geo || '';
+  const competitors = (painSections.competitor_offer || {}).competitors || ev(['основные конкуренты']) || '';
+  const differentiation = (painSections.competitor_offer || {}).differentiation || '';
+  const segments = (painSections.segments_personas || {}).segments || ev(['сегменты спроса']) || '';
+  const personas = (painSections.segments_personas || {}).personas || ev(['персоны']) || '';
+  const searchPhrases = (demandSteps.audience_language || {}).phrases || ev(['фразы аудитории', 'реальный язык ца']) || '';
+  const hotIntents = (demandSteps.intents || {}).hot_intents || '';
+  const demandPromoted = demand.promoted || product || '';
+  const demandExcluded = demand.excluded || '';
+
+  return {
+    product:        { value: product,         source: pain.product ? 'Боль → офер' : 'Паспорт', empty: !product },
+    segment:        { value: segment,         source: pain.mainSegment ? 'Боль → офер' : 'Gate 0', empty: !segment },
+    mainPain:       { value: mainPain,        source: 'Боль → офер', empty: !mainPain },
+    jtbd:           { value: jtbd,            source: 'Боль → офер', empty: !jtbd },
+    offerFormula:   { value: offerFormula,    source: 'Боль → офер', empty: !offerFormula },
+    cta:            { value: cta,             source: (painSections.offer || {}).cta ? 'Боль → офер' : 'Паспорт', empty: !cta },
+    proof:          { value: proofText,       source: 'Боль → офер', empty: !proofText },
+    usp:            { value: usp,             source: p.afterUsp ? 'Паспорт (после)' : 'Паспорт', empty: !usp },
+    offer:          { value: offer,           source: p.afterOffer ? 'Паспорт (после)' : 'Паспорт', empty: !offer },
+    targetCpa:      { value: targetCpa,       source: demand.targetCpa ? 'Спрос' : 'Юнит-экономика', empty: !targetCpa },
+    website:        { value: website,         source: 'Паспорт', empty: !website },
+    geography:      { value: geography,       source: 'Паспорт', empty: !geography },
+    name:           { value: p.name || '',    source: 'Паспорт', empty: !p.name },
+    niche:          { value: p.niche || '',   source: 'Паспорт', empty: !p.niche },
+    competitors:    { value: competitors,     source: 'Боль → офер', empty: !competitors },
+    differentiation:{ value: differentiation, source: 'Боль → офер', empty: !differentiation },
+    segments:       { value: segments,        source: 'Боль → офер', empty: !segments },
+    personas:       { value: personas,        source: 'Боль → офер', empty: !personas },
+    searchPhrases:  { value: searchPhrases,   source: 'Спрос', empty: !searchPhrases },
+    hotIntents:     { value: hotIntents,      source: 'Спрос', empty: !hotIntents },
+    demandPromoted: { value: demandPromoted,  source: demand.promoted ? 'Спрос' : 'Паспорт', empty: !demandPromoted },
+    demandExcluded: { value: demandExcluded,  source: 'Спрос', empty: !demandExcluded }
+  };
+}
+
+function ctxVal(ctx, key) {
+  const item = ctx[key];
+  return item && !item.empty ? item.value : '';
+}
+
+function ctxPill(ctx, key, label) {
+  const item = ctx[key];
+  if (!item || item.empty) return `<span class="ctx-item ctx-empty"><span class="ctx-label">${escapeHtml(label)}</span><span class="ctx-value ctx-na">не заполнено</span></span>`;
+  const short = truncateText(item.value, 80);
+  return `<span class="ctx-item"><span class="ctx-label">${escapeHtml(label)}</span><span class="ctx-value">${escapeHtml(short)}</span><span class="ctx-source">${escapeHtml(item.source)}</span></span>`;
+}
+
+function systemContextBannerHtml(keys, title) {
+  const ctx = getSystemContext();
+  const items = keys.filter(([k]) => ctx[k]).map(([k, label]) => ctxPill(ctx, k, label));
+  if (!items.length) return '';
+  const heading = title || 'Связанные данные проекта';
+  return `<details class="system-context-banner" open><summary>${escapeHtml(heading)} <small>${items.filter(i => !i.includes('ctx-na')).length} из ${items.length} заполнено</small></summary><div class="ctx-grid">${items.join('')}</div></details>`;
+}
+
+function systemContextPlaceholder(key) {
+  const ctx = getSystemContext();
+  const item = ctx[key];
+  if (!item || item.empty) return '';
+  return truncateText(item.value, 60);
+}
+
 function syncProjectPassportCard(workspace = state) {
   if (!workspace?.gates) return;
   syncProjectBeforeFromPositioning(workspace);
@@ -2067,13 +2151,18 @@ function renderPainOfferRoute(section) {
       </div>
       <span class="status-pill status-${status}">${STATUS_LABELS[status] || status}</span>
     </div>
+    ${systemContextBannerHtml([
+      ['product', 'Продукт'], ['segment', 'Аудитория'], ['usp', 'УТП'], ['offer', 'Оффер'],
+      ['cta', 'CTA'], ['website', 'Сайт'], ['geography', 'Гео'], ['searchPhrases', 'Фразы аудитории'],
+      ['competitors', 'Конкуренты'], ['targetCpa', 'Целевой CPA']
+    ], 'Данные из других блоков')}
     <section class="demand-frame">
       <div class="demand-section-title"><div><h4>Верх блока</h4><p class="muted">Главный результат маршрута — финальный офер.</p></div></div>
       <div class="demand-grid three">
-        ${painInput('product', 'Продукт / услуга', 'text', 'что анализируем')}
-        ${painInput('landing', 'Посадочная / проект', 'text', 'к чему относится офер')}
-        ${painInput('mainSegment', 'Главный сегмент', 'text', 'для кого делаем')}
-        ${painInput('finalOffer', 'Финальный офер', 'textarea', 'главный результат блока')}
+        ${painInput('product', 'Продукт / услуга', 'text', systemContextPlaceholder('product') || 'что анализируем')}
+        ${painInput('landing', 'Посадочная / проект', 'text', systemContextPlaceholder('website') || 'к чему относится офер')}
+        ${painInput('mainSegment', 'Главный сегмент', 'text', systemContextPlaceholder('segment') || 'для кого делаем')}
+        ${painInput('finalOffer', 'Финальный офер', 'textarea', systemContextPlaceholder('offerFormula') || 'главный результат блока')}
       </div>
     </section>
     <div class="demand-steps pain-steps">
@@ -2166,11 +2255,17 @@ function renderDemandRoute(section) {
       <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
     </div>
 
+    ${systemContextBannerHtml([
+      ['product', 'Продукт'], ['offerFormula', 'Офер'], ['usp', 'УТП'], ['cta', 'CTA'],
+      ['mainPain', 'Главная боль'], ['jtbd', 'JTBD'], ['segment', 'Аудитория'],
+      ['website', 'Сайт'], ['geography', 'Гео'], ['targetCpa', 'Целевой CPA'],
+      ['hotIntents', 'Горячие интенты']
+    ], 'Данные из паспорта и маршрута офера')}
     <section class="demand-frame">
       <div class="demand-grid three">
-        ${demandInput('promoted', 'Что продвигаем', 'text', 'продукт / услуга')}
+        ${demandInput('promoted', 'Что продвигаем', 'text', systemContextPlaceholder('product') || 'продукт / услуга')}
         ${demandInput('excluded', 'Что не продвигаем', 'text', 'мусор, вакансии, обучение, бесплатное')}
-        ${demandInput('geo', 'Гео', 'text', 'город / регион / страна')}
+        ${demandInput('geo', 'Гео', 'text', systemContextPlaceholder('geography') || 'город / регион / страна')}
         ${demandInput('language', 'Язык', 'text', 'если нужен для Google')}
         <label class="demand-field"><span>Рекламная система</span><select data-demand-field="adSystem">
           <option value="yandex" ${route.adSystem === 'yandex' ? 'selected' : ''}>Яндекс</option>
@@ -2188,8 +2283,8 @@ function renderDemandRoute(section) {
           <option value="display" ${route.googleCampaignType === 'display' ? 'selected' : ''}>Display</option>
           <option value="search_display" ${route.googleCampaignType === 'search_display' ? 'selected' : ''}>Search + Display</option>
         </select></label>` : ''}
-        ${demandInput('landing', 'Посадочная', 'text', 'URL страницы')}
-        ${demandInput('targetCpa', 'Целевой CPL / CPA', 'text', 'если известен')}
+        ${demandInput('landing', 'Посадочная', 'text', systemContextPlaceholder('website') || 'URL страницы')}
+        ${demandInput('targetCpa', 'Целевой CPL / CPA', 'text', systemContextPlaceholder('targetCpa') || 'если известен')}
       </div>
     </section>
 
@@ -3790,6 +3885,19 @@ function bindSemanticAccordion(gateId) {
   });
 }
 
+function cardContextKeysForTitle(title) {
+  const t = normalizeGateTitle(title || '');
+  if (/позиционирован|утп/.test(t)) return [['usp', 'Текущее УТП'], ['offer', 'Оффер'], ['differentiation', 'Точка отличия'], ['competitors', 'Конкуренты']];
+  if (/оффер|cta|призыв/.test(t)) return [['offer', 'Оффер'], ['cta', 'CTA'], ['offerFormula', 'Формула офера'], ['mainPain', 'Боль'], ['proof', 'Доказательство']];
+  if (/продукт|сегмент|задача клиент/.test(t)) return [['product', 'Продукт'], ['segment', 'Аудитория'], ['jtbd', 'JTBD'], ['niche', 'Ниша']];
+  if (/психологическ|декомпозиц/.test(t)) return [['mainPain', 'Боль'], ['jtbd', 'JTBD'], ['segment', 'Аудитория'], ['offerFormula', 'Формула офера']];
+  if (/семантик|поисков|спрос/.test(t)) return [['product', 'Продукт'], ['searchPhrases', 'Фразы аудитории'], ['hotIntents', 'Горячие интенты'], ['demandPromoted', 'Что продвигаем']];
+  if (/каналы|реклам|креатив|объявлен/.test(t)) return [['usp', 'УТП'], ['offer', 'Оффер'], ['cta', 'CTA'], ['offerFormula', 'Формула офера'], ['segment', 'Аудитория']];
+  if (/результат|метрик/.test(t)) return [['targetCpa', 'Целевой CPA']];
+  if (/сайт|страниц|лендинг/.test(t)) return [['usp', 'УТП'], ['offer', 'Оффер'], ['cta', 'CTA'], ['website', 'Сайт']];
+  return [];
+}
+
 function cardUserFieldsHtml(c) {
   if (isProjectPassportCard(c)) return `<div class="field-row"><span>Паспорт проекта</span>${projectPassportFieldsHtml()}</div>`;
   if (isCurrentResultsCard(c)) return `<div class="field-row"><span>Показатели</span>${currentResultsHtml(c)}</div>`;
@@ -3801,8 +3909,10 @@ function cardUserFieldsHtml(c) {
   if (isStrategyContextCard(c)) return strategyFieldsHtml(c);
   if (isAnalyticsContextCard(c)) return contextualInstructionWorkspaceHtml(c);
   if (isTaskContextCard(c)) return taskFieldsHtml(c);
+  const ctxKeys = cardContextKeysForTitle(c.title);
+  const ctxBanner = ctxKeys.length ? systemContextBannerHtml(ctxKeys, 'Связанные данные') : '';
   const evidence = evidenceStructuredHtml(c);
-  return evidence ? `<div class="field-row simplified-fields">${evidence}</div>` : '';
+  return evidence ? `${ctxBanner}<div class="field-row simplified-fields">${evidence}</div>` : ctxBanner;
 }
 
 function contextualInstructionWorkspaceHtml(card) {
@@ -3926,7 +4036,11 @@ function pageStructureCardHtml(card, row, pageIndex, repeatable) {
   const defs = ensurePageContextFields(row, context);
   const snippet = snippetForPage(row);
   const grouped = defs.reduce((acc, def) => { (acc[def.group] = acc[def.group] || []).push(def); return acc; }, {});
+  const pageCtxKeys = context === 'home' || context === 'landing' || context === 'service'
+    ? [['usp', 'УТП'], ['offer', 'Оффер'], ['cta', 'CTA'], ['mainPain', 'Боль'], ['offerFormula', 'Формула офера'], ['proof', 'Доказательство'], ['segment', 'Аудитория']]
+    : [['usp', 'УТП'], ['offer', 'Оффер'], ['cta', 'CTA'], ['name', 'Проект']];
   return `<section class="page-structure-card v14-page-card">
+    ${pageIndex === 0 ? systemContextBannerHtml(pageCtxKeys, 'Контекст для страницы') : ''}
     <div class="page-structure-head">
       <input class="page-name-input" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="name" value="${escapeAttr(row.name || '')}" placeholder="Название страницы" ${row.fixed ? 'readonly' : ''} />
       <span class="status-pill status-${pageStructureStatus(row)}">${STATUS_LABELS[pageStructureStatus(row)]}</span>
@@ -3997,14 +4111,13 @@ function gate1PageStructureHtml(card) {
 
 function strategyFieldsHtml(card) {
   card.strategyFields = card.strategyFields || { decision:'', source:'', nextStep:'' };
+  const ctx = getSystemContext();
   return `<div class="strategy-fields context-panel">
-    <div class="context-source">
-      <strong>Автоконтекст проекта</strong>
-      <span>Продукт: ${escapeHtml(getEvidenceValue('cto-prodaem') || state.project?.description || 'не заполнено')}</span>
-      <span>Аудитория: ${escapeHtml(getEvidenceValue('komu-prodaem') || 'не заполнено')}</span>
-      <span>УТП: ${escapeHtml(state.project?.usp || getEvidenceValue('utp') || 'не заполнено')}</span>
-      <span>Оффер: ${escapeHtml(state.project?.offer || 'не заполнено')}</span>
-    </div>
+    ${systemContextBannerHtml([
+      ['product', 'Продукт'], ['segment', 'Аудитория'], ['usp', 'УТП'], ['offer', 'Оффер'],
+      ['cta', 'CTA'], ['mainPain', 'Главная боль'], ['jtbd', 'JTBD'], ['offerFormula', 'Формула офера'],
+      ['targetCpa', 'Целевой CPA'], ['differentiation', 'Точка отличия']
+    ], 'Контекст проекта')}
     <label>Стратегическое решение<textarea data-strategy-card-id="${escapeAttr(card.id)}" data-strategy-field="decision" rows="3">${escapeHtml(card.strategyFields.decision || '')}</textarea></label>
     <label>Источник решения<input data-strategy-card-id="${escapeAttr(card.id)}" data-strategy-field="source" value="${escapeAttr(card.strategyFields.source || '')}" placeholder="спрос, боль, конкурент, экономика" /></label>
     <label>Следующий шаг<input data-strategy-card-id="${escapeAttr(card.id)}" data-strategy-field="nextStep" value="${escapeAttr(card.strategyFields.nextStep || '')}" /></label>
@@ -4014,6 +4127,7 @@ function strategyFieldsHtml(card) {
 function implementationFieldsHtml(card) {
   card.implementationFields = card.implementationFields || { what:'', where:'', output:'', comment:'' };
   return `<div class="implementation-fields context-panel">
+    ${systemContextBannerHtml([['usp', 'УТП'], ['offer', 'Оффер'], ['cta', 'CTA'], ['offerFormula', 'Формула офера'], ['website', 'Сайт']], 'Контекст проекта')}
     <label>Что реализовать<textarea data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="what" rows="2">${escapeHtml(card.implementationFields.what || '')}</textarea></label>
     <label>Где реализовать<input data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="where" value="${escapeAttr(card.implementationFields.where || '')}" placeholder="страница / канал / кампания" /></label>
     <label>Результат на выходе<input data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="output" value="${escapeAttr(card.implementationFields.output || '')}" /></label>

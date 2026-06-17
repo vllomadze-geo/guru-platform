@@ -1834,6 +1834,22 @@ label .field-hint-wrap{margin-bottom:4px}
 .passport-field-label{display:flex;align-items:center;gap:6px;margin-bottom:2px}
 @media(max-width:720px){.field-hint-popup{left:auto;right:0;width:280px}.field-hint-popup::before{display:none}}
 
+/* v1.0 System context banners */
+.system-context-banner{background:#fff;border:1px solid var(--line,#e4ded4);border-radius:16px;margin-bottom:14px;overflow:hidden}
+.system-context-banner>summary{display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;font-weight:800;font-size:13px;color:var(--text);user-select:none;list-style:none}
+.system-context-banner>summary::-webkit-details-marker{display:none}
+.system-context-banner>summary::before{content:'▸';font-size:11px;transition:transform .15s}
+.system-context-banner[open]>summary::before{transform:rotate(90deg)}
+.system-context-banner>summary small{font-weight:600;color:var(--muted,#8a857c);margin-left:auto;font-size:11px}
+.ctx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;padding:4px 16px 14px}
+.ctx-item{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:8px 10px;background:rgba(246,243,238,.5);border:1px solid rgba(31,27,22,.06);border-radius:10px;font-size:12px;line-height:1.45}
+.ctx-item.ctx-empty{opacity:.5}
+.ctx-label{font-weight:800;color:var(--text);grid-column:1;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.ctx-source{grid-column:2;grid-row:1;font-size:10px;font-weight:700;color:#fff;background:var(--text,#1f1b16);border-radius:999px;padding:1px 7px;align-self:center;white-space:nowrap}
+.ctx-value{grid-column:1/-1;color:#5f5a52;word-break:break-word}
+.ctx-na{font-style:italic;color:var(--muted)}
+.ctx-placeholder{color:var(--muted,#8a857c);font-style:italic}
+
 /* v1.0 Supabase connection test */
 .supabase-status {
   display: inline-flex;
