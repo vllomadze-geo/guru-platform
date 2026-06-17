@@ -527,6 +527,693 @@ const FIELD_STANDARDS = {
     example: '1200 клиентов за 2024 год, средняя оценка 4.9 на Яндексе',
     reference: 'Хопкинс: «Конкретные факты говорят, а обобщения — нет»',
     min: 10, max: 160
+  },
+  queries: {
+    label: 'Основные запросы',
+    formula: '[Ключевая фраза] + [частотность] + [тип интента]',
+    example: 'химчистка дивана на дому — 3 200/мес — коммерческий',
+    reference: 'Wordstat + Keyword Planner: собрать ядро запросов, по которым аудитория уже ищет решение',
+    min: 20, max: 500
+  },
+  frequency: {
+    label: 'Частотность / динамика',
+    formula: '[Объём запросов] + [тренд: растёт / стабильный / падает] + [сезонность]',
+    example: '3 200/мес, стабильный, пик — сентябрь–ноябрь',
+    reference: 'Wordstat History / Google Trends — спрос должен быть достаточным для запуска',
+    min: 10, max: 300
+  },
+  intent: {
+    label: 'Интент',
+    formula: '[Тип интента] + [что стоит за запросом] + [готовность к действию]',
+    example: 'Коммерческий: ищет исполнителя, готов заказать, сравнивает цены',
+    reference: 'Интент определяет посадочную и тип объявления — не смешивайте горячее с информационным',
+    min: 10, max: 300
+  },
+  conclusion: {
+    label: 'Вывод',
+    formula: '[Главный факт] + [что это значит для проекта] + [рекомендация]',
+    example: 'Спрос стабильный, 80% — коммерческий. Можно запускать поисковую рекламу.',
+    reference: 'Вывод = мост между данными и решением. Без вывода данные мертвы',
+    min: 20, max: 400
+  },
+  competitors: {
+    label: 'Основные конкуренты',
+    formula: '[Название] + [чем известен] + [сильная сторона]',
+    example: 'CleanHome — лидер по отзывам, «Чисто» — низкие цены, «Блеск» — скорость',
+    reference: 'Траут: конкурент — тот, кто занимает место в сознании вашего клиента',
+    min: 20, max: 500
+  },
+  repeatedPromises: {
+    label: 'Повторяющиеся обещания',
+    formula: '[Что все обещают одинаково] — показывает «шум рынка»',
+    example: 'Все обещают «качественную химчистку», «опытных мастеров», «современное оборудование»',
+    reference: 'Ривз: если все говорят одно и то же, никто не говорит ничего',
+    min: 20, max: 400
+  },
+  weakSpots: {
+    label: 'Слабые места конкурентов',
+    formula: '[Слабость] + [как это проявляется для клиента]',
+    example: 'Нет гарантии результата, долгое ожидание (2–3 дня), непрозрачные цены',
+    reference: 'Хопкинс: чужая слабость — ваша возможность, если вы можете это доказать',
+    min: 15, max: 400
+  },
+  differentiation: {
+    label: 'Точка отличия',
+    formula: '[В чём мы объективно отличаемся] + [почему это важно клиенту]',
+    example: 'Выезд за 2 часа, а не за 2 дня — важно для тех, кто ждёт гостей',
+    reference: 'Траут: позиция = одно отличие, которое вы можете защитить и доказать',
+    min: 20, max: 300
+  },
+  explicitPains: {
+    label: 'Явные боли',
+    formula: '[Боль, которую клиент сам формулирует] + [как проявляется]',
+    example: 'Пятно на диване не выводится, запах не уходит, стыдно перед гостями',
+    reference: 'Огилви: говорите на языке клиента — используйте его слова, не свои',
+    min: 15, max: 400
+  },
+  hiddenPains: {
+    label: 'Скрытые боли',
+    formula: '[Боль, которую клиент не формулирует, но она влияет на решение]',
+    example: 'Боится испортить мебель ещё больше, не знает кому доверять, откладывает',
+    reference: 'Бернейс: скрытая мотивация часто сильнее явной',
+    min: 15, max: 400
+  },
+  reason: {
+    label: 'Причина спроса',
+    formula: '[Событие или ситуация, запустившая поиск решения]',
+    example: 'Ребёнок пролил сок, переезд, подготовка к продаже квартиры',
+    reference: 'JTBD: причина = triggering event, без которого клиент не начал бы искать',
+    min: 10, max: 300
+  },
+  mainPain: {
+    label: 'Сильнейшая боль',
+    formula: '[Одна боль, которая перевешивает остальные] + [почему именно она]',
+    example: 'Пятно видно гостям — стыд сильнее лени и экономии',
+    reference: 'Джобс: фокус на одном. Одна боль → одно решение → один CTA',
+    min: 15, max: 200
+  },
+  functionalJob: {
+    label: 'Функциональная работа',
+    formula: '[Что клиент хочет сделать практически]',
+    example: 'Убрать пятно с дивана, вернуть мебели чистый вид',
+    reference: 'Кристенсен: функциональная работа — задача, которую клиент «нанимает» продукт выполнить',
+    min: 15, max: 300
+  },
+  emotionalJob: {
+    label: 'Эмоциональная работа',
+    formula: '[Что клиент хочет почувствовать после решения]',
+    example: 'Спокойствие, что дом чистый; уверенность перед приходом гостей',
+    reference: 'JTBD: эмоциональная работа часто определяет выбор между конкурентами',
+    min: 10, max: 300
+  },
+  socialJob: {
+    label: 'Социальная работа',
+    formula: '[Как клиент хочет выглядеть в глазах других]',
+    example: 'Хозяйка, которая следит за домом; ответственный арендатор',
+    reference: 'JTBD: социальный контекст усиливает готовность платить больше',
+    min: 10, max: 300
+  },
+  mainJtbd: {
+    label: 'Главный JTBD',
+    formula: 'Когда [ситуация], я хочу [действие], чтобы [результат]',
+    example: 'Когда на диване пятно перед приходом гостей, я хочу вызвать химчистку, чтобы мебель выглядела как новая',
+    reference: 'Кристенсен: формула JTBD = ситуация + мотивация + ожидаемый результат',
+    min: 30, max: 300
+  },
+  segments: {
+    label: 'Сегменты спроса',
+    formula: '[Группа клиентов] + [сценарий выбора] + [отличие от других]',
+    example: 'Мамы с детьми — срочно, цена вторична. Арендаторы — перед сдачей, ищут дешевле.',
+    min: 20, max: 500
+  },
+  personas: {
+    label: 'Персоны',
+    formula: '[Имя-маркер] + [ситуация] + [главный критерий выбора]',
+    example: 'Марина, 35 — мама, пятно от сока, нужен выезд сегодня, цена вторична',
+    reference: 'Купер: персона = архетип, не портрет — описывайте поведение, не возраст',
+    min: 20, max: 500
+  },
+  triggers: {
+    label: 'Триггеры выбора',
+    formula: '[Событие / момент, запускающий поиск решения]',
+    example: 'Гости через 3 дня, переезд через неделю, ребёнок испачкал диван',
+    reference: 'JTBD: триггер = момент, когда наблюдатель становится покупателем',
+    min: 15, max: 400
+  },
+  criteria: {
+    label: 'Критерии выбора',
+    formula: '[По чему клиент сравнивает] + [что важнее всего]',
+    example: 'Скорость выезда > цена > отзывы > гарантия результата',
+    reference: 'Хопкинс: знание критериев позволяет строить рекламу вокруг того, что важно',
+    min: 15, max: 400
+  },
+  forWhom: {
+    label: 'Для кого',
+    formula: '[Сегмент] + [ситуация] + [что для них важно]',
+    example: 'Для владельцев мягкой мебели, которым нужен результат без запаха и ожидания',
+    reference: 'Бернейс: точный адресат = точный отклик. Офер «для всех» не работает ни для кого',
+    min: 15, max: 200
+  },
+  cta: {
+    label: 'CTA',
+    formula: '[Глагол] + [что получит клиент] + [снятие барьера]',
+    example: 'Рассчитать стоимость за 2 минуты',
+    reference: 'Джобс: кнопка = одно действие, ноль сомнений',
+    min: 8, max: 50
+  },
+  partners: {
+    label: 'Потенциальные партнёры',
+    formula: '[Кто] + [их аудитория] + [точка пересечения]',
+    example: 'Мебельные магазины — покупатели нуждаются в уходе за новой мебелью',
+    min: 15, max: 400
+  },
+  partnerBenefit: {
+    label: 'Выгода для партнёра',
+    formula: '[Что получает партнёр] + [почему это для него ценно]',
+    example: 'Дополнительный сервис для клиентов без затрат — повышает лояльность',
+    min: 10, max: 300
+  },
+  format: {
+    label: 'Формат коллаборации',
+    formula: '[Механика взаимодействия] + [что делает каждая сторона]',
+    example: 'Партнёр даёт флаер → мы даём скидку 10% → партнёр получает % от заказа',
+    min: 10, max: 300
+  },
+  priority: {
+    label: 'Приоритет',
+    formula: '[Высокий / средний / низкий] + [обоснование]',
+    example: 'Высокий — пересечение аудиторий 80%, минимальные затраты на запуск',
+    min: 5, max: 200
+  },
+  value_proposition: {
+    label: 'Ценностное предложение',
+    formula: '[Что продвигаем] + [для кого] + [главная выгода]',
+    example: 'Химчистка мягкой мебели на дому для владельцев квартир — результат за 2 часа',
+    reference: 'Ривз: одно предложение = одна мысль',
+    min: 20, max: 300
+  },
+  limitations: {
+    label: 'Ограничения и исключения',
+    formula: '[Что НЕ продвигаем] + [что исключаем из рекламы]',
+    example: 'Не продвигаем: стирку штор, чистку офисов, вакансии, обучение',
+    min: 10, max: 300
+  },
+  success_metric: {
+    label: 'Критерий успеха',
+    formula: '[Целевое действие] + [измеримый порог] + [период]',
+    example: 'Заявка через форму, ≥ 30 заявок/мес при CPL ≤ 800₽',
+    min: 15, max: 300
+  },
+  phrases: {
+    label: 'Фразы аудитории',
+    formula: '[Как клиент формулирует проблему своими словами]',
+    example: '«почистить диван», «вывести пятно с дивана», «химчистка на дом»',
+    reference: 'Огилви: говорите на языке клиента, а не на языке своего прайса',
+    min: 15, max: 400
+  },
+  pain_words: {
+    label: 'Слова боли',
+    formula: '[Слова, которые клиент использует при описании проблемы]',
+    example: '«воняет», «не отстирывается», «испортили», «страшно трогать»',
+    min: 10, max: 300
+  },
+  commercial_words: {
+    label: 'Коммерческие уточнения',
+    formula: '[Слова, сигнализирующие готовность к покупке]',
+    example: '«заказать», «цена», «стоимость», «на дому», «с выездом», «недорого»',
+    min: 10, max: 300
+  },
+  hot_intents: {
+    label: 'Горячие интенты',
+    formula: '[Запросы с максимальной готовностью к действию]',
+    example: '«химчистка дивана заказать», «вызвать химчистку на дом цена»',
+    reference: 'Горячие интенты = приоритет №1 при ограниченном бюджете',
+    min: 15, max: 400
+  },
+  compare_intents: {
+    label: 'Интенты сравнения',
+    formula: '[Запросы, где клиент сравнивает / выбирает]',
+    example: '«химчистка мебели отзывы», «лучшая химчистка Москва»',
+    min: 10, max: 400
+  },
+  trash_intents: {
+    label: 'Мусорные интенты',
+    formula: '[Запросы, которые не приводят к целевому действию]',
+    example: '«химчистка дивана своими руками», «средство для чистки», «вакансии»',
+    reference: 'Мусорные интенты = минус-слова. Без них бюджет сгорает без результата',
+    min: 10, max: 400
+  },
+  cluster_logic: {
+    label: 'Правило группировки',
+    formula: '[Принцип объединения запросов в группы] + [почему так]',
+    example: 'По типу мебели: диваны, ковры, матрасы — разные услуги, разные посадочные',
+    reference: '1 группа = 1 интент + 1 посадочная',
+    min: 15, max: 400
+  },
+  landing_match: {
+    label: 'Соответствие посадочным',
+    formula: '[Группа запросов → какая страница] + [есть ли страница]',
+    example: '«химчистка дивана» → /uslugi/divany, «химчистка ковров» → /uslugi/kovry',
+    min: 15, max: 400
+  },
+  priority_groups: {
+    label: 'Приоритетные группы',
+    formula: '[Какие группы запускать первыми] + [критерий приоритета]',
+    example: 'Сначала горячие группы (заказать, вызвать) — конверсии при минимальном бюджете',
+    min: 15, max: 400
+  },
+  demand_volume: {
+    label: 'Оценка объёма спроса',
+    formula: '[Суммарная частотность] + [охват] + [прогноз трафика]',
+    example: '12 000 запросов/мес в Москве, ~600 кликов/мес при CTR 5%',
+    min: 15, max: 400
+  },
+  forecast_cpa: {
+    label: 'Прогноз CPA / CPL',
+    formula: '[Расчётный CPL] + [логика расчёта] + [сравнение с целевым]',
+    example: 'CPL ~700₽ (CPC 70₽ × CR 10%). Целевой — 800₽. Укладываемся.',
+    min: 15, max: 400
+  },
+  decision: {
+    label: 'Решение',
+    formula: '[Запускаем / не запускаем / тестируем] + [обоснование] + [условия пересмотра]',
+    example: 'Запускаем горячие группы с лимитом 30 000₽/мес. Пересмотр через 2 недели.',
+    min: 15, max: 400
+  },
+  search_logic: {
+    label: 'Поиск: ключи, минусы, объявления',
+    formula: '[Ключевые фразы] + [минус-слова] + [тексты объявлений]',
+    example: 'Ключи: химчистка дивана заказать. Минусы: своими руками, средство. Объявление: Химчистка дивана за 2 часа.',
+    min: 30, max: 600
+  },
+  display_logic: {
+    label: 'РСЯ / Display: аудитории и креативы',
+    formula: '[Аудитории] + [исключения] + [описание креативов]',
+    example: 'Аудитория: посещали конкурентов + интерес «уборка». Креатив: до/после с ценой.',
+    min: 20, max: 600
+  },
+  assets_logic: {
+    label: 'Дополнения / Assets',
+    formula: '[Быстрые ссылки] + [уточнения] + [callouts]',
+    example: 'БС: Цены, Отзывы, Примеры работ. Уточнения: Выезд за 2 часа, Гарантия.',
+    min: 15, max: 500
+  },
+  launch_ready: {
+    label: 'Что готово к запуску',
+    formula: '[Перечень готовых элементов: группы, ключи, минусы, объявления, посадочные]',
+    example: '3 группы готовы: горячие, тёплые, локальные. Ключи, минусы, объявления заполнены.',
+    min: 15, max: 400
+  },
+  risks: {
+    label: 'Риски',
+    formula: '[Что может пойти не так] + [что требует решения до запуска]',
+    example: 'Нет страницы для ковров — трафик пойдёт на главную (низкая конверсия)',
+    min: 10, max: 400
+  },
+  handoff: {
+    label: 'Передача на настройку',
+    formula: '[Финальный пакет для настройки кампании]',
+    example: 'Таблица запуска: 3 группы, ключи, минусы, тексты, посадочные, бюджет 30 000₽/мес',
+    min: 10, max: 400
+  },
+  promoted: {
+    label: 'Что продвигаем',
+    formula: '[Продукт / услуга] + [ключевая характеристика]',
+    example: 'Химчистка мягкой мебели с выездом на дом',
+    min: 5, max: 200
+  },
+  excluded: {
+    label: 'Что не продвигаем',
+    formula: '[Направления, которые исключаем из рекламы]',
+    example: 'Стирка штор, офисная уборка, вакансии, обучение',
+    min: 5, max: 200
+  },
+  strategyDecision: {
+    label: 'Стратегическое решение',
+    formula: '[Что решили] + [на основании каких данных] + [ожидаемый результат]',
+    example: 'Запускаем поиск на горячие интенты — спрос есть, CPL укладывается в экономику',
+    reference: 'Стратегия = выбор, что делать И что НЕ делать',
+    min: 30, max: 500
+  },
+  strategySource: {
+    label: 'Источник решения',
+    formula: '[Откуда данные: спрос / боль / конкурент / экономика]',
+    example: 'Юнит-экономика: CPL 700₽ при допустимых 800₽ → можно запускать',
+    min: 10, max: 200
+  },
+  strategyNextStep: {
+    label: 'Следующий шаг',
+    formula: '[Конкретное действие] + [кто делает] + [когда]',
+    example: 'Настроить кампанию в Яндекс Директ → маркетолог → до пятницы',
+    min: 10, max: 200
+  },
+  implWhat: {
+    label: 'Что реализовать',
+    formula: '[Конкретная задача] + [требования к результату]',
+    example: 'Страница «Химчистка дивана» — H1, оффер, CTA, форма, 3 кейса',
+    min: 15, max: 400
+  },
+  implWhere: {
+    label: 'Где реализовать',
+    formula: '[Канал / страница / кампания / раздел сайта]',
+    example: '/uslugi/himchistka-divana или Яндекс Директ → кампания «Горячие»',
+    min: 5, max: 200
+  },
+  implOutput: {
+    label: 'Результат на выходе',
+    formula: '[Что должно быть готово] + [как проверить]',
+    example: 'Страница опубликована, CTA работает, форма отправляет лид в CRM',
+    min: 10, max: 300
+  },
+  taskDue: {
+    label: 'Дата / период',
+    formula: '[Дедлайн] или [период выполнения]',
+    example: '15.07.2025 или «до конца недели»',
+    min: 3, max: 50
+  },
+  taskResult: {
+    label: 'Результат',
+    formula: '[Что сделано] + [ссылка или подтверждение]',
+    example: 'Страница опубликована: /uslugi/divany, форма работает, лид приходит в CRM',
+    min: 5, max: 300
+  },
+  aov: {
+    label: 'Средний чек (AOV)',
+    formula: '[Сумма] + [за что: услуга / товар / заказ]',
+    example: '4 500₽ за одну услугу химчистки дивана',
+    reference: 'AOV = стартовая точка юнит-экономики. Без чека нельзя считать CPA',
+    min: 3, max: 200
+  },
+  source: {
+    label: 'Источник данных',
+    formula: '[Откуда взяты цифры] + [период] + [достоверность]',
+    example: 'CRM за последние 6 месяцев, 340 заказов',
+    min: 5, max: 200
+  },
+  period: {
+    label: 'Период оценки',
+    formula: '[Временной интервал] + [почему именно он]',
+    example: 'Последние 6 месяцев — достаточная выборка без сезонных искажений',
+    min: 3, max: 150
+  },
+  marginPercent: {
+    label: 'Маржа %',
+    formula: '[Процент маржинальности] + [что включено в себестоимость]',
+    example: '45% — после вычета материалов, выезда мастера и амортизации',
+    reference: 'Маржа < 10% — рекламный запуск экономически опасен',
+    min: 3, max: 200
+  },
+  variableCosts: {
+    label: 'Себестоимость / переменные расходы',
+    formula: '[Сумма на одну продажу] + [из чего складывается]',
+    example: '2 475₽: материалы 800₽ + выезд 1 200₽ + амортизация 475₽',
+    min: 5, max: 200
+  },
+  grossProfit: {
+    label: 'Валовая прибыль с продажи',
+    formula: '[AOV − себестоимость] = [сумма]',
+    example: '4 500₽ − 2 475₽ = 2 025₽ валовой прибыли',
+    min: 3, max: 200
+  },
+  repeatPurchases: {
+    label: 'Повторные покупки',
+    formula: '[Есть ли повторные] + [как часто] + [доля повторных]',
+    example: '~30% клиентов обращаются повторно в течение года',
+    min: 5, max: 200
+  },
+  avgPurchaseCount: {
+    label: 'Среднее число покупок',
+    formula: '[Сколько раз клиент покупает за период LTV]',
+    example: '1.4 покупки на клиента за 12 месяцев',
+    min: 3, max: 150
+  },
+  ltv: {
+    label: 'LTV',
+    formula: '[AOV × среднее число покупок] или [доход с клиента за период]',
+    example: '4 500₽ × 1.4 = 6 300₽ за 12 месяцев',
+    reference: 'Если LTV выше AOV, допустимый CPA можно увеличить',
+    min: 3, max: 200
+  },
+  assumption: {
+    label: 'Допущение',
+    formula: '[Что предполагаем] + [почему допустимо] + [что изменится при ошибке]',
+    example: 'Считаем по первой продаже — данных по LTV пока недостаточно',
+    min: 5, max: 300
+  },
+  targetDrr: {
+    label: 'Целевой DRR',
+    formula: '[Процент от выручки на рекламу] + [обоснование]',
+    example: '15% — при марже 45% и потолке затрат 30% от прибыли',
+    reference: 'DRR выше маржи = убыточная реклама',
+    min: 3, max: 200
+  },
+  limitReason: {
+    label: 'Причина лимита',
+    formula: '[Почему именно такой DRR] + [ограничивающий фактор]',
+    example: 'Нет данных по LTV, считаем окупаемость с первой продажи — лимит консервативный',
+    min: 5, max: 300
+  },
+  safeCorridor: {
+    label: 'Безопасный коридор',
+    formula: '[Мин DRR – макс DRR] + [что за пределами]',
+    example: '10–20%: ниже — недобор трафика, выше — рискуем прибылью',
+    min: 5, max: 200
+  },
+  riskStatus: {
+    label: 'Статус риска',
+    formula: '[Низкий / средний / высокий] + [обоснование]',
+    example: 'Средний — маржа позволяет, но LTV не подтверждён',
+    min: 5, max: 200
+  },
+  leadToSaleConversion: {
+    label: 'Конверсия из лида в продажу',
+    formula: '[Процент] + [источник данных] + [период]',
+    example: '25% — из CRM за 6 месяцев, 85 продаж из 340 лидов',
+    min: 3, max: 200
+  },
+  allowedCpa: {
+    label: 'Допустимый CPA',
+    formula: '[Сумма] + [логика: маржа × DRR или прямой расчёт]',
+    example: '675₽ — маржа 2 025₽ × DRR 33%',
+    reference: 'CPA должен быть ниже валовой прибыли с продажи',
+    min: 3, max: 200
+  },
+  allowedCpl: {
+    label: 'Допустимый CPL',
+    formula: '[CPA × конверсия из лида в продажу]',
+    example: '675₽ × 25% = 169₽ — максимальная стоимость заявки',
+    min: 3, max: 200
+  },
+  promoteAllowed: {
+    label: 'Что можно продвигать',
+    formula: '[Направления с положительной экономикой] + [условия]',
+    example: 'Химчистка диванов, ковров — CPL укладывается, маржа > 40%',
+    min: 10, max: 400
+  },
+  promoteForbidden: {
+    label: 'Что нельзя продвигать',
+    formula: '[Направления с отрицательной экономикой] + [почему]',
+    example: 'Химчистка подушек — чек 800₽, маржа 15%, CPA не окупается',
+    min: 5, max: 400
+  },
+  minTestBudget: {
+    label: 'Минимальный бюджет теста',
+    formula: '[Сумма] + [период] + [что проверяем]',
+    example: '30 000₽ на 2 недели — достаточно для 40+ кликов/день',
+    min: 5, max: 300
+  },
+  risk: {
+    label: 'Риск',
+    formula: '[Что может пойти не так] + [вероятность] + [план Б]',
+    example: 'Конверсия ниже 10% — при CPL > 1000₽ остановить и пересмотреть посадочную',
+    min: 5, max: 300
+  },
+  unitProduct: {
+    label: 'Продукт / услуга',
+    formula: '[Что считаем] — один продукт на один расчёт',
+    example: 'Химчистка мягкой мебели (основная услуга)',
+    min: 5, max: 200
+  },
+  salesModel: {
+    label: 'Модель продажи',
+    formula: '[Тип целевого действия] + [путь к продаже]',
+    example: 'Заявка → звонок менеджера → выезд мастера → оплата',
+    min: 5, max: 200
+  },
+  finalCpaCpl: {
+    label: 'Финальный CPA / CPL',
+    formula: '[Итоговая допустимая стоимость клиента и заявки]',
+    example: 'CPA: 675₽, CPL: 169₽ — главный ориентир для запуска рекламы',
+    reference: 'Главный итог юнит-экономики — всё остальное ведёт к этой цифре',
+    min: 10, max: 300
+  },
+  heroH1: {
+    label: 'H1 героя',
+    formula: '[Ключевое обещание] + [для кого] + [конкретика]',
+    example: 'Химчистка мебели в Москве — результат за 2 часа',
+    reference: 'Один H1 на страницу. Первый экран = одна мысль',
+    min: 15, max: 80
+  },
+  heroVisual: {
+    label: 'Визуал героя',
+    formula: '[Что на изображении / видео] + [эмоция / результат]',
+    example: 'Фото «до/после» — чистый белый диван, мастер в форме',
+    min: 5, max: 200
+  },
+  heroProof: {
+    label: 'Соцдоказательство',
+    formula: '[Факт / цифра / значок доверия на первом экране]',
+    example: '★ 4.9 на Яндексе · 1 200+ клиентов · Гарантия результата',
+    reference: 'Хопкинс: факт на первом экране снимает сомнение быстрее текста',
+    min: 5, max: 200
+  },
+  heroMiniBlocks: {
+    label: 'Мини-блоки',
+    formula: '[3–4 коротких факта: доставка / сроки / гарантия / оплата]',
+    example: 'Выезд за 2 часа · Оплата после результата · Гарантия 30 дней',
+    min: 10, max: 300
+  },
+  primaryButton: {
+    label: 'Основная кнопка',
+    formula: '[Глагол] + [что получит клиент]',
+    example: 'Рассчитать стоимость',
+    reference: 'Одна кнопка = одно действие. Без конкуренции за внимание',
+    min: 5, max: 40
+  },
+  secondaryButton: {
+    label: 'Альтернативная кнопка',
+    formula: '[Запасное действие для тех, кто не готов к основному]',
+    example: 'Написать в WhatsApp',
+    min: 5, max: 40
+  },
+  segmentTitle: {
+    label: 'Заголовок сегментов',
+    formula: '[Обращение к разным группам клиентов]',
+    example: 'Химчистка для каждой ситуации',
+    min: 5, max: 80
+  },
+  segmentCards: {
+    label: 'Карточки сегментов',
+    formula: '[Сегмент] + [ссылка] + [короткое описание]',
+    example: 'Диваны → /divany · Ковры → /kovry · Матрасы → /matrasy',
+    min: 10, max: 500
+  },
+  aboutTitle: {
+    label: 'Заголовок «О компании»',
+    formula: '[Кто мы] + [главный факт / цифра]',
+    example: 'iCleaning — 1 200 клиентов за 3 года',
+    min: 5, max: 80
+  },
+  aboutFacts: {
+    label: '3 фактоида',
+    formula: '[Цифра] + [что она означает] × 3 штуки',
+    example: '1 200 клиентов · 4.9 средняя оценка · 3 года на рынке',
+    reference: 'Хопкинс: конкретные цифры убеждают, прилагательные — нет',
+    min: 10, max: 300
+  },
+  aboutText: {
+    label: 'Текст о подходе',
+    formula: '[Как мы работаем] + [чем это выгодно клиенту]',
+    example: 'Используем гипоаллергенную химию и проверяем результат до отъезда мастера',
+    min: 15, max: 400
+  },
+  trustBadges: {
+    label: 'Значки доверия',
+    formula: '[Сертификаты / награды / партнёрства / рейтинги]',
+    example: 'Сертификат IICRC · Партнёр Karcher · Рейтинг A+ на Яндексе',
+    min: 5, max: 300
+  },
+  cases: {
+    label: 'Кейсы',
+    formula: '[Ситуация] + [что сделали] + [результат]',
+    example: 'Диван после залития — полное восстановление за 3 часа, отзыв 5★',
+    min: 15, max: 500
+  },
+  portfolioButton: {
+    label: 'Кнопка портфолио',
+    formula: '[Текст кнопки для перехода к кейсам]',
+    example: 'Смотреть все работы',
+    min: 5, max: 40
+  },
+  processTitle: {
+    label: 'Заголовок процесса',
+    formula: '[Как это работает] + [акцент на простоту / скорость]',
+    example: 'Как мы работаем — 4 простых шага',
+    min: 5, max: 80
+  },
+  processSteps: {
+    label: 'Шаги процесса',
+    formula: '[Номер] + [действие] + [срок] × 3–5 шагов',
+    example: '1. Заявка → 2. Выезд (2 часа) → 3. Чистка → 4. Проверка результата',
+    min: 15, max: 500
+  },
+  processButton: {
+    label: 'Кнопка под схемой',
+    formula: '[CTA, связанный с первым шагом процесса]',
+    example: 'Начать с бесплатной оценки',
+    min: 5, max: 40
+  },
+  benefits: {
+    label: 'Выгоды',
+    formula: '[Выгода] + [конкретика / цифра] × 3',
+    example: 'Результат за 2 часа · Гипоаллергенная химия · Гарантия 30 дней',
+    reference: 'Ривз: выгода = то, что получает клиент, а не то, чем вы гордитесь',
+    min: 15, max: 400
+  },
+  reviews: {
+    label: 'Отзывы',
+    formula: '[Источник] + [средняя оценка] + [цитаты или виджет]',
+    example: 'Яндекс: 4.9/5, 230 отзывов. «Диван как новый, мастер приехал через час»',
+    min: 10, max: 500
+  },
+  reviewsButton: {
+    label: 'Кнопка отзывов',
+    formula: '[Текст кнопки для перехода к полным отзывам]',
+    example: 'Читать все отзывы на Яндексе',
+    min: 5, max: 40
+  },
+  snippetMeaning: {
+    label: 'Основной смысл страницы',
+    formula: '[О чём страница] + [какую задачу решает для пользователя]',
+    example: 'Главная — первое знакомство, доверие, основной CTA',
+    min: 15, max: 300
+  },
+  phone: { label: 'Телефон', formula: '[Номер в международном формате]', example: '+7 (495) 123-45-67', min: 5, max: 30 },
+  messengers: { label: 'Мессенджеры', formula: '[Канал] + [ссылка / номер]', example: 'WhatsApp: +7 (495) 123-45-67, Telegram: @icleaning', min: 5, max: 200 },
+  address: { label: 'Адрес', formula: '[Полный адрес] + [ориентир / метро]', example: 'Москва, ул. Примерная, 1 (м. Таганская)', min: 5, max: 200 },
+  hours: { label: 'График работы', formula: '[Дни] + [часы]', example: 'Пн–Вс: 09:00–21:00', min: 3, max: 100 },
+  form: { label: 'Форма связи', formula: '[Поля] + [CTA формы] + [куда приходит заявка]', example: 'Имя + Телефон + «Заказать звонок» → CRM + email', min: 10, max: 300 },
+  categoryLogic: {
+    label: 'Логика категорий',
+    formula: '[Принцип деления] + [уровни] + [примеры]',
+    example: 'По типу мебели: диваны / ковры / матрасы / шторы. Один уровень.',
+    min: 10, max: 400
+  },
+  filters: { label: 'Фильтры / сортировка', formula: '[Какие фильтры] + [логика сортировки]', example: 'По цене, по типу ткани, по размеру. Сортировка: по популярности.', min: 5, max: 300 },
+  cards: { label: 'Карточки каталога', formula: '[Что содержит: фото / название / цена / CTA]', example: 'Фото услуги + Название + Цена от + «Подробнее»', min: 10, max: 300 },
+  catalogCta: { label: 'CTA каталога', formula: '[Действие] + [куда ведёт]', example: 'Подробнее → страница услуги', min: 5, max: 60 },
+  gallery: { label: 'Галерея', formula: '[Количество фото] + [что на них] + [формат]', example: '5 фото: общий вид, детали, до/после, процесс, результат', min: 5, max: 200 },
+  price: { label: 'Цена / условия', formula: '[Цена или диапазон] + [что включено]', example: 'от 2 500₽ за кресло, от 4 500₽ за диван. Выезд бесплатный.', min: 5, max: 200 },
+  characteristics: { label: 'Характеристики', formula: '[Ключевые характеристики в структурированном виде]', example: 'Время: 2–3 часа · Площадь: до 3 м² · Химия: гипоаллергенная', min: 10, max: 400 },
+  availability: { label: 'Наличие / сроки', formula: '[Доступность] + [сроки]', example: 'Выезд сегодня при заказе до 15:00', min: 5, max: 150 },
+  productCta: { label: 'Кнопка действия', formula: '[Основное действие на карточке]', example: 'Заказать химчистку', min: 5, max: 40 },
+  serviceProblem: {
+    label: 'Проблема клиента',
+    formula: '[Ситуация] + [почему это проблема] + [что будет если не решить]',
+    example: 'Пятно на диване не выводится домашними средствами — впитывается глубже',
+    min: 15, max: 400
+  },
+  serviceProof: {
+    label: 'Доказательства / кейсы',
+    formula: '[Примеры работ] + [результат] + [отзыв или фото]',
+    example: 'Диван после залития кофе → восстановление за 2 часа, фото до/после',
+    min: 10, max: 500
+  },
+  serviceSteps: {
+    label: 'Процесс / этапы',
+    formula: '[Шаги оказания услуги] + [срок каждого шага]',
+    example: '1. Осмотр (5 мин) → 2. Обработка (40 мин) → 3. Сушка (1 час) → 4. Проверка',
+    min: 10, max: 400
   }
 };
 
@@ -607,6 +1294,14 @@ function bindLiveCharCounters() {
     input.addEventListener('input', () => {
       const std = { min: Number(input.dataset.charMin), max: Number(input.dataset.charMax) };
       updateCharCounter(input, input.dataset.evidenceKey, std);
+    });
+  });
+  document.querySelectorAll('[data-char-counter-key]').forEach(input => {
+    input.addEventListener('input', () => {
+      const counterKey = input.dataset.charCounterKey;
+      const stdKey = input.dataset.charStdKey || counterKey;
+      const std = getFieldStandard(stdKey);
+      if (std) updateCharCounter(input, counterKey, std);
     });
   });
 }
@@ -1998,10 +2693,15 @@ function firstIncompleteDemandStepKey(route) {
 function demandInput(name, label, type = 'text', placeholder = '') {
   const route = ensureDemandRouteState();
   const value = route[name] || '';
+  const std = getFieldStandard(name);
+  const lbl = std ? fieldLabelWithHint(label, name) : `<span>${escapeHtml(label)}</span>`;
+  const counterKey = 'demandInput_' + name;
+  const counter = std && (std.min || std.max) ? charCounterHtml(value, std.min, std.max, counterKey) : '';
+  const charAttrs = std ? ` data-char-counter-key="${escapeAttr(counterKey)}" data-char-std-key="${escapeAttr(name)}"` : '';
   const tag = type === 'textarea'
-    ? `<textarea data-demand-field="${escapeAttr(name)}" placeholder="${escapeAttr(placeholder)}">${escapeHtml(value)}</textarea>`
-    : `<input data-demand-field="${escapeAttr(name)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(placeholder)}" />`;
-  return `<label class="demand-field"><span>${escapeHtml(label)}</span>${tag}</label>`;
+    ? `<textarea data-demand-field="${escapeAttr(name)}"${charAttrs} placeholder="${escapeAttr(placeholder)}">${escapeHtml(value)}</textarea>`
+    : `<input data-demand-field="${escapeAttr(name)}"${charAttrs} value="${escapeAttr(value)}" placeholder="${escapeAttr(placeholder)}" />`;
+  return `<label class="demand-field">${lbl}${tag}${counter}</label>`;
 }
 
 
@@ -2234,8 +2934,10 @@ function painOfferSectionHtml(route, section, isOpen) {
         ${section.fields.map(([key, label]) => {
           const std = getFieldStandard(key);
           const lbl = std ? fieldLabelWithHint(label, key) : `<span>${escapeHtml(label)}</span>`;
-          const counter = std && (std.min || std.max) ? charCounterHtml(data[key] || '', std.min, std.max, 'pain_' + section.key + '_' + key) : '';
-          return `<label class="demand-field">${lbl}<textarea data-pain-section="${escapeAttr(section.key)}" data-pain-section-field="${escapeAttr(key)}" placeholder="результат">${escapeHtml(data[key] || '')}</textarea>${counter}</label>`;
+          const counterKey = 'pain_' + section.key + '_' + key;
+          const counter = std && (std.min || std.max) ? charCounterHtml(data[key] || '', std.min, std.max, counterKey) : '';
+          const charAttrs = std ? ` data-char-counter-key="${escapeAttr(counterKey)}" data-char-std-key="${escapeAttr(key)}"` : '';
+          return `<label class="demand-field">${lbl}<textarea data-pain-section="${escapeAttr(section.key)}" data-pain-section-field="${escapeAttr(key)}"${charAttrs} placeholder="результат">${escapeHtml(data[key] || '')}</textarea>${counter}</label>`;
         }).join('')}
         <label class="demand-field"><span>${fieldLabelWithHint('Доказательство', 'proof')}</span><textarea data-pain-section="${escapeAttr(section.key)}" data-pain-section-field="evidence" placeholder="ссылка, скрин, вывод или источник">${escapeHtml(data.evidence || '')}</textarea></label>
       </div>
@@ -2364,7 +3066,14 @@ function demandStepHtml(route, step, isOpen) {
       <span class="status-pill status-${filled ? 'ready' : 'not_started'}">${filled ? 'Заполнено' : 'Не начато'}</span>
     </button>
     ${isOpen ? `<div class="demand-step-body">
-      ${step.fields.map(([key, label]) => `<label class="demand-field"><span>${escapeHtml(label)}</span><textarea data-demand-step="${escapeAttr(step.key)}" data-demand-step-field="${escapeAttr(key)}" placeholder="результат шага">${escapeHtml(data[key] || '')}</textarea></label>`).join('')}
+      ${step.fields.map(([key, label]) => {
+        const std = getFieldStandard(key);
+        const lbl = std ? fieldLabelWithHint(label, key) : `<span>${escapeHtml(label)}</span>`;
+        const counterKey = 'demand_' + step.key + '_' + key;
+        const counter = std && (std.min || std.max) ? charCounterHtml(data[key] || '', std.min, std.max, counterKey) : '';
+        const charAttrs = std ? ` data-char-counter-key="${escapeAttr(counterKey)}" data-char-std-key="${escapeAttr(key)}"` : '';
+        return `<label class="demand-field">${lbl}<textarea data-demand-step="${escapeAttr(step.key)}" data-demand-step-field="${escapeAttr(key)}"${charAttrs} placeholder="результат шага">${escapeHtml(data[key] || '')}</textarea>${counter}</label>`;
+      }).join('')}
     </div>` : ''}
   </article>`;
 }
@@ -4124,9 +4833,11 @@ function pageContextFieldHtml(card, pageIndex, row, def) {
   const hintKey = def.key;
   const std = getFieldStandard(hintKey);
   const labelHtml = std ? fieldLabelWithHint(def.label, hintKey) : escapeHtml(def.label);
-  const counter = std && (std.min || std.max) ? charCounterHtml(value, std.min, std.max, hintKey + '_' + card.id + '_' + pageIndex) : '';
-  if (def.type === 'textarea') return `<label class="full">${labelHtml}<textarea ${common} rows="2">${escapeHtml(value)}</textarea>${counter}</label>`;
-  return `<label>${labelHtml}<input ${common} value="${escapeAttr(value)}" />${counter}</label>`;
+  const counterKey = hintKey + '_' + card.id + '_' + pageIndex;
+  const counter = std && (std.min || std.max) ? charCounterHtml(value, std.min, std.max, counterKey) : '';
+  const charAttrs = std ? ` data-char-counter-key="${escapeAttr(counterKey)}" data-char-std-key="${escapeAttr(hintKey)}"` : '';
+  if (def.type === 'textarea') return `<label class="full">${labelHtml}<textarea ${common}${charAttrs} rows="2">${escapeHtml(value)}</textarea>${counter}</label>`;
+  return `<label>${labelHtml}<input ${common}${charAttrs} value="${escapeAttr(value)}" />${counter}</label>`;
 }
 
 function snippetForPage(row) {
@@ -4162,18 +4873,18 @@ function strategyFieldsHtml(card) {
       ['cta', 'CTA'], ['mainPain', 'Главная боль'], ['jtbd', 'JTBD'], ['offerFormula', 'Формула офера'],
       ['targetCpa', 'Целевой CPA'], ['differentiation', 'Точка отличия']
     ], 'Контекст проекта')}
-    <label>Стратегическое решение<textarea data-strategy-card-id="${escapeAttr(card.id)}" data-strategy-field="decision" rows="3">${escapeHtml(card.strategyFields.decision || '')}</textarea></label>
-    <label>Источник решения<input data-strategy-card-id="${escapeAttr(card.id)}" data-strategy-field="source" value="${escapeAttr(card.strategyFields.source || '')}" placeholder="спрос, боль, конкурент, экономика" /></label>
-    <label>Следующий шаг<input data-strategy-card-id="${escapeAttr(card.id)}" data-strategy-field="nextStep" value="${escapeAttr(card.strategyFields.nextStep || '')}" /></label>
+    <label>${fieldLabelWithHint('Стратегическое решение', 'strategyDecision')}<textarea data-strategy-card-id="${escapeAttr(card.id)}" data-strategy-field="decision" data-char-counter-key="strategyDecision_${escapeAttr(card.id)}" data-char-std-key="strategyDecision" rows="3">${escapeHtml(card.strategyFields.decision || '')}</textarea>${charCounterHtml(card.strategyFields.decision, 30, 500, 'strategyDecision_' + card.id)}</label>
+    <label>${fieldLabelWithHint('Источник решения', 'strategySource')}<input data-strategy-card-id="${escapeAttr(card.id)}" data-strategy-field="source" data-char-counter-key="strategySource_${escapeAttr(card.id)}" data-char-std-key="strategySource" value="${escapeAttr(card.strategyFields.source || '')}" placeholder="спрос, боль, конкурент, экономика" />${charCounterHtml(card.strategyFields.source, 10, 200, 'strategySource_' + card.id)}</label>
+    <label>${fieldLabelWithHint('Следующий шаг', 'strategyNextStep')}<input data-strategy-card-id="${escapeAttr(card.id)}" data-strategy-field="nextStep" data-char-counter-key="strategyNextStep_${escapeAttr(card.id)}" data-char-std-key="strategyNextStep" value="${escapeAttr(card.strategyFields.nextStep || '')}" />${charCounterHtml(card.strategyFields.nextStep, 10, 200, 'strategyNextStep_' + card.id)}</label>
   </div>`;
 }
 
 function implementationFieldsHtml(card) {
   card.implementationFields = card.implementationFields || { what:'', where:'', output:'', comment:'' };
   return `<div class="implementation-fields context-panel">
-    <label>Что реализовать<textarea data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="what" rows="2">${escapeHtml(card.implementationFields.what || '')}</textarea></label>
-    <label>Где реализовать<input data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="where" value="${escapeAttr(card.implementationFields.where || '')}" placeholder="страница / канал / кампания" /></label>
-    <label>Результат на выходе<input data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="output" value="${escapeAttr(card.implementationFields.output || '')}" /></label>
+    <label>${fieldLabelWithHint('Что реализовать', 'implWhat')}<textarea data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="what" data-char-counter-key="implWhat_${escapeAttr(card.id)}" data-char-std-key="implWhat" rows="2">${escapeHtml(card.implementationFields.what || '')}</textarea>${charCounterHtml(card.implementationFields.what, 15, 400, 'implWhat_' + card.id)}</label>
+    <label>${fieldLabelWithHint('Где реализовать', 'implWhere')}<input data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="where" data-char-counter-key="implWhere_${escapeAttr(card.id)}" data-char-std-key="implWhere" value="${escapeAttr(card.implementationFields.where || '')}" placeholder="страница / канал / кампания" />${charCounterHtml(card.implementationFields.where, 5, 200, 'implWhere_' + card.id)}</label>
+    <label>${fieldLabelWithHint('Результат на выходе', 'implOutput')}<input data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="output" data-char-counter-key="implOutput_${escapeAttr(card.id)}" data-char-std-key="implOutput" value="${escapeAttr(card.implementationFields.output || '')}" />${charCounterHtml(card.implementationFields.output, 10, 300, 'implOutput_' + card.id)}</label>
     <label>Комментарий<input data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="comment" value="${escapeAttr(card.implementationFields.comment || '')}" placeholder="если нужен" /></label>
   </div>`;
 }
@@ -4181,8 +4892,8 @@ function implementationFieldsHtml(card) {
 function taskFieldsHtml(card) {
   card.taskFields = card.taskFields || { due:'', result:'', comment:'' };
   return `<div class="task-fields context-panel">
-    <label>Дата / период<input data-task-card-id="${escapeAttr(card.id)}" data-task-field="due" value="${escapeAttr(card.taskFields.due || '')}" /></label>
-    <label>Результат<input data-task-card-id="${escapeAttr(card.id)}" data-task-field="result" value="${escapeAttr(card.taskFields.result || '')}" /></label>
+    <label>${fieldLabelWithHint('Дата / период', 'taskDue')}<input data-task-card-id="${escapeAttr(card.id)}" data-task-field="due" data-char-counter-key="taskDue_${escapeAttr(card.id)}" data-char-std-key="taskDue" value="${escapeAttr(card.taskFields.due || '')}" />${charCounterHtml(card.taskFields.due, 3, 50, 'taskDue_' + card.id)}</label>
+    <label>${fieldLabelWithHint('Результат', 'taskResult')}<input data-task-card-id="${escapeAttr(card.id)}" data-task-field="result" data-char-counter-key="taskResult_${escapeAttr(card.id)}" data-char-std-key="taskResult" value="${escapeAttr(card.taskFields.result || '')}" />${charCounterHtml(card.taskFields.result, 5, 300, 'taskResult_' + card.id)}</label>
     <label>Комментарий<input data-task-card-id="${escapeAttr(card.id)}" data-task-field="comment" value="${escapeAttr(card.taskFields.comment || '')}" placeholder="если нужен" /></label>
   </div>`;
 }
@@ -6616,10 +7327,16 @@ function firstIncompleteUnitSectionKey() {
 function unitInput(name, label, type = 'text', placeholder = '') {
   const route = ensureUnitEconomicsState();
   const value = route[name] || '';
+  const stdKey = ({ product: 'unitProduct' })[name] || name;
+  const std = getFieldStandard(stdKey);
+  const lbl = std ? fieldLabelWithHint(label, stdKey) : `<span>${escapeHtml(label)}</span>`;
+  const counterKey = 'unitInput_' + name;
+  const counter = std && (std.min || std.max) ? charCounterHtml(value, std.min, std.max, counterKey) : '';
+  const charAttrs = std ? ` data-char-counter-key="${escapeAttr(counterKey)}" data-char-std-key="${escapeAttr(stdKey)}"` : '';
   const tag = type === 'textarea'
-    ? `<textarea data-unit-field="${escapeAttr(name)}" placeholder="${escapeAttr(placeholder)}">${escapeHtml(value)}</textarea>`
-    : `<input data-unit-field="${escapeAttr(name)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(placeholder)}" />`;
-  return `<label class="demand-field"><span>${escapeHtml(label)}</span>${tag}</label>`;
+    ? `<textarea data-unit-field="${escapeAttr(name)}"${charAttrs} placeholder="${escapeAttr(placeholder)}">${escapeHtml(value)}</textarea>`
+    : `<input data-unit-field="${escapeAttr(name)}"${charAttrs} value="${escapeAttr(value)}" placeholder="${escapeAttr(placeholder)}" />`;
+  return `<label class="demand-field">${lbl}${tag}${counter}</label>`;
 }
 
 function renderUnitEconomicsRoute(section) {
@@ -6682,8 +7399,15 @@ function unitSectionHtml(route, section, isOpen) {
     ${isOpen ? `<div class="pain-step-body">
       <div class="pain-standard"><strong>Стандарт готовности:</strong> ${escapeHtml(section.standard)}</div>
       <div class="demand-step-body">
-        ${section.fields.map(([key, label]) => `<label class="demand-field"><span>${escapeHtml(label)}</span><textarea data-unit-section="${escapeAttr(section.key)}" data-unit-section-field="${escapeAttr(key)}" placeholder="результат">${escapeHtml(data[key] || '')}</textarea></label>`).join('')}
-        <label class="demand-field"><span>Доказательство</span><textarea data-unit-section="${escapeAttr(section.key)}" data-unit-section-field="evidence" placeholder="ссылка, источник расчёта или короткий вывод">${escapeHtml(data.evidence || '')}</textarea></label>
+        ${section.fields.map(([key, label]) => {
+          const std = getFieldStandard(key);
+          const lbl = std ? fieldLabelWithHint(label, key) : `<span>${escapeHtml(label)}</span>`;
+          const counterKey = 'unit_' + section.key + '_' + key;
+          const counter = std && (std.min || std.max) ? charCounterHtml(data[key] || '', std.min, std.max, counterKey) : '';
+          const charAttrs = std ? ` data-char-counter-key="${escapeAttr(counterKey)}" data-char-std-key="${escapeAttr(key)}"` : '';
+          return `<label class="demand-field">${lbl}<textarea data-unit-section="${escapeAttr(section.key)}" data-unit-section-field="${escapeAttr(key)}"${charAttrs} placeholder="результат">${escapeHtml(data[key] || '')}</textarea>${counter}</label>`;
+        }).join('')}
+        <label class="demand-field"><span>${fieldLabelWithHint('Доказательство', 'proof')}</span><textarea data-unit-section="${escapeAttr(section.key)}" data-unit-section-field="evidence" placeholder="ссылка, источник расчёта или короткий вывод">${escapeHtml(data.evidence || '')}</textarea></label>
       </div>
     </div>` : ''}
   </article>`;
