@@ -161,6 +161,7 @@ function saveState() {
   syncActiveProjectMeta();
   els.saveStatus.textContent = 'Сохранено: ' + new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   els.autosaveDot.style.background = '#82d48d';
+  scheduleCloudSync();
 }
 
 function syncActiveProjectMeta() {
@@ -8232,3 +8233,40 @@ document.addEventListener('click', e => {
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+|v1\.0/g, 'v1.0'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+|v1\.0/g, 'v1.0'); });
 })();
+
+// === Supabase sync ===
+let _syncTimer = null;
+
+function scheduleCloudSync() {
+  if (_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(pushToSupabase, 2000);
+}
+
+async function pushToSupabase() {
+  if (!state || !activeProjectId) return;
+  try {
+    const response = await fetch('/api/workspace-sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project_id: activeProjectId, state: state })
+    });
+    const data = await response.json();
+    if (data.ok) {
+      els.saveStatus.textContent = 'Сохранено в облако: ' + new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      els.autosaveDot.style.background = '#4a9eff';
+    }
+  } catch (e) {
+    console.warn('Supabase sync failed, localStorage ok', e);
+  }
+}
+
+async function loadFromSupabase(projectId) {
+  try {
+    const response = await fetch(`/api/workspace-sync?project_id=${encodeURIComponent(projectId)}`);
+    const data = await response.json();
+    if (data.ok && data.state) return data.state;
+  } catch (e) {
+    console.warn('Supabase load failed, using localStorage', e);
+  }
+  return null;
+}
