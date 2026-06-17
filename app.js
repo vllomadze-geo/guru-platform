@@ -9219,6 +9219,3 @@ window.__yandexCheckScheduled = false;
 document.addEventListener('DOMContentLoaded', () => {
   handleYandexCallback();
 });
-
-// Хук: проверяем подключение после того как проект открылся
-}
