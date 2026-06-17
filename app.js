@@ -9030,3 +9030,200 @@ document.addEventListener('click', e => {
   saveState();
   renderGate();
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ЯНДЕКС ПОДКЛЮЧЕНИЕ
+// ═══════════════════════════════════════════════════════════════════════════
+
+const YANDEX_CLIENT_ID = '0e01043f75a840678a965001504ba56e';
+
+// ── Проверка состояния подключения ────────────────────────────────────────
+async function checkYandexConnection() {
+  const statusEl = document.getElementById('yandexStatus');
+  const btnEl    = document.getElementById('yandexConnectBtn');
+  if (!statusEl || !btnEl) return;
+
+  if (!activeProjectId) return;
+
+  statusEl.className = 'yandex-status is-checking';
+  statusEl.textContent = 'Яндекс: проверка...';
+
+  try {
+    // Пробуем получить данные Директа — если токен есть, вернёт ok:true
+    const res = await fetch(`/api/yandex-direct?project_id=${encodeURIComponent(activeProjectId)}`);
+    const json = await res.json();
+
+    if (json.ok) {
+      setYandexConnected(json.data);
+    } else if (json.error === 'not_connected' || json.error === 'missing_project_id') {
+      setYandexDisconnected();
+    } else if (json.error === 'token_expired') {
+      setYandexStatus('is-error', 'Токен устарел — переподключите');
+      btnEl.textContent = 'Переподключить';
+      btnEl.className = 'btn yandex-btn';
+    } else {
+      // Токен есть но Direct вернул ошибку (нет кампаний и т.д.) — всё равно connected
+      setYandexConnected(null);
+    }
+  } catch (e) {
+    setYandexDisconnected();
+  }
+}
+
+function setYandexDisconnected() {
+  const statusEl = document.getElementById('yandexStatus');
+  const btnEl    = document.getElementById('yandexConnectBtn');
+  if (!statusEl || !btnEl) return;
+  statusEl.className = 'yandex-status is-disconnected';
+  statusEl.textContent = 'Яндекс не подключён';
+  btnEl.textContent = 'Подключить Яндекс';
+  btnEl.className = 'btn yandex-btn';
+  hideYandexDataStrip();
+}
+
+function setYandexConnected(data) {
+  const statusEl = document.getElementById('yandexStatus');
+  const btnEl    = document.getElementById('yandexConnectBtn');
+  if (!statusEl || !btnEl) return;
+  statusEl.className = 'yandex-status is-connected';
+  statusEl.textContent = 'Яндекс подключён ✓';
+  btnEl.textContent = 'Переподключить';
+  btnEl.className = 'btn yandex-btn is-connected';
+  if (data) showYandexDataStrip(data);
+}
+
+function setYandexStatus(cls, text) {
+  const statusEl = document.getElementById('yandexStatus');
+  if (!statusEl) return;
+  statusEl.className = `yandex-status ${cls}`;
+  statusEl.textContent = text;
+}
+
+// ── Плашка с данными под заголовком ──────────────────────────────────────
+function showYandexDataStrip(data) {
+  // Убираем старую если есть
+  document.getElementById('yandexDataStrip')?.remove();
+
+  const summaryGrid = document.getElementById('summaryGrid');
+  if (!summaryGrid) return;
+
+  const fmt = (n) => n != null ? Number(n).toLocaleString('ru-RU') : '—';
+  const fmtPct = (n) => n != null ? `${n}%` : '—';
+
+  const strip = document.createElement('div');
+  strip.id = 'yandexDataStrip';
+  strip.className = 'yandex-data-strip';
+  strip.innerHTML = `
+    <div class="yandex-data-strip-title">Яндекс Директ · ${data.period?.from || ''} — ${data.period?.to || ''}</div>
+    <div class="yandex-kpi">
+      <div class="yandex-kpi-label">Расход</div>
+      <div class="yandex-kpi-value">${fmt(data.spend)} <span class="yandex-kpi-unit">₽</span></div>
+    </div>
+    <div class="yandex-kpi">
+      <div class="yandex-kpi-label">Клики</div>
+      <div class="yandex-kpi-value">${fmt(data.clicks)}</div>
+    </div>
+    <div class="yandex-kpi">
+      <div class="yandex-kpi-label">CTR</div>
+      <div class="yandex-kpi-value">${fmtPct(data.ctr)}</div>
+    </div>
+    <div class="yandex-kpi">
+      <div class="yandex-kpi-label">CPC</div>
+      <div class="yandex-kpi-value">${fmt(data.cpc)} <span class="yandex-kpi-unit">₽</span></div>
+    </div>
+    <div class="yandex-kpi">
+      <div class="yandex-kpi-label">Конверсии</div>
+      <div class="yandex-kpi-value">${fmt(data.conversions)}</div>
+    </div>
+    <div class="yandex-kpi">
+      <div class="yandex-kpi-label">CPL</div>
+      <div class="yandex-kpi-value">${data.cpl > 0 ? fmt(data.cpl) : '—'} <span class="yandex-kpi-unit">${data.cpl > 0 ? '₽' : ''}</span></div>
+    </div>
+  `;
+
+  // Вставляем после summaryGrid
+  summaryGrid.insertAdjacentElement('afterend', strip);
+}
+
+function hideYandexDataStrip() {
+  document.getElementById('yandexDataStrip')?.remove();
+}
+
+// ── Запуск OAuth ──────────────────────────────────────────────────────────
+function startYandexOAuth() {
+  if (!activeProjectId) {
+    alert('Сначала откройте проект');
+    return;
+  }
+  const url = `https://oauth.yandex.ru/authorize?response_type=code` +
+    `&client_id=${YANDEX_CLIENT_ID}` +
+    `&state=${encodeURIComponent(activeProjectId)}`;
+  window.location.href = url;
+}
+
+// ── Обработка возврата после OAuth ───────────────────────────────────────
+function handleYandexCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const connected = params.get('yandex_connected');
+  const error     = params.get('yandex_error');
+  const projectId = params.get('project_id');
+  const login     = params.get('login');
+
+  if (!connected && !error) return;
+
+  // Чистим URL
+  const clean = window.location.pathname;
+  window.history.replaceState({}, '', clean);
+
+  if (error) {
+    setTimeout(() => {
+      setYandexStatus('is-error', `Ошибка: ${error}`);
+    }, 500);
+    return;
+  }
+
+  if (connected && projectId) {
+    // Открываем нужный проект если ещё не открыт
+    if (activeProjectId !== projectId && projectId !== 'test-project-123') {
+      openProject(projectId);
+    }
+    // Показываем статус
+    setTimeout(() => {
+      setYandexStatus('is-checking', `Яндекс: загружаем данные...`);
+      checkYandexConnection();
+      if (login) {
+        const statusEl = document.getElementById('yandexStatus');
+        if (statusEl) {
+          setTimeout(() => {
+            if (statusEl.classList.contains('is-connected')) {
+              statusEl.textContent = `Яндекс: ${login} ✓`;
+            }
+          }, 2000);
+        }
+      }
+    }, 400);
+  }
+}
+
+// ── Навешиваем событие на кнопку ──────────────────────────────────────────
+document.addEventListener('click', e => {
+  if (e.target.closest('#yandexConnectBtn')) {
+    startYandexOAuth();
+  }
+});
+
+// ── Запуск при открытии проекта ───────────────────────────────────────────
+const _origOpenProject = openProject;
+// Патчим openProject чтобы после открытия проверять Яндекс
+window.__yandexCheckScheduled = false;
+document.addEventListener('DOMContentLoaded', () => {
+  handleYandexCallback();
+});
+
+// Хук: проверяем подключение после того как проект открылся
+const _openProjectOrig = openProject;
+function openProject(projectId) {
+  _openProjectOrig(projectId);
+  // Небольшая задержка чтобы DOM успел отрендериться
+  setTimeout(() => checkYandexConnection(), 600);
+}
