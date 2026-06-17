@@ -9078,7 +9078,6 @@ function setYandexDisconnected() {
   statusEl.textContent = 'Яндекс не подключён';
   btnEl.textContent = 'Подключить Яндекс';
   btnEl.className = 'btn yandex-btn';
-  hideYandexDataStrip();
 }
 
 function setYandexConnected(data) {
@@ -9089,7 +9088,6 @@ function setYandexConnected(data) {
   statusEl.textContent = 'Яндекс подключён ✓';
   btnEl.textContent = 'Переподключить';
   btnEl.className = 'btn yandex-btn is-connected';
-  if (data) showYandexDataStrip(data);
 }
 
 function setYandexStatus(cls, text) {
@@ -9097,56 +9095,6 @@ function setYandexStatus(cls, text) {
   if (!statusEl) return;
   statusEl.className = `yandex-status ${cls}`;
   statusEl.textContent = text;
-}
-
-// ── Плашка с данными под заголовком ──────────────────────────────────────
-function showYandexDataStrip(data) {
-  // Убираем старую если есть
-  document.getElementById('yandexDataStrip')?.remove();
-
-  const summaryGrid = document.getElementById('summaryGrid');
-  if (!summaryGrid) return;
-
-  const fmt = (n) => n != null ? Number(n).toLocaleString('ru-RU') : '—';
-  const fmtPct = (n) => n != null ? `${n}%` : '—';
-
-  const strip = document.createElement('div');
-  strip.id = 'yandexDataStrip';
-  strip.className = 'yandex-data-strip';
-  strip.innerHTML = `
-    <div class="yandex-data-strip-title">Яндекс Директ · ${data.period?.from || ''} — ${data.period?.to || ''}</div>
-    <div class="yandex-kpi">
-      <div class="yandex-kpi-label">Расход</div>
-      <div class="yandex-kpi-value">${fmt(data.spend)} <span class="yandex-kpi-unit">₽</span></div>
-    </div>
-    <div class="yandex-kpi">
-      <div class="yandex-kpi-label">Клики</div>
-      <div class="yandex-kpi-value">${fmt(data.clicks)}</div>
-    </div>
-    <div class="yandex-kpi">
-      <div class="yandex-kpi-label">CTR</div>
-      <div class="yandex-kpi-value">${fmtPct(data.ctr)}</div>
-    </div>
-    <div class="yandex-kpi">
-      <div class="yandex-kpi-label">CPC</div>
-      <div class="yandex-kpi-value">${fmt(data.cpc)} <span class="yandex-kpi-unit">₽</span></div>
-    </div>
-    <div class="yandex-kpi">
-      <div class="yandex-kpi-label">Конверсии</div>
-      <div class="yandex-kpi-value">${fmt(data.conversions)}</div>
-    </div>
-    <div class="yandex-kpi">
-      <div class="yandex-kpi-label">CPL</div>
-      <div class="yandex-kpi-value">${data.cpl > 0 ? fmt(data.cpl) : '—'} <span class="yandex-kpi-unit">${data.cpl > 0 ? '₽' : ''}</span></div>
-    </div>
-  `;
-
-  // Вставляем после summaryGrid
-  summaryGrid.insertAdjacentElement('afterend', strip);
-}
-
-function hideYandexDataStrip() {
-  document.getElementById('yandexDataStrip')?.remove();
 }
 
 // ── Запуск OAuth ──────────────────────────────────────────────────────────
@@ -9213,69 +9161,3 @@ document.addEventListener('click', e => {
 });
 
 
-// ═══════════════════════════════════════════════════════════════
-// GPT — ЧАТ И ПОМОЩЬ С ЗАПОЛНЕНИЕМ
-// ═══════════════════════════════════════════════════════════════
-
-function getProjectContextForGPT() {
-  if (!state?.project) return {};
-  return { name: state.project.name||'', type: state.project.type||'', website: state.project.website||'', usp: state.project.usp||'', offer: state.project.offer||'', geography: state.project.geography||'' };
-}
-
-let _gptChatHistory = [];
-let _gptChatOpen = false;
-
-function initGPTChat() {
-  const sidebar = document.querySelector('.sidebar');
-  if (!sidebar || document.getElementById('gptChatBlock')) return;
-  const block = document.createElement('div');
-  block.id = 'gptChatBlock';
-  block.className = 'gpt-chat-block';
-  block.innerHTML = '<button class="gpt-chat-toggle" id="gptChatToggle"><span>✦</span> GPT-ассистент</button><div class="gpt-chat-panel" id="gptChatPanel" hidden><div class="gpt-chat-messages" id="gptChatMessages"></div><div class="gpt-chat-input-row"><textarea class="gpt-chat-input" id="gptChatInput" placeholder="Спросить GPT..." rows="2"></textarea><button class="gpt-send-btn" id="gptSendBtn">→</button></div></div>';
-  const footer = sidebar.querySelector('.side-footer');
-  if (footer) sidebar.insertBefore(block, footer); else sidebar.appendChild(block);
-  document.getElementById('gptChatToggle').addEventListener('click', () => { _gptChatOpen=!_gptChatOpen; document.getElementById('gptChatPanel').hidden=!_gptChatOpen; document.getElementById('gptChatToggle').classList.toggle('is-open',_gptChatOpen); if(_gptChatOpen) document.getElementById('gptChatInput')?.focus(); });
-  document.getElementById('gptSendBtn').addEventListener('click', sendGPTMessage);
-  document.getElementById('gptChatInput').addEventListener('keydown', e => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendGPTMessage();} });
-}
-
-async function sendGPTMessage() {
-  const input = document.getElementById('gptChatInput');
-  const text = input?.value?.trim();
-  if (!text) return;
-  input.value = ''; input.disabled = true;
-  _gptChatHistory.push({ role: 'user', content: text });
-  renderGPTMessages();
-  const loaderId = 'gpt-loading-' + Date.now();
-  appendGPTMessage('assistant', '...', loaderId);
-  try {
-    const res = await fetch('/api/gpt', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ messages: _gptChatHistory, project_context: getProjectContextForGPT(), mode: 'chat' }) });
-    const json = await res.json();
-    document.getElementById(loaderId)?.remove();
-    if (json.ok) { _gptChatHistory.push({ role: 'assistant', content: json.text }); appendGPTMessage('assistant', json.text); }
-    else appendGPTMessage('assistant', 'Ошибка: ' + json.error);
-  } catch(e) { document.getElementById(loaderId)?.remove(); appendGPTMessage('assistant', 'Ошибка соединения'); }
-  input.disabled = false; input.focus();
-}
-
-function renderGPTMessages() {
-  const c = document.getElementById('gptChatMessages');
-  if (!c) return;
-  c.innerHTML = _gptChatHistory.map(m => '<div class="gpt-msg gpt-msg-'+m.role+'"><div class="gpt-msg-bubble">'+escapeHtml(m.content).replace(/\n/g,'<br>')+'</div></div>').join('');
-  c.scrollTop = c.scrollHeight;
-}
-
-function appendGPTMessage(role, text, id) {
-  const c = document.getElementById('gptChatMessages');
-  if (!c) return;
-  const d = document.createElement('div');
-  d.className = 'gpt-msg gpt-msg-'+role;
-  if (id) d.id = id;
-  d.innerHTML = '<div class="gpt-msg-bubble">'+escapeHtml(text).replace(/\n/g,'<br>')+'</div>';
-  c.appendChild(d); c.scrollTop = c.scrollHeight;
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const appShell = document.getElementById('appShell');
-  if (appShell) new MutationObserver(() => { if (!appShell.hidden) setTimeout(initGPTChat, 300); }).observe(appShell, {attributes:true, attributeFilter:['hidden']});
-});
