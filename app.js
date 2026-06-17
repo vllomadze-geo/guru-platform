@@ -9221,9 +9221,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Хук: проверяем подключение после того как проект открылся
-const _openProjectOrig = openProject;
+// openProject hook via observer
 function openProject(projectId) {
-  _openProjectOrig(projectId);
+  // replaced
   // Небольшая задержка чтобы DOM успел отрендериться
   setTimeout(() => checkYandexConnection(), 600);
 }
