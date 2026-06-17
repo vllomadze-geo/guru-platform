@@ -7497,13 +7497,7 @@ function bindGate6Events() {
     g6.context[input.dataset.g6Context] = input.value;
     saveState();
   }));
-  document.querySelectorAll('[data-g6-open]').forEach(btn => btn.addEventListener('click', () => {
-    const g6 = ensureGate6State();
-    const key = btn.dataset.g6Open;
-    g6.openSeasons[key] = !g6.openSeasons[key];
-    saveState();
-    renderGate();
-  }));
+  // [delegated]
   document.querySelectorAll('[data-g6-relevance]').forEach(input => input.addEventListener('change', () => {
     const g6 = ensureGate6State();
     const key = input.dataset.g6Relevance;
@@ -7841,16 +7835,7 @@ function bindGate6Events() {
     g6.context[input.dataset.g6Context] = input.value;
     saveState();
   }));
-  document.querySelectorAll('[data-g6-open-quarter]').forEach(btn => btn.addEventListener('click', () => {
-    const g6 = ensureGate6State();
-    const key = btn.dataset.g6OpenQuarter;
-    const next = !g6.openQuarters[key];
-    const oneAtATime = window.matchMedia && window.matchMedia('(max-width: 720px)').matches;
-    if (oneAtATime && next) g6.openQuarters = {};
-    g6.openQuarters[key] = next;
-    saveState();
-    renderGate();
-  }));
+  // [delegated]
   document.querySelectorAll('[data-g6-event-detail]').forEach(detail => detail.addEventListener('toggle', () => {
     const g6 = ensureGate6State();
     g6.openEvents[detail.dataset.g6EventDetail] = detail.open;
@@ -8271,3 +8256,22 @@ async function loadFromSupabase(projectId) {
   }
   return null;
 }
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-g6-open-quarter]');
+  if (!btn) return;
+  const g6 = ensureGate6State();
+  const key = btn.dataset.g6OpenQuarter;
+  g6.openQuarters[key] = !g6.openQuarters[key];
+  saveState();
+  renderGate();
+});
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-g6-open]');
+  if (!btn || e.target.closest('[data-g6-open-quarter]')) return;
+  const g6 = ensureGate6State();
+  const key = btn.dataset.g6Open;
+  g6.openSeasons[key] = !g6.openSeasons[key];
+  saveState();
+  renderGate();
+});
