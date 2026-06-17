@@ -1,7 +1,9 @@
 {
   "functions": {
-    "api/supabase-test.js": {
-      "regions": ["fra1"]
-    }
+    "api/supabase-test.js":      { "regions": ["fra1"] },
+    "api/workspace-sync.js":     { "regions": ["fra1"] },
+    "api/yandex-callback.js":    { "regions": ["fra1"] },
+    "api/yandex-direct.js":      { "regions": ["fra1"] },
+    "api/yandex-metrika.js":     { "regions": ["fra1"] }
   }
 }
