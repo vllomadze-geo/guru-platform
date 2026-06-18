@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v1.1.2';
+const PLATFORM_VERSION = 'v1.1.6';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -8954,4 +8954,322 @@ bindCardInputs = function() {
   document.title = document.title.replace(re, 'v1.1.5');
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.5'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.5'); });
+})();
+
+
+/*
+  v1.1.6 — Gate 0 / единый паспортный интерфейс для 5 базовых блоков.
+  Цель: меньше обучающего текста, больше фиксации результата, ключевых смыслов и явного признака передачи данных.
+*/
+STATUS_LABELS.requires_update = 'Требует обновления';
+
+const GATE0_PASSPORT_V116_BLOCKS = {
+  'Продукт, сегмент и задача клиента': {
+    key: 'product_segment_client_task',
+    title: 'Продукт, сегмент и задача клиента',
+    orient: 'Зафиксируйте, что продаем, кому продаем и ради какого результата клиенту это нужно.',
+    formula: 'Что продаем → кому продаем → результат → передать дальше',
+    instruction: 'Инструменты: бриф, интервью, CRM, сайт, отдел продаж. На выходе должны быть три базовых смысла проекта: продукт, сегмент, результат.',
+    context: ['name','niche','website','geography'],
+    fields: [
+      { key: 'whatSell', sharedKey: 'что_продаем', label: 'Что продаем', hint: 'продукт / услуга / направление', route: 'Gate 1, Gate 3, Gate 4', downstream: 'оффер, семантика, юнит-экономика, кампании, календарь, отчеты', fallback: ['niche','offer'] },
+      { key: 'targetSegment', sharedKey: 'кому_продаем', label: 'Кому продаем', hint: 'основной сегмент / аудитория', route: 'Gate 1, Gate 3, Gate 4', downstream: 'ЦА, сегменты, персоны, рекламные группы, коллаборации', fallback: [] },
+      { key: 'clientResult', sharedKey: 'ради_какого_результата', label: 'Ради какого результата', hint: 'какую задачу клиент хочет решить', route: 'Gate 1, Gate 3, Gate 4', downstream: 'JTBD, офер, лендинги, объявления, CTA', fallback: ['afterDescription'] }
+    ],
+    tags: { key: 'productKeywords', sharedKey: 'product_keywords', label: 'Ключевые слова продукта', placeholder: 'подарок ручной работы, авторская мастерская, под заказ' },
+    proof: { key: 'productSegmentProof', sharedKey: 'product_segment_proof', label: 'Доказательство', placeholder: 'бриф / интервью / CRM / сайт / отдел продаж' },
+    transfer: 'Глобальные поля · используются в Gate 1, Gate 3, Gate 4'
+  },
+  'Психологическая декомпозиция оффера': {
+    key: 'offer_psychology',
+    title: 'Психологическая декомпозиция оффера',
+    orient: 'Зафиксируйте психологическую основу оффера: рациональное объяснение, скрытый мотив и социальное оправдание.',
+    formula: 'Рациональное объяснение → скрытый мотив → социальное оправдание → передать дальше',
+    instruction: 'Инструменты: интервью, отзывы, CRM, конкуренты, фокус-группа. На выходе должны быть три мотива покупки.',
+    context: ['whatSell','targetSegment','clientResult','usp'],
+    fields: [
+      { key: 'offerRationalCoverage', sharedKey: 'offer_rational_coverage', label: 'Рациональное покрытие', hint: 'цена, срок, гарантия, качество, результат', route: 'Gate 1, Gate 3, Gate 4', downstream: 'FAQ, цена, преимущества, объявления', fallback: [] },
+      { key: 'offerIrrationalDriver', sharedKey: 'offer_irrational_driver', label: 'Иррациональный драйвер', hint: 'страх, желание, статус, контроль, уверенность', route: 'Gate 1, Gate 3, Gate 4', downstream: 'офер, hero-экран, боли, креативы', fallback: [] },
+      { key: 'offerSocialMechanism', sharedKey: 'offer_social_mechanism', label: 'Социальный механизм', hint: 'как клиент объясняет покупку другим', route: 'Gate 1, Gate 3, Gate 4', downstream: 'отзывы, кейсы, соцдоказательство, PR', fallback: [] }
+    ],
+    tags: { key: 'offerPsychTags', sharedKey: 'offer_psych_tags', label: 'Ключевые мотивы', placeholder: 'статус, забота, уникальность, контроль' },
+    proof: { key: 'offerPsychProof', sharedKey: 'offer_psych_proof', label: 'Доказательство', placeholder: 'интервью / отзывы / CRM / конкуренты / фокус-группа' },
+    transfer: 'Глобальные поля оффера · используются в Gate 1, Gate 3, Gate 4'
+  },
+  'Текущее позиционирование и УТП': {
+    key: 'positioning_utp',
+    title: 'Текущее позиционирование и УТП',
+    orient: 'Зафиксируйте, как проект сейчас говорит о себе, для кого он нужен и почему его выбирают.',
+    formula: 'Как проект говорит о себе → для кого он нужен → почему выбрать сейчас → передать дальше',
+    instruction: 'Инструменты: сайт, посадочные, презентации, рекламные материалы, скрипты продаж. На выходе нужны стартовая формулировка, позиционирование и УТП.',
+    context: ['name','niche','geography','whatSell','targetSegment','clientResult','offerRationalCoverage','offerIrrationalDriver','offerSocialMechanism'],
+    fields: [
+      { key: 'positioningStartFormula', sharedKey: 'positioning_start_formula', label: 'Стартовая формулировка', hint: 'как проект сейчас коротко описывает себя', route: 'Gate 1, Gate 3, Gate 4', downstream: 'описание проекта, главная, презентации, отчеты', fallback: ['description','name'] },
+      { key: 'positioningStatement', sharedKey: 'positioning_statement', label: 'Позиционирование', hint: 'для кого / категория / отличие', route: 'Gate 1, Gate 3, Gate 4', downstream: 'аудит сайта, ЦА, конкуренты, JTBD, сегменты', fallback: [] },
+      { key: 'usp', sharedKey: 'usp', label: 'УТП', hint: 'главное обещание выбора', route: 'Gate 1, Gate 3, Gate 4', downstream: 'hero-экран, офер, объявления, CTA, лендинги', fallback: ['afterUsp'] }
+    ],
+    tags: { key: 'positioningMeaningTags', sharedKey: 'positioning_meaning_tags', label: 'Ключевые смыслы позиционирования', placeholder: 'авторская работа, подарок с характером, ручная эстетика' },
+    proof: { key: 'positioningProof', sharedKey: 'positioning_proof', label: 'Доказательство', placeholder: 'сайт / посадочные / презентации / рекламные материалы / скрипты' },
+    transfer: 'Глобальные поля позиционирования · используются в Gate 1, Gate 3, Gate 4'
+  },
+  'Текущие офферы и CTA': {
+    key: 'current_offers_cta',
+    title: 'Текущие офферы и CTA',
+    orient: 'Зафиксируйте, с каким предложением и действием проект сейчас выходит к аудитории.',
+    formula: 'Что предлагаем → к какому действию ведем → где подтверждено → передать дальше',
+    instruction: 'Источники: сайт, посадочные, объявления, баннеры, мессенджеры, скрипты продаж. На выходе нужны офферы, CTA и главное целевое действие.',
+    context: ['whatSell','targetSegment','clientResult','positioningStartFormula','positioningStatement','usp','offerRationalCoverage','offerIrrationalDriver','offerSocialMechanism'],
+    fields: [
+      { key: 'currentOffers', sharedKey: 'current_offers', label: 'Текущие офферы', hint: 'предложения, акции, бонусы, сценарии покупки', route: 'Gate 1, Gate 3, Gate 4', downstream: 'офер, JTBD, аудит страниц, лендинги, объявления', fallback: ['offer','afterOffer'] },
+      { key: 'currentCtas', sharedKey: 'current_ctas', label: 'Текущие CTA', hint: 'купить, заказать, написать, рассчитать', route: 'Gate 1, Gate 4', downstream: 'hero-блоки, формы, кнопки, баннеры, email, push, Telegram', fallback: ['mainCta','afterMainCta'] },
+      { key: 'primaryTargetAction', sharedKey: 'primary_target_action', label: 'Основное целевое действие', hint: 'главное действие клиента', route: 'Gate 2, Gate 4, Gate 5', downstream: 'цели Метрики, конверсионные блоки, thank you page, отчеты', fallback: ['mainCta'] }
+    ],
+    tags: { key: 'offerCtaActionTags', sharedKey: 'offer_cta_action_tags', label: 'Ключевые действия', placeholder: 'купить из каталога, сделать под заказ, написать' },
+    proof: { key: 'currentOffersCtaProof', sharedKey: 'current_offers_cta_proof', label: 'Доказательство', placeholder: 'сайт / объявления / баннеры / мессенджеры / скрипты' },
+    transfer: 'Глобальные офферы и CTA · используются в Gate 1, Gate 4, Gate 5'
+  },
+  'Текущая семантика и поисковый фокус': {
+    key: 'search_focus',
+    title: 'Текущая семантика и поисковый фокус',
+    orient: 'Зафиксируйте, по каким запросам и направлениям проект уже сейчас должен быть найден.',
+    formula: 'Ключи → кластеры → исключения → поисковый фокус → передать дальше',
+    instruction: 'Инструменты как источники проверки: Wordstat, Яндекс Директ, SEO-таблицы, поисковые отчеты. Это стартовая фиксация поискового направления, не полноценный сбор семантики.',
+    context: ['whatSell','targetSegment','clientResult','positioningStatement','usp','geography'],
+    fields: [
+      { key: 'searchMainKeywords', sharedKey: 'search_main_keywords', label: 'Основные ключевые слова', hint: 'главные запросы', route: 'Gate 1, Gate 4', downstream: 'спрос, SEO, страницы, Title, H1, Description', fallback: [] },
+      { key: 'searchPriorityClusters', sharedKey: 'search_priority_clusters', label: 'Приоритетные кластеры', hint: '3–7 направлений спроса', route: 'Gate 1, Gate 3, Gate 4', downstream: 'структура сайта, категории, услуги, рекламные группы', fallback: [] },
+      { key: 'searchIrrelevantQueries', sharedKey: 'search_irrelevant_queries', label: 'Нерелевантные запросы', hint: 'что исключить', route: 'Gate 1, Gate 4', downstream: 'минус-фразы, исключения, фильтрация семантики', fallback: [] },
+      { key: 'searchFocusSummary', sharedKey: 'search_focus_summary', label: 'Итоговый поисковый фокус', hint: 'на чем держится спрос', route: 'Gate 1, Gate 3, Gate 4, Gate 5', downstream: 'стратегия, аудит сайта, рекламные кампании, отчеты', fallback: [] }
+    ],
+    tags: { key: 'searchTags', sharedKey: 'search_tags', label: 'Поисковые теги', placeholder: 'подарки ручной работы, авторский декор, подарок под заказ' },
+    proof: { key: 'searchFocusProof', sharedKey: 'search_focus_proof', label: 'Доказательство', placeholder: 'Wordstat / Директ / Search Console / Вебмастер / SEO-отчет / таблица' },
+    transfer: 'Глобальный поисковый фокус · используется в Gate 1, Gate 3, Gate 4, Gate 5'
+  }
+};
+
+function v116PassportDef(card) {
+  return card ? GATE0_PASSPORT_V116_BLOCKS[card.title] : null;
+}
+
+function v116FallbackValue(field, workspace = state) {
+  const project = workspace?.project || {};
+  for (const key of field.fallback || []) {
+    const value = String(project[key] || '').trim();
+    if (value) return value;
+  }
+  return '';
+}
+
+function v116ReadValue(field, workspace = state) {
+  return workspace?.project?.[field.key] || workspace?.sharedEvidence?.[field.sharedKey] || v116FallbackValue(field, workspace) || '';
+}
+
+function v116ReadMeta(meta, workspace = state) {
+  if (!meta) return '';
+  return workspace?.project?.[meta.key] || workspace?.sharedEvidence?.[meta.sharedKey] || '';
+}
+
+function v116ContextRows(def, workspace = state) {
+  const project = workspace?.project || {};
+  const labels = {
+    name: 'Название', niche: 'Ниша', website: 'Сайт', geography: 'География', whatSell: 'Что продаем', targetSegment: 'Кому продаем', clientResult: 'Результат клиента', usp: 'УТП', offer: 'Офер', mainCta: 'CTA', positioningStartFormula: 'Стартовая формулировка', positioningStatement: 'Позиционирование', offerRationalCoverage: 'Рациональное покрытие', offerIrrationalDriver: 'Иррациональный драйвер', offerSocialMechanism: 'Социальный механизм'
+  };
+  return (def.context || []).map(key => [labels[key] || key, project[key]]).filter(([, value]) => String(value || '').trim());
+}
+
+function v116EnsureBlock(card, workspace = state) {
+  const def = v116PassportDef(card);
+  if (!def || !workspace) return;
+  workspace.project = workspace.project || {};
+  workspace.sharedEvidence = workspace.sharedEvidence || {};
+  card.instruction = def.instruction;
+  card.evidenceFields = [
+    ...def.fields.map(field => ({ key: field.sharedKey, label: field.label })),
+    { key: def.tags.sharedKey, label: def.tags.label },
+    { key: def.proof.sharedKey, label: def.proof.label }
+  ];
+  def.fields.forEach(field => {
+    const value = String(workspace.project[field.key] || workspace.sharedEvidence[field.sharedKey] || v116FallbackValue(field, workspace) || '').trim();
+    workspace.project[field.key] = value;
+    workspace.sharedEvidence[field.sharedKey] = value;
+  });
+  [def.tags, def.proof].forEach(meta => {
+    const value = String(workspace.project[meta.key] || workspace.sharedEvidence[meta.sharedKey] || '').trim();
+    workspace.project[meta.key] = value;
+    workspace.sharedEvidence[meta.sharedKey] = value;
+  });
+  card.evidence = v116Plain(card, workspace);
+}
+
+function v116EnsureAll(workspace = state) {
+  if (!workspace?.gates) return;
+  workspace.gates.flatMap(g => g.cards || []).forEach(card => {
+    if (v116PassportDef(card)) v116EnsureBlock(card, workspace);
+  });
+}
+
+function v116Plain(card, workspace = state) {
+  const def = v116PassportDef(card);
+  if (!def) return '';
+  const lines = def.fields.map(field => `${field.label}:\n${v116ReadValue(field, workspace)}`);
+  lines.push(`${def.tags.label}:\n${v116ReadMeta(def.tags, workspace)}`);
+  lines.push(`${def.proof.label}:\n${v116ReadMeta(def.proof, workspace)}`);
+  return lines.join('\n\n');
+}
+
+function v116Status(card, workspace = state) {
+  const def = v116PassportDef(card);
+  if (!def) return card?.status || 'not_started';
+  const values = def.fields.map(field => String(v116ReadValue(field, workspace) || '').trim());
+  const filled = values.filter(Boolean).length;
+  const proof = String(v116ReadMeta(def.proof, workspace) || '').trim();
+  if (!filled) return 'not_started';
+  if (filled === def.fields.length && proof) return 'ready';
+  return 'in_progress';
+}
+
+function v116PassportFieldCard(def, field) {
+  const value = v116ReadValue(field, state);
+  const filled = String(value || '').trim();
+  return `<label class="passport-v116-field-card">
+    <span class="passport-v116-field-title">${escapeHtml(field.label)}</span>
+    <span class="passport-v116-field-hint">${escapeHtml(field.hint)}</span>
+    <input class="passport-v116-input" data-v116-block="${escapeAttr(def.key)}" data-v116-kind="main" data-v116-key="${escapeAttr(field.key)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(field.hint)}" />
+    <span class="passport-v116-mini-row">
+      <span class="mini-indicator ${filled ? 'is-saved' : ''}">${filled ? 'Глобальное поле' : 'Не заполнено'}</span>
+      <span class="mini-indicator">${escapeHtml(field.route)}</span>
+      <span class="mini-indicator">${filled ? 'Обновлено' : 'Ожидает данных'}</span>
+    </span>
+  </label>`;
+}
+
+function v116PassportFieldsHtml(card) {
+  const def = v116PassportDef(card);
+  if (!def) return '';
+  v116EnsureBlock(card, state);
+  const context = v116ContextRows(def, state);
+  return `<div class="passport-v116">
+    <div class="passport-v116-topline">
+      <div>
+        <div class="passport-v116-kicker">Паспортная ячейка проекта</div>
+        <div class="passport-v116-orient">${escapeHtml(def.orient)}</div>
+      </div>
+      <span class="passport-v116-status">${escapeHtml(STATUS_LABELS[v116Status(card, state)] || v116Status(card, state))}</span>
+    </div>
+    <details class="passport-v116-context">
+      <summary>Автоконтекст проекта: свернуто</summary>
+      <div class="passport-v116-context-grid">
+        ${context.length ? context.map(([label, value]) => `<span>${escapeHtml(label)}: <b>${escapeHtml(value)}</b></span>`).join('') : '<span>Связанные данные пока не заполнены.</span>'}
+      </div>
+    </details>
+    <div class="passport-v116-grid">
+      ${def.fields.map(field => v116PassportFieldCard(def, field)).join('')}
+    </div>
+    <label class="passport-v116-tags">
+      <span class="passport-v116-field-title">${escapeHtml(def.tags.label)}</span>
+      <span class="passport-v116-field-hint">Короткие слова, смыслы или теги. Через запятую.</span>
+      <input class="passport-v116-input" data-v116-block="${escapeAttr(def.key)}" data-v116-kind="tags" value="${escapeAttr(v116ReadMeta(def.tags, state))}" placeholder="${escapeAttr(def.tags.placeholder)}" />
+    </label>
+    <label class="passport-v116-proof">
+      <span class="passport-v116-field-title">${escapeHtml(def.proof.label)}</span>
+      <span class="passport-v116-field-hint">Один источник, который подтверждает текущую фиксацию.</span>
+      <input class="passport-v116-input" data-v116-block="${escapeAttr(def.key)}" data-v116-kind="proof" value="${escapeAttr(v116ReadMeta(def.proof, state))}" placeholder="${escapeAttr(def.proof.placeholder)}" />
+    </label>
+    <div class="passport-v116-transfer">
+      <span>${escapeHtml(def.transfer)}</span>
+      <b>Передача автоматическая</b>
+    </div>
+    <div class="passport-v116-formula">${escapeHtml(def.formula)}</div>
+  </div>`;
+}
+
+function v116UpdatePassportInput(e) {
+  const def = Object.values(GATE0_PASSPORT_V116_BLOCKS).find(item => item.key === e.target.dataset.v116Block);
+  if (!def || !state) return;
+  state.project = state.project || {};
+  state.sharedEvidence = state.sharedEvidence || {};
+  const kind = e.target.dataset.v116Kind;
+  const value = e.target.value;
+  if (kind === 'main') {
+    const field = def.fields.find(item => item.key === e.target.dataset.v116Key);
+    if (!field) return;
+    state.project[field.key] = value;
+    state.sharedEvidence[field.sharedKey] = value;
+  }
+  if (kind === 'tags') {
+    state.project[def.tags.key] = value;
+    state.sharedEvidence[def.tags.sharedKey] = value;
+  }
+  if (kind === 'proof') {
+    state.project[def.proof.key] = value;
+    state.sharedEvidence[def.proof.sharedKey] = value;
+  }
+  const card = allCardsFromWorkspace(state).find(c => c.title === def.title);
+  if (card) {
+    v116EnsureBlock(card, state);
+    card.status = v116Status(card, state);
+  }
+  recalculateAllStatuses(state);
+  flashSaving();
+}
+
+const __guruPrevPrepareSystemCardsV116 = prepareSystemCards;
+prepareSystemCards = function(workspace) {
+  __guruPrevPrepareSystemCardsV116(workspace);
+  v116EnsureAll(workspace);
+};
+
+const __guruPrevRecalculateStatusForCardV116 = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (v116PassportDef(card)) {
+    v116EnsureBlock(card, workspace);
+    card.status = v116Status(card, workspace);
+    return;
+  }
+  __guruPrevRecalculateStatusForCardV116(card, workspace);
+};
+
+const __guruPrevTextValuesForStatusV116 = textValuesForStatus;
+textValuesForStatus = function(card, workspace = state) {
+  const def = v116PassportDef(card);
+  if (def) return [
+    ...def.fields.map(field => v116ReadValue(field, workspace)),
+    v116ReadMeta(def.tags, workspace),
+    v116ReadMeta(def.proof, workspace)
+  ];
+  return __guruPrevTextValuesForStatusV116(card, workspace);
+};
+
+const __guruPrevFormatStructuredEvidencePlainV116 = formatStructuredEvidencePlain;
+formatStructuredEvidencePlain = function(card, workspace = state) {
+  if (v116PassportDef(card)) return v116Plain(card, workspace);
+  return __guruPrevFormatStructuredEvidencePlainV116(card, workspace);
+};
+
+const __guruPrevSyncEvidenceTextsV116 = syncEvidenceTexts;
+syncEvidenceTexts = function(workspace = state) {
+  __guruPrevSyncEvidenceTextsV116(workspace);
+  v116EnsureAll(workspace);
+};
+
+const __guruPrevCardUserFieldsHtmlV116 = cardUserFieldsHtml;
+cardUserFieldsHtml = function(c) {
+  if (v116PassportDef(c)) return `<div class="field-row passport-v116-row"><span>${escapeHtml(c.title)}</span>${v116PassportFieldsHtml(c)}</div>`;
+  return __guruPrevCardUserFieldsHtmlV116(c);
+};
+
+const __guruPrevBindCardInputsV116 = bindCardInputs;
+bindCardInputs = function() {
+  __guruPrevBindCardInputsV116();
+  document.querySelectorAll('[data-v116-block]').forEach(input => {
+    input.addEventListener('input', v116UpdatePassportInput);
+    input.addEventListener('change', v116UpdatePassportInput);
+  });
+};
+
+(function markV116() {
+  const re = /v0\.\d+|v1\.0|v1\.1|v1\.1\.1|v1\.1\.2|v1\.1\.3|v1\.1\.4|v1\.1\.5/g;
+  document.title = document.title.replace(re, 'v1.1.6');
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.6'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.6'); });
 })();
