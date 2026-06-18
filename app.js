@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v1.1.7';
+const PLATFORM_VERSION = 'v1.1.8';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -9268,7 +9268,7 @@ bindCardInputs = function() {
 };
 
 (function markV116() {
-  const re = /v0\.\d+|v1\.0|v1\.1|v1\.1\.1|v1\.1\.2|v1\.1\.3|v1\.1\.4|v1\.1\.5/g;
+  const re = /v0\.\d+|v1\.0|v1\.1(?:\.\d+)?/g;
   document.title = document.title.replace(re, 'v1.1.6');
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.6'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.6'); });
@@ -9568,4 +9568,168 @@ render = function() {
   document.title = document.title.replace(re, 'v1.1.7');
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.7'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.7'); });
+})();
+
+
+/* v1.1.8 — Gate-level Debug Export fix */
+const GURU_DEBUG_VERSION_V118 = 'v1.1.8';
+
+function guruDebugSafeEscape(value = '') {
+  try {
+    return window.CSS && CSS.escape ? CSS.escape(String(value)) : String(value).replace(/"/g, '\\"');
+  } catch (error) {
+    return String(value || '');
+  }
+}
+
+function guruDebugStatusLabel(status = '') {
+  return STATUS_LABELS?.[status] || status || '';
+}
+
+function guruDebugGateStatus(gate) {
+  if (!gate || !Array.isArray(gate.cards) || !gate.cards.length) return 'not_started';
+  const statuses = gate.cards.map(card => card.status || 'not_started');
+  if (statuses.includes('problem')) return 'problem';
+  if (statuses.includes('needs_review')) return 'needs_review';
+  if (statuses.every(status => status === 'ready')) return 'ready';
+  if (statuses.some(status => status && status !== 'not_started')) return 'in_progress';
+  return 'not_started';
+}
+
+function guruDebugActiveGate() {
+  const gates = state?.gates || [];
+  return gates.find(g => g.id === activeGateId) || gates[0] || null;
+}
+
+function guruDebugAllFieldsForCard(card) {
+  const def = v116PassportDef(card);
+  if (def) return guruDebugPassportFields(def, state);
+  return guruDebugGenericFields(card, state).fields;
+}
+
+function guruDebugGatePayload(gateId = activeGateId, notes = '') {
+  const gate = (state?.gates || []).find(g => g.id === gateId) || guruDebugActiveGate();
+  const cards = (gate?.cards || []).map(card => {
+    const def = v116PassportDef(card);
+    const fields = guruDebugAllFieldsForCard(card);
+    return {
+      blockName: card.title,
+      blockId: card.id,
+      status: card.status || 'not_started',
+      statusLabel: guruDebugStatusLabel(card.status || 'not_started'),
+      fields,
+      rawEvidence: card.evidence || '',
+      evidenceFields: ensureEvidenceFields(card).map(f => ({ ...f, value: getEvidenceValue(f.key, state) })),
+      instruction: card.instruction || '',
+      globalDataLinks: guruDebugGlobalLinks(def, state),
+      syncConflicts: guruDebugSyncConflicts(def, state),
+      validationErrors: guruDebugValidation(card, def, fields)
+    };
+  });
+  const gateStatus = guruDebugGateStatus(gate);
+  return {
+    tool: 'GURU Debug Export',
+    exportType: 'gate',
+    schemaVersion: GURU_DEBUG_VERSION_V118,
+    updatedAt: new Date().toISOString(),
+    gate: gate ? {
+      id: gate.id,
+      title: gate.title,
+      status: gateStatus,
+      statusLabel: guruDebugStatusLabel(gateStatus),
+      progress: getProgress(gate.cards || [])
+    } : null,
+    blocks: cards,
+    uiState: guruDebugVisibleUiState(),
+    projectGlobalData: { ...(state?.project || {}) },
+    sharedEvidence: { ...(state?.sharedEvidence || {}) },
+    syncConflicts: cards.flatMap(card => (card.syncConflicts || []).map(item => ({ blockId: card.blockId, blockName: card.blockName, ...item }))),
+    validationErrors: cards.flatMap(card => (card.validationErrors || []).map(item => ({ blockId: card.blockId, blockName: card.blockName, ...item }))),
+    technical: {
+      platformVersion: PLATFORM_VERSION,
+      debugVersion: GURU_DEBUG_VERSION_V118,
+      localStorageKey: WORKSPACE_STORAGE_PREFIX + currentProjectId,
+      projectId: currentProjectId,
+      consoleErrors: window.__guruConsoleLog || [],
+      userAgent: navigator.userAgent,
+      url: location.href
+    },
+    notes: notes || ''
+  };
+}
+
+function guruDebugDownloadJson(filename, payload) {
+  try {
+    const text = JSON.stringify(payload, null, 2);
+    const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      a.remove();
+      URL.revokeObjectURL(url);
+    }, 300);
+    flashSaving();
+  } catch (error) {
+    console.error('GURU Debug Export failed', error);
+    alert('Не удалось экспортировать диагностику. Откройте консоль и пришлите ошибку.');
+  }
+}
+
+function guruDebugExportGate() {
+  const notes = guruDebugAskNotes();
+  const payload = guruDebugGatePayload(activeGateId, notes);
+  const gateId = payload.gate?.id || activeGateId || 'gate';
+  const file = `guru-debug_${guruDebugSlug(gateId)}_${guruDebugDateStamp()}.json`;
+  guruDebugDownloadJson(file, payload);
+}
+
+function guruDebugRemoveBlockButtons() {
+  document.querySelectorAll('.passport-v117-debug, [data-debug-export-block]').forEach(node => {
+    const wrap = node.classList?.contains('passport-v117-debug') ? node : node.closest('.passport-v117-debug');
+    (wrap || node).remove();
+  });
+}
+
+function guruDebugEnsureToolbarButton() {
+  const bar = document.getElementById('workspaceToolbar');
+  if (!bar) return;
+  guruDebugRemoveBlockButtons();
+  let btn = bar.querySelector('[data-debug-export-gate]');
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn secondary debug-export-btn';
+    btn.dataset.debugExportGate = '1';
+    btn.textContent = 'Экспорт диагностики Gate';
+    bar.appendChild(btn);
+  }
+  btn.onclick = guruDebugExportGate;
+}
+
+function guruDebugBindButtons() {
+  guruDebugEnsureToolbarButton();
+}
+
+const __guruPrevV116PassportFieldsHtmlV118 = v116PassportFieldsHtml;
+v116PassportFieldsHtml = function(card) {
+  const html = __guruPrevV116PassportFieldsHtmlV118(card);
+  return html.replace(/<div class="passport-v117-debug">[\s\S]*?<\/div>/g, '');
+};
+
+const __guruPrevRenderV118 = render;
+render = function() {
+  __guruPrevRenderV118();
+  setTimeout(guruDebugBindButtons, 0);
+};
+
+(function markV118() {
+  const re = /v0\.\d+|v1\.0|v1\.1(?:\.\d+)?/g;
+  document.title = document.title.replace(re, 'v1.1.8');
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.8'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.8'); });
 })();
