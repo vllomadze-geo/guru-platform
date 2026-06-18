@@ -8720,3 +8720,238 @@ bindCardInputs = function() {
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.4'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.4'); });
 })();
+
+/*
+  v1.1.5, Gate 0 / Текущие офферы и CTA
+  Возвращаем блок к стартовой фиксации: что предлагаем -> к какому действию ведем -> где подтверждено -> передать дальше.
+*/
+const CURRENT_OFFERS_CTA_GLOBAL_FIELDS = [
+  {
+    key: 'currentOffers',
+    sharedKey: 'current_offers',
+    label: 'Текущие офферы',
+    hint: 'какие предложения сейчас используются',
+    fallbackKeys: ['offer', 'afterOffer'],
+    downstream: 'Gate 1 -> Боль / JTBD / Офер, аудит сайта, страницы, лендинги, объявления',
+    route: 'Gate 1 / Gate 3 / Gate 4'
+  },
+  {
+    key: 'currentCtas',
+    sharedKey: 'current_ctas',
+    label: 'Текущие CTA',
+    hint: 'призывы на сайте, в рекламе, баннерах, мессенджерах',
+    fallbackKeys: ['mainCta', 'afterMainCta'],
+    downstream: 'hero-блоки, формы, кнопки, баннеры, объявления, email / push / Telegram',
+    route: 'Gate 1 / Gate 4'
+  },
+  {
+    key: 'primaryTargetAction',
+    sharedKey: 'primary_target_action',
+    label: 'Основное целевое действие',
+    hint: 'купить / оставить заявку / написать / позвонить / забронировать',
+    fallbackKeys: ['mainCta'],
+    downstream: 'цели Метрики, конверсионные блоки, thank you page, отчеты, рекламные кампании',
+    route: 'Gate 2 / Gate 4 / Gate 5'
+  }
+];
+const CURRENT_OFFERS_CTA_PROOF_KEY = 'current_offers_cta_proof';
+
+function isCurrentOffersCtaCard(card) {
+  return card?.title === 'Текущие офферы и CTA';
+}
+
+function currentOffersCtaFallback(field, workspace = state) {
+  const project = workspace?.project || {};
+  for (const key of field.fallbackKeys || []) {
+    const value = String(project[key] || '').trim();
+    if (value) return value;
+  }
+  return '';
+}
+
+function readCurrentOffersCtaValue(field, workspace = state) {
+  return workspace?.project?.[field.key] || workspace?.sharedEvidence?.[field.sharedKey] || currentOffersCtaFallback(field, workspace) || '';
+}
+
+function readCurrentOffersCtaProof(workspace = state) {
+  return workspace?.project?.currentOffersCtaProof || workspace?.sharedEvidence?.[CURRENT_OFFERS_CTA_PROOF_KEY] || '';
+}
+
+function currentOffersCtaPlain(workspace = state) {
+  const main = CURRENT_OFFERS_CTA_GLOBAL_FIELDS.map(field => `${field.label}:\n${readCurrentOffersCtaValue(field, workspace)}`).join('\n\n');
+  return `${main}\n\nДоказательство:\n${readCurrentOffersCtaProof(workspace)}`;
+}
+
+function currentOffersCtaAutocontext(workspace = state) {
+  const project = workspace?.project || {};
+  return [
+    ['Название', project.name],
+    ['Ниша', project.niche],
+    ['Сайт', project.website || project.websiteUrl || project.website_url],
+    ['География', project.geography],
+    ['Что продаем', project.whatSell],
+    ['Кому продаем', project.targetSegment],
+    ['Результат клиента', project.clientResult],
+    ['Стартовая формулировка', project.positioningStartFormula],
+    ['Позиционирование', project.positioningStatement],
+    ['УТП', project.usp],
+    ['Рациональное покрытие', project.offerRationalCoverage],
+    ['Иррациональный драйвер', project.offerIrrationalDriver],
+    ['Социальный механизм', project.offerSocialMechanism]
+  ].filter(([, value]) => String(value || '').trim());
+}
+
+function ensureCurrentOffersCtaGlobals(workspace = state) {
+  if (!workspace) return;
+  workspace.project = workspace.project || {};
+  workspace.sharedEvidence = workspace.sharedEvidence || {};
+  const card = (workspace.gates || []).flatMap(g => g.cards || []).find(isCurrentOffersCtaCard);
+  if (card) {
+    card.instruction = 'Инструменты как источники доказательства: сайт, посадочные, объявления, баннеры, мессенджеры, скрипты продаж.\n\nБлок отвечает за фиксацию того, с каким предложением и призывом проект сейчас выходит к аудитории.\n\nНа выходе должно быть понятно: что предлагаем, к какому действию ведем и где это подтверждено.';
+    card.evidenceFields = [
+      ...CURRENT_OFFERS_CTA_GLOBAL_FIELDS.map(field => ({ key: field.sharedKey, label: field.label })),
+      { key: CURRENT_OFFERS_CTA_PROOF_KEY, label: 'Доказательство' }
+    ];
+  }
+  CURRENT_OFFERS_CTA_GLOBAL_FIELDS.forEach(field => {
+    const fromProject = String(workspace.project[field.key] || '').trim();
+    const fromShared = String(workspace.sharedEvidence[field.sharedKey] || '').trim();
+    const fallback = currentOffersCtaFallback(field, workspace);
+    const value = fromProject || fromShared || fallback;
+    workspace.project[field.key] = value;
+    workspace.sharedEvidence[field.sharedKey] = value;
+  });
+  const proof = String(workspace.project.currentOffersCtaProof || workspace.sharedEvidence[CURRENT_OFFERS_CTA_PROOF_KEY] || '').trim();
+  workspace.project.currentOffersCtaProof = proof;
+  workspace.sharedEvidence[CURRENT_OFFERS_CTA_PROOF_KEY] = proof;
+  if (card) card.evidence = currentOffersCtaPlain(workspace);
+}
+
+function currentOffersCtaStatus(workspace = state) {
+  const values = CURRENT_OFFERS_CTA_GLOBAL_FIELDS.map(field => String(readCurrentOffersCtaValue(field, workspace) || '').trim());
+  const proof = String(readCurrentOffersCtaProof(workspace) || '').trim();
+  const filled = values.filter(Boolean).length;
+  if (!filled) return 'not_started';
+  if (filled === CURRENT_OFFERS_CTA_GLOBAL_FIELDS.length && proof) return 'ready';
+  return 'in_progress';
+}
+
+function currentOffersCtaFieldsHtml(card) {
+  ensureCurrentOffersCtaGlobals(state);
+  const context = currentOffersCtaAutocontext(state);
+  return `<div class="offer-cta-block">
+    <details class="offer-cta-context">
+      <summary>Свернутый автоконтекст проекта</summary>
+      <div class="offer-cta-context-grid">
+        ${context.length ? context.map(([label, value]) => `<span>${escapeHtml(label)}: <b>${escapeHtml(value)}</b></span>`).join('') : '<span>Связанные данные пока не заполнены.</span>'}
+      </div>
+    </details>
+    <div class="offer-cta-formula"><span>что предлагаем</span><span>к какому действию ведем</span><span>где подтверждено</span><span>передать дальше</span></div>
+    <div class="offer-cta-grid">
+      ${CURRENT_OFFERS_CTA_GLOBAL_FIELDS.map(field => {
+        const value = readCurrentOffersCtaValue(field, state);
+        return `<label class="offer-cta-field">
+          <span class="offer-cta-title">${escapeHtml(field.label)}</span>
+          <input data-offer-cta-field="${escapeAttr(field.key)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(field.hint)}" />
+          <span class="offer-cta-hint">${escapeHtml(field.hint)}</span>
+          <span class="product-segment-indicators">
+            <span class="mini-indicator ${String(value).trim() ? 'is-saved' : ''}">${String(value).trim() ? 'Глобальное поле' : 'Не заполнено'}</span>
+            <span class="mini-indicator">Используется в ${escapeHtml(field.route)}</span>
+          </span>
+          <span class="offer-cta-downstream">Передается в: ${escapeHtml(field.downstream)}</span>
+        </label>`;
+      }).join('')}
+    </div>
+    <label class="offer-cta-proof">
+      <span class="offer-cta-title">Доказательство</span>
+      <input data-offer-cta-proof="true" value="${escapeAttr(readCurrentOffersCtaProof(state))}" placeholder="сайт / посадочные / объявления / баннеры / мессенджеры / скрипты" />
+      <span class="offer-cta-hint">Источник подтверждает, что эти офферы и CTA реально используются сейчас.</span>
+    </label>
+    <div class="offer-cta-note">Эти три значения являются глобальным источником офферов и призывов к действию. Следующий этап: связать их с конкретными полями Gate 1, Gate 4, целями, формами и отчетами.</div>
+  </div>`;
+}
+
+function updateCurrentOffersCtaField(e) {
+  if (!state) return;
+  ensureCurrentOffersCtaGlobals(state);
+  const field = CURRENT_OFFERS_CTA_GLOBAL_FIELDS.find(item => item.key === e.target.dataset.offerCtaField);
+  if (field) {
+    state.project[field.key] = e.target.value;
+    state.sharedEvidence[field.sharedKey] = e.target.value;
+  }
+  if (e.target.dataset.offerCtaProof) {
+    state.project.currentOffersCtaProof = e.target.value;
+    state.sharedEvidence[CURRENT_OFFERS_CTA_PROOF_KEY] = e.target.value;
+  }
+  const card = allCardsFromWorkspace(state).find(isCurrentOffersCtaCard);
+  if (card) {
+    card.evidence = currentOffersCtaPlain(state);
+    recalculateStatusForCard(card, state);
+  }
+  recalculateAllStatuses(state);
+  flashSaving();
+}
+
+const __guruPrevPrepareSystemCardsV115 = prepareSystemCards;
+prepareSystemCards = function(workspace) {
+  __guruPrevPrepareSystemCardsV115(workspace);
+  ensureCurrentOffersCtaGlobals(workspace);
+};
+
+const __guruPrevIsSystemSpecialCardV115 = isSystemSpecialCard;
+isSystemSpecialCard = function(card) {
+  return isCurrentOffersCtaCard(card) || __guruPrevIsSystemSpecialCardV115(card);
+};
+
+const __guruPrevRecalculateStatusForCardV115 = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isCurrentOffersCtaCard(card)) {
+    ensureCurrentOffersCtaGlobals(workspace);
+    card.status = currentOffersCtaStatus(workspace);
+    return;
+  }
+  __guruPrevRecalculateStatusForCardV115(card, workspace);
+};
+
+const __guruPrevTextValuesForStatusV115 = textValuesForStatus;
+textValuesForStatus = function(card, workspace = state) {
+  if (isCurrentOffersCtaCard(card)) return [
+    ...CURRENT_OFFERS_CTA_GLOBAL_FIELDS.map(field => readCurrentOffersCtaValue(field, workspace)),
+    readCurrentOffersCtaProof(workspace)
+  ];
+  return __guruPrevTextValuesForStatusV115(card, workspace);
+};
+
+const __guruPrevFormatStructuredEvidencePlainV115 = formatStructuredEvidencePlain;
+formatStructuredEvidencePlain = function(card, workspace = state) {
+  if (isCurrentOffersCtaCard(card)) return currentOffersCtaPlain(workspace);
+  return __guruPrevFormatStructuredEvidencePlainV115(card, workspace);
+};
+
+const __guruPrevSyncEvidenceTextsV115 = syncEvidenceTexts;
+syncEvidenceTexts = function(workspace = state) {
+  __guruPrevSyncEvidenceTextsV115(workspace);
+  ensureCurrentOffersCtaGlobals(workspace);
+};
+
+const __guruPrevCardUserFieldsHtmlV115 = cardUserFieldsHtml;
+cardUserFieldsHtml = function(c) {
+  if (isCurrentOffersCtaCard(c)) return `<div class="field-row offer-cta-row"><span>Глобальные офферы и CTA</span>${currentOffersCtaFieldsHtml(c)}</div>`;
+  return __guruPrevCardUserFieldsHtmlV115(c);
+};
+
+const __guruPrevBindCardInputsV115 = bindCardInputs;
+bindCardInputs = function() {
+  __guruPrevBindCardInputsV115();
+  document.querySelectorAll('[data-offer-cta-field], [data-offer-cta-proof]').forEach(input => {
+    input.addEventListener('input', updateCurrentOffersCtaField);
+    input.addEventListener('change', updateCurrentOffersCtaField);
+  });
+};
+
+(function markV115() {
+  const re = /v0\.\d+|v1\.0|v1\.1|v1\.1\.1|v1\.1\.2|v1\.1\.3|v1\.1\.4/g;
+  document.title = document.title.replace(re, 'v1.1.5');
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.5'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.5'); });
+})();
