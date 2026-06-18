@@ -1,4 +1,4 @@
-# ГУРУ, v1.1-clean Gate 0
+# ГУРУ, v1.1.1.1-clean Gate 0
 
 ## Назначение версии
 
@@ -55,5 +55,9 @@
 ## Commit
 
 ```text
-Update to v1.1-clean: restore Gate 0 product segment fields
+Update to v1.1.1.1-clean: restore Gate 0 product segment fields
 ```
+
+
+## v1.1.1 fix
+Исправлена ошибка рекурсии в Gate 0, из-за которой консоль показывала `Maximum call stack size exceeded` и `string size exceeded`.

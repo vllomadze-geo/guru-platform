@@ -7887,7 +7887,7 @@ renderGateNav = function() {
 
 
 /*
-  v1.1 — Gate 0 / Паспорт проекта → Продукт, сегмент и задача клиента
+  v1.1.1 — Gate 0 / Паспорт проекта → Продукт, сегмент и задача клиента
   Возвращаем простую паспортную точку: что продаём → кому продаём → ради какого результата.
 */
 const PRODUCT_SEGMENT_GLOBAL_FIELDS = [
@@ -7921,6 +7921,14 @@ function isProductSegmentClientCard(card) {
   return card?.title === 'Продукт, сегмент и задача клиента';
 }
 
+function readProductSegmentValue(field, workspace = state) {
+  return workspace?.project?.[field.key] || workspace?.sharedEvidence?.[field.evidenceKey] || '';
+}
+
+function productSegmentPlain(workspace = state) {
+  return PRODUCT_SEGMENT_GLOBAL_FIELDS.map(field => `${field.label}:\n${readProductSegmentValue(field, workspace)}`).join('\n\n');
+}
+
 function ensureProductSegmentGlobals(workspace = state) {
   if (!workspace) return;
   workspace.project = workspace.project || {};
@@ -7934,24 +7942,14 @@ function ensureProductSegmentGlobals(workspace = state) {
     const fromProject = String(workspace.project[field.key] || '').trim();
     const fromShared = String(workspace.sharedEvidence[field.evidenceKey] || '').trim();
     const value = fromProject || fromShared;
-    if (value) {
-      workspace.project[field.key] = value;
-      workspace.sharedEvidence[field.evidenceKey] = value;
-    } else {
-      workspace.project[field.key] = workspace.project[field.key] || '';
-      workspace.sharedEvidence[field.evidenceKey] = workspace.sharedEvidence[field.evidenceKey] || '';
-    }
+    workspace.project[field.key] = value;
+    workspace.sharedEvidence[field.evidenceKey] = value;
   });
   if (card) card.evidence = productSegmentPlain(workspace);
 }
 
 function productSegmentValue(field, workspace = state) {
-  ensureProductSegmentGlobals(workspace);
-  return workspace?.project?.[field.key] || workspace?.sharedEvidence?.[field.evidenceKey] || '';
-}
-
-function productSegmentPlain(workspace = state) {
-  return PRODUCT_SEGMENT_GLOBAL_FIELDS.map(field => `${field.label}:\n${productSegmentValue(field, workspace)}`).join('\n\n');
+  return readProductSegmentValue(field, workspace);
 }
 
 function productSegmentStatus(workspace = state) {
@@ -8056,7 +8054,7 @@ bindCardInputs = function() {
 };
 
 (function markV11() {
-  document.title = document.title.replace(/v0\.\d+|v1\.0/g, 'v1.1');
-  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+|v1\.0/g, 'v1.1'); });
-  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+|v1\.0/g, 'v1.1'); });
+  document.title = document.title.replace(/v0\.\d+|v1\.0|v1\.1/g, 'v1.1.1');
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+|v1\.0|v1\.1/g, 'v1.1.1'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+|v1\.0|v1\.1/g, 'v1.1.1'); });
 })();
