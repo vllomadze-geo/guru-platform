@@ -1130,21 +1130,21 @@ function recalculateStatusForCard(card, workspace = state) {
       return;
     }
   }
+  const evidenceFields = ensureEvidenceFields(card);
+  const evidenceValues = evidenceFields.map(field => String(getEvidenceValue(field.key, workspace) || '').trim());
+  const evidenceFilled = evidenceValues.filter(Boolean).length;
   const instructionRows = ensureInstructionWorkspace(card);
   if (instructionRows.length) {
     const touchedRows = instructionRows.filter(row => String(row.link || '').trim() || row.status || String(row.result || '').trim() || String(row.comment || '').trim());
     const completeRows = instructionRows.filter(row => row.status && String(row.result || '').trim());
-    const evidenceValues = ensureEvidenceFields(card).map(field => String(getEvidenceValue(field.key, workspace) || '').trim()).filter(Boolean);
-    if (!touchedRows.length && !evidenceValues.length) card.status = 'not_started';
-    else if (completeRows.length === instructionRows.length) card.status = 'ready';
+    if (!touchedRows.length && !evidenceFilled) card.status = 'not_started';
+    else if (completeRows.length === instructionRows.length && (!evidenceFields.length || evidenceFilled === evidenceFields.length)) card.status = 'ready';
     else card.status = 'in_progress';
     return;
   }
-  const values = textValuesForStatus(card, workspace).map(v => String(v || '').trim());
-  const nonEmpty = values.filter(Boolean);
-  if (!nonEmpty.length) card.status = 'not_started';
-  else if (nonEmpty.length === values.length && nonEmpty.every(hasFinalPeriod)) card.status = 'ready';
-  else card.status = 'in_progress';
+  if (!evidenceFilled) { card.status = 'not_started'; return; }
+  if (evidenceFields.length && evidenceFilled === evidenceFields.length) { card.status = 'ready'; return; }
+  card.status = 'in_progress';
 }
 
 function recalculateAllStatuses(workspace = state) {
