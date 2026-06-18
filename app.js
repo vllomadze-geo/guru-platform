@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v1.1.6';
+const PLATFORM_VERSION = 'v1.1.7';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -210,18 +210,6 @@ function openProject(projectId) {
   els.appShell.hidden = false;
   saveState();
   render();
-  loadFromSupabase(projectId).then(cloudState => {
-    if (!cloudState) return;
-    const local = state?.updatedAt || '';
-    const cloud = cloudState.updatedAt || '';
-    if (cloud > local) {
-      state = migrateWorkspace(cloudState, projectId);
-      localStorage.setItem(WORKSPACE_STORAGE_PREFIX + projectId, JSON.stringify(state));
-      render();
-      els.saveStatus.textContent = 'Загружено из облака';
-      els.autosaveDot.style.background = '#4a9eff';
-    }
-  });
 }
 
 function renderProjectLauncher() {
@@ -1130,21 +1118,21 @@ function recalculateStatusForCard(card, workspace = state) {
       return;
     }
   }
-  const evidenceFields = ensureEvidenceFields(card);
-  const evidenceValues = evidenceFields.map(field => String(getEvidenceValue(field.key, workspace) || '').trim());
-  const evidenceFilled = evidenceValues.filter(Boolean).length;
   const instructionRows = ensureInstructionWorkspace(card);
   if (instructionRows.length) {
     const touchedRows = instructionRows.filter(row => String(row.link || '').trim() || row.status || String(row.result || '').trim() || String(row.comment || '').trim());
     const completeRows = instructionRows.filter(row => row.status && String(row.result || '').trim());
-    if (!touchedRows.length && !evidenceFilled) card.status = 'not_started';
-    else if (completeRows.length === instructionRows.length && (!evidenceFields.length || evidenceFilled === evidenceFields.length)) card.status = 'ready';
+    const evidenceValues = ensureEvidenceFields(card).map(field => String(getEvidenceValue(field.key, workspace) || '').trim()).filter(Boolean);
+    if (!touchedRows.length && !evidenceValues.length) card.status = 'not_started';
+    else if (completeRows.length === instructionRows.length) card.status = 'ready';
     else card.status = 'in_progress';
     return;
   }
-  if (!evidenceFilled) { card.status = 'not_started'; return; }
-  if (evidenceFields.length && evidenceFilled === evidenceFields.length) { card.status = 'ready'; return; }
-  card.status = 'in_progress';
+  const values = textValuesForStatus(card, workspace).map(v => String(v || '').trim());
+  const nonEmpty = values.filter(Boolean);
+  if (!nonEmpty.length) card.status = 'not_started';
+  else if (nonEmpty.length === values.length && nonEmpty.every(hasFinalPeriod)) card.status = 'ready';
+  else card.status = 'in_progress';
 }
 
 function recalculateAllStatuses(workspace = state) {
@@ -7898,47 +7886,6 @@ renderGateNav = function() {
 })();
 
 
-// === Supabase sync ===
-let _syncTimer = null;
-
-function scheduleCloudSync() {
-  if (_syncTimer) clearTimeout(_syncTimer);
-  _syncTimer = setTimeout(pushToSupabase, 2000);
-}
-
-async function pushToSupabase() {
-  if (!state || !activeProjectId) return;
-  try {
-    const response = await fetch('/api/workspace-sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ project_id: activeProjectId, state: state })
-    });
-    const data = await response.json();
-    if (data.ok) {
-      els.saveStatus.textContent = 'Облако ✓ ' + new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-      els.autosaveDot.style.background = '#4a9eff';
-    } else {
-      console.warn('Supabase sync error:', data.error, data.detail);
-      els.saveStatus.textContent = 'Облако: ошибка записи';
-      els.autosaveDot.style.background = '#d4605f';
-    }
-  } catch (e) {
-    console.warn('Supabase sync failed, localStorage ok', e);
-  }
-}
-
-async function loadFromSupabase(projectId) {
-  try {
-    const response = await fetch(`/api/workspace-sync?project_id=${encodeURIComponent(projectId)}`);
-    const data = await response.json();
-    if (data.ok && data.state) return data.state;
-  } catch (e) {
-    console.warn('Supabase load failed, using localStorage', e);
-  }
-  return null;
-}
-
 /*
   v1.1.1 — Gate 0 / Паспорт проекта → Продукт, сегмент и задача клиента
   Возвращаем простую паспортную точку: что продаём → кому продаём → ради какого результата.
@@ -9325,4 +9272,300 @@ bindCardInputs = function() {
   document.title = document.title.replace(re, 'v1.1.6');
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.6'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.6'); });
+})();
+
+
+/* v1.1.7 — GURU Debug Export / Экспорт диагностики */
+const GURU_DEBUG_VERSION = 'v1.1.7';
+window.__guruConsoleLog = window.__guruConsoleLog || [];
+(function captureGuruConsoleV117() {
+  if (window.__guruConsoleCaptureV117) return;
+  window.__guruConsoleCaptureV117 = true;
+  const originalError = console.error.bind(console);
+  const originalWarn = console.warn.bind(console);
+  console.error = function(...args) {
+    window.__guruConsoleLog.push({ level: 'error', message: args.map(v => String(v)).join(' '), timestamp: new Date().toISOString() });
+    originalError(...args);
+  };
+  console.warn = function(...args) {
+    window.__guruConsoleLog.push({ level: 'warn', message: args.map(v => String(v)).join(' '), timestamp: new Date().toISOString() });
+    originalWarn(...args);
+  };
+})();
+
+function guruDebugSlug(value = '') {
+  const source = String(value || 'block').toLowerCase();
+  const translit = { а:'a', б:'b', в:'v', г:'g', д:'d', е:'e', ё:'e', ж:'zh', з:'z', и:'i', й:'y', к:'k', л:'l', м:'m', н:'n', о:'o', п:'p', р:'r', с:'s', т:'t', у:'u', ф:'f', х:'h', ц:'c', ч:'ch', ш:'sh', щ:'sch', ъ:'', ы:'y', ь:'', э:'e', ю:'yu', я:'ya' };
+  return source.split('').map(ch => translit[ch] || ch).join('').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'block';
+}
+
+function guruDebugDateStamp() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function guruDebugDownloadJson(filename, payload) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function guruDebugFindGateByCard(cardId, workspace = state) {
+  return (workspace?.gates || []).find(g => (g.cards || []).some(c => c.id === cardId)) || null;
+}
+
+function guruDebugFindCard(cardId, workspace = state) {
+  for (const gate of workspace?.gates || []) {
+    const card = (gate.cards || []).find(c => c.id === cardId);
+    if (card) return { gate, card };
+  }
+  return { gate: null, card: null };
+}
+
+function guruDebugVisibleUiState(cardId = '') {
+  const cardNode = cardId ? document.querySelector(`[data-card="${CSS.escape(cardId)}"], [data-card-row="${CSS.escape(cardId)}"]`) : null;
+  const openDetails = Array.from(document.querySelectorAll('details')).map((node, index) => ({
+    index,
+    open: Boolean(node.open),
+    summary: node.querySelector('summary')?.textContent?.trim() || '',
+    className: node.className || ''
+  }));
+  return {
+    activeView,
+    activeGateId,
+    pageTitle: els?.pageTitle?.textContent || '',
+    search: els?.searchInput?.value || '',
+    statusFilter: els?.statusFilter?.value || '',
+    window: { width: window.innerWidth, height: window.innerHeight, devicePixelRatio: window.devicePixelRatio || 1 },
+    viewportMode: window.innerWidth < 768 ? 'mobile' : 'desktop',
+    cardVisible: cardNode ? true : false,
+    cardExpanded: cardNode ? Boolean(cardNode.classList.contains('is-open') || cardNode.open) : null,
+    openDetails,
+    supabaseStatus: document.getElementById('supabaseStatus')?.textContent?.trim() || ''
+  };
+}
+
+function guruDebugPassportFields(def, workspace = state) {
+  if (!def) return [];
+  const fields = [];
+  def.fields.forEach(field => fields.push({
+    key: field.key,
+    sharedKey: field.sharedKey,
+    label: field.label,
+    value: v116ReadValue(field, workspace),
+    empty: !String(v116ReadValue(field, workspace) || '').trim(),
+    global: true,
+    route: field.route || '',
+    type: 'main'
+  }));
+  fields.push({ key: def.tags.key, sharedKey: def.tags.sharedKey, label: def.tags.label, value: v116ReadMeta(def.tags, workspace), empty: !String(v116ReadMeta(def.tags, workspace) || '').trim(), global: true, route: 'смысловые теги блока', type: 'tags' });
+  fields.push({ key: def.proof.key, sharedKey: def.proof.sharedKey, label: def.proof.label, value: v116ReadMeta(def.proof, workspace), empty: !String(v116ReadMeta(def.proof, workspace) || '').trim(), global: false, route: 'доказательство статуса', type: 'proof' });
+  return fields;
+}
+
+function guruDebugGenericFields(card, workspace = state) {
+  const fields = ensureEvidenceFields(card).map(field => ({
+    key: field.key,
+    label: field.label,
+    value: getEvidenceValue(field.key, workspace),
+    empty: !String(getEvidenceValue(field.key, workspace) || '').trim(),
+    global: false,
+    type: 'evidence'
+  }));
+  const instructionRows = ensureInstructionWorkspace(card).map(row => ({ ...row }));
+  return { fields, instructionRows };
+}
+
+function guruDebugGlobalLinks(def, workspace = state) {
+  if (!def) return [];
+  return [
+    ...def.fields.map(field => ({
+      label: field.label,
+      projectKey: field.key,
+      sharedEvidenceKey: field.sharedKey,
+      currentProjectValue: workspace?.project?.[field.key] || '',
+      currentSharedValue: workspace?.sharedEvidence?.[field.sharedKey] || '',
+      usedIn: field.route || def.transfer || ''
+    })),
+    { label: def.tags.label, projectKey: def.tags.key, sharedEvidenceKey: def.tags.sharedKey, currentProjectValue: workspace?.project?.[def.tags.key] || '', currentSharedValue: workspace?.sharedEvidence?.[def.tags.sharedKey] || '', usedIn: 'теги / ключевые смыслы' },
+    { label: def.proof.label, projectKey: def.proof.key, sharedEvidenceKey: def.proof.sharedKey, currentProjectValue: workspace?.project?.[def.proof.key] || '', currentSharedValue: workspace?.sharedEvidence?.[def.proof.sharedKey] || '', usedIn: 'доказательство блока' }
+  ];
+}
+
+function guruDebugSyncConflicts(def, workspace = state) {
+  if (!def) return [];
+  const items = guruDebugGlobalLinks(def, workspace);
+  return items.filter(item => String(item.currentProjectValue || '') !== String(item.currentSharedValue || '')).map(item => ({
+    label: item.label,
+    projectKey: item.projectKey,
+    sharedEvidenceKey: item.sharedEvidenceKey,
+    projectValue: item.currentProjectValue,
+    sharedEvidenceValue: item.currentSharedValue,
+    problem: 'Значение в project и sharedEvidence отличается'
+  }));
+}
+
+function guruDebugValidation(card, def, fields) {
+  const errors = [];
+  if (!card) errors.push({ type: 'missing_block', message: 'Блок не найден' });
+  if (def) {
+    const mainFields = fields.filter(f => f.type === 'main');
+    const filled = mainFields.filter(f => !f.empty).length;
+    const proof = fields.find(f => f.type === 'proof');
+    if (filled && filled < mainFields.length) errors.push({ type: 'incomplete_main_fields', message: 'Заполнены не все главные поля', filled, total: mainFields.length });
+    if (filled === mainFields.length && proof?.empty) errors.push({ type: 'missing_proof', message: 'Главные поля заполнены, но доказательство отсутствует' });
+    if (card.status === 'ready' && proof?.empty) errors.push({ type: 'status_mismatch', message: 'Статус Готово не должен стоять без доказательства' });
+  }
+  return errors;
+}
+
+function guruDebugBlockPayload(cardId, notes = '') {
+  const { gate, card } = guruDebugFindCard(cardId, state);
+  const def = card ? v116PassportDef(card) : null;
+  const passportFields = def ? guruDebugPassportFields(def, state) : null;
+  const generic = card && !def ? guruDebugGenericFields(card, state) : null;
+  const fields = passportFields || generic?.fields || [];
+  const payload = {
+    tool: 'GURU Debug Export',
+    exportType: 'block',
+    schemaVersion: GURU_DEBUG_VERSION,
+    updatedAt: new Date().toISOString(),
+    gate: gate ? { id: gate.id, title: gate.title } : null,
+    blockName: card?.title || '',
+    blockId: card?.id || cardId || '',
+    status: card?.status || '',
+    fields,
+    rawEvidence: card?.evidence || '',
+    evidenceFields: card ? ensureEvidenceFields(card).map(f => ({ ...f, value: getEvidenceValue(f.key, state) })) : [],
+    instruction: card?.instruction || '',
+    autocontекст: def ? v116ContextRows(def, state).map(([label, value]) => ({ label, value })) : [],
+    globalDataLinks: guruDebugGlobalLinks(def, state),
+    linkedGates: def ? (def.transfer || '').split('·').map(x => x.trim()).filter(Boolean) : [],
+    syncConflicts: guruDebugSyncConflicts(def, state),
+    validationErrors: guruDebugValidation(card, def, fields),
+    uiState: guruDebugVisibleUiState(cardId),
+    technical: {
+      platformVersion: PLATFORM_VERSION,
+      debugVersion: GURU_DEBUG_VERSION,
+      localStorageKey: WORKSPACE_STORAGE_PREFIX + currentProjectId,
+      projectId: currentProjectId,
+      consoleErrors: window.__guruConsoleLog || [],
+      userAgent: navigator.userAgent,
+      url: location.href,
+      htmlSnapshot: cardId ? (document.querySelector(`[data-card="${CSS.escape(cardId)}"], [data-card-row="${CSS.escape(cardId)}"]`)?.outerHTML || '') : ''
+    },
+    notes: notes || ''
+  };
+  return payload;
+}
+
+function guruDebugGatePayload(gateId = activeGateId, notes = '') {
+  const gate = (state?.gates || []).find(g => g.id === gateId);
+  const cards = (gate?.cards || []).map(card => {
+    const def = v116PassportDef(card);
+    const fields = def ? guruDebugPassportFields(def, state) : guruDebugGenericFields(card, state).fields;
+    return {
+      blockName: card.title,
+      blockId: card.id,
+      status: card.status,
+      fields,
+      validationErrors: guruDebugValidation(card, def, fields),
+      globalDataLinks: guruDebugGlobalLinks(def, state),
+      syncConflicts: guruDebugSyncConflicts(def, state)
+    };
+  });
+  return {
+    tool: 'GURU Debug Export',
+    exportType: 'gate',
+    schemaVersion: GURU_DEBUG_VERSION,
+    updatedAt: new Date().toISOString(),
+    gate: gate ? { id: gate.id, title: gate.title, status: getGateStatus(gate), progress: getProgress(gate.cards || []) } : null,
+    blocks: cards,
+    uiState: guruDebugVisibleUiState(),
+    projectGlobalData: { ...(state?.project || {}) },
+    sharedEvidence: { ...(state?.sharedEvidence || {}) },
+    syncConflicts: cards.flatMap(card => card.syncConflicts.map(item => ({ blockId: card.blockId, blockName: card.blockName, ...item }))),
+    validationErrors: cards.flatMap(card => card.validationErrors.map(item => ({ blockId: card.blockId, blockName: card.blockName, ...item }))),
+    technical: {
+      platformVersion: PLATFORM_VERSION,
+      debugVersion: GURU_DEBUG_VERSION,
+      localStorageKey: WORKSPACE_STORAGE_PREFIX + currentProjectId,
+      projectId: currentProjectId,
+      consoleErrors: window.__guruConsoleLog || [],
+      userAgent: navigator.userAgent,
+      url: location.href
+    },
+    notes: notes || ''
+  };
+}
+
+function guruDebugAskNotes() {
+  return prompt('Коротко опишите проблему для debug export:', '') || '';
+}
+
+function guruDebugExportBlock(cardId) {
+  const notes = guruDebugAskNotes();
+  const payload = guruDebugBlockPayload(cardId, notes);
+  const file = `guru-debug_gate-${guruDebugSlug(payload.gate?.id || activeGateId)}_${guruDebugSlug(payload.blockName || payload.blockId)}_${guruDebugDateStamp()}.json`;
+  guruDebugDownloadJson(file, payload);
+}
+
+function guruDebugExportGate() {
+  const notes = guruDebugAskNotes();
+  const payload = guruDebugGatePayload(activeGateId, notes);
+  const file = `guru-debug_gate-${guruDebugSlug(payload.gate?.id || activeGateId)}_${guruDebugDateStamp()}.json`;
+  guruDebugDownloadJson(file, payload);
+}
+
+function guruDebugEnsureToolbarButton() {
+  const bar = document.getElementById('workspaceToolbar');
+  if (!bar || bar.querySelector('[data-debug-export-gate]')) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn secondary debug-export-btn';
+  btn.dataset.debugExportGate = '1';
+  btn.textContent = 'Экспорт диагностики Gate';
+  bar.appendChild(btn);
+}
+
+function guruDebugBindButtons() {
+  guruDebugEnsureToolbarButton();
+  document.querySelector('[data-debug-export-gate]')?.addEventListener('click', guruDebugExportGate);
+  document.querySelectorAll('[data-debug-export-block]').forEach(btn => {
+    if (btn.dataset.debugBound === '1') return;
+    btn.dataset.debugBound = '1';
+    btn.addEventListener('click', () => guruDebugExportBlock(btn.dataset.debugExportBlock));
+  });
+}
+
+const __guruPrevV116PassportFieldsHtmlV117 = v116PassportFieldsHtml;
+v116PassportFieldsHtml = function(card) {
+  const html = __guruPrevV116PassportFieldsHtmlV117(card);
+  if (!v116PassportDef(card)) return html;
+  const button = `<div class="passport-v117-debug"><button type="button" class="btn secondary debug-export-btn" data-debug-export-block="${escapeAttr(card.id)}">Экспорт диагностики блока</button></div>`;
+  return html.replace('<details class="passport-v116-context">', `${button}<details class="passport-v116-context">`);
+};
+
+const __guruPrevBindCardInputsV117 = bindCardInputs;
+bindCardInputs = function() {
+  __guruPrevBindCardInputsV117();
+  guruDebugBindButtons();
+};
+
+const __guruPrevRenderV117 = render;
+render = function() {
+  __guruPrevRenderV117();
+  setTimeout(guruDebugBindButtons, 0);
+};
+
+(function markV117() {
+  const re = /v0\.\d+|v1\.0|v1\.1(?:\.\d+)?/g;
+  document.title = document.title.replace(re, 'v1.1.7');
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.7'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.7'); });
 })();

@@ -2439,3 +2439,23 @@ select:disabled {
     align-items: flex-start;
   }
 }
+
+
+/* v1.1.7 — Debug Export */
+.debug-export-btn {
+  white-space: nowrap;
+}
+.passport-v117-debug {
+  display: flex;
+  justify-content: flex-start;
+  margin: 10px 0 8px;
+}
+.passport-v117-debug .debug-export-btn {
+  min-height: 34px;
+  font-size: 12px;
+  padding: 7px 12px;
+}
+@media (max-width: 760px) {
+  .debug-export-btn { width: 100%; }
+  .passport-v117-debug { width: 100%; }
+}
