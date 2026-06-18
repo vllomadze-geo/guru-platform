@@ -227,6 +227,18 @@ function openProject(projectId) {
   els.appShell.hidden = false;
   saveState();
   render();
+  loadFromSupabase(projectId).then(cloudState => {
+    if (!cloudState) return;
+    const local = state?.updatedAt || '';
+    const cloud = cloudState.updatedAt || '';
+    if (cloud > local) {
+      state = migrateWorkspace(cloudState, projectId);
+      localStorage.setItem(WORKSPACE_STORAGE_PREFIX + projectId, JSON.stringify(state));
+      render();
+      els.saveStatus.textContent = 'Загружено из облака';
+      els.autosaveDot.style.background = '#4a9eff';
+    }
+  });
 }
 
 function renderProjectLauncher() {
@@ -2748,6 +2760,7 @@ function gate1LinkRowsHtml(card) {
 
 
 function inlineToolControlsHtml() {
+  if (!state) return '';
   state.tools = normalizeProjectTools(state.tools);
   const groups = {};
   state.tools.forEach(tool => {
@@ -2763,6 +2776,7 @@ function inlineToolControlsHtml() {
 }
 
 function updateInlineTool(e) {
+  if (!state) return;
   const key = e.target.dataset.inlineTool;
   state.tools = normalizeProjectTools(state.tools);
   const tool = state.tools.find(item => item.key === key);
@@ -3192,6 +3206,7 @@ function updateLinkBankFromInput(e) {
 }
 
 function renderTools() {
+  if (!state) return;
   activeView = 'tools';
   setToolbarVisible(false);
   state.tools = normalizeProjectTools(state.tools);
@@ -3227,6 +3242,7 @@ function toolRowHtml(tool) {
 }
 
 function updateProjectTool(e) {
+  if (!state?.tools) return;
   const key = e.target.dataset.projectTool;
   const tool = state.tools.find(item => item.key === key);
   if (!tool) return;
@@ -3551,7 +3567,11 @@ document.getElementById('newProjectName').addEventListener('keydown', e => {
   if (e.key === 'Enter') createProjectFromModal();
 });
 
-showLauncher();
+if (projects.length === 1) {
+  openProject(projects[0].id);
+} else {
+  showLauncher();
+}
 
 /* v0.14 — Context-first simplification overrides */
 
@@ -8099,6 +8119,47 @@ renderGateNav = function() {
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+|v1\.0/g, 'v1.0'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+|v1\.0/g, 'v1.0'); });
 })();
+
+// === Supabase sync ===
+let _syncTimer = null;
+
+function scheduleCloudSync() {
+  if (_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(pushToSupabase, 2000);
+}
+
+async function pushToSupabase() {
+  if (!state || !activeProjectId) return;
+  try {
+    const response = await fetch('/api/workspace-sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project_id: activeProjectId, state: state })
+    });
+    const data = await response.json();
+    if (data.ok) {
+      els.saveStatus.textContent = 'Облако ✓ ' + new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      els.autosaveDot.style.background = '#4a9eff';
+    } else {
+      console.warn('Supabase sync error:', data.error, data.detail);
+      els.saveStatus.textContent = 'Облако: ошибка записи';
+      els.autosaveDot.style.background = '#d4605f';
+    }
+  } catch (e) {
+    console.warn('Supabase sync failed, localStorage ok', e);
+  }
+}
+
+async function loadFromSupabase(projectId) {
+  try {
+    const response = await fetch(`/api/workspace-sync?project_id=${encodeURIComponent(projectId)}`);
+    const data = await response.json();
+    if (data.ok && data.state) return data.state;
+  } catch (e) {
+    console.warn('Supabase load failed, using localStorage', e);
+  }
+  return null;
+}
 
 
 /*
