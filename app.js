@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v1.1.9';
+const PLATFORM_VERSION = 'v1.1.10';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -19,6 +19,9 @@ let state = null;
 let activeView = 'project';
 let activeGateId = null;
 let layoutMode = 'table';
+let launcherProjectFilter = 'active';
+let activeProjectMenuId = null;
+let pendingDeleteProjectId = null;
 
 const els = {
   launcher: document.getElementById('projectLauncher'),
@@ -48,7 +51,7 @@ function loadProjects() {
     const saved = localStorage.getItem(PROJECTS_STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length) return parsed;
+      if (Array.isArray(parsed) && parsed.length) return normalizeProjects(parsed);
     }
   } catch (err) {
     console.warn('Не удалось прочитать список проектов', err);
@@ -76,12 +79,26 @@ function loadProjects() {
     console.warn('Не удалось выполнить миграцию старой версии', err);
   }
 
-  localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify([defaultProject]));
-  return [defaultProject];
+  localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(normalizeProjects([defaultProject])));
+  return normalizeProjects([defaultProject]);
 }
 
 function saveProjects() {
   localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projects));
+}
+
+
+function normalizeProjects(list = []) {
+  return (Array.isArray(list) ? list : []).map(project => ({
+    ...project,
+    archived: Boolean(project.archived),
+    lifecycleStatus: project.lifecycleStatus || (project.archived ? 'archived' : 'active'),
+    icon: project.icon || getProjectIcon(project.name)
+  }));
+}
+
+function currentProjectIdSafe() {
+  return activeProjectId || '';
 }
 
 function loadState(projectId) {
@@ -213,12 +230,49 @@ function openProject(projectId) {
 }
 
 function renderProjectLauncher() {
-  els.projectGrid.innerHTML = projects.map(projectCardHtml).join('') + addProjectCardHtml();
+  projects = normalizeProjects(projects);
+  const activeProjects = projects.filter(project => !project.archived);
+  const archivedProjects = projects.filter(project => project.archived);
+  const visibleProjects = launcherProjectFilter === 'archive' ? archivedProjects : activeProjects;
+  const emptyMessage = launcherProjectFilter === 'archive'
+    ? '<div class="project-empty">Архив пуст. Здесь будут проекты, которые вы скрыли без удаления данных.</div>'
+    : '<div class="project-empty">Активных проектов пока нет.</div>';
+
+  document.querySelectorAll('[data-project-filter]').forEach(btn => {
+    btn.classList.toggle('is-active', btn.dataset.projectFilter === launcherProjectFilter);
+    const count = btn.dataset.projectFilter === 'archive' ? archivedProjects.length : activeProjects.length;
+    btn.querySelector('[data-filter-count]').textContent = String(count);
+  });
+
+  els.projectGrid.innerHTML = (visibleProjects.length ? visibleProjects.map(projectCardHtml).join('') : emptyMessage)
+    + (launcherProjectFilter === 'active' ? addProjectCardHtml() : '');
+
   document.querySelectorAll('[data-open-project]').forEach(card => {
-    card.addEventListener('click', () => openProject(card.dataset.openProject));
+    card.addEventListener('click', e => {
+      if (e.target.closest('[data-project-menu], [data-project-action], [data-project-site], .project-menu-panel')) return;
+      openProject(card.dataset.openProject);
+    });
+    card.addEventListener('keydown', e => {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('button, a')) {
+        e.preventDefault();
+        openProject(card.dataset.openProject);
+      }
+    });
   });
   document.querySelectorAll('[data-project-site]').forEach(link => {
     link.addEventListener('click', e => e.stopPropagation());
+  });
+  document.querySelectorAll('[data-project-menu]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      toggleProjectMenu(btn.dataset.projectMenu);
+    });
+  });
+  document.querySelectorAll('[data-project-action]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      handleProjectMenuAction(btn.dataset.projectAction, btn.dataset.projectId);
+    });
   });
   document.getElementById('addProjectCard')?.addEventListener('click', showNewProjectModal);
 }
@@ -226,13 +280,25 @@ function renderProjectLauncher() {
 function projectCardHtml(project) {
   const website = project.website ? normalizeUrl(project.website) : '';
   const description = project.description || 'Короткое описание проекта пока не заполнено.';
+  const isArchived = Boolean(project.archived);
   return `
-    <button class="project-card" data-open-project="${escapeAttr(project.id)}">
+    <div class="project-card ${isArchived ? 'project-card-archived' : ''}" data-open-project="${escapeAttr(project.id)}" tabindex="0" role="button" aria-label="Открыть проект ${escapeAttr(project.name)}">
+      <button type="button" class="project-menu-trigger" data-project-menu="${escapeAttr(project.id)}" aria-label="Меню проекта">⋯</button>
+      <div class="project-menu-panel" data-project-menu-panel="${escapeAttr(project.id)}" hidden>
+        <button type="button" data-project-action="open" data-project-id="${escapeAttr(project.id)}">Открыть проект</button>
+        <button type="button" data-project-action="edit-passport" data-project-id="${escapeAttr(project.id)}">Редактировать паспорт</button>
+        <button type="button" data-project-action="export-debug" data-project-id="${escapeAttr(project.id)}">Экспорт диагностики проекта</button>
+        ${isArchived
+          ? `<button type="button" data-project-action="restore" data-project-id="${escapeAttr(project.id)}">Вернуть из архива</button>`
+          : `<button type="button" data-project-action="archive" data-project-id="${escapeAttr(project.id)}">Архивировать</button>`}
+        <button type="button" class="danger" data-project-action="delete" data-project-id="${escapeAttr(project.id)}">Удалить проект</button>
+      </div>
       <span class="project-avatar">${escapeHtml(project.icon || getProjectIcon(project.name))}</span>
       <span class="project-name">${escapeHtml(project.name)}</span>
       <span class="project-description">${escapeHtml(description)}</span>
+      ${isArchived ? `<span class="project-state-chip">Архив</span>` : ''}
       ${website ? `<a class="project-site" href="${escapeAttr(website)}" target="_blank" rel="noopener" data-project-site>Открыть сайт ↗</a>` : `<span class="project-site muted-link">Ссылка не указана</span>`}
-    </button>`;
+    </div>`;
 }
 
 function addProjectCardHtml() {
@@ -243,6 +309,153 @@ function addProjectCardHtml() {
       <span class="project-description">Создать отдельный рабочий интерфейс для нового сайта, бренда или кампании.</span>
       <span class="project-site muted-link">Добавить проект</span>
     </button>`;
+}
+
+function toggleProjectMenu(projectId) {
+  activeProjectMenuId = activeProjectMenuId === projectId ? null : projectId;
+  document.querySelectorAll('[data-project-menu-panel]').forEach(panel => {
+    panel.hidden = panel.dataset.projectMenuPanel !== activeProjectMenuId;
+  });
+}
+
+function closeProjectMenus() {
+  activeProjectMenuId = null;
+  document.querySelectorAll('[data-project-menu-panel]').forEach(panel => { panel.hidden = true; });
+}
+
+function handleProjectMenuAction(action, projectId) {
+  closeProjectMenus();
+  if (!projectId) return;
+  if (action === 'open') openProject(projectId);
+  if (action === 'edit-passport') openProject(projectId);
+  if (action === 'export-debug') exportProjectDebug(projectId);
+  if (action === 'archive') archiveProject(projectId);
+  if (action === 'restore') restoreProject(projectId);
+  if (action === 'delete') showProjectDeleteModal(projectId);
+}
+
+function archiveProject(projectId) {
+  const project = projects.find(p => p.id === projectId);
+  if (!project) return;
+  project.archived = true;
+  project.lifecycleStatus = 'archived';
+  project.updatedAt = new Date().toISOString();
+  saveProjects();
+  launcherProjectFilter = 'active';
+  renderProjectLauncher();
+}
+
+function restoreProject(projectId) {
+  const project = projects.find(p => p.id === projectId);
+  if (!project) return;
+  project.archived = false;
+  project.lifecycleStatus = 'active';
+  project.updatedAt = new Date().toISOString();
+  saveProjects();
+  launcherProjectFilter = 'archive';
+  renderProjectLauncher();
+}
+
+function readWorkspaceRaw(projectId) {
+  try {
+    const saved = localStorage.getItem(WORKSPACE_STORAGE_PREFIX + projectId);
+    return saved ? JSON.parse(saved) : null;
+  } catch (error) {
+    return { readError: String(error?.message || error) };
+  }
+}
+
+function projectDebugPayload(projectId) {
+  const project = projects.find(p => p.id === projectId) || null;
+  const workspace = readWorkspaceRaw(projectId);
+  const gates = Array.isArray(workspace?.gates) ? workspace.gates.map(gate => ({
+    id: gate.id,
+    title: gate.title,
+    cards: (gate.cards || []).map(card => ({
+      id: card.id,
+      title: card.title,
+      status: card.status,
+      evidence: card.evidence || '',
+      evidenceFields: ensureEvidenceFields ? ensureEvidenceFields(card).map(field => ({
+        key: field.key,
+        label: field.label,
+        value: workspace?.sharedEvidence?.[field.key] || ''
+      })) : []
+    }))
+  })) : [];
+  return {
+    tool: 'GURU Debug Export',
+    exportType: 'project',
+    schemaVersion: 'v1.1.10-project-debug',
+    updatedAt: new Date().toISOString(),
+    projectId,
+    project,
+    workspaceProject: workspace?.project || {},
+    lifecycleStatus: project?.archived ? 'archived' : 'active',
+    globalData: workspace?.project || {},
+    sharedEvidence: workspace?.sharedEvidence || {},
+    gates,
+    metrics: workspace?.metrics || [],
+    linkBank: workspace?.linkBank || [],
+    tools: workspace?.tools || {},
+    uiState: { launcherProjectFilter, activeProjectId, activeView, activeGateId, url: location.href, viewport: { width: window.innerWidth, height: window.innerHeight } },
+    technical: { platformVersion: PLATFORM_VERSION, localStorageKey: WORKSPACE_STORAGE_PREFIX + projectId, userAgent: navigator.userAgent },
+    notes: 'Экспорт диагностики проекта перед архивированием или удалением.'
+  };
+}
+
+function exportProjectDebug(projectId) {
+  const project = projects.find(p => p.id === projectId);
+  const payload = projectDebugPayload(projectId);
+  const slug = guruDebugSlug ? guruDebugSlug(project?.name || projectId) : String(project?.name || projectId).toLowerCase().replace(/\s+/g, '-');
+  const filename = `guru-debug_project-${slug}_${guruDebugDateStamp ? guruDebugDateStamp() : new Date().toISOString().slice(0,10)}.json`;
+  const text = typeof guruDebugJsonTextV119 === 'function' ? guruDebugJsonTextV119(payload) : JSON.stringify(payload, null, 2);
+  if (typeof guruDebugForceDownloadV119 === 'function') guruDebugForceDownloadV119(filename, text);
+  else downloadText(filename, text);
+  if (typeof guruDebugShowPanelV119 === 'function') guruDebugShowPanelV119(filename, text);
+}
+
+function showProjectDeleteModal(projectId) {
+  const project = projects.find(p => p.id === projectId);
+  if (!project) return;
+  pendingDeleteProjectId = projectId;
+  const modal = document.getElementById('projectDeleteModal');
+  document.getElementById('deleteProjectName').textContent = project.name;
+  document.getElementById('deleteProjectConfirmName').value = '';
+  document.getElementById('confirmProjectDelete').disabled = true;
+  modal.hidden = false;
+  setTimeout(() => document.getElementById('deleteProjectConfirmName').focus(), 0);
+}
+
+function hideProjectDeleteModal() {
+  pendingDeleteProjectId = null;
+  const modal = document.getElementById('projectDeleteModal');
+  if (modal) modal.hidden = true;
+}
+
+function updateDeleteConfirmState() {
+  const project = projects.find(p => p.id === pendingDeleteProjectId);
+  const input = document.getElementById('deleteProjectConfirmName');
+  const btn = document.getElementById('confirmProjectDelete');
+  if (!project || !input || !btn) return;
+  btn.disabled = input.value.trim() !== project.name;
+}
+
+function deleteProjectForever(projectId) {
+  const project = projects.find(p => p.id === projectId);
+  if (!project) return;
+  project.lifecycleStatus = 'deleting';
+  project.updatedAt = new Date().toISOString();
+  saveProjects();
+  localStorage.removeItem(WORKSPACE_STORAGE_PREFIX + projectId);
+  projects = projects.filter(p => p.id !== projectId);
+  saveProjects();
+  if (activeProjectId === projectId) {
+    showLauncher();
+  } else {
+    hideProjectDeleteModal();
+    renderProjectLauncher();
+  }
 }
 
 function getProjectIcon(name = '') {
@@ -304,6 +517,8 @@ function createProjectFromModal() {
     afterOffer: '',
     afterDescription: '',
     icon: icon || getProjectIcon(name),
+    archived: false,
+    lifecycleStatus: 'active',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -10080,4 +10295,37 @@ render = function() {
   document.title = document.title.replace(re, 'v1.1.9');
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.9'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.9'); });
+})();
+
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('[data-project-menu], .project-menu-panel')) closeProjectMenus();
+});
+document.querySelectorAll('[data-project-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    launcherProjectFilter = btn.dataset.projectFilter || 'active';
+    closeProjectMenus();
+    renderProjectLauncher();
+  });
+});
+document.getElementById('projectDeleteModal')?.addEventListener('click', e => {
+  if (e.target === document.getElementById('projectDeleteModal')) hideProjectDeleteModal();
+});
+document.getElementById('closeProjectDeleteModal')?.addEventListener('click', hideProjectDeleteModal);
+document.getElementById('cancelProjectDelete')?.addEventListener('click', hideProjectDeleteModal);
+document.getElementById('deleteProjectConfirmName')?.addEventListener('input', updateDeleteConfirmState);
+document.getElementById('exportProjectBeforeDelete')?.addEventListener('click', () => {
+  if (pendingDeleteProjectId) exportProjectDebug(pendingDeleteProjectId);
+});
+document.getElementById('confirmProjectDelete')?.addEventListener('click', () => {
+  if (!pendingDeleteProjectId) return;
+  deleteProjectForever(pendingDeleteProjectId);
+});
+
+
+(function markV1110() {
+  const re = /v0\.\d+|v1\.0|v1\.1(?:\.\d+)?/g;
+  document.title = document.title.replace(re, 'v1.1.10');
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.10'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.10'); });
 })();

@@ -3,15 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>УНИВЕРСАЛ / ГУРУ — платформа v1.1.8</title>
-  <link rel="stylesheet" href="styles.css?v=1.1.7" />
+  <title>УНИВЕРСАЛ / ГУРУ — платформа v1.1.10</title>
+  <link rel="stylesheet" href="styles.css?v=1.1.10" />
 </head>
 <body>
   <section class="project-launcher" id="projectLauncher">
     <div class="launcher-inner">
-      <div class="launcher-kicker">УНИВЕРСАЛ / ГУРУ · v1.1.8</div>
+      <div class="launcher-kicker">УНИВЕРСАЛ / ГУРУ · v1.1.10</div>
       <h1>Выберите проект</h1>
       <p class="launcher-lead">Откройте рабочий интерфейс нужного проекта или создайте новый проект.</p>
+      <div class="launcher-actions" aria-label="Фильтр проектов">
+        <button type="button" class="launcher-filter is-active" data-project-filter="active">Активные <span data-filter-count>0</span></button>
+        <button type="button" class="launcher-filter" data-project-filter="archive">Архив <span data-filter-count>0</span></button>
+      </div>
       <div class="project-grid" id="projectGrid"></div>
     </div>
   </section>
@@ -43,6 +47,31 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="projectDeleteModal" hidden>
+    <div class="modal-card danger-modal">
+      <div class="modal-head">
+        <div>
+          <div class="eyebrow">Опасное действие</div>
+          <h2>Удалить проект?</h2>
+        </div>
+        <button class="icon-btn" id="closeProjectDeleteModal" aria-label="Закрыть">×</button>
+      </div>
+      <div class="danger-copy">
+        <p>Вы собираетесь удалить проект <strong id="deleteProjectName"></strong>.</p>
+        <p>Будут удалены паспорт проекта, Gate, заполненные блоки, глобальные поля, отчёты, календарь и журнал выполнения.</p>
+        <p>Перед удалением рекомендуется экспортировать диагностику проекта.</p>
+      </div>
+      <button type="button" class="btn secondary" id="exportProjectBeforeDelete">Экспортировать проект</button>
+      <label class="delete-confirm-label">Введите точное название проекта для подтверждения
+        <input id="deleteProjectConfirmName" autocomplete="off" />
+      </label>
+      <div class="modal-actions">
+        <button class="btn secondary" id="cancelProjectDelete">Отмена</button>
+        <button class="btn danger" id="confirmProjectDelete" disabled>Удалить навсегда</button>
+      </div>
+    </div>
+  </div>
+
   <div class="app-shell" id="appShell" hidden>
     <aside class="sidebar">
       <div class="brand-block">
@@ -68,7 +97,7 @@
     <main class="main">
       <header class="topbar">
         <div>
-          <div class="eyebrow">Рабочая версия MVP · v1.1.8</div>
+          <div class="eyebrow">Рабочая версия MVP · v1.1.10</div>
           <div id="supabaseStatus" class="supabase-status is-checking">Supabase: проверка подключения</div>
           <h1 id="pageTitle">Платформа</h1>
         </div>
