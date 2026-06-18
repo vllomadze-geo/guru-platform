@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v1.1.10';
+const PLATFORM_VERSION = 'v1.1.11';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -1212,6 +1212,11 @@ function syncProjectBeforeFromPositioning(workspace = state) {
   if (!workspace) return;
   workspace.project = workspace.project || {};
   workspace.sharedEvidence = workspace.sharedEvidence || {};
+  const descriptionFallback = workspace.project.description || '';
+  workspace.project.mainCta = getSharedEvidenceByLabels(workspace, ['главный CTA', 'список текущих CTA', 'CTA', 'основной CTA']) || workspace.project.mainCta || '';
+  workspace.project.usp = getSharedEvidenceByLabels(workspace, ['УТП', 'позиционирования', 'стартовая формулировка', 'главное УТП']) || workspace.project.usp || '';
+  workspace.project.offer = getSharedEvidenceByLabels(workspace, ['оффер', 'список текущих офферов', 'текущие офферы']) || workspace.project.offer || '';
+  workspace.project.description = getSharedEvidenceByLabels(workspace, ['описание проекта', 'стартовая формулировка', 'позиционирования']) || descriptionFallback;
 }
 
 function syncProjectPassportCard(workspace = state) {
@@ -8941,7 +8946,7 @@ const CURRENT_OFFERS_CTA_GLOBAL_FIELDS = [
     sharedKey: 'current_offers',
     label: 'Текущие офферы',
     hint: 'какие предложения сейчас используются',
-    fallbackKeys: [],
+    fallbackKeys: ['offer', 'afterOffer'],
     downstream: 'Gate 1 -> Боль / JTBD / Офер, аудит сайта, страницы, лендинги, объявления',
     route: 'Gate 1 / Gate 3 / Gate 4'
   },
@@ -8950,7 +8955,7 @@ const CURRENT_OFFERS_CTA_GLOBAL_FIELDS = [
     sharedKey: 'current_ctas',
     label: 'Текущие CTA',
     hint: 'призывы на сайте, в рекламе, баннерах, мессенджерах',
-    fallbackKeys: [],
+    fallbackKeys: ['mainCta', 'afterMainCta'],
     downstream: 'hero-блоки, формы, кнопки, баннеры, объявления, email / push / Telegram',
     route: 'Gate 1 / Gate 4'
   },
@@ -8959,7 +8964,7 @@ const CURRENT_OFFERS_CTA_GLOBAL_FIELDS = [
     sharedKey: 'primary_target_action',
     label: 'Основное целевое действие',
     hint: 'купить / оставить заявку / написать / позвонить / забронировать',
-    fallbackKeys: [],
+    fallbackKeys: ['mainCta'],
     downstream: 'цели Метрики, конверсионные блоки, thank you page, отчеты, рекламные кампании',
     route: 'Gate 2 / Gate 4 / Gate 5'
   }
@@ -9182,9 +9187,9 @@ const GATE0_PASSPORT_V116_BLOCKS = {
     instruction: 'Инструменты: бриф, интервью, CRM, сайт, отдел продаж. На выходе должны быть три базовых смысла проекта: продукт, сегмент, результат.',
     context: ['name','niche','website','geography'],
     fields: [
-      { key: 'whatSell', sharedKey: 'что_продаем', label: 'Что продаем', hint: 'продукт / услуга / направление', route: 'Gate 1, Gate 3, Gate 4', downstream: 'оффер, семантика, юнит-экономика, кампании, календарь, отчеты', fallback: [] },
+      { key: 'whatSell', sharedKey: 'что_продаем', label: 'Что продаем', hint: 'продукт / услуга / направление', route: 'Gate 1, Gate 3, Gate 4', downstream: 'оффер, семантика, юнит-экономика, кампании, календарь, отчеты', fallback: ['niche','offer'] },
       { key: 'targetSegment', sharedKey: 'кому_продаем', label: 'Кому продаем', hint: 'основной сегмент / аудитория', route: 'Gate 1, Gate 3, Gate 4', downstream: 'ЦА, сегменты, персоны, рекламные группы, коллаборации', fallback: [] },
-      { key: 'clientResult', sharedKey: 'ради_какого_результата', label: 'Ради какого результата', hint: 'какую задачу клиент хочет решить', route: 'Gate 1, Gate 3, Gate 4', downstream: 'JTBD, офер, лендинги, объявления, CTA', fallback: [] }
+      { key: 'clientResult', sharedKey: 'ради_какого_результата', label: 'Ради какого результата', hint: 'какую задачу клиент хочет решить', route: 'Gate 1, Gate 3, Gate 4', downstream: 'JTBD, офер, лендинги, объявления, CTA', fallback: ['afterDescription'] }
     ],
     tags: { key: 'productKeywords', sharedKey: 'product_keywords', label: 'Ключевые слова продукта', placeholder: 'подарок ручной работы, авторская мастерская, под заказ' },
     proof: { key: 'productSegmentProof', sharedKey: 'product_segment_proof', label: 'Доказательство', placeholder: 'бриф / интервью / CRM / сайт / отдел продаж' },
@@ -9214,9 +9219,9 @@ const GATE0_PASSPORT_V116_BLOCKS = {
     instruction: 'Инструменты: сайт, посадочные, презентации, рекламные материалы, скрипты продаж. На выходе нужны стартовая формулировка, позиционирование и УТП.',
     context: ['name','niche','geography','whatSell','targetSegment','clientResult','offerRationalCoverage','offerIrrationalDriver','offerSocialMechanism'],
     fields: [
-      { key: 'positioningStartFormula', sharedKey: 'positioning_start_formula', label: 'Стартовая формулировка', hint: 'как проект сейчас коротко описывает себя', route: 'Gate 1, Gate 3, Gate 4', downstream: 'описание проекта, главная, презентации, отчеты', fallback: [] },
+      { key: 'positioningStartFormula', sharedKey: 'positioning_start_formula', label: 'Стартовая формулировка', hint: 'как проект сейчас коротко описывает себя', route: 'Gate 1, Gate 3, Gate 4', downstream: 'описание проекта, главная, презентации, отчеты', fallback: ['description','name'] },
       { key: 'positioningStatement', sharedKey: 'positioning_statement', label: 'Позиционирование', hint: 'для кого / категория / отличие', route: 'Gate 1, Gate 3, Gate 4', downstream: 'аудит сайта, ЦА, конкуренты, JTBD, сегменты', fallback: [] },
-      { key: 'usp', sharedKey: 'usp', label: 'УТП', hint: 'главное обещание выбора', route: 'Gate 1, Gate 3, Gate 4', downstream: 'hero-экран, офер, объявления, CTA, лендинги', fallback: [] }
+      { key: 'usp', sharedKey: 'usp', label: 'УТП', hint: 'главное обещание выбора', route: 'Gate 1, Gate 3, Gate 4', downstream: 'hero-экран, офер, объявления, CTA, лендинги', fallback: ['afterUsp'] }
     ],
     tags: { key: 'positioningMeaningTags', sharedKey: 'positioning_meaning_tags', label: 'Ключевые смыслы позиционирования', placeholder: 'авторская работа, подарок с характером, ручная эстетика' },
     proof: { key: 'positioningProof', sharedKey: 'positioning_proof', label: 'Доказательство', placeholder: 'сайт / посадочные / презентации / рекламные материалы / скрипты' },
@@ -9230,9 +9235,9 @@ const GATE0_PASSPORT_V116_BLOCKS = {
     instruction: 'Источники: сайт, посадочные, объявления, баннеры, мессенджеры, скрипты продаж. На выходе нужны офферы, CTA и главное целевое действие.',
     context: ['whatSell','targetSegment','clientResult','positioningStartFormula','positioningStatement','usp','offerRationalCoverage','offerIrrationalDriver','offerSocialMechanism'],
     fields: [
-      { key: 'currentOffers', sharedKey: 'current_offers', label: 'Текущие офферы', hint: 'предложения, акции, бонусы, сценарии покупки', route: 'Gate 1, Gate 3, Gate 4', downstream: 'офер, JTBD, аудит страниц, лендинги, объявления', fallback: [] },
-      { key: 'currentCtas', sharedKey: 'current_ctas', label: 'Текущие CTA', hint: 'купить, заказать, написать, рассчитать', route: 'Gate 1, Gate 4', downstream: 'hero-блоки, формы, кнопки, баннеры, email, push, Telegram', fallback: [] },
-      { key: 'primaryTargetAction', sharedKey: 'primary_target_action', label: 'Основное целевое действие', hint: 'главное действие клиента', route: 'Gate 2, Gate 4, Gate 5', downstream: 'цели Метрики, конверсионные блоки, thank you page, отчеты', fallback: [] }
+      { key: 'currentOffers', sharedKey: 'current_offers', label: 'Текущие офферы', hint: 'предложения, акции, бонусы, сценарии покупки', route: 'Gate 1, Gate 3, Gate 4', downstream: 'офер, JTBD, аудит страниц, лендинги, объявления', fallback: ['offer','afterOffer'] },
+      { key: 'currentCtas', sharedKey: 'current_ctas', label: 'Текущие CTA', hint: 'купить, заказать, написать, рассчитать', route: 'Gate 1, Gate 4', downstream: 'hero-блоки, формы, кнопки, баннеры, email, push, Telegram', fallback: ['mainCta','afterMainCta'] },
+      { key: 'primaryTargetAction', sharedKey: 'primary_target_action', label: 'Основное целевое действие', hint: 'главное действие клиента', route: 'Gate 2, Gate 4, Gate 5', downstream: 'цели Метрики, конверсионные блоки, thank you page, отчеты', fallback: ['mainCta'] }
     ],
     tags: { key: 'offerCtaActionTags', sharedKey: 'offer_cta_action_tags', label: 'Ключевые действия', placeholder: 'купить из каталога, сделать под заказ, написать' },
     proof: { key: 'currentOffersCtaProof', sharedKey: 'current_offers_cta_proof', label: 'Доказательство', placeholder: 'сайт / объявления / баннеры / мессенджеры / скрипты' },
@@ -10323,4 +10328,200 @@ document.getElementById('confirmProjectDelete')?.addEventListener('click', () =>
   document.title = document.title.replace(re, 'v1.1.10');
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.10'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.10'); });
+})();
+
+
+/* v1.1.11 — Gate 0 / Контрольная дата фиксации
+   Блок фиксирует дату, объект и срез состояния проекта. Не задача на реализацию.
+*/
+const CONTROL_FIXATION_FIELDS_V1111 = [
+  {
+    key: 'controlFixationDate',
+    sharedKey: 'control_fixation_date',
+    label: 'Дата фиксации',
+    hint: 'день, когда зафиксировали состояние проекта',
+    type: 'date'
+  },
+  {
+    key: 'controlFixationObject',
+    sharedKey: 'control_fixation_object',
+    label: 'Объект фиксации',
+    hint: 'сайт / Gate / блок / кампания / отчёт',
+    type: 'text'
+  },
+  {
+    key: 'controlFixationSnapshot',
+    sharedKey: 'control_fixation_snapshot',
+    label: 'Состояние на дату',
+    hint: 'короткий срез состояния на момент фиксации',
+    type: 'text'
+  },
+  {
+    key: 'controlFixationProof',
+    sharedKey: 'control_fixation_proof',
+    label: 'Доказательство',
+    hint: 'скрин / файл / отчёт / ссылка на срез',
+    type: 'text'
+  }
+];
+
+function isControlFixationCardV1111(card) {
+  return card?.title === 'Контрольная дата фиксации';
+}
+
+function controlFixationInstructionV1111() {
+  return 'Блок отвечает не за постановку задачи, а за фиксацию состояния проекта на конкретную дату.\n\nФормула: дата → объект → состояние → доказательство → статус.\n\nНа выходе должно быть понятно: на какую дату, какой объект и в каком состоянии зафиксирован для будущего сравнения до / после.';
+}
+
+function controlFixationReadV1111(field, workspace = state) {
+  return workspace?.project?.[field.key] || workspace?.sharedEvidence?.[field.sharedKey] || '';
+}
+
+function controlFixationPlainV1111(workspace = state) {
+  return CONTROL_FIXATION_FIELDS_V1111
+    .map(field => `${field.label}:\n${controlFixationReadV1111(field, workspace)}`)
+    .join('\n\n');
+}
+
+function ensureControlFixationV1111(card, workspace = state) {
+  if (!card || !workspace || !isControlFixationCardV1111(card)) return;
+  workspace.project = workspace.project || {};
+  workspace.sharedEvidence = workspace.sharedEvidence || {};
+  card.instruction = controlFixationInstructionV1111();
+  card.evidenceFields = CONTROL_FIXATION_FIELDS_V1111.map(field => ({ key: field.sharedKey, label: field.label }));
+  CONTROL_FIXATION_FIELDS_V1111.forEach(field => {
+    const value = String(workspace.project[field.key] || workspace.sharedEvidence[field.sharedKey] || '').trim();
+    workspace.project[field.key] = value;
+    workspace.sharedEvidence[field.sharedKey] = value;
+  });
+  card.evidence = controlFixationPlainV1111(workspace);
+}
+
+function controlFixationObjectLooksBrokenV1111(value = '') {
+  const v = String(value || '').trim().toLowerCase();
+  if (!v) return false;
+  if (v.length < 3) return true;
+  return ['-', '---', 'нет', 'не указано', 'непонятно', 'хз'].includes(v);
+}
+
+function controlFixationStatusV1111(card, workspace = state) {
+  if (!isControlFixationCardV1111(card)) return card?.status || 'not_started';
+  const date = String(controlFixationReadV1111(CONTROL_FIXATION_FIELDS_V1111[0], workspace) || '').trim();
+  const object = String(controlFixationReadV1111(CONTROL_FIXATION_FIELDS_V1111[1], workspace) || '').trim();
+  const snapshot = String(controlFixationReadV1111(CONTROL_FIXATION_FIELDS_V1111[2], workspace) || '').trim();
+  const proof = String(controlFixationReadV1111(CONTROL_FIXATION_FIELDS_V1111[3], workspace) || '').trim();
+  if (!date) return 'not_started';
+  if (controlFixationObjectLooksBrokenV1111(object)) return 'problem';
+  if (date && object && snapshot && proof) return 'ready';
+  return 'in_progress';
+}
+
+function controlFixationFieldsHtmlV1111(card) {
+  ensureControlFixationV1111(card, state);
+  const dateField = CONTROL_FIXATION_FIELDS_V1111[0];
+  const objectField = CONTROL_FIXATION_FIELDS_V1111[1];
+  const snapshotField = CONTROL_FIXATION_FIELDS_V1111[2];
+  const proofField = CONTROL_FIXATION_FIELDS_V1111[3];
+  const status = controlFixationStatusV1111(card, state);
+  const fieldHtml = (field, cls = '') => {
+    const value = controlFixationReadV1111(field, state);
+    const type = field.type === 'date' ? 'date' : 'text';
+    return `<label class="control-date-field ${cls}">
+      <span class="control-date-title">${escapeHtml(field.label)}</span>
+      <span class="control-date-hint">${escapeHtml(field.hint)}</span>
+      <input type="${type}" data-control-fixation-key="${escapeAttr(field.key)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(field.hint)}" />
+    </label>`;
+  };
+  return `<div class="control-date-v1111">
+    <div class="control-date-head">
+      <div>
+        <div class="control-date-kicker">Паспортная фиксация состояния</div>
+        <div class="control-date-orient">Зафиксируйте состояние проекта на конкретную дату, чтобы потом сравнить изменения.</div>
+      </div>
+      <span class="status-pill status-${escapeAttr(status)}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+    </div>
+    <details class="control-date-instruction">
+      <summary>Показать инструкцию</summary>
+      <div>${escapeHtml(controlFixationInstructionV1111())}</div>
+    </details>
+    <div class="control-date-grid">
+      ${fieldHtml(dateField, 'control-date-main')}
+      ${fieldHtml(objectField, 'control-date-main')}
+      ${fieldHtml(snapshotField, 'control-date-wide')}
+      ${fieldHtml(proofField, 'control-date-wide')}
+    </div>
+    <div class="control-date-transfer">
+      <span>Глобальное поле · используется для будущего сравнения до / после</span>
+      <b>дата → объект → состояние → доказательство → статус</b>
+    </div>
+  </div>`;
+}
+
+function updateControlFixationInputV1111(e) {
+  const field = CONTROL_FIXATION_FIELDS_V1111.find(item => item.key === e.target.dataset.controlFixationKey);
+  if (!field || !state) return;
+  state.project = state.project || {};
+  state.sharedEvidence = state.sharedEvidence || {};
+  const value = e.target.value;
+  state.project[field.key] = value;
+  state.sharedEvidence[field.sharedKey] = value;
+  const card = allCardsFromWorkspace(state).find(isControlFixationCardV1111);
+  if (card) {
+    ensureControlFixationV1111(card, state);
+    card.status = controlFixationStatusV1111(card, state);
+  }
+  recalculateAllStatuses(state);
+  flashSaving();
+}
+
+const __guruPrevPrepareSystemCardsV1111 = prepareSystemCards;
+prepareSystemCards = function(workspace) {
+  __guruPrevPrepareSystemCardsV1111(workspace);
+  (workspace?.gates || []).flatMap(g => g.cards || []).forEach(card => {
+    if (isControlFixationCardV1111(card)) ensureControlFixationV1111(card, workspace);
+  });
+};
+
+const __guruPrevRecalculateStatusForCardV1111 = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isControlFixationCardV1111(card)) {
+    ensureControlFixationV1111(card, workspace);
+    card.status = controlFixationStatusV1111(card, workspace);
+    return;
+  }
+  __guruPrevRecalculateStatusForCardV1111(card, workspace);
+};
+
+const __guruPrevTextValuesForStatusV1111 = textValuesForStatus;
+textValuesForStatus = function(card, workspace = state) {
+  if (isControlFixationCardV1111(card)) return CONTROL_FIXATION_FIELDS_V1111.map(field => controlFixationReadV1111(field, workspace));
+  return __guruPrevTextValuesForStatusV1111(card, workspace);
+};
+
+const __guruPrevFormatStructuredEvidencePlainV1111 = formatStructuredEvidencePlain;
+formatStructuredEvidencePlain = function(card, workspace = state) {
+  if (isControlFixationCardV1111(card)) return controlFixationPlainV1111(workspace);
+  return __guruPrevFormatStructuredEvidencePlainV1111(card, workspace);
+};
+
+const __guruPrevCardUserFieldsHtmlV1111 = cardUserFieldsHtml;
+cardUserFieldsHtml = function(c) {
+  if (isControlFixationCardV1111(c)) return `<div class="field-row control-date-row"><span>${escapeHtml(c.title)}</span>${controlFixationFieldsHtmlV1111(c)}</div>`;
+  return __guruPrevCardUserFieldsHtmlV1111(c);
+};
+
+const __guruPrevBindCardInputsV1111 = bindCardInputs;
+bindCardInputs = function() {
+  __guruPrevBindCardInputsV1111();
+  document.querySelectorAll('[data-control-fixation-key]').forEach(input => {
+    input.addEventListener('input', updateControlFixationInputV1111);
+    input.addEventListener('change', updateControlFixationInputV1111);
+  });
+};
+
+(function markV1111() {
+  const re = /v0\.\d+|v1\.0|v1\.1(?:\.\d+)?/g;
+  document.title = document.title.replace(re, 'v1.1.11');
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.11'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.11'); });
 })();

@@ -2604,3 +2604,98 @@ select:disabled {
   .project-menu-panel { right: 0; width: 210px; }
   .launcher-actions { margin-top: -8px; }
 }
+
+
+/* v1.1.11 — Контрольная дата фиксации */
+.control-date-row > span { display: none; }
+.control-date-v1111 {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+}
+.control-date-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(17, 17, 17, .08);
+}
+.control-date-kicker {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: rgba(17, 17, 17, .48);
+  margin-bottom: 4px;
+}
+.control-date-orient {
+  font-weight: 700;
+  color: #1f1f1f;
+  max-width: 720px;
+}
+.control-date-instruction {
+  border: 1px solid rgba(17,17,17,.08);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,.55);
+}
+.control-date-instruction summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: rgba(17,17,17,.72);
+}
+.control-date-instruction div {
+  margin-top: 10px;
+  color: rgba(17,17,17,.68);
+  white-space: pre-line;
+}
+.control-date-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.control-date-field {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid rgba(17,17,17,.10);
+  border-radius: 18px;
+  background: #fff;
+}
+.control-date-wide { grid-column: 1 / -1; }
+.control-date-title {
+  font-weight: 800;
+  color: #171717;
+}
+.control-date-hint {
+  font-size: 12px;
+  color: rgba(17,17,17,.56);
+}
+.control-date-field input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(17,17,17,.12);
+  border-radius: 12px;
+  padding: 11px 12px;
+  font: inherit;
+  background: #faf9f5;
+}
+.control-date-transfer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  border-top: 1px solid rgba(17,17,17,.08);
+  padding-top: 12px;
+  color: rgba(17,17,17,.62);
+  font-size: 12px;
+}
+.control-date-transfer b {
+  color: #171717;
+  font-weight: 800;
+}
+@media (max-width: 760px) {
+  .control-date-head,
+  .control-date-transfer { flex-direction: column; align-items: flex-start; }
+  .control-date-grid { grid-template-columns: 1fr; }
+}
