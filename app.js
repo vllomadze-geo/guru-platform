@@ -8263,3 +8263,225 @@ bindCardInputs = function() {
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.2'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.2'); });
 })();
+
+/*
+  v1.1.3 — Gate 0 / Текущее позиционирование и УТП
+  Возвращаем блок к паспортной фиксации: как проект говорит о себе → для кого он нужен → почему выбрать его сейчас.
+*/
+const POSITIONING_GLOBAL_FIELDS = [
+  {
+    key: 'positioningStartFormula',
+    sharedKey: 'positioning_start_formula',
+    label: 'Стартовая формулировка',
+    hint: 'как проект сейчас коротко описывает себя',
+    downstream: 'описание проекта, главная, презентации, отчёты',
+    route: 'Gate 1 / Gate 3 / Gate 4'
+  },
+  {
+    key: 'positioningStatement',
+    sharedKey: 'positioning_statement',
+    label: 'Позиционирование',
+    hint: 'для кого проект, в какой категории и чем отличается',
+    downstream: 'аудит сайта, ЦА, конкуренты, JTBD, сегменты',
+    route: 'Gate 1 / Gate 3 / Gate 4'
+  },
+  {
+    key: 'usp',
+    sharedKey: 'positioning_usp',
+    label: 'УТП',
+    hint: 'главное обещание / причина выбрать сейчас',
+    downstream: 'hero-экран, офер, объявления, CTA, лендинги, карточки услуг',
+    route: 'Gate 1 / Gate 3 / Gate 4'
+  }
+];
+const POSITIONING_PROOF_KEY = 'positioning_proof';
+
+function isPositioningUtpCard(card) {
+  return card?.title === 'Текущее позиционирование и УТП';
+}
+
+function readPositioningValue(field, workspace = state) {
+  return workspace?.project?.[field.key] || workspace?.sharedEvidence?.[field.sharedKey] || '';
+}
+
+function readPositioningProof(workspace = state) {
+  return workspace?.project?.positioningProof || workspace?.sharedEvidence?.[POSITIONING_PROOF_KEY] || '';
+}
+
+function positioningPlain(workspace = state) {
+  const main = POSITIONING_GLOBAL_FIELDS.map(field => `${field.label}:\n${readPositioningValue(field, workspace)}`).join('\n\n');
+  return `${main}\n\nДоказательство:\n${readPositioningProof(workspace)}`;
+}
+
+function positioningAutocontext(workspace = state) {
+  const project = workspace?.project || {};
+  return [
+    ['Название', project.name],
+    ['Ниша', project.niche],
+    ['Сайт', project.website || project.websiteUrl || project.website_url],
+    ['География', project.geography],
+    ['Что продаём', project.whatSell],
+    ['Кому продаём', project.targetSegment],
+    ['Результат клиента', project.clientResult],
+    ['CTA до начала работ', project.mainCta],
+    ['Оффер до начала работ', project.offer],
+    ['Описание проекта', project.description],
+    ['Рациональное покрытие', project.offerRationalCoverage],
+    ['Иррациональный драйвер', project.offerIrrationalDriver],
+    ['Социальный механизм', project.offerSocialMechanism]
+  ].filter(([, value]) => String(value || '').trim());
+}
+
+function ensurePositioningGlobals(workspace = state) {
+  if (!workspace) return;
+  workspace.project = workspace.project || {};
+  workspace.sharedEvidence = workspace.sharedEvidence || {};
+  const card = (workspace.gates || []).flatMap(g => g.cards || []).find(isPositioningUtpCard);
+  if (card) {
+    card.instruction = 'Инструменты: сайт, посадочные, презентации, рекламные материалы, скрипты продаж.\n\nБлок отвечает за фиксацию того, как проект сейчас описывает себя и почему клиент должен выбрать его сейчас.\n\nНа выходе должно быть понятно: как проект говорит о себе, для кого он нужен и почему выбрать его сейчас.';
+    card.evidenceFields = [
+      ...POSITIONING_GLOBAL_FIELDS.map(field => ({ key: field.sharedKey, label: field.label })),
+      { key: POSITIONING_PROOF_KEY, label: 'Доказательство' }
+    ];
+  }
+  POSITIONING_GLOBAL_FIELDS.forEach(field => {
+    const fromProject = String(workspace.project[field.key] || '').trim();
+    const fromShared = String(workspace.sharedEvidence[field.sharedKey] || '').trim();
+    const value = fromProject || fromShared;
+    workspace.project[field.key] = value;
+    workspace.sharedEvidence[field.sharedKey] = value;
+  });
+  const proof = String(workspace.project.positioningProof || workspace.sharedEvidence[POSITIONING_PROOF_KEY] || '').trim();
+  workspace.project.positioningProof = proof;
+  workspace.sharedEvidence[POSITIONING_PROOF_KEY] = proof;
+  if (card) card.evidence = positioningPlain(workspace);
+}
+
+function positioningStatus(workspace = state) {
+  const values = POSITIONING_GLOBAL_FIELDS.map(field => String(readPositioningValue(field, workspace) || '').trim());
+  const proof = String(readPositioningProof(workspace) || '').trim();
+  const filled = values.filter(Boolean).length;
+  if (!filled) return 'not_started';
+  if (filled === POSITIONING_GLOBAL_FIELDS.length && proof) return 'ready';
+  return 'in_progress';
+}
+
+function positioningFieldsHtml(card) {
+  ensurePositioningGlobals(state);
+  const context = positioningAutocontext(state);
+  return `<div class="positioning-block">
+    <details class="positioning-context">
+      <summary>Свернутый автоконтекст проекта</summary>
+      <div class="positioning-context-grid">
+        ${context.length ? context.map(([label, value]) => `<span>${escapeHtml(label)}: <b>${escapeHtml(value)}</b></span>`).join('') : '<span>Связанные данные пока не заполнены.</span>'}
+      </div>
+    </details>
+    <div class="positioning-formula"><span>Как проект говорит о себе</span><span>для кого он нужен</span><span>почему выбрать сейчас</span><span>передать дальше</span></div>
+    <div class="positioning-grid">
+      ${POSITIONING_GLOBAL_FIELDS.map(field => {
+        const value = readPositioningValue(field, state);
+        return `<label class="positioning-field">
+          <span class="positioning-title">${escapeHtml(field.label)}</span>
+          <input data-positioning-field="${escapeAttr(field.key)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(field.hint)}" />
+          <span class="positioning-hint">${escapeHtml(field.hint)}</span>
+          <span class="product-segment-indicators">
+            <span class="mini-indicator ${String(value).trim() ? 'is-saved' : ''}">${String(value).trim() ? 'Сохранено в позиционировании' : 'Не заполнено'}</span>
+            <span class="mini-indicator">Используется в ${escapeHtml(field.route)}</span>
+          </span>
+          <span class="positioning-downstream">Передаётся в: ${escapeHtml(field.downstream)}</span>
+        </label>`;
+      }).join('')}
+    </div>
+    <label class="positioning-proof">
+      <span class="positioning-title">Доказательство</span>
+      <input data-positioning-proof="true" value="${escapeAttr(readPositioningProof(state))}" placeholder="сайт / посадочные / презентации / рекламные материалы / скрипты продаж" />
+      <span class="positioning-hint">Источник подтверждения, не главное поле анализа.</span>
+    </label>
+    <div class="positioning-note">Эти три значения являются глобальными данными позиционирования. Следующий этап: связать их с конкретными полями Gate 1–4.</div>
+  </div>`;
+}
+
+function updatePositioningField(e) {
+  if (!state) return;
+  ensurePositioningGlobals(state);
+  const field = POSITIONING_GLOBAL_FIELDS.find(item => item.key === e.target.dataset.positioningField);
+  if (field) {
+    state.project[field.key] = e.target.value;
+    state.sharedEvidence[field.sharedKey] = e.target.value;
+  }
+  if (e.target.dataset.positioningProof) {
+    state.project.positioningProof = e.target.value;
+    state.sharedEvidence[POSITIONING_PROOF_KEY] = e.target.value;
+  }
+  const card = allCardsFromWorkspace(state).find(isPositioningUtpCard);
+  if (card) {
+    card.evidence = positioningPlain(state);
+    recalculateStatusForCard(card, state);
+  }
+  recalculateAllStatuses(state);
+  flashSaving();
+}
+
+const __guruPrevPrepareSystemCardsV113 = prepareSystemCards;
+prepareSystemCards = function(workspace) {
+  __guruPrevPrepareSystemCardsV113(workspace);
+  ensurePositioningGlobals(workspace);
+};
+
+const __guruPrevIsSystemSpecialCardV113 = isSystemSpecialCard;
+isSystemSpecialCard = function(card) {
+  return isPositioningUtpCard(card) || __guruPrevIsSystemSpecialCardV113(card);
+};
+
+const __guruPrevRecalculateStatusForCardV113 = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isPositioningUtpCard(card)) {
+    ensurePositioningGlobals(workspace);
+    card.status = positioningStatus(workspace);
+    return;
+  }
+  __guruPrevRecalculateStatusForCardV113(card, workspace);
+};
+
+const __guruPrevTextValuesForStatusV113 = textValuesForStatus;
+textValuesForStatus = function(card, workspace = state) {
+  if (isPositioningUtpCard(card)) return [
+    ...POSITIONING_GLOBAL_FIELDS.map(field => readPositioningValue(field, workspace)),
+    readPositioningProof(workspace)
+  ];
+  return __guruPrevTextValuesForStatusV113(card, workspace);
+};
+
+const __guruPrevFormatStructuredEvidencePlainV113 = formatStructuredEvidencePlain;
+formatStructuredEvidencePlain = function(card, workspace = state) {
+  if (isPositioningUtpCard(card)) return positioningPlain(workspace);
+  return __guruPrevFormatStructuredEvidencePlainV113(card, workspace);
+};
+
+const __guruPrevSyncEvidenceTextsV113 = syncEvidenceTexts;
+syncEvidenceTexts = function(workspace = state) {
+  __guruPrevSyncEvidenceTextsV113(workspace);
+  ensurePositioningGlobals(workspace);
+};
+
+const __guruPrevCardUserFieldsHtmlV113 = cardUserFieldsHtml;
+cardUserFieldsHtml = function(c) {
+  if (isPositioningUtpCard(c)) return `<div class="field-row positioning-row"><span>Глобальные данные позиционирования</span>${positioningFieldsHtml(c)}</div>`;
+  return __guruPrevCardUserFieldsHtmlV113(c);
+};
+
+const __guruPrevBindCardInputsV113 = bindCardInputs;
+bindCardInputs = function() {
+  __guruPrevBindCardInputsV113();
+  document.querySelectorAll('[data-positioning-field], [data-positioning-proof]').forEach(input => {
+    input.addEventListener('input', updatePositioningField);
+    input.addEventListener('change', updatePositioningField);
+  });
+};
+
+(function markV113() {
+  const re = /v0\.\d+|v1\.0|v1\.1|v1\.1\.1|v1\.1\.2/g;
+  document.title = document.title.replace(re, 'v1.1.3');
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.3'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.3'); });
+})();
