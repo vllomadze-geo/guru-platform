@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v1.1';
+const PLATFORM_VERSION = 'v1.1.2';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -8057,4 +8057,209 @@ bindCardInputs = function() {
   document.title = document.title.replace(/v0\.\d+|v1\.0|v1\.1/g, 'v1.1.1');
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+|v1\.0|v1\.1/g, 'v1.1.1'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(/v0\.\d+|v1\.0|v1\.1/g, 'v1.1.1'); });
+})();
+
+
+/*
+  v1.1.2 — Gate 0 / Психологическая декомпозиция оффера
+  Пересобираем блок как паспортную основу оффера: рациональное объяснение → скрытый мотив → социальное оправдание.
+*/
+const OFFER_PSYCH_GLOBAL_FIELDS = [
+  {
+    key: 'offerRationalCoverage',
+    sharedKey: 'offer_rational_coverage',
+    label: 'Рациональное покрытие',
+    hint: 'цена, срок, гарантия, характеристики, понятный результат',
+    downstream: 'FAQ, цена, блок преимуществ, объявления',
+    route: 'Gate 1 / Gate 3 / Gate 4'
+  },
+  {
+    key: 'offerIrrationalDriver',
+    sharedKey: 'offer_irrational_driver',
+    label: 'Иррациональный драйвер',
+    hint: 'страх, желание, статус, контроль, уверенность, безопасность',
+    downstream: 'оффер, hero-экран, боли, креативы',
+    route: 'Gate 1 / Gate 3 / Gate 4'
+  },
+  {
+    key: 'offerSocialMechanism',
+    sharedKey: 'offer_social_mechanism',
+    label: 'Социальный механизм',
+    hint: 'как клиент объяснит покупку другим и кем хочет выглядеть',
+    downstream: 'отзывы, кейсы, соцдоказательство, PR',
+    route: 'Gate 1 / Gate 3 / Gate 4'
+  }
+];
+const OFFER_PSYCH_PROOF_KEY = 'offer_psych_proof';
+
+function isOfferPsychCard(card) {
+  return card?.title === 'Психологическая декомпозиция оффера';
+}
+
+function readOfferPsychValue(field, workspace = state) {
+  return workspace?.project?.[field.key] || workspace?.sharedEvidence?.[field.sharedKey] || '';
+}
+
+function readOfferPsychProof(workspace = state) {
+  return workspace?.project?.offerPsychProof || workspace?.sharedEvidence?.[OFFER_PSYCH_PROOF_KEY] || '';
+}
+
+function offerPsychPlain(workspace = state) {
+  const main = OFFER_PSYCH_GLOBAL_FIELDS.map(field => `${field.label}:\n${readOfferPsychValue(field, workspace)}`).join('\n\n');
+  return `${main}\n\nДоказательство:\n${readOfferPsychProof(workspace)}`;
+}
+
+function ensureOfferPsychGlobals(workspace = state) {
+  if (!workspace) return;
+  workspace.project = workspace.project || {};
+  workspace.sharedEvidence = workspace.sharedEvidence || {};
+  const card = (workspace.gates || []).flatMap(g => g.cards || []).find(isOfferPsychCard);
+  if (card) {
+    card.instruction = 'Инструменты: интервью, отзывы, CRM, конкуренты, фокус-группа.\n\nБлок отвечает за стартовую психологическую основу оффера: что клиент объясняет логикой, что движет покупкой глубже и как он оправдывает покупку социально.\n\nНа выходе должно быть понятно: рациональное объяснение, скрытый мотив и социальное оправдание покупки.';
+    card.evidenceFields = [
+      ...OFFER_PSYCH_GLOBAL_FIELDS.map(field => ({ key: field.sharedKey, label: field.label })),
+      { key: OFFER_PSYCH_PROOF_KEY, label: 'Доказательство' }
+    ];
+  }
+  OFFER_PSYCH_GLOBAL_FIELDS.forEach(field => {
+    const fromProject = String(workspace.project[field.key] || '').trim();
+    const fromShared = String(workspace.sharedEvidence[field.sharedKey] || '').trim();
+    const value = fromProject || fromShared;
+    workspace.project[field.key] = value;
+    workspace.sharedEvidence[field.sharedKey] = value;
+  });
+  const proof = String(workspace.project.offerPsychProof || workspace.sharedEvidence[OFFER_PSYCH_PROOF_KEY] || '').trim();
+  workspace.project.offerPsychProof = proof;
+  workspace.sharedEvidence[OFFER_PSYCH_PROOF_KEY] = proof;
+  if (card) card.evidence = offerPsychPlain(workspace);
+}
+
+function offerPsychStatus(workspace = state) {
+  const values = OFFER_PSYCH_GLOBAL_FIELDS.map(field => String(readOfferPsychValue(field, workspace) || '').trim());
+  const proof = String(readOfferPsychProof(workspace) || '').trim();
+  const filled = values.filter(Boolean).length;
+  if (!filled) return 'not_started';
+  if (filled === OFFER_PSYCH_GLOBAL_FIELDS.length && proof) return 'ready';
+  return 'in_progress';
+}
+
+function offerPsychFieldsHtml(card) {
+  ensureOfferPsychGlobals(state);
+  return `<div class="offer-psych-block">
+    <details class="offer-psych-context">
+      <summary>Свернутый автоконтекст проекта</summary>
+      <div class="offer-psych-context-grid">
+        <span>Что продаём: <b>${escapeHtml(state?.project?.whatSell || 'не задано')}</b></span>
+        <span>Кому продаём: <b>${escapeHtml(state?.project?.targetSegment || 'не задано')}</b></span>
+        <span>Результат: <b>${escapeHtml(state?.project?.clientResult || 'не задано')}</b></span>
+      </div>
+    </details>
+    <div class="offer-psych-formula"><span>Рациональное объяснение</span><span>скрытый мотив</span><span>социальное оправдание</span><span>передать дальше</span></div>
+    <div class="offer-psych-grid">
+      ${OFFER_PSYCH_GLOBAL_FIELDS.map(field => {
+        const value = readOfferPsychValue(field, state);
+        return `<label class="offer-psych-field">
+          <span class="offer-psych-title">${escapeHtml(field.label)}</span>
+          <input data-offer-psych-field="${escapeAttr(field.key)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(field.hint)}" />
+          <span class="offer-psych-hint">${escapeHtml(field.hint)}</span>
+          <span class="product-segment-indicators">
+            <span class="mini-indicator ${String(value).trim() ? 'is-saved' : ''}">${String(value).trim() ? 'Сохранено в оффере' : 'Не заполнено'}</span>
+            <span class="mini-indicator">Используется в ${escapeHtml(field.route)}</span>
+          </span>
+          <span class="offer-psych-downstream">Передаётся в: ${escapeHtml(field.downstream)}</span>
+        </label>`;
+      }).join('')}
+    </div>
+    <label class="offer-psych-proof">
+      <span class="offer-psych-title">Доказательство</span>
+      <input data-offer-psych-proof="true" value="${escapeAttr(readOfferPsychProof(state))}" placeholder="интервью / отзывы / CRM / конкуренты / фокус-группа" />
+      <span class="offer-psych-hint">Источник подтверждения, не главное поле анализа.</span>
+    </label>
+    <div class="offer-psych-note">Эти три значения являются базовыми данными оффера. Следующий этап: связать их с конкретными полями Gate 1–4.</div>
+  </div>`;
+}
+
+function updateOfferPsychField(e) {
+  if (!state) return;
+  ensureOfferPsychGlobals(state);
+  const field = OFFER_PSYCH_GLOBAL_FIELDS.find(item => item.key === e.target.dataset.offerPsychField);
+  if (field) {
+    state.project[field.key] = e.target.value;
+    state.sharedEvidence[field.sharedKey] = e.target.value;
+  }
+  if (e.target.dataset.offerPsychProof) {
+    state.project.offerPsychProof = e.target.value;
+    state.sharedEvidence[OFFER_PSYCH_PROOF_KEY] = e.target.value;
+  }
+  const card = allCardsFromWorkspace(state).find(isOfferPsychCard);
+  if (card) {
+    card.evidence = offerPsychPlain(state);
+    recalculateStatusForCard(card, state);
+  }
+  recalculateAllStatuses(state);
+  flashSaving();
+}
+
+const __guruPrevPrepareSystemCardsV112 = prepareSystemCards;
+prepareSystemCards = function(workspace) {
+  __guruPrevPrepareSystemCardsV112(workspace);
+  ensureOfferPsychGlobals(workspace);
+};
+
+const __guruPrevIsSystemSpecialCardV112 = isSystemSpecialCard;
+isSystemSpecialCard = function(card) {
+  return isOfferPsychCard(card) || __guruPrevIsSystemSpecialCardV112(card);
+};
+
+const __guruPrevRecalculateStatusForCardV112 = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isOfferPsychCard(card)) {
+    ensureOfferPsychGlobals(workspace);
+    card.status = offerPsychStatus(workspace);
+    return;
+  }
+  __guruPrevRecalculateStatusForCardV112(card, workspace);
+};
+
+const __guruPrevTextValuesForStatusV112 = textValuesForStatus;
+textValuesForStatus = function(card, workspace = state) {
+  if (isOfferPsychCard(card)) return [
+    ...OFFER_PSYCH_GLOBAL_FIELDS.map(field => readOfferPsychValue(field, workspace)),
+    readOfferPsychProof(workspace)
+  ];
+  return __guruPrevTextValuesForStatusV112(card, workspace);
+};
+
+const __guruPrevFormatStructuredEvidencePlainV112 = formatStructuredEvidencePlain;
+formatStructuredEvidencePlain = function(card, workspace = state) {
+  if (isOfferPsychCard(card)) return offerPsychPlain(workspace);
+  return __guruPrevFormatStructuredEvidencePlainV112(card, workspace);
+};
+
+const __guruPrevSyncEvidenceTextsV112 = syncEvidenceTexts;
+syncEvidenceTexts = function(workspace = state) {
+  __guruPrevSyncEvidenceTextsV112(workspace);
+  ensureOfferPsychGlobals(workspace);
+};
+
+const __guruPrevCardUserFieldsHtmlV112 = cardUserFieldsHtml;
+cardUserFieldsHtml = function(c) {
+  if (isOfferPsychCard(c)) return `<div class="field-row offer-psych-row"><span>Глобальные данные оффера</span>${offerPsychFieldsHtml(c)}</div>`;
+  return __guruPrevCardUserFieldsHtmlV112(c);
+};
+
+const __guruPrevBindCardInputsV112 = bindCardInputs;
+bindCardInputs = function() {
+  __guruPrevBindCardInputsV112();
+  document.querySelectorAll('[data-offer-psych-field], [data-offer-psych-proof]').forEach(input => {
+    input.addEventListener('input', updateOfferPsychField);
+    input.addEventListener('change', updateOfferPsychField);
+  });
+};
+
+(function markV112() {
+  const re = /v0\.\d+|v1\.0|v1\.1|v1\.1\.1/g;
+  document.title = document.title.replace(re, 'v1.1.2');
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.2'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.2'); });
 })();

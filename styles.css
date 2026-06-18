@@ -1940,3 +1940,88 @@ select:disabled {
   .product-segment-grid { grid-template-columns: 1fr; }
   .product-segment-block { max-width: none; }
 }
+
+/* v1.1.2 — Gate 0 / Психологическая декомпозиция оффера */
+.offer-psych-row { align-items: stretch; }
+.offer-psych-block {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+}
+.offer-psych-context {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255,255,255,0.7);
+  padding: 12px 14px;
+}
+.offer-psych-context summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--text);
+}
+.offer-psych-context-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.offer-psych-formula {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.offer-psych-formula span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 11px;
+  background: rgba(255,255,255,0.8);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+.offer-psych-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.offer-psych-field,
+.offer-psych-proof {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255,255,255,0.76);
+}
+.offer-psych-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+}
+.offer-psych-hint,
+.offer-psych-downstream,
+.offer-psych-note {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+.offer-psych-proof input,
+.offer-psych-field input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 12px;
+  background: #fff;
+  font: inherit;
+}
+.offer-psych-note {
+  border-left: 3px solid var(--accent);
+  padding-left: 12px;
+}
+@media (max-width: 980px) {
+  .offer-psych-grid,
+  .offer-psych-context-grid { grid-template-columns: 1fr; }
+}
