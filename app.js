@@ -1,7 +1,7 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
-const PLATFORM_VERSION = 'v1.1.8';
+const PLATFORM_VERSION = 'v1.1.9';
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -9732,4 +9732,352 @@ render = function() {
   document.title = document.title.replace(re, 'v1.1.8');
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.8'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.8'); });
+})();
+
+
+/* v1.1.9 — Gate Debug Export hard fix: no prompt, reliable download + visible fallback */
+const GURU_DEBUG_VERSION_V119 = 'v1.1.9';
+
+function guruDebugFieldValueV119(field, def) {
+  try {
+    if (field && def && typeof v116ReadValue === 'function') return v116ReadValue(field, state) || '';
+  } catch (error) {}
+  try {
+    return state?.project?.[field?.key] || state?.sharedEvidence?.[field?.sharedKey] || '';
+  } catch (error) {
+    return '';
+  }
+}
+
+function guruDebugMetaValueV119(meta) {
+  try {
+    if (meta && typeof v116ReadMeta === 'function') return v116ReadMeta(meta, state) || '';
+  } catch (error) {}
+  try {
+    return state?.project?.[meta?.key] || state?.sharedEvidence?.[meta?.sharedKey] || '';
+  } catch (error) {
+    return '';
+  }
+}
+
+function guruDebugCollectFieldsV119(card) {
+  const fields = [];
+  let def = null;
+  try { def = typeof v116PassportDef === 'function' ? v116PassportDef(card) : null; } catch (error) { def = null; }
+
+  if (def) {
+    (def.fields || []).forEach(field => {
+      const value = guruDebugFieldValueV119(field, def);
+      fields.push({
+        key: field.key || '',
+        sharedKey: field.sharedKey || '',
+        label: field.label || field.key || '',
+        value,
+        empty: !String(value || '').trim(),
+        type: 'main',
+        global: true,
+        route: field.route || '',
+        downstream: field.downstream || ''
+      });
+    });
+    if (def.tags) {
+      const value = guruDebugMetaValueV119(def.tags);
+      fields.push({
+        key: def.tags.key || '',
+        sharedKey: def.tags.sharedKey || '',
+        label: def.tags.label || 'Теги / смыслы',
+        value,
+        empty: !String(value || '').trim(),
+        type: 'tags',
+        global: true
+      });
+    }
+    if (def.proof) {
+      const value = guruDebugMetaValueV119(def.proof);
+      fields.push({
+        key: def.proof.key || '',
+        sharedKey: def.proof.sharedKey || '',
+        label: def.proof.label || 'Доказательство',
+        value,
+        empty: !String(value || '').trim(),
+        type: 'proof',
+        global: false
+      });
+    }
+    return { fields, def };
+  }
+
+  try {
+    const evidenceFields = typeof ensureEvidenceFields === 'function' ? ensureEvidenceFields(card) : (card?.evidenceFields || []);
+    (evidenceFields || []).forEach(field => {
+      let value = '';
+      try { value = typeof getEvidenceValue === 'function' ? getEvidenceValue(field.key, state) : state?.sharedEvidence?.[field.key]; } catch (error) {}
+      fields.push({
+        key: field.key || '',
+        label: field.label || field.key || '',
+        value: value || '',
+        empty: !String(value || '').trim(),
+        type: 'evidence',
+        global: false
+      });
+    });
+  } catch (error) {
+    fields.push({ key: 'debug_error', label: 'Ошибка чтения полей', value: String(error?.message || error), empty: false, type: 'debug_error', global: false });
+  }
+
+  return { fields, def: null };
+}
+
+function guruDebugLinksV119(def) {
+  if (!def) return [];
+  const links = [];
+  try {
+    (def.fields || []).forEach(field => links.push({
+      label: field.label || '',
+      projectKey: field.key || '',
+      sharedEvidenceKey: field.sharedKey || '',
+      projectValue: state?.project?.[field.key] || '',
+      sharedEvidenceValue: state?.sharedEvidence?.[field.sharedKey] || '',
+      usedIn: field.downstream || field.route || def.transfer || ''
+    }));
+    [def.tags, def.proof].filter(Boolean).forEach(meta => links.push({
+      label: meta.label || '',
+      projectKey: meta.key || '',
+      sharedEvidenceKey: meta.sharedKey || '',
+      projectValue: state?.project?.[meta.key] || '',
+      sharedEvidenceValue: state?.sharedEvidence?.[meta.sharedKey] || '',
+      usedIn: meta === def.proof ? 'доказательство блока' : 'теги / ключевые смыслы'
+    }));
+  } catch (error) {}
+  return links;
+}
+
+function guruDebugConflictsV119(links) {
+  return (links || []).filter(item => String(item.projectValue || '') !== String(item.sharedEvidenceValue || '')).map(item => ({
+    label: item.label,
+    projectKey: item.projectKey,
+    sharedEvidenceKey: item.sharedEvidenceKey,
+    projectValue: item.projectValue,
+    sharedEvidenceValue: item.sharedEvidenceValue,
+    problem: 'Значение в project и sharedEvidence отличается'
+  }));
+}
+
+function guruDebugValidationV119(card, fields) {
+  const errors = [];
+  const main = (fields || []).filter(f => f.type === 'main');
+  const proof = (fields || []).find(f => f.type === 'proof');
+  const filledMain = main.filter(f => !f.empty).length;
+  if (main.length && filledMain > 0 && filledMain < main.length) {
+    errors.push({ type: 'incomplete_main_fields', message: 'Заполнены не все главные поля', filled: filledMain, total: main.length });
+  }
+  if (main.length && filledMain === main.length && proof && proof.empty) {
+    errors.push({ type: 'missing_proof', message: 'Главные поля заполнены, но доказательство отсутствует' });
+  }
+  if ((card?.status || '') === 'ready' && proof && proof.empty) {
+    errors.push({ type: 'status_mismatch', message: 'Статус Готово стоит без доказательства' });
+  }
+  return errors;
+}
+
+function guruDebugUiStateV119() {
+  let openDetails = [];
+  try {
+    openDetails = Array.from(document.querySelectorAll('details')).map((node, index) => ({
+      index,
+      open: Boolean(node.open),
+      summary: node.querySelector('summary')?.textContent?.trim() || '',
+      className: node.className || ''
+    }));
+  } catch (error) {}
+  return {
+    activeView: typeof activeView !== 'undefined' ? activeView : '',
+    activeGateId: typeof activeGateId !== 'undefined' ? activeGateId : '',
+    pageTitle: document.getElementById('pageTitle')?.textContent?.trim() || '',
+    statusFilter: document.getElementById('statusFilter')?.value || '',
+    layoutMode: typeof layoutMode !== 'undefined' ? layoutMode : '',
+    viewport: { width: window.innerWidth, height: window.innerHeight, devicePixelRatio: window.devicePixelRatio || 1 },
+    viewportMode: window.innerWidth < 768 ? 'mobile' : 'desktop',
+    openDetails,
+    supabaseStatus: document.getElementById('supabaseStatus')?.textContent?.trim() || '',
+    timestamp: new Date().toISOString()
+  };
+}
+
+function guruDebugGatePayloadV119(gateId = activeGateId) {
+  const gates = state?.gates || [];
+  const gate = gates.find(g => g.id === gateId) || gates[0] || null;
+  const blocks = (gate?.cards || []).map(card => {
+    const collected = guruDebugCollectFieldsV119(card);
+    const links = guruDebugLinksV119(collected.def);
+    const conflicts = guruDebugConflictsV119(links);
+    const validation = guruDebugValidationV119(card, collected.fields);
+    return {
+      blockName: card?.title || '',
+      blockId: card?.id || '',
+      status: card?.status || 'not_started',
+      statusLabel: guruDebugStatusLabel ? guruDebugStatusLabel(card?.status || 'not_started') : (card?.status || 'not_started'),
+      fields: collected.fields,
+      instruction: card?.instruction || '',
+      rawEvidence: card?.evidence || '',
+      globalDataLinks: links,
+      syncConflicts: conflicts,
+      validationErrors: validation
+    };
+  });
+  const allConflicts = blocks.flatMap(block => (block.syncConflicts || []).map(item => ({ blockId: block.blockId, blockName: block.blockName, ...item })));
+  const allErrors = blocks.flatMap(block => (block.validationErrors || []).map(item => ({ blockId: block.blockId, blockName: block.blockName, ...item })));
+  return {
+    tool: 'GURU Debug Export',
+    exportType: 'gate',
+    schemaVersion: GURU_DEBUG_VERSION_V119,
+    updatedAt: new Date().toISOString(),
+    gate: gate ? {
+      id: gate.id,
+      title: gate.title,
+      status: typeof guruDebugGateStatus === 'function' ? guruDebugGateStatus(gate) : '',
+      statusLabel: typeof guruDebugGateStatus === 'function' ? guruDebugStatusLabel(guruDebugGateStatus(gate)) : '',
+      progress: typeof getProgress === 'function' ? getProgress(gate.cards || []) : null
+    } : null,
+    blocks,
+    projectGlobalData: { ...(state?.project || {}) },
+    sharedEvidence: { ...(state?.sharedEvidence || {}) },
+    syncConflicts: allConflicts,
+    validationErrors: allErrors,
+    uiState: guruDebugUiStateV119(),
+    technical: {
+      platformVersion: PLATFORM_VERSION,
+      debugVersion: GURU_DEBUG_VERSION_V119,
+      localStorageKey: (typeof WORKSPACE_STORAGE_PREFIX !== 'undefined' ? WORKSPACE_STORAGE_PREFIX : '') + (typeof currentProjectId !== 'undefined' ? currentProjectId : ''),
+      projectId: typeof currentProjectId !== 'undefined' ? currentProjectId : '',
+      consoleErrors: window.__guruConsoleLog || [],
+      userAgent: navigator.userAgent,
+      url: location.href
+    },
+    notes: ''
+  };
+}
+
+function guruDebugJsonTextV119(payload) {
+  const seen = new WeakSet();
+  return JSON.stringify(payload, function(key, value) {
+    if (typeof value === 'function') return '[function]';
+    if (value instanceof Element) return '[dom_element]';
+    if (value === window) return '[window]';
+    if (value === document) return '[document]';
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) return '[circular]';
+      seen.add(value);
+    }
+    if (typeof value === 'string' && value.length > 50000) return value.slice(0, 50000) + '\n...[truncated]';
+    return value;
+  }, 2);
+}
+
+function guruDebugShowPanelV119(filename, text) {
+  let panel = document.getElementById('guruDebugExportPanel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'guruDebugExportPanel';
+    panel.style.cssText = 'position:fixed;right:24px;bottom:24px;z-index:999999;width:min(520px,calc(100vw - 48px));background:#fff;border:1px solid rgba(0,0,0,.16);box-shadow:0 18px 60px rgba(0,0,0,.18);border-radius:18px;padding:16px;font:14px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1c1c1c;';
+    document.body.appendChild(panel);
+  }
+  panel.innerHTML = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:10px;">
+      <div>
+        <strong>Debug export подготовлен</strong>
+        <div style="opacity:.68;margin-top:3px;word-break:break-all;">${guruDebugSafeEscape(filename)}</div>
+      </div>
+      <button type="button" data-debug-close style="border:0;background:#f2f2f2;border-radius:999px;padding:6px 10px;cursor:pointer;">×</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <button type="button" data-debug-download-again style="border:1px solid rgba(0,0,0,.16);background:#111;color:#fff;border-radius:999px;padding:8px 12px;cursor:pointer;">Скачать JSON</button>
+      <button type="button" data-debug-copy style="border:1px solid rgba(0,0,0,.16);background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer;">Скопировать</button>
+    </div>
+    <textarea readonly style="width:100%;height:160px;box-sizing:border-box;border:1px solid rgba(0,0,0,.12);border-radius:12px;padding:10px;font:12px/1.35 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;">${String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea>
+  `;
+  panel.querySelector('[data-debug-close]')?.addEventListener('click', () => panel.remove());
+  panel.querySelector('[data-debug-download-again]')?.addEventListener('click', () => guruDebugForceDownloadV119(filename, text));
+  panel.querySelector('[data-debug-copy]')?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      panel.querySelector('[data-debug-copy]').textContent = 'Скопировано';
+    } catch (error) {
+      const textarea = panel.querySelector('textarea');
+      textarea.focus();
+      textarea.select();
+      document.execCommand('copy');
+      panel.querySelector('[data-debug-copy]').textContent = 'Скопировано';
+    }
+  });
+}
+
+function guruDebugForceDownloadV119(filename, text) {
+  const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.rel = 'noopener';
+  a.style.position = 'fixed';
+  a.style.left = '-9999px';
+  document.body.appendChild(a);
+  a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+  setTimeout(() => {
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, 1500);
+}
+
+function guruDebugExportGateV119() {
+  try {
+    const payload = guruDebugGatePayloadV119(activeGateId);
+    const gateId = payload.gate?.id || activeGateId || 'gate';
+    const filename = `guru-debug_${guruDebugSlug(gateId)}_${guruDebugDateStamp()}.json`;
+    const text = guruDebugJsonTextV119(payload);
+    window.__guruLastDebugExport = { filename, text, payload, createdAt: new Date().toISOString() };
+    guruDebugForceDownloadV119(filename, text);
+    guruDebugShowPanelV119(filename, text);
+    try { flashSaving(); } catch (error) {}
+  } catch (error) {
+    console.error('GURU Debug Export v1.1.9 failed', error);
+    alert('Диагностика не экспортировалась. Ошибка: ' + (error?.message || error));
+  }
+}
+
+function guruDebugEnsureToolbarButtonV119() {
+  const bar = document.getElementById('workspaceToolbar');
+  if (!bar) return;
+  document.querySelectorAll('.passport-v117-debug, [data-debug-export-block]').forEach(node => {
+    const wrap = node.classList?.contains('passport-v117-debug') ? node : node.closest('.passport-v117-debug');
+    (wrap || node).remove();
+  });
+  let btn = bar.querySelector('[data-debug-export-gate]');
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn secondary debug-export-btn';
+    btn.dataset.debugExportGate = '1';
+    bar.appendChild(btn);
+  }
+  btn.textContent = 'Экспорт диагностики Gate';
+  btn.onclick = guruDebugExportGateV119;
+}
+
+guruDebugExportGate = guruDebugExportGateV119;
+guruDebugEnsureToolbarButton = guruDebugEnsureToolbarButtonV119;
+guruDebugBindButtons = guruDebugEnsureToolbarButtonV119;
+window.guruDebugExportGate = guruDebugExportGateV119;
+
+const __guruPrevRenderV119 = render;
+render = function() {
+  __guruPrevRenderV119();
+  setTimeout(guruDebugEnsureToolbarButtonV119, 0);
+};
+
+(function markV119() {
+  const re = /v0\.\d+|v1\.0|v1\.1(?:\.\d+)?/g;
+  document.title = document.title.replace(re, 'v1.1.9');
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.9'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.9'); });
 })();
