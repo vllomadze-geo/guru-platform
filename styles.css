@@ -2107,3 +2107,92 @@ select:disabled {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* v1.1.4 — Gate 0 / Текущая семантика и поисковый фокус */
+.search-focus-block {
+  display: grid;
+  gap: 14px;
+}
+.search-focus-context {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,.72);
+}
+.search-focus-context summary {
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+.search-focus-context-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.search-focus-formula {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.search-focus-formula span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--panel-soft);
+}
+.search-focus-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.search-focus-field,
+.search-focus-proof {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255,255,255,.74);
+}
+.search-focus-field:last-child {
+  grid-column: 1 / -1;
+}
+.search-focus-title {
+  font-weight: 800;
+  letter-spacing: .01em;
+}
+.search-focus-field input,
+.search-focus-proof input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 11px 12px;
+  background: #fff;
+  font: inherit;
+}
+.search-focus-hint,
+.search-focus-downstream,
+.search-focus-note {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.search-focus-note {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+@media (max-width: 980px) {
+  .search-focus-grid,
+  .search-focus-context-grid {
+    grid-template-columns: 1fr;
+  }
+  .search-focus-field:last-child {
+    grid-column: auto;
+  }
+}

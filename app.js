@@ -8485,3 +8485,238 @@ bindCardInputs = function() {
   document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.3'); });
   document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.3'); });
 })();
+
+
+/*
+  v1.1.4 — Gate 0 / Текущая семантика и поисковый фокус
+  Возвращаем блок к стартовой фиксации поискового направления: ключи → кластеры → бренд → исключения → поисковый фокус.
+*/
+const SEARCH_FOCUS_GLOBAL_FIELDS = [
+  {
+    key: 'searchMainKeywords',
+    sharedKey: 'search_main_keywords',
+    label: 'Основные ключевые слова',
+    hint: 'главные запросы, по которым проект должен находиться',
+    downstream: 'Gate 1 → Спрос, SEO, страницы, Title, H1, Description',
+    route: 'Gate 1 / SEO / страницы'
+  },
+  {
+    key: 'searchPriorityClusters',
+    sharedKey: 'search_priority_clusters',
+    label: 'Приоритетные кластеры',
+    hint: '3–7 направлений спроса, которые важнее всего',
+    downstream: 'структура сайта, категории, услуги, рекламные группы',
+    route: 'Gate 1 / Gate 3 / Gate 4'
+  },
+  {
+    key: 'searchBrandQueries',
+    sharedKey: 'search_brand_queries',
+    label: 'Брендовые запросы',
+    hint: 'название бренда, продукта, компании, авторские названия',
+    downstream: 'брендовая реклама, SEO, репутация, отчёты',
+    route: 'Gate 1 / Gate 4 / Gate 5'
+  },
+  {
+    key: 'searchIrrelevantQueries',
+    sharedKey: 'search_irrelevant_queries',
+    label: 'Нерелевантные запросы',
+    hint: 'что точно не нужно собирать и продвигать',
+    downstream: 'минус-фразы, исключения, фильтрация семантики',
+    route: 'Gate 1 / реклама / SEO'
+  },
+  {
+    key: 'searchFocusSummary',
+    sharedKey: 'search_focus_summary',
+    label: 'Итоговый поисковый фокус',
+    hint: 'короткий вывод, на чём держится семантика проекта',
+    downstream: 'стратегия, аудит сайта, рекламные кампании, отчёты',
+    route: 'Gate 1 / Gate 3 / Gate 5'
+  }
+];
+const SEARCH_FOCUS_PROOF_KEY = 'search_focus_proof';
+
+function isSearchFocusCard(card) {
+  return card?.title === 'Текущая семантика и поисковый фокус';
+}
+
+function readSearchFocusValue(field, workspace = state) {
+  return workspace?.project?.[field.key] || workspace?.sharedEvidence?.[field.sharedKey] || '';
+}
+
+function readSearchFocusProof(workspace = state) {
+  return workspace?.project?.searchFocusProof || workspace?.sharedEvidence?.[SEARCH_FOCUS_PROOF_KEY] || '';
+}
+
+function searchFocusPlain(workspace = state) {
+  const main = SEARCH_FOCUS_GLOBAL_FIELDS.map(field => `${field.label}:\n${readSearchFocusValue(field, workspace)}`).join('\n\n');
+  return `${main}\n\nДоказательство:\n${readSearchFocusProof(workspace)}`;
+}
+
+function searchFocusAutocontext(workspace = state) {
+  const project = workspace?.project || {};
+  return [
+    ['Название', project.name],
+    ['Ниша', project.niche],
+    ['Сайт', project.website || project.websiteUrl || project.website_url],
+    ['География', project.geography],
+    ['Что продаём', project.whatSell],
+    ['Кому продаём', project.targetSegment],
+    ['Результат клиента', project.clientResult],
+    ['Позиционирование', project.positioningStatement],
+    ['УТП', project.usp]
+  ].filter(([, value]) => String(value || '').trim());
+}
+
+function ensureSearchFocusGlobals(workspace = state) {
+  if (!workspace) return;
+  workspace.project = workspace.project || {};
+  workspace.sharedEvidence = workspace.sharedEvidence || {};
+  const card = (workspace.gates || []).flatMap(g => g.cards || []).find(isSearchFocusCard);
+  if (card) {
+    card.instruction = 'Инструменты как источники проверки: Wordstat, Яндекс Директ, SEO-таблицы, поисковые отчёты.\n\nБлок отвечает за фиксацию того, по каким запросам и направлениям проект уже сейчас должен быть найден.\n\nНа выходе должно быть понятно: ключи, кластеры, бренд, исключения и итоговый поисковый фокус проекта.';
+    card.evidenceFields = [
+      ...SEARCH_FOCUS_GLOBAL_FIELDS.map(field => ({ key: field.sharedKey, label: field.label })),
+      { key: SEARCH_FOCUS_PROOF_KEY, label: 'Доказательство' }
+    ];
+  }
+  SEARCH_FOCUS_GLOBAL_FIELDS.forEach(field => {
+    const fromProject = String(workspace.project[field.key] || '').trim();
+    const fromShared = String(workspace.sharedEvidence[field.sharedKey] || '').trim();
+    const value = fromProject || fromShared;
+    workspace.project[field.key] = value;
+    workspace.sharedEvidence[field.sharedKey] = value;
+  });
+  const proof = String(workspace.project.searchFocusProof || workspace.sharedEvidence[SEARCH_FOCUS_PROOF_KEY] || '').trim();
+  workspace.project.searchFocusProof = proof;
+  workspace.sharedEvidence[SEARCH_FOCUS_PROOF_KEY] = proof;
+  if (card) card.evidence = searchFocusPlain(workspace);
+}
+
+function searchFocusStatus(workspace = state) {
+  const values = SEARCH_FOCUS_GLOBAL_FIELDS.map(field => String(readSearchFocusValue(field, workspace) || '').trim());
+  const proof = String(readSearchFocusProof(workspace) || '').trim();
+  const filled = values.filter(Boolean).length;
+  if (!filled) return 'not_started';
+  if (filled === SEARCH_FOCUS_GLOBAL_FIELDS.length && proof) return 'ready';
+  return 'in_progress';
+}
+
+function searchFocusFieldsHtml(card) {
+  ensureSearchFocusGlobals(state);
+  const context = searchFocusAutocontext(state);
+  return `<div class="search-focus-block">
+    <details class="search-focus-context">
+      <summary>Свернутый автоконтекст проекта</summary>
+      <div class="search-focus-context-grid">
+        ${context.length ? context.map(([label, value]) => `<span>${escapeHtml(label)}: <b>${escapeHtml(value)}</b></span>`).join('') : '<span>Связанные данные пока не заполнены.</span>'}
+      </div>
+    </details>
+    <div class="search-focus-formula"><span>Ключи</span><span>кластеры</span><span>бренд</span><span>исключения</span><span>поисковый фокус</span><span>передать дальше</span></div>
+    <div class="search-focus-grid">
+      ${SEARCH_FOCUS_GLOBAL_FIELDS.map(field => {
+        const value = readSearchFocusValue(field, state);
+        return `<label class="search-focus-field">
+          <span class="search-focus-title">${escapeHtml(field.label)}</span>
+          <input data-search-focus-field="${escapeAttr(field.key)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(field.hint)}" />
+          <span class="search-focus-hint">${escapeHtml(field.hint)}</span>
+          <span class="product-segment-indicators">
+            <span class="mini-indicator ${String(value).trim() ? 'is-saved' : ''}">${String(value).trim() ? 'Сохранено в поисковом фокусе' : 'Не заполнено'}</span>
+            <span class="mini-indicator">Используется в ${escapeHtml(field.route)}</span>
+          </span>
+          <span class="search-focus-downstream">Передаётся в: ${escapeHtml(field.downstream)}</span>
+        </label>`;
+      }).join('')}
+    </div>
+    <label class="search-focus-proof">
+      <span class="search-focus-title">Доказательство</span>
+      <input data-search-focus-proof="true" value="${escapeAttr(readSearchFocusProof(state))}" placeholder="Wordstat / Директ / Search Console / Вебмастер / SEO-отчёт / таблица" />
+      <span class="search-focus-hint">Инструменты используются как источник доказательства, а не как отдельные рабочие строки.</span>
+    </label>
+    <div class="search-focus-note">Эти пять значений являются глобальным поисковым фокусом проекта. Следующий этап: связать их с конкретными полями Gate 1, SEO, страниц, рекламы и отчётов.</div>
+  </div>`;
+}
+
+function updateSearchFocusField(e) {
+  if (!state) return;
+  ensureSearchFocusGlobals(state);
+  const field = SEARCH_FOCUS_GLOBAL_FIELDS.find(item => item.key === e.target.dataset.searchFocusField);
+  if (field) {
+    state.project[field.key] = e.target.value;
+    state.sharedEvidence[field.sharedKey] = e.target.value;
+  }
+  if (e.target.dataset.searchFocusProof) {
+    state.project.searchFocusProof = e.target.value;
+    state.sharedEvidence[SEARCH_FOCUS_PROOF_KEY] = e.target.value;
+  }
+  const card = allCardsFromWorkspace(state).find(isSearchFocusCard);
+  if (card) {
+    card.evidence = searchFocusPlain(state);
+    recalculateStatusForCard(card, state);
+  }
+  recalculateAllStatuses(state);
+  flashSaving();
+}
+
+const __guruPrevPrepareSystemCardsV114 = prepareSystemCards;
+prepareSystemCards = function(workspace) {
+  __guruPrevPrepareSystemCardsV114(workspace);
+  ensureSearchFocusGlobals(workspace);
+};
+
+const __guruPrevIsSystemSpecialCardV114 = isSystemSpecialCard;
+isSystemSpecialCard = function(card) {
+  return isSearchFocusCard(card) || __guruPrevIsSystemSpecialCardV114(card);
+};
+
+const __guruPrevRecalculateStatusForCardV114 = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isSearchFocusCard(card)) {
+    ensureSearchFocusGlobals(workspace);
+    card.status = searchFocusStatus(workspace);
+    return;
+  }
+  __guruPrevRecalculateStatusForCardV114(card, workspace);
+};
+
+const __guruPrevTextValuesForStatusV114 = textValuesForStatus;
+textValuesForStatus = function(card, workspace = state) {
+  if (isSearchFocusCard(card)) return [
+    ...SEARCH_FOCUS_GLOBAL_FIELDS.map(field => readSearchFocusValue(field, workspace)),
+    readSearchFocusProof(workspace)
+  ];
+  return __guruPrevTextValuesForStatusV114(card, workspace);
+};
+
+const __guruPrevFormatStructuredEvidencePlainV114 = formatStructuredEvidencePlain;
+formatStructuredEvidencePlain = function(card, workspace = state) {
+  if (isSearchFocusCard(card)) return searchFocusPlain(workspace);
+  return __guruPrevFormatStructuredEvidencePlainV114(card, workspace);
+};
+
+const __guruPrevSyncEvidenceTextsV114 = syncEvidenceTexts;
+syncEvidenceTexts = function(workspace = state) {
+  __guruPrevSyncEvidenceTextsV114(workspace);
+  ensureSearchFocusGlobals(workspace);
+};
+
+const __guruPrevCardUserFieldsHtmlV114 = cardUserFieldsHtml;
+cardUserFieldsHtml = function(c) {
+  if (isSearchFocusCard(c)) return `<div class="field-row search-focus-row"><span>Глобальный поисковый фокус</span>${searchFocusFieldsHtml(c)}</div>`;
+  return __guruPrevCardUserFieldsHtmlV114(c);
+};
+
+const __guruPrevBindCardInputsV114 = bindCardInputs;
+bindCardInputs = function() {
+  __guruPrevBindCardInputsV114();
+  document.querySelectorAll('[data-search-focus-field], [data-search-focus-proof]').forEach(input => {
+    input.addEventListener('input', updateSearchFocusField);
+    input.addEventListener('change', updateSearchFocusField);
+  });
+};
+
+(function markV114() {
+  const re = /v0\.\d+|v1\.0|v1\.1|v1\.1\.1|v1\.1\.2|v1\.1\.3/g;
+  document.title = document.title.replace(re, 'v1.1.4');
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.4'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.4'); });
+})();
