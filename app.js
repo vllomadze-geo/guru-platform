@@ -1212,11 +1212,6 @@ function syncProjectBeforeFromPositioning(workspace = state) {
   if (!workspace) return;
   workspace.project = workspace.project || {};
   workspace.sharedEvidence = workspace.sharedEvidence || {};
-  const descriptionFallback = workspace.project.description || '';
-  workspace.project.mainCta = getSharedEvidenceByLabels(workspace, ['главный CTA', 'список текущих CTA', 'CTA', 'основной CTA']) || workspace.project.mainCta || '';
-  workspace.project.usp = getSharedEvidenceByLabels(workspace, ['УТП', 'позиционирования', 'стартовая формулировка', 'главное УТП']) || workspace.project.usp || '';
-  workspace.project.offer = getSharedEvidenceByLabels(workspace, ['оффер', 'список текущих офферов', 'текущие офферы']) || workspace.project.offer || '';
-  workspace.project.description = getSharedEvidenceByLabels(workspace, ['описание проекта', 'стартовая формулировка', 'позиционирования']) || descriptionFallback;
 }
 
 function syncProjectPassportCard(workspace = state) {
@@ -8946,7 +8941,7 @@ const CURRENT_OFFERS_CTA_GLOBAL_FIELDS = [
     sharedKey: 'current_offers',
     label: 'Текущие офферы',
     hint: 'какие предложения сейчас используются',
-    fallbackKeys: ['offer', 'afterOffer'],
+    fallbackKeys: [],
     downstream: 'Gate 1 -> Боль / JTBD / Офер, аудит сайта, страницы, лендинги, объявления',
     route: 'Gate 1 / Gate 3 / Gate 4'
   },
@@ -8955,7 +8950,7 @@ const CURRENT_OFFERS_CTA_GLOBAL_FIELDS = [
     sharedKey: 'current_ctas',
     label: 'Текущие CTA',
     hint: 'призывы на сайте, в рекламе, баннерах, мессенджерах',
-    fallbackKeys: ['mainCta', 'afterMainCta'],
+    fallbackKeys: [],
     downstream: 'hero-блоки, формы, кнопки, баннеры, объявления, email / push / Telegram',
     route: 'Gate 1 / Gate 4'
   },
@@ -8964,7 +8959,7 @@ const CURRENT_OFFERS_CTA_GLOBAL_FIELDS = [
     sharedKey: 'primary_target_action',
     label: 'Основное целевое действие',
     hint: 'купить / оставить заявку / написать / позвонить / забронировать',
-    fallbackKeys: ['mainCta'],
+    fallbackKeys: [],
     downstream: 'цели Метрики, конверсионные блоки, thank you page, отчеты, рекламные кампании',
     route: 'Gate 2 / Gate 4 / Gate 5'
   }
@@ -9187,9 +9182,9 @@ const GATE0_PASSPORT_V116_BLOCKS = {
     instruction: 'Инструменты: бриф, интервью, CRM, сайт, отдел продаж. На выходе должны быть три базовых смысла проекта: продукт, сегмент, результат.',
     context: ['name','niche','website','geography'],
     fields: [
-      { key: 'whatSell', sharedKey: 'что_продаем', label: 'Что продаем', hint: 'продукт / услуга / направление', route: 'Gate 1, Gate 3, Gate 4', downstream: 'оффер, семантика, юнит-экономика, кампании, календарь, отчеты', fallback: ['niche','offer'] },
+      { key: 'whatSell', sharedKey: 'что_продаем', label: 'Что продаем', hint: 'продукт / услуга / направление', route: 'Gate 1, Gate 3, Gate 4', downstream: 'оффер, семантика, юнит-экономика, кампании, календарь, отчеты', fallback: [] },
       { key: 'targetSegment', sharedKey: 'кому_продаем', label: 'Кому продаем', hint: 'основной сегмент / аудитория', route: 'Gate 1, Gate 3, Gate 4', downstream: 'ЦА, сегменты, персоны, рекламные группы, коллаборации', fallback: [] },
-      { key: 'clientResult', sharedKey: 'ради_какого_результата', label: 'Ради какого результата', hint: 'какую задачу клиент хочет решить', route: 'Gate 1, Gate 3, Gate 4', downstream: 'JTBD, офер, лендинги, объявления, CTA', fallback: ['afterDescription'] }
+      { key: 'clientResult', sharedKey: 'ради_какого_результата', label: 'Ради какого результата', hint: 'какую задачу клиент хочет решить', route: 'Gate 1, Gate 3, Gate 4', downstream: 'JTBD, офер, лендинги, объявления, CTA', fallback: [] }
     ],
     tags: { key: 'productKeywords', sharedKey: 'product_keywords', label: 'Ключевые слова продукта', placeholder: 'подарок ручной работы, авторская мастерская, под заказ' },
     proof: { key: 'productSegmentProof', sharedKey: 'product_segment_proof', label: 'Доказательство', placeholder: 'бриф / интервью / CRM / сайт / отдел продаж' },
@@ -9219,9 +9214,9 @@ const GATE0_PASSPORT_V116_BLOCKS = {
     instruction: 'Инструменты: сайт, посадочные, презентации, рекламные материалы, скрипты продаж. На выходе нужны стартовая формулировка, позиционирование и УТП.',
     context: ['name','niche','geography','whatSell','targetSegment','clientResult','offerRationalCoverage','offerIrrationalDriver','offerSocialMechanism'],
     fields: [
-      { key: 'positioningStartFormula', sharedKey: 'positioning_start_formula', label: 'Стартовая формулировка', hint: 'как проект сейчас коротко описывает себя', route: 'Gate 1, Gate 3, Gate 4', downstream: 'описание проекта, главная, презентации, отчеты', fallback: ['description','name'] },
+      { key: 'positioningStartFormula', sharedKey: 'positioning_start_formula', label: 'Стартовая формулировка', hint: 'как проект сейчас коротко описывает себя', route: 'Gate 1, Gate 3, Gate 4', downstream: 'описание проекта, главная, презентации, отчеты', fallback: [] },
       { key: 'positioningStatement', sharedKey: 'positioning_statement', label: 'Позиционирование', hint: 'для кого / категория / отличие', route: 'Gate 1, Gate 3, Gate 4', downstream: 'аудит сайта, ЦА, конкуренты, JTBD, сегменты', fallback: [] },
-      { key: 'usp', sharedKey: 'usp', label: 'УТП', hint: 'главное обещание выбора', route: 'Gate 1, Gate 3, Gate 4', downstream: 'hero-экран, офер, объявления, CTA, лендинги', fallback: ['afterUsp'] }
+      { key: 'usp', sharedKey: 'usp', label: 'УТП', hint: 'главное обещание выбора', route: 'Gate 1, Gate 3, Gate 4', downstream: 'hero-экран, офер, объявления, CTA, лендинги', fallback: [] }
     ],
     tags: { key: 'positioningMeaningTags', sharedKey: 'positioning_meaning_tags', label: 'Ключевые смыслы позиционирования', placeholder: 'авторская работа, подарок с характером, ручная эстетика' },
     proof: { key: 'positioningProof', sharedKey: 'positioning_proof', label: 'Доказательство', placeholder: 'сайт / посадочные / презентации / рекламные материалы / скрипты' },
@@ -9235,9 +9230,9 @@ const GATE0_PASSPORT_V116_BLOCKS = {
     instruction: 'Источники: сайт, посадочные, объявления, баннеры, мессенджеры, скрипты продаж. На выходе нужны офферы, CTA и главное целевое действие.',
     context: ['whatSell','targetSegment','clientResult','positioningStartFormula','positioningStatement','usp','offerRationalCoverage','offerIrrationalDriver','offerSocialMechanism'],
     fields: [
-      { key: 'currentOffers', sharedKey: 'current_offers', label: 'Текущие офферы', hint: 'предложения, акции, бонусы, сценарии покупки', route: 'Gate 1, Gate 3, Gate 4', downstream: 'офер, JTBD, аудит страниц, лендинги, объявления', fallback: ['offer','afterOffer'] },
-      { key: 'currentCtas', sharedKey: 'current_ctas', label: 'Текущие CTA', hint: 'купить, заказать, написать, рассчитать', route: 'Gate 1, Gate 4', downstream: 'hero-блоки, формы, кнопки, баннеры, email, push, Telegram', fallback: ['mainCta','afterMainCta'] },
-      { key: 'primaryTargetAction', sharedKey: 'primary_target_action', label: 'Основное целевое действие', hint: 'главное действие клиента', route: 'Gate 2, Gate 4, Gate 5', downstream: 'цели Метрики, конверсионные блоки, thank you page, отчеты', fallback: ['mainCta'] }
+      { key: 'currentOffers', sharedKey: 'current_offers', label: 'Текущие офферы', hint: 'предложения, акции, бонусы, сценарии покупки', route: 'Gate 1, Gate 3, Gate 4', downstream: 'офер, JTBD, аудит страниц, лендинги, объявления', fallback: [] },
+      { key: 'currentCtas', sharedKey: 'current_ctas', label: 'Текущие CTA', hint: 'купить, заказать, написать, рассчитать', route: 'Gate 1, Gate 4', downstream: 'hero-блоки, формы, кнопки, баннеры, email, push, Telegram', fallback: [] },
+      { key: 'primaryTargetAction', sharedKey: 'primary_target_action', label: 'Основное целевое действие', hint: 'главное действие клиента', route: 'Gate 2, Gate 4, Gate 5', downstream: 'цели Метрики, конверсионные блоки, thank you page, отчеты', fallback: [] }
     ],
     tags: { key: 'offerCtaActionTags', sharedKey: 'offer_cta_action_tags', label: 'Ключевые действия', placeholder: 'купить из каталога, сделать под заказ, написать' },
     proof: { key: 'currentOffersCtaProof', sharedKey: 'current_offers_cta_proof', label: 'Доказательство', placeholder: 'сайт / объявления / баннеры / мессенджеры / скрипты' },
