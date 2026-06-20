@@ -9406,7 +9406,7 @@ function v116PassportFieldCard(def, field) {
   return `<label class="passport-v116-field-card">
     <span class="passport-v116-field-title">${escapeHtml(field.label)}</span>
     <span class="passport-v116-field-hint">${escapeHtml(field.hint)}</span>
-    <input class="passport-v116-input" data-v116-block="${escapeAttr(def.key)}" data-v116-kind="main" data-v116-key="${escapeAttr(field.key)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(field.hint)}" />
+    <input class="passport-v116-input ${filled ? 'is-filled' : 'is-empty'}" data-v116-block="${escapeAttr(def.key)}" data-v116-kind="main" data-v116-key="${escapeAttr(field.key)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(field.hint)}" />
     <span class="passport-v116-mini-row">
       <span class="mini-indicator ${filled ? 'is-saved' : ''}">${filled ? 'Глобальное поле' : 'Не заполнено'}</span>
       <span class="mini-indicator">${escapeHtml(field.route)}</span>
@@ -9482,6 +9482,8 @@ function v116UpdatePassportInput(e) {
     card.status = v116Status(card, state);
   }
   recalculateAllStatuses(state);
+  e.target.classList.toggle('is-filled', !!value.trim());
+  e.target.classList.toggle('is-empty', !value.trim());
   flashSaving();
 }
 

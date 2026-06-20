@@ -2394,6 +2394,14 @@ select:disabled {
   padding: 9px 10px;
   font: inherit;
 }
+.passport-v116-input.is-empty {
+  background: rgba(180,50,50,.22);
+  border-color: rgba(180,50,50,.4);
+}
+.passport-v116-input.is-filled {
+  background: rgba(50,140,60,.18);
+  border-color: rgba(50,140,60,.4);
+}
 .passport-v116-input:focus {
   outline: 1px solid rgba(212,176,95,.55);
   border-color: rgba(212,176,95,.65);
