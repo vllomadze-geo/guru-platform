@@ -1,0 +1,14 @@
+{
+  "name": "guru-platform",
+  "version": "1.2.0",
+  "private": true,
+  "description": "ГУРУ — маркетинговая операционная система",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "vercel build",
+    "start": "vercel dev"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

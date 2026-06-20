@@ -2325,8 +2325,6 @@ function renderGate1Accordion(gate, cards) {
   const queryActive = els.searchInput.value.trim() || els.statusFilter.value !== 'all';
   els.contentArea.innerHTML = `<div class="analytics-accordion">
     <div class="analytics-intro">
-      <div class="analytics-path">Gate 1 → Аналитика</div>
-      <h2>Gate 1, Аналитика</h2>
       <p class="muted">Сначала видны четыре смысловых уровня. Раскрытый уровень становится главным рабочим полем, вложенность читается через сетку, отступы и активные состояния.</p>
     </div>
     ${sections.map(section => {
@@ -6587,8 +6585,6 @@ renderGate1Accordion = function(gate, cards) {
   const queryActive = els.searchInput.value.trim() || els.statusFilter.value !== 'all';
   els.contentArea.innerHTML = `<div class="analytics-accordion">
     <div class="analytics-intro">
-      <div class="analytics-path">Gate 1 → Аналитика</div>
-      <h2>Gate 1, Аналитика</h2>
       <p class="muted">Сначала видны четыре смысловых уровня. Раскрытый уровень становится главным рабочим полем.</p>
     </div>
     ${sections.map(section => {
