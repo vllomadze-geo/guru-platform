@@ -555,9 +555,9 @@ function countByStatus(cards = allCards()) {
 
 
 const TOOL_CARD_CONFIG = {
-  'Текущее состояние сайта': ['Страницы сайта', 'Главные посадочные', 'Формы', 'CTA', 'Контакты', 'Блоки доверия', 'Мобильная версия'],
-  'Текущая инфраструктура маркетинга': ['Яндекс Метрика', 'Цели Метрики', 'CRM', 'Формы', 'UTM', 'Уведомления', 'Рекламные кабинеты', 'Таблицы'],
-  'Текущие каналы и рекламные материалы': ['Яндекс Директ', 'РСЯ', 'Медийная реклама', 'SEO', 'Карты', 'Баннеры', 'Объявления', 'Видео', 'Тексты']
+  'Текущее состояние сайта': ['Главные посадочные', 'Формы', 'CTA', 'Контакты', 'Блоки доверия', 'Мобильная версия'],
+  'Текущая инфраструктура маркетинга': ['Яндекс Метрика', 'Цели Метрики', 'CRM', 'Формы', 'UTM', 'Уведомления', 'Рекламные кабинеты'],
+  'Текущие каналы и рекламные материалы': []
 };
 
 
@@ -574,12 +574,13 @@ const CURRENT_RESULTS_METRICS = [
   { key: 'ctr', label: 'CTR', type: 'number' },
   { key: 'leads', label: 'Заявки', type: 'number' },
   { key: 'calls', label: 'Звонки', type: 'number' },
-  { key: 'cpl_cpa', label: 'CPL или CPA', type: 'number' },
+  { key: 'leads_total', label: 'Лиды всего', type: 'number' },
   { key: 'conversion', label: 'Конверсия', type: 'number' },
   { key: 'cost', label: 'Расход', type: 'number' },
-  { key: 'lead_quality', label: 'Качество лидов', type: 'text' },
-  { key: 'sales', label: 'Продажи, если доступны', type: 'number' }
+  { key: 'cpl', label: 'CPL', type: 'number' },
+  { key: 'cpa', label: 'CPA', type: 'number' }
 ];
+const CURRENT_RESULTS_SOURCES = ['Метрика', 'Директ', 'GA4', 'Google Ads', 'CRM'];
 
 const PROJECT_META_FIELDS = [
   ['name', 'Название проекта'],
@@ -603,9 +604,7 @@ const PROJECT_AFTER_FIELDS = [
 ];
 
 const PROJECT_PASSPORT_FIELDS = [
-  ...PROJECT_META_FIELDS,
-  ...PROJECT_BEFORE_FIELDS,
-  ...PROJECT_AFTER_FIELDS
+  ...PROJECT_META_FIELDS
 ];
 
 
@@ -1144,7 +1143,7 @@ function cardPreviewText(card) {
 }
 
 function isProjectPassportCard(card) {
-  return card?.title === 'Паспорт проекта';
+  return card?.title === 'Паспорт проекта' || card?.title === 'Проект: базовые сведения';
 }
 
 function isStartupSummaryCard(card) {
@@ -1167,6 +1166,7 @@ function prepareSystemCards(workspace) {
     gate.cards.forEach(card => {
       card.gateId = gate.id;
       card.gateTitle = gate.title;
+      if (card.title === 'Паспорт проекта') card.title = 'Проект: базовые сведения';
       if (isToolStatusCard(card)) {
         ensureToolItems(card);
         card.evidenceFields = [];
@@ -1203,10 +1203,11 @@ function ensureCurrentResults(card) {
       label: metric.label,
       type: metric.type,
       value: prev.value || '',
-      period: prev.period || '',
+      source: prev.source || '',
       comment: prev.comment || ''
     };
   });
+  card.currentResultsMeta = card.currentResultsMeta || { period: '', sources: '' };
   return card.currentResults;
 }
 
@@ -1224,11 +1225,6 @@ function syncProjectBeforeFromPositioning(workspace = state) {
   if (!workspace) return;
   workspace.project = workspace.project || {};
   workspace.sharedEvidence = workspace.sharedEvidence || {};
-  const descriptionFallback = workspace.project.description || '';
-  workspace.project.mainCta = getSharedEvidenceByLabels(workspace, ['главный CTA', 'список текущих CTA', 'CTA', 'основной CTA']) || workspace.project.mainCta || '';
-  workspace.project.usp = getSharedEvidenceByLabels(workspace, ['УТП', 'позиционирования', 'стартовая формулировка', 'главное УТП']) || workspace.project.usp || '';
-  workspace.project.offer = getSharedEvidenceByLabels(workspace, ['оффер', 'список текущих офферов', 'текущие офферы']) || workspace.project.offer || '';
-  workspace.project.description = getSharedEvidenceByLabels(workspace, ['описание проекта', 'стартовая формулировка', 'позиционирования']) || descriptionFallback;
 }
 
 function syncProjectPassportCard(workspace = state) {
@@ -1239,9 +1235,7 @@ function syncProjectPassportCard(workspace = state) {
   const project = workspace.project || {};
   card.evidenceFields = [];
   const base = PROJECT_META_FIELDS.map(([key, label]) => `${label}:\n${project[key] || ''}`);
-  const before = PROJECT_BEFORE_FIELDS.map(([key, label]) => `До начала работ / ${label}:\n${project[key] || ''}`);
-  const after = PROJECT_AFTER_FIELDS.map(([key, label]) => `После завершения работ / ${label}:\n${project[key] || ''}`);
-  card.evidence = [...base, ...before, ...after].join('\n\n');
+  card.evidence = base.join('\n\n');
 }
 
 function updateProjectChrome() {
@@ -1281,9 +1275,8 @@ function recalculateStatusForCard(card, workspace = state) {
     const project = workspace?.project || {};
     const required = PROJECT_PASSPORT_FIELDS.map(([key]) => String(project[key] || '').trim());
     const nonEmpty = required.filter(Boolean);
-    const longTexts = ['usp', 'offer', 'description', 'afterUsp', 'afterOffer', 'afterDescription'].map(key => String(project[key] || '').trim()).filter(Boolean);
     if (!nonEmpty.length) card.status = 'not_started';
-    else if (nonEmpty.length === required.length && longTexts.every(hasFinalPeriod)) card.status = 'ready';
+    else if (nonEmpty.length === required.length) card.status = 'ready';
     else card.status = 'in_progress';
     return;
   }
@@ -1306,11 +1299,17 @@ function recalculateStatusForCard(card, workspace = state) {
   }
   if (isCurrentResultsCard(card)) {
     const rows = ensureCurrentResults(card);
-    const filled = rows.filter(row => String(row.value || '').trim() || String(row.period || '').trim() || String(row.comment || '').trim());
-    const missingPeriod = rows.some(row => String(row.value || '').trim() && !String(row.period || '').trim());
-    if (!filled.length) card.status = 'not_started';
-    else if (missingPeriod) card.status = 'in_progress';
-    else card.status = 'ready';
+    const meta = card.currentResultsMeta || {};
+    const period = String(meta.period || '').trim();
+    const withValue = rows.filter(row => String(row.value || '').trim());
+    const withSource = withValue.filter(row => String(row.source || '').trim());
+    if (!period) { card.status = 'not_started'; return; }
+    if (!withValue.length) { card.status = 'in_progress'; return; }
+    if (withValue.length && !withSource.length) { card.status = 'needs_review'; return; }
+    const periodDays = (function() { const m = period.match(/(\d+)\s*(дн|day)/i); return m ? Number(m[1]) : 30; })();
+    if (periodDays < 14) { card.status = 'needs_review'; return; }
+    if (withValue.length >= 5 && withSource.length === withValue.length) { card.status = 'ready'; return; }
+    card.status = 'in_progress';
     return;
   }
   const gate1Mode = getGate1CardMode(card);
@@ -1381,22 +1380,12 @@ function projectPassportFieldsHtml() {
     const readonly = options.readonly ? ' readonly' : '';
     const dataAttr = options.readonly ? '' : ` data-project-inline="${escapeAttr(key)}"`;
     return `<label>${escapeHtml(title)}${isLong
-      ? `<textarea${dataAttr}${readonly} rows="3">${escapeHtml(value)}</textarea>`
-      : `<input${dataAttr}${readonly} value="${escapeAttr(value)}" />`}</label>`;
+      ? `<textarea${dataAttr}${readonly} rows="3" placeholder="${escapeAttr(label)}">${escapeHtml(value)}</textarea>`
+      : `<input${dataAttr}${readonly} value="${escapeAttr(value)}" placeholder="${escapeAttr(label)}" />`}</label>`;
   };
   return `<div class="project-passport-sync">
     <div class="form-grid compact-form passport-meta-grid">
       ${PROJECT_META_FIELDS.map(field => inputHtml(field)).join('')}
-    </div>
-    <div class="passport-compare-grid compact-compare">
-      <section class="passport-column">
-        <h3>До начала работ</h3>
-        ${PROJECT_BEFORE_FIELDS.map(field => inputHtml(field, '', { readonly: true })).join('')}
-      </section>
-      <section class="passport-column">
-        <h3>После завершения работ</h3>
-        ${PROJECT_AFTER_FIELDS.map(field => inputHtml(field)).join('')}
-      </section>
     </div>
   </div>`;
 }
@@ -1453,12 +1442,13 @@ function formatStructuredEvidencePlain(card, workspace = state) {
   if (isProjectPassportCard(card)) {
     const project = workspace.project || {};
     const meta = PROJECT_META_FIELDS.map(([key, label]) => `${label}: ${project[key] || ''}`);
-    const before = PROJECT_BEFORE_FIELDS.map(([key, label]) => `До начала работ / ${label}: ${project[key] || ''}`);
-    const after = PROJECT_AFTER_FIELDS.map(([key, label]) => `После завершения работ / ${label}: ${project[key] || ''}`);
-    return [...meta, ...before, ...after].join('\n');
+    return meta.join('\n');
   }
   if (isCurrentResultsCard(card)) {
-    return ensureCurrentResults(card).map(row => `${row.label}: ${row.value || ''}${row.period ? ' | период: ' + row.period : ''}${row.comment ? ' | комментарий: ' + row.comment : ''}`).join('\n');
+    const meta = card.currentResultsMeta || {};
+    const header = `Период: ${meta.period || 'не указан'}\nИсточники: ${meta.sources || 'не указаны'}`;
+    const rows = ensureCurrentResults(card).map(row => `${row.label}: ${row.value || '—'}${row.source ? ' [' + row.source + ']' : ''}${row.comment ? ' — ' + row.comment : ''}`).join('\n');
+    return `${header}\n\n${rows}`;
   }
   if (isToolStatusCard(card)) {
     const evidencePart = ensureEvidenceFields(card).map(field => `${field.label}: ${getEvidenceValue(field.key, workspace)}`).join('\n');
@@ -2130,7 +2120,8 @@ function bindPainOfferRouteEvents() {
   });
   document.querySelectorAll('[data-pain-toggle-section]').forEach(btn => btn.addEventListener('click', () => {
     const route = ensurePainOfferState();
-    route.openSection = route.openSection === btn.dataset.painToggleSection ? '' : btn.dataset.painToggleSection;
+    route.openSections = route.openSections || {};
+    route.openSections[btn.dataset.painToggleSection] = !route.openSections[btn.dataset.painToggleSection];
     saveState();
     renderGate();
   }));
@@ -2283,7 +2274,8 @@ function bindDemandRouteEvents() {
   }));
   document.querySelectorAll('[data-demand-toggle-step]').forEach(btn => btn.addEventListener('click', () => {
     const route = ensureDemandRouteState();
-    route.openStep = route.openStep === btn.dataset.demandToggleStep ? '' : btn.dataset.demandToggleStep;
+    route.openSteps = route.openSteps || {};
+    route.openSteps[btn.dataset.demandToggleStep] = !route.openSteps[btn.dataset.demandToggleStep];
     saveState();
     renderGate();
   }));
@@ -2464,7 +2456,7 @@ function instructionToggleHtml(card) {
 }
 
 function cardUserFieldsHtml(c) {
-  if (isProjectPassportCard(c)) return `<div class="field-row"><span>Паспорт проекта</span>${projectPassportFieldsHtml()}</div>`;
+  if (isProjectPassportCard(c)) return `<div class="field-row">${projectPassportFieldsHtml()}</div>`;
   if (isCurrentResultsCard(c)) return `<div class="field-row"><span>Показатели</span>${currentResultsHtml(c)}</div>`;
   if (isToolStatusCard(c)) return `<div class="field-row"><span>Статусы элементов</span>${toolItemsHtml(c)}</div>`;
   if (isStartupSummaryCard(c)) return `<div class="field-row"><span>Автоматическая сводка</span>${startupSummaryHtml()}</div>`;
@@ -2665,7 +2657,7 @@ function relevantToolsForCard(card) {
       groups.add('CRM и лиды');
     } else groups.add('SEO и индексация');
   }
-  return (state.tools || []).filter(tool => tool.enabled && groups.has(tool.group));
+  return (state?.tools || []).filter(tool => tool.enabled && groups.has(tool.group));
 }
 
 function ensureToolWorkspace(card) {
@@ -2850,7 +2842,7 @@ function pageStructureCardHtml(card, row, pageIndex, repeatable) {
       <label>Статус URL<select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="urlStatus">${linkStatusOptionsHtml('works', row.urlStatus)}</select>${seoIndicatorHtml(row.url)}</label>
       <label>H1 <small>20–70 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="h1" value="${escapeAttr(row.h1 || '')}" />${pageFieldStatusHtml(row.h1, 20, 70)}</label>
       <label>Title <small>30–70 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="title" value="${escapeAttr(row.title || '')}" />${pageFieldStatusHtml(row.title, 30, 70)}</label>
-      <label class="full">Description <small>70–180 знаков</small><textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="description" rows="2">${escapeHtml(row.description || '')}</textarea>${pageFieldStatusHtml(row.description, 70, 180)}</label>
+      <label class="full">Description <small>70–155 знаков</small><textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="description" rows="2">${escapeHtml(row.description || '')}</textarea>${pageFieldStatusHtml(row.description, 70, 155)}</label>
       <label class="full">Основной текст <small>минимум 300 знаков</small><textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="body" rows="4">${escapeHtml(row.body || '')}</textarea>${pageFieldStatusHtml(row.body, 300, 0)}</label>
       <label class="full">Оффер страницы<textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="offer" rows="2">${escapeHtml(row.offer || '')}</textarea></label>
     </div>
@@ -2874,14 +2866,24 @@ function rowsSafeLength(rows) { return Array.isArray(rows) ? rows.length : 0; }
 
 function currentResultsHtml(card) {
   const rows = ensureCurrentResults(card);
-  return `<div class="current-results">
-    <table class="mini-table current-results-table">
-      <thead><tr><th>Показатель</th><th>Значение</th><th>Период</th><th>Комментарий</th></tr></thead>
+  const meta = card.currentResultsMeta || { period: '', sources: '' };
+  return `<div class="current-results-v2">
+    <div class="cr-meta">
+      <label class="cr-meta-field">
+        <span class="cr-meta-label">Период фиксации</span>
+        <input data-cr-meta-card-id="${escapeAttr(card.id)}" data-cr-meta-field="period" value="${escapeAttr(meta.period || '')}" placeholder="последние 30 полных дней" />
+      </label>
+    </div>
+    <table class="cr-table">
+      <thead><tr><th>Показатель</th><th>Значение</th><th>Источник</th><th>Комментарий</th></tr></thead>
       <tbody>${rows.map((row, index) => `<tr>
-        <td>${escapeHtml(row.label)}</td>
-        <td><input ${row.type === 'number' ? 'type="number"' : ''} data-current-result-card-id="${escapeAttr(card.id)}" data-current-result-index="${index}" data-current-result-field="value" value="${escapeAttr(row.value || '')}" placeholder="${row.type === 'number' ? 'число' : 'текст'}" /></td>
-        <td><input data-current-result-card-id="${escapeAttr(card.id)}" data-current-result-index="${index}" data-current-result-field="period" value="${escapeAttr(row.period || '')}" placeholder="например: 1–31 мая" /></td>
-        <td><input data-current-result-card-id="${escapeAttr(card.id)}" data-current-result-index="${index}" data-current-result-field="comment" value="${escapeAttr(row.comment || '')}" placeholder="короткий комментарий" /></td>
+        <td class="cr-label">${escapeHtml(row.label)}</td>
+        <td><input data-current-result-card-id="${escapeAttr(card.id)}" data-current-result-index="${index}" data-current-result-field="value" value="${escapeAttr(row.value || '')}" placeholder="—" /></td>
+        <td><select data-current-result-card-id="${escapeAttr(card.id)}" data-current-result-index="${index}" data-current-result-field="source">
+          <option value="" ${!row.source ? 'selected' : ''}>—</option>
+          ${CURRENT_RESULTS_SOURCES.map(s => `<option value="${escapeAttr(s)}" ${row.source === s ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('')}
+        </select></td>
+        <td><input data-current-result-card-id="${escapeAttr(card.id)}" data-current-result-index="${index}" data-current-result-field="comment" value="${escapeAttr(row.comment || '')}" placeholder="—" /></td>
       </tr>`).join('')}</tbody>
     </table>
   </div>`;
@@ -2996,7 +2998,6 @@ function updateToolItemFromInput(e) {
   const summaryCard = allCardsFromWorkspace(state).find(isStartupSummaryCard);
   if (summaryCard) recalculateStatusForCard(summaryCard);
   flashSaving();
-  render();
 }
 
 function updateCurrentResultFromInput(e) {
@@ -3007,6 +3008,15 @@ function updateCurrentResultFromInput(e) {
   ensureCurrentResults(card);
   if (!card.currentResults[index]) return;
   card.currentResults[index][field] = e.target.value;
+  recalculateStatusForCard(card);
+  flashSaving();
+}
+
+function updateCurrentResultMeta(e) {
+  const card = findCard(e.target.dataset.crMetaCardId);
+  if (!card) return;
+  card.currentResultsMeta = card.currentResultsMeta || { period: '', sources: '' };
+  card.currentResultsMeta[e.target.dataset.crMetaField] = e.target.value;
   recalculateStatusForCard(card);
   flashSaving();
 }
@@ -3802,7 +3812,7 @@ function bindSemanticAccordion(gateId) {
 }
 
 function cardUserFieldsHtml(c) {
-  if (isProjectPassportCard(c)) return `<div class="field-row"><span>Паспорт проекта</span>${projectPassportFieldsHtml()}</div>`;
+  if (isProjectPassportCard(c)) return `<div class="field-row">${projectPassportFieldsHtml()}</div>`;
   if (isCurrentResultsCard(c)) return `<div class="field-row"><span>Показатели</span>${currentResultsHtml(c)}</div>`;
   if (isToolStatusCard(c)) return `<div class="field-row"><span>Статусы элементов</span>${toolItemsHtml(c)}</div>`;
   if (isStartupSummaryCard(c)) return `<div class="field-row"><span>Автоматическая сводка</span>${startupSummaryHtml()}</div>`;
@@ -3948,7 +3958,7 @@ function pageStructureCardHtml(card, row, pageIndex, repeatable) {
       <label>Статус страницы<select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="urlStatus">${linkStatusOptionsHtml('works', row.urlStatus)}</select></label>
       <label>H1 <small>10–90 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="h1" value="${escapeAttr(row.h1 || '')}" />${pageFieldStatusHtml(row.h1, 10, 90)}</label>
       <label>Title <small>20–90 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="title" value="${escapeAttr(row.title || '')}" />${pageFieldStatusHtml(row.title, 20, 90)}</label>
-      <label class="full">Description <small>50–200 знаков</small><textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="description" rows="2">${escapeHtml(row.description || '')}</textarea>${pageFieldStatusHtml(row.description, 50, 200)}</label>
+      <label class="full">Description <small>70–155 знаков</small><textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="description" rows="2">${escapeHtml(row.description || '')}</textarea>${pageFieldStatusHtml(row.description, 70, 155)}</label>
     </div>
     <div class="page-context-groups">
       ${Object.entries(grouped).map(([group, items]) => `<details class="page-context-group" open>
@@ -4005,13 +4015,6 @@ function gate1PageStructureHtml(card) {
 function strategyFieldsHtml(card) {
   card.strategyFields = card.strategyFields || { decision:'', source:'', nextStep:'' };
   return `<div class="strategy-fields context-panel">
-    <div class="context-source">
-      <strong>Автоконтекст проекта</strong>
-      <span>Продукт: ${escapeHtml(getEvidenceValue('cto-prodaem') || state.project?.description || 'не заполнено')}</span>
-      <span>Аудитория: ${escapeHtml(getEvidenceValue('komu-prodaem') || 'не заполнено')}</span>
-      <span>УТП: ${escapeHtml(state.project?.usp || getEvidenceValue('utp') || 'не заполнено')}</span>
-      <span>Оффер: ${escapeHtml(state.project?.offer || 'не заполнено')}</span>
-    </div>
     <label>Стратегическое решение<textarea data-strategy-card-id="${escapeAttr(card.id)}" data-strategy-field="decision" rows="3">${escapeHtml(card.strategyFields.decision || '')}</textarea></label>
     <label>Источник решения<input data-strategy-card-id="${escapeAttr(card.id)}" data-strategy-field="source" value="${escapeAttr(card.strategyFields.source || '')}" placeholder="спрос, боль, конкурент, экономика" /></label>
     <label>Следующий шаг<input data-strategy-card-id="${escapeAttr(card.id)}" data-strategy-field="nextStep" value="${escapeAttr(card.strategyFields.nextStep || '')}" /></label>
@@ -5100,7 +5103,7 @@ pageStructureCardHtml = function(card, row, pageIndex, repeatable) {
       <label>URL<input list="projectUrlOptions" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
       <label>H1 <small>10–90 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="h1" value="${escapeAttr(row.h1 || '')}" />${pageFieldStatusHtml(row.h1, 10, 90)}</label>
       <label>Title <small>20–90 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="title" value="${escapeAttr(row.title || '')}" />${pageFieldStatusHtml(row.title, 20, 90)}</label>
-      <label class="full">Description <small>50–200 знаков</small><textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="description" rows="2">${escapeHtml(row.description || '')}</textarea>${pageFieldStatusHtml(row.description, 50, 200)}</label>
+      <label class="full">Description <small>70–155 знаков</small><textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="description" rows="2">${escapeHtml(row.description || '')}</textarea>${pageFieldStatusHtml(row.description, 70, 155)}</label>
     </div>
     <div class="page-context-groups">
       ${Object.entries(grouped).map(([group, items]) => `<details class="page-context-group" open>
@@ -5273,7 +5276,7 @@ function pageRouteOrientir(card, row) {
 function rowInputField(card, pageIndex, row, field, label, standard, type = 'input', extra = '') {
   const value = row[field] || '';
   const attr = `data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="${escapeAttr(field)}"`;
-  const check = field === 'h1' ? pageFieldStatusHtml(value, 10, 90) : field === 'title' ? pageFieldStatusHtml(value, 20, 90) : field === 'description' ? pageFieldStatusHtml(value, 50, 200) : '';
+  const check = field === 'h1' ? pageFieldStatusHtml(value, 10, 90) : field === 'title' ? pageFieldStatusHtml(value, 20, 90) : field === 'description' ? pageFieldStatusHtml(value, 70, 155) : '';
   if (type === 'textarea') {
     return `<label class="route-field ${extra}"><span>${escapeHtml(label)}</span><small>${escapeHtml(standard || '')}</small><textarea ${attr} rows="2">${escapeHtml(value)}</textarea>${check}</label>`;
   }
@@ -5411,7 +5414,7 @@ pageStructureCardHtml = function(card, row, pageIndex, repeatable) {
       ${repeatable ? `<button class="small-btn danger-mini" data-remove-gate1-page="${escapeAttr(card.id)}" data-index="${pageIndex}" ${rowsSafeLength(card.pageRows) <= 1 ? 'disabled' : ''}>×</button>` : ''}
     </div>
     <div class="route-top-grid">
-      <label class="route-field route-url"><span>URL</span><small>Адрес страницы, которую проверяем.</small><input list="projectUrlOptions" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
+      <label class="route-field route-url"><span>URL${g0HintBtnHtml('audit_url')}</span><small>Адрес страницы, которую проверяем.</small><input list="projectUrlOptions" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
       <div class="route-orientir"><strong>Краткий ориентир</strong><span>${escapeHtml(pageRouteOrientir(card, row))}</span></div>
     </div>
     <div class="route-sections">${routeHtml}</div>
@@ -5477,12 +5480,12 @@ function v22PageTemplates() {
       orientir: 'Коммерческая точка входа. За 3 секунды объясняет, кто вы, для кого и почему вам можно доверять.',
       sections: [
         { key:'home_hero', title:'1. Hero-экран', task:'Сразу объяснить, кто вы, для кого и почему стоит остаться.', checklist:['H1 с результатом и адресатом','УТП без абстракций','Визуал результата или продукта','Соцдоказательство','Основная и альтернативная кнопки'], standard:'На первом экране понятно предложение, доверие и первое действие.', fields:[rowField('h1','H1','10–90 знаков'), ctxField('heroUsp','УТП','1 ясное обещание результата','textarea'), ctxField('heroVisual','Визуал','Что показываем на первом экране'), ctxField('heroProof','Соцдоказательство','Рейтинг / логотипы / кейс / цифра'), ctxField('heroMiniBlocks','Мини-блок: доставка / сроки / гарантия / оплата','Коротко по пунктам','textarea'), ctxField('primaryButton','Основная кнопка','Главное действие'), ctxField('secondaryButton','Альтернативная кнопка','Мягкое действие')] },
-        { key:'home_segments', title:'2. Навигация по сегментам', task:'Помочь пользователю быстро выбрать свой сценарий.', checklist:['Заголовок выбора','3–6 карточек сегментов','Фото + название + ссылка в каждой карточке'], standard:'Пользователь за один экран понимает, куда ему перейти.', fields:[ctxField('segmentTitle','Заголовок','Объясняет логику выбора'), ctxField('segmentCards','Карточки сегментов','Фото + название + ссылка','textarea')] },
-        { key:'home_about', title:'3. О компании', task:'Показать доверие и масштаб без длинного текста.', checklist:['Заголовок доверия','3 фактоида','Короткий текст о подходе','Сертификаты / награды / знаки доверия'], standard:'Блок отвечает, почему компании можно доверять.', fields:[ctxField('aboutTitle','Заголовок','Смысл доверия'), ctxField('aboutFacts','3 фактоида','Цифры / опыт / масштаб','textarea'), ctxField('aboutText','Короткий текст','2–4 предложения','textarea'), ctxField('trustBadges','Доказательства','Сертификаты / награды / знаки доверия','textarea')] },
-        { key:'home_cases', title:'4. Кейсы', task:'Показать реальные результаты и снять страх «не получится».', checklist:['3–4 примера','Название кейса','Категория','Результат','CTA на портфолио'], standard:'Кейсы показывают конкретный результат, а не просто факт работы.', fields:[ctxField('cases','Кейсы','Название + категория + результат','textarea'), ctxField('portfolioButton','CTA на портфолио','Кнопка или ссылка')] },
-        { key:'home_process', title:'5. Процесс работы', task:'Снять неопределённость и показать порядок действий.', checklist:['3–5 шагов','Что происходит на каждом шаге','Срок по каждому шагу','CTA под схемой'], standard:'Пользователь понимает, что будет после заявки.', fields:[ctxField('processTitle','Заголовок','Процесс простым языком'), ctxField('processSteps','3–5 шагов','Название + что происходит + срок','textarea'), ctxField('processButton','CTA под схемой','Следующее действие')] },
-        { key:'home_benefits', title:'6. Выгоды', task:'Сформулировать пользу для клиента, а не свойства компании.', checklist:['Заголовок','3 конкретные выгоды','Каждая выгода привязана к результату клиента'], standard:'Выгоды отвечают на вопрос «что я получу».', fields:[ctxField('benefits','3 конкретные выгоды','Без общих слов','textarea')] },
-        { key:'home_reviews', title:'7. Отзывы', task:'Добавить внешнее доверие перед финальным действием.', checklist:['Виджет Яндекс / Google или 3 цитаты','Кнопка «Читать все отзывы»'], standard:'Отзывы выглядят проверяемо и связаны с реальными клиентами.', fields:[ctxField('reviews','Отзывы','Виджет или 3 цитаты','textarea'), ctxField('reviewsButton','CTA читать все отзывы','Кнопка или ссылка')] },
+        { key:'home_segments', title:'2. Навигация по сегментам', task:'Помочь пользователю быстро выбрать свой сценарий.', checklist:['H2: заголовок выбора','3–6 карточек сегментов','Фото + название + ссылка в каждой карточке'], standard:'Пользователь за один экран понимает, куда ему перейти.', fields:[ctxField('segmentTitle','H2: Заголовок секции','Объясняет логику выбора'), ctxField('segmentCards','Карточки сегментов','H3: название сегмента + фото + ссылка','textarea')] },
+        { key:'home_about', title:'3. О компании', task:'Показать доверие и масштаб без длинного текста.', checklist:['H2: заголовок доверия','3 фактоида','Короткий текст о подходе','Сертификаты / награды / знаки доверия'], standard:'Блок отвечает, почему компании можно доверять.', fields:[ctxField('aboutTitle','H2: Заголовок секции','Смысл доверия'), ctxField('aboutFacts','3 фактоида','Цифры / опыт / масштаб','textarea'), ctxField('aboutText','Короткий текст','2–4 предложения','textarea')] },
+        { key:'home_cases', title:'4. Кейсы', task:'Показать реальные результаты и снять страх «не получится».', checklist:['H2: заголовок блока','3–4 примера','H3: название кейса','Категория','Результат','CTA на портфолио'], standard:'Кейсы показывают конкретный результат, а не просто факт работы.', fields:[ctxField('casesTitle','H2: Заголовок секции','Реальные результаты / Наши работы'), ctxField('cases','Кейсы','H3: название кейса + категория + результат','textarea'), ctxField('portfolioButton','CTA на портфолио','Кнопка или ссылка')] },
+        { key:'home_process', title:'5. Процесс работы', task:'Снять неопределённость и показать порядок действий.', checklist:['H2: заголовок блока','3–5 шагов','Что происходит на каждом шаге','Срок по каждому шагу','CTA под схемой'], standard:'Пользователь понимает, что будет после заявки.', fields:[ctxField('processTitle','H2: Заголовок секции','Процесс простым языком'), ctxField('processSteps','3–5 шагов','H3: название шага + что происходит + срок','textarea'), ctxField('processButton','CTA под схемой','Следующее действие')] },
+        { key:'home_benefits', title:'6. Выгоды', task:'Сформулировать пользу для клиента, а не свойства компании.', checklist:['H2: заголовок блока','3 конкретные выгоды','Каждая выгода привязана к результату клиента'], standard:'Выгоды отвечают на вопрос «что я получу».', fields:[ctxField('benefitsTitle','H2: Заголовок секции','Почему выбирают нас / Что вы получите'), ctxField('benefits','3 конкретные выгоды','H3: формулировка выгоды','textarea')] },
+        { key:'home_reviews', title:'7. Отзывы', task:'Добавить внешнее доверие перед финальным действием.', checklist:['H2: заголовок блока','Виджет Яндекс / Google или 3 цитаты','Кнопка «Читать все отзывы»'], standard:'Отзывы выглядят проверяемо и связаны с реальными клиентами.', fields:[ctxField('reviewsTitle','H2: Заголовок секции','Отзывы клиентов / Что говорят о нас'), ctxField('reviews','Отзывы','Виджет или 3 цитаты','textarea'), ctxField('reviewsButton','CTA читать все отзывы','Кнопка или ссылка')] },
         finalCtaSection('home_final_cta')
       ]
     },
@@ -5492,9 +5495,9 @@ function v22PageTemplates() {
       sections: [
         { key:'landing_hero', title:'1. Герой', task:'За 3 секунды передать оффер и вызвать первое действие.', checklist:['H1: результат + для кого + срок/условия','Подзаголовок: 1–2 конкретные выгоды','Визуал результата или продукта','Соцдоказательство','Мини-блок: срок / гарантия / условие','Одна яркая кнопка','Нет глобального меню'], standard:'Первый экран продаёт действие без отвлечений.', fields:[rowField('h1','H1','Результат + для кого + срок/условия'), ctxField('landingSubhead','Подзаголовок','1–2 конкретные выгоды'), ctxField('landingVisual','Визуал','Фото/видео результата или продукта'), ctxField('landingSocialProof','Соцдоказательство','Рейтинг / факты / логотипы'), ctxField('landingMiniBlock','Мини-блок','Срок / гарантия / условие','textarea'), ctxField('landingMainButton','Кнопка','Получить / Записаться / Рассчитать')] },
         { key:'landing_social', title:'2. Быстрый соцдок', task:'Сразу после героя убрать сомнение «а вы вообще кто».', checklist:['Полоса логотипов клиентов / партнёров / СМИ','3 цифры: клиенты / опыт / довольные','Формат узкий, без много места'], standard:'Первое доверие видно без скролла вглубь.', fields:[ctxField('landingLogos','Логотипы / партнёры / СМИ','Кого показываем','textarea'), ctxField('landingNumbers','3 цифры','X клиентов / X лет / X% довольных','textarea')] },
-        { key:'landing_pains', title:'3. Боли', task:'Показать, что мы понимаем проблему клиента.', checklist:['Заголовок боли','3–5 болей','Визуальный разделитель или иконки','Переход к решению'], standard:'Клиент узнаёт свою ситуацию.', fields:[ctxField('landingPainTitle','Заголовок боли','Ситуация клиента'), ctxField('landingPains','3–5 болей','Заголовок + 1–2 предложения','textarea'), ctxField('landingPainBridge','Переход к решению','Короткий мост к офферу','textarea')] },
-        { key:'landing_solution', title:'4. Оффер / Решение', task:'Показать продукт как прямой ответ на боль.', checklist:['Заголовок: как это решает боль','Описание продукта / услуги','Формула результата: было → стало','CTA повтор'], standard:'Понятно, что именно получит клиент.', fields:[ctxField('landingSolutionTitle','Заголовок решения','Как решает боль'), ctxField('landingSolutionText','Описание продукта/услуги','Что именно, как работает, что получает клиент','textarea'), ctxField('landingResultFormula','Формула результата','Было → стало / до → после'), ctxField('landingSolutionCta','CTA повтор','Получить / Попробовать')] },
-        { key:'landing_process', title:'5. Как это работает', task:'Снять страх, что это сложно, долго или непонятно.', checklist:['Заголовок','3–5 шагов','Иконка + заголовок + 1 предложение + срок','Акцент на простоте первого шага'], standard:'Процесс выглядит простым и безопасным.', fields:[ctxField('landingProcessTitle','Заголовок','3 шага до результата / Как мы работаем'), ctxField('landingProcessSteps','3–5 шагов','Иконка + заголовок + предложение + срок','textarea')] },
+        { key:'landing_pains', title:'3. Боли', task:'Показать, что мы понимаем проблему клиента.', checklist:['H2: заголовок боли','3–5 болей с H3','Визуальный разделитель или иконки','Переход к решению'], standard:'Клиент узнаёт свою ситуацию.', fields:[ctxField('landingPainTitle','H2: Заголовок секции','Ситуация клиента'), ctxField('landingPains','3–5 болей','H3: заголовок боли + 1–2 предложения','textarea'), ctxField('landingPainBridge','Переход к решению','Короткий мост к офферу','textarea')] },
+        { key:'landing_solution', title:'4. Оффер / Решение', task:'Показать продукт как прямой ответ на боль.', checklist:['H2: как это решает боль','Описание продукта / услуги','Формула результата: было → стало','CTA повтор'], standard:'Понятно, что именно получит клиент.', fields:[ctxField('landingSolutionTitle','H2: Заголовок секции','Как решает боль'), ctxField('landingSolutionText','Описание продукта/услуги','Что именно, как работает, что получает клиент','textarea'), ctxField('landingResultFormula','Формула результата','Было → стало / до → после'), ctxField('landingSolutionCta','CTA повтор','Получить / Попробовать')] },
+        { key:'landing_process', title:'5. Как это работает', task:'Снять страх, что это сложно, долго или непонятно.', checklist:['H2: заголовок блока','3–5 шагов с H3','Иконка + заголовок + 1 предложение + срок','Акцент на простоте первого шага'], standard:'Процесс выглядит простым и безопасным.', fields:[ctxField('landingProcessTitle','H2: Заголовок секции','3 шага до результата / Как мы работаем'), ctxField('landingProcessSteps','3–5 шагов','H3: название шага + предложение + срок','textarea')] },
         { key:'landing_cases', title:'6. Результаты / Кейсы', task:'Закрыть страх «вдруг не сработает».', checklist:['2–4 кейса','Ситуация → что сделали → результат в цифрах','Формат до/после, если есть','Цитата клиента','CTA повтор'], standard:'Есть доказательство реального результата.', fields:[ctxField('landingCases','2–4 кейса','Ситуация → действие → результат','textarea'), ctxField('landingClientQuote','Цитата клиента','Фото и имя, если возможно','textarea'), ctxField('landingCasesCta','CTA повтор','Следующее действие')] },
         { key:'landing_packages', title:'7. Пакеты / Вариации', task:'Дать выбор без перегруза.', checklist:['2–4 варианта','Название + для кого + что входит + цена/от X','Рекомендованный вариант','CTA у каждой карточки'], standard:'Выбор есть, но не создаёт паралич выбора.', fields:[ctxField('landingPackages','2–4 варианта','Название + кому + что входит + цена','textarea'), ctxField('landingRecommended','Рекомендованный вариант','Лейбл «Популярный»')] },
         { key:'landing_price', title:'8. Цена / Форма захвата', task:'Закрыть возражение по деньгам или снизить барьер первого шага.', checklist:['Цена открыта или цена по запросу','Что входит + бонус + гарантия + дедлайн','Короткая форма','Обещание времени ответа','Один из двух вариантов, не оба'], standard:'Пользователь понимает следующий шаг и не боится формы.', fields:[ctxField('landingPrice','Цена / условия','Цена + что входит + гарантия','textarea'), ctxField('landingForm','Форма','Имя + телефон / рассчитать стоимость'), ctxField('landingAnswerPromise','Обещание ответа','Ответим за X минут')] },
@@ -5507,11 +5510,11 @@ function v22PageTemplates() {
       orientir: 'Обязательная конверсионная страница. Проводит клиента от боли до заявки, не уводя со страницы.',
       sections: [
         { key:'service_hero', title:'1. Герой', task:'С первого экрана передать УТП, доверие и первое действие.', checklist:['H1: фраза УТП под конкретную услугу','Подзаголовок: 1–2 ключевые выгоды','Соцдок: рейтинг / логотипы / кейс-тиндер','Мини-блок: доставка / сроки / гарантия / оплата','Основная кнопка'], standard:'Первый экран сразу объясняет услугу и действие.', fields:[rowField('h1','H1','УТП под конкретную услугу'), ctxField('serviceSubhead','Подзаголовок','1–2 ключевые выгоды'), ctxField('serviceSocialProof','Соцдок','Рейтинг / логотипы / кейс'), ctxField('serviceMiniBlock','Мини-блок','Доставка / сроки / гарантия / оплата','textarea'), ctxField('serviceHeroButton','Кнопка','Основное действие')] },
-        { key:'service_pain_solution', title:'2. Боли → Решение', task:'Зацепить болью и сразу показать выход.', checklist:['Заголовок блока','2–3 формулы: боль → решение','Мини-доказательства под каждой болью','Кнопка'], standard:'Проблема и решение понятны без длинного текста.', fields:[ctxField('servicePainTitle','Заголовок блока','Боль клиента'), ctxField('servicePainSolutions','2–3 формулы','Боль → решение + доказательство','textarea'), ctxField('servicePainButton','Кнопка','Следующее действие')] },
+        { key:'service_pain_solution', title:'2. Боли → Решение', task:'Зацепить болью и сразу показать выход.', checklist:['H2: заголовок блока','2–3 формулы: боль → решение с H3','Мини-доказательства под каждой болью','Кнопка'], standard:'Проблема и решение понятны без длинного текста.', fields:[ctxField('servicePainTitle','H2: Заголовок секции','Боль клиента'), ctxField('servicePainSolutions','2–3 формулы','H3: боль → решение + доказательство','textarea'), ctxField('servicePainButton','Кнопка','Следующее действие')] },
         { key:'service_cases', title:'3. Кейсы', task:'Показать реальный результат и закрыть страх.', checklist:['2–4 кейса','Формат до / после / результат','Отзывы с фото клиента','Формат слайдера или сетки'], standard:'Кейсы доказывают, что услуга работает.', fields:[ctxField('serviceCases','2–4 кейса','До / после / результат','textarea'), ctxField('serviceReviews','Отзывы клиентов','Фото + цитата','textarea'), ctxField('serviceCasesFormat','Формат','Слайдер или сетка')] },
-        { key:'service_process', title:'4. Как работаем', task:'Убрать неопределённость, клиент должен знать, что будет дальше.', checklist:['Заголовок','3–5 шагов','Шаг → ожидаемый результат → срок','Видео-демо 15–30 сек, если есть','Кнопки'], standard:'Процесс прозрачен и снижает страх заявки.', fields:[ctxField('serviceProcessTitle','Заголовок','Как работаем'), ctxField('serviceProcessSteps','3–5 шагов','Шаг → результат → срок','textarea'), ctxField('serviceVideo','Видео-демо','15–30 сек, если применимо'), ctxField('serviceProcessButtons','Кнопки','Оформить заявку / консультация')] },
-        { key:'service_packages', title:'5. Вариации / Пакеты', task:'Дать выбор под разные потребности и бюджеты.', checklist:['Общий заголовок + подзаголовок','3–7 карточек','Название + для кого + что входит','Кнопка у каждой карточки'], standard:'Пакеты помогают выбрать, но не перегружают.', fields:[ctxField('servicePackagesTitle','Заголовок','Общий заголовок + подзаголовок'), ctxField('servicePackages','3–7 карточек','Название + для кого + состав','textarea')] },
-        { key:'service_price', title:'6. Цена', task:'Закрыть возражение по деньгам, показать ценность, не просто цифру.', checklist:['Заголовок','Цена + что входит','Бонус / спецпредложение','Гарантия + условия оплаты','Калькулятор, если применимо','Кнопки'], standard:'Цена выглядит как ценность, а не сухая сумма.', fields:[ctxField('servicePriceTitle','Заголовок','Про ценность'), ctxField('servicePrice','Цена + что входит','Цена, состав, условия','textarea'), ctxField('serviceBonus','Бонус / спецпредложение','Если есть'), ctxField('servicePayment','Гарантия + условия оплаты','Оплата / возврат / безопасность','textarea'), ctxField('serviceCalculator','Калькулятор','Если применимо'), ctxField('servicePriceButtons','Кнопки','Оформить заявку / консультация')] },
+        { key:'service_process', title:'4. Как работаем', task:'Убрать неопределённость, клиент должен знать, что будет дальше.', checklist:['H2: заголовок блока','3–5 шагов с H3','Шаг → ожидаемый результат → срок','Видео-демо 15–30 сек, если есть','Кнопки'], standard:'Процесс прозрачен и снижает страх заявки.', fields:[ctxField('serviceProcessTitle','H2: Заголовок секции','Как работаем'), ctxField('serviceProcessSteps','3–5 шагов','Шаг → результат → срок','textarea'), ctxField('serviceVideo','Видео-демо','15–30 сек, если применимо'), ctxField('serviceProcessButtons','Кнопки','Оформить заявку / консультация')] },
+        { key:'service_packages', title:'5. Вариации / Пакеты', task:'Дать выбор под разные потребности и бюджеты.', checklist:['H2: общий заголовок + подзаголовок','3–7 карточек с H3','Название + для кого + что входит','Кнопка у каждой карточки'], standard:'Пакеты помогают выбрать, но не перегружают.', fields:[ctxField('servicePackagesTitle','H2: Заголовок секции','Общий заголовок + подзаголовок'), ctxField('servicePackages','3–7 карточек','Название + для кого + состав','textarea')] },
+        { key:'service_price', title:'6. Цена', task:'Закрыть возражение по деньгам, показать ценность, не просто цифру.', checklist:['H2: заголовок блока','Цена + что входит','Бонус / спецпредложение','Гарантия + условия оплаты','Калькулятор, если применимо','Кнопки'], standard:'Цена выглядит как ценность, а не сухая сумма.', fields:[ctxField('servicePriceTitle','H2: Заголовок секции','Про ценность'), ctxField('servicePrice','Цена + что входит','Цена, состав, условия','textarea'), ctxField('serviceBonus','Бонус / спецпредложение','Если есть'), ctxField('servicePayment','Гарантия + условия оплаты','Оплата / возврат / безопасность','textarea'), ctxField('serviceCalculator','Калькулятор','Если применимо'), ctxField('servicePriceButtons','Кнопки','Оформить заявку / консультация')] },
         { key:'service_faq', title:'7. FAQ', task:'Снять оставшиеся возражения без участия менеджера.', checklist:['6–10 вопросов','Сроки / гарантия / оплата / возврат / безопасность','Аккордеон','Кнопка задать вопрос'], standard:'FAQ закрывает частые сомнения.', fields:[ctxField('serviceFaq','6–10 вопросов','Вопрос + ответ','textarea'), ctxField('serviceFaqButton','Кнопка','Не нашли ответ? Задать вопрос')] },
         { key:'service_contacts', title:'8. Контакты / Связаться', task:'Финальный захват максимально простым способом связи.', checklist:['Форма: имя + телефон + сообщение','Телефон кликабельный','Мессенджеры','Часы работы + обещание времени ответа'], standard:'Пользователь может связаться одним действием.', fields:[ctxField('serviceContactForm','Форма','Имя + телефон + опционально сообщение','textarea'), ctxField('serviceContactPhone','Телефон','Кликабельный'), ctxField('serviceContactMessengers','Мессенджеры','WhatsApp / Telegram'), ctxField('serviceContactHours','Часы работы','Время ответа')] },
         { key:'service_cross', title:'9. Финальный экран + другие услуги', task:'Повторить УТП и удержать перелинковкой.', checklist:['УТП в 1–2 строки','Гарантия + кнопка','Блок других услуг: 3–6 карточек'], standard:'Есть финальный захват и продолжение маршрута.', fields:[ctxField('serviceFinalOffer','Финальное УТП','1–2 строки + гарантия'), ctxField('serviceOtherServices','Другие услуги','3–6 карточек с УТП','textarea')] }
@@ -5523,7 +5526,7 @@ function v22PageTemplates() {
       sections: [
         { key:'catalog_hero', title:'1. Герой', task:'Подтвердить, что пользователь попал в нужный раздел.', checklist:['H1: название категории + гео/уточнение','Intro: 2–3 предложения о разделе'], standard:'Сразу ясно, что это за категория и кому она подходит.', fields:[rowField('h1','H1','Название категории + гео/уточнение'), ctxField('catalogIntro','Intro','2–3 предложения','textarea')] },
         { key:'catalog_filters', title:'2. Фильтры + сетка', task:'Упростить выбор и дать достаточно информации для клика.', checklist:['Фильтры: табы / теги / сортировка, если позиций больше 10','Карточка: фото + категория + H3 + атрибуты + CTA'], standard:'Пользователь быстро находит подходящий вариант.', fields:[ctxField('catalogFilters','Фильтры','Табы / теги / сортировка','textarea'), ctxField('catalogCards','Карточки','Фото + категория + H3 + атрибуты + CTA','textarea')] },
-        { key:'catalog_lead_magnet', title:'3. Лид-магнит врезка', task:'Поймать тех, кто устал листать или не может выбрать.', checklist:['Вставляется после 3–6 карточки','Заголовок «Не знаете что выбрать?»','Кнопка консультации'], standard:'Есть мягкий захват для неопределившихся.', fields:[ctxField('catalogLeadMagnetPlace','Место вставки','После 3–6 карточки'), ctxField('catalogLeadMagnetTitle','Заголовок','Не знаете что выбрать?'), ctxField('catalogLeadMagnetButton','Кнопка','Получить консультацию')] },
+        { key:'catalog_lead_magnet', title:'3. Лид-магнит врезка', task:'Поймать тех, кто устал листать или не может выбрать.', checklist:['Вставляется после 3–6 карточки','H2: заголовок врезки','Кнопка консультации'], standard:'Есть мягкий захват для неопределившихся.', fields:[ctxField('catalogLeadMagnetPlace','Место вставки','После 3–6 карточки'), ctxField('catalogLeadMagnetTitle','H2: Заголовок врезки','Не знаете что выбрать?'), ctxField('catalogLeadMagnetButton','Кнопка','Получить консультацию')] },
         { key:'catalog_pagination', title:'4. Пагинация + перелинковка', task:'Техническая навигация и удержание, если категория не подошла.', checklist:['Показать ещё AJAX для UX','Числовая пагинация для роботов','Смотрите также: 3–4 смежные категории','Финальный CTA'], standard:'Навигация удобна человеку и понятна поисковым системам.', fields:[ctxField('catalogPagination','Пагинация','AJAX + числовая пагинация','textarea'), ctxField('catalogRelated','Смотрите также','3–4 смежные категории','textarea'), ctxField('catalogFinalCta','Финальный CTA','Если нужен')] }
       ]
     },
@@ -5695,7 +5698,7 @@ function v22RouteSectionHtml(card, row, pageIndex, section, open = false) {
 }
 
 function v22SeoSnippetSection(card, row, pageIndex, open = false) {
-  const section = { key:'seo_snippet', title:'SEO-сниппет', task:'Собрать поисковый вид страницы из H1, Title и Description.', checklist:['Title отражает смысл страницы','Description объясняет ценность и действие','Snippet читается как короткое предложение'], standard:'Страница понятно выглядит в поиске и не требует отдельного блока сниппета.', fields:[rowField('title','Title','20–90 знаков. SEO-заголовок страницы.'), rowField('description','Description','50–200 знаков. SEO-описание страницы.','textarea')] };
+  const section = { key:'seo_snippet', title:'SEO-сниппет', task:'Собрать поисковый вид страницы из H1, Title и Description.', checklist:['Title отражает смысл страницы','Description объясняет ценность и действие','Snippet читается как короткое предложение'], standard:'Страница понятно выглядит в поиске и не требует отдельного блока сниппета.', fields:[rowField('title','Title','20–90 знаков. SEO-заголовок страницы.'), rowField('description','Description','70–155 знаков. SEO-описание страницы.','textarea'), ctxField('seoKeywords','Ключевые слова','Основные ключевые слова для страницы.')] };
   const snippet = snippetForPage(row);
   const base = v22RouteSectionHtml(card, row, pageIndex, section, open);
   return base.replace('</div>\n  </details>', `<div class="snippet-preview route-snippet v22-snippet-preview full"><strong>Snippet</strong><span>${snippet ? escapeHtml(snippet) : 'Соберётся из H1, Title, Description, смысла и оффера страницы.'}</span></div></div>\n  </details>`);
@@ -5754,7 +5757,7 @@ pageStructureCardHtml = function(card, row, pageIndex, repeatable) {
       ${repeatable ? `<button class="small-btn danger-mini" data-remove-gate1-page="${escapeAttr(card.id)}" data-index="${pageIndex}" ${rowsSafeLength(card.pageRows) <= 1 ? 'disabled' : ''}>×</button>` : ''}
     </div>
     <div class="route-top-grid v22-route-top-grid">
-      <label class="route-field route-url"><span>URL</span><small>Адрес страницы, которую проверяем.</small><input list="projectUrlOptions" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
+      <label class="route-field route-url"><span>URL${g0HintBtnHtml('audit_url')}</span><small>Адрес страницы, которую проверяем.</small><input list="projectUrlOptions" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
       <div class="route-orientir"><strong>Краткий ориентир</strong><span>${escapeHtml(template.orientir || pageRouteOrientir(card, row))}</span></div>
     </div>
     <div class="route-sections v22-route-sections">${v22RouteSectionsHtml(card, row, pageIndex)}</div>
@@ -6553,7 +6556,8 @@ function bindUnitEconomicsRouteEvents() {
   });
   document.querySelectorAll('[data-unit-toggle-section]').forEach(btn => btn.addEventListener('click', () => {
     const route = ensureUnitEconomicsState();
-    route.openSection = route.openSection === btn.dataset.unitToggleSection ? '' : btn.dataset.unitToggleSection;
+    route.openSections = route.openSections || {};
+    route.openSections[btn.dataset.unitToggleSection] = !route.openSections[btn.dataset.unitToggleSection];
     saveState();
     renderGate();
   }));
@@ -9003,7 +9007,7 @@ const CURRENT_OFFERS_CTA_GLOBAL_FIELDS = [
     sharedKey: 'current_offers',
     label: 'Текущие офферы',
     hint: 'какие предложения сейчас используются',
-    fallbackKeys: ['offer', 'afterOffer'],
+    fallbackKeys: [],
     downstream: 'Gate 1 -> Боль / JTBD / Офер, аудит сайта, страницы, лендинги, объявления',
     route: 'Gate 1 / Gate 3 / Gate 4'
   },
@@ -9012,7 +9016,7 @@ const CURRENT_OFFERS_CTA_GLOBAL_FIELDS = [
     sharedKey: 'current_ctas',
     label: 'Текущие CTA',
     hint: 'призывы на сайте, в рекламе, баннерах, мессенджерах',
-    fallbackKeys: ['mainCta', 'afterMainCta'],
+    fallbackKeys: [],
     downstream: 'hero-блоки, формы, кнопки, баннеры, объявления, email / push / Telegram',
     route: 'Gate 1 / Gate 4'
   },
@@ -9021,7 +9025,7 @@ const CURRENT_OFFERS_CTA_GLOBAL_FIELDS = [
     sharedKey: 'primary_target_action',
     label: 'Основное целевое действие',
     hint: 'купить / оставить заявку / написать / позвонить / забронировать',
-    fallbackKeys: ['mainCta'],
+    fallbackKeys: [],
     downstream: 'цели Метрики, конверсионные блоки, thank you page, отчеты, рекламные кампании',
     route: 'Gate 2 / Gate 4 / Gate 5'
   }
@@ -9244,12 +9248,10 @@ const GATE0_PASSPORT_V116_BLOCKS = {
     instruction: 'Инструменты: бриф, интервью, CRM, сайт, отдел продаж. На выходе должны быть три базовых смысла проекта: продукт, сегмент, результат.',
     context: ['name','niche','website','geography'],
     fields: [
-      { key: 'whatSell', sharedKey: 'что_продаем', label: 'Что продаем', hint: 'продукт / услуга / направление', route: 'Gate 1, Gate 3, Gate 4', downstream: 'оффер, семантика, юнит-экономика, кампании, календарь, отчеты', fallback: ['niche','offer'] },
+      { key: 'whatSell', sharedKey: 'что_продаем', label: 'Что продаем', hint: 'продукт / услуга / направление', route: 'Gate 1, Gate 3, Gate 4', downstream: 'оффер, семантика, юнит-экономика, кампании, календарь, отчеты', fallback: [] },
       { key: 'targetSegment', sharedKey: 'кому_продаем', label: 'Кому продаем', hint: 'основной сегмент / аудитория', route: 'Gate 1, Gate 3, Gate 4', downstream: 'ЦА, сегменты, персоны, рекламные группы, коллаборации', fallback: [] },
-      { key: 'clientResult', sharedKey: 'ради_какого_результата', label: 'Ради какого результата', hint: 'какую задачу клиент хочет решить', route: 'Gate 1, Gate 3, Gate 4', downstream: 'JTBD, офер, лендинги, объявления, CTA', fallback: ['afterDescription'] }
+      { key: 'clientResult', sharedKey: 'ради_какого_результата', label: 'Ради какого результата', hint: 'какую задачу клиент хочет решить', route: 'Gate 1, Gate 3, Gate 4', downstream: 'JTBD, офер, лендинги, объявления, CTA', fallback: [] }
     ],
-    tags: { key: 'productKeywords', sharedKey: 'product_keywords', label: 'Ключевые слова продукта', placeholder: 'подарок ручной работы, авторская мастерская, под заказ' },
-    proof: { key: 'productSegmentProof', sharedKey: 'product_segment_proof', label: 'Доказательство', placeholder: 'бриф / интервью / CRM / сайт / отдел продаж' },
     transfer: 'Глобальные поля · используются в Gate 1, Gate 3, Gate 4'
   },
   'Психологическая декомпозиция оффера': {
@@ -9264,8 +9266,6 @@ const GATE0_PASSPORT_V116_BLOCKS = {
       { key: 'offerIrrationalDriver', sharedKey: 'offer_irrational_driver', label: 'Иррациональный драйвер', hint: 'страх, желание, статус, контроль, уверенность', route: 'Gate 1, Gate 3, Gate 4', downstream: 'офер, hero-экран, боли, креативы', fallback: [] },
       { key: 'offerSocialMechanism', sharedKey: 'offer_social_mechanism', label: 'Социальный механизм', hint: 'как клиент объясняет покупку другим', route: 'Gate 1, Gate 3, Gate 4', downstream: 'отзывы, кейсы, соцдоказательство, PR', fallback: [] }
     ],
-    tags: { key: 'offerPsychTags', sharedKey: 'offer_psych_tags', label: 'Ключевые мотивы', placeholder: 'статус, забота, уникальность, контроль' },
-    proof: { key: 'offerPsychProof', sharedKey: 'offer_psych_proof', label: 'Доказательство', placeholder: 'интервью / отзывы / CRM / конкуренты / фокус-группа' },
     transfer: 'Глобальные поля оффера · используются в Gate 1, Gate 3, Gate 4'
   },
   'Текущее позиционирование и УТП': {
@@ -9276,12 +9276,10 @@ const GATE0_PASSPORT_V116_BLOCKS = {
     instruction: 'Инструменты: сайт, посадочные, презентации, рекламные материалы, скрипты продаж. На выходе нужны стартовая формулировка, позиционирование и УТП.',
     context: ['name','niche','geography','whatSell','targetSegment','clientResult','offerRationalCoverage','offerIrrationalDriver','offerSocialMechanism'],
     fields: [
-      { key: 'positioningStartFormula', sharedKey: 'positioning_start_formula', label: 'Стартовая формулировка', hint: 'как проект сейчас коротко описывает себя', route: 'Gate 1, Gate 3, Gate 4', downstream: 'описание проекта, главная, презентации, отчеты', fallback: ['description','name'] },
+      { key: 'positioningStartFormula', sharedKey: 'positioning_start_formula', label: 'Стартовая формулировка', hint: 'как проект сейчас коротко описывает себя', route: 'Gate 1, Gate 3, Gate 4', downstream: 'описание проекта, главная, презентации, отчеты', fallback: [] },
       { key: 'positioningStatement', sharedKey: 'positioning_statement', label: 'Позиционирование', hint: 'для кого / категория / отличие', route: 'Gate 1, Gate 3, Gate 4', downstream: 'аудит сайта, ЦА, конкуренты, JTBD, сегменты', fallback: [] },
-      { key: 'usp', sharedKey: 'usp', label: 'УТП', hint: 'главное обещание выбора', route: 'Gate 1, Gate 3, Gate 4', downstream: 'hero-экран, офер, объявления, CTA, лендинги', fallback: ['afterUsp'] }
+      { key: 'usp', sharedKey: 'usp', label: 'УТП', hint: 'главное обещание выбора', route: 'Gate 1, Gate 3, Gate 4', downstream: 'hero-экран, офер, объявления, CTA, лендинги', fallback: [] }
     ],
-    tags: { key: 'positioningMeaningTags', sharedKey: 'positioning_meaning_tags', label: 'Ключевые смыслы позиционирования', placeholder: 'авторская работа, подарок с характером, ручная эстетика' },
-    proof: { key: 'positioningProof', sharedKey: 'positioning_proof', label: 'Доказательство', placeholder: 'сайт / посадочные / презентации / рекламные материалы / скрипты' },
     transfer: 'Глобальные поля позиционирования · используются в Gate 1, Gate 3, Gate 4'
   },
   'Текущие офферы и CTA': {
@@ -9292,12 +9290,10 @@ const GATE0_PASSPORT_V116_BLOCKS = {
     instruction: 'Источники: сайт, посадочные, объявления, баннеры, мессенджеры, скрипты продаж. На выходе нужны офферы, CTA и главное целевое действие.',
     context: ['whatSell','targetSegment','clientResult','positioningStartFormula','positioningStatement','usp','offerRationalCoverage','offerIrrationalDriver','offerSocialMechanism'],
     fields: [
-      { key: 'currentOffers', sharedKey: 'current_offers', label: 'Текущие офферы', hint: 'предложения, акции, бонусы, сценарии покупки', route: 'Gate 1, Gate 3, Gate 4', downstream: 'офер, JTBD, аудит страниц, лендинги, объявления', fallback: ['offer','afterOffer'] },
-      { key: 'currentCtas', sharedKey: 'current_ctas', label: 'Текущие CTA', hint: 'купить, заказать, написать, рассчитать', route: 'Gate 1, Gate 4', downstream: 'hero-блоки, формы, кнопки, баннеры, email, push, Telegram', fallback: ['mainCta','afterMainCta'] },
-      { key: 'primaryTargetAction', sharedKey: 'primary_target_action', label: 'Основное целевое действие', hint: 'главное действие клиента', route: 'Gate 2, Gate 4, Gate 5', downstream: 'цели Метрики, конверсионные блоки, thank you page, отчеты', fallback: ['mainCta'] }
+      { key: 'currentOffers', sharedKey: 'current_offers', label: 'Текущие офферы', hint: 'предложения, акции, бонусы, сценарии покупки', route: 'Gate 1, Gate 3, Gate 4', downstream: 'офер, JTBD, аудит страниц, лендинги, объявления', fallback: [] },
+      { key: 'currentCtas', sharedKey: 'current_ctas', label: 'Текущие CTA', hint: 'купить, заказать, написать, рассчитать', route: 'Gate 1, Gate 4', downstream: 'hero-блоки, формы, кнопки, баннеры, email, push, Telegram', fallback: [] },
+      { key: 'primaryTargetAction', sharedKey: 'primary_target_action', label: 'Основное целевое действие', hint: 'главное действие клиента', route: 'Gate 2, Gate 4, Gate 5', downstream: 'цели Метрики, конверсионные блоки, thank you page, отчеты', fallback: [] }
     ],
-    tags: { key: 'offerCtaActionTags', sharedKey: 'offer_cta_action_tags', label: 'Ключевые действия', placeholder: 'купить из каталога, сделать под заказ, написать' },
-    proof: { key: 'currentOffersCtaProof', sharedKey: 'current_offers_cta_proof', label: 'Доказательство', placeholder: 'сайт / объявления / баннеры / мессенджеры / скрипты' },
     transfer: 'Глобальные офферы и CTA · используются в Gate 1, Gate 4, Gate 5'
   },
   'Текущая семантика и поисковый фокус': {
@@ -9311,10 +9307,7 @@ const GATE0_PASSPORT_V116_BLOCKS = {
       { key: 'searchMainKeywords', sharedKey: 'search_main_keywords', label: 'Основные ключевые слова', hint: 'главные запросы', route: 'Gate 1, Gate 4', downstream: 'спрос, SEO, страницы, Title, H1, Description', fallback: [] },
       { key: 'searchPriorityClusters', sharedKey: 'search_priority_clusters', label: 'Приоритетные кластеры', hint: '3–7 направлений спроса', route: 'Gate 1, Gate 3, Gate 4', downstream: 'структура сайта, категории, услуги, рекламные группы', fallback: [] },
       { key: 'searchIrrelevantQueries', sharedKey: 'search_irrelevant_queries', label: 'Нерелевантные запросы', hint: 'что исключить', route: 'Gate 1, Gate 4', downstream: 'минус-фразы, исключения, фильтрация семантики', fallback: [] },
-      { key: 'searchFocusSummary', sharedKey: 'search_focus_summary', label: 'Итоговый поисковый фокус', hint: 'на чем держится спрос', route: 'Gate 1, Gate 3, Gate 4, Gate 5', downstream: 'стратегия, аудит сайта, рекламные кампании, отчеты', fallback: [] }
     ],
-    tags: { key: 'searchTags', sharedKey: 'search_tags', label: 'Поисковые теги', placeholder: 'подарки ручной работы, авторский декор, подарок под заказ' },
-    proof: { key: 'searchFocusProof', sharedKey: 'search_focus_proof', label: 'Доказательство', placeholder: 'Wordstat / Директ / Search Console / Вебмастер / SEO-отчет / таблица' },
     transfer: 'Глобальный поисковый фокус · используется в Gate 1, Gate 3, Gate 4, Gate 5'
   }
 };
@@ -9357,15 +9350,14 @@ function v116EnsureBlock(card, workspace = state) {
   card.instruction = def.instruction;
   card.evidenceFields = [
     ...def.fields.map(field => ({ key: field.sharedKey, label: field.label })),
-    { key: def.tags.sharedKey, label: def.tags.label },
-    { key: def.proof.sharedKey, label: def.proof.label }
+    ...(def.tags ? [{ key: def.tags.sharedKey, label: def.tags.label }] : [])
   ];
   def.fields.forEach(field => {
     const value = String(workspace.project[field.key] || workspace.sharedEvidence[field.sharedKey] || v116FallbackValue(field, workspace) || '').trim();
     workspace.project[field.key] = value;
     workspace.sharedEvidence[field.sharedKey] = value;
   });
-  [def.tags, def.proof].forEach(meta => {
+  [def.tags].filter(Boolean).forEach(meta => {
     const value = String(workspace.project[meta.key] || workspace.sharedEvidence[meta.sharedKey] || '').trim();
     workspace.project[meta.key] = value;
     workspace.sharedEvidence[meta.sharedKey] = value;
@@ -9384,8 +9376,7 @@ function v116Plain(card, workspace = state) {
   const def = v116PassportDef(card);
   if (!def) return '';
   const lines = def.fields.map(field => `${field.label}:\n${v116ReadValue(field, workspace)}`);
-  lines.push(`${def.tags.label}:\n${v116ReadMeta(def.tags, workspace)}`);
-  lines.push(`${def.proof.label}:\n${v116ReadMeta(def.proof, workspace)}`);
+  if (def.tags) lines.push(`${def.tags.label}:\n${v116ReadMeta(def.tags, workspace)}`);
   return lines.join('\n\n');
 }
 
@@ -9394,9 +9385,8 @@ function v116Status(card, workspace = state) {
   if (!def) return card?.status || 'not_started';
   const values = def.fields.map(field => String(v116ReadValue(field, workspace) || '').trim());
   const filled = values.filter(Boolean).length;
-  const proof = String(v116ReadMeta(def.proof, workspace) || '').trim();
   if (!filled) return 'not_started';
-  if (filled === def.fields.length && proof) return 'ready';
+  if (filled === def.fields.length) return 'ready';
   return 'in_progress';
 }
 
@@ -9406,12 +9396,7 @@ function v116PassportFieldCard(def, field) {
   return `<label class="passport-v116-field-card">
     <span class="passport-v116-field-title">${escapeHtml(field.label)}</span>
     <span class="passport-v116-field-hint">${escapeHtml(field.hint)}</span>
-    <input class="passport-v116-input ${filled ? 'is-filled' : 'is-empty'}" data-v116-block="${escapeAttr(def.key)}" data-v116-kind="main" data-v116-key="${escapeAttr(field.key)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(field.hint)}" />
-    <span class="passport-v116-mini-row">
-      <span class="mini-indicator ${filled ? 'is-saved' : ''}">${filled ? 'Глобальное поле' : 'Не заполнено'}</span>
-      <span class="mini-indicator">${escapeHtml(field.route)}</span>
-      <span class="mini-indicator">${filled ? 'Обновлено' : 'Ожидает данных'}</span>
-    </span>
+    <textarea class="passport-v116-input passport-v116-autosize ${filled ? 'is-filled' : 'is-empty'}" data-v116-block="${escapeAttr(def.key)}" data-v116-kind="main" data-v116-key="${escapeAttr(field.key)}" placeholder="${escapeAttr(field.hint)}" rows="1">${escapeHtml(value)}</textarea>
   </label>`;
 }
 
@@ -9419,39 +9404,21 @@ function v116PassportFieldsHtml(card) {
   const def = v116PassportDef(card);
   if (!def) return '';
   v116EnsureBlock(card, state);
-  const context = v116ContextRows(def, state);
   return `<div class="passport-v116">
     <div class="passport-v116-topline">
       <div>
-        <div class="passport-v116-kicker">Паспортная ячейка проекта</div>
         <div class="passport-v116-orient">${escapeHtml(def.orient)}</div>
       </div>
       <span class="passport-v116-status">${escapeHtml(STATUS_LABELS[v116Status(card, state)] || v116Status(card, state))}</span>
     </div>
-    <details class="passport-v116-context">
-      <summary>Автоконтекст проекта: свернуто</summary>
-      <div class="passport-v116-context-grid">
-        ${context.length ? context.map(([label, value]) => `<span>${escapeHtml(label)}: <b>${escapeHtml(value)}</b></span>`).join('') : '<span>Связанные данные пока не заполнены.</span>'}
-      </div>
-    </details>
     <div class="passport-v116-grid">
       ${def.fields.map(field => v116PassportFieldCard(def, field)).join('')}
     </div>
-    <label class="passport-v116-tags">
+    ${def.tags ? `<label class="passport-v116-tags">
       <span class="passport-v116-field-title">${escapeHtml(def.tags.label)}</span>
       <span class="passport-v116-field-hint">Короткие слова, смыслы или теги. Через запятую.</span>
       <input class="passport-v116-input" data-v116-block="${escapeAttr(def.key)}" data-v116-kind="tags" value="${escapeAttr(v116ReadMeta(def.tags, state))}" placeholder="${escapeAttr(def.tags.placeholder)}" />
-    </label>
-    <label class="passport-v116-proof">
-      <span class="passport-v116-field-title">${escapeHtml(def.proof.label)}</span>
-      <span class="passport-v116-field-hint">Один источник, который подтверждает текущую фиксацию.</span>
-      <input class="passport-v116-input" data-v116-block="${escapeAttr(def.key)}" data-v116-kind="proof" value="${escapeAttr(v116ReadMeta(def.proof, state))}" placeholder="${escapeAttr(def.proof.placeholder)}" />
-    </label>
-    <div class="passport-v116-transfer">
-      <span>${escapeHtml(def.transfer)}</span>
-      <b>Передача автоматическая</b>
-    </div>
-    <div class="passport-v116-formula">${escapeHtml(def.formula)}</div>
+    </label>` : ''}
   </div>`;
 }
 
@@ -9471,10 +9438,6 @@ function v116UpdatePassportInput(e) {
   if (kind === 'tags') {
     state.project[def.tags.key] = value;
     state.sharedEvidence[def.tags.sharedKey] = value;
-  }
-  if (kind === 'proof') {
-    state.project[def.proof.key] = value;
-    state.sharedEvidence[def.proof.sharedKey] = value;
   }
   const card = allCardsFromWorkspace(state).find(c => c.title === def.title);
   if (card) {
@@ -10407,20 +10370,6 @@ const CONTROL_FIXATION_FIELDS_V1111 = [
     label: 'Объект фиксации',
     hint: 'сайт / Gate / блок / кампания / отчёт',
     type: 'text'
-  },
-  {
-    key: 'controlFixationSnapshot',
-    sharedKey: 'control_fixation_snapshot',
-    label: 'Состояние на дату',
-    hint: 'короткий срез состояния на момент фиксации',
-    type: 'text'
-  },
-  {
-    key: 'controlFixationProof',
-    sharedKey: 'control_fixation_proof',
-    label: 'Доказательство',
-    hint: 'скрин / файл / отчёт / ссылка на срез',
-    type: 'text'
   }
 ];
 
@@ -10467,25 +10416,19 @@ function controlFixationStatusV1111(card, workspace = state) {
   if (!isControlFixationCardV1111(card)) return card?.status || 'not_started';
   const date = String(controlFixationReadV1111(CONTROL_FIXATION_FIELDS_V1111[0], workspace) || '').trim();
   const object = String(controlFixationReadV1111(CONTROL_FIXATION_FIELDS_V1111[1], workspace) || '').trim();
-  const snapshot = String(controlFixationReadV1111(CONTROL_FIXATION_FIELDS_V1111[2], workspace) || '').trim();
-  const proof = String(controlFixationReadV1111(CONTROL_FIXATION_FIELDS_V1111[3], workspace) || '').trim();
   if (!date) return 'not_started';
   if (controlFixationObjectLooksBrokenV1111(object)) return 'problem';
-  if (date && object && snapshot && proof) return 'ready';
+  if (date && object) return 'ready';
   return 'in_progress';
 }
 
 function controlFixationFieldsHtmlV1111(card) {
   ensureControlFixationV1111(card, state);
-  const dateField = CONTROL_FIXATION_FIELDS_V1111[0];
-  const objectField = CONTROL_FIXATION_FIELDS_V1111[1];
-  const snapshotField = CONTROL_FIXATION_FIELDS_V1111[2];
-  const proofField = CONTROL_FIXATION_FIELDS_V1111[3];
   const status = controlFixationStatusV1111(card, state);
-  const fieldHtml = (field, cls = '') => {
+  const fieldHtml = (field) => {
     const value = controlFixationReadV1111(field, state);
     const type = field.type === 'date' ? 'date' : 'text';
-    return `<label class="control-date-field ${cls}">
+    return `<label class="control-date-field">
       <span class="control-date-title">${escapeHtml(field.label)}</span>
       <span class="control-date-hint">${escapeHtml(field.hint)}</span>
       <input type="${type}" data-control-fixation-key="${escapeAttr(field.key)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(field.hint)}" />
@@ -10494,24 +10437,12 @@ function controlFixationFieldsHtmlV1111(card) {
   return `<div class="control-date-v1111">
     <div class="control-date-head">
       <div>
-        <div class="control-date-kicker">Паспортная фиксация состояния</div>
         <div class="control-date-orient">Зафиксируйте состояние проекта на конкретную дату, чтобы потом сравнить изменения.</div>
       </div>
       <span class="status-pill status-${escapeAttr(status)}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
     </div>
-    <details class="control-date-instruction">
-      <summary>Показать инструкцию</summary>
-      <div>${escapeHtml(controlFixationInstructionV1111())}</div>
-    </details>
     <div class="control-date-grid">
-      ${fieldHtml(dateField, 'control-date-main')}
-      ${fieldHtml(objectField, 'control-date-main')}
-      ${fieldHtml(snapshotField, 'control-date-wide')}
-      ${fieldHtml(proofField, 'control-date-wide')}
-    </div>
-    <div class="control-date-transfer">
-      <span>Глобальное поле · используется для будущего сравнения до / после</span>
-      <b>дата → объект → состояние → доказательство → статус</b>
+      ${CONTROL_FIXATION_FIELDS_V1111.map(field => fieldHtml(field)).join('')}
     </div>
   </div>`;
 }
@@ -10580,7 +10511,3515 @@ bindCardInputs = function() {
 
 (function markV1111() {
   const re = /v0\.\d+|v1\.0|v1\.1(?:\.\d+)?/g;
-  document.title = document.title.replace(re, 'v1.1.11');
-  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.11'); });
-  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.1.11'); });
+  document.title = document.title.replace(re, 'v1.2.0');
+  document.querySelectorAll('.launcher-kicker').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.2.0'); });
+  document.querySelectorAll('.eyebrow').forEach(el => { el.textContent = el.textContent.replace(re, 'v1.2.0'); });
 })();
+
+/* v1.2.0 — Gate 0 vertical layout */
+const __guruPrevRenderGateTableV120 = renderGateTable;
+renderGateTable = function(gate, cards) {
+  if (gate && gate.id === 'gate-0') {
+    recalculateAllStatuses(state);
+    els.contentArea.innerHTML = `<div class="gate0-vertical">${cards.map(c => `
+      <section class="gate0-card" data-card-row="${c.id}">
+        <div class="gate0-card-head">
+          <div class="gate0-card-title">${escapeHtml(c.title)}</div>
+          <span class="gate0-card-status status-${c.status}">${STATUS_LABELS[c.status] || c.status}</span>
+        </div>
+        ${instructionToggleHtml(c)}
+        <div class="gate0-card-body">${cardUserFieldsHtml(c)}</div>
+      </section>`).join('')}</div>`;
+    bindCardInputs();
+    renderGateNav();
+    return;
+  }
+  __guruPrevRenderGateTableV120(gate, cards);
+};
+
+function gate0RefreshStatuses() {
+  document.querySelectorAll('.gate0-card[data-card-row]').forEach(section => {
+    const card = findCard(section.dataset.cardRow);
+    if (!card) return;
+    const badge = section.querySelector('.gate0-card-status');
+    if (badge) {
+      badge.className = 'gate0-card-status status-' + card.status;
+      badge.textContent = STATUS_LABELS[card.status] || card.status;
+    }
+    if (isStartupSummaryCard(card)) {
+      const body = section.querySelector('.gate0-card-body');
+      if (body) body.innerHTML = `<div class="field-row">${gate0SummaryHtml()}</div>`;
+    }
+  });
+  renderGateNav();
+}
+
+const __guruPrevFlashSavingV120 = flashSaving;
+flashSaving = function() {
+  __guruPrevFlashSavingV120();
+  if (activeGateId === 'gate-0') gate0RefreshStatuses();
+};
+
+function autosizeTextarea(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+const __guruPrevBindCardInputsV120 = bindCardInputs;
+bindCardInputs = function() {
+  __guruPrevBindCardInputsV120();
+  document.querySelectorAll('[data-cr-meta-card-id]').forEach(input => {
+    input.addEventListener('input', updateCurrentResultMeta);
+    input.addEventListener('change', updateCurrentResultMeta);
+  });
+  document.querySelectorAll('.passport-v116-autosize').forEach(ta => {
+    autosizeTextarea(ta);
+    ta.addEventListener('input', () => autosizeTextarea(ta));
+  });
+};
+
+/* v1.2.0 — Проблемы и ограничения на старте: сводка Gate 0 */
+function gate0SummaryHtml() {
+  const gate = state?.gates?.find(g => g.id === 'gate-0');
+  if (!gate) return '<div class="empty">Gate 0 не найден.</div>';
+  const cards = gate.cards.filter(c => !isStartupSummaryCard(c));
+  const total = cards.length;
+  const ready = cards.filter(c => c.status === 'ready').length;
+  const inProgress = cards.filter(c => c.status === 'in_progress').length;
+  const notStarted = cards.filter(c => c.status === 'not_started').length;
+  const needsReview = cards.filter(c => c.status === 'needs_review' || c.status === 'problem').length;
+  return `<div class="gate0-summary-v2">
+    <div class="gate0-summary-stats">
+      <div class="gate0-stat"><span class="gate0-stat-value">${total}</span><span class="gate0-stat-label">блоков</span></div>
+      <div class="gate0-stat ready"><span class="gate0-stat-value">${ready}</span><span class="gate0-stat-label">готово</span></div>
+      <div class="gate0-stat progress"><span class="gate0-stat-value">${inProgress}</span><span class="gate0-stat-label">в работе</span></div>
+      <div class="gate0-stat empty-stat"><span class="gate0-stat-value">${notStarted}</span><span class="gate0-stat-label">не начато</span></div>
+      ${needsReview ? `<div class="gate0-stat review"><span class="gate0-stat-value">${needsReview}</span><span class="gate0-stat-label">внимание</span></div>` : ''}
+    </div>
+    <table class="cr-table">
+      <thead><tr><th>Блок</th><th>Статус</th><th>Заполненность</th></tr></thead>
+      <tbody>${cards.map(c => {
+        const statusLabel = STATUS_LABELS[c.status] || c.status;
+        const pct = c.status === 'ready' ? 100 : c.status === 'not_started' ? 0 : 50;
+        return `<tr>
+          <td class="cr-label">${escapeHtml(c.title)}</td>
+          <td><span class="gate0-summary-pill status-${c.status}">${escapeHtml(statusLabel)}</span></td>
+          <td><div class="gate0-summary-bar"><div class="gate0-summary-fill" style="width:${pct}%"></div></div><span class="gate0-summary-pct">${pct}%</span></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+const __guruPrevCardUserFieldsHtmlV120Summary = cardUserFieldsHtml;
+cardUserFieldsHtml = function(c) {
+  if (isStartupSummaryCard(c)) return `<div class="field-row">${gate0SummaryHtml()}</div>`;
+  return __guruPrevCardUserFieldsHtmlV120Summary(c);
+};
+
+const __guruPrevRecalcStatusV120Summary = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isStartupSummaryCard(card)) {
+    const gate = workspace?.gates?.find(g => g.id === 'gate-0');
+    if (!gate) { card.status = 'not_started'; return; }
+    const others = gate.cards.filter(c => !isStartupSummaryCard(c));
+    const ready = others.filter(c => c.status === 'ready').length;
+    const started = others.filter(c => c.status !== 'not_started').length;
+    if (!started) { card.status = 'not_started'; return; }
+    if (ready === others.length) { card.status = 'ready'; return; }
+    const needsReview = others.some(c => c.status === 'needs_review' || c.status === 'problem');
+    if (needsReview) { card.status = 'needs_review'; return; }
+    card.status = 'in_progress';
+    return;
+  }
+  __guruPrevRecalcStatusV120Summary(card, workspace);
+};
+
+/* v1.2.0 — Текущие каналы и рекламные материалы */
+const CHANNEL_ITEMS_CONFIG = [
+  { channel: 'Платная реклама', platform: 'Яндекс Директ', type: 'Поиск', materials: 'объявления, быстрые ссылки, уточнения' },
+  { channel: 'Платная реклама', platform: 'Яндекс Директ', type: 'РСЯ', materials: 'баннеры, объявления, видео' },
+  { channel: 'Платная реклама', platform: 'Google Ads', type: 'Search', materials: 'RSA, assets, keywords' },
+  { channel: 'Платная реклама', platform: 'Google Ads', type: 'Display', materials: 'баннеры, responsive display ads' },
+  { channel: 'Органика', platform: 'SEO', type: 'Страницы сайта', materials: 'title, description, H1, тексты' },
+  { channel: 'Геосервисы', platform: 'Яндекс Карты', type: 'Карточка организации', materials: 'фото, отзывы, описание, акции' },
+  { channel: 'Геосервисы', platform: 'Google Business Profile', type: 'Карточка организации', materials: 'фото, отзывы, описание' },
+  { channel: 'SMM', platform: 'VK / Telegram / другое', type: 'Контент / посевы', materials: 'посты, баннеры, видео' }
+];
+
+function isChannelsCard(card) {
+  return card?.title === 'Текущие каналы и рекламные материалы';
+}
+
+function ensureChannelItems(card) {
+  const prev = new Map((card.channelItems || []).map(item => [item.platform + '|' + item.type, item]));
+  card.channelItems = CHANNEL_ITEMS_CONFIG.map(cfg => {
+    const old = prev.get(cfg.platform + '|' + cfg.type) || {};
+    return { ...cfg, status: old.status || '' };
+  });
+  return card.channelItems;
+}
+
+function channelsHtml(card) {
+  const items = ensureChannelItems(card);
+  return `<div class="channels-v2">
+    <table class="cr-table">
+      <thead><tr><th>Канал</th><th>Платформа</th><th>Тип</th><th>Материалы</th><th>Статус</th></tr></thead>
+      <tbody>${items.map((item, i) => `<tr>
+        <td class="cr-label">${escapeHtml(item.channel)}</td>
+        <td>${escapeHtml(item.platform)}</td>
+        <td>${escapeHtml(item.type)}</td>
+        <td class="channels-materials">${escapeHtml(item.materials)}</td>
+        <td><select data-channel-card-id="${escapeAttr(card.id)}" data-channel-index="${i}">
+          <option value="" ${!item.status ? 'selected' : ''}>Выбрать</option>
+          <option value="active" ${item.status === 'active' ? 'selected' : ''}>Активен</option>
+          <option value="planned" ${item.status === 'planned' ? 'selected' : ''}>Планируется</option>
+          <option value="inactive" ${item.status === 'inactive' ? 'selected' : ''}>Не используется</option>
+        </select></td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function updateChannelItem(e) {
+  const card = findCard(e.target.dataset.channelCardId);
+  if (!card) return;
+  const index = Number(e.target.dataset.channelIndex);
+  ensureChannelItems(card);
+  if (card.channelItems[index]) card.channelItems[index].status = e.target.value;
+  recalculateStatusForCard(card);
+  flashSaving();
+}
+
+const __guruPrevCardUserFieldsHtmlV120Channels = cardUserFieldsHtml;
+cardUserFieldsHtml = function(c) {
+  if (isChannelsCard(c)) return `<div class="field-row">${channelsHtml(c)}</div>`;
+  return __guruPrevCardUserFieldsHtmlV120Channels(c);
+};
+
+const __guruPrevRecalcStatusV120Channels = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isChannelsCard(card)) {
+    const items = ensureChannelItems(card);
+    const chosen = items.filter(i => i.status);
+    if (!chosen.length) { card.status = 'not_started'; return; }
+    if (chosen.length === items.length) { card.status = 'ready'; return; }
+    card.status = 'in_progress';
+    return;
+  }
+  __guruPrevRecalcStatusV120Channels(card, workspace);
+};
+
+const __guruPrevIsSystemSpecialV120Channels = isSystemSpecialCard;
+isSystemSpecialCard = function(card) {
+  return isChannelsCard(card) || __guruPrevIsSystemSpecialV120Channels(card);
+};
+
+const __guruPrevBindV120Channels = bindCardInputs;
+bindCardInputs = function() {
+  __guruPrevBindV120Channels();
+  document.querySelectorAll('[data-channel-card-id]').forEach(el => {
+    el.addEventListener('change', updateChannelItem);
+  });
+};
+
+/* ================================================================
+   v1.3.0 — Gate 1 Аналитика: дизайн-система ГУРУ (Брокман)
+   Одна колонка, max-width 820px, чистые карточки, цветовая индикация
+   ================================================================ */
+
+const __guruPrevRenderGate1AccordionV130 = renderGate1Accordion;
+renderGate1Accordion = function(gate, cards) {
+  const sections = getGate1Sections(gate, cards);
+  const accState = getGate1AccordionState();
+  const queryActive = els.searchInput.value.trim() || els.statusFilter.value !== 'all';
+  els.contentArea.innerHTML = `<div class="g1-redesign">
+    ${sections.map(section => {
+      const sectionOpen = Boolean(accState.subblocks[section.key]);
+      const status = section.key === 'demand_semantics' ? getDemandRouteStatus()
+        : section.key === 'pain_jtbd_offer' ? getPainOfferStatus()
+        : section.key === 'unit_economics' ? getUnitEconomicsStatus()
+        : getSectionStatus(section.allInnerCards);
+      const progressText = section.key === 'demand_semantics' ? getDemandProgressText()
+        : section.key === 'pain_jtbd_offer' ? getPainOfferProgressText()
+        : section.key === 'unit_economics' ? getUnitEconomicsProgressText()
+        : getSectionProgressText(section.allInnerCards);
+      const displayCards = queryActive ? section.filteredInnerCards : section.allInnerCards;
+      return `<section class="g1-section ${sectionOpen ? 'is-open' : ''}">
+        <button class="g1-section-header" data-gate1-toggle-section="${escapeAttr(section.key)}">
+          <span class="g1-section-left">
+            <span class="g1-section-title">${escapeHtml(section.title)}</span>
+            <span class="g1-section-progress">${escapeHtml(progressText)}</span>
+          </span>
+          <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+          <span class="g1-section-toggle">${sectionOpen ? 'Закрыть' : 'Открыть'}</span>
+        </button>
+        ${sectionOpen ? `<div class="g1-section-body">
+          ${section.key === 'demand_semantics' ? g1RenderDemand()
+            : section.key === 'pain_jtbd_offer' ? g1RenderPainOffer()
+            : section.key === 'unit_economics' ? g1RenderUnitEconomics()
+            : (displayCards.length ? displayCards.map(card => g1CardHtml(card)).join('') : '<div class="g1-empty">По текущему фильтру ничего не найдено.</div>')}
+        </div>` : ''}
+      </section>`;
+    }).join('')}
+  </div>`;
+  bindGate1Accordion();
+  bindDemandRouteEvents();
+  bindPainOfferRouteEvents();
+  bindUnitEconomicsRouteEvents();
+  bindCardInputs();
+  recalculateAllStatuses(state);
+  renderGateNav();
+};
+
+function g1CardHtml(card) {
+  const accState = getGate1AccordionState();
+  const isOpen = Boolean(accState.cards[card.id]);
+  return `<article class="g1-card ${isOpen ? 'is-open' : ''}" data-card="${escapeAttr(card.id)}">
+    <button class="g1-card-header" data-gate1-toggle-card="${escapeAttr(card.id)}">
+      <span class="g1-card-title">${escapeHtml(card.title)}</span>
+      <span class="status-pill status-${card.status}">${STATUS_LABELS[card.status] || card.status}</span>
+      <span class="g1-section-toggle">${isOpen ? 'Свернуть' : 'Раскрыть'}</span>
+    </button>
+    ${isOpen ? `<div class="g1-card-body">
+      ${instructionToggleHtml(card)}
+      <div class="card-fields">
+        ${cardUserFieldsHtml(card)}
+      </div>
+    </div>` : ''}
+  </article>`;
+}
+
+function g1FieldInput(dataAttr, name, label, value, placeholder, type) {
+  const filled = String(value || '').trim();
+  const cls = filled ? 'is-filled' : 'is-empty';
+  if (type === 'textarea') {
+    return `<label class="g1-field"><span>${escapeHtml(label)}</span><textarea class="g1-input ${cls}" ${dataAttr}="${escapeAttr(name)}" placeholder="${escapeAttr(placeholder)}">${escapeHtml(value || '')}</textarea></label>`;
+  }
+  if (type === 'select') return '';
+  return `<label class="g1-field"><span>${escapeHtml(label)}</span><input class="g1-input ${cls}" ${dataAttr}="${escapeAttr(name)}" value="${escapeAttr(value || '')}" placeholder="${escapeAttr(placeholder)}" /></label>`;
+}
+
+function g1RenderDemand() {
+  const route = ensureDemandRouteState();
+  const status = getDemandRouteStatus();
+  const issues = demandChecks();
+  const openStep = route.openStep || firstIncompleteDemandStepKey(route);
+  const groups = route.groups || [];
+  return `<div class="g1-route">
+    <div class="g1-card">
+      <div class="g1-card-header-static">
+        <span class="g1-card-title">Параметры кампании</span>
+        <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+      </div>
+      <div class="g1-card-body">
+        <div class="g1-fields-grid">
+          ${g1FieldInput('data-demand-field', 'promoted', 'Что продвигаем', route.promoted, 'продукт / услуга', 'text')}
+          ${g1FieldInput('data-demand-field', 'excluded', 'Что не продвигаем', route.excluded, 'мусор, вакансии, обучение', 'text')}
+          ${g1FieldInput('data-demand-field', 'geo', 'Гео', route.geo, 'город / регион / страна', 'text')}
+          ${g1FieldInput('data-demand-field', 'language', 'Язык', route.language, 'если нужен для Google', 'text')}
+          <label class="g1-field"><span>Рекламная система</span><select class="g1-input is-filled" data-demand-field="adSystem">
+            <option value="yandex" ${route.adSystem === 'yandex' ? 'selected' : ''}>Яндекс</option>
+            <option value="google" ${route.adSystem === 'google' ? 'selected' : ''}>Google</option>
+            <option value="both" ${route.adSystem === 'both' ? 'selected' : ''}>Яндекс + Google</option>
+          </select></label>
+          ${g1FieldInput('data-demand-field', 'goal', 'Цель', route.goal, 'заявка / звонок / покупка', 'text')}
+          ${g1FieldInput('data-demand-field', 'landing', 'Посадочная', route.landing, 'URL страницы', 'text')}
+          ${g1FieldInput('data-demand-field', 'targetCpa', 'Целевой CPL / CPA', route.targetCpa, 'если известен', 'text')}
+        </div>
+      </div>
+    </div>
+    ${DEMAND_ROUTE_STEPS.map(step => {
+      const data = route.steps?.[step.key] || {};
+      const filled = step.fields.some(([key]) => String(data[key] || '').trim());
+      const isOpen = openStep === step.key;
+      return `<div class="g1-card ${isOpen ? 'is-open' : ''}">
+        <button class="g1-card-header" data-demand-toggle-step="${escapeAttr(step.key)}">
+          <span class="g1-card-title">${escapeHtml(step.title)}</span>
+          <span class="status-pill status-${filled ? 'ready' : 'not_started'}">${filled ? 'Заполнено' : 'Не начато'}</span>
+          <span class="g1-section-toggle">${isOpen ? 'Свернуть' : 'Раскрыть'}</span>
+        </button>
+        ${isOpen ? `<div class="g1-card-body">
+          <p class="g1-task">${escapeHtml(step.task)}</p>
+          <div class="g1-fields-grid">
+            ${step.fields.map(([key, label]) => `<label class="g1-field"><span>${escapeHtml(label)}</span><textarea class="g1-input ${String(data[key] || '').trim() ? 'is-filled' : 'is-empty'}" data-demand-step="${escapeAttr(step.key)}" data-demand-step-field="${escapeAttr(key)}" placeholder="результат шага">${escapeHtml(data[key] || '')}</textarea></label>`).join('')}
+          </div>
+        </div>` : ''}
+      </div>`;
+    }).join('')}
+    <div class="g1-card">
+      <div class="g1-card-header-static">
+        <span class="g1-card-title">Финальная таблица запуска</span>
+        <button class="small-btn" data-add-demand-group>+ Добавить группу</button>
+      </div>
+      <div class="g1-card-body">
+        <div class="table-scroll"><table class="mini-table typed-table demand-table">
+          <thead><tr><th>Группа</th><th>Тип</th><th>Интент</th><th>Посадочная</th><th>Ключи</th><th>Минусы</th><th>Аудитория</th><th>Объявление</th><th>Дополнения</th><th>CPA</th><th>Статус</th><th></th></tr></thead>
+          <tbody>${groups.map((group, index) => demandGroupRowHtml(group, index, route)).join('') || `<tr><td colspan="12" class="muted">Добавьте первую группу.</td></tr>`}</tbody>
+        </table></div>
+      </div>
+    </div>
+    <div class="g1-card g1-checks ${issues.length ? '' : 'is-ok'}">
+      <div class="g1-card-header-static"><span class="g1-card-title">Автоматические проверки</span></div>
+      <div class="g1-card-body">
+        ${issues.length ? issues.map(issue => `<div class="demand-check ${issue.level}">${escapeHtml(issue.text)}</div>`).join('') : '<div class="demand-check ready">Критичных ошибок нет.</div>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+function g1RenderPainOffer() {
+  const route = ensurePainOfferState();
+  const status = getPainOfferStatus();
+  const issues = painOfferChecks();
+  route.openSections = route.openSections || {};
+  const hasAnyOpen = Object.values(route.openSections).some(Boolean);
+  return `<div class="g1-route">
+    <div class="g1-card">
+      <div class="g1-card-header-static">
+        <span class="g1-card-title">Параметры маршрута</span>
+        <span class="status-pill status-${status}">${STATUS_LABELS[status] || status}</span>
+      </div>
+      <div class="g1-card-body">
+        <div class="g1-fields-grid">
+          ${g1FieldInput('data-pain-field', 'product', 'Продукт / услуга', route.product, 'что анализируем', 'text')}
+          ${g1FieldInput('data-pain-field', 'landing', 'Посадочная / проект', route.landing, 'к чему относится офер', 'text')}
+          ${g1FieldInput('data-pain-field', 'mainSegment', 'Главный сегмент', route.mainSegment, 'для кого делаем', 'text')}
+          ${g1FieldInput('data-pain-field', 'finalOffer', 'Финальный офер', route.finalOffer, 'главный результат блока', 'textarea')}
+        </div>
+      </div>
+    </div>
+    ${PAIN_OFFER_SECTIONS.map(item => {
+      const data = route.sections?.[item.key] || {};
+      const sStatus = painSectionStatus(item);
+      const isOpen = !!route.openSections[item.key];
+      return `<div class="g1-card ${isOpen ? 'is-open' : ''}">
+        <button class="g1-card-header" data-pain-toggle-section="${escapeAttr(item.key)}">
+          <span class="g1-card-title">${escapeHtml(item.title)}</span>
+          <span class="status-pill status-${sStatus}">${STATUS_LABELS[sStatus] || sStatus}</span>
+        </button>
+        ${isOpen ? `<div class="g1-card-body">
+          <p class="g1-task">${escapeHtml(item.orient)}</p>
+          <div class="g1-fields-grid">
+            ${item.fields.map(([key, label]) => `<label class="g1-field"><span>${escapeHtml(label)}</span><textarea class="g1-input ${String(data[key] || '').trim() ? 'is-filled' : 'is-empty'}" data-pain-section="${escapeAttr(item.key)}" data-pain-section-field="${escapeAttr(key)}" placeholder="результат">${escapeHtml(data[key] || '')}</textarea></label>`).join('')}
+          </div>
+        </div>` : ''}
+      </div>`;
+    }).join('')}
+    <div class="g1-card g1-checks ${issues.length ? '' : 'is-ok'}">
+      <div class="g1-card-header-static"><span class="g1-card-title">Автоматические проверки</span></div>
+      <div class="g1-card-body">
+        ${issues.length ? issues.map(issue => `<div class="demand-check ${issue.level}">${escapeHtml(issue.text)}</div>`).join('') : '<div class="demand-check ready">Критичных ошибок нет.</div>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+function g1RenderUnitEconomics() {
+  const route = ensureUnitEconomicsState();
+  const status = getUnitEconomicsStatus();
+  const issues = unitEconomicsChecks();
+  route.openSections = route.openSections || {};
+  const hasAnyUnitOpen = Object.values(route.openSections).some(Boolean);
+  const c = unitEconomicsComputed();
+  const drrLabel = c.drrRate ? Math.round(c.drrRate * 1000) / 10 + '%' : '—';
+  const cplDecision = route.sections?.cpa_cpl?.decision || '—';
+  return `<div class="g1-route">
+    <div class="g1-card">
+      <div class="g1-card-header-static">
+        <span class="g1-card-title">Параметры</span>
+        <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+      </div>
+      <div class="g1-card-body">
+        <div class="g1-fields-grid">
+          ${g1FieldInput('data-unit-field', 'product', 'Продукт / услуга', route.product, 'что считаем', 'text')}
+          ${g1FieldInput('data-unit-field', 'period', 'Период оценки', route.period, 'месяц / квартал / сезон', 'text')}
+          ${g1FieldInput('data-unit-field', 'salesModel', 'Модель продажи', route.salesModel, 'заявка / звонок / покупка', 'text')}
+          ${g1FieldInput('data-unit-field', 'finalCpaCpl', 'Финальный допустимый CPA / CPL', route.finalCpaCpl, 'главный итог блока', 'textarea')}
+        </div>
+      </div>
+    </div>
+    <div class="g1-card">
+      <div class="g1-card-header-static"><span class="g1-card-title">Финальный результат</span></div>
+      <div class="g1-card-body">
+        <div class="unit-summary-grid">
+          <div><span>Допустимый CPA</span><strong>${escapeHtml(formatUnitMoney(c.allowedCpa))}</strong></div>
+          <div><span>Допустимый CPL</span><strong>${escapeHtml(formatUnitMoney(c.allowedCpl))}</strong></div>
+          <div><span>Допустимый DRR</span><strong>${escapeHtml(drrLabel)}</strong></div>
+          <div><span>Решение</span><strong>${escapeHtml(cplDecision)}</strong></div>
+        </div>
+        <div class="unit-promo-split">
+          <div><span>Что можно продвигать</span><p>${escapeHtml(route.sections?.economic_limits?.promoteAllowed || '—')}</p></div>
+          <div><span>Что нельзя продвигать</span><p>${escapeHtml(route.sections?.economic_limits?.promoteForbidden || '—')}</p></div>
+        </div>
+      </div>
+    </div>
+    ${UNIT_ECONOMICS_SECTIONS.map(item => {
+      const data = route.sections?.[item.key] || {};
+      const sStatus = unitSectionStatus(item);
+      const isOpen = !!route.openSections[item.key];
+      return `<div class="g1-card ${isOpen ? 'is-open' : ''}">
+        <button class="g1-card-header" data-unit-toggle-section="${escapeAttr(item.key)}">
+          <span class="g1-card-title">${escapeHtml(item.title)}</span>
+          <span class="status-pill status-${sStatus}">${STATUS_LABELS[sStatus] || sStatus}</span>
+        </button>
+        ${isOpen ? `<div class="g1-card-body">
+          <p class="g1-task">${escapeHtml(item.orient)}</p>
+          <div class="g1-fields-grid">
+            ${item.fields.map(([key, label]) => `<label class="g1-field"><span>${escapeHtml(label)}</span><textarea class="g1-input ${String(data[key] || '').trim() ? 'is-filled' : 'is-empty'}" data-unit-section="${escapeAttr(item.key)}" data-unit-section-field="${escapeAttr(key)}" placeholder="результат">${escapeHtml(data[key] || '')}</textarea></label>`).join('')}
+          </div>
+        </div>` : ''}
+      </div>`;
+    }).join('')}
+    <div class="g1-card g1-checks ${issues.length ? '' : 'is-ok'}">
+      <div class="g1-card-header-static"><span class="g1-card-title">Автоматические проверки</span></div>
+      <div class="g1-card-body">
+        ${issues.length ? issues.map(issue => `<div class="demand-check ${issue.level}">${escapeHtml(issue.text)}</div>`).join('') : '<div class="demand-check ready">Критичных ошибок нет.</div>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* Live update: toggle is-filled/is-empty on g1-input fields */
+document.addEventListener('input', function(e) {
+  if (!e.target.classList.contains('g1-input')) return;
+  const filled = String(e.target.value || '').trim();
+  e.target.classList.toggle('is-filled', !!filled);
+  e.target.classList.toggle('is-empty', !filled);
+});
+
+/* v1.3.0 fix: prevent renderGate() during input to avoid focus loss.
+   Override card-type update functions to skip full re-render on input,
+   only re-render on change (blur/select). */
+function g1PointUpdateBadge(card) {
+  if (!card) return;
+  const el = document.querySelector(`[data-card="${CSS.escape(card.id)}"] .status-pill`);
+  if (el) {
+    el.className = `status-pill status-${card.status}`;
+    el.textContent = STATUS_LABELS[card.status] || card.status;
+  }
+  renderGateNav();
+}
+
+const __g1PrevUpdateRobotsYandex = updateRobotsYandexField;
+updateRobotsYandexField = function(target) {
+  const card = allCardsFromWorkspace(state).find(isRobotsYandexCard);
+  if (!card) return;
+  const fields = ensureRobotsYandexFields(card);
+  const field = target.dataset.robotsYandexField;
+  fields[field] = target.value;
+  if (field === 'siteUrl' || field === 'robotsUrl') addOrUpdateProjectLink(target.value, { comment: field === 'robotsUrl' ? 'robots.txt' : 'URL сайта', source: 'Яндекс Вебмастер' });
+  recalculateStatusForCard(card);
+  flashSaving();
+  g1PointUpdateBadge(card);
+};
+
+const __g1PrevUpdateRobotsUnified = updateRobotsUnifiedField;
+updateRobotsUnifiedField = function(target) {
+  const cardId = target.closest('[data-card]')?.dataset?.card;
+  const card = cardId ? findCard(cardId) : allCardsFromWorkspace(state).find(isRobotsUnifiedCard);
+  if (!card) return;
+  const fields = ensureRobotsUnifiedFields(card);
+  const systemKey = target.dataset.robotsUnifiedSystem;
+  const field = target.dataset.robotsUnifiedField;
+  if (systemKey) {
+    fields.systems[systemKey] = fields.systems[systemKey] || { enabled: false, status: '', evidence: '' };
+    if (target.type === 'checkbox') fields.systems[systemKey].enabled = target.checked;
+    else fields.systems[systemKey][field] = target.value;
+  } else {
+    fields[field] = target.value;
+    if (field === 'url') addOrUpdateProjectLink(target.value, { comment: 'robots.txt', source: 'Robots.txt' });
+  }
+  recalculateStatusForCard(card);
+  flashSaving();
+  g1PointUpdateBadge(card);
+};
+
+const __g1PrevUpdateSitemapUnified = updateSitemapUnifiedField;
+updateSitemapUnifiedField = function(target) {
+  const cardId = target.closest('[data-card]')?.dataset?.card;
+  const card = cardId ? findCard(cardId) : allCardsFromWorkspace(state).find(isSitemapUnifiedCard);
+  if (!card) return;
+  const fields = ensureSitemapUnifiedFields(card);
+  const systemKey = target.dataset.sitemapUnifiedSystem;
+  const field = target.dataset.sitemapUnifiedField;
+  if (systemKey) {
+    fields.systems[systemKey] = fields.systems[systemKey] || { enabled: false, status: '', evidence: '' };
+    if (target.type === 'checkbox') fields.systems[systemKey].enabled = target.checked;
+    else fields.systems[systemKey][field] = target.value;
+  } else {
+    fields[field] = target.value;
+    if (field === 'url') addOrUpdateProjectLink(target.value, { comment: 'sitemap.xml', source: 'Sitemap' });
+  }
+  recalculateStatusForCard(card);
+  flashSaving();
+  g1PointUpdateBadge(card);
+};
+
+const __g1PrevUpdateServerResponse = updateServerResponseField;
+updateServerResponseField = function(target) {
+  const card = allCardsFromWorkspace(state).find(isServerResponseCard);
+  if (!card) return;
+  const fields = ensureServerResponseFields(card);
+  const field = target.dataset.serverResponseField;
+  fields[field] = target.value;
+  recalculateStatusForCard(card);
+  flashSaving();
+  g1PointUpdateBadge(card);
+};
+
+const __g1PrevUpdateSslHttps = updateSslHttpsField;
+updateSslHttpsField = function(target) {
+  const card = allCardsFromWorkspace(state).find(isSslHttpsCard);
+  if (!card) return;
+  const fields = ensureSslHttpsFields(card);
+  const field = target.dataset.sslHttpsField;
+  fields[field] = target.value;
+  recalculateStatusForCard(card);
+  flashSaving();
+  g1PointUpdateBadge(card);
+};
+
+/* ================================================================
+   v1.3.0 — Robots.txt: доступ поисковых роботов (v2 redesign)
+   ================================================================ */
+
+const ROBOTS_V2_URL_ROWS = [
+  { url: '/', type: 'Главная', expect: 'Разрешено' },
+  { url: '/services', type: 'Услуги', expect: 'Разрешено' },
+  { url: '/contacts', type: 'Контакты', expect: 'Разрешено' },
+  { url: '/catalog', type: 'Каталог', expect: 'Разрешено / Не требуется' },
+  { url: '/product', type: 'Карточка товара', expect: 'Разрешено / Не требуется' }
+];
+const ROBOTS_V2_SERVICE_ROWS = [
+  { url: '/admin', type: 'служебная', expect: 'закрыто / недоступно' },
+  { url: '/?filter=', type: 'фильтр / дубль', expect: 'закрыто / canonical / noindex' },
+  { url: '/cart', type: 'корзина', expect: 'зависит от проекта' },
+  { url: '/login', type: 'личный кабинет', expect: 'закрыто / нецелевое' }
+];
+const ROBOTS_V2_RESULT_OPTIONS = ['', 'Разрешено', 'Запрещено', 'Не требуется', 'Требует внимания'];
+const ROBOTS_V2_GOOGLE_RESULT_OPTIONS = ['', 'Сканирование разрешено', 'Заблокировано robots.txt', 'Не требуется', 'Требует внимания'];
+const ROBOTS_V2_YANDEX_INSTRUCTION = 'Суть:\nПроверить, что Яндекс может обходить важные страницы сайта и robots.txt не содержит ошибок.\n\nКак проверить:\n1. Открыть Яндекс Вебмастер.\n2. Перейти: Инструменты → Анализ robots.txt.\n3. Нажать «Проверить».\n4. Зафиксировать количество ошибок.\n5. В блоке «Доступ к страницам» проверить важные URL: /, /services, /contacts, /catalog, /product.\n6. Отдельно проверить служебные URL: /admin, /?filter=, /cart, /login.\n7. Внести результат.\n\nИдеал:\n0 ошибок, важные страницы разрешены, служебные URL обработаны корректно.';
+const ROBOTS_V2_GOOGLE_INSTRUCTION = 'Суть:\nПроверить, что Google не заблокирован robots.txt и может увидеть ключевые страницы сайта.\n\nКак проверить:\n1. Открыть Google Search Console.\n2. Перейти в «Проверка URL».\n3. Ввести важную страницу, например главную.\n4. Запустить проверку актуальной версии.\n5. Зафиксировать, разрешено ли сканирование.\n6. Проверить, нет ли сообщения о блокировке robots.txt.\n7. При необходимости открыть просмотр страницы и зафиксировать рендер.\n8. Повторить для 2–3 ключевых страниц.\n\nИдеал:\nключевые страницы доступны для сканирования, robots.txt их не блокирует, страница рендерится без критических пустых блоков.';
+
+function ensureRobotsV130(card) {
+  if (!card) return;
+  card.title = 'Robots.txt: доступ поисковых роботов';
+  card.instruction = 'Проверяем, что поисковые роботы видят важные страницы сайта, а служебные URL не мешают обходу и индексации.';
+  const old = card.robotsUnified || {};
+  card.robotsV130 = card.robotsV130 || {
+    url: old.url || '',
+    domain: '',
+    checkDate: '',
+    source: '',
+    yandex: { enabled: 'yes', errors: '', sitemap: '', importantOk: '', serviceOk: '', source: '', urlResults: [], serviceResults: [] },
+    google: { enabled: 'yes', importantOk: '', blocked: '', renderOk: '', source: '', urlResults: [], renderPage: '', renderScan: '', renderResult: '', renderSource: '' },
+    summary: { robotsOpen: '', errorsStatus: '', importantStatus: '', serviceStatus: '', sitemapStatus: '', conclusion: '' }
+  };
+  const f = card.robotsV130;
+  f.yandex = f.yandex || {};
+  f.google = f.google || {};
+  f.summary = f.summary || {};
+  if (!Array.isArray(f.yandex.urlResults) || f.yandex.urlResults.length !== ROBOTS_V2_URL_ROWS.length) {
+    const prev = new Map((f.yandex.urlResults || []).map(r => [r.url, r]));
+    f.yandex.urlResults = ROBOTS_V2_URL_ROWS.map(row => ({ ...row, result: (prev.get(row.url) || {}).result || '' }));
+  }
+  if (!Array.isArray(f.yandex.serviceResults) || f.yandex.serviceResults.length !== ROBOTS_V2_SERVICE_ROWS.length) {
+    const prev = new Map((f.yandex.serviceResults || []).map(r => [r.url, r]));
+    f.yandex.serviceResults = ROBOTS_V2_SERVICE_ROWS.map(row => ({ ...row, result: (prev.get(row.url) || {}).result || '', comment: (prev.get(row.url) || {}).comment || '' }));
+  }
+  if (!Array.isArray(f.google.urlResults) || f.google.urlResults.length !== ROBOTS_V2_URL_ROWS.length) {
+    const prev = new Map((f.google.urlResults || []).map(r => [r.url, r]));
+    f.google.urlResults = ROBOTS_V2_URL_ROWS.map(row => ({ ...row, result: (prev.get(row.url) || {}).result || '' }));
+  }
+  return f;
+}
+
+function rv2Select(name, value, options, attrs = '') {
+  return `<select ${attrs} class="g1-input ${value ? 'is-filled' : 'is-empty'}">${options.map(o => {
+    const v = Array.isArray(o) ? o[0] : o;
+    const l = Array.isArray(o) ? o[1] : (o || '—');
+    return `<option value="${escapeAttr(v)}" ${value === v ? 'selected' : ''}>${escapeHtml(l)}</option>`;
+  }).join('')}</select>`;
+}
+
+function rv2Input(value, placeholder, attrs = '') {
+  const filled = String(value || '').trim();
+  return `<input class="g1-input ${filled ? 'is-filled' : 'is-empty'}" ${attrs} value="${escapeAttr(value || '')}" placeholder="${escapeAttr(placeholder)}" />`;
+}
+
+function robotsV130FieldsHtml(card) {
+  const f = ensureRobotsV130(card);
+  const yEnabled = f.yandex.enabled !== 'no';
+  const gEnabled = f.google.enabled !== 'no';
+
+  const topHtml = `<div class="rv2-section">
+    <label class="g1-field"><span>URL robots.txt${g0HintBtnHtml('audit_url')}</span>${rv2Input(f.url, 'https://site.ru/robots.txt', 'data-rv2="url"')}</label>
+    <label class="g1-field"><span>Основной домен${g0HintBtnHtml('audit_domain')}</span>${rv2Input(f.domain, 'https://site.ru', 'data-rv2="domain"')}</label>
+    <label class="g1-field"><span>Дата проверки</span><input type="date" class="g1-input ${f.checkDate ? 'is-filled' : 'is-empty'}" data-rv2="checkDate" value="${escapeAttr(f.checkDate || '')}" /></label>
+  </div>`;
+
+  const yUrlTable = `<table class="cr-table"><thead><tr><th>URL</th><th>Тип</th><th>Ожидаем</th><th>Результат</th></tr></thead>
+    <tbody>${f.yandex.urlResults.map((r, i) => `<tr><td class="cr-label">${escapeHtml(r.url)}</td><td>${escapeHtml(r.type)}</td><td>${escapeHtml(r.expect)}</td>
+    <td>${rv2Select('', r.result, ROBOTS_V2_RESULT_OPTIONS, `data-rv2-sys="yandex" data-rv2-table="url" data-rv2-idx="${i}"`)}</td></tr>`).join('')}</tbody></table>`;
+
+  const yServiceTable = `<table class="cr-table"><thead><tr><th>URL</th><th>Тип</th><th>Ожидаем</th><th>Результат</th><th>Комментарий</th></tr></thead>
+    <tbody>${f.yandex.serviceResults.map((r, i) => `<tr><td class="cr-label">${escapeHtml(r.url)}</td><td>${escapeHtml(r.type)}</td><td>${escapeHtml(r.expect)}</td>
+    <td>${rv2Select('', r.result, ROBOTS_V2_RESULT_OPTIONS, `data-rv2-sys="yandex" data-rv2-table="service" data-rv2-idx="${i}"`)}</td>
+    <td>${rv2Input(r.comment, '—', `data-rv2-sys="yandex" data-rv2-table="service-comment" data-rv2-idx="${i}"`)}</td></tr>`).join('')}</tbody></table>`;
+
+  const yandexHtml = `<div class="rv2-system-card">
+    <div class="rv2-system-head"><div><b>Яндекс</b> <span class="rv2-service">Яндекс Вебмастер</span></div>
+      <label class="rv2-toggle"><span>Проверка:</span>${rv2Select('', f.yandex.enabled || 'yes', [['yes','Да'],['no','Нет']], 'data-rv2-sys="yandex" data-rv2-field="enabled"')}</label></div>
+    ${yEnabled ? `<div class="rv2-system-body">
+      <details class="instruction-toggle"><summary>Показать инструкцию</summary><div class="instruction-text">${escapeHtml(ROBOTS_V2_YANDEX_INSTRUCTION)}</div></details>
+      <div class="rv2-fields">
+        <label class="g1-field"><span>Ошибки robots.txt</span>${rv2Select('', f.yandex.errors, ['',['0','0 ошибок'],['errors','Есть ошибки']], 'data-rv2-sys="yandex" data-rv2-field="errors"')}</label>
+        <label class="g1-field"><span>Sitemap в robots.txt</span>${rv2Select('', f.yandex.sitemap, ['',['yes','Указан'],['no','Не указан'],['attention','Требует внимания']], 'data-rv2-sys="yandex" data-rv2-field="sitemap"')}</label>
+        <label class="g1-field"><span>Важные URL разрешены</span>${rv2Select('', f.yandex.importantOk, ['',['yes','Да'],['no','Нет'],['partial','Частично']], 'data-rv2-sys="yandex" data-rv2-field="importantOk"')}</label>
+        <label class="g1-field"><span>Служебные URL обработаны</span>${rv2Select('', f.yandex.serviceOk, ['',['yes','Да'],['no','Нет'],['partial','Частично'],['not_required','Не требуется']], 'data-rv2-sys="yandex" data-rv2-field="serviceOk"')}</label>
+      </div>
+      <details class="rv2-url-details"><summary>Проверка важных URL</summary>${yUrlTable}</details>
+      <details class="rv2-url-details"><summary>Проверка служебных URL</summary>${yServiceTable}</details>
+    </div>` : '<div class="rv2-disabled">Проверка отключена</div>'}</div>`;
+
+  const gUrlTable = `<table class="cr-table"><thead><tr><th>URL</th><th>Тип</th><th>Ожидаем</th><th>Результат</th></tr></thead>
+    <tbody>${f.google.urlResults.map((r, i) => `<tr><td class="cr-label">${escapeHtml(r.url)}</td><td>${escapeHtml(r.type)}</td><td>${escapeHtml(r.expect)}</td>
+    <td>${rv2Select('', r.result, ROBOTS_V2_GOOGLE_RESULT_OPTIONS, `data-rv2-sys="google" data-rv2-table="url" data-rv2-idx="${i}"`)}</td></tr>`).join('')}</tbody></table>`;
+
+  const googleHtml = `<div class="rv2-system-card">
+    <div class="rv2-system-head"><div><b>Google</b> <span class="rv2-service">Google Search Console</span></div>
+      <label class="rv2-toggle"><span>Проверка:</span>${rv2Select('', f.google.enabled || 'yes', [['yes','Да'],['no','Нет']], 'data-rv2-sys="google" data-rv2-field="enabled"')}</label></div>
+    ${gEnabled ? `<div class="rv2-system-body">
+      <details class="instruction-toggle"><summary>Показать инструкцию</summary><div class="instruction-text">${escapeHtml(ROBOTS_V2_GOOGLE_INSTRUCTION)}</div></details>
+      <div class="rv2-fields">
+        <label class="g1-field"><span>Важные URL доступны</span>${rv2Select('', f.google.importantOk, ['',['yes','Да'],['no','Нет'],['partial','Частично']], 'data-rv2-sys="google" data-rv2-field="importantOk"')}</label>
+        <label class="g1-field"><span>Блокировка robots.txt</span>${rv2Select('', f.google.blocked, ['',['no','Нет'],['yes','Есть'],['partial','Частично']], 'data-rv2-sys="google" data-rv2-field="blocked"')}</label>
+        <label class="g1-field"><span>Страница рендерится</span>${rv2Select('', f.google.renderOk, ['',['yes','Да'],['no','Нет'],['attention','Требует внимания'],['not_required','Не требуется']], 'data-rv2-sys="google" data-rv2-field="renderOk"')}</label>
+      </div>
+      <details class="rv2-url-details"><summary>Проверка важных URL</summary>${gUrlTable}</details>
+      <details class="rv2-url-details"><summary>Проверка рендера</summary>
+        <div class="rv2-fields" style="padding:10px 0;">
+          <label class="g1-field"><span>Проверяемая страница</span>${rv2Input(f.google.renderPage, '/', 'data-rv2-sys="google" data-rv2-field="renderPage"')}</label>
+          <label class="g1-field"><span>Сканирование разрешено</span>${rv2Select('', f.google.renderScan, ['',['yes','Да'],['no','Нет']], 'data-rv2-sys="google" data-rv2-field="renderScan"')}</label>
+          <label class="g1-field"><span>Рендер страницы</span>${rv2Select('', f.google.renderResult, ['',['full','Полный'],['empty','Есть пустые блоки'],['attention','Требует внимания'],['not_required','Не требуется']], 'data-rv2-sys="google" data-rv2-field="renderResult"')}</label>
+        </div>
+      </details>
+    </div>` : '<div class="rv2-disabled">Проверка отключена</div>'}</div>`;
+
+  const summaryHtml = `<div class="rv2-summary">
+    <div class="rv2-summary-title">Итог проверки robots.txt</div>
+    <div class="rv2-fields">
+      <label class="g1-field"><span>robots.txt открыт</span>${rv2Select('', f.summary.robotsOpen, ['',['yes','Да'],['no','Нет']], 'data-rv2-sum="robotsOpen"')}</label>
+      <label class="g1-field"><span>Ошибки файла</span>${rv2Select('', f.summary.errorsStatus, ['',['0','0'],['errors','Есть ошибки']], 'data-rv2-sum="errorsStatus"')}</label>
+      <label class="g1-field"><span>Важные страницы</span>${rv2Select('', f.summary.importantStatus, ['',['ok','Разрешены'],['partial','Частично'],['blocked','Заблокированы']], 'data-rv2-sum="importantStatus"')}</label>
+      <label class="g1-field"><span>Служебные URL</span>${rv2Select('', f.summary.serviceStatus, ['',['ok','Обработаны'],['partial','Частично'],['attention','Требуют внимания']], 'data-rv2-sum="serviceStatus"')}</label>
+      <label class="g1-field"><span>Sitemap</span>${rv2Select('', f.summary.sitemapStatus, ['',['yes','Указан'],['no','Не указан'],['attention','Требует внимания']], 'data-rv2-sum="sitemapStatus"')}</label>
+      <label class="g1-field"><span>Финальный вывод</span>${rv2Input(f.summary.conclusion, 'что исправить или можно идти дальше', 'data-rv2-sum="conclusion"')}</label>
+    </div>
+  </div>`;
+
+  return `<div class="rv2-block">
+    ${topHtml}
+    <div class="rv2-systems">${yandexHtml}${googleHtml}</div>
+  </div>`;
+}
+
+function robotsV130CardStatus(card) {
+  const f = ensureRobotsV130(card);
+  if (!String(f.url || '').trim()) return 'not_started';
+  const yEnabled = f.yandex.enabled !== 'no';
+  const gEnabled = f.google.enabled !== 'no';
+  if (!yEnabled && !gEnabled) return 'not_required';
+
+  function sysStatus(sys, enabled) {
+    if (!enabled) return 'skip';
+    if (sys.importantOk === 'no' || sys.blocked === 'yes') return 'problem';
+    if (!sys.importantOk && !(sys.blocked === 'no')) return 'empty';
+    if (sys.importantOk === 'partial' || sys.blocked === 'partial' || sys.serviceOk === 'no') return 'attention';
+    return 'done';
+  }
+  const ySt = sysStatus(f.yandex, yEnabled);
+  const gSt = sysStatus(f.google, gEnabled);
+  if (ySt === 'problem' || gSt === 'problem') return 'problem';
+  if (ySt === 'empty' || gSt === 'empty') return 'in_progress';
+  if (ySt === 'attention' || gSt === 'attention') return 'needs_review';
+  if ((ySt === 'done' || ySt === 'skip') && (gSt === 'done' || gSt === 'skip')) return 'ready';
+  return 'in_progress';
+}
+
+const __g1PrevGetCardModeV130 = getGate1CardMode;
+getGate1CardMode = function(card) {
+  if (isRobotsUnifiedCard(card)) return 'robots_v130';
+  return __g1PrevGetCardModeV130(card);
+};
+
+const __g1PrevEnsureTypedV130 = ensureGate1TypedData;
+ensureGate1TypedData = function(card) {
+  if (isRobotsUnifiedCard(card)) { ensureRobotsV130(card); return; }
+  return __g1PrevEnsureTypedV130(card);
+};
+
+const __g1PrevTypedFieldsV130 = gate1TypedFieldsHtml;
+gate1TypedFieldsHtml = function(card) {
+  if (getGate1CardMode(card) === 'robots_v130') return robotsV130FieldsHtml(card);
+  return __g1PrevTypedFieldsV130(card);
+};
+
+const __g1PrevRecalcV130 = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isRobotsUnifiedCard(card)) { card.status = robotsV130CardStatus(card); return; }
+  return __g1PrevRecalcV130(card, workspace);
+};
+
+function updateRobotsV2(target) {
+  const card = allCardsFromWorkspace(state).find(isRobotsUnifiedCard);
+  if (!card) return;
+  const f = ensureRobotsV130(card);
+  const sys = target.dataset.rv2Sys;
+  const field = target.dataset.rv2Field;
+  const table = target.dataset.rv2Table;
+  const sum = target.dataset.rv2Sum;
+  const idx = Number(target.dataset.rv2Idx);
+  if (target.dataset.rv2) {
+    f[target.dataset.rv2] = target.value;
+    if (target.dataset.rv2 === 'url') addOrUpdateProjectLink(target.value, { comment: 'robots.txt', source: 'Robots.txt' });
+  } else if (sum) {
+    f.summary[sum] = target.value;
+  } else if (sys && table === 'url') {
+    f[sys].urlResults[idx].result = target.value;
+  } else if (sys && table === 'service') {
+    f[sys].serviceResults[idx].result = target.value;
+  } else if (sys && table === 'service-comment') {
+    f[sys].serviceResults[idx].comment = target.value;
+  } else if (sys && field) {
+    f[sys][field] = target.value;
+  }
+  recalculateStatusForCard(card);
+  flashSaving();
+  if (target.tagName === 'SELECT' && (field === 'enabled')) renderGate();
+  else g1PointUpdateBadge(card);
+}
+
+document.addEventListener('input', e => {
+  if (e.target?.dataset && (e.target.dataset.rv2 || e.target.dataset.rv2Sys || e.target.dataset.rv2Sum) && e.target.tagName !== 'SELECT') updateRobotsV2(e.target);
+});
+document.addEventListener('change', e => {
+  if (e.target?.dataset && (e.target.dataset.rv2 || e.target.dataset.rv2Sys || e.target.dataset.rv2Sum || e.target.dataset.rv2Table)) updateRobotsV2(e.target);
+});
+
+/* ================================================================
+   v1.3.0 — Sitemap.xml: карта важных страниц (редизайн)
+   ================================================================ */
+
+const SITEMAP_V130_STATUSES = [
+  ['', 'Выбрать'],
+  ['not_required', 'Не требуется'],
+  ['required', 'Требуется'],
+  ['checked', 'Проверено'],
+  ['problem', 'Проблема']
+];
+
+const SITEMAP_V130_YESNO = [['', '—'], ['yes', 'Да'], ['no', 'Нет'], ['not_checked', 'Не проверено']];
+const SITEMAP_V130_LASTMOD = [['', '—'], ['fresh', 'Свежий'], ['stale', 'Устарел'], ['missing', 'Отсутствует'], ['not_required', 'Не требуется']];
+const SITEMAP_V130_TECH = [['', '—'], ['no', 'Нет'], ['problem', 'Есть проблема']];
+
+const SITEMAP_V130_INSTRUCTION = `Суть:\nSitemap содержит важные индексируемые страницы, не содержит мусор, файл валиден.\nИдеал: файл доступен, XML корректен, lastmod актуален, технических URL нет, расхождение с индексом < 20%.\n\nИнструкция:\n1. Открыть URL Sitemap → проверить: файл отдаётся 200, XML валиден, URL ведут на нужные страницы.\n2. Яндекс Вебмастер → Индексирование → Файлы Sitemap → сравнить «URL в Sitemap» и «Страниц в поиске».\n3. Google Search Console → Файлы Sitemap → проверить статус, обнаруженные URL.\n4. Расхождение > 20% → проверить причины (новые страницы, каноникалы, закрытые от индексации).`;
+
+function ensureSitemapV130(card) {
+  if (!card) return;
+  card.title = 'Sitemap.xml: карта важных страниц';
+  card.instruction = SITEMAP_V130_INSTRUCTION;
+  const old = card.sitemapUnified || {};
+  card.sitemapV130 = card.sitemapV130 || {
+    url: old.url || '',
+    fileAccessible: '',
+    xmlValid: '',
+    urlCount: '',
+    lastmod: '',
+    techUrls: '',
+    inRobots: '',
+    yandex: {
+      status: old.systems?.yandex?.enabled ? (old.systems.yandex.status === 'ok' ? 'checked' : old.systems.yandex.status === 'issue' ? 'problem' : '') : '',
+      webmasterStatus: '',
+      pagesInSitemap: '',
+      pagesInSearch: '',
+      divergence: '',
+      evidence: old.systems?.yandex?.evidence || '',
+      comment: ''
+    },
+    google: {
+      status: old.systems?.google?.enabled ? (old.systems.google.status === 'ok' ? 'checked' : old.systems.google.status === 'issue' ? 'problem' : '') : '',
+      gscStatus: '',
+      discoveredUrls: '',
+      indexedPages: '',
+      divergence: '',
+      evidence: old.systems?.google?.evidence || '',
+      comment: ''
+    }
+  };
+  card.sitemapV130.yandex = card.sitemapV130.yandex || { status:'', webmasterStatus:'', pagesInSitemap:'', pagesInSearch:'', divergence:'', evidence:'', comment:'' };
+  card.sitemapV130.google = card.sitemapV130.google || { status:'', gscStatus:'', discoveredUrls:'', indexedPages:'', divergence:'', evidence:'', comment:'' };
+  return card.sitemapV130;
+}
+
+function smV130Select(dataAttr, name, label, value, options) {
+  return `<label class="g1-field"><span>${escapeHtml(label)}</span><select class="g1-input is-filled" data-sm-v130-field="${escapeAttr(name)}" ${dataAttr}>${options.map(([v,l]) => `<option value="${escapeAttr(v)}" ${value === v ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}</select></label>`;
+}
+
+function smV130Input(name, label, value, placeholder, dataAttr) {
+  const filled = String(value || '').trim();
+  return `<label class="g1-field"><span>${escapeHtml(label)}</span><input class="g1-input ${filled ? 'is-filled' : 'is-empty'}" data-sm-v130-field="${escapeAttr(name)}" ${dataAttr || ''} value="${escapeAttr(value || '')}" placeholder="${escapeAttr(placeholder)}" /></label>`;
+}
+
+function smV130DivergenceHint(value) {
+  const n = parseFloat(value);
+  if (isNaN(n)) return '';
+  if (n <= 20) return '<span style="color:#16a34a;font-size:11px;font-weight:700">допустимо</span>';
+  if (n <= 50) return '<span style="color:#f59e0b;font-size:11px;font-weight:700">требует проверки</span>';
+  return '<span style="color:#dc2626;font-size:11px;font-weight:700">вероятная проблема</span>';
+}
+
+function smV130SystemHtml(key, data) {
+  const label = key === 'yandex' ? 'Яндекс' : 'Google';
+  const service = key === 'yandex' ? 'Яндекс Вебмастер' : 'Google Search Console';
+  const showFields = data.status === 'required' || data.status === 'checked' || data.status === 'problem';
+  const sysAttr = `data-sm-v130-system="${escapeAttr(key)}"`;
+  const pill = !data.status ? '<span class="result-pill result-neutral">Не выбран</span>'
+    : data.status === 'not_required' ? '<span class="result-pill result-neutral">Не требуется</span>'
+    : data.status === 'required' ? '<span class="result-pill result-bad" style="background:#fff3d6;color:#8a5a00">Требуется</span>'
+    : data.status === 'checked' ? '<span class="result-pill result-ok">Проверено</span>'
+    : '<span class="result-pill result-bad">Проблема</span>';
+
+  const statusSelect = `<label class="g1-field"><span>Статус</span><select class="g1-input is-filled" data-sm-v130-field="status" ${sysAttr}>${SITEMAP_V130_STATUSES.map(([v,l]) => `<option value="${escapeAttr(v)}" ${data.status === v ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}</select></label>`;
+
+  if (!showFields) {
+    return `<div class="g1-card" style="border-radius:14px;">
+      <div class="g1-card-header-static" style="padding:14px 18px;border-bottom:none;">
+        <span class="g1-card-title" style="font-size:14px;">${escapeHtml(label)} <span style="font-weight:500;color:var(--muted);font-size:12px;">${escapeHtml(service)}</span></span>
+        ${pill}
+      </div>
+      <div style="padding:0 18px 14px;">
+        <select class="g1-input ${data.status ? 'is-filled' : 'is-empty'}" data-sm-v130-field="status" ${sysAttr}>${SITEMAP_V130_STATUSES.map(([v,l]) => `<option value="${escapeAttr(v)}" ${data.status === v ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}</select>
+      </div>
+    </div>`;
+  }
+
+  const divHint = smV130DivergenceHint(data.divergence);
+  const yandexFields = key === 'yandex' ? `
+    ${smV130Input('webmasterStatus', 'Статус в Яндекс Вебмастере', data.webmasterStatus, 'обработан / ошибка / ожидание', sysAttr)}
+    ${smV130Input('pagesInSitemap', 'Страниц в Sitemap', data.pagesInSitemap, 'число', sysAttr)}
+    ${smV130Input('pagesInSearch', 'Страниц в поиске', data.pagesInSearch, 'число', sysAttr)}
+    <label class="g1-field"><span>Расхождение, % ${divHint}</span><input class="g1-input ${String(data.divergence||'').trim() ? 'is-filled' : 'is-empty'}" data-sm-v130-field="divergence" ${sysAttr} value="${escapeAttr(data.divergence || '')}" placeholder="0–100" /></label>
+  ` : `
+    ${smV130Input('gscStatus', 'Статус в Google Search Console', data.gscStatus, 'успешно / есть ошибки', sysAttr)}
+    ${smV130Input('discoveredUrls', 'Обнаружено URL в Sitemap', data.discoveredUrls, 'число', sysAttr)}
+    ${smV130Input('indexedPages', 'Проиндексировано страниц', data.indexedPages, 'если доступно', sysAttr)}
+    <label class="g1-field"><span>Расхождение, % ${divHint}</span><input class="g1-input ${String(data.divergence||'').trim() ? 'is-filled' : 'is-empty'}" data-sm-v130-field="divergence" ${sysAttr} value="${escapeAttr(data.divergence || '')}" placeholder="0–100" /></label>
+  `;
+
+  return `<div class="g1-card" style="border-radius:14px;">
+    <div class="g1-card-header-static" style="padding:14px 18px;">
+      <span class="g1-card-title" style="font-size:14px;">${escapeHtml(label)} <span style="font-weight:500;color:var(--muted);font-size:12px;">${escapeHtml(service)}</span></span>
+      ${pill}
+    </div>
+    <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
+      ${statusSelect}
+      ${yandexFields}
+      ${smV130Input('evidence', 'Доказательство', data.evidence, `ссылка на ${service}, скрин или отчёт`, sysAttr)}
+      ${data.status === 'problem' ? smV130Input('comment', 'Комментарий', data.comment, 'что именно не так', sysAttr) : ''}
+    </div>
+  </div>`;
+}
+
+function sitemapV130FieldsHtml(card) {
+  const f = ensureSitemapV130(card);
+  const urlFilled = String(f.url || '').trim();
+  return `<div style="display:flex;flex-direction:column;gap:12px;">
+    ${smV130Input('url', 'URL Sitemap.xml', f.url, 'https://site.ru/sitemap.xml', '').replace('URL Sitemap.xml</span>', 'URL Sitemap.xml' + g0HintBtnHtml('audit_url') + '</span>')}
+    <div class="g1-card" style="border-radius:14px;">
+      <div class="g1-card-header-static" style="padding:14px 18px;">
+        <span class="g1-card-title" style="font-size:14px;">Проверка файла</span>
+      </div>
+      <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
+        ${smV130Select('', 'fileAccessible', 'Файл доступен', f.fileAccessible, SITEMAP_V130_YESNO)}
+        ${smV130Select('', 'xmlValid', 'XML корректный', f.xmlValid, SITEMAP_V130_YESNO)}
+        ${smV130Input('urlCount', 'Количество URL в файле', f.urlCount, 'число', '')}
+        ${smV130Select('', 'lastmod', '<lastmod>', f.lastmod, SITEMAP_V130_LASTMOD)}
+        ${smV130Select('', 'techUrls', 'Технические URL', f.techUrls, SITEMAP_V130_TECH)}
+        ${smV130Select('', 'inRobots', 'Sitemap указан в robots.txt', f.inRobots, SITEMAP_V130_YESNO)}
+      </div>
+    </div>
+    ${smV130SystemHtml('yandex', f.yandex)}
+    ${smV130SystemHtml('google', f.google)}
+  </div>`;
+}
+
+function sitemapV130CardStatus(card) {
+  const f = ensureSitemapV130(card);
+  const url = String(f.url || '').trim();
+  if (!url) return 'not_started';
+  const ys = f.yandex.status;
+  const gs = f.google.status;
+  if (!ys && !gs) return 'in_progress';
+  if (ys === 'not_required' && gs === 'not_required') return 'problem';
+  if (ys === 'problem' || gs === 'problem') return 'problem';
+  if (f.techUrls === 'problem' || f.xmlValid === 'no' || f.fileAccessible === 'no') return 'problem';
+  if (f.lastmod === 'stale') return 'problem';
+  const yDone = ys === 'checked';
+  const gDone = gs === 'checked';
+  const ySkip = ys === 'not_required';
+  const gSkip = gs === 'not_required';
+  if ((yDone || ySkip) && (gDone || gSkip) && (yDone || gDone)) return 'ready';
+  if (ys === 'required' || gs === 'required') return 'in_progress';
+  return 'in_progress';
+}
+
+const __g1SmPrevGetCardMode = getGate1CardMode;
+getGate1CardMode = function(card) {
+  if (isSitemapUnifiedCard(card)) return 'sitemap_v130';
+  return __g1SmPrevGetCardMode(card);
+};
+
+const __g1SmPrevEnsureTyped = ensureGate1TypedData;
+ensureGate1TypedData = function(card) {
+  if (isSitemapUnifiedCard(card)) { ensureSitemapV130(card); return; }
+  return __g1SmPrevEnsureTyped(card);
+};
+
+const __g1SmPrevTypedFields = gate1TypedFieldsHtml;
+gate1TypedFieldsHtml = function(card) {
+  if (getGate1CardMode(card) === 'sitemap_v130') return sitemapV130FieldsHtml(card);
+  return __g1SmPrevTypedFields(card);
+};
+
+const __g1SmPrevRecalc = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isSitemapUnifiedCard(card)) { card.status = sitemapV130CardStatus(card); return; }
+  return __g1SmPrevRecalc(card, workspace);
+};
+
+function updateSitemapV130(target) {
+  const card = allCardsFromWorkspace(state).find(isSitemapUnifiedCard);
+  if (!card) return;
+  const f = ensureSitemapV130(card);
+  const systemKey = target.dataset.smV130System;
+  const field = target.dataset.smV130Field;
+  if (systemKey) {
+    f[systemKey][field] = target.value;
+  } else {
+    f[field] = target.value;
+    if (field === 'url') addOrUpdateProjectLink(target.value, { comment: 'sitemap.xml', source: 'Sitemap.xml' });
+  }
+  recalculateStatusForCard(card);
+  flashSaving();
+  if (target.tagName === 'SELECT') renderGate();
+  else g1PointUpdateBadge(card);
+}
+
+document.addEventListener('input', e => {
+  if (e.target?.dataset?.smV130Field && e.target.tagName !== 'SELECT') updateSitemapV130(e.target);
+});
+document.addEventListener('change', e => {
+  if (e.target?.dataset?.smV130Field) updateSitemapV130(e.target);
+});
+
+/* ================================================================
+   v1.3.0 — Канонический URL и редиректы (редизайн)
+   ================================================================ */
+
+const REDIRECT_V130_STATUSES = [['', '—'], ['ok', 'ОК'], ['needs_check', 'Требует проверки'], ['problem', 'Проблема'], ['not_required', 'Не требуется']];
+
+const REDIRECT_V130_INSTRUCTION = `Суть:\nПроверить, что у сайта есть одна основная версия URL, а все дубли корректно перенаправляются на неё.\n\nЧто проверить:\n1. Указать канонический URL сайта.\n2. Проверить версии http, https, www, без www.\n3. Зафиксировать код ответа каждой версии.\n4. Зафиксировать финальный URL после редиректа.\n5. Проверить, что только одна версия отдаёт 200.\n6. Проверить, что остальные версии ведут на основную через 301 или 308.\n7. Для внутренней страницы проверить слэш и без слэша: только одна версия должна отдавать 200.\n\nИдеал:\nОдна версия сайта отдаёт 200, все дубли ведут на неё через один постоянный редирект, финальный URL совпадает с каноническим.`;
+
+const REDIRECT_V130_DEFAULT_ROWS = [
+  { label: 'https://site.ru/', variant: '', code: '', finalUrl: '', status: '', evidence: '' },
+  { label: 'http://site.ru/', variant: '', code: '', finalUrl: '', status: '', evidence: '' },
+  { label: 'https://www.site.ru/', variant: '', code: '', finalUrl: '', status: '', evidence: '' },
+  { label: 'http://www.site.ru/', variant: '', code: '', finalUrl: '', status: '', evidence: '' },
+  { label: '/page (без слэша)', variant: '', code: '', finalUrl: '', status: '', evidence: '' },
+  { label: '/page/ (со слэшем)', variant: '', code: '', finalUrl: '', status: '', evidence: '' }
+];
+
+function ensureRedirectV130(card) {
+  if (!card) return;
+  card.title = 'Канонический URL и редиректы';
+  card.instruction = REDIRECT_V130_INSTRUCTION;
+  if (!card.redirectV130) {
+    const old = card.serverResponse || {};
+    card.redirectV130 = {
+      canonicalUrl: old.url || '',
+      rows: REDIRECT_V130_DEFAULT_ROWS.map(r => ({...r}))
+    };
+  }
+  if (!Array.isArray(card.redirectV130.rows) || !card.redirectV130.rows.length) {
+    card.redirectV130.rows = REDIRECT_V130_DEFAULT_ROWS.map(r => ({...r}));
+  }
+  return card.redirectV130;
+}
+
+function redirectV130RowHtml(row, index, totalRows) {
+  return `<tr>
+    <td><input class="g1-input ${String(row.variant||'').trim() ? 'is-filled' : 'is-empty'}" data-rdr-v130-index="${index}" data-rdr-v130-col="variant" value="${escapeAttr(row.variant || '')}" placeholder="${escapeAttr(row.label)}" /></td>
+    <td><input class="g1-input ${String(row.code||'').trim() ? 'is-filled' : 'is-empty'}" data-rdr-v130-index="${index}" data-rdr-v130-col="code" value="${escapeAttr(row.code || '')}" placeholder="200 / 301 / 404" style="width:90px;" /></td>
+    <td><input class="g1-input ${String(row.finalUrl||'').trim() ? 'is-filled' : 'is-empty'}" data-rdr-v130-index="${index}" data-rdr-v130-col="finalUrl" value="${escapeAttr(row.finalUrl || '')}" placeholder="https://..." /></td>
+    <td><select class="g1-input is-filled" data-rdr-v130-index="${index}" data-rdr-v130-col="status">${REDIRECT_V130_STATUSES.map(([v,l]) => `<option value="${escapeAttr(v)}" ${row.status === v ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}</select></td>
+    <td><input class="g1-input ${String(row.evidence||'').trim() ? 'is-filled' : 'is-empty'}" data-rdr-v130-index="${index}" data-rdr-v130-col="evidence" value="${escapeAttr(row.evidence || '')}" placeholder="скрин / отчёт" /></td>
+    <td><button class="small-btn danger-mini" data-rdr-v130-remove="${index}" ${totalRows <= 1 ? 'disabled' : ''}>×</button></td>
+  </tr>`;
+}
+
+function redirectV130FieldsHtml(card) {
+  const f = ensureRedirectV130(card);
+  const urlFilled = String(f.canonicalUrl || '').trim();
+  return `<div style="display:flex;flex-direction:column;gap:12px;">
+    <label class="g1-field"><span>Канонический URL</span><input class="g1-input ${urlFilled ? 'is-filled' : 'is-empty'}" data-rdr-v130-field="canonicalUrl" value="${escapeAttr(f.canonicalUrl || '')}" placeholder="https://site.ru/" /></label>
+    <div class="g1-table-scroll"><table class="mini-table typed-table g1-forms-table" style="font-size:13px;">
+      <thead><tr><th>Вариант URL</th><th>Код</th><th>Финальный URL</th><th>Статус</th><th>Доказательство</th><th></th></tr></thead>
+      <tbody>${f.rows.map((row, i) => redirectV130RowHtml(row, i, f.rows.length)).join('')}</tbody>
+    </table></div>
+    <div style="display:flex;gap:8px;">
+      <button class="small-btn add-inline-btn" data-rdr-v130-add>+ Добавить строку</button>
+    </div>
+  </div>`;
+}
+
+function redirectV130CardStatus(card) {
+  const f = ensureRedirectV130(card);
+  const url = String(f.canonicalUrl || '').trim();
+  if (!url) return 'not_started';
+  const active = f.rows.filter(r => r.status && r.status !== 'not_required');
+  const filled = f.rows.filter(r => String(r.code || '').trim() || r.status);
+  if (!filled.length) return 'in_progress';
+  if (active.some(r => r.status === 'problem')) return 'problem';
+  const twoHundreds = f.rows.filter(r => String(r.code || '').trim() === '200' && r.status !== 'not_required');
+  if (twoHundreds.length > 1) return 'problem';
+  const hasBadCodes = f.rows.some(r => {
+    const c = String(r.code || '').trim();
+    return ['404','500','502','503'].includes(c) && r.status !== 'not_required';
+  });
+  if (hasBadCodes) return 'problem';
+  if (active.some(r => r.status === 'needs_check')) return 'needs_review';
+  if (active.length && active.every(r => r.status === 'ok')) return 'ready';
+  return 'in_progress';
+}
+
+const __g1RdrPrevGetCardMode = getGate1CardMode;
+getGate1CardMode = function(card) {
+  if (isServerResponseCard(card)) return 'redirect_v130';
+  return __g1RdrPrevGetCardMode(card);
+};
+
+const __g1RdrPrevEnsureTyped = ensureGate1TypedData;
+ensureGate1TypedData = function(card) {
+  if (isServerResponseCard(card)) { ensureRedirectV130(card); return; }
+  return __g1RdrPrevEnsureTyped(card);
+};
+
+const __g1RdrPrevTypedFields = gate1TypedFieldsHtml;
+gate1TypedFieldsHtml = function(card) {
+  if (getGate1CardMode(card) === 'redirect_v130') return redirectV130FieldsHtml(card);
+  return __g1RdrPrevTypedFields(card);
+};
+
+const __g1RdrPrevRecalc = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isServerResponseCard(card)) { card.status = redirectV130CardStatus(card); return; }
+  return __g1RdrPrevRecalc(card, workspace);
+};
+
+function updateRedirectV130(target) {
+  const card = allCardsFromWorkspace(state).find(isServerResponseCard);
+  if (!card) return;
+  const f = ensureRedirectV130(card);
+  const field = target.dataset.rdrV130Field;
+  const col = target.dataset.rdrV130Col;
+  const idx = target.dataset.rdrV130Index;
+  if (field) {
+    f[field] = target.value;
+    if (field === 'canonicalUrl') addOrUpdateProjectLink(target.value, { comment: 'канонический URL', source: 'Редиректы' });
+  } else if (col && idx !== undefined) {
+    f.rows[Number(idx)][col] = target.value;
+  }
+  recalculateStatusForCard(card);
+  flashSaving();
+  if (target.tagName === 'SELECT') renderGate();
+  else g1PointUpdateBadge(card);
+}
+
+function addRedirectV130Row() {
+  const card = allCardsFromWorkspace(state).find(isServerResponseCard);
+  if (!card) return;
+  const f = ensureRedirectV130(card);
+  f.rows.push({ label: '', variant: '', code: '', finalUrl: '', status: '', evidence: '' });
+  flashSaving();
+  renderGate();
+}
+
+function removeRedirectV130Row(index) {
+  const card = allCardsFromWorkspace(state).find(isServerResponseCard);
+  if (!card) return;
+  const f = ensureRedirectV130(card);
+  if (f.rows.length <= 1) return;
+  f.rows.splice(index, 1);
+  recalculateStatusForCard(card);
+  flashSaving();
+  renderGate();
+}
+
+document.addEventListener('input', e => {
+  if ((e.target?.dataset?.rdrV130Field || e.target?.dataset?.rdrV130Col) && e.target.tagName !== 'SELECT') updateRedirectV130(e.target);
+});
+document.addEventListener('change', e => {
+  if (e.target?.dataset?.rdrV130Field || e.target?.dataset?.rdrV130Col) updateRedirectV130(e.target);
+});
+document.addEventListener('click', e => {
+  if (e.target?.dataset?.rdrV130Add !== undefined) addRedirectV130Row();
+  if (e.target?.dataset?.rdrV130Remove !== undefined) removeRedirectV130Row(Number(e.target.dataset.rdrV130Remove));
+});
+
+/* v1.3.0 — скрыть блок «Изображения SEO META in 1 CLICK» */
+const __g1PrevIsRemoved = isRemovedGate1StandaloneBlock;
+isRemovedGate1StandaloneBlock = function(card) {
+  if (/Изображения SEO META/i.test(String(card?.title || ''))) return true;
+  return __g1PrevIsRemoved(card);
+};
+
+/* v1.3.0 — убрать дубликат "Финальный CTA" */
+const __g1PrevRouteSections = v22RouteSectionsHtml;
+v22RouteSectionsHtml = function(card, row, pageIndex) {
+  const template = v22TemplateForCard(card);
+  const sections = [...(template.sections || [])];
+  const hasCta = sections.some(s => /final.?cta/i.test(s.key) || /Финальный CTA/i.test(s.title));
+  const statuses = sections.map(section => v22SectionStatus(row, section));
+  let firstOpen = statuses.findIndex(status => status !== 'ready');
+  const html = sections.map((section, index) => v22RouteSectionHtml(card, row, pageIndex, section, index === firstOpen)).join('');
+  const seoOpen = firstOpen === -1 && (!v22IsFilled(row.title) || !v22IsFilled(row.description));
+  const ctaOpen = !hasCta && firstOpen === -1 && row.ctaMode !== 'not_needed' && !v22IsFilled(row.finalCta) && !seoOpen;
+  return html + v22SeoSnippetSection(card, row, pageIndex, seoOpen) + v22TechnicalControlHtml(card, row, pageIndex);
+};
+
+/* v1.3.0 — убрать статус-пиллы "ОК: 12" из полей страниц */
+pageFieldStatusHtml = function() { return ''; };
+
+/* v1.3.0 — Страницы: дизайн-система Брокмана (одна колонка, цветовые ячейки) */
+const __g1PrevRowInput = rowInputField;
+rowInputField = function(card, pageIndex, row, field, label, standard, type = 'input', extra = '') {
+  const value = row[field] || '';
+  const filled = String(value).trim();
+  const cls = filled ? 'is-filled' : 'is-empty';
+  const attr = `data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="${escapeAttr(field)}"`;
+  return `<label class="g1-field"><span>${escapeHtml(label)}</span><small style="color:var(--muted);font-size:11px;">${escapeHtml(standard || '')}</small><textarea class="g1-input ${cls}" ${attr} rows="1">${escapeHtml(value)}</textarea></label>`;
+};
+
+const __g1PrevContextInput = contextInputField;
+contextInputField = function(card, pageIndex, row, key, label, standard, type = 'input', extra = '') {
+  row.contextFields = row.contextFields || {};
+  const value = row.contextFields[key] || '';
+  const filled = String(value).trim();
+  const cls = filled ? 'is-filled' : 'is-empty';
+  const attr = `data-page-context-card-id="${escapeAttr(card.id)}" data-page-context-index="${pageIndex}" data-page-context-key="${escapeAttr(key)}"`;
+  return `<label class="g1-field"><span>${escapeHtml(label)}</span><small style="color:var(--muted);font-size:11px;">${escapeHtml(standard || '')}</small><textarea class="g1-input ${cls}" ${attr} rows="1">${escapeHtml(value)}</textarea></label>`;
+};
+
+/* ================================================================
+   v1.3.0 — SSL / HTTPS: безопасность домена (редизайн)
+   ================================================================ */
+
+const SSL_V130_YESNO = [['', '—'], ['yes', 'Да'], ['no', 'Нет'], ['not_checked', 'Не проверено']];
+const SSL_V130_CHAIN = [['', '—'], ['trusted', 'Доверенная'], ['problem', 'Проблема'], ['not_checked', 'Не проверено']];
+
+const SSL_V130_INSTRUCTION = `Суть:\nПроверить, что сайт открывается по HTTPS, сертификат действителен, выписан на правильный домен и не истекает в ближайшие 30 дней.\n\nЧто проверить:\n1. Вставить домен в SSL-проверку: SSL Labs или SSL Shopper.\n2. Проверить, что HTTPS работает.\n3. Проверить, что сертификат валиден.\n4. Проверить, что домен совпадает с сертификатом: CN / SAN.\n5. Проверить срок действия: больше 30 дней — ок, меньше 30 дней — срочно обновить.\n6. Зафиксировать доказательство: скрин или ссылка на отчёт.\n\nИдеал:\nHTTPS работает, сертификат валиден, домен совпадает, цепочка доверенная, срок действия больше 30 дней.`;
+
+function ensureSslV130(card) {
+  if (!card) return;
+  card.title = 'SSL / HTTPS: безопасность домена';
+  card.instruction = SSL_V130_INSTRUCTION;
+  const old = card.sslHttps || {};
+  card.sslV130 = card.sslV130 || {
+    domain: old.domain || '',
+    httpsWorks: '',
+    certValid: '',
+    domainMatch: '',
+    expiresIn: '',
+    chain: '',
+    evidence: old.evidence || ''
+  };
+  return card.sslV130;
+}
+
+function sslV130Select(name, label, value, options) {
+  return `<label class="g1-field"><span>${escapeHtml(label)}</span><select class="g1-input is-filled" data-ssl-v130-field="${escapeAttr(name)}">${options.map(([v,l]) => `<option value="${escapeAttr(v)}" ${value === v ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}</select></label>`;
+}
+
+function sslV130Input(name, label, value, placeholder) {
+  const filled = String(value || '').trim();
+  return `<label class="g1-field"><span>${escapeHtml(label)}</span><input class="g1-input ${filled ? 'is-filled' : 'is-empty'}" data-ssl-v130-field="${escapeAttr(name)}" value="${escapeAttr(value || '')}" placeholder="${escapeAttr(placeholder)}" /></label>`;
+}
+
+function sslV130ExpiresHint(value) {
+  const n = parseInt(value, 10);
+  if (isNaN(n) || !value) return '';
+  if (n > 30) return ' <span style="color:#16a34a;font-size:11px;font-weight:700">ок</span>';
+  if (n > 0) return ' <span style="color:#f59e0b;font-size:11px;font-weight:700">скоро истекает</span>';
+  return ' <span style="color:#dc2626;font-size:11px;font-weight:700">истёк</span>';
+}
+
+function sslV130FieldsHtml(card) {
+  const f = ensureSslV130(card);
+  const domainFilled = String(f.domain || '').trim();
+  const expHint = sslV130ExpiresHint(f.expiresIn);
+  return `<div style="display:flex;flex-direction:column;gap:12px;">
+    ${sslV130Input('domain', 'Проверяемый домен', f.domain, 'site.ru')}
+    ${sslV130Select('httpsWorks', 'HTTPS работает', f.httpsWorks, SSL_V130_YESNO)}
+    ${sslV130Select('certValid', 'SSL-сертификат валиден', f.certValid, SSL_V130_YESNO)}
+    ${sslV130Select('domainMatch', 'Домен совпадает с сертификатом (CN / SAN)', f.domainMatch, SSL_V130_YESNO)}
+    <label class="g1-field"><span>Истекает через (дней)${expHint}</span><input class="g1-input ${String(f.expiresIn||'').trim() ? 'is-filled' : 'is-empty'}" data-ssl-v130-field="expiresIn" value="${escapeAttr(f.expiresIn || '')}" placeholder="число дней" /></label>
+    ${sslV130Select('chain', 'Цепочка сертификата', f.chain, SSL_V130_CHAIN)}
+    ${sslV130Input('evidence', 'Доказательство', f.evidence, 'ссылка на SSL Labs / SSL Shopper или скрин')}
+  </div>`;
+}
+
+function sslV130CardStatus(card) {
+  const f = ensureSslV130(card);
+  if (!String(f.domain || '').trim()) return 'not_started';
+  if (!f.httpsWorks && !f.certValid && !f.domainMatch) return 'in_progress';
+  if (f.httpsWorks === 'no' || f.certValid === 'no' || f.domainMatch === 'no' || f.chain === 'problem') return 'problem';
+  const days = parseInt(f.expiresIn, 10);
+  if (!isNaN(days) && days <= 0) return 'problem';
+  if (!isNaN(days) && days <= 30) return 'needs_attention';
+  if (f.httpsWorks === 'yes' && f.certValid === 'yes' && f.domainMatch === 'yes' && f.chain === 'trusted' && !isNaN(days) && days > 30) return 'ready';
+  return 'in_progress';
+}
+
+const __g1SslPrevGetCardMode = getGate1CardMode;
+getGate1CardMode = function(card) {
+  if (isSslHttpsCard(card)) return 'ssl_v130';
+  return __g1SslPrevGetCardMode(card);
+};
+
+const __g1SslPrevEnsureTyped = ensureGate1TypedData;
+ensureGate1TypedData = function(card) {
+  if (isSslHttpsCard(card)) { ensureSslV130(card); return; }
+  return __g1SslPrevEnsureTyped(card);
+};
+
+const __g1SslPrevTypedFields = gate1TypedFieldsHtml;
+gate1TypedFieldsHtml = function(card) {
+  if (getGate1CardMode(card) === 'ssl_v130') return sslV130FieldsHtml(card);
+  return __g1SslPrevTypedFields(card);
+};
+
+const __g1SslPrevRecalc = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isSslHttpsCard(card)) { card.status = sslV130CardStatus(card); return; }
+  return __g1SslPrevRecalc(card, workspace);
+};
+
+function updateSslV130(target) {
+  const card = allCardsFromWorkspace(state).find(isSslHttpsCard);
+  if (!card) return;
+  const f = ensureSslV130(card);
+  f[target.dataset.sslV130Field] = target.value;
+  recalculateStatusForCard(card);
+  flashSaving();
+  if (target.tagName === 'SELECT') renderGate();
+  else g1PointUpdateBadge(card);
+}
+
+document.addEventListener('input', e => {
+  if (e.target?.dataset?.sslV130Field && e.target.tagName !== 'SELECT') updateSslV130(e.target);
+});
+document.addEventListener('change', e => {
+  if (e.target?.dataset?.sslV130Field) updateSslV130(e.target);
+});
+
+/* ================================================================
+   v1.3.0 — Страницы: нужность на уровне страницы, не секции
+   ================================================================ */
+STATUS_LABELS.not_required = STATUS_LABELS.not_required || 'Не требуется';
+STATUS_LABELS.undecided = STATUS_LABELS.undecided || 'Под вопросом';
+
+const __g1PrevPageCardHtml = pageStructureCardHtml;
+pageStructureCardHtml = function(card, row, pageIndex, repeatable) {
+  v20EnsurePageAuditFields(row);
+  row.contextFields = row.contextFields || {};
+  row.pageNeeded = row.pageNeeded || 'needed';
+  const needed = row.pageNeeded;
+  const pageStatus = pageStructureStatus(row);
+  const template = v22TemplateForCard(card);
+  const nameValue = row.name || card.title || template.type || 'Страница';
+
+  const needSelect = `<select class="g1-input is-filled" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="pageNeeded" style="max-width:200px;">
+    <option value="needed" ${needed === 'needed' ? 'selected' : ''}>Нужна</option>
+    <option value="not_needed" ${needed === 'not_needed' ? 'selected' : ''}>Не нужна</option>
+    <option value="undecided" ${needed === 'undecided' ? 'selected' : ''}>Под вопросом</option>
+  </select>`;
+
+  if (needed === 'not_needed') {
+    return `<section class="page-structure-card guru-route-card v22-page-card" data-page-source-card="${escapeAttr(card.id)}" style="opacity:.7;">
+      <div class="route-card-head v22-route-card-head">
+        <div>
+          <input class="page-name-input route-page-name" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="name" value="${escapeAttr(nameValue)}" placeholder="Название страницы" ${row.fixed ? 'readonly' : ''} />
+        </div>
+        <span class="status-pill status-not_required">Не требуется</span>
+        ${repeatable ? `<button class="small-btn danger-mini" data-remove-gate1-page="${escapeAttr(card.id)}" data-index="${pageIndex}" ${rowsSafeLength(card.pageRows) <= 1 ? 'disabled' : ''}>×</button>` : ''}
+      </div>
+      <div style="padding:0 20px 16px;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:12px;font-weight:700;color:var(--muted);">Использовать в проекте:</span>${needSelect}
+      </div>
+    </section>`;
+  }
+
+  if (needed === 'undecided') {
+    return `<section class="page-structure-card guru-route-card v22-page-card" data-page-source-card="${escapeAttr(card.id)}">
+      <div class="route-card-head v22-route-card-head">
+        <div>
+          <input class="page-name-input route-page-name" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="name" value="${escapeAttr(nameValue)}" placeholder="Название страницы" ${row.fixed ? 'readonly' : ''} />
+        </div>
+        <span class="status-pill status-undecided" style="background:#fff3d6;color:#8a5a00;">Под вопросом</span>
+        ${repeatable ? `<button class="small-btn danger-mini" data-remove-gate1-page="${escapeAttr(card.id)}" data-index="${pageIndex}" ${rowsSafeLength(card.pageRows) <= 1 ? 'disabled' : ''}>×</button>` : ''}
+      </div>
+      <div style="padding:0 20px 16px;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:12px;font-weight:700;color:var(--muted);">Использовать в проекте:</span>${needSelect}
+        <span style="font-size:11px;color:#8a5a00;">Нужно принять решение</span>
+      </div>
+    </section>`;
+  }
+
+  return `<section class="page-structure-card guru-route-card v22-page-card" data-page-source-card="${escapeAttr(card.id)}">
+    <div class="route-card-head v22-route-card-head">
+      <div>
+        <input class="page-name-input route-page-name" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="name" value="${escapeAttr(nameValue)}" placeholder="Название страницы" ${row.fixed ? 'readonly' : ''} />
+      </div>
+      <span class="status-pill status-${pageStatus}">${STATUS_LABELS[pageStatus] || pageStatus}</span>
+      ${repeatable ? `<button class="small-btn danger-mini" data-remove-gate1-page="${escapeAttr(card.id)}" data-index="${pageIndex}" ${rowsSafeLength(card.pageRows) <= 1 ? 'disabled' : ''}>×</button>` : ''}
+    </div>
+    <div style="padding:0 20px 10px;display:flex;align-items:center;gap:12px;">
+      <span style="font-size:12px;font-weight:700;color:var(--muted);">Использовать в проекте:</span>${needSelect}
+    </div>
+    <div class="route-top-grid v22-route-top-grid">
+      <label class="g1-field"><span>URL${g0HintBtnHtml('audit_url')}</span><small style="color:var(--muted);font-size:11px;">Адрес страницы, которую проверяем.</small><input class="g1-input ${String(row.url||'').trim() ? 'is-filled' : 'is-empty'}" list="projectUrlOptions" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || '')}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
+    </div>
+    <div class="route-sections v22-route-sections">${v22RouteSectionsHtml(card, row, pageIndex)}</div>
+  </section>`;
+};
+
+/* Override page status: handle not_needed/undecided + don't require result/proof */
+const __g1PrevPageStatus = pageStructureStatus;
+pageStructureStatus = function(row) {
+  if (row.pageNeeded === 'not_needed') return 'not_required';
+  if (row.pageNeeded === 'undecided') return 'in_progress';
+  if (!v22IsFilled(row.url)) return 'not_started';
+  const cwvSt = cwvBlockStatus(row);
+  if (cwvSt === 'problem') return 'problem';
+  if (cwvSt === 'needs_attention') return 'needs_attention';
+  const seoReady = v22IsFilled(row.title) && v22IsFilled(row.description);
+  if (seoReady) return 'ready';
+  if (v22IsFilled(row.title) || v22IsFilled(row.description) || v22IsFilled(row.h1)) return 'in_progress';
+  return 'not_started';
+};
+
+/* Override tech control: remove "Доказательство" field */
+const __g1PrevAuditControls = pageAuditControlsCompactHtml;
+pageAuditControlsCompactHtml = function(card, row, pageIndex) {
+  v20EnsurePageAuditFields(row);
+  return `<div class="route-tech-grid">
+    <label class="g1-field"><span>Meta Robots</span><select class="g1-input is-filled" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="metaRobotsStatus">${auditStatusOptions(row.metaRobotsStatus, 'meta')}</select></label>
+    <label class="g1-field"><span>CWV</span><select class="g1-input is-filled" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="cwvStatus">${auditStatusOptions(row.cwvStatus, 'cwv')}</select></label>
+    <label class="g1-field"><span>Изображения</span><select class="g1-input is-filled" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="imagesStatus">${auditStatusOptions(row.imagesStatus, 'images')}</select></label>
+  </div>`;
+};
+
+/* Override section status: don't require result/proof fields */
+v22SectionStatus = function(row, section) {
+  if (v22SectionMode(row, section) === 'not_needed') return 'ready';
+  const requiredFields = (section.fields || []).filter(field => field.required !== false);
+  const checks = requiredFields.map(field => v22IsFilled(v22GetFieldValue(row, field)));
+  const filled = checks.filter(Boolean).length;
+  if (!filled) return 'not_started';
+  if (filled === checks.length) return 'ready';
+  return 'in_progress';
+};
+
+/* Override section renderer: remove "Нужна ли секция", "Результат секции", "Доказательство" */
+v22RouteSectionHtml = function(card, row, pageIndex, section, open) {
+  row.contextFields = row.contextFields || {};
+  const status = v22SectionStatus(row, section);
+  return `<details class="route-section v22-route-section status-${status}" ${open ? 'open' : ''}>
+    <summary>
+      <span class="v22-section-title">${escapeHtml(section.title)}</span>
+      <span class="v22-section-status status-pill status-${status}">${escapeHtml(v22SectionStatusLabel(row, section))}</span>
+    </summary>
+    <div class="route-section-body v22-section-body">
+      <div class="v22-section-guidance">
+        <div><strong>Задача</strong><p>${escapeHtml(section.task || '')}</p></div>
+        <div><strong>Чек-пункты</strong><ul>${(section.checklist || []).map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>
+        <div><strong>Стандарт готовности</strong><p>${escapeHtml(section.standard || '')}</p></div>
+      </div>
+      <div class="route-section-grid v22-route-fields">
+        ${(section.fields || []).map(field => v22SectionFieldHtml(card, pageIndex, row, field)).join('')}
+      </div>
+    </div>
+  </details>`;
+};
+
+/* Handle the pageNeeded field change */
+document.addEventListener('change', e => {
+  if (e.target?.dataset?.gate1PageField === 'pageNeeded') {
+    const card = findCard(e.target.dataset.gate1PageCardId);
+    if (!card) return;
+    const idx = Number(e.target.dataset.gate1PageIndex);
+    if (card.pageRows?.[idx]) {
+      card.pageRows[idx].pageNeeded = e.target.value;
+      recalculateStatusForCard(card);
+      flashSaving();
+      renderGate();
+    }
+  }
+});
+
+/* v1.3.0 — fix page jump: don't renderGate() on input for text fields */
+const __g1PrevUpdatePageRow = updateGate1PageRow;
+updateGate1PageRow = function(e) {
+  const card = findCard(e.target.dataset.gate1PageCardId);
+  if (!card) return;
+  ensureGate1TypedData(card);
+  const index = Number(e.target.dataset.gate1PageIndex);
+  const field = e.target.dataset.gate1PageField;
+  if (!card.pageRows[index]) return;
+  card.pageRows[index][field] = e.target.value;
+  addOrUpdateProjectLink(card.pageRows[index].url, { status: card.pageRows[index].urlStatus, comment: card.pageRows[index].comment, source: card.pageRows[index].source });
+  recalculateStatusForCard(card);
+  flashSaving();
+  if (['ctaMode','urlStatus','source','pageNeeded'].includes(field)) renderGate();
+  else {
+    g1PointUpdateBadge(card);
+    g1RefreshSectionBadges(card);
+  }
+};
+
+/* v1.3.0 — refresh section-level status badges without re-rendering */
+function g1RefreshSectionBadges(card) {
+  if (!card?.pageRows) return;
+  const template = v22TemplateForCard(card);
+  const allSections = [...(template.sections || []),
+    { key:'seo_snippet', title:'SEO-сниппет', fields:[rowField('title','Title',''), rowField('description','Description','')] }
+  ];
+  card.pageRows.forEach((row, idx) => {
+    const pageCard = document.querySelector(`[data-page-source-card="${CSS.escape(card.id)}"]`);
+    if (!pageCard) return;
+    allSections.forEach(section => {
+      const status = v22SectionStatus(row, section);
+      const badge = Array.from(pageCard.querySelectorAll('.v22-section-status')).find(el => {
+        const title = el.closest('summary')?.querySelector('.v22-section-title');
+        return title && title.textContent.trim() === section.title;
+      });
+      if (badge) {
+        badge.className = `v22-section-status status-pill status-${status}`;
+        badge.textContent = STATUS_LABELS[status] || status;
+      }
+    });
+  });
+}
+
+const __g1PrevUpdateContextField = updatePageContextField;
+updatePageContextField = function(e) {
+  __g1PrevUpdateContextField(e);
+  const card = findCard(e.target.dataset.pageContextCardId);
+  if (card) {
+    g1PointUpdateBadge(card);
+    g1RefreshSectionBadges(card);
+  }
+};
+
+/* v1.3.0 — remove snippet preview from SEO section */
+v22SeoSnippetSection = function(card, row, pageIndex, open) {
+  const section = { key:'seo_snippet', title:'SEO-сниппет', task:'Собрать поисковый вид страницы из H1, Title и Description.', checklist:['Title отражает смысл страницы','Description объясняет ценность и действие','Snippet читается как короткое предложение'], standard:'Страница понятно выглядит в поиске и не требует отдельного блока сниппета.', fields:[rowField('title','Title','20–90 знаков. SEO-заголовок страницы.'), rowField('description','Description','70–155 знаков. SEO-описание страницы.','textarea'), ctxField('seoKeywords','Ключевые слова','Основные ключевые слова для страницы.')] };
+  return v22RouteSectionHtml(card, row, pageIndex, section, open);
+};
+
+/* v1.3.0 — CWV / PageSpeed Insights (replaces Технический контроль) */
+function ensureCwvData(row) {
+  row.cwvData = row.cwvData || {
+    mobile: { performance: '', lcp: '', inp: '', cls: '', issue: '', status: '' },
+    desktop: { performance: '', lcp: '', inp: '', cls: '', issue: '', status: '' },
+    evidence: ''
+  };
+  row.cwvData.mobile = row.cwvData.mobile || { performance:'', lcp:'', inp:'', cls:'', issue:'', status:'' };
+  row.cwvData.desktop = row.cwvData.desktop || { performance:'', lcp:'', inp:'', cls:'', issue:'', status:'' };
+  return row.cwvData;
+}
+
+const CWV_STATUSES = [['', '—'], ['ok', 'ОК'], ['attention', 'Требует внимания'], ['problem', 'Проблема']];
+
+function cwvRowHtml(card, pageIndex, version, label, data) {
+  const attr = (field) => `data-cwv-card="${escapeAttr(card.id)}" data-cwv-index="${pageIndex}" data-cwv-version="${escapeAttr(version)}" data-cwv-field="${escapeAttr(field)}"`;
+  const cls = (v) => String(v||'').trim() ? 'is-filled' : 'is-empty';
+  return `<tr>
+    <td style="font-weight:700;white-space:nowrap;">${escapeHtml(label)}</td>
+    <td><input class="g1-input ${cls(data.performance)}" ${attr('performance')} value="${escapeAttr(data.performance||'')}" placeholder="0–100" style="width:70px;" /></td>
+    <td><input class="g1-input ${cls(data.lcp)}" ${attr('lcp')} value="${escapeAttr(data.lcp||'')}" placeholder="сек" style="width:80px;" /></td>
+    <td><input class="g1-input ${cls(data.inp)}" ${attr('inp')} value="${escapeAttr(data.inp||'')}" placeholder="мс" style="width:70px;" /></td>
+    <td><input class="g1-input ${cls(data.cls)}" ${attr('cls')} value="${escapeAttr(data.cls||'')}" placeholder="0.00" style="width:70px;" /></td>
+    <td><input class="g1-input ${cls(data.issue)}" ${attr('issue')} value="${escapeAttr(data.issue||'')}" placeholder="нет" /></td>
+    <td><select class="g1-input is-filled" ${attr('status')}>${CWV_STATUSES.map(([v,l]) => `<option value="${escapeAttr(v)}" ${data.status===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}</select></td>
+  </tr>`;
+}
+
+function cwvBlockStatus(row) {
+  const d = ensureCwvData(row);
+  const url = String(row.url || '').trim();
+  if (!url) return 'not_started';
+  const mFilled = String(d.mobile.performance||'').trim() || d.mobile.status;
+  const dFilled = String(d.desktop.performance||'').trim() || d.desktop.status;
+  if (!mFilled && !dFilled) return 'in_progress';
+  if (!mFilled || !dFilled) return 'in_progress';
+  if (d.mobile.status === 'problem' || d.desktop.status === 'problem') return 'problem';
+  if (d.mobile.status === 'attention' || d.desktop.status === 'attention') return 'needs_attention';
+  const perf = [parseFloat(d.mobile.performance), parseFloat(d.desktop.performance)].filter(n => !isNaN(n));
+  if (perf.some(n => n < 50)) return 'problem';
+  if (perf.some(n => n < 70)) return 'needs_attention';
+  if (d.mobile.status === 'ok' && d.desktop.status === 'ok') return 'ready';
+  return 'in_progress';
+}
+
+v22TechnicalControlHtml = function(card, row, pageIndex) {
+  const d = ensureCwvData(row);
+  const status = cwvBlockStatus(row);
+  const evidenceFilled = String(d.evidence||'').trim();
+  return `<details class="route-section v22-route-section status-${status}">
+    <summary>
+      <span class="v22-section-title">CWV / PageSpeed Insights</span>
+      <span class="v22-section-status status-pill status-${status}">${STATUS_LABELS[status] || status}</span>
+    </summary>
+    <div class="route-section-body v22-section-body" style="padding:14px;">
+      <div class="g1-table-scroll"><table class="mini-table typed-table g1-forms-table" style="font-size:13px;">
+        <thead><tr><th>Версия</th><th>Performance</th><th>LCP</th><th>INP</th><th>CLS</th><th>Главная проблема</th><th>Статус</th></tr></thead>
+        <tbody>
+          ${cwvRowHtml(card, pageIndex, 'mobile', 'Мобильная', d.mobile)}
+          ${cwvRowHtml(card, pageIndex, 'desktop', 'Десктопная', d.desktop)}
+        </tbody>
+      </table></div>
+      <label class="g1-field"><span>Доказательство</span><input class="g1-input ${evidenceFilled ? 'is-filled' : 'is-empty'}" data-cwv-card="${escapeAttr(card.id)}" data-cwv-index="${pageIndex}" data-cwv-field="evidence" value="${escapeAttr(d.evidence||'')}" placeholder="ссылка на PageSpeed Insights, скрин или отчёт" /></label>
+    </div>
+  </details>`;
+};
+
+function updateCwvField(target) {
+  const card = findCard(target.dataset.cwvCard);
+  if (!card) return;
+  const idx = Number(target.dataset.cwvIndex);
+  const row = card.pageRows?.[idx];
+  if (!row) return;
+  const d = ensureCwvData(row);
+  const version = target.dataset.cwvVersion;
+  const field = target.dataset.cwvField;
+  if (version) {
+    d[version][field] = target.value;
+  } else {
+    d[field] = target.value;
+  }
+  recalculateStatusForCard(card);
+  flashSaving();
+  if (target.tagName === 'SELECT') renderGate();
+  else { g1PointUpdateBadge(card); g1RefreshSectionBadges(card); }
+}
+
+document.addEventListener('input', e => {
+  if (e.target?.dataset?.cwvField && e.target.tagName !== 'SELECT') updateCwvField(e.target);
+});
+document.addEventListener('change', e => {
+  if (e.target?.dataset?.cwvField) updateCwvField(e.target);
+});
+
+/* v1.3.0 — fix card-level status for page_structure: treat not_required as done */
+const __g1PrevRecalcPage = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (getGate1CardMode(card) === 'page_structure') {
+    ensureGate1TypedData(card);
+    const statuses = (card.pageRows || []).map(pageStructureStatus);
+    const active = statuses.filter(s => s !== 'not_required');
+    if (statuses.some(s => s === 'problem')) card.status = 'problem';
+    else if (statuses.some(s => s === 'needs_attention')) card.status = 'needs_attention';
+    else if (!active.length && statuses.length && statuses.every(s => s === 'not_required')) card.status = 'not_required';
+    else if (!active.length) card.status = 'not_started';
+    else if (active.every(s => s === 'not_started')) card.status = 'not_started';
+    else if (active.every(s => s === 'ready')) card.status = 'ready';
+    else card.status = 'in_progress';
+    return;
+  }
+  return __g1PrevRecalcPage(card, workspace);
+};
+
+/* ================================================================
+   v1.3.0 — Cookie-баннер: уведомление и согласие (редизайн)
+   ================================================================ */
+
+const __g1PrevIsCookieCard = isV23CookieCard;
+isV23CookieCard = function(card) {
+  if (/cookie/i.test(String(card?.title || ''))) return true;
+  return __g1PrevIsCookieCard(card);
+};
+
+const COOKIE_V130_ZONES = [['', '—'], ['ru', 'РФ'], ['eu', 'ЕС / UK'], ['ru_eu', 'РФ + ЕС']];
+const COOKIE_V130_YESNO = [['', '—'], ['yes', 'Да'], ['no', 'Нет']];
+const COOKIE_V130_MODELS = [['', '—'], ['notice_only', 'Только уведомление'], ['accept', 'Принять'], ['accept_settings', 'Принять + Настроить'], ['accept_reject', 'Принять + Отклонить'], ['accept_reject_settings', 'Принять + Отклонить + Настроить']];
+const COOKIE_V130_PRECONSENT = [['', '—'], ['not_set', 'Не ставятся'], ['set', 'Ставятся'], ['not_checked', 'Не проверено'], ['not_required', 'Не требуется']];
+
+const COOKIE_V130_INSTRUCTION = `Суть:\nПроверить, что cookie-баннер соответствует выбранной правовой зоне, даёт понятное уведомление, ссылку на политику и не мешает ключевому действию.\n\nЧто проверить:\n1. Открыть сайт в режиме инкогнито.\n2. Проверить, появляется ли cookie-баннер.\n3. Выбрать правовую зону: РФ, ЕС / UK, РФ + ЕС.\n4. Проверить ссылку на политику обработки данных.\n5. Проверить модель действия: уведомление, принять, отклонить, настроить.\n6. Для ЕС / UK и РФ + ЕС проверить, что необязательные cookie не ставятся до согласия.\n7. Проверить, что баннер не перекрывает форму, заявку или основную кнопку.\n\nИдеал:\nПравовая зона выбрана, баннер соответствует требованиям, есть ссылка на политику, модель действия понятна, баннер не мешает конверсии.`;
+
+function ensureCookieV130(card) {
+  if (!card) return;
+  card.title = 'Cookie-баннер: уведомление и согласие';
+  card.instruction = COOKIE_V130_INSTRUCTION;
+  const old = card.legalTrust || {};
+  card.cookieV130 = card.cookieV130 || {
+    url: old.url || '',
+    zone: '',
+    bannerShown: '',
+    policyLink: '',
+    actionModel: '',
+    preCookies: '',
+    ctaFree: '',
+    evidence: old.evidence || ''
+  };
+  return card.cookieV130;
+}
+
+function cookieV130Select(name, label, value, options) {
+  return `<label class="g1-field"><span>${escapeHtml(label)}</span><select class="g1-input is-filled" data-cookie-v130-field="${escapeAttr(name)}">${options.map(([v,l]) => `<option value="${escapeAttr(v)}" ${value === v ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}</select></label>`;
+}
+
+function cookieV130FieldsHtml(card) {
+  const f = ensureCookieV130(card);
+  const urlFilled = String(f.url || '').trim();
+  const evidenceFilled = String(f.evidence || '').trim();
+  const needsEu = f.zone === 'eu' || f.zone === 'ru_eu';
+  return `<div style="display:flex;flex-direction:column;gap:12px;">
+    <label class="g1-field"><span>URL проверки</span><input class="g1-input ${urlFilled ? 'is-filled' : 'is-empty'}" data-cookie-v130-field="url" value="${escapeAttr(f.url || '')}" placeholder="https://site.ru" /></label>
+    ${cookieV130Select('zone', 'Правовая зона', f.zone, COOKIE_V130_ZONES)}
+    ${cookieV130Select('bannerShown', 'Баннер показывается', f.bannerShown, COOKIE_V130_YESNO)}
+    ${cookieV130Select('policyLink', 'Ссылка на политику', f.policyLink, COOKIE_V130_YESNO)}
+    ${cookieV130Select('actionModel', 'Модель действия в баннере', f.actionModel, COOKIE_V130_MODELS)}
+    ${needsEu ? cookieV130Select('preCookies', 'Необязательные cookie до согласия', f.preCookies, COOKIE_V130_PRECONSENT) : ''}
+    ${cookieV130Select('ctaFree', 'Баннер не мешает CTA', f.ctaFree, COOKIE_V130_YESNO)}
+  </div>`;
+}
+
+function cookieV130Status(card) {
+  const f = ensureCookieV130(card);
+  if (!String(f.url || '').trim()) return 'not_started';
+  if (!f.zone) return 'in_progress';
+  if (!f.bannerShown || !f.policyLink || !f.actionModel || !f.ctaFree) return 'in_progress';
+  if (f.policyLink === 'no') return 'problem';
+  if (f.ctaFree === 'no') return 'problem';
+  if (f.bannerShown === 'no') return 'problem';
+  const needsEu = f.zone === 'eu' || f.zone === 'ru_eu';
+  if (needsEu) {
+    if (!f.preCookies) return 'in_progress';
+    if (f.preCookies === 'set') return 'problem';
+    const euModels = ['accept_reject', 'accept_reject_settings'];
+    if (!euModels.includes(f.actionModel)) return 'problem';
+  }
+  return 'ready';
+}
+
+const __g1CookiePrevGetMode = getGate1CardMode;
+getGate1CardMode = function(card) {
+  if (isV23CookieCard(card)) return 'cookie_v130';
+  return __g1CookiePrevGetMode(card);
+};
+
+const __g1CookiePrevEnsure = ensureGate1TypedData;
+ensureGate1TypedData = function(card) {
+  if (isV23CookieCard(card)) { ensureCookieV130(card); return; }
+  return __g1CookiePrevEnsure(card);
+};
+
+const __g1CookiePrevTyped = gate1TypedFieldsHtml;
+gate1TypedFieldsHtml = function(card) {
+  if (getGate1CardMode(card) === 'cookie_v130') return cookieV130FieldsHtml(card);
+  return __g1CookiePrevTyped(card);
+};
+
+const __g1CookiePrevRecalc = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isV23CookieCard(card)) { card.status = cookieV130Status(card); return; }
+  return __g1CookiePrevRecalc(card, workspace);
+};
+
+function updateCookieV130(target) {
+  const card = allCardsFromWorkspace(state).find(isV23CookieCard);
+  if (!card) return;
+  const f = ensureCookieV130(card);
+  f[target.dataset.cookieV130Field] = target.value;
+  if (target.dataset.cookieV130Field === 'url') addOrUpdateProjectLink(target.value, { comment: 'cookie-баннер' });
+  recalculateStatusForCard(card);
+  flashSaving();
+  if (target.tagName === 'SELECT') renderGate();
+  else g1PointUpdateBadge(card);
+}
+
+document.addEventListener('input', e => {
+  if (e.target?.dataset?.cookieV130Field && e.target.tagName !== 'SELECT') updateCookieV130(e.target);
+});
+document.addEventListener('change', e => {
+  if (e.target?.dataset?.cookieV130Field) updateCookieV130(e.target);
+});
+
+/* ================================================================
+   v1.3.0 — Футер: навигация, доверие и юридическая база
+   ================================================================ */
+
+const FOOTER_V130_STATUS3 = [['', '—'], ['yes', 'Есть'], ['no', 'Нет'], ['not_required', 'Не требуется']];
+const FOOTER_V130_YESNO = [['', '—'], ['yes', 'Да'], ['no', 'Нет']];
+const FOOTER_V130_ZONES = [['', '—'], ['ru', 'РФ'], ['eu', 'ЕС / UK'], ['ru_eu', 'РФ + ЕС']];
+
+const FOOTER_V130_INSTRUCTION = `Суть:\nПроверить, что футер помогает пользователю найти нужный раздел, связаться с компанией, проверить доверие и получить юридическую информацию.\n\nЧто проверить:\n1. Открыть футер сайта.\n2. Коммерческая навигация: каталог, категории, услуги, важные разделы.\n3. Контакты: телефон, email, мессенджеры, адрес, часы работы.\n4. Конверсионное действие: выбрать, заказать, написать, рассчитать.\n5. Сервисные ссылки: доставка, оплата, возврат, гарантии, FAQ.\n6. Доверие: соцсети, отзывы, сертификаты, портфолио.\n7. Юридическая база: политика данных, cookie, оферта, реквизиты.\n8. Все ссылки открываются.\n9. Зафиксировать доказательство.\n\nИдеал:\nФутер даёт навигацию, контакт, доверие, сервис и юридическую прозрачность.`;
+
+function ensureFooterV130(card) {
+  if (!card) return;
+  card.title = 'Футер: навигация, доверие и юридическая база';
+  card.instruction = FOOTER_V130_INSTRUCTION;
+  card.footerV130 = card.footerV130 || {
+    url: card.legalTrust?.url || '',
+    zone: '',
+    commercialNav: '',
+    contacts: '',
+    conversion: '',
+    serviceInfo: '',
+    trust: '',
+    legalBase: '',
+    linksWork: '',
+    evidence: card.legalTrust?.evidence || ''
+  };
+  return card.footerV130;
+}
+
+const __g1PrevIsFooterCard = isV23FooterCard;
+isV23FooterCard = function(card) {
+  if (/футер/i.test(String(card?.title || ''))) return true;
+  return __g1PrevIsFooterCard(card);
+};
+
+function footerV130Select(name, label, value, options) {
+  return `<label class="g1-field"><span>${escapeHtml(label)}</span><select class="g1-input is-filled" data-footer-v130-field="${escapeAttr(name)}">${options.map(([v,l]) => `<option value="${escapeAttr(v)}" ${value === v ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}</select></label>`;
+}
+
+function footerV130FieldsHtml(card) {
+  const f = ensureFooterV130(card);
+  const urlFilled = String(f.url || '').trim();
+  const evFilled = String(f.evidence || '').trim();
+  return `<div style="display:flex;flex-direction:column;gap:12px;">
+    <label class="g1-field"><span>URL проверки</span><input class="g1-input ${urlFilled ? 'is-filled' : 'is-empty'}" data-footer-v130-field="url" value="${escapeAttr(f.url || '')}" placeholder="https://site.ru" /></label>
+    ${footerV130Select('zone', 'Правовая зона', f.zone, FOOTER_V130_ZONES)}
+    ${footerV130Select('commercialNav', 'Коммерческая навигация', f.commercialNav, FOOTER_V130_STATUS3)}
+    ${footerV130Select('contacts', 'Контакты', f.contacts, FOOTER_V130_YESNO)}
+    ${footerV130Select('conversion', 'Конверсионное действие', f.conversion, FOOTER_V130_STATUS3)}
+    ${footerV130Select('serviceInfo', 'Сервисная информация', f.serviceInfo, FOOTER_V130_STATUS3)}
+    ${footerV130Select('trust', 'Доверие', f.trust, FOOTER_V130_STATUS3)}
+    ${footerV130Select('legalBase', 'Юридическая база', f.legalBase, FOOTER_V130_YESNO)}
+    ${footerV130Select('linksWork', 'Ссылки открываются', f.linksWork, FOOTER_V130_YESNO)}
+  </div>`;
+}
+
+function footerV130Status(card) {
+  const f = ensureFooterV130(card);
+  if (!String(f.url || '').trim()) return 'not_started';
+  if (!f.contacts || !f.legalBase || !f.linksWork) return 'in_progress';
+  if (f.contacts === 'no' || f.legalBase === 'no' || f.linksWork === 'no') return 'problem';
+  const optional = ['commercialNav','conversion','serviceInfo','trust'];
+  const active = optional.filter(k => f[k] && f[k] !== 'not_required');
+  if (active.some(k => f[k] === 'no')) return 'needs_attention';
+  if (f.contacts === 'yes' && f.legalBase === 'yes' && f.linksWork === 'yes') return 'ready';
+  return 'in_progress';
+}
+
+const __g1FooterPrevGetMode = getGate1CardMode;
+getGate1CardMode = function(card) {
+  if (isV23FooterCard(card)) return 'footer_v130';
+  return __g1FooterPrevGetMode(card);
+};
+
+const __g1FooterPrevEnsure = ensureGate1TypedData;
+ensureGate1TypedData = function(card) {
+  if (isV23FooterCard(card)) { ensureFooterV130(card); return; }
+  return __g1FooterPrevEnsure(card);
+};
+
+const __g1FooterPrevTyped = gate1TypedFieldsHtml;
+gate1TypedFieldsHtml = function(card) {
+  if (getGate1CardMode(card) === 'footer_v130') return footerV130FieldsHtml(card);
+  return __g1FooterPrevTyped(card);
+};
+
+const __g1FooterPrevRecalc = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isV23FooterCard(card)) { card.status = footerV130Status(card); return; }
+  return __g1FooterPrevRecalc(card, workspace);
+};
+
+function updateFooterV130(target) {
+  const card = allCardsFromWorkspace(state).find(isV23FooterCard);
+  if (!card) return;
+  const f = ensureFooterV130(card);
+  f[target.dataset.footerV130Field] = target.value;
+  if (target.dataset.footerV130Field === 'url') addOrUpdateProjectLink(target.value, { comment: 'проверка футера' });
+  recalculateStatusForCard(card);
+  flashSaving();
+  if (target.tagName === 'SELECT') renderGate();
+  else g1PointUpdateBadge(card);
+}
+
+document.addEventListener('input', e => {
+  if (e.target?.dataset?.footerV130Field && e.target.tagName !== 'SELECT') updateFooterV130(e.target);
+});
+document.addEventListener('change', e => {
+  if (e.target?.dataset?.footerV130Field) updateFooterV130(e.target);
+});
+
+/* ================================================================
+   v1.3.0 — Согласие в формах (редизайн)
+   ================================================================ */
+
+const CONSENT_V130_ZONES = [['', '—'], ['ru', 'РФ'], ['eu', 'ЕС / UK'], ['ru_eu', 'РФ + ЕС']];
+const CONSENT_V130_PDN = [['', '—'], ['yes', 'Есть'], ['no', 'Нет'], ['not_required', 'Не требуется']];
+const CONSENT_V130_POLICY = [['', '—'], ['yes', 'Ссылка есть'], ['no', 'Ссылки нет'], ['not_required', 'Не требуется']];
+const CONSENT_V130_AD = [['', '—'], ['yes', 'Есть отдельно'], ['no', 'Нет'], ['not_required', 'Не требуется']];
+const CONSENT_V130_STATUS = [['', '—'], ['done', 'Реализовано'], ['not_done', 'Не реализовано'], ['attention', 'Требует внимания'], ['not_required', 'Не требуется']];
+
+const CONSENT_V130_PLACES = [
+  { key: 'home', place: 'Главная', form: 'заявка / консультация / расчёт' },
+  { key: 'service', place: 'Страница услуги', form: 'заявка / расчёт / консультация' },
+  { key: 'landing', place: 'Лендинг', form: 'lead-форма / квиз / заявка' },
+  { key: 'product', place: 'Карточка товара', form: 'заказ / вопрос / покупка' },
+  { key: 'cart', place: 'Корзина / оформление', form: 'отправка заказа' },
+  { key: 'contacts', place: 'Контакты', form: 'обратная связь' },
+  { key: 'footer', place: 'Футер', form: 'подписка / связь / мессенджеры' },
+  { key: 'popup', place: 'Попап / виджет', form: 'callback / подписка / заявка' },
+  { key: 'auth', place: 'Регистрация / ЛК', form: 'аккаунт / авторизация' },
+  { key: 'other', place: 'Другое', form: '' }
+];
+
+const CONSENT_V130_INSTRUCTION = `Суть:\nПроверить, что во всех местах, где пользователь отправляет данные, есть согласие на обработку ПДн, ссылка на политику и отдельное согласие на рекламу при необходимости.\n\nЧто проверить:\n1. Пройти по каждому месту из списка.\n2. Если формы нет — отметить «Не требуется».\n3. Если форма есть — проверить ПДн, политику, рекламное согласие.\n4. Для ЕС/UK: галочка не проставлена заранее.\n5. Зафиксировать источник.\n\nИдеал:\nВсе формы проверены, согласие корректно, политика доступна, рекламное согласие отдельно.`;
+
+function ensureConsentV130(card) {
+  if (!card) return;
+  card.title = 'Согласие в формах';
+  card.instruction = CONSENT_V130_INSTRUCTION;
+  const old = card.consentV130 || {};
+  card.consentV130 = card.consentV130 || { zone: old.zone || '' };
+  card.consentV130.places = card.consentV130.places || {};
+  CONSENT_V130_PLACES.forEach(p => {
+    card.consentV130.places[p.key] = card.consentV130.places[p.key] || { pdn: '', policy: '', ad: '', status: '', evidence: '' };
+  });
+  return card.consentV130;
+}
+
+const __g1PrevIsConsentCard = isV23FormConsentSummaryCard;
+isV23FormConsentSummaryCard = function(card) {
+  if (/согласие.*форм/i.test(String(card?.title || ''))) return true;
+  return __g1PrevIsConsentCard(card);
+};
+
+function consentV130RowHtml(place, data) {
+  const attr = (col) => `data-consent-v130-place="${escapeAttr(place.key)}" data-consent-v130-col="${escapeAttr(col)}"`;
+  const evFilled = String(data.evidence || '').trim();
+  return `<tr>
+    <td style="font-weight:700;white-space:nowrap;font-size:13px;">${escapeHtml(place.place)}</td>
+    <td style="color:var(--muted);font-size:12px;">${escapeHtml(place.form)}</td>
+    <td><select class="g1-input is-filled" ${attr('pdn')}>${CONSENT_V130_PDN.map(([v,l]) => `<option value="${escapeAttr(v)}" ${data.pdn===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}</select></td>
+    <td><select class="g1-input is-filled" ${attr('policy')}>${CONSENT_V130_POLICY.map(([v,l]) => `<option value="${escapeAttr(v)}" ${data.policy===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}</select></td>
+    <td><select class="g1-input is-filled" ${attr('ad')}>${CONSENT_V130_AD.map(([v,l]) => `<option value="${escapeAttr(v)}" ${data.ad===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}</select></td>
+    <td><select class="g1-input is-filled" ${attr('status')}>${CONSENT_V130_STATUS.map(([v,l]) => `<option value="${escapeAttr(v)}" ${data.status===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}</select></td>
+    <td><input class="g1-input ${evFilled ? 'is-filled' : 'is-empty'}" ${attr('evidence')} value="${escapeAttr(data.evidence||'')}" placeholder="скрин / ссылка" /></td>
+  </tr>`;
+}
+
+function consentV130FieldsHtml(card) {
+  const f = ensureConsentV130(card);
+  return `<div style="display:flex;flex-direction:column;gap:12px;">
+    <label class="g1-field"><span>Правовая зона</span><select class="g1-input is-filled" data-consent-v130-field="zone">${CONSENT_V130_ZONES.map(([v,l]) => `<option value="${escapeAttr(v)}" ${f.zone===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}</select></label>
+    <div class="g1-table-scroll"><table class="mini-table typed-table g1-forms-table">
+      <thead><tr><th>Место</th><th>Тип формы</th><th>ПДн</th><th>Политика</th><th>Реклама</th><th>Статус</th><th>Источник</th></tr></thead>
+      <tbody>${CONSENT_V130_PLACES.map(p => consentV130RowHtml(p, f.places[p.key])).join('')}</tbody>
+    </table></div>
+  </div>`;
+}
+
+function consentV130BlockStatus(card) {
+  const f = ensureConsentV130(card);
+  const rows = CONSENT_V130_PLACES.map(p => f.places[p.key]);
+  const active = rows.filter(r => r.status && r.status !== 'not_required');
+  if (!active.length && !rows.some(r => r.status)) return 'not_started';
+  if (active.some(r => r.status === 'not_done')) return 'problem';
+  if (active.some(r => r.pdn === 'no' || r.policy === 'no')) return 'problem';
+  if (active.some(r => r.status === 'attention')) return 'needs_attention';
+  if (active.length && active.every(r => r.status === 'done')) return 'ready';
+  return 'in_progress';
+}
+
+const __g1ConsentPrevGetMode = getGate1CardMode;
+getGate1CardMode = function(card) {
+  if (isV23FormConsentSummaryCard(card)) return 'consent_v130';
+  return __g1ConsentPrevGetMode(card);
+};
+
+const __g1ConsentPrevEnsure = ensureGate1TypedData;
+ensureGate1TypedData = function(card) {
+  if (isV23FormConsentSummaryCard(card)) { ensureConsentV130(card); return; }
+  return __g1ConsentPrevEnsure(card);
+};
+
+const __g1ConsentPrevTyped = gate1TypedFieldsHtml;
+gate1TypedFieldsHtml = function(card) {
+  if (getGate1CardMode(card) === 'consent_v130') return consentV130FieldsHtml(card);
+  return __g1ConsentPrevTyped(card);
+};
+
+const __g1ConsentPrevRecalc = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isV23FormConsentSummaryCard(card)) { card.status = consentV130BlockStatus(card); return; }
+  return __g1ConsentPrevRecalc(card, workspace);
+};
+
+function updateConsentV130(target) {
+  const card = allCardsFromWorkspace(state).find(isV23FormConsentSummaryCard);
+  if (!card) return;
+  const f = ensureConsentV130(card);
+  const field = target.dataset.consentV130Field;
+  const place = target.dataset.consentV130Place;
+  const col = target.dataset.consentV130Col;
+  if (field) f[field] = target.value;
+  else if (place && col) f.places[place][col] = target.value;
+  recalculateStatusForCard(card);
+  flashSaving();
+  if (target.tagName === 'SELECT') renderGate();
+  else g1PointUpdateBadge(card);
+}
+
+document.addEventListener('input', e => {
+  if ((e.target?.dataset?.consentV130Field || e.target?.dataset?.consentV130Place) && e.target.tagName !== 'SELECT') updateConsentV130(e.target);
+});
+document.addEventListener('change', e => {
+  if (e.target?.dataset?.consentV130Field || e.target?.dataset?.consentV130Place) updateConsentV130(e.target);
+});
+
+/* ================================================================
+   v1.3.0 — Спрос: семантика, кластеризация, намерения (полный редизайн)
+   Два независимых раздела: Поиск и Баннерные/сетевые кампании
+   ================================================================ */
+
+const DEMAND_V130_PLATFORMS_SEARCH = [['', '—'],['yandex','Яндекс Поиск'],['google','Google Search'],['both','Яндекс + Google']];
+const DEMAND_V130_PLATFORMS_BANNER = [['', '—'],['rsya','Яндекс РСЯ'],['display','Google Display'],['both','Яндекс + Google']];
+
+const DEMAND_V130_SEARCH_STEPS = [
+  { key:'frames', title:'1. Рамки продвижения', task:'Ограничить сбор семантики, чтобы не собирать мусор.', fields:[
+    {k:'product',l:'Что продвигаем',p:'услуга / симптом / результат'},
+    {k:'excluded',l:'Что не продвигаем',p:'бесплатно, вакансии, обучение, DIY'},
+    {k:'minusZones',l:'Минус-зоны',p:'список минус-зон',t:'textarea'},
+    {k:'geo',l:'География',p:'город / регион / страна'},
+    {k:'landing',l:'Посадочная страница',p:'URL'},
+    {k:'source',l:'Источник',p:'Wordstat / Keyword Planner / подсказки'}
+  ]},
+  { key:'formulations', title:'2. Пользовательские формулировки', task:'Собрать живой язык аудитории: формулировки, жаргон, ошибки, боли.', fields:[
+    {k:'realPhrases',l:'Реальные формулировки',p:'как клиент описывает проблему',t:'textarea'},
+    {k:'slang',l:'Разговорные / ошибки / сленг',p:'сокращения, опечатки, жаргон',t:'textarea'},
+    {k:'pains',l:'Боли и ситуации',p:'проблемы, из-за которых ищут',t:'textarea'},
+    {k:'source',l:'Источник',p:'Wordstat / подсказки / отчёты'}
+  ]},
+  { key:'clusters', title:'3. Частотность и кластеры', task:'Понять, есть ли спрос и как он структурирован. 1 кластер = 1 тема = 1 интент.', fields:[
+    {k:'clusters',l:'Кластеры',p:'кластер → интент → фразы → частотность',t:'textarea'},
+    {k:'source',l:'Источник',p:'Wordstat / Keyword Planner'}
+  ]},
+  { key:'groups', title:'4. Размер и логика групп', task:'Собрать управляемую структуру групп: узкая ниша 1–3, широкий спрос 3–8.', fields:[
+    {k:'groups',l:'Группы',p:'группа → интент → посадочная → кол-во фраз',t:'textarea'},
+    {k:'comment',l:'Комментарий',p:'логика группировки'}
+  ]},
+  { key:'economics', title:'5. Оценка спроса и стоимости', task:'Проверить жизнеспособность: минимум 50 кликов/неделю на группу.', fields:[
+    {k:'forecast',l:'Прогнозы по группам',p:'группа → показы → клики → CPC → бюджет',t:'textarea'},
+    {k:'decision',l:'Решение',p:'какие запускаем, какие объединяем, какие исключаем',t:'textarea'},
+    {k:'source',l:'Источник',p:'Прогноз бюджета Директа / Keyword Planner'}
+  ]},
+  { key:'filling', title:'6. Наполнение групп', task:'Подготовить группы к загрузке: фразы, минусы, быстрые ссылки, уточнения.', fields:[
+    {k:'keywords',l:'Ключевые фразы по группам',p:'5–10 фраз одного смысла на группу',t:'textarea'},
+    {k:'negatives',l:'Минус-фразы',p:'общие и групповые минусы',t:'textarea'},
+    {k:'sitelinks',l:'Быстрые ссылки / sitelinks',p:'заголовок + описание + URL',t:'textarea'},
+    {k:'callouts',l:'Уточнения / callouts',p:'до 25 символов, 12 штук',t:'textarea'},
+    {k:'source',l:'Источник',p:'Директ / Ads'}
+  ]},
+  { key:'ads', title:'7. Поисковые объявления', task:'2–4 объявления на группу: разные углы подачи, релевантные ключам.', fields:[
+    {k:'ads',l:'Объявления по группам',p:'группа → заголовок → доп. заголовок → текст → CTA',t:'textarea'},
+    {k:'source',l:'Источник',p:'ссылка / скрин / отчёт'}
+  ]}
+];
+
+const DEMAND_V130_BANNER_STEPS = [
+  { key:'b_frames', title:'1. Рамки продвижения', task:'Ограничить тематику, аудитории и площадки для сетевых кампаний.', fields:[
+    {k:'product',l:'Что продвигаем',p:'услуга / категория / проблема / результат'},
+    {k:'excluded',l:'Что не продвигаем',p:'бесплатно, вакансии, форумный интерес'},
+    {k:'audiences',l:'Допустимые аудитории',p:'холодные, тёплые, ретаргетинг, конкуренты'},
+    {k:'excludedAudiences',l:'Исключаемые темы и аудитории',p:'что точно исключаем',t:'textarea'},
+    {k:'geo',l:'География',p:'город / регион / страна'},
+    {k:'landing',l:'Посадочная',p:'URL'},
+    {k:'source',l:'Источник',p:'Метрика / Аудитории / Ads'}
+  ]},
+  { key:'b_themes', title:'2. Темы и язык аудитории', task:'Собрать не поисковые запросы, а темы, контексты и сценарии интереса.', fields:[
+    {k:'themes',l:'Тематические направления',p:'основные темы для сетей',t:'textarea'},
+    {k:'related',l:'Смежные темы',p:'коммерческие смежные темы',t:'textarea'},
+    {k:'pains',l:'Боли / ситуации',p:'проблемы клиента',t:'textarea'},
+    {k:'retargeting',l:'Сценарии ретаргетинга',p:'визит → корзина → покупка',t:'textarea'},
+    {k:'source',l:'Источник',p:'Wordstat / Метрика / сайт'}
+  ]},
+  { key:'b_targeting', title:'3. Структура таргетингов', task:'Разделить условия показа по типам: слова, интересы, сегменты, автотаргетинг.', fields:[
+    {k:'thematicWords',l:'Тематические слова',p:'описывают тематику предложения',t:'textarea'},
+    {k:'interests',l:'Интересы и привычки',p:'категории интересов',t:'textarea'},
+    {k:'segments',l:'Сегменты аудитории / ретаргетинг',p:'Метрика / Аудитории',t:'textarea'},
+    {k:'autoTarget',l:'Автотаргетинг',p:'если нужен дополнительный охват'},
+    {k:'source',l:'Источник',p:'Директ / Ads'}
+  ]},
+  { key:'b_groups', title:'4. Размер и логика групп', task:'Собрать управляемую структуру сетевых групп: не смешивать холод и ретаргетинг.', fields:[
+    {k:'groups',l:'Группы',p:'группа → тип аудитории → сценарий → условия',t:'textarea'},
+    {k:'comment',l:'Комментарий',p:'логика разделения'}
+  ]},
+  { key:'b_viability', title:'5. Оценка охвата и жизнеспособности', task:'Проверить, сможет ли кампания обучаться и получать данные.', fields:[
+    {k:'reach',l:'Охват и прогнозы',p:'группа → охват → клики → бюджет',t:'textarea'},
+    {k:'decision',l:'Решение',p:'какие запускаем, какие объединяем',t:'textarea'},
+    {k:'source',l:'Источник',p:'Директ / Ads'}
+  ]},
+  { key:'b_filling', title:'6. Наполнение групп', task:'Подготовить таргетинги, исключения и расширения для каждой группы.', fields:[
+    {k:'targetings',l:'Таргетинги по группам',p:'группа → слова / интересы / сегменты',t:'textarea'},
+    {k:'exclusions',l:'Исключения',p:'минус-фразы, площадки, темы',t:'textarea'},
+    {k:'sitelinks',l:'Быстрые ссылки / assets',p:'заголовок + описание',t:'textarea'},
+    {k:'callouts',l:'Уточнения',p:'до 25 символов',t:'textarea'},
+    {k:'source',l:'Источник',p:'Директ / Ads'}
+  ]},
+  { key:'b_creatives', title:'7. Креативы и объявления', task:'2–4 объявления на группу: разные углы, форматы изображений 1:1, 16:9, 9:16.', fields:[
+    {k:'creatives',l:'Объявления по группам',p:'группа → заголовок → текст → CTA → визуал',t:'textarea'},
+    {k:'images',l:'Форматы изображений',p:'1:1, 16:9, 9:16 — мин. 3 на группу'},
+    {k:'video',l:'Видео',p:'если используется'},
+    {k:'source',l:'Источник',p:'ссылка / скрин / отчёт'}
+  ]}
+];
+
+function ensureDemandV130() {
+  state.demandV130 = state.demandV130 || {
+    search: { platform: '', openStep: '', steps: {} },
+    banner: { platform: '', openStep: '', steps: {} }
+  };
+  state.demandV130.search = state.demandV130.search || { platform:'', openSteps:{}, steps:{} };
+  state.demandV130.banner = state.demandV130.banner || { platform:'', openSteps:{}, steps:{} };
+  state.demandV130.search.openSteps = state.demandV130.search.openSteps || {};
+  state.demandV130.banner.openSteps = state.demandV130.banner.openSteps || {};
+  return state.demandV130;
+}
+
+function dv130StepStatus(data, step) {
+  const fields = step.fields;
+  const filled = fields.filter(f => String(data[f.k] || '').trim()).length;
+  if (!filled) return 'not_started';
+  if (filled === fields.length) return 'ready';
+  return 'in_progress';
+}
+
+function dv130SectionStatus(section, steps) {
+  const data = section.steps || {};
+  if (!section.platform) return 'not_started';
+  const statuses = steps.map(s => dv130StepStatus(data[s.key] || {}, s));
+  if (statuses.every(s => s === 'not_started')) return 'not_started';
+  if (statuses.every(s => s === 'ready')) return 'ready';
+  return 'in_progress';
+}
+
+function dv130FieldHtml(prefix, stepKey, field, value) {
+  const filled = String(value || '').trim();
+  const cls = filled ? 'is-filled' : 'is-empty';
+  const attr = `data-dv130-prefix="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(stepKey)}" data-dv130-field="${escapeAttr(field.k)}"`;
+  if (field.t === 'textarea') {
+    return `<label class="g1-field"><span>${escapeHtml(field.l)}</span><textarea class="g1-input ${cls}" ${attr} rows="3" placeholder="${escapeAttr(field.p)}">${escapeHtml(value || '')}</textarea></label>`;
+  }
+  return `<label class="g1-field"><span>${escapeHtml(field.l)}</span><input class="g1-input ${cls}" ${attr} value="${escapeAttr(value || '')}" placeholder="${escapeAttr(field.p)}" /></label>`;
+}
+
+function dv130StepHtml(prefix, step, data, isOpen) {
+  const status = dv130StepStatus(data, step);
+  return `<div class="g1-card ${isOpen ? 'is-open' : ''}">
+    <button class="g1-card-header" data-dv130-toggle="${escapeAttr(prefix)}" data-dv130-step-key="${escapeAttr(step.key)}">
+      <span class="g1-card-title">${escapeHtml(step.title)}</span>
+      <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+    </button>
+    ${isOpen ? `<div class="g1-card-body">
+      <p class="g1-task">${escapeHtml(step.task)}</p>
+      <div class="g1-fields-grid">
+        ${step.fields.map(f => dv130FieldHtml(prefix, step.key, f, data[f.k])).join('')}
+      </div>
+    </div>` : ''}
+  </div>`;
+}
+
+function dv130SectionHtml(prefix, title, section, steps, platformOptions) {
+  const status = dv130SectionStatus(section, steps);
+  const openSteps = section.openSteps || {};
+  const stepsData = section.steps || {};
+  const hasAnyOpen = Object.values(openSteps).some(Boolean);
+  const firstIncomplete = steps.findIndex(s => dv130StepStatus(stepsData[s.key] || {}, s) !== 'ready');
+
+  return `<div class="g1-card">
+    <div class="g1-card-header-static">
+      <span class="g1-card-title">${escapeHtml(title)}</span>
+      <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+    </div>
+    <div class="g1-card-body">
+      <label class="g1-field"><span>Платформа</span><select class="g1-input is-filled" data-dv130-prefix="${escapeAttr(prefix)}" data-dv130-field="platform">${platformOptions.map(([v,l]) => `<option value="${escapeAttr(v)}" ${section.platform===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}</select></label>
+      ${section.platform ? `<div class="g1-route">
+        ${steps.map(s => dv130StepHtml(prefix, s, stepsData[s.key] || {}, !!openSteps[s.key])).join('')}
+      </div>` : '<p class="g1-task">Выберите платформу, чтобы начать.</p>'}
+    </div>
+  </div>`;
+}
+
+function g1RenderDemandV130() {
+  const d = ensureDemandV130();
+  const searchStatus = dv130SectionStatus(d.search, DEMAND_V130_SEARCH_STEPS);
+  const bannerStatus = dv130SectionStatus(d.banner, DEMAND_V130_BANNER_STEPS);
+  return `<div class="g1-route">
+    ${dv130SectionHtml('search', '1. Поисковые кампании', d.search, DEMAND_V130_SEARCH_STEPS, DEMAND_V130_PLATFORMS_SEARCH)}
+    ${dv130SectionHtml('banner', '2. Баннерные / сетевые кампании', d.banner, DEMAND_V130_BANNER_STEPS, DEMAND_V130_PLATFORMS_BANNER)}
+  </div>`;
+}
+
+/* Override demand route renderer */
+const __g1PrevRenderDemandV130 = g1RenderDemand;
+g1RenderDemand = function() {
+  return g1RenderDemandV130();
+};
+
+/* Override demand status */
+const __g1PrevDemandStatus = getDemandRouteStatus;
+getDemandRouteStatus = function() {
+  const d = ensureDemandV130();
+  const s = dv130SectionStatus(d.search, DEMAND_V130_SEARCH_STEPS);
+  const b = dv130SectionStatus(d.banner, DEMAND_V130_BANNER_STEPS);
+  if (s === 'not_started' && b === 'not_started') return 'not_started';
+  if (s === 'ready' && (b === 'ready' || !d.banner.platform)) return 'ready';
+  if (b === 'ready' && (s === 'ready' || !d.search.platform)) return 'ready';
+  return 'in_progress';
+};
+
+const __g1PrevDemandProgress = getDemandProgressText;
+getDemandProgressText = function() {
+  const d = ensureDemandV130();
+  const sReady = DEMAND_V130_SEARCH_STEPS.filter(s => dv130StepStatus((d.search.steps||{})[s.key]||{}, s) === 'ready').length;
+  const bReady = DEMAND_V130_BANNER_STEPS.filter(s => dv130StepStatus((d.banner.steps||{})[s.key]||{}, s) === 'ready').length;
+  return `поиск: ${sReady}/${DEMAND_V130_SEARCH_STEPS.length}, баннеры: ${bReady}/${DEMAND_V130_BANNER_STEPS.length}`;
+};
+
+/* Event handlers */
+function updateDemandV130(target) {
+  const d = ensureDemandV130();
+  const prefix = target.dataset.dv130Prefix;
+  const stepKey = target.dataset.dv130Step;
+  const field = target.dataset.dv130Field;
+  if (!prefix) return;
+  const section = d[prefix];
+  if (!section) return;
+  if (field === 'platform') {
+    section.platform = target.value;
+    saveState();
+    renderGate();
+    return;
+  }
+  if (stepKey) {
+    section.steps = section.steps || {};
+    section.steps[stepKey] = section.steps[stepKey] || {};
+    section.steps[stepKey][field] = target.value;
+    flashSaving();
+    renderGateNav();
+  }
+}
+
+document.addEventListener('input', e => {
+  if (e.target?.dataset?.dv130Prefix && e.target.tagName !== 'SELECT') updateDemandV130(e.target);
+});
+document.addEventListener('change', e => {
+  if (e.target?.dataset?.dv130Prefix) updateDemandV130(e.target);
+});
+document.addEventListener('click', e => {
+  const toggle = e.target.closest('[data-dv130-toggle]');
+  if (!toggle) return;
+  const d = ensureDemandV130();
+  const prefix = toggle.dataset.dv130Toggle;
+  const stepKey = toggle.dataset.dv130StepKey;
+  const section = d[prefix];
+  if (!section) return;
+  section.openSteps = section.openSteps || {};
+  section.openSteps[stepKey] = !section.openSteps[stepKey];
+  saveState();
+  renderGate();
+});
+
+/* ================================================================
+   v1.3.0 — Боль → JTBD → офер (полный редизайн)
+   7 этапов: боль → поиск → конкуренты → JTBD → сегменты → офер → коллаборации
+   ================================================================ */
+
+const PAIN_V130_STEPS = [
+  { key:'pain', title:'1. Боль и причина спроса', task:'Понять, что заставляет человека искать решение.', standard:'Понятно, какая проблема запускает спрос и какой результат человек хочет получить.', fields:[
+    {k:'explicitPain',l:'Явная боль',p:'проблема, которую человек формулирует прямо',t:'textarea'},
+    {k:'hiddenPain',l:'Скрытая боль',p:'проблема, которая стоит за запросом',t:'textarea'},
+    {k:'demandReason',l:'Причина спроса',p:'событие-триггер: поломка, срочность, сравнение'},
+    {k:'situation',l:'Ситуация запуска',p:'что произошло до обращения'},
+    {k:'fear',l:'Страх / риск',p:'чего боится клиент'},
+    {k:'desiredResult',l:'Желанный результат',p:'что хочет получить'},
+    {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'интервью / CRM / заявки / звонки'}
+  ]},
+  { key:'search', title:'2. Поисковое поведение', task:'Понять, как люди формулируют свою боль в поиске.', standard:'Понятно, какими словами люди ищут решение и какие запросы имеют коммерческий смысл.', fields:[
+    {k:'mainQueries',l:'Основные запросы',p:'ядро запросов',t:'textarea'},
+    {k:'colloquial',l:'Разговорные формулировки',p:'жаргон, ошибки, сокращения',t:'textarea'},
+    {k:'repeatingWords',l:'Повторяющиеся слова',p:'какие слова встречаются чаще всего'},
+    {k:'commercialIntent',l:'Коммерческий интент',p:'купить, заказать, цена, стоимость',t:'textarea'},
+    {k:'infoIntent',l:'Информационный интент',p:'как выбрать, что лучше, отзывы',t:'textarea'},
+    {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'Wordstat / Keyword Planner / Search Console'}
+  ]},
+  { key:'competitors', title:'3. Конкурентные обещания', task:'Понять, как рынок уже отвечает на эту боль.', standard:'Понятно, какие обещания есть на рынке и где можно отличиться.', fields:[
+    {k:'competitors',l:'Конкуренты и их оферы',p:'конкурент → офер → УТП → цена → доверие',t:'textarea'},
+    {k:'repeatingPromises',l:'Повторяющиеся обещания рынка',p:'что все говорят одинаково',t:'textarea'},
+    {k:'weakSpots',l:'Слабые места и пустоты',p:'что рынок недоговаривает или не раскрывает',t:'textarea'},
+    {k:'differentiation',l:'Возможность отличиться',p:'где наш разрыв с конкурентами'},
+    {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'сайты конкурентов / объявления / отчёт'}
+  ]},
+  { key:'jtbd', title:'4. JTBD', task:'Перевести боль в задачу клиента. JTBD — про клиента, не про продукт.', standard:'Понятно, какую работу клиент нанимает продукт выполнить.', fields:[
+    {k:'functionalJob',l:'Функциональная работа',p:'какую практическую задачу хочет решить',t:'textarea'},
+    {k:'emotionalJob',l:'Эмоциональная работа',p:'что хочет перестать чувствовать / начать чувствовать',t:'textarea'},
+    {k:'socialJob',l:'Социальная работа',p:'как хочет выглядеть в глазах других',t:'textarea'},
+    {k:'situation',l:'Ситуация запуска',p:'когда возникает потребность'},
+    {k:'progress',l:'Прогресс клиента',p:'что меняется после решения'},
+    {k:'barrier',l:'Барьер выбора',p:'что мешает принять решение'},
+    {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'интервью / CRM / анализ'}
+  ]},
+  { key:'segments', title:'5. Сегменты', task:'Понять, у кого одна и та же боль проявляется по-разному.', standard:'Понятно, кому продаём, в какой ситуации и через какой смысл.', fields:[
+    {k:'segments',l:'Сегменты',p:'сегмент → сценарий → боль → JTBD → барьер → что показать',t:'textarea'},
+    {k:'mainSegment',l:'Основной сегмент',p:'кому продаём в первую очередь'},
+    {k:'criteria',l:'Критерии выбора по сегментам',p:'цена / срок / доверие / результат',t:'textarea'},
+    {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'CRM / интервью / аналитика'}
+  ]},
+  { key:'offer', title:'6. Офер', task:'Собрать офер из боли, поиска, JTBD и конкурентного разрыва.', standard:'Офер понятен за 3 секунды: кому, что, зачем и почему стоит поверить.', fields:[
+    {k:'baseOffer',l:'Базовый офер',p:'для [сегмент] мы даём [результат] через [механизм]',t:'textarea'},
+    {k:'forWhom',l:'Для кого',p:'основной сегмент'},
+    {k:'painClosed',l:'Какую боль закрывает',p:'главная боль клиента'},
+    {k:'resultPromise',l:'Какой результат обещает',p:'конкретный результат'},
+    {k:'mechanism',l:'Через какой механизм',p:'как это работает'},
+    {k:'whyTrust',l:'Почему стоит поверить',p:'доказательства: кейсы, цифры, гарантии',t:'textarea'},
+    {k:'mainCta',l:'Главный CTA',p:'основное действие'},
+    {k:'segmentOffers',l:'Версии офера по сегментам',p:'сегмент → офер → CTA',t:'textarea'},
+    {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'макет / презентация / бриф'}
+  ]},
+  { key:'collab', title:'7. Коллаборационный потенциал', task:'Понять, кто может усилить доверие, охват или вход в аудиторию.', standard:'Есть список партнёров и точек усиления.', fields:[
+    {k:'partners',l:'Партнёры',p:'тип → почему пересекается → что предложить → формат',t:'textarea'},
+    {k:'priority',l:'Приоритет',p:'кого подключить в первую очередь'},
+    {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'контакты / переписка / план'}
+  ]}
+];
+
+function ensurePainV130() {
+  state.painV130 = state.painV130 || { openSteps: {}, steps: {} };
+  state.painV130.openSteps = state.painV130.openSteps || {};
+  state.painV130.steps = state.painV130.steps || {};
+  return state.painV130;
+}
+
+function painV130StepStatus(data, step) {
+  const filled = step.fields.filter(f => String(data[f.k] || '').trim()).length;
+  if (!filled) return 'not_started';
+  if (filled === step.fields.length) return 'ready';
+  return 'in_progress';
+}
+
+function painV130StepHtml(step, data, isOpen) {
+  const status = painV130StepStatus(data, step);
+  return `<div class="g1-card ${isOpen ? 'is-open' : ''}">
+    <button class="g1-card-header" data-pv130-toggle="${escapeAttr(step.key)}">
+      <span class="g1-card-title">${escapeHtml(step.title)}</span>
+      <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+    </button>
+    ${isOpen ? `<div class="g1-card-body">
+      <p class="g1-task">${escapeHtml(step.task)}</p>
+      <div class="g1-fields-grid">
+        ${step.fields.map(f => {
+          const value = data[f.k] || '';
+          const filled = String(value).trim();
+          const cls = filled ? 'is-filled' : 'is-empty';
+          const attr = `data-pv130-step="${escapeAttr(step.key)}" data-pv130-field="${escapeAttr(f.k)}"`;
+          if (f.t === 'textarea') return `<label class="g1-field"><span>${escapeHtml(f.l)}</span><textarea class="g1-input ${cls}" ${attr} rows="3" placeholder="${escapeAttr(f.p)}">${escapeHtml(value)}</textarea></label>`;
+          return `<label class="g1-field"><span>${escapeHtml(f.l)}</span><input class="g1-input ${cls}" ${attr} value="${escapeAttr(value)}" placeholder="${escapeAttr(f.p)}" /></label>`;
+        }).join('')}
+      </div>
+      <p class="g1-task" style="margin-top:8px;font-style:italic;">Стандарт: ${escapeHtml(step.standard)}</p>
+    </div>` : ''}
+  </div>`;
+}
+
+function g1RenderPainV130() {
+  const d = ensurePainV130();
+  const userTouched = Object.keys(d.openSteps).length > 0;
+  const readyCount = PAIN_V130_STEPS.filter(s => painV130StepStatus(d.steps[s.key] || {}, s) === 'ready').length;
+
+  const summaryHtml = readyCount === PAIN_V130_STEPS.length ? `<div class="g1-card">
+    <div class="g1-card-header-static"><span class="g1-card-title">Итог: Боль → JTBD → офер</span></div>
+    <div class="g1-card-body" style="font-size:13px;">
+      <div style="display:grid;gap:6px;">
+        ${[['Главная боль', d.steps.pain?.explicitPain],['Причина спроса', d.steps.pain?.demandReason],['Как ищут', d.steps.search?.mainQueries],['Конкурентный разрыв', d.steps.competitors?.differentiation],['Главный JTBD', d.steps.jtbd?.functionalJob],['Основной сегмент', d.steps.segments?.mainSegment],['Базовый офер', d.steps.offer?.baseOffer],['Главный CTA', d.steps.offer?.mainCta],['Коллаборации', d.steps.collab?.partners]].map(([label, val]) => `<div><strong>${escapeHtml(label)}:</strong> ${escapeHtml(String(val || '—').substring(0,150))}</div>`).join('')}
+      </div>
+    </div>
+  </div>` : '';
+
+  return `<div class="g1-route">
+    ${PAIN_V130_STEPS.map(s => painV130StepHtml(s, d.steps[s.key] || {}, !!d.openSteps[s.key])).join('')}
+    ${summaryHtml}
+  </div>`;
+}
+
+/* Override pain/offer renderer */
+const __g1PrevRenderPainV130 = g1RenderPainOffer;
+g1RenderPainOffer = function() { return g1RenderPainV130(); };
+
+/* Override pain/offer status */
+const __g1PrevPainStatusV130 = getPainOfferStatus;
+getPainOfferStatus = function() {
+  const d = ensurePainV130();
+  const statuses = PAIN_V130_STEPS.map(s => painV130StepStatus(d.steps[s.key] || {}, s));
+  if (statuses.every(s => s === 'not_started')) return 'not_started';
+  if (statuses.every(s => s === 'ready')) return 'ready';
+  return 'in_progress';
+};
+
+const __g1PrevPainProgressV130 = getPainOfferProgressText;
+getPainOfferProgressText = function() {
+  const d = ensurePainV130();
+  const ready = PAIN_V130_STEPS.filter(s => painV130StepStatus(d.steps[s.key] || {}, s) === 'ready').length;
+  return `${ready} из ${PAIN_V130_STEPS.length} этапов готово`;
+};
+
+/* Event handlers */
+function updatePainV130(target) {
+  const d = ensurePainV130();
+  const stepKey = target.dataset.pv130Step;
+  const field = target.dataset.pv130Field;
+  if (stepKey && field) {
+    d.steps[stepKey] = d.steps[stepKey] || {};
+    d.steps[stepKey][field] = target.value;
+    flashSaving();
+    renderGateNav();
+  }
+}
+
+document.addEventListener('input', e => {
+  if (e.target?.dataset?.pv130Step && e.target.tagName !== 'SELECT') updatePainV130(e.target);
+});
+document.addEventListener('change', e => {
+  if (e.target?.dataset?.pv130Step) updatePainV130(e.target);
+});
+document.addEventListener('click', e => {
+  const toggle = e.target.closest('[data-pv130-toggle]');
+  if (!toggle) return;
+  const d = ensurePainV130();
+  const key = toggle.dataset.pv130Toggle;
+  d.openSteps[key] = !d.openSteps[key];
+  saveState();
+  renderGate();
+});
+
+/* ================================================================
+   v1.3.0 — Юнит-экономика (полный редизайн)
+   По конкретным продуктам/услугам, 6 этапов + итоговая таблица
+   ================================================================ */
+
+const UNIT_V130_TYPES = [['', '—'],['product','Продукт'],['service','Услуга'],['category','Категория'],['package','Пакет'],['direction','Направление']];
+const UNIT_V130_MODELS = [['', '—'],['purchase','Покупка'],['lead','Заявка'],['call','Звонок'],['consult','Консультация'],['repeat','Повторная покупка']];
+const UNIT_V130_DECISIONS = [['', '—'],['promote','Можно продвигать'],['fix','Нужно доработать'],['no','Не продвигать'],['nodata','Недостаточно данных']];
+
+const UNIT_V130_STEPS = [
+  { key:'sales', title:'1. Продажи / оказанные услуги', task:'Сколько раз продукт продан или услуга оказана за период.', fields:[
+    {k:'salesCount',l:'Количество продаж / оказаний',p:'число'},
+    {k:'leadsCount',l:'Количество заявок',p:'если есть'},
+    {k:'paymentsCount',l:'Количество оплат',p:'число'},
+    {k:'refundsCount',l:'Отмены / возвраты',p:'число'},
+    {k:'source',l:'Источник',p:'CRM / касса / таблица'}
+  ]},
+  { key:'revenue', title:'2. Выручка / AOV', task:'Сколько денег приносит одна продажа.', fields:[
+    {k:'unitPrice',l:'Цена одной продажи',p:'₽'},
+    {k:'avgCheck',l:'Средний чек',p:'₽'},
+    {k:'totalRevenue',l:'Общая выручка за период',p:'₽'},
+    {k:'source',l:'Источник',p:'CRM / касса / аналитика'}
+  ]},
+  { key:'margin', title:'3. Себестоимость и маржа', task:'Сколько реально остаётся после выполнения заказа.', fields:[
+    {k:'costPerUnit',l:'Себестоимость единицы',p:'₽'},
+    {k:'variableCosts',l:'Переменные расходы',p:'₽'},
+    {k:'commissions',l:'Комиссии / доставка / упаковка',p:'₽'},
+    {k:'marginRub',l:'Маржа в рублях',p:'₽'},
+    {k:'marginPct',l:'Маржа в %',p:'%'},
+    {k:'source',l:'Источник',p:'расчёт / бухгалтерия'}
+  ]},
+  { key:'ltv', title:'4. Повторные покупки / LTV', task:'Можно ли учитывать будущие покупки клиента.', fields:[
+    {k:'repeatType',l:'Покупает один раз или повторно',p:'один раз / повторно'},
+    {k:'avgPurchases',l:'Среднее кол-во покупок на клиента',p:'число'},
+    {k:'repeatPeriod',l:'Средний период повторной покупки',p:'дней / месяцев'},
+    {k:'ltv',l:'LTV',p:'₽'},
+    {k:'source',l:'Источник',p:'CRM / аналитика'}
+  ]},
+  { key:'adLimits', title:'5. Рекламная допустимость', task:'Сколько максимум можно отдать на привлечение клиента.', fields:[
+    {k:'adSharePct',l:'Допустимая доля рекламы от выручки',p:'%'},
+    {k:'targetDrr',l:'Допустимый DRR',p:'%'},
+    {k:'allowedCpa',l:'Допустимый CPA',p:'₽'},
+    {k:'leadToSale',l:'Конверсия из заявки в продажу',p:'% или 1 из N'},
+    {k:'allowedCpl',l:'Допустимый CPL',p:'₽'},
+    {k:'source',l:'Источник',p:'расчёт / рекламный кабинет'}
+  ]},
+  { key:'decision', title:'6. Решение по продвижению', task:'Стоит ли продвигать эту единицу.', fields:[
+    {k:'decision',l:'Решение',p:'можно / доработать / не продвигать',sel:UNIT_V130_DECISIONS},
+    {k:'reason',l:'Причина решения',p:'почему именно такое решение',t:'textarea'},
+    {k:'whatToFix',l:'Что изменить',p:'цена / офер / маржа / посадочная / конверсия'},
+    {k:'source',l:'Источник',p:'расчёт / обсуждение'}
+  ]}
+];
+
+const UNIT_V130_BLANK_ITEM = { type:'', name:'', period:'', model:'', dataSource:'', openSteps:{}, steps:{} };
+
+function ensureUnitV130() {
+  state.unitV130 = state.unitV130 || { items: [JSON.parse(JSON.stringify(UNIT_V130_BLANK_ITEM))] };
+  if (!state.unitV130.items?.length) state.unitV130.items = [JSON.parse(JSON.stringify(UNIT_V130_BLANK_ITEM))];
+  state.unitV130.items.forEach(item => { item.openSteps = item.openSteps || {}; item.steps = item.steps || {}; });
+  return state.unitV130;
+}
+
+function uv130StepStatus(data, step) {
+  const filled = step.fields.filter(f => String(data[f.k] || '').trim()).length;
+  if (!filled) return 'not_started';
+  if (filled === step.fields.length) return 'ready';
+  return 'in_progress';
+}
+
+function uv130ItemStatus(item) {
+  if (!String(item.name || '').trim()) return 'not_started';
+  const statuses = UNIT_V130_STEPS.map(s => uv130StepStatus(item.steps[s.key] || {}, s));
+  if (statuses.every(s => s === 'not_started')) return 'not_started';
+  if (statuses.every(s => s === 'ready')) return 'ready';
+  return 'in_progress';
+}
+
+function uv130FieldHtml(itemIdx, stepKey, field, value) {
+  const filled = String(value || '').trim();
+  const cls = filled ? 'is-filled' : 'is-empty';
+  const attr = `data-uv130-item="${itemIdx}" data-uv130-step="${escapeAttr(stepKey)}" data-uv130-field="${escapeAttr(field.k)}"`;
+  if (field.sel) return `<label class="g1-field"><span>${escapeHtml(field.l)}</span><select class="g1-input is-filled" ${attr}>${field.sel.map(([v,l]) => `<option value="${escapeAttr(v)}" ${value===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}</select></label>`;
+  if (field.t === 'textarea') return `<label class="g1-field"><span>${escapeHtml(field.l)}</span><textarea class="g1-input ${cls}" ${attr} rows="2" placeholder="${escapeAttr(field.p)}">${escapeHtml(value || '')}</textarea></label>`;
+  return `<label class="g1-field"><span>${escapeHtml(field.l)}</span><input class="g1-input ${cls}" ${attr} value="${escapeAttr(value || '')}" placeholder="${escapeAttr(field.p)}" /></label>`;
+}
+
+function uv130StepHtml(itemIdx, step, data, isOpen) {
+  const status = uv130StepStatus(data, step);
+  return `<div class="g1-card ${isOpen ? 'is-open' : ''}">
+    <button class="g1-card-header" data-uv130-toggle="${itemIdx}" data-uv130-step-key="${escapeAttr(step.key)}">
+      <span class="g1-card-title">${escapeHtml(step.title)}</span>
+      <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+    </button>
+    ${isOpen ? `<div class="g1-card-body"><p class="g1-task">${escapeHtml(step.task)}</p><div class="g1-fields-grid">${step.fields.map(f => uv130FieldHtml(itemIdx, step.key, f, data[f.k])).join('')}</div></div>` : ''}
+  </div>`;
+}
+
+function uv130ItemHtml(item, idx, total) {
+  const status = uv130ItemStatus(item);
+  const nameFilled = String(item.name || '').trim();
+  return `<div class="g1-card" style="border:2px solid var(--line);border-radius:18px;padding:0;">
+    <div class="g1-card-header-static">
+      <span class="g1-card-title">${escapeHtml(nameFilled || 'Единица ' + (idx+1))}</span>
+      <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+      ${total > 1 ? `<button class="small-btn danger-mini" data-uv130-remove="${idx}">×</button>` : ''}
+    </div>
+    <div style="padding:14px 20px;display:flex;flex-direction:column;gap:12px;">
+      <div class="g1-fields-grid">
+        <label class="g1-field"><span>Тип</span><select class="g1-input is-filled" data-uv130-item="${idx}" data-uv130-meta="type">${UNIT_V130_TYPES.map(([v,l]) => `<option value="${escapeAttr(v)}" ${item.type===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}</select></label>
+        <label class="g1-field"><span>Название</span><input class="g1-input ${nameFilled ? 'is-filled' : 'is-empty'}" data-uv130-item="${idx}" data-uv130-meta="name" value="${escapeAttr(item.name || '')}" placeholder="Подарочные наборы / Химчистка обуви" /></label>
+        <label class="g1-field"><span>Период</span><input class="g1-input ${String(item.period||'').trim() ? 'is-filled' : 'is-empty'}" data-uv130-item="${idx}" data-uv130-meta="period" value="${escapeAttr(item.period || '')}" placeholder="месяц / квартал / сезон" /></label>
+        <label class="g1-field"><span>Модель продажи</span><select class="g1-input is-filled" data-uv130-item="${idx}" data-uv130-meta="model">${UNIT_V130_MODELS.map(([v,l]) => `<option value="${escapeAttr(v)}" ${item.model===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}</select></label>
+      </div>
+      <div class="g1-route">${UNIT_V130_STEPS.map(s => uv130StepHtml(idx, s, item.steps[s.key] || {}, !!item.openSteps[s.key])).join('')}</div>
+    </div>
+  </div>`;
+}
+
+function uv130SummaryHtml(items) {
+  const filled = items.filter(i => String(i.name || '').trim() && uv130ItemStatus(i) !== 'not_started');
+  if (!filled.length) return '';
+  return `<div class="g1-card"><div class="g1-card-header-static"><span class="g1-card-title">Итог по продуктам / услугам</span></div>
+    <div class="g1-card-body"><div class="g1-table-scroll"><table class="mini-table typed-table g1-forms-table" style="font-size:12px;">
+      <thead><tr><th>Продукт / услуга</th><th>Продажи</th><th>Выручка</th><th>Маржа</th><th>CPA</th><th>CPL</th><th>Решение</th></tr></thead>
+      <tbody>${filled.map(i => { const s = i.steps || {}; return `<tr><td style="font-weight:700;">${escapeHtml(i.name||'—')}</td><td>${escapeHtml(s.sales?.salesCount||'—')}</td><td>${escapeHtml(s.revenue?.totalRevenue||'—')}</td><td>${escapeHtml(s.margin?.marginRub||'—')}</td><td>${escapeHtml(s.adLimits?.allowedCpa||'—')}</td><td>${escapeHtml(s.adLimits?.allowedCpl||'—')}</td><td>${escapeHtml((UNIT_V130_DECISIONS.find(([v])=>v===s.decision?.decision)||[])[1]||'—')}</td></tr>`; }).join('')}</tbody>
+    </table></div></div></div>`;
+}
+
+g1RenderUnitEconomics = function() {
+  const d = ensureUnitV130();
+  return `<div class="g1-route">
+    ${d.items.map((item, i) => uv130ItemHtml(item, i, d.items.length)).join('')}
+    <button class="small-btn add-inline-btn" data-uv130-add>+ Добавить продукт / услугу</button>
+    ${uv130SummaryHtml(d.items)}
+  </div>`;
+};
+
+getUnitEconomicsStatus = function() {
+  const d = ensureUnitV130();
+  const statuses = d.items.map(uv130ItemStatus);
+  if (statuses.every(s => s === 'not_started')) return 'not_started';
+  if (statuses.every(s => s === 'ready')) return 'ready';
+  return 'in_progress';
+};
+
+getUnitEconomicsProgressText = function() {
+  const d = ensureUnitV130();
+  const ready = d.items.filter(i => uv130ItemStatus(i) === 'ready').length;
+  return `${ready} из ${d.items.length} единиц готово`;
+};
+
+function updateUnitV130(target) {
+  const d = ensureUnitV130();
+  const itemIdx = Number(target.dataset.uv130Item);
+  const item = d.items[itemIdx];
+  if (!item) return;
+  const meta = target.dataset.uv130Meta;
+  const stepKey = target.dataset.uv130Step;
+  const field = target.dataset.uv130Field;
+  if (meta) item[meta] = target.value;
+  else if (stepKey && field) { item.steps[stepKey] = item.steps[stepKey] || {}; item.steps[stepKey][field] = target.value; }
+  flashSaving();
+  if (target.tagName === 'SELECT') renderGate();
+  else renderGateNav();
+}
+
+document.addEventListener('input', e => {
+  if (e.target?.dataset?.uv130Item !== undefined && e.target.tagName !== 'SELECT') updateUnitV130(e.target);
+});
+document.addEventListener('change', e => {
+  if (e.target?.dataset?.uv130Item !== undefined) updateUnitV130(e.target);
+});
+document.addEventListener('click', e => {
+  const toggle = e.target.closest('[data-uv130-toggle]');
+  if (toggle) {
+    const d = ensureUnitV130();
+    const idx = Number(toggle.dataset.uv130Toggle);
+    const key = toggle.dataset.uv130StepKey;
+    if (d.items[idx]) { d.items[idx].openSteps[key] = !d.items[idx].openSteps[key]; saveState(); renderGate(); }
+    return;
+  }
+  if (e.target?.dataset?.uv130Add !== undefined) { ensureUnitV130().items.push(JSON.parse(JSON.stringify(UNIT_V130_BLANK_ITEM))); flashSaving(); renderGate(); }
+  if (e.target?.dataset?.uv130Remove !== undefined) { const d = ensureUnitV130(); if (d.items.length > 1) { d.items.splice(Number(e.target.dataset.uv130Remove), 1); flashSaving(); renderGate(); } }
+});
+
+/* ================================================================
+   v1.4.0 — Gate 2 «Инструментирование — ДО трафика»
+   Дизайн-система ГУРУ (Брокманн): g1-redesign, одна колонка, 820px
+   ================================================================ */
+
+function getGate2AccordionState() {
+  ensureUiState(state);
+  if (!state.ui.gate2Accordion) state.ui.gate2Accordion = { sections: {}, cards: {} };
+  return state.ui.gate2Accordion;
+}
+
+function g2ParseOrient(instruction) {
+  if (!instruction) return '';
+  const m = instruction.match(/Суть:\s*\n?(.*?)(?:\n\n|\nОтвечает|$)/s);
+  return m ? m[1].trim() : '';
+}
+
+function g2ParseStandard(instruction) {
+  if (!instruction) return '';
+  const m = instruction.match(/Инструкция:\s*\n?(.*?)$/s);
+  return m ? m[1].trim() : '';
+}
+
+function g2EnsureSource(card) {
+  if (!card.fields) card.fields = {};
+  if (card.fields.g2Source === undefined) card.fields.g2Source = card.evidence || '';
+  return card.fields.g2Source || '';
+}
+
+function g2CardStatus(card) {
+  const src = String(g2EnsureSource(card) || '').trim();
+  const notes = String(card.notes || '').trim();
+  if (src && notes) return 'ready';
+  if (src || notes) return 'in_progress';
+  return 'not_started';
+}
+
+function g2SectionStatus(cards) {
+  if (!cards.length) return 'not_started';
+  const statuses = cards.map(g2CardStatus);
+  if (statuses.every(s => s === 'ready')) return 'ready';
+  if (statuses.some(s => s !== 'not_started')) return 'in_progress';
+  return 'not_started';
+}
+
+function g2SectionProgress(cards) {
+  const ready = cards.filter(c => g2CardStatus(c) === 'ready').length;
+  return `${ready} из ${cards.length} готово`;
+}
+
+function g2CardHtml(card) {
+  const acc = getGate2AccordionState();
+  const isOpen = Boolean(acc.cards[card.id]);
+  const status = g2CardStatus(card);
+  const orient = g2ParseOrient(card.instruction);
+  const standard = g2ParseStandard(card.instruction);
+  const noteVal = card.notes || '';
+  const srcVal = g2EnsureSource(card);
+  const noteCls = String(noteVal).trim() ? 'is-filled' : 'is-empty';
+  const srcCls = String(srcVal).trim() ? 'is-filled' : 'is-empty';
+
+  return `<article class="g1-card ${isOpen ? 'is-open' : ''}" data-card="${escapeAttr(card.id)}">
+    <button class="g1-card-header" data-g2-toggle-card="${escapeAttr(card.id)}">
+      <span class="g1-card-title">${escapeHtml(card.title)}</span>
+      <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+      <span class="g1-section-toggle">${isOpen ? 'Свернуть' : 'Раскрыть'}</span>
+    </button>
+    ${isOpen ? `<div class="g1-card-body">
+      ${orient ? `<p class="g1-task">${escapeHtml(orient)}</p>` : ''}
+      <div class="g1-fields-grid">
+        <label class="g1-field"><span>Рабочие заметки</span><textarea class="g1-input ${noteCls}" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="notes" rows="3" placeholder="что сделано, результат">${escapeHtml(noteVal)}</textarea></label>
+        <label class="g1-field"><span>Источник / ссылка / скрин / отчёт</span><textarea class="g1-input ${srcCls}" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="source" rows="2" placeholder="URL, скриншот, описание проверки">${escapeHtml(srcVal)}</textarea></label>
+      </div>
+      ${standard ? `<p class="g1-task" style="font-style:italic;margin-top:12px;opacity:.7"><strong>Стандарт готовности:</strong> ${escapeHtml(standard)}</p>` : ''}
+    </div>` : ''}
+  </article>`;
+}
+
+function renderGate2Redesign(gate, cards) {
+  const sections = getNumberedHeaderSections(gate, new Set(cards.map(c => c.id)));
+  const acc = getGate2AccordionState();
+
+  els.contentArea.innerHTML = `<div class="g1-redesign">
+    ${sections.map(section => {
+      const sectionOpen = Boolean(acc.sections[section.key]);
+      const innerCards = section.filteredInnerCards;
+      const status = g2SectionStatus(innerCards);
+      const progressText = g2SectionProgress(innerCards);
+      return `<section class="g1-section ${sectionOpen ? 'is-open' : ''}">
+        <button class="g1-section-header" data-g2-toggle-section="${escapeAttr(section.key)}">
+          <span class="g1-section-left">
+            <span class="g1-section-title">${escapeHtml(section.title)}</span>
+            <span class="g1-section-progress">${escapeHtml(progressText)}</span>
+          </span>
+          <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+          <span class="g1-section-toggle">${sectionOpen ? 'Закрыть' : 'Открыть'}</span>
+        </button>
+        ${sectionOpen ? `<div class="g1-section-body">
+          ${innerCards.length ? innerCards.map(card => g2CardHtml(card)).join('') : '<div class="g1-empty">Нет блоков в этой секции.</div>'}
+        </div>` : ''}
+      </section>`;
+    }).join('')}
+  </div>`;
+
+  bindGate2Events();
+  bindCardInputs();
+  renderGateNav();
+}
+
+function bindGate2Events() {
+  document.querySelectorAll('[data-g2-toggle-section]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const acc = getGate2AccordionState();
+      const key = btn.dataset.g2ToggleSection;
+      acc.sections[key] = !acc.sections[key];
+      saveState();
+      renderGate();
+    });
+  });
+  document.querySelectorAll('[data-g2-toggle-card]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const acc = getGate2AccordionState();
+      const cardId = btn.dataset.g2ToggleCard;
+      acc.cards[cardId] = !acc.cards[cardId];
+      saveState();
+      renderGate();
+    });
+  });
+}
+
+function g2PointUpdateBadge(card) {
+  if (!card) return;
+  const status = g2CardStatus(card);
+  const cardEl = document.querySelector(`[data-card="${CSS.escape(card.id)}"]`);
+  const pill = cardEl?.querySelector('.status-pill');
+  if (pill) {
+    pill.className = `status-pill status-${status}`;
+    pill.textContent = STATUS_LABELS[status] || status;
+  }
+  const sectionEl = cardEl?.closest('.g1-section');
+  if (sectionEl) {
+    const sectionCards = Array.from(sectionEl.querySelectorAll('[data-card]')).map(el => findCard(el.dataset.card)).filter(Boolean);
+    const sStatus = g2SectionStatus(sectionCards);
+    const sPill = sectionEl.querySelector('.g1-section-header .status-pill');
+    if (sPill) { sPill.className = `status-pill status-${sStatus}`; sPill.textContent = STATUS_LABELS[sStatus] || sStatus; }
+    const sProgress = sectionEl.querySelector('.g1-section-progress');
+    if (sProgress) sProgress.textContent = g2SectionProgress(sectionCards);
+  }
+  renderGateNav();
+}
+
+function updateGate2Field(target) {
+  const cardId = target.dataset.g2CardId;
+  const field = target.dataset.g2Field;
+  if (!cardId || !field) return;
+  const card = findCard(cardId);
+  if (!card) return;
+  if (field === 'notes') card.notes = target.value;
+  else if (field === 'source') { if (!card.fields) card.fields = {}; card.fields.g2Source = target.value; }
+  const cls = String(target.value || '').trim() ? 'is-filled' : 'is-empty';
+  target.classList.remove('is-filled', 'is-empty');
+  target.classList.add(cls);
+  recalculateStatusForCard(card);
+  flashSaving();
+  g2PointUpdateBadge(card);
+}
+
+document.addEventListener('input', e => {
+  if (e.target?.dataset?.g2CardId && e.target.tagName !== 'SELECT') updateGate2Field(e.target);
+});
+document.addEventListener('change', e => {
+  if (e.target?.dataset?.g2CardId) updateGate2Field(e.target);
+});
+
+const __guruPrevRenderGateTableV140 = renderGateTable;
+renderGateTable = function(gate, cards) {
+  if (gate?.id === 'gate-2') {
+    renderGate2Redesign(gate, cards);
+    return;
+  }
+  if (gate?.id === 'gate-3') {
+    renderGate3Redesign(gate, cards);
+    return;
+  }
+  __guruPrevRenderGateTableV140(gate, cards);
+};
+
+// ─── Gate 3 Redesign (дизайн-система ГУРУ / Брокманн) ───
+
+function getGate3AccordionState() {
+  ensureUiState(state);
+  state.ui.gate3Accordion = state.ui.gate3Accordion || { sections: {}, cards: {} };
+  return state.ui.gate3Accordion;
+}
+
+function renderGate3Redesign(gate, cards) {
+  const sections = getSemanticGateSections(gate, cards);
+  const acc = getGate3AccordionState();
+  const queryActive = els.searchInput.value.trim() || els.statusFilter.value !== 'all';
+
+  els.contentArea.innerHTML = `<div class="g1-redesign">
+    ${sections.map(section => {
+      const sectionOpen = Boolean(acc.sections[section.key]);
+      const status = getSectionStatus(section.allInnerCards);
+      const progressText = getSectionProgressText(section.allInnerCards);
+      const isFunnel = section.key === 'funnel_stages';
+      const allCards = (queryActive ? section.filteredInnerCards : section.allInnerCards)
+        .filter(c => !/[cсCС]писок этапов/i.test(c.title));
+      return `<section class="g1-section ${sectionOpen ? 'is-open' : ''}">
+        <button class="g1-section-header" data-g3-toggle-section="${escapeAttr(section.key)}">
+          <span class="g1-section-left">
+            <span class="g1-section-title">${escapeHtml(section.title)}</span>
+            <span class="g1-section-progress">${escapeHtml(progressText)}</span>
+          </span>
+          <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+          <span class="g1-section-toggle">${sectionOpen ? 'Закрыть' : 'Открыть'}</span>
+        </button>
+        ${sectionOpen ? `<div class="g1-section-body${isFunnel ? ' g3-funnel' : ''}">
+          ${allCards.length ? allCards.map((card, i) => g3CardHtml(card, isFunnel ? { index: i, total: allCards.length } : null)).join('') : '<div class="g1-empty">По текущему фильтру ничего не найдено.</div>'}
+        </div>` : ''}
+      </section>`;
+    }).join('')}
+  </div>`;
+  bindGate3Accordion();
+  bindCardInputs();
+  renderGateNav();
+}
+
+function g3CardHtml(card, funnel) {
+  const acc = getGate3AccordionState();
+  const isOpen = Boolean(acc.cards[card.id]);
+  card.strategyFields = card.strategyFields || { decision:'', source:'', nextStep:'' };
+  const sf = card.strategyFields;
+  const funnelStyle = funnel ? ` style="width:${100 - (funnel.index / Math.max(funnel.total - 1, 1)) * 55}%"` : '';
+  return `<article class="g1-card ${isOpen ? 'is-open' : ''}${funnel ? ' g3-funnel-card' : ''}" data-card="${escapeAttr(card.id)}"${funnelStyle}>
+    <button class="g1-card-header" data-g3-toggle-card="${escapeAttr(card.id)}">
+      <span class="g1-card-title">${escapeHtml(card.title)}</span>
+      <span class="status-pill status-${card.status}">${STATUS_LABELS[card.status] || card.status}</span>
+      <span class="g1-section-toggle">${isOpen ? 'Свернуть' : 'Раскрыть'}</span>
+    </button>
+    ${isOpen ? `<div class="g1-card-body">
+      ${card.instruction ? `<p class="g1-task">${escapeHtml(card.instruction)}</p>` : ''}
+      <div class="g1-fields-grid">
+        ${g3Field('decision', 'Стратегическое решение', sf.decision, 'что решено / выбрано', 'textarea', card.id)}
+        ${g3Field('source', 'Источник решения', sf.source, 'спрос, боль, конкурент, экономика', 'input', card.id)}
+        ${g3Field('nextStep', 'Следующий шаг', sf.nextStep, 'конкретное действие', 'input', card.id)}
+      </div>
+      <p class="g1-task" style="font-style:italic;margin-top:12px;opacity:.7">Готово, когда решение сформулировано и подтверждено источником.</p>
+      <label class="g1-field"><span>Источник / ссылка / скрин / отчёт</span><input class="g1-input ${(sf.source||'').trim() ? 'is-filled' : 'is-empty'}" data-g3-card-id="${escapeAttr(card.id)}" data-g3-field="source" value="${escapeAttr(sf.source || '')}" placeholder="ссылка или описание подтверждения" /></label>
+    </div>` : ''}
+  </article>`;
+}
+
+function g3Field(name, label, value, placeholder, type, cardId) {
+  const filled = String(value || '').trim();
+  const cls = filled ? 'is-filled' : 'is-empty';
+  if (type === 'textarea') {
+    return `<label class="g1-field"><span>${escapeHtml(label)}</span><textarea class="g1-input ${cls}" data-g3-card-id="${escapeAttr(cardId)}" data-g3-field="${escapeAttr(name)}" rows="3" placeholder="${escapeAttr(placeholder)}">${escapeHtml(value || '')}</textarea></label>`;
+  }
+  return `<label class="g1-field"><span>${escapeHtml(label)}</span><input class="g1-input ${cls}" data-g3-card-id="${escapeAttr(cardId)}" data-g3-field="${escapeAttr(name)}" value="${escapeAttr(value || '')}" placeholder="${escapeAttr(placeholder)}" /></label>`;
+}
+
+function bindGate3Accordion() {
+  document.querySelectorAll('[data-g3-toggle-section]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const acc = getGate3AccordionState();
+      acc.sections[btn.dataset.g3ToggleSection] = !acc.sections[btn.dataset.g3ToggleSection];
+      saveState();
+      renderGate();
+    });
+  });
+  document.querySelectorAll('[data-g3-toggle-card]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const acc = getGate3AccordionState();
+      acc.cards[btn.dataset.g3ToggleCard] = !acc.cards[btn.dataset.g3ToggleCard];
+      saveState();
+      renderGate();
+    });
+  });
+}
+
+function updateGate3Field(target) {
+  const card = findCard(target.dataset.g3CardId);
+  if (!card) return;
+  card.strategyFields = card.strategyFields || {};
+  card.strategyFields[target.dataset.g3Field] = target.value;
+  recalculateStatusForCard(card);
+  flashSaving();
+  g1PointUpdateBadge(card);
+}
+
+document.addEventListener('input', e => {
+  if (e.target?.dataset?.g3CardId && e.target.tagName !== 'SELECT') {
+    updateGate3Field(e.target);
+    const cls = e.target.value.trim() ? 'is-filled' : 'is-empty';
+    e.target.classList.remove('is-filled', 'is-empty');
+    e.target.classList.add(cls);
+  }
+});
+document.addEventListener('change', e => {
+  if (e.target?.dataset?.g3CardId) updateGate3Field(e.target);
+});
+
+/* ================================================================
+   Gate 4 · Реализация — redesign (g1-redesign pattern)
+   ================================================================ */
+
+function isGate4(gate) { return gate?.id === 'gate-4'; }
+
+function getGate4AccordionState() {
+  if (!state.ui) state.ui = {};
+  if (!state.ui.gate4Accordion) state.ui.gate4Accordion = { sections: {}, cards: {} };
+  return state.ui.gate4Accordion;
+}
+
+function getGate4SectionStatus(cards) {
+  if (!cards.length) return 'not_started';
+  const filled = cards.filter(c => c.status === 'ready').length;
+  if (filled === cards.length) return 'ready';
+  if (filled > 0 || cards.some(c => c.status === 'in_progress')) return 'in_progress';
+  if (cards.some(c => c.status === 'needs_attention')) return 'needs_attention';
+  if (cards.some(c => c.status === 'problem')) return 'problem';
+  return 'not_started';
+}
+
+function getGate4SectionProgress(cards) {
+  if (!cards.length) return '';
+  const done = cards.filter(c => c.status === 'ready').length;
+  return `${cards.length} блоков, готово ${Math.round(done / cards.length * 100)}%`;
+}
+
+function g4CardFieldsHtml(card) {
+  card.implementationFields = card.implementationFields || { what: '', where: '', output: '', comment: '', source: '' };
+  const f = card.implementationFields;
+  return `<div class="g1-fields-grid">
+    ${g1FieldInput('data-g4-card-id="' + escapeAttr(card.id) + '" data-g4-field', 'what', 'Что реализовать', f.what, 'описание задачи / элемента', 'textarea')}
+    ${g1FieldInput('data-g4-card-id="' + escapeAttr(card.id) + '" data-g4-field', 'where', 'Где реализовать', f.where, 'страница / канал / кампания', 'text')}
+    ${g1FieldInput('data-g4-card-id="' + escapeAttr(card.id) + '" data-g4-field', 'output', 'Результат на выходе', f.output, 'что должно получиться', 'text')}
+    ${g1FieldInput('data-g4-card-id="' + escapeAttr(card.id) + '" data-g4-field', 'comment', 'Комментарий', f.comment, 'если нужен', 'text')}
+    ${g1FieldInput('data-g4-card-id="' + escapeAttr(card.id) + '" data-g4-field', 'source', 'Источник / ссылка / скрин / отчёт', f.source, 'URL, файл или описание', 'text')}
+  </div>`;
+}
+
+function g4CardHtml(card) {
+  const acc = getGate4AccordionState();
+  const isOpen = Boolean(acc.cards[card.id]);
+  const instr = String(card?.instruction || '').trim();
+  const taskText = instr ? instr.split(/\n/).slice(0, 2).join(' ').slice(0, 200) : '';
+  return `<article class="g1-card ${isOpen ? 'is-open' : ''}" data-card="${escapeAttr(card.id)}">
+    <button class="g1-card-header" data-g4-toggle-card="${escapeAttr(card.id)}">
+      <span class="g1-card-title">${escapeHtml(card.title)}</span>
+      <span class="status-pill status-${card.status}">${STATUS_LABELS[card.status] || card.status}</span>
+    </button>
+    ${isOpen ? `<div class="g1-card-body">
+      ${taskText ? `<p class="g1-task">${escapeHtml(taskText)}</p>` : ''}
+      ${g4CardFieldsHtml(card)}
+      <p class="g1-task" style="font-style:italic;margin-top:8px">Готово, когда все обязательные поля заполнены и есть источник подтверждения.</p>
+    </div>` : ''}
+  </article>`;
+}
+
+function renderGate4Redesign(gate, cards) {
+  const sections = getSemanticGateSections(gate, cards);
+  const acc = getGate4AccordionState();
+  const queryActive = els.searchInput.value.trim() || els.statusFilter.value !== 'all';
+  els.contentArea.innerHTML = `<div class="g1-redesign">
+    ${sections.map(section => {
+      const sectionOpen = Boolean(acc.sections[section.key]);
+      const status = getGate4SectionStatus(section.allInnerCards);
+      const progressText = getGate4SectionProgress(section.allInnerCards);
+      const displayCards = queryActive ? section.filteredInnerCards : section.allInnerCards;
+      return `<section class="g1-section ${sectionOpen ? 'is-open' : ''}">
+        <button class="g1-section-header" data-g4-toggle-section="${escapeAttr(section.key)}">
+          <span class="g1-section-left">
+            <span class="g1-section-title">${escapeHtml(section.title)}</span>
+            <span class="g1-section-progress">${escapeHtml(progressText)}</span>
+          </span>
+          <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+        </button>
+        ${sectionOpen ? `<div class="g1-section-body">
+          ${displayCards.length ? displayCards.map(card => g4CardHtml(card)).join('') : '<div class="g1-empty">По текущему фильтру ничего не найдено.</div>'}
+        </div>` : ''}
+      </section>`;
+    }).join('')}
+  </div>`;
+  bindGate4Accordion();
+  bindGate4Fields();
+  bindCardInputs();
+  renderGateNav();
+}
+
+function bindGate4Accordion() {
+  document.querySelectorAll('[data-g4-toggle-section]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.g4ToggleSection;
+      const acc = getGate4AccordionState();
+      acc.sections[key] = !acc.sections[key];
+      saveState();
+      renderGate();
+    });
+  });
+  document.querySelectorAll('[data-g4-toggle-card]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cardId = btn.dataset.g4ToggleCard;
+      const acc = getGate4AccordionState();
+      acc.cards[cardId] = !acc.cards[cardId];
+      saveState();
+      renderGate();
+    });
+  });
+}
+
+function bindGate4Fields() {
+  document.querySelectorAll('[data-g4-card-id]').forEach(input => {
+    input.addEventListener('input', e => {
+      const cardId = e.target.dataset.g4CardId;
+      const field = e.target.dataset.g4Field;
+      const card = findCard(cardId);
+      if (!card) return;
+      card.implementationFields = card.implementationFields || {};
+      card.implementationFields[field] = e.target.value;
+      recalculateStatusForCard(card);
+      flashSaving();
+      const cls = e.target.value.trim() ? 'is-filled' : 'is-empty';
+      e.target.classList.remove('is-filled', 'is-empty');
+      e.target.classList.add(cls);
+      g1PointUpdateBadge(card);
+    });
+    input.addEventListener('change', e => {
+      const cardId = e.target.dataset.g4CardId;
+      const field = e.target.dataset.g4Field;
+      const card = findCard(cardId);
+      if (!card) return;
+      card.implementationFields = card.implementationFields || {};
+      card.implementationFields[field] = e.target.value;
+      recalculateStatusForCard(card);
+      flashSaving();
+      if (e.target.tagName === 'SELECT') renderGate();
+    });
+  });
+}
+
+const __prevRenderSemanticGateAccordionG4 = renderSemanticGateAccordion;
+renderSemanticGateAccordion = function(gate, cards) {
+  if (isGate4(gate)) {
+    renderGate4Redesign(gate, cards);
+    return;
+  }
+  __prevRenderSemanticGateAccordionG4(gate, cards);
+};
+
+
+/*
+  Gate 0 → Gate 1: справочные подсказки (G0 hints)
+  Не автозаполнение. Только popover с данными из Gate 0 рядом с полями Gate 1.
+*/
+
+function readGate0Value(key) {
+  if (!state) return '';
+  const p = state.project || {};
+  const se = state.sharedEvidence || {};
+  const map = {
+    product: () => p.whatSell || se['что_продаем'] || '',
+    audience: () => p.targetSegment || se['кому_продаем'] || '',
+    client_result: () => p.clientResult || se['ради_какого_результата'] || '',
+    geo: () => p.geography || '',
+    project_name: () => p.name || '',
+    website: () => p.website || '',
+    niche: () => p.niche || '',
+    rational_coverage: () => p.offerRationalCoverage || se['offer_rational_coverage'] || '',
+    irrational_driver: () => p.offerIrrationalDriver || se['offer_irrational_driver'] || '',
+    social_mechanism: () => p.offerSocialMechanism || se['offer_social_mechanism'] || '',
+    positioning: () => p.positioningStatement || se['positioning_statement'] || '',
+    usp: () => p.usp || se['positioning_usp'] || '',
+    main_keywords: () => p.searchMainKeywords || se['search_main_keywords'] || '',
+    priority_clusters: () => p.searchPriorityClusters || se['search_priority_clusters'] || '',
+    brand_queries: () => p.searchBrandQueries || se['search_brand_queries'] || '',
+    irrelevant_queries: () => p.searchIrrelevantQueries || se['search_irrelevant_queries'] || '',
+    current_offers: () => p.currentOffers || se['current_offers'] || '',
+    current_ctas: () => p.currentCtas || se['current_ctas'] || '',
+    primary_target_action: () => p.primaryTargetAction || se['primary_target_action'] || '',
+    services_list: () => p.whatSell || se['что_продаем'] || ''
+  };
+  return (map[key] ? map[key]() : '').trim();
+}
+
+const G0_HINT_LABELS = {
+  product: 'Что продаём',
+  audience: 'Кому продаём',
+  client_result: 'Ради какого результата',
+  geo: 'География',
+  project_name: 'Название проекта',
+  website: 'Сайт',
+  niche: 'Ниша',
+  rational_coverage: 'Рациональное покрытие',
+  irrational_driver: 'Иррациональный драйвер',
+  social_mechanism: 'Социальный механизм',
+  positioning: 'Позиционирование',
+  usp: 'УТП',
+  main_keywords: 'Основные ключевые слова',
+  priority_clusters: 'Приоритетные кластеры',
+  brand_queries: 'Брендовые запросы',
+  irrelevant_queries: 'Нерелевантные запросы',
+  current_offers: 'Текущие офферы',
+  current_ctas: 'Текущие CTA',
+  primary_target_action: 'Основное целевое действие',
+  services_list: 'Список продуктов / услуг'
+};
+
+const GATE1_G0_HINTS = {
+  demand_promoted: ['product', 'audience', 'client_result'],
+  demand_excluded: ['irrelevant_queries'],
+  demand_geo: ['geo'],
+  demand_landing: ['website'],
+  demand_queries: ['main_keywords', 'priority_clusters', 'brand_queries'],
+  demand_negatives: ['irrelevant_queries'],
+  demand_offer: ['current_offers', 'usp'],
+  demand_cta: ['current_ctas', 'primary_target_action'],
+  pain_product: ['product', 'audience', 'client_result'],
+  pain_explicitPains: ['irrational_driver', 'client_result'],
+  pain_hiddenPains: ['irrational_driver', 'social_mechanism'],
+  pain_reason: ['client_result', 'rational_coverage'],
+  pain_jtbd: ['client_result', 'irrational_driver'],
+  pain_segment: ['audience'],
+  pain_offer: ['current_offers', 'usp', 'positioning'],
+  pain_cta: ['current_ctas', 'primary_target_action'],
+  pain_social: ['social_mechanism'],
+  unit_product: ['product', 'services_list'],
+  unit_period: ['geo'],
+  unit_salesModel: ['primary_target_action'],
+  unit_promoteAllowed: ['product', 'current_offers'],
+  unit_promoteForbidden: ['irrelevant_queries'],
+  audit_url: ['website'],
+  audit_domain: ['website'],
+  audit_geo: ['geo'],
+  audit_name: ['project_name', 'niche']
+};
+
+function g0HintBtnHtml(hintKey) {
+  const sources = GATE1_G0_HINTS[hintKey];
+  if (!sources || !sources.length) return '';
+  return `<button type="button" class="g0-hint-btn" data-g0-hint="${escapeAttr(hintKey)}">G0</button>`;
+}
+
+function g0PopoverHtml(hintKey) {
+  const sources = GATE1_G0_HINTS[hintKey];
+  if (!sources) return '';
+  const items = sources.map(key => {
+    const value = readGate0Value(key);
+    const label = G0_HINT_LABELS[key] || key;
+    if (!value) return `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(label)}</div><div class="g0-popover-empty">В Gate 0 это поле пока не заполнено.</div></div>`;
+    return `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(label)}</div><div class="g0-popover-value">${escapeHtml(value)}</div></div>`;
+  });
+  return `<div class="g0-popover"><div class="g0-popover-title">Gate 0 / контекст</div>${items.join('')}</div>`;
+}
+
+let _g0ActivePopover = null;
+function positionG0Popover(popover, rect) {
+  popover.style.position = 'fixed';
+  popover.style.left = Math.min(rect.left, window.innerWidth - 360) + 'px';
+  const spaceBelow = window.innerHeight - rect.bottom;
+  const spaceAbove = rect.top;
+  if (spaceBelow >= 220 || spaceBelow >= spaceAbove) {
+    popover.style.top = (rect.bottom + 4) + 'px';
+    popover.style.maxHeight = Math.max(120, spaceBelow - 16) + 'px';
+  } else {
+    popover.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+    popover.style.maxHeight = Math.max(120, spaceAbove - 16) + 'px';
+  }
+}
+
+function showG0Popover(btn) {
+  closeG0Popover();
+  const key = btn.dataset.g0Hint;
+  const html = g0PopoverHtml(key);
+  if (!html) return;
+  const el = document.createElement('div');
+  el.innerHTML = html;
+  const popover = el.firstElementChild;
+  document.body.appendChild(popover);
+  positionG0Popover(popover, btn.getBoundingClientRect());
+  _g0ActivePopover = popover;
+  setTimeout(() => document.addEventListener('click', _g0ClickAway, true), 0);
+}
+
+function closeG0Popover() {
+  if (_g0ActivePopover) { _g0ActivePopover.remove(); _g0ActivePopover = null; }
+  document.removeEventListener('click', _g0ClickAway, true);
+}
+
+function _g0ClickAway(e) {
+  if (_g0ActivePopover && !_g0ActivePopover.contains(e.target) && !e.target.closest('.g0-hint-btn')) closeG0Popover();
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.g0-hint-btn');
+  if (btn) { e.preventDefault(); e.stopPropagation(); showG0Popover(btn); }
+});
+
+// Override demandInput to inject G0 hint buttons
+const __prevDemandInputG0 = demandInput;
+demandInput = function(name, label, type, placeholder) {
+  const hintKey = 'demand_' + name;
+  const hint = g0HintBtnHtml(hintKey);
+  if (!hint) return __prevDemandInputG0(name, label, type, placeholder);
+  const route = ensureDemandRouteState();
+  const value = route[name] || '';
+  const tag = type === 'textarea'
+    ? `<textarea data-demand-field="${escapeAttr(name)}" placeholder="${escapeAttr(placeholder || '')}">${escapeHtml(value)}</textarea>`
+    : `<input data-demand-field="${escapeAttr(name)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(placeholder || '')}" />`;
+  return `<label class="demand-field"><span>${escapeHtml(label)}${hint}</span>${tag}</label>`;
+};
+
+// Override painInput to inject G0 hint buttons
+const __prevPainInputG0 = painInput;
+painInput = function(name, label, type, placeholder) {
+  const hintKey = 'pain_' + name;
+  const hint = g0HintBtnHtml(hintKey);
+  if (!hint) return __prevPainInputG0(name, label, type, placeholder);
+  const route = ensurePainOfferState();
+  const value = route[name] || '';
+  const tag = (type === 'textarea')
+    ? `<textarea data-pain-field="${escapeAttr(name)}" placeholder="${escapeAttr(placeholder || '')}">${escapeHtml(value)}</textarea>`
+    : `<input data-pain-field="${escapeAttr(name)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(placeholder || '')}" />`;
+  return `<label class="demand-field"><span>${escapeHtml(label)}${hint}</span>${tag}</label>`;
+};
+
+// Override unitInput to inject G0 hint buttons
+const __prevUnitInputG0 = unitInput;
+unitInput = function(name, label, type, placeholder) {
+  const hintKey = 'unit_' + name;
+  const hint = g0HintBtnHtml(hintKey);
+  if (!hint) return __prevUnitInputG0(name, label, type, placeholder);
+  const route = ensureUnitEconomicsState();
+  const value = route[name] || '';
+  const tag = (type === 'textarea')
+    ? `<textarea data-unit-field="${escapeAttr(name)}" placeholder="${escapeAttr(placeholder || '')}">${escapeHtml(value)}</textarea>`
+    : `<input data-unit-field="${escapeAttr(name)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(placeholder || '')}" />`;
+  return `<label class="demand-field"><span>${escapeHtml(label)}${hint}</span>${tag}</label>`;
+};
+
+// Inject G0 hints into pain/offer section fields
+const __prevPainOfferSectionHtmlG0 = painOfferSectionHtml;
+painOfferSectionHtml = function(route, section, isOpen) {
+  if (!isOpen) return __prevPainOfferSectionHtmlG0(route, section, isOpen);
+  const data = route.sections?.[section.key] || {};
+  const status = painSectionStatus(section);
+  const fieldHintsMap = {
+    explicitPains: 'pain_explicitPains',
+    hiddenPains: 'pain_hiddenPains',
+    reason: 'pain_reason',
+    mainJtbd: 'pain_jtbd',
+    segments: 'pain_segment',
+    forWhom: 'pain_segment',
+    resultPromise: 'pain_offer',
+    cta: 'pain_cta',
+    offerFormula: 'pain_offer',
+    socialJob: 'pain_social'
+  };
+  return `<article class="demand-step pain-step is-open">
+    <button class="demand-step-head" data-pain-toggle-section="${escapeAttr(section.key)}">
+      <span><strong>${escapeHtml(section.title)}</strong><small>${escapeHtml(section.orient)}</small></span>
+      <span class="status-pill status-${status}">${STATUS_LABELS[status] || status}</span>
+    </button>
+    <div class="pain-step-body">
+      <div class="pain-standard"><strong>Стандарт готовности:</strong> ${escapeHtml(section.standard)}</div>
+      <div class="demand-step-body">
+        ${section.fields.map(([key, label]) => {
+          const hint = fieldHintsMap[key] ? g0HintBtnHtml(fieldHintsMap[key]) : '';
+          return `<label class="demand-field"><span>${escapeHtml(label)}${hint}</span><textarea data-pain-section="${escapeAttr(section.key)}" data-pain-section-field="${escapeAttr(key)}" placeholder="результат">${escapeHtml(data[key] || '')}</textarea></label>`;
+        }).join('')}
+        <label class="demand-field"><span>Доказательство</span><textarea data-pain-section="${escapeAttr(section.key)}" data-pain-section-field="evidence" placeholder="ссылка, скрин, вывод или источник">${escapeHtml(data.evidence || '')}</textarea></label>
+      </div>
+    </div>
+  </article>`;
+};
+
+// Inject G0 hints into unit economics section fields
+const __prevUnitSectionHtmlG0 = unitSectionHtml;
+unitSectionHtml = function(route, section, isOpen) {
+  if (!isOpen) return __prevUnitSectionHtmlG0(route, section, isOpen);
+  const data = route.sections?.[section.key] || {};
+  const status = unitSectionStatus(section);
+  const fieldHintsMap = {
+    promoteAllowed: 'unit_promoteAllowed',
+    promoteForbidden: 'unit_promoteForbidden'
+  };
+  return `<article class="demand-step unit-step is-open">
+    <button class="demand-step-head" data-unit-toggle-section="${escapeAttr(section.key)}">
+      <span><strong>${escapeHtml(section.title)}</strong><small>${escapeHtml(section.orient)}</small></span>
+      <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+    </button>
+    <div class="pain-step-body">
+      <div class="pain-standard"><strong>Стандарт готовности:</strong> ${escapeHtml(section.standard)}</div>
+      <div class="demand-step-body">
+        ${section.fields.map(([key, label]) => {
+          const hint = fieldHintsMap[key] ? g0HintBtnHtml(fieldHintsMap[key]) : '';
+          return `<label class="demand-field"><span>${escapeHtml(label)}${hint}</span><textarea data-unit-section="${escapeAttr(section.key)}" data-unit-section-field="${escapeAttr(key)}" placeholder="результат">${escapeHtml(data[key] || '')}</textarea></label>`;
+        }).join('')}
+        <label class="demand-field"><span>Доказательство</span><textarea data-unit-section="${escapeAttr(section.key)}" data-unit-section-field="evidence" placeholder="ссылка, источник расчёта или короткий вывод">${escapeHtml(data.evidence || '')}</textarea></label>
+      </div>
+    </div>
+  </article>`;
+};
+
+// Inject G0 hints into demand route step fields (семантика section)
+const __prevDemandStepHtmlG0 = demandStepHtml;
+demandStepHtml = function(route, step, isOpen) {
+  if (!isOpen) return __prevDemandStepHtmlG0(route, step, isOpen);
+  const data = route.steps?.[step.key] || {};
+  const filled = step.fields.some(([key]) => String(data[key] || '').trim());
+  const fieldHintsMap = {
+    queries: 'demand_queries',
+    negatives: 'demand_negatives',
+    offer: 'demand_offer',
+    cta: 'demand_cta'
+  };
+  return `<article class="demand-step is-open">
+    <button class="demand-step-head" data-demand-toggle-step="${escapeAttr(step.key)}">
+      <span><strong>${escapeHtml(step.title)}</strong><small>${escapeHtml(step.task)}</small></span>
+      <span class="status-pill status-${filled ? 'in_progress' : 'not_started'}">${filled ? 'В работе' : 'Не начато'}</span>
+    </button>
+    <div class="demand-step-body">
+      ${step.fields.map(([key, label]) => {
+        const hint = fieldHintsMap[key] ? g0HintBtnHtml(fieldHintsMap[key]) : '';
+        return `<label class="demand-field"><span>${escapeHtml(label)}${hint}</span><textarea data-demand-step="${escapeAttr(step.key)}" data-demand-step-field="${escapeAttr(key)}" placeholder="результат">${escapeHtml(data[key] || '')}</textarea></label>`;
+      }).join('')}
+    </div>
+  </article>`;
+};
+
+/* v1.3.0 — autosize для ВСЕХ textarea на странице */
+document.addEventListener('input', e => {
+  if (e.target.tagName === 'TEXTAREA') { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }
+});
+new MutationObserver(() => {
+  document.querySelectorAll('textarea').forEach(ta => {
+    if (!ta.dataset.autosized) { ta.dataset.autosized = '1'; ta.rows = 1; ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; }
+  });
+}).observe(document.getElementById('contentArea') || document.body, { childList: true, subtree: true });
+
+// G0 hints for page context fields (кнопки, CTA)
+const CONTEXT_FIELD_G0_HINTS = {
+  primaryButton: 'page_cta',
+  secondaryButton: 'page_cta',
+  serviceHeroButton: 'page_cta',
+  heroUsp: 'page_usp',
+  seoKeywords: 'page_keywords'
+};
+
+GATE1_G0_HINTS.page_cta = ['current_ctas', 'primary_target_action'];
+GATE1_G0_HINTS.page_usp = ['usp', 'positioning'];
+GATE1_G0_HINTS.page_keywords = ['main_keywords', 'priority_clusters', 'brand_queries'];
+const SEO_HINT_FIELDS = ['title', 'description'];
+
+function seoHintBtnHtml(field, cardId, pageIndex) {
+  if (!SEO_HINT_FIELDS.includes(field)) return '';
+  return `<button type="button" class="g0-hint-btn" data-seo-hint="${escapeAttr(field)}" data-seo-card="${escapeAttr(cardId)}" data-seo-page="${pageIndex}">G0</button>`;
+}
+
+function collectPageContext(card, pageIndex) {
+  const row = card.pageRows?.[pageIndex];
+  if (!row) return [];
+  const ctx = row.contextFields || {};
+  const template = v22TemplateForCard(card);
+  const sections = template.sections || [];
+  const groups = [];
+
+  sections.forEach(section => {
+    const items = [];
+    (section.fields || []).forEach(field => {
+      const value = field.kind === 'row' ? row[field.field] : ctx[field.key];
+      if (String(value || '').trim()) {
+        items.push({ label: field.label, value: String(value).trim() });
+      }
+    });
+    if (items.length) groups.push({ title: section.title, items });
+  });
+
+  if (String(row.h1 || '').trim() && !groups.length) {
+    groups.push({ title: 'Страница', items: [{ label: 'H1', value: row.h1.trim() }] });
+  }
+
+  return groups;
+}
+
+function seoPopoverHtml(field, card, pageIndex) {
+  const pageGroups = collectPageContext(card, pageIndex);
+  const g0Items = [
+    { key: 'product', label: 'Что продаём' },
+    { key: 'audience', label: 'Кому продаём' },
+    { key: 'client_result', label: 'Результат клиента' },
+    { key: 'usp', label: 'УТП проекта' },
+    { key: 'main_keywords', label: 'Ключевые слова' },
+    { key: 'geo', label: 'География' }
+  ].map(({ key, label }) => {
+    const v = readGate0Value(key);
+    return v ? { label, value: v } : null;
+  }).filter(Boolean);
+
+  let html = '<div class="g0-popover">';
+  if (pageGroups.length) {
+    pageGroups.forEach(group => {
+      html += `<div class="g0-popover-title">${escapeHtml(group.title)}</div>`;
+      html += group.items.map(i => `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(i.label)}</div><div class="g0-popover-value">${escapeHtml(i.value)}</div></div>`).join('');
+    });
+  }
+  if (g0Items.length) {
+    html += `<div class="g0-popover-title" style="margin-top:${pageGroups.length ? 8 : 0}px">Gate 0 / проект</div>`;
+    html += g0Items.map(i => `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(i.label)}</div><div class="g0-popover-value">${escapeHtml(i.value)}</div></div>`).join('');
+  }
+  if (!pageGroups.length && !g0Items.length) {
+    html += '<div class="g0-popover-empty">Данные пока не заполнены.</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-seo-hint]');
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  closeG0Popover();
+  const field = btn.dataset.seoHint;
+  const cardId = btn.dataset.seoCard;
+  const pageIndex = Number(btn.dataset.seoPage);
+  const card = findCard(cardId);
+  if (!card) return;
+  const el = document.createElement('div');
+  el.innerHTML = seoPopoverHtml(field, card, pageIndex);
+  const popover = el.firstElementChild;
+  document.body.appendChild(popover);
+  positionG0Popover(popover, btn.getBoundingClientRect());
+  _g0ActivePopover = popover;
+  setTimeout(() => document.addEventListener('click', _g0ClickAway, true), 0);
+});
+
+const __prevRowInputFieldG0 = rowInputField;
+rowInputField = function(card, pageIndex, row, field, label, standard, type, extra) {
+  const html = __prevRowInputFieldG0(card, pageIndex, row, field, label, standard, type || 'input', extra || '');
+  const btn = seoHintBtnHtml(field, card.id, pageIndex);
+  if (!btn) return html;
+  return html.replace('>' + escapeHtml(label) + '</span>', '>' + escapeHtml(label) + btn + '</span>');
+};
+
+function resolveContextG0Hint(key) {
+  if (CONTEXT_FIELD_G0_HINTS[key]) return CONTEXT_FIELD_G0_HINTS[key];
+  if (key.endsWith('_button') || key.endsWith('Button') || key.endsWith('Cta') || key.endsWith('_cta')) return 'page_cta';
+  if (key.endsWith('_alt') && key.includes('cta')) return 'page_cta';
+  return null;
+}
+
+const __prevContextInputFieldG0 = contextInputField;
+contextInputField = function(card, pageIndex, row, key, label, standard, type, extra) {
+  const html = __prevContextInputFieldG0(card, pageIndex, row, key, label, standard, type || 'input', extra || '');
+  const hintKey = resolveContextG0Hint(key);
+  if (!hintKey) return html;
+  const btn = g0HintBtnHtml(hintKey);
+  if (!btn) return html;
+  return html.replace('>' + escapeHtml(label) + '</span>', '>' + escapeHtml(label) + btn + '</span>');
+};
+
+/* v1.3.0 — Автоматический бэкап данных при сохранении */
+const __g1PrevFlashSavingBackup = flashSaving;
+let __g1LastBackupTime = 0;
+flashSaving = function() {
+  __g1PrevFlashSavingBackup();
+  const now = Date.now();
+  if (now - __g1LastBackupTime > 5 * 60 * 1000) {
+    __g1LastBackupTime = now;
+    try {
+      const key = Object.keys(localStorage).find(k => k.includes('workspace'));
+      if (key) {
+        const data = localStorage.getItem(key);
+        const ts = new Date().toISOString().replace(/[:.]/g, '-');
+        localStorage.setItem('guru-backup-' + ts, data);
+        const backups = Object.keys(localStorage).filter(k => k.startsWith('guru-backup-')).sort();
+        while (backups.length > 5) { localStorage.removeItem(backups.shift()); }
+      }
+    } catch(e) {}
+  }
+};
+
+/* v1.3.0 — Переместить технические блоки вниз Аудита сайта */
+const TECH_CARD_PATTERNS = [/robots/i, /sitemap/i, /канонический|редирект/i, /meta\s*robots/i, /cwv|pagespeed/i, /ssl|https/i, /cookie/i, /футер/i, /согласие.*форм/i];
+function isTechCard(card) {
+  const t = String(card?.title || '');
+  return TECH_CARD_PATTERNS.some(re => re.test(t));
+}
+const __g1PrevGetSectionsSort = getGate1Sections;
+getGate1Sections = function(gate, visibleCards) {
+  const result = __g1PrevGetSectionsSort(gate, visibleCards);
+  result.forEach(section => {
+    if (section.key === 'site_audit') {
+      const pages = section.allInnerCards.filter(c => !isTechCard(c));
+      const tech = section.allInnerCards.filter(c => isTechCard(c));
+      section.allInnerCards = [...pages, ...tech];
+      const fPages = section.filteredInnerCards.filter(c => !isTechCard(c));
+      const fTech = section.filteredInnerCards.filter(c => isTechCard(c));
+      section.filteredInnerCards = [...fPages, ...fTech];
+    }
+  });
+  return result;
+};
