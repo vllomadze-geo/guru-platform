@@ -11369,7 +11369,7 @@ function smV130Select(dataAttr, name, label, value, options) {
 
 function smV130Input(name, label, value, placeholder, dataAttr) {
   const filled = String(value || '').trim();
-  return `<label class="g1-field"><span>${escapeHtml(label)}</span><input class="g1-input ${filled ? 'is-filled' : 'is-empty'}" data-sm-v130-field="${escapeAttr(name)}" ${dataAttr || ''} value="${escapeAttr(value || '')}" placeholder="${escapeAttr(placeholder)}" /></label>`;
+  return `<label class="g1-field"><span>${escapeHtml(label)}</span><textarea class="g1-input ${filled ? 'is-filled' : 'is-empty'}" data-sm-v130-field="${escapeAttr(name)}" ${dataAttr || ''} rows="1" placeholder="${escapeAttr(placeholder)}">${escapeHtml(value || '')}</textarea></label>`;
 }
 
 function smV130DivergenceHint(value) {
@@ -11754,7 +11754,7 @@ function sslV130Select(name, label, value, options) {
 
 function sslV130Input(name, label, value, placeholder) {
   const filled = String(value || '').trim();
-  return `<label class="g1-field"><span>${escapeHtml(label)}</span><input class="g1-input ${filled ? 'is-filled' : 'is-empty'}" data-ssl-v130-field="${escapeAttr(name)}" value="${escapeAttr(value || '')}" placeholder="${escapeAttr(placeholder)}" /></label>`;
+  return `<label class="g1-field"><span>${escapeHtml(label)}</span><textarea class="g1-input ${filled ? 'is-filled' : 'is-empty'}" data-ssl-v130-field="${escapeAttr(name)}" rows="1" placeholder="${escapeAttr(placeholder)}">${escapeHtml(value || '')}</textarea></label>`;
 }
 
 function sslV130ExpiresHint(value) {
@@ -12517,42 +12517,22 @@ const DEMAND_V130_PLATFORMS_BANNER = [['', '—'],['rsya','Яндекс РСЯ']
 const DEMAND_V130_SEARCH_STEPS = [
   { key:'frames', title:'1. Рамки продвижения', task:'Ограничить сбор семантики, чтобы не собирать мусор.', fields:[
     {k:'product',l:'Что продвигаем',p:'услуга / симптом / результат'},
-    {k:'excluded',l:'Что не продвигаем',p:'бесплатно, вакансии, обучение, DIY'},
-    {k:'minusZones',l:'Минус-зоны',p:'список минус-зон',t:'textarea'},
-    {k:'geo',l:'География',p:'город / регион / страна'},
-    {k:'landing',l:'Посадочная страница',p:'URL'},
-    {k:'source',l:'Источник',p:'Wordstat / Keyword Planner / подсказки'}
+    {k:'excluded',l:'Что не продвигаем',p:'бесплатно, вакансии, обучение, DIY'}
   ]},
   { key:'formulations', title:'2. Пользовательские формулировки', task:'Собрать живой язык аудитории: формулировки, жаргон, ошибки, боли.', fields:[
-    {k:'realPhrases',l:'Реальные формулировки',p:'как клиент описывает проблему',t:'textarea'},
-    {k:'slang',l:'Разговорные / ошибки / сленг',p:'сокращения, опечатки, жаргон',t:'textarea'},
-    {k:'pains',l:'Боли и ситуации',p:'проблемы, из-за которых ищут',t:'textarea'},
-    {k:'source',l:'Источник',p:'Wordstat / подсказки / отчёты'}
+    {k:'slang',l:'Разговорные / ошибки / сленг',p:'сокращения, опечатки, жаргон',t:'textarea'}
   ]},
-  { key:'clusters', title:'3. Частотность и кластеры', task:'Понять, есть ли спрос и как он структурирован. 1 кластер = 1 тема = 1 интент.', fields:[
-    {k:'clusters',l:'Кластеры',p:'кластер → интент → фразы → частотность',t:'textarea'},
-    {k:'source',l:'Источник',p:'Wordstat / Keyword Planner'}
-  ]},
-  { key:'groups', title:'4. Размер и логика групп', task:'Собрать управляемую структуру групп: узкая ниша 1–3, широкий спрос 3–8.', fields:[
-    {k:'groups',l:'Группы',p:'группа → интент → посадочная → кол-во фраз',t:'textarea'},
-    {k:'comment',l:'Комментарий',p:'логика группировки'}
-  ]},
-  { key:'economics', title:'5. Оценка спроса и стоимости', task:'Проверить жизнеспособность: минимум 50 кликов/неделю на группу.', fields:[
-    {k:'forecast',l:'Прогнозы по группам',p:'группа → показы → клики → CPC → бюджет',t:'textarea'},
-    {k:'decision',l:'Решение',p:'какие запускаем, какие объединяем, какие исключаем',t:'textarea'},
-    {k:'source',l:'Источник',p:'Прогноз бюджета Директа / Keyword Planner'}
-  ]},
-  { key:'filling', title:'6. Наполнение групп', task:'Подготовить группы к загрузке: фразы, минусы, быстрые ссылки, уточнения.', fields:[
-    {k:'keywords',l:'Ключевые фразы по группам',p:'5–10 фраз одного смысла на группу',t:'textarea'},
-    {k:'negatives',l:'Минус-фразы',p:'общие и групповые минусы',t:'textarea'},
-    {k:'sitelinks',l:'Быстрые ссылки / sitelinks',p:'заголовок + описание + URL',t:'textarea'},
-    {k:'callouts',l:'Уточнения / callouts',p:'до 25 символов, 12 штук',t:'textarea'},
-    {k:'source',l:'Источник',p:'Директ / Ads'}
-  ]},
-  { key:'ads', title:'7. Поисковые объявления', task:'2–4 объявления на группу: разные углы подачи, релевантные ключам.', fields:[
-    {k:'ads',l:'Объявления по группам',p:'группа → заголовок → доп. заголовок → текст → CTA',t:'textarea'},
-    {k:'source',l:'Источник',p:'ссылка / скрин / отчёт'}
-  ]}
+  { key:'clusters', title:'3. Частотность и кластеры', taskHtml: true, task:`Для <b>поисковой кампании на 7 дней</b> я бы использовал такие ориентиры:
+<table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;">
+<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px 0;color:var(--muted);font-weight:700;">Показатель</td><td style="padding:8px 12px;text-align:right;color:var(--muted);font-weight:700;">Ниже нормы</td><td style="padding:8px 12px;text-align:right;color:var(--muted);font-weight:700;">Рабочий минимум</td><td style="padding:8px 12px;text-align:right;color:var(--muted);font-weight:700;">Хорошо</td></tr>
+<tr style="border-bottom:1px solid var(--line);"><td style="padding:12px 0;">Прогноз показов</td><td style="padding:12px;text-align:right;">&lt; 300</td><td style="padding:12px;text-align:right;">300–1000</td><td style="padding:12px;text-align:right;">1000+</td></tr>
+<tr style="border-bottom:1px solid var(--line);"><td style="padding:12px 0;">Прогноз кликов</td><td style="padding:12px;text-align:right;">&lt; 20</td><td style="padding:12px;text-align:right;">50–100</td><td style="padding:12px;text-align:right;">100+</td></tr>
+<tr style="border-bottom:1px solid var(--line);"><td style="padding:12px 0;">Бюджет (без НДС)</td><td style="padding:12px;text-align:right;">&lt; 500 ₽</td><td style="padding:12px;text-align:right;">1000–3000 ₽</td><td style="padding:12px;text-align:right;">3000+ ₽</td></tr>
+<tr><td style="padding:12px 0;">Количество фраз в кластере</td><td style="padding:12px;text-align:right;">&lt; 5</td><td style="padding:12px;text-align:right;">5–20</td><td style="padding:12px;text-align:right;">20–50</td></tr>
+</table>`, table: true, tableCols:['Тип спроса','Интент','Кластер','Прогноз показов','Прогноз кликов','Бюджет (без НДС)'], tableHints:['Коммерческий / Средний / Слабый','Что человек хочет получить в результате поиска','Группа запросов с одинаковым интентом','за 7 дней','за 7 дней','₽ за 7 дней'], tableKey:'clusterRows', tableItemLabel:'Поисковый спрос', tableSelects:{col0:[['','—'],['hot','Коммерческий / ближе к покупке'],['medium','Средний / поиск идеи'],['weak','Слабый / широкий / сомнительный']]} },
+  { key:'groups', title:'4. Размер, наполнение групп и объявления', task:'Собрать управляемую структуру групп: узкая ниша 1–3, широкий спрос 3–8.', fields:[
+    {k:'semanticCore',l:'Семантическое ядро',p:'группы, ключевые фразы, минус-слова, структура кампании',t:'textarea'}
+  ], table: true, tableCols:['Группа','Ключевые фразы'], tableHints:['Название группы объявлений','Список ключевых фраз группы'], tableKey:'groupRows', tableItemLabel:'Группа', table2: true, table2Cols:['Заголовок (≤ 56)','Доп. заголовок (≤ 30)','Текст (≤ 81)'], table2Hints:['','',''], table2Key:'adsRows', table2Label:'Объявление', table2Prompt:'Промт:\nТы специалист по Яндекс Директ (Поиск), сильный в CTR и релевантности.\nЗадача: создать ровно 3 варианта поискового объявления для ОДНОЙ группы ключей под лидогенерацию (конверсия: заявка/обращение).\nКонтакты в объявлениях запрещены.\nПравила генерации:\n1) Вывести РОВНО 3 объявления, без таблиц, без комментариев и лишних пояснений.\n2) Каждое объявление строго в 3 строках: 1) Заголовок: 2) Доп. заголовок: 3) Текст:\n3) Лимиты: Заголовок ≤ 56 символов, Доп. заголовок ≤ 30, Текст ≤ 81.\n4) В каждом Заголовке обязателен 1 (ОДИН) релевантный ключ из списка <KEYWORDS>, вставленный дословно. Не дублировать ключ внутри заголовка и не делать «спам».\n5) В каждом объявлении использовать РАЗНЫЕ ключи (не повторять один и тот же ключ между объявлениями).\n6) Внутри одного элемента объявления не повторять слова (особенно ключевое). Избегать тавтологии.\n7) Тон: русский, естественно, премиально, без «массмаркета», без капса.\n8) Запреты: без жаргона, грубости, агрессии, недостоверных обещаний. Нельзя: «№1», «лучший», «самый», «гарантия», «скидки» (если не подтверждено). Никаких контактов.\n9) 3 смысловых угла должны заметно отличаться.\n10) Пиши так, чтобы объявление прошло модерацию и выглядело максимально релевантным посадочной.\nСамопроверка перед выводом:\n— Проверь лимиты символов для каждой строки.\n— Проверь отсутствие повторов слов внутри каждой строки.\n— Проверь, что в каждом заголовке есть ровно один ключ и ключи не повторяются между объявлениями.\nВыводи только 3 объявления в заданном формате.', table3: true, table3Cols:['Заголовок (≤ 30)','Описание (≤ 60)','Ссылка'], table3Hints:['','','URL страницы'], table3Key:'sitelinkRows', table3Label:'Быстрая ссылка', table3Title:'Быстрые ссылки', table3Prompt:'Создай до 8 быстрых ссылок для поисковой кампании Яндекс Директ.\n\nИсходные данные:\nПродукт: [что продаём]\nАудитория: [кому продаём]\nЦель кампании: [заявка / заказ / консультация]\nОсновной оффер: [УТП]\nКластеры кампании: [список]\nГлавная посадочная страница: [URL]\nДоступные страницы сайта / соцсети / Яндекс Маркет: [список URL]\n\nТребования Яндекс Директа:\n1. До 8 быстрых ссылок.\n2. Текст каждой ссылки до 30 символов.\n3. Описание до 60 символов.\n4. Без эмодзи.\n5. Ссылка должна понятно объяснять, куда попадёт пользователь.\n6. Не использовать одинаковые формулировки.\n\nФормат:\n| Быстрая ссылка | URL | Описание | Роль |' },
 ];
 
 const DEMAND_V130_BANNER_STEPS = [
@@ -12616,10 +12596,19 @@ function ensureDemandV130() {
 }
 
 function dv130StepStatus(data, step) {
-  const fields = step.fields;
-  const filled = fields.filter(f => String(data[f.k] || '').trim()).length;
-  if (!filled) return 'not_started';
-  if (filled === fields.length) return 'ready';
+  const fields = step.fields || [];
+  const fieldsFilled = fields.filter(f => String(data[f.k] || '').trim()).length;
+  let tableFilled = false, tableReady = false;
+  if (step.table) {
+    const rows = data[step.tableKey] || [];
+    tableFilled = rows.some(r => Object.values(r).some(v => String(v||'').trim()));
+    tableReady = rows.length > 0 && rows.some(r => Object.values(r).every(v => String(v||'').trim()));
+  }
+  const anyFilled = fieldsFilled > 0 || tableFilled;
+  if (!anyFilled) return 'not_started';
+  const allFieldsReady = !fields.length || fieldsFilled === fields.length;
+  const allTableReady = !step.table || tableReady;
+  if (allFieldsReady && allTableReady) return 'ready';
   return 'in_progress';
 }
 
@@ -12636,24 +12625,156 @@ function dv130FieldHtml(prefix, stepKey, field, value) {
   const filled = String(value || '').trim();
   const cls = filled ? 'is-filled' : 'is-empty';
   const attr = `data-dv130-prefix="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(stepKey)}" data-dv130-field="${escapeAttr(field.k)}"`;
-  if (field.t === 'textarea') {
-    return `<label class="g1-field"><span>${escapeHtml(field.l)}</span><textarea class="g1-input ${cls}" ${attr} rows="3" placeholder="${escapeAttr(field.p)}">${escapeHtml(value || '')}</textarea></label>`;
-  }
-  return `<label class="g1-field"><span>${escapeHtml(field.l)}</span><input class="g1-input ${cls}" ${attr} value="${escapeAttr(value || '')}" placeholder="${escapeAttr(field.p)}" /></label>`;
+  return `<label class="g1-field"><span>${escapeHtml(field.l)}</span><textarea class="g1-input ${cls}" ${attr} rows="1" placeholder="${escapeAttr(field.p)}">${escapeHtml(value || '')}</textarea></label>`;
+}
+
+function dv130ParseNum(val) {
+  if (!val) return 0;
+  const cleaned = String(val).replace(/[^\d.,]/g, '').replace(',', '.');
+  return parseFloat(cleaned) || 0;
+}
+
+function dv130TableSummary(rows) {
+  let shows = 0, clicks = 0, budget = 0;
+  rows.forEach(r => {
+    shows += dv130ParseNum(r.col3);
+    clicks += dv130ParseNum(r.col4);
+    budget += dv130ParseNum(r.col5);
+  });
+  if (!shows && !clicks && !budget) return '';
+  return `<div class="g1-card" style="border-radius:14px;padding:14px 18px;margin-bottom:4px;">
+    <div style="font-weight:800;font-size:13px;margin-bottom:8px;">Итого по всем кластерам</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+      <div><span style="font-size:11px;color:var(--muted);font-weight:700;">Прогноз показов</span><div style="font-size:18px;font-weight:900;">${shows ? Math.round(shows).toLocaleString('ru') : '—'}</div></div>
+      <div><span style="font-size:11px;color:var(--muted);font-weight:700;">Прогноз кликов</span><div style="font-size:18px;font-weight:900;">${clicks ? Math.round(clicks).toLocaleString('ru') : '—'}</div></div>
+      <div><span style="font-size:11px;color:var(--muted);font-weight:700;">Бюджет (без НДС)</span><div style="font-size:18px;font-weight:900;">${budget ? Math.round(budget).toLocaleString('ru') + ' ₽' : '—'}</div></div>
+    </div>
+  </div>`;
+}
+
+function dv130TableHtml(prefix, step, data) {
+  const rows = data[step.tableKey] || [{}];
+  const cols = step.tableCols;
+  const colKeys = cols.map((c, i) => 'col' + i);
+  return `${dv130TableSummary(rows)}<div class="g1-fields-grid">
+    ${rows.map((row, ri) => `<div class="g1-card" style="border-radius:14px;padding:14px 18px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-weight:800;font-size:13px;color:var(--muted);">${escapeHtml(step.tableItemLabel || 'Элемент')} ${ri + 1}</span>
+        <button class="small-btn danger-mini" data-dv130-table-remove="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(step.key)}" data-dv130-table-key="${escapeAttr(step.tableKey)}" data-dv130-row="${ri}" ${rows.length <= 1 ? 'disabled' : ''}>×</button>
+      </div>
+      <div class="g1-fields-grid">
+        ${colKeys.map((ck, ci) => {
+          const val = row[ck] || '';
+          const cls = String(val).trim() ? 'is-filled' : 'is-empty';
+          const hint = (step.tableHints || [])[ci] || '';
+          const selOpts = step.tableSelects?.[ck];
+          const hintHtml = hint ? `<small style="color:var(--muted);font-size:11px;">${escapeHtml(hint)}</small>` : '';
+          if (selOpts) {
+            return `<label class="g1-field"><span>${escapeHtml(cols[ci])}</span>${hintHtml}<select class="g1-input is-filled" data-dv130-prefix="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(step.key)}" data-dv130-table="${escapeAttr(step.tableKey)}" data-dv130-row="${ri}" data-dv130-col="${ck}">${selOpts.map(([v,l]) => `<option value="${escapeAttr(v)}" ${val===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}</select></label>`;
+          }
+          return `<label class="g1-field"><span>${escapeHtml(cols[ci])}</span>${hintHtml}<textarea class="g1-input ${cls}" data-dv130-prefix="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(step.key)}" data-dv130-table="${escapeAttr(step.tableKey)}" data-dv130-row="${ri}" data-dv130-col="${ck}" rows="1" placeholder="${escapeAttr(cols[ci])}">${escapeHtml(val)}</textarea></label>`;
+        }).join('')}
+      </div>
+      ${step.table2 ? dv130InlineAdsHtml(prefix, step, data, ri) : ''}
+    </div>`).join('')}
+  </div>
+  <button class="small-btn add-inline-btn" data-dv130-table-add="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(step.key)}" data-dv130-table-key="${escapeAttr(step.tableKey)}">+ Добавить ${escapeHtml((step.tableItemLabel || 'элемент').toLowerCase())}</button>
+  ${step.tablePrompt ? `<details class="g1-prompt-toggle"><summary>Показать промт</summary><div>${escapeHtml(step.tablePrompt)}</div></details>` : ''}`;
+}
+
+function dv130InlineAdsHtml(prefix, step, data, clusterIdx) {
+  const allAds = data[step.table2Key] || {};
+  const ads = allAds[clusterIdx] || [{}];
+  const cols = step.table2Cols;
+  const colKeys = cols.map((c, i) => 'ad' + i);
+  const label = step.table2Label || 'Объявление';
+  return `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);">
+    <span style="font-weight:800;font-size:12px;color:var(--muted);display:block;margin-bottom:8px;">Объявления</span>
+    ${ads.map((ad, ai) => `<div style="padding:10px 0;${ai > 0 ? 'border-top:1px dashed var(--line);' : ''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-weight:700;font-size:12px;color:var(--muted);">${escapeHtml(label)} ${ai + 1}</span>
+        <button class="small-btn danger-mini" data-dv130-ads-remove="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(step.key)}" data-dv130-ads-key="${escapeAttr(step.table2Key)}" data-dv130-cluster="${clusterIdx}" data-dv130-ad="${ai}" ${ads.length <= 1 ? 'disabled' : ''} style="font-size:11px;">×</button>
+      </div>
+      <div class="g1-fields-grid">
+        ${colKeys.map((ck, ci) => {
+          const val = ad[ck] || '';
+          const cls = String(val).trim() ? 'is-filled' : 'is-empty';
+          const hint = (step.table2Hints || [])[ci] || '';
+          return `<label class="g1-field"><span>${escapeHtml(cols[ci])}</span>${hint ? `<small style="color:var(--muted);font-size:11px;">${escapeHtml(hint)}</small>` : ''}<textarea class="g1-input ${cls}" data-dv130-prefix="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(step.key)}" data-dv130-ads-key="${escapeAttr(step.table2Key)}" data-dv130-cluster="${clusterIdx}" data-dv130-ad="${ai}" data-dv130-adcol="${ck}" rows="1" placeholder="${escapeAttr(cols[ci])}">${escapeHtml(val)}</textarea></label>`;
+        }).join('')}
+      </div>
+    </div>`).join('')}
+    <button class="small-btn add-inline-btn" style="font-size:12px;margin-top:4px;" data-dv130-ads-add="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(step.key)}" data-dv130-ads-key="${escapeAttr(step.table2Key)}" data-dv130-cluster="${clusterIdx}">+ Добавить объявление</button>
+    ${step.table2Prompt ? `<details class="g1-prompt-toggle"><summary>Показать промт</summary><div>${escapeHtml(step.table2Prompt)}</div></details>` : ''}
+  </div>`;
+}
+
+function dv130Table3Html(prefix, step, data) {
+  const rows = data[step.table3Key] || [{}];
+  const cols = step.table3Cols;
+  const colKeys = cols.map((c, i) => 't3col' + i);
+  const label = step.table3Label || 'Элемент';
+  return `<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);">
+    <span style="font-weight:900;font-size:14px;display:block;margin-bottom:10px;">${escapeHtml(step.table3Title || label)}</span>
+    <div class="g1-fields-grid">
+      ${rows.map((row, ri) => `<div class="g1-card" style="border-radius:14px;padding:14px 18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-weight:800;font-size:13px;color:var(--muted);">${escapeHtml(label)} ${ri + 1}</span>
+          <button class="small-btn danger-mini" data-dv130-table-remove="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(step.key)}" data-dv130-table-key="${escapeAttr(step.table3Key)}" data-dv130-row="${ri}" ${rows.length <= 1 ? 'disabled' : ''}>×</button>
+        </div>
+        <div class="g1-fields-grid">
+          ${colKeys.map((ck, ci) => {
+            const val = row[ck] || '';
+            const cls = String(val).trim() ? 'is-filled' : 'is-empty';
+            const hint = (step.table3Hints || [])[ci] || '';
+            return `<label class="g1-field"><span>${escapeHtml(cols[ci])}</span>${hint ? `<small style="color:var(--muted);font-size:11px;">${escapeHtml(hint)}</small>` : ''}<textarea class="g1-input ${cls}" data-dv130-prefix="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(step.key)}" data-dv130-table="${escapeAttr(step.table3Key)}" data-dv130-row="${ri}" data-dv130-col="${ck}" rows="1" placeholder="${escapeAttr(cols[ci])}">${escapeHtml(val)}</textarea></label>`;
+          }).join('')}
+        </div>
+      </div>`).join('')}
+    </div>
+    <button class="small-btn add-inline-btn" data-dv130-table-add="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(step.key)}" data-dv130-table-key="${escapeAttr(step.table3Key)}">+ Добавить ${escapeHtml(label.toLowerCase())}</button>
+    ${step.table3Prompt ? `<details class="g1-prompt-toggle"><summary>Показать промт</summary><div>${escapeHtml(step.table3Prompt)}</div></details>` : ''}
+  </div>`;
+}
+
+function dv130Table2Html(prefix, step, data) {
+  const rows = data[step.table2Key] || [{}];
+  const cols = step.table2Cols;
+  const colKeys = cols.map((c, i) => 't2col' + i);
+  const label = step.table2Label || 'Элемент';
+  return `<div style="margin-top:12px;"><div class="g1-fields-grid">
+    ${rows.map((row, ri) => `<div class="g1-card" style="border-radius:14px;padding:14px 18px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-weight:800;font-size:13px;color:var(--muted);">${escapeHtml(label)} ${ri + 1}</span>
+        <button class="small-btn danger-mini" data-dv130-table-remove="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(step.key)}" data-dv130-table-key="${escapeAttr(step.table2Key)}" data-dv130-row="${ri}" ${rows.length <= 1 ? 'disabled' : ''}>×</button>
+      </div>
+      <div class="g1-fields-grid">
+        ${colKeys.map((ck, ci) => {
+          const val = row[ck] || '';
+          const cls = String(val).trim() ? 'is-filled' : 'is-empty';
+          const hint = (step.table2Hints || [])[ci] || '';
+          return `<label class="g1-field"><span>${escapeHtml(cols[ci])}</span>${hint ? `<small style="color:var(--muted);font-size:11px;">${escapeHtml(hint)}</small>` : ''}<textarea class="g1-input ${cls}" data-dv130-prefix="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(step.key)}" data-dv130-table="${escapeAttr(step.table2Key)}" data-dv130-row="${ri}" data-dv130-col="${ck}" rows="1" placeholder="${escapeAttr(cols[ci])}">${escapeHtml(val)}</textarea></label>`;
+        }).join('')}
+      </div>
+    </div>`).join('')}
+  </div>
+  <button class="small-btn add-inline-btn" data-dv130-table-add="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(step.key)}" data-dv130-table-key="${escapeAttr(step.table2Key)}">+ Добавить ${escapeHtml(label.toLowerCase())}</button></div>`;
 }
 
 function dv130StepHtml(prefix, step, data, isOpen) {
   const status = dv130StepStatus(data, step);
+  const fieldsHtml = (step.fields||[]).length ? `<div class="g1-fields-grid">${step.fields.map(f => dv130FieldHtml(prefix, step.key, f, data[f.k])).join('')}</div>` : '';
+  const tableHtml = step.table ? dv130TableHtml(prefix, step, data) : '';
+  const table3Html = step.table3 ? dv130Table3Html(prefix, step, data) : '';
+  const bodyContent = fieldsHtml + tableHtml + table3Html;
   return `<div class="g1-card ${isOpen ? 'is-open' : ''}">
     <button class="g1-card-header" data-dv130-toggle="${escapeAttr(prefix)}" data-dv130-step-key="${escapeAttr(step.key)}">
       <span class="g1-card-title">${escapeHtml(step.title)}</span>
       <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
     </button>
     ${isOpen ? `<div class="g1-card-body">
-      <p class="g1-task">${escapeHtml(step.task)}</p>
-      <div class="g1-fields-grid">
-        ${step.fields.map(f => dv130FieldHtml(prefix, step.key, f, data[f.k])).join('')}
-      </div>
+      <div class="g1-task">${step.taskHtml ? step.task : escapeHtml(step.task)}</div>
+      ${bodyContent}
     </div>` : ''}
   </div>`;
 }
@@ -12730,7 +12851,35 @@ function updateDemandV130(target) {
     renderGate();
     return;
   }
-  if (stepKey) {
+  const adCol = target.dataset.dv130Adcol;
+  const adsKey = target.dataset.dv130AdsKey;
+  const clusterIdx = target.dataset.dv130Cluster;
+  const adIdx = target.dataset.dv130Ad;
+  if (stepKey && adCol && adsKey && clusterIdx !== undefined && adIdx !== undefined) {
+    section.steps = section.steps || {};
+    section.steps[stepKey] = section.steps[stepKey] || {};
+    section.steps[stepKey][adsKey] = section.steps[stepKey][adsKey] || {};
+    section.steps[stepKey][adsKey][clusterIdx] = section.steps[stepKey][adsKey][clusterIdx] || [{}];
+    section.steps[stepKey][adsKey][clusterIdx][Number(adIdx)] = section.steps[stepKey][adsKey][clusterIdx][Number(adIdx)] || {};
+    section.steps[stepKey][adsKey][clusterIdx][Number(adIdx)][adCol] = target.value;
+    flashSaving();
+    renderGateNav();
+    return;
+  }
+  const tableKey = target.dataset.dv130Table;
+  const rowIdx = target.dataset.dv130Row;
+  const colKey = target.dataset.dv130Col;
+  if (stepKey && tableKey && rowIdx !== undefined && colKey) {
+    section.steps = section.steps || {};
+    section.steps[stepKey] = section.steps[stepKey] || {};
+    section.steps[stepKey][tableKey] = section.steps[stepKey][tableKey] || [{}];
+    section.steps[stepKey][tableKey][Number(rowIdx)] = section.steps[stepKey][tableKey][Number(rowIdx)] || {};
+    section.steps[stepKey][tableKey][Number(rowIdx)][colKey] = target.value;
+    flashSaving();
+    renderGateNav();
+    return;
+  }
+  if (stepKey && field) {
     section.steps = section.steps || {};
     section.steps[stepKey] = section.steps[stepKey] || {};
     section.steps[stepKey][field] = target.value;
@@ -12747,16 +12896,75 @@ document.addEventListener('change', e => {
 });
 document.addEventListener('click', e => {
   const toggle = e.target.closest('[data-dv130-toggle]');
-  if (!toggle) return;
-  const d = ensureDemandV130();
-  const prefix = toggle.dataset.dv130Toggle;
-  const stepKey = toggle.dataset.dv130StepKey;
-  const section = d[prefix];
-  if (!section) return;
-  section.openSteps = section.openSteps || {};
-  section.openSteps[stepKey] = !section.openSteps[stepKey];
-  saveState();
-  renderGate();
+  if (toggle) {
+    const d = ensureDemandV130();
+    const prefix = toggle.dataset.dv130Toggle;
+    const stepKey = toggle.dataset.dv130StepKey;
+    const section = d[prefix];
+    if (!section) return;
+    section.openSteps = section.openSteps || {};
+    section.openSteps[stepKey] = !section.openSteps[stepKey];
+    saveState();
+    renderGate();
+    return;
+  }
+  if (e.target?.dataset?.dv130TableAdd) {
+    const d = ensureDemandV130();
+    const section = d[e.target.dataset.dv130TableAdd];
+    const stepKey = e.target.dataset.dv130Step;
+    const tableKey = e.target.dataset.dv130TableKey;
+    if (section) {
+      section.steps = section.steps || {};
+      section.steps[stepKey] = section.steps[stepKey] || {};
+      section.steps[stepKey][tableKey] = section.steps[stepKey][tableKey] || [{}];
+      section.steps[stepKey][tableKey].push({});
+      flashSaving();
+      renderGate();
+    }
+    return;
+  }
+  if (e.target?.dataset?.dv130TableRemove) {
+    const d = ensureDemandV130();
+    const section = d[e.target.dataset.dv130TableRemove];
+    const stepKey = e.target.dataset.dv130Step;
+    const tableKey = e.target.dataset.dv130TableKey;
+    const ri = Number(e.target.dataset.dv130Row);
+    if (section) {
+      const rows = section.steps?.[stepKey]?.[tableKey] || [];
+      if (rows.length > 1) { rows.splice(ri, 1); flashSaving(); renderGate(); }
+    }
+    return;
+  }
+  if (e.target?.dataset?.dv130AdsAdd) {
+    const d = ensureDemandV130();
+    const section = d[e.target.dataset.dv130AdsAdd];
+    const stepKey = e.target.dataset.dv130Step;
+    const adsKey = e.target.dataset.dv130AdsKey;
+    const ci = e.target.dataset.dv130Cluster;
+    if (section) {
+      section.steps = section.steps || {};
+      section.steps[stepKey] = section.steps[stepKey] || {};
+      section.steps[stepKey][adsKey] = section.steps[stepKey][adsKey] || {};
+      section.steps[stepKey][adsKey][ci] = section.steps[stepKey][adsKey][ci] || [{}];
+      section.steps[stepKey][adsKey][ci].push({});
+      flashSaving();
+      renderGate();
+    }
+    return;
+  }
+  if (e.target?.dataset?.dv130AdsRemove) {
+    const d = ensureDemandV130();
+    const section = d[e.target.dataset.dv130AdsRemove];
+    const stepKey = e.target.dataset.dv130Step;
+    const adsKey = e.target.dataset.dv130AdsKey;
+    const ci = e.target.dataset.dv130Cluster;
+    const ai = Number(e.target.dataset.dv130Ad);
+    if (section) {
+      const ads = section.steps?.[stepKey]?.[adsKey]?.[ci] || [];
+      if (ads.length > 1) { ads.splice(ai, 1); flashSaving(); renderGate(); }
+    }
+    return;
+  }
 });
 
 /* ================================================================
@@ -12765,7 +12973,15 @@ document.addEventListener('click', e => {
    ================================================================ */
 
 const PAIN_V130_STEPS = [
-  { key:'pain', title:'1. Боль и причина спроса', task:'Понять, что заставляет человека искать решение.', standard:'Понятно, какая проблема запускает спрос и какой результат человек хочет получить.', fields:[
+  { key:'search', title:'1. Поисковое поведение', task:'Понять, как люди формулируют свою боль в поиске.', standard:'Понятно, какими словами люди ищут решение и какие запросы имеют коммерческий смысл.', fields:[
+    {k:'mainQueries',l:'Основные запросы',p:'ядро запросов',t:'textarea'},
+    {k:'colloquial',l:'Разговорные формулировки',p:'жаргон, ошибки, сокращения',t:'textarea'},
+    {k:'repeatingWords',l:'Повторяющиеся слова',p:'какие слова встречаются чаще всего'},
+    {k:'commercialIntent',l:'Коммерческий интент',p:'купить, заказать, цена, стоимость',t:'textarea'},
+    {k:'infoIntent',l:'Информационный интент',p:'как выбрать, что лучше, отзывы',t:'textarea'},
+    {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'Wordstat / Keyword Planner / Search Console'}
+  ]},
+  { key:'pain', title:'2. Боль и причина спроса', task:'Понять, что заставляет человека искать решение.', standard:'Понятно, какая проблема запускает спрос и какой результат человек хочет получить.', fields:[
     {k:'explicitPain',l:'Явная боль',p:'проблема, которую человек формулирует прямо',t:'textarea'},
     {k:'hiddenPain',l:'Скрытая боль',p:'проблема, которая стоит за запросом',t:'textarea'},
     {k:'demandReason',l:'Причина спроса',p:'событие-триггер: поломка, срочность, сравнение'},
@@ -12774,15 +12990,7 @@ const PAIN_V130_STEPS = [
     {k:'desiredResult',l:'Желанный результат',p:'что хочет получить'},
     {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'интервью / CRM / заявки / звонки'}
   ]},
-  { key:'search', title:'2. Поисковое поведение', task:'Понять, как люди формулируют свою боль в поиске.', standard:'Понятно, какими словами люди ищут решение и какие запросы имеют коммерческий смысл.', fields:[
-    {k:'mainQueries',l:'Основные запросы',p:'ядро запросов',t:'textarea'},
-    {k:'colloquial',l:'Разговорные формулировки',p:'жаргон, ошибки, сокращения',t:'textarea'},
-    {k:'repeatingWords',l:'Повторяющиеся слова',p:'какие слова встречаются чаще всего'},
-    {k:'commercialIntent',l:'Коммерческий интент',p:'купить, заказать, цена, стоимость',t:'textarea'},
-    {k:'infoIntent',l:'Информационный интент',p:'как выбрать, что лучше, отзывы',t:'textarea'},
-    {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'Wordstat / Keyword Planner / Search Console'}
-  ]},
-  { key:'competitors', title:'3. Конкурентные обещания', task:'Понять, как рынок уже отвечает на эту боль.', standard:'Понятно, какие обещания есть на рынке и где можно отличиться.', fields:[
+  { key:'competitors', title:'3. Конкуренты', task:'Понять, как рынок уже отвечает на эту боль.', standard:'Понятно, какие обещания есть на рынке и где можно отличиться.', fields:[
     {k:'competitors',l:'Конкуренты и их оферы',p:'конкурент → офер → УТП → цена → доверие',t:'textarea'},
     {k:'repeatingPromises',l:'Повторяющиеся обещания рынка',p:'что все говорят одинаково',t:'textarea'},
     {k:'weakSpots',l:'Слабые места и пустоты',p:'что рынок недоговаривает или не раскрывает',t:'textarea'},
@@ -12804,22 +13012,7 @@ const PAIN_V130_STEPS = [
     {k:'criteria',l:'Критерии выбора по сегментам',p:'цена / срок / доверие / результат',t:'textarea'},
     {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'CRM / интервью / аналитика'}
   ]},
-  { key:'offer', title:'6. Офер', task:'Собрать офер из боли, поиска, JTBD и конкурентного разрыва.', standard:'Офер понятен за 3 секунды: кому, что, зачем и почему стоит поверить.', fields:[
-    {k:'baseOffer',l:'Базовый офер',p:'для [сегмент] мы даём [результат] через [механизм]',t:'textarea'},
-    {k:'forWhom',l:'Для кого',p:'основной сегмент'},
-    {k:'painClosed',l:'Какую боль закрывает',p:'главная боль клиента'},
-    {k:'resultPromise',l:'Какой результат обещает',p:'конкретный результат'},
-    {k:'mechanism',l:'Через какой механизм',p:'как это работает'},
-    {k:'whyTrust',l:'Почему стоит поверить',p:'доказательства: кейсы, цифры, гарантии',t:'textarea'},
-    {k:'mainCta',l:'Главный CTA',p:'основное действие'},
-    {k:'segmentOffers',l:'Версии офера по сегментам',p:'сегмент → офер → CTA',t:'textarea'},
-    {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'макет / презентация / бриф'}
-  ]},
-  { key:'collab', title:'7. Коллаборационный потенциал', task:'Понять, кто может усилить доверие, охват или вход в аудиторию.', standard:'Есть список партнёров и точек усиления.', fields:[
-    {k:'partners',l:'Партнёры',p:'тип → почему пересекается → что предложить → формат',t:'textarea'},
-    {k:'priority',l:'Приоритет',p:'кого подключить в первую очередь'},
-    {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'контакты / переписка / план'}
-  ]}
+  { key:'offer', title:'6. Офер', task:'Собрать офер из боли, поиска, JTBD и конкурентного разрыва.', standard:'Офер понятен за 3 секунды: кому, что, зачем и почему стоит поверить.', fields:[], table: true, tableCols:['Заголовок (≤ 40)','Краткое описание (50–90)','Основной текст (180–300)','Цена','SEO Title (≤ 70)','SEO Description (≤ 170)','SEO Ключевые слова'], tableHints:['до 40 символов','50–90 символов','180–300 символов','₽','до 70 символов','до 170 символов','5–15 фраз через запятую'], tableKey:'offerRows', tableItemLabel:'Офер (товар/услуга)', tablePrompt:'Создай карточку товара по фото и краткому описанию.\n\nСтиль: ясно, просто, естественно. Пиши для человека, но учитывай SEO. Не выдумывай характеристики, которых нет во входных данных.\n\nВыдай:\n1. Заголовок, до 40 символов.\n2. Краткое описание, 50–90 символов.\n3. Основной текст, 180–300 символов.\n4. Цена, если указана.\n5. SEO Title, до 70 символов.\n6. SEO Description, до 170 символов.\n7. SEO ключевые слова, 5–15 фраз через запятую.\n\nЛогика текста:\n— что это;\n— из чего сделано;\n— для чего используется;\n— кому или для какого случая подходит;\n— в чём ценность товара.\n\nНе использовать пустые рекламные слова: «идеальный», «лучший», «уникальный», «невероятный», «роскошный», «эксклюзивный», если это не подтверждено фактом.\n\nФормат ответа:\n\nЗаголовок:\n...\n\nКраткое описание:\n...\n\nОсновной текст:\n...\n\nЦена:\n...\n\nSEO Title:\n...\n\nSEO Description:\n...\n\nSEO ключевые слова:\n...' }
 ];
 
 function ensurePainV130() {
@@ -12830,10 +13023,45 @@ function ensurePainV130() {
 }
 
 function painV130StepStatus(data, step) {
-  const filled = step.fields.filter(f => String(data[f.k] || '').trim()).length;
-  if (!filled) return 'not_started';
-  if (filled === step.fields.length) return 'ready';
+  const fields = step.fields || [];
+  const fieldsFilled = fields.filter(f => String(data[f.k] || '').trim()).length;
+  let tableFilled = false, tableReady = false;
+  if (step.table) {
+    const rows = data[step.tableKey] || [];
+    tableFilled = rows.some(r => Object.values(r).some(v => String(v||'').trim()));
+    tableReady = rows.length > 0 && rows.some(r => Object.values(r).every(v => String(v||'').trim()));
+  }
+  const anyFilled = fieldsFilled > 0 || tableFilled;
+  if (!anyFilled) return 'not_started';
+  const allFieldsReady = !fields.length || fieldsFilled === fields.length;
+  const allTableReady = !step.table || tableReady;
+  if (allFieldsReady && allTableReady) return 'ready';
   return 'in_progress';
+}
+
+function pv130TableHtml(step, data) {
+  const rows = data[step.tableKey] || [{}];
+  const cols = step.tableCols;
+  const colKeys = cols.map((c, i) => 'col' + i);
+  const label = step.tableItemLabel || 'Элемент';
+  return `<div class="g1-fields-grid">
+    ${rows.map((row, ri) => `<div class="g1-card" style="border-radius:14px;padding:14px 18px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-weight:800;font-size:13px;color:var(--muted);">${escapeHtml(label)} ${ri + 1}</span>
+        <button class="small-btn danger-mini" data-pv130-table-remove="${escapeAttr(step.key)}" data-pv130-table-key="${escapeAttr(step.tableKey)}" data-pv130-row="${ri}" ${rows.length <= 1 ? 'disabled' : ''}>×</button>
+      </div>
+      <div class="g1-fields-grid">
+        ${colKeys.map((ck, ci) => {
+          const val = row[ck] || '';
+          const cls = String(val).trim() ? 'is-filled' : 'is-empty';
+          const hint = (step.tableHints || [])[ci] || '';
+          return `<label class="g1-field"><span>${escapeHtml(cols[ci])}</span>${hint ? `<small style="color:var(--muted);font-size:11px;">${escapeHtml(hint)}</small>` : ''}<textarea class="g1-input ${cls}" data-pv130-step="${escapeAttr(step.key)}" data-pv130-table="${escapeAttr(step.tableKey)}" data-pv130-row="${ri}" data-pv130-col="${ck}" rows="1" placeholder="${escapeAttr(cols[ci])}">${escapeHtml(val)}</textarea></label>`;
+        }).join('')}
+      </div>
+    </div>`).join('')}
+  </div>
+  <button class="small-btn add-inline-btn" data-pv130-table-add="${escapeAttr(step.key)}" data-pv130-table-key="${escapeAttr(step.tableKey)}">+ Добавить ${escapeHtml(label.toLowerCase())}</button>
+  ${step.tablePrompt ? `<details class="g1-prompt-toggle"><summary>Показать промт</summary><div>${escapeHtml(step.tablePrompt)}</div></details>` : ''}`;
 }
 
 function painV130StepHtml(step, data, isOpen) {
@@ -12845,16 +13073,16 @@ function painV130StepHtml(step, data, isOpen) {
     </button>
     ${isOpen ? `<div class="g1-card-body">
       <p class="g1-task">${escapeHtml(step.task)}</p>
-      <div class="g1-fields-grid">
+      ${(step.fields||[]).length ? `<div class="g1-fields-grid">
         ${step.fields.map(f => {
           const value = data[f.k] || '';
           const filled = String(value).trim();
           const cls = filled ? 'is-filled' : 'is-empty';
           const attr = `data-pv130-step="${escapeAttr(step.key)}" data-pv130-field="${escapeAttr(f.k)}"`;
-          if (f.t === 'textarea') return `<label class="g1-field"><span>${escapeHtml(f.l)}</span><textarea class="g1-input ${cls}" ${attr} rows="3" placeholder="${escapeAttr(f.p)}">${escapeHtml(value)}</textarea></label>`;
-          return `<label class="g1-field"><span>${escapeHtml(f.l)}</span><input class="g1-input ${cls}" ${attr} value="${escapeAttr(value)}" placeholder="${escapeAttr(f.p)}" /></label>`;
+          return `<label class="g1-field"><span>${escapeHtml(f.l)}</span><textarea class="g1-input ${cls}" ${attr} rows="1" placeholder="${escapeAttr(f.p)}">${escapeHtml(value)}</textarea></label>`;
         }).join('')}
-      </div>
+      </div>` : ''}
+      ${step.table ? pv130TableHtml(step, data) : ''}
       <p class="g1-task" style="margin-top:8px;font-style:italic;">Стандарт: ${escapeHtml(step.standard)}</p>
     </div>` : ''}
   </div>`;
@@ -12906,6 +13134,18 @@ function updatePainV130(target) {
   const d = ensurePainV130();
   const stepKey = target.dataset.pv130Step;
   const field = target.dataset.pv130Field;
+  const tableKey = target.dataset.pv130Table;
+  const rowIdx = target.dataset.pv130Row;
+  const colKey = target.dataset.pv130Col;
+  if (stepKey && tableKey && rowIdx !== undefined && colKey) {
+    d.steps[stepKey] = d.steps[stepKey] || {};
+    d.steps[stepKey][tableKey] = d.steps[stepKey][tableKey] || [{}];
+    d.steps[stepKey][tableKey][Number(rowIdx)] = d.steps[stepKey][tableKey][Number(rowIdx)] || {};
+    d.steps[stepKey][tableKey][Number(rowIdx)][colKey] = target.value;
+    flashSaving();
+    renderGateNav();
+    return;
+  }
   if (stepKey && field) {
     d.steps[stepKey] = d.steps[stepKey] || {};
     d.steps[stepKey][field] = target.value;
@@ -12922,12 +13162,34 @@ document.addEventListener('change', e => {
 });
 document.addEventListener('click', e => {
   const toggle = e.target.closest('[data-pv130-toggle]');
-  if (!toggle) return;
-  const d = ensurePainV130();
-  const key = toggle.dataset.pv130Toggle;
-  d.openSteps[key] = !d.openSteps[key];
-  saveState();
-  renderGate();
+  if (toggle) {
+    const d = ensurePainV130();
+    const key = toggle.dataset.pv130Toggle;
+    d.openSteps[key] = !d.openSteps[key];
+    saveState();
+    renderGate();
+    return;
+  }
+  if (e.target?.dataset?.pv130TableAdd) {
+    const d = ensurePainV130();
+    const stepKey = e.target.dataset.pv130TableAdd;
+    const tableKey = e.target.dataset.pv130TableKey;
+    d.steps[stepKey] = d.steps[stepKey] || {};
+    d.steps[stepKey][tableKey] = d.steps[stepKey][tableKey] || [{}];
+    d.steps[stepKey][tableKey].push({});
+    flashSaving();
+    renderGate();
+    return;
+  }
+  if (e.target?.dataset?.pv130TableRemove) {
+    const d = ensurePainV130();
+    const stepKey = e.target.dataset.pv130TableRemove;
+    const tableKey = e.target.dataset.pv130TableKey;
+    const ri = Number(e.target.dataset.pv130Row);
+    const rows = d.steps?.[stepKey]?.[tableKey] || [];
+    if (rows.length > 1) { rows.splice(ri, 1); flashSaving(); renderGate(); }
+    return;
+  }
 });
 
 /* ================================================================
@@ -13013,8 +13275,7 @@ function uv130FieldHtml(itemIdx, stepKey, field, value) {
   const cls = filled ? 'is-filled' : 'is-empty';
   const attr = `data-uv130-item="${itemIdx}" data-uv130-step="${escapeAttr(stepKey)}" data-uv130-field="${escapeAttr(field.k)}"`;
   if (field.sel) return `<label class="g1-field"><span>${escapeHtml(field.l)}</span><select class="g1-input is-filled" ${attr}>${field.sel.map(([v,l]) => `<option value="${escapeAttr(v)}" ${value===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}</select></label>`;
-  if (field.t === 'textarea') return `<label class="g1-field"><span>${escapeHtml(field.l)}</span><textarea class="g1-input ${cls}" ${attr} rows="2" placeholder="${escapeAttr(field.p)}">${escapeHtml(value || '')}</textarea></label>`;
-  return `<label class="g1-field"><span>${escapeHtml(field.l)}</span><input class="g1-input ${cls}" ${attr} value="${escapeAttr(value || '')}" placeholder="${escapeAttr(field.p)}" /></label>`;
+  return `<label class="g1-field"><span>${escapeHtml(field.l)}</span><textarea class="g1-input ${cls}" ${attr} rows="1" placeholder="${escapeAttr(field.p)}">${escapeHtml(value || '')}</textarea></label>`;
 }
 
 function uv130StepHtml(itemIdx, step, data, isOpen) {
@@ -13626,7 +13887,7 @@ const G0_HINT_LABELS = {
 };
 
 const GATE1_G0_HINTS = {
-  demand_promoted: ['product', 'audience', 'client_result'],
+  demand_promoted: '__demand_promoted_full__',
   demand_excluded: ['irrelevant_queries'],
   demand_geo: ['geo'],
   demand_landing: ['website'],
@@ -13655,7 +13916,10 @@ const GATE1_G0_HINTS = {
 };
 
 function g0HintBtnHtml(hintKey) {
+  if (hintKey === '__demand_promoted_full__') return '<button type="button" class="g0-hint-btn" data-demand-promoted-hint>G0</button>';
+  if (hintKey === '__clusters_all__') return '<button type="button" class="g0-hint-btn" data-clusters-hint>G0</button>';
   const sources = GATE1_G0_HINTS[hintKey];
+  if (typeof sources === 'string') return g0HintBtnHtml(sources);
   if (!sources || !sources.length) return '';
   return `<button type="button" class="g0-hint-btn" data-g0-hint="${escapeAttr(hintKey)}">G0</button>`;
 }
@@ -13863,7 +14127,7 @@ const CONTEXT_FIELD_G0_HINTS = {
   secondaryButton: 'page_cta',
   serviceHeroButton: 'page_cta',
   heroUsp: 'page_usp',
-  seoKeywords: 'page_keywords'
+  seoKeywords: '__seo_keywords_all__'
 };
 
 GATE1_G0_HINTS.page_cta = ['current_ctas', 'primary_target_action'];
@@ -13971,11 +14235,224 @@ function resolveContextG0Hint(key) {
   return null;
 }
 
+function collectAllSeoKeywords() {
+  if (!state?.gates) return [];
+  const items = [];
+  state.gates.forEach(gate => {
+    (gate.cards || []).forEach(card => {
+      (card.pageRows || []).forEach(row => {
+        const kw = String(row.contextFields?.seoKeywords || '').trim();
+        const name = row.name || card.title || 'Страница';
+        if (kw) items.push({ page: name, keywords: kw });
+      });
+    });
+  });
+  return items;
+}
+
+function demandPromotedPopoverHtml() {
+  const pages = collectAllSeoKeywords();
+  const g0Base = ['product', 'audience', 'client_result'].map(key => {
+    const v = readGate0Value(key);
+    return v ? { label: G0_HINT_LABELS[key], value: v } : null;
+  }).filter(Boolean);
+  const g0Sem = ['main_keywords', 'priority_clusters', 'brand_queries', 'irrelevant_queries'].map(key => {
+    const v = readGate0Value(key);
+    return v ? { label: G0_HINT_LABELS[key], value: v } : null;
+  }).filter(Boolean);
+
+  let html = '<div class="g0-popover">';
+  if (g0Base.length) {
+    html += '<div class="g0-popover-title">Gate 0 / продукт</div>';
+    html += g0Base.map(i => `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(i.label)}</div><div class="g0-popover-value">${escapeHtml(i.value)}</div></div>`).join('');
+  }
+  if (pages.length) {
+    html += `<div class="g0-popover-title" style="margin-top:8px">Ключевые слова по страницам</div>`;
+    html += pages.map(p => `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(p.page)}</div><div class="g0-popover-value">${escapeHtml(p.keywords)}</div></div>`).join('');
+  }
+  if (g0Sem.length) {
+    html += `<div class="g0-popover-title" style="margin-top:8px">Gate 0 / семантика</div>`;
+    html += g0Sem.map(i => `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(i.label)}</div><div class="g0-popover-value">${escapeHtml(i.value)}</div></div>`).join('');
+  }
+  if (!g0Base.length && !pages.length && !g0Sem.length) {
+    html += '<div class="g0-popover-empty">Данные пока не заполнены.</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-demand-promoted-hint]');
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  closeG0Popover();
+  const el = document.createElement('div');
+  el.innerHTML = demandPromotedPopoverHtml();
+  const popover = el.firstElementChild;
+  document.body.appendChild(popover);
+  positionG0Popover(popover, btn.getBoundingClientRect());
+  _g0ActivePopover = popover;
+  setTimeout(() => document.addEventListener('click', _g0ClickAway, true), 0);
+});
+
+const DEMAND_PROMOTED_BTN = '<button type="button" class="g0-hint-btn" data-demand-promoted-hint>G0</button>';
+
+function sitelinksContextPopoverHtml() {
+  const items = [];
+  const add = (label, value) => { if (String(value || '').trim()) items.push({ label, value: String(value).trim() }); };
+
+  add('Продукт', readGate0Value('product'));
+  add('Аудитория', readGate0Value('audience'));
+  add('Основной оффер / УТП', readGate0Value('usp'));
+  add('Цель кампании', readGate0Value('primary_target_action'));
+
+  // Clusters from demand
+  const d = state?.demandV130 || {};
+  const clusters = [];
+  ['search', 'banner'].forEach(section => {
+    (d[section]?.steps?.clusters?.clusterRows || []).forEach(row => {
+      const c = String(row.col2 || '').trim();
+      if (c) clusters.push(c);
+    });
+  });
+  if (clusters.length) add('Кластеры кампании', clusters.join(', '));
+  const g0clusters = readGate0Value('priority_clusters');
+  if (g0clusters && !clusters.length) add('Приоритетные кластеры (Gate 0)', g0clusters);
+
+  add('Главная посадочная', readGate0Value('website'));
+
+  // Collect all page URLs
+  const urls = [];
+  if (state?.gates) {
+    state.gates.forEach(gate => {
+      (gate.cards || []).forEach(card => {
+        (card.pageRows || []).forEach(row => {
+          const url = String(row.url || '').trim();
+          const name = row.name || card.title || '';
+          if (url && url !== 'https://') urls.push(name ? `${name}: ${url}` : url);
+        });
+      });
+    });
+  }
+  if (urls.length) add('Доступные страницы', urls.join('\n'));
+
+  let html = '<div class="g0-popover">';
+  html += '<div class="g0-popover-title">Контекст для быстрых ссылок</div>';
+  if (items.length) {
+    html += items.map(i => `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(i.label)}</div><div class="g0-popover-value">${escapeHtml(i.value)}</div></div>`).join('');
+  } else {
+    html += '<div class="g0-popover-empty">Данные пока не заполнены.</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-sitelinks-hint]');
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  closeG0Popover();
+  const el = document.createElement('div');
+  el.innerHTML = sitelinksContextPopoverHtml();
+  const popover = el.firstElementChild;
+  document.body.appendChild(popover);
+  positionG0Popover(popover, btn.getBoundingClientRect());
+  _g0ActivePopover = popover;
+  setTimeout(() => document.addEventListener('click', _g0ClickAway, true), 0);
+});
+
+function clustersPopoverHtml() {
+  const d = state?.demandV130 || {};
+  const items = [];
+  ['search', 'banner'].forEach(section => {
+    const rows = d[section]?.steps?.clusters?.clusterRows || [];
+    rows.forEach(row => {
+      const cluster = String(row.col2 || '').trim();
+      const intent = String(row.col1 || '').trim();
+      if (cluster) items.push({ cluster, intent });
+    });
+  });
+
+  let html = '<div class="g0-popover">';
+  if (items.length) {
+    html += '<div class="g0-popover-title">Кластеры из спроса</div>';
+    html += items.map(i => `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(i.intent || 'без интента')}</div><div class="g0-popover-value">${escapeHtml(i.cluster)}</div></div>`).join('');
+  } else {
+    html += '<div class="g0-popover-empty">Кластеры пока не заполнены в шаге «Частотность и кластеры».</div>';
+  }
+  const g0clusters = readGate0Value('priority_clusters');
+  if (g0clusters) {
+    html += '<div class="g0-popover-title" style="margin-top:8px">Gate 0 / приоритетные кластеры</div>';
+    html += `<div class="g0-popover-item"><div class="g0-popover-value">${escapeHtml(g0clusters)}</div></div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-clusters-hint]');
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  closeG0Popover();
+  const el = document.createElement('div');
+  el.innerHTML = clustersPopoverHtml();
+  const popover = el.firstElementChild;
+  document.body.appendChild(popover);
+  positionG0Popover(popover, btn.getBoundingClientRect());
+  _g0ActivePopover = popover;
+  setTimeout(() => document.addEventListener('click', _g0ClickAway, true), 0);
+});
+
+function allSeoKeywordsPopoverHtml() {
+  const pages = collectAllSeoKeywords();
+  const g0Items = ['main_keywords', 'priority_clusters', 'brand_queries'].map(key => {
+    const v = readGate0Value(key);
+    return v ? { label: G0_HINT_LABELS[key], value: v } : null;
+  }).filter(Boolean);
+
+  let html = '<div class="g0-popover">';
+  if (pages.length) {
+    html += '<div class="g0-popover-title">Ключевые слова по страницам</div>';
+    html += pages.map(p => `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(p.page)}</div><div class="g0-popover-value">${escapeHtml(p.keywords)}</div></div>`).join('');
+  }
+  if (g0Items.length) {
+    html += `<div class="g0-popover-title" style="margin-top:${pages.length ? 8 : 0}px">Gate 0 / семантика</div>`;
+    html += g0Items.map(i => `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(i.label)}</div><div class="g0-popover-value">${escapeHtml(i.value)}</div></div>`).join('');
+  }
+  if (!pages.length && !g0Items.length) {
+    html += '<div class="g0-popover-empty">Ключевые слова пока не заполнены.</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-seo-kw-all]');
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  closeG0Popover();
+  const el = document.createElement('div');
+  el.innerHTML = allSeoKeywordsPopoverHtml();
+  const popover = el.firstElementChild;
+  document.body.appendChild(popover);
+  positionG0Popover(popover, btn.getBoundingClientRect());
+  _g0ActivePopover = popover;
+  setTimeout(() => document.addEventListener('click', _g0ClickAway, true), 0);
+});
+
 const __prevContextInputFieldG0 = contextInputField;
 contextInputField = function(card, pageIndex, row, key, label, standard, type, extra) {
   const html = __prevContextInputFieldG0(card, pageIndex, row, key, label, standard, type || 'input', extra || '');
   const hintKey = resolveContextG0Hint(key);
   if (!hintKey) return html;
+  if (hintKey === '__seo_keywords_all__') {
+    const btn = '<button type="button" class="g0-hint-btn" data-seo-kw-all>G0</button>';
+    return html.replace('>' + escapeHtml(label) + '</span>', '>' + escapeHtml(label) + btn + '</span>');
+  }
   const btn = g0HintBtnHtml(hintKey);
   if (!btn) return html;
   return html.replace('>' + escapeHtml(label) + '</span>', '>' + escapeHtml(label) + btn + '</span>');
@@ -14022,4 +14499,33 @@ getGate1Sections = function(gate, visibleCards) {
     }
   });
   return result;
+};
+
+// G0 hints for g1FieldInput and dv130FieldHtml
+const G1_FIELD_G0_MAP = {
+  promoted: 'demand_promoted',
+  excluded: 'demand_excluded',
+  geo: 'demand_geo',
+  product: 'demand_promoted',
+  semanticCore: '__clusters_all__'
+};
+
+const __prevG1FieldInputG0 = g1FieldInput;
+g1FieldInput = function(dataAttr, name, label, value, placeholder, type) {
+  const html = __prevG1FieldInputG0(dataAttr, name, label, value, placeholder, type);
+  const hintKey = G1_FIELD_G0_MAP[name];
+  if (!hintKey) return html;
+  const btn = g0HintBtnHtml(hintKey);
+  if (!btn) return html;
+  return html.replace('>' + escapeHtml(label) + '</span>', '>' + escapeHtml(label) + btn + '</span>');
+};
+
+const __prevDv130FieldHtmlG0 = dv130FieldHtml;
+dv130FieldHtml = function(prefix, stepKey, field, value) {
+  const html = __prevDv130FieldHtmlG0(prefix, stepKey, field, value);
+  const hintKey = G1_FIELD_G0_MAP[field.k];
+  if (!hintKey) return html;
+  const btn = g0HintBtnHtml(hintKey);
+  if (!btn) return html;
+  return html.replace('>' + escapeHtml(field.l) + '</span>', '>' + escapeHtml(field.l) + btn + '</span>');
 };
