@@ -5,8 +5,8 @@
   "description": "ГУРУ — маркетинговая операционная система",
   "scripts": {
     "dev": "vercel dev",
-    "build": "vercel build",
-    "start": "vercel dev"
+    "build": "echo 'No build'",
+    "start": "serve ."
   },
   "engines": {
     "node": ">=18"
