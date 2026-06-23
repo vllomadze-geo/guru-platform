@@ -64,7 +64,11 @@ h1, h2, h3 { margin: 0; line-height: 1.05; }
 h1 { font-size: 34px; margin-top: 6px; }
 h2 { font-size: 24px; }
 h3 { font-size: 16px; }
-.topbar-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.topbar-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+.btn-group { display: flex; gap: 0; }
+.btn-group .btn { border-radius: 0; border-right-width: 0; }
+.btn-group .btn:first-child { border-radius: 12px 0 0 12px; }
+.btn-group .btn:last-child { border-radius: 0 12px 12px 0; border-right-width: 1px; }
 .btn {
   border: 1px solid var(--line); background: var(--panel); color: var(--text);
   border-radius: 12px; padding: 10px 14px; cursor: pointer; font-weight: 700;

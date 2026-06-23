@@ -3423,6 +3423,56 @@ function exportPdfReport() {
   reportWindow.document.close();
 }
 
+function exportGateCsv() {
+  syncEvidenceTexts();
+  const currentGate = activeView === 'gate'
+    ? state.gates.find(gate => gate.id === activeGateId)
+    : state.gates[0];
+  if (!currentGate) { alert('Не найден текущий Gate для экспорта.'); return; }
+  const rows = [];
+  rows.push(['gate', 'block', 'instruction', 'status', 'evidence', 'pages', 'notes', 'source_row']);
+  currentGate.cards.forEach(c => rows.push([currentGate.title, c.title, c.instruction || '', STATUS_LABELS[c.status] || c.status, formatStructuredEvidencePlain(c, state), c.pages || '', c.notes || '', c.sourceRow || '']));
+  const projectName = state.project?.name || 'project';
+  downloadText(`guru-gate-${projectName}.csv`, toCsv(rows));
+}
+
+function exportPdfProjectReport() {
+  syncProjectPassportCard(state);
+  recalculateAllStatuses(state);
+  syncEvidenceTexts(state);
+  if (!state.gates.length) { alert('Нет Gates для экспорта.'); return; }
+  const projectName = escapeHtml(state.project?.name || 'Проект');
+  const gateSections = state.gates.map(gate => {
+    const rows = gate.cards.map(card => ({
+      title: card.title,
+      status: STATUS_LABELS[card.status] || card.status,
+      evidence: formatStructuredEvidencePlain(card, state),
+      notes: card.notes || ''
+    }));
+    return `<h2 style="margin-top:28px;">${escapeHtml(gate.title)}</h2>
+    <table><thead><tr><th>Название блока</th><th>Статус</th><th>Структурированное доказательство</th><th>Комментарий</th></tr></thead><tbody>
+    ${rows.map(row => `<tr><td>${escapeHtml(row.title)}</td><td>${escapeHtml(row.status)}</td><td class="evidence">${escapeHtml(row.evidence)}</td><td class="notes">${escapeHtml(row.notes)}</td></tr>`).join('')}
+    </tbody></table>`;
+  }).join('');
+  const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Отчёт ГУРУ — ${projectName} — Весь проект</title>
+    <style>
+      body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#1f1b16;margin:28px;background:#fff;}
+      h1{font-size:24px;margin:0 0 6px;} h2{font-size:16px;margin:0 0 14px;color:#756c61;page-break-before:auto;}.meta{color:#756c61;margin-bottom:20px;font-size:12px;}
+      table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:18px;} th,td{border:1px solid #ded8ce;padding:8px;vertical-align:top;text-align:left;}
+      th{background:#f4f1ec;text-transform:uppercase;letter-spacing:.04em;font-size:10px;}.evidence{white-space:pre-wrap;}.notes{white-space:pre-wrap;}@page{size:A4;margin:12mm;}
+    </style></head><body>
+    <h1>Отчёт ГУРУ: ${projectName}</h1>
+    <div class="meta">Полный экспорт проекта — все Gates (${state.gates.length})</div>
+    ${gateSections}
+    <script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script>
+    </body></html>`;
+  const reportWindow = window.open('', '_blank');
+  if (!reportWindow) { alert('Браузер заблокировал окно печати. Разрешите всплывающие окна и повторите экспорт.'); return; }
+  reportWindow.document.open();
+  reportWindow.document.write(html);
+  reportWindow.document.close();
+}
+
 function exportCsv() {
   syncEvidenceTexts();
   const rows = [];
@@ -3537,6 +3587,64 @@ function importCsvFile(file) {
   reader.readAsText(file, 'utf-8');
 }
 
+function importProjectCsvFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const rows = parseCsv(reader.result);
+    if (!rows.length) return alert('CSV пустой.');
+    if (!confirm('Импортировать весь проект из CSV? Это заменит все текущие данные (Gates, ссылки, инструменты, метрики).')) return;
+    const STATUS_REVERSE = {};
+    Object.entries(STATUS_LABELS).forEach(([k, v]) => STATUS_REVERSE[v] = k);
+    const gates = {};
+    let section = 'gates';
+    let i = 0;
+    if (rows[0] && rows[0][0] === 'gate') i = 1;
+    for (; i < rows.length; i++) {
+      const r = rows[i];
+      const first = (r[0] || '').trim();
+      if (first === 'SHARED_EVIDENCE') { section = 'shared_evidence'; i++; continue; }
+      if (first === 'PROJECT_LINK_BANK') { section = 'link_bank'; i++; continue; }
+      if (first === 'PROJECT_TOOLS') { section = 'tools'; i++; continue; }
+      if (first === 'METRICS') { section = 'metrics'; i++; continue; }
+      if (!r.some(v => String(v).trim())) continue;
+      if (section === 'gates') {
+        const gateTitle = r[0] || 'Импорт';
+        if (!gates[gateTitle]) gates[gateTitle] = { id: 'gate-import-' + Date.now() + '-' + Object.keys(gates).length, title: gateTitle, cards: [] };
+        gates[gateTitle].cards.push({
+          id: 'import-card-' + Date.now() + '-' + i,
+          title: r[1] || 'Без названия',
+          instruction: r[2] || '',
+          status: STATUS_REVERSE[r[3]] || 'not_started',
+          evidence: r[4] || '',
+          evidenceFields: extractEvidenceFields(r[4] || '').map(item => ({ key: item.key, label: item.label })),
+          pages: r[5] || '',
+          notes: r[6] || '',
+          fields: {},
+          sourceRow: r[7] || ''
+        });
+      } else if (section === 'link_bank') {
+        if (!state.linkBank) state.linkBank = [];
+        state.linkBank.push({ url: r[0] || '', seo: { availability: r[1] || '', indexation: r[2] || '', visibility: r[3] || '', errors: r[4] || '' }, comment: r[5] || '', source: r[6] || '' });
+      } else if (section === 'tools') {
+        if (!state.tools) state.tools = [];
+        state.tools.push({ group: r[0] || '', name: r[1] || '', enabled: r[2] === 'Включён' });
+      } else if (section === 'metrics') {
+        if (!state.metrics) state.metrics = [];
+        state.metrics.push({ date: r[0] || '', channel: r[1] || '', impressions: Number(r[2]) || 0, clicks: Number(r[3]) || 0, cost: Number(r[4]) || 0, leads: Number(r[5]) || 0 });
+      }
+    }
+    const gateList = Object.values(gates);
+    if (gateList.length) state.gates = gateList;
+    initializeEvidenceStructure(state);
+    activeView = 'project';
+    activeGateId = state.gates[0]?.id || null;
+    flashSaving();
+    render();
+    alert('Проект успешно импортирован: ' + state.gates.length + ' Gates.');
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
 function resetDemo() {
   if (!activeProjectId) return;
   if (!confirm('Сбросить данные текущего проекта и вернуться к исходному CSV?')) return;
@@ -3557,10 +3665,14 @@ function escapeAttr(value) { return escapeHtml(value).replace(/`/g, '&#96;'); }
 // Header and navigation events
 document.getElementById('switchProjectBtn')?.addEventListener('click', showLauncher);
 document.getElementById('projectBtn')?.addEventListener('click', () => { activeView = 'project'; render(); });
-document.getElementById('importBtn').addEventListener('click', () => els.csvInput.click());
-els.csvInput.addEventListener('change', e => e.target.files[0] && importCsvFile(e.target.files[0]));
-document.getElementById('exportBtn').addEventListener('click', exportCsv);
-document.getElementById('exportPdfBtn').addEventListener('click', exportPdfReport);
+document.getElementById('importGateBtn').addEventListener('click', () => els.csvInput.click());
+els.csvInput.addEventListener('change', e => { if (e.target.files[0]) { importCsvFile(e.target.files[0]); e.target.value = ''; } });
+document.getElementById('importProjectBtn').addEventListener('click', () => document.getElementById('csvInputProject').click());
+document.getElementById('csvInputProject').addEventListener('change', e => { if (e.target.files[0]) { importProjectCsvFile(e.target.files[0]); e.target.value = ''; } });
+document.getElementById('exportGateBtn').addEventListener('click', exportGateCsv);
+document.getElementById('exportProjectBtn').addEventListener('click', exportCsv);
+document.getElementById('exportPdfGateBtn').addEventListener('click', exportPdfReport);
+document.getElementById('exportPdfProjectBtn').addEventListener('click', exportPdfProjectReport);
 document.getElementById('resetBtn').addEventListener('click', resetDemo);
 
 els.searchInput.addEventListener('input', renderGate);
