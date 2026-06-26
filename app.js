@@ -618,12 +618,13 @@ const GATE1_SUBBLOCKS = [
   {
     key: 'demand_semantics',
     title: 'Спрос и структура кампаний',
-    aliases: ['спрос: семантика, кластеризация, намерения']
+    aliases: ['спрос: семантика, кластеризация, намерения'],
+    hidden: true
   },
   {
     key: 'pain_jtbd_offer',
-    title: 'Ценность и позиционирование',
-    aliases: ['боль → jtbd → офер', 'боль -> jtbd -> офер']
+    title: 'Спрос, ценность, позиционирование',
+    aliases: ['боль → jtbd → офер', 'боль -> jtbd -> офер', 'ценность и позиционирование']
   },
   {
     key: 'unit_economics',
@@ -1167,6 +1168,12 @@ function prepareSystemCards(workspace) {
       card.gateId = gate.id;
       card.gateTitle = gate.title;
       if (card.title === 'Паспорт проекта') card.title = 'Проект: базовые сведения';
+      if (card.title === 'Текущее позиционирование и УТП') card.title = 'Текущее позиционирование, УТП, офферы и CTA';
+      if (card.title === 'Текущие офферы и CTA') card._merged = true;
+      if (card.title === 'Текущая семантика и поисковый фокус') card._merged = true;
+      if (card.title === 'Текущее состояние сайта') { card.title = 'Текущее состояние маркетинговой системы'; card.instruction = 'Зафиксируй что уже есть до начала работы. Это точка отсчёта — с ней будем сравнивать результат.'; }
+      if (card.title === 'Текущая инфраструктура маркетинга') card._merged = true;
+      if (card.title === 'Текущие каналы и рекламные материалы') card._merged = true;
       if (isToolStatusCard(card)) {
         ensureToolItems(card);
         card.evidenceFields = [];
@@ -2973,7 +2980,6 @@ function updateEvidenceFromInput(e) {
   document.querySelectorAll(`[data-evidence-key="${CSS.escape(key)}"]`).forEach(input => {
     if (input !== e.target) input.value = e.target.value;
   });
-  recalculateAllStatuses(state);
   flashSaving();
 }
 
@@ -2982,7 +2988,6 @@ function updateProjectFromInline(e) {
   if (!key) return;
   state.project[key] = e.target.value;
   syncProjectPassportCard(state);
-  recalculateAllStatuses(state);
   flashSaving();
 }
 
@@ -9472,33 +9477,22 @@ const GATE0_PASSPORT_V116_BLOCKS = {
     ],
     transfer: 'Глобальные поля оффера · используются в Gate 1, Gate 3, Gate 4'
   },
-  'Текущее позиционирование и УТП': {
-    key: 'positioning_utp',
-    title: 'Текущее позиционирование и УТП',
-    orient: 'Зафиксируйте, как проект сейчас говорит о себе, для кого он нужен и почему его выбирают.',
-    formula: 'Как проект говорит о себе → для кого он нужен → почему выбрать сейчас → передать дальше',
-    instruction: 'Инструменты: сайт, посадочные, презентации, рекламные материалы, скрипты продаж. На выходе нужны стартовая формулировка, позиционирование и УТП.',
-    context: ['name','niche','geography','whatSell','targetSegment','clientResult','offerRationalCoverage','offerIrrationalDriver','offerSocialMechanism'],
+  'Текущее позиционирование, УТП, офферы и CTA': {
+    key: 'positioning_utp_offers_cta',
+    title: 'Текущее позиционирование, УТП, офферы и CTA',
+    orient: 'Зафиксируйте, как проект говорит о себе, почему его выбирают, с каким предложением и действием выходит к аудитории.',
+    formula: '',
+    instruction: 'Источники: сайт, посадочные, презентации, рекламные материалы, скрипты продаж, объявления, баннеры, мессенджеры.',
+    context: ['name','niche','geography','whatSell','targetSegment','clientResult'],
     fields: [
       { key: 'positioningStartFormula', sharedKey: 'positioning_start_formula', label: 'Стартовая формулировка', hint: 'как проект сейчас коротко описывает себя', route: 'Gate 1, Gate 3, Gate 4', downstream: 'описание проекта, главная, презентации, отчеты', fallback: [] },
       { key: 'positioningStatement', sharedKey: 'positioning_statement', label: 'Позиционирование', hint: 'для кого / категория / отличие', route: 'Gate 1, Gate 3, Gate 4', downstream: 'аудит сайта, ЦА, конкуренты, JTBD, сегменты', fallback: [] },
-      { key: 'usp', sharedKey: 'usp', label: 'УТП', hint: 'главное обещание выбора', route: 'Gate 1, Gate 3, Gate 4', downstream: 'hero-экран, офер, объявления, CTA, лендинги', fallback: [] }
-    ],
-    transfer: 'Глобальные поля позиционирования · используются в Gate 1, Gate 3, Gate 4'
-  },
-  'Текущие офферы и CTA': {
-    key: 'current_offers_cta',
-    title: 'Текущие офферы и CTA',
-    orient: 'Зафиксируйте, с каким предложением и действием проект сейчас выходит к аудитории.',
-    formula: 'Что предлагаем → к какому действию ведем → где подтверждено → передать дальше',
-    instruction: 'Источники: сайт, посадочные, объявления, баннеры, мессенджеры, скрипты продаж. На выходе нужны офферы, CTA и главное целевое действие.',
-    context: ['whatSell','targetSegment','clientResult','positioningStartFormula','positioningStatement','usp','offerRationalCoverage','offerIrrationalDriver','offerSocialMechanism'],
-    fields: [
+      { key: 'usp', sharedKey: 'usp', label: 'УТП', hint: 'главное обещание выбора', route: 'Gate 1, Gate 3, Gate 4', downstream: 'hero-экран, офер, объявления, CTA, лендинги', fallback: [] },
       { key: 'currentOffers', sharedKey: 'current_offers', label: 'Текущие офферы', hint: 'предложения, акции, бонусы, сценарии покупки', route: 'Gate 1, Gate 3, Gate 4', downstream: 'офер, JTBD, аудит страниц, лендинги, объявления', fallback: [] },
       { key: 'currentCtas', sharedKey: 'current_ctas', label: 'Текущие CTA', hint: 'купить, заказать, написать, рассчитать', route: 'Gate 1, Gate 4', downstream: 'hero-блоки, формы, кнопки, баннеры, email, push, Telegram', fallback: [] },
       { key: 'primaryTargetAction', sharedKey: 'primary_target_action', label: 'Основное целевое действие', hint: 'главное действие клиента', route: 'Gate 2, Gate 4, Gate 5', downstream: 'цели Метрики, конверсионные блоки, thank you page, отчеты', fallback: [] }
     ],
-    transfer: 'Глобальные офферы и CTA · используются в Gate 1, Gate 4, Gate 5'
+    transfer: ''
   },
   'Текущая семантика и поисковый фокус': {
     key: 'search_focus',
@@ -9595,6 +9589,7 @@ function v116Status(card, workspace = state) {
 }
 
 function v116PassportFieldCard(def, field) {
+  if (field.key === 'whatSell') return v116WhatSellCard(def, field);
   const value = v116ReadValue(field, state);
   const filled = String(value || '').trim();
   return `<label class="passport-v116-field-card">
@@ -9602,6 +9597,25 @@ function v116PassportFieldCard(def, field) {
     <span class="passport-v116-field-hint">${escapeHtml(field.hint)}</span>
     <textarea class="passport-v116-input passport-v116-autosize ${filled ? 'is-filled' : 'is-empty'}" data-v116-block="${escapeAttr(def.key)}" data-v116-kind="main" data-v116-key="${escapeAttr(field.key)}" placeholder="${escapeAttr(field.hint)}" rows="1">${escapeHtml(value)}</textarea>
   </label>`;
+}
+
+function v116WhatSellCard(def, field) {
+  const main = v116ReadValue(field, state);
+  const extra = Array.isArray(state.project?.whatSellExtra) ? state.project.whatSellExtra : [];
+  const mainFilled = String(main || '').trim();
+  return `<div class="passport-v116-field-card v116-multi-field">
+    <span class="passport-v116-field-title">${escapeHtml(field.label)}</span>
+    <span class="passport-v116-field-hint">${escapeHtml(field.hint)}</span>
+    <textarea class="passport-v116-input passport-v116-autosize ${mainFilled ? 'is-filled' : 'is-empty'}" data-v116-block="${escapeAttr(def.key)}" data-v116-kind="main" data-v116-key="${escapeAttr(field.key)}" placeholder="${escapeAttr(field.hint)}" rows="1">${escapeHtml(main)}</textarea>
+    ${extra.map((val, i) => {
+      const f = String(val || '').trim();
+      return `<div class="v116-multi-row">
+        <textarea class="passport-v116-input passport-v116-autosize ${f ? 'is-filled' : 'is-empty'}" data-whatsell-extra="${i}" placeholder="${escapeAttr(field.hint)}" rows="1">${escapeHtml(val)}</textarea>
+        <button class="v116-multi-remove" data-whatsell-remove="${i}" title="Удалить">×</button>
+      </div>`;
+    }).join('')}
+    <button class="v116-multi-add" data-whatsell-add>+ добавить продукт / услугу / направление</button>
+  </div>`;
 }
 
 function v116PassportFieldsHtml(card) {
@@ -9648,7 +9662,6 @@ function v116UpdatePassportInput(e) {
     v116EnsureBlock(card, state);
     card.status = v116Status(card, state);
   }
-  recalculateAllStatuses(state);
   e.target.classList.toggle('is-filled', !!value.trim());
   e.target.classList.toggle('is-empty', !value.trim());
   flashSaving();
@@ -10726,7 +10739,7 @@ renderGateTable = function(gate, cards) {
   if (gate && gate.id === 'gate-0') {
     recalculateAllStatuses(state);
     state._gate0Open = state._gate0Open || {};
-    els.contentArea.innerHTML = `<div class="gate0-vertical">${cards.map(c => {
+    els.contentArea.innerHTML = `<div class="gate0-vertical">${cards.filter(c => !isOfferPsychCard(c) && !c._merged).map(c => {
       const isOpen = state._gate0Open[c.id] !== false;
       return `<details class="gate0-card" data-card-row="${c.id}" ${isOpen ? 'open' : ''}>
         <summary class="gate0-card-head">
@@ -10752,6 +10765,8 @@ renderGateTable = function(gate, cards) {
 };
 
 function gate0RefreshStatuses() {
+  const gate = state?.gates?.find(g => g.id === 'gate-0');
+  if (gate) gate.cards.forEach(c => recalculateStatusForCard(c, state));
   document.querySelectorAll('.gate0-card[data-card-row]').forEach(section => {
     const card = findCard(section.dataset.cardRow);
     if (!card) return;
@@ -10789,6 +10804,34 @@ bindCardInputs = function() {
   document.querySelectorAll('.passport-v116-autosize').forEach(ta => {
     autosizeTextarea(ta);
     ta.addEventListener('input', () => autosizeTextarea(ta));
+  });
+  document.querySelectorAll('[data-whatsell-extra]').forEach(ta => {
+    ta.addEventListener('input', function() {
+      const idx = Number(this.dataset.whatsellExtra);
+      state.project.whatSellExtra = state.project.whatSellExtra || [];
+      state.project.whatSellExtra[idx] = this.value;
+      this.classList.toggle('is-filled', !!this.value.trim());
+      this.classList.toggle('is-empty', !this.value.trim());
+      autosizeTextarea(this);
+      flashSaving();
+    });
+  });
+  document.querySelectorAll('[data-whatsell-add]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.project.whatSellExtra = state.project.whatSellExtra || [];
+      state.project.whatSellExtra.push('');
+      flashSaving();
+      renderGate();
+    });
+  });
+  document.querySelectorAll('[data-whatsell-remove]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.dataset.whatsellRemove);
+      state.project.whatSellExtra = state.project.whatSellExtra || [];
+      state.project.whatSellExtra.splice(idx, 1);
+      flashSaving();
+      renderGate();
+    });
   });
 };
 
@@ -10849,91 +10892,329 @@ recalculateStatusForCard = function(card, workspace = state) {
   __guruPrevRecalcStatusV120Summary(card, workspace);
 };
 
-/* v1.2.0 — Текущие каналы и рекламные материалы */
-const CHANNEL_ITEMS_CONFIG = [
-  { channel: 'Платная реклама', platform: 'Яндекс Директ', type: 'Поиск', materials: 'объявления, быстрые ссылки, уточнения' },
-  { channel: 'Платная реклама', platform: 'Яндекс Директ', type: 'РСЯ', materials: 'баннеры, объявления, видео' },
-  { channel: 'Платная реклама', platform: 'Google Ads', type: 'Search', materials: 'RSA, assets, keywords' },
-  { channel: 'Платная реклама', platform: 'Google Ads', type: 'Display', materials: 'баннеры, responsive display ads' },
-  { channel: 'Органика', platform: 'SEO', type: 'Страницы сайта', materials: 'title, description, H1, тексты' },
-  { channel: 'Геосервисы', platform: 'Яндекс Карты', type: 'Карточка организации', materials: 'фото, отзывы, описание, акции' },
-  { channel: 'Геосервисы', platform: 'Google Business Profile', type: 'Карточка организации', materials: 'фото, отзывы, описание' },
-  { channel: 'SMM', platform: 'VK / Telegram / другое', type: 'Контент / посевы', materials: 'посты, баннеры, видео' }
+/* v1.2.0 — Текущее состояние маркетинговой системы (мегаблок) */
+const MEGA_PLATFORM_FUNDAMENTAL = [
+  'Главная страница',
+  'Страница продукта / услуги / каталог',
+  'Форма заявки / корзина',
+  'CTA (кнопка целевого действия)',
+  'Контакты (телефон, адрес, мессенджер)',
+  'Мобильная версия',
+  'Блоки доверия (отзывы, гарантии, сертификаты)',
+  'Политика конфиденциальности'
 ];
+const MEGA_PLATFORM_OLD_MAP = {
+  'Главные посадочные': 'Главная страница',
+  'Формы': 'Форма заявки / корзина',
+  'CTA': 'CTA (кнопка целевого действия)',
+  'Контакты': 'Контакты (телефон, адрес, мессенджер)',
+  'Блоки доверия': 'Блоки доверия (отзывы, гарантии, сертификаты)',
+  'Мобильная версия': 'Мобильная версия'
+};
+const MEGA_PLATFORM_EXTRA_PRESETS = ['О нас / история бренда','FAQ','Портфолио / кейсы','Страница доставки и оплаты','Квиз / калькулятор'];
+const MEGA_INFRA_DEFAULTS = ['Яндекс Метрика','Цели Метрики','CRM','Формы → CRM','UTM-разметка','Уведомления о заявках','Рекламные кабинеты'];
+const MEGA_CHANNEL_DEFAULTS = [
+  { channel:'Платная реклама', platform:'Яндекс Директ', type:'Поиск', materials:'объявления, быстрые ссылки, уточнения' },
+  { channel:'Платная реклама', platform:'Яндекс Директ', type:'РСЯ', materials:'баннеры, объявления, видео' },
+  { channel:'Платная реклама', platform:'Google Ads', type:'Search', materials:'RSA, assets, keywords' },
+  { channel:'Платная реклама', platform:'Google Ads', type:'Display', materials:'баннеры, responsive display ads' },
+  { channel:'Органика', platform:'SEO', type:'Страницы сайта', materials:'title, description, H1, тексты' },
+  { channel:'Геосервисы', platform:'Яндекс Карты', type:'Карточка организации', materials:'фото, отзывы, описание, акции' },
+  { channel:'Геосервисы', platform:'Google Business Profile', type:'Карточка организации', materials:'фото, отзывы, описание' },
+  { channel:'SMM', platform:'VK / Telegram / другое', type:'Контент / посевы', materials:'посты, баннеры, видео' }
+];
+const MEGA_TOOL_STATUSES = [['','Выбрать'],['implemented','Реализовано'],['not_implemented','Не реализовано'],['in_progress','В работе']];
+const MEGA_CHANNEL_STATUSES = [['','Выбрать'],['active','Активен'],['planned','Планируется'],['inactive','Не используется']];
 
-function isChannelsCard(card) {
-  return card?.title === 'Текущие каналы и рекламные материалы';
+function isMegaMarketingCard(card) {
+  return card?.title === 'Текущее состояние маркетинговой системы';
 }
 
-function ensureChannelItems(card) {
-  const prev = new Map((card.channelItems || []).map(item => [item.platform + '|' + item.type, item]));
-  card.channelItems = CHANNEL_ITEMS_CONFIG.map(cfg => {
-    const old = prev.get(cfg.platform + '|' + cfg.type) || {};
-    return { ...cfg, status: old.status || '' };
-  });
-  return card.channelItems;
+function ensureMegaMarketing(card, workspace = state) {
+  if (!card || !isMegaMarketingCard(card)) return;
+  if (!card.megaMarketing) {
+    card.megaMarketing = { platform: [], infra: [], channels: [] };
+    const gate = workspace?.gates?.find(g => g.id === 'gate-0');
+    if (gate) {
+      const oldSite = gate.cards.find(c => c.title === 'Текущее состояние сайта' || c.title === 'Текущее состояние маркетинговой системы');
+      const oldInfra = gate.cards.find(c => c.title === 'Текущая инфраструктура маркетинга');
+      const oldChannels = gate.cards.find(c => c.title === 'Текущие каналы и рекламные материалы');
+      if (oldSite?.toolItems?.length) {
+        card.megaMarketing.platform = oldSite.toolItems.map(i => ({ name: i.name, status: i.status || '', comment: i.comment || '' }));
+        console.log('Mega migration: platform from toolItems', card.megaMarketing.platform.length);
+      }
+      if (oldInfra?.toolItems?.length) {
+        card.megaMarketing.infra = oldInfra.toolItems.map(i => ({ name: i.name, status: i.status || '', comment: i.comment || '' }));
+        console.log('Mega migration: infra from toolItems', card.megaMarketing.infra.length);
+      }
+      if (oldChannels?.channelItems?.length) {
+        card.megaMarketing.channels = oldChannels.channelItems.map(i => ({ ...i }));
+        console.log('Mega migration: channels from channelItems', card.megaMarketing.channels.length);
+      }
+    }
+  }
+  const m = card.megaMarketing;
+  if (!m.platformV2) {
+    m.platformV2 = { fundamental: [], landings: {}, extra: [] };
+    if (m.platform?.length) {
+      const oldMap = new Map(m.platform.map(i => [i.name, i]));
+      m.platformV2.fundamental = MEGA_PLATFORM_FUNDAMENTAL.map(name => {
+        const mapped = Object.entries(MEGA_PLATFORM_OLD_MAP).find(([,v]) => v === name);
+        const old = mapped ? oldMap.get(mapped[0]) : oldMap.get(name);
+        return { name, status: old?.status || '', url: old?.url || '', comment: old?.comment || '' };
+      });
+      console.log('Platform v2 migration: fundamental', m.platformV2.fundamental.filter(r => r.status).length + ' with data');
+    }
+  }
+  if (!m.platformV2.fundamental.length) {
+    m.platformV2.fundamental = MEGA_PLATFORM_FUNDAMENTAL.map(name => ({ name, status: '', url: '', comment: '' }));
+  }
+  m.platformV2.landings = m.platformV2.landings || {};
+  m.platformV2.extra = m.platformV2.extra || [];
+  if (!m.infra.length) m.infra = MEGA_INFRA_DEFAULTS.map(name => ({ name, status: '', comment: '' }));
+  if (!m.channels.length) m.channels = MEGA_CHANNEL_DEFAULTS.map(c => ({ ...c, status: '' }));
+  return m;
 }
 
-function channelsHtml(card) {
-  const items = ensureChannelItems(card);
-  return `<div class="channels-v2">
+function megaToolSectionHtml(cardId, sectionKey, title, hint, items, addLabel) {
+  return `<div class="mega-section">
+    <div class="mega-section-title">${escapeHtml(title)}</div>
+    <div class="mega-section-hint">${escapeHtml(hint)}</div>
     <table class="cr-table">
-      <thead><tr><th>Канал</th><th>Платформа</th><th>Тип</th><th>Материалы</th><th>Статус</th></tr></thead>
+      <thead><tr><th>Элемент</th><th>Статус</th><th>Комментарий</th></tr></thead>
+      <tbody>${items.map((item, i) => `<tr>
+        <td class="cr-label">${escapeHtml(item.name)}</td>
+        <td><select data-mega-card="${escapeAttr(cardId)}" data-mega-section="${escapeAttr(sectionKey)}" data-mega-idx="${i}" data-mega-field="status">
+          ${MEGA_TOOL_STATUSES.map(([v,l]) => `<option value="${escapeAttr(v)}" ${item.status === v ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}
+        </select></td>
+        <td><div class="mega-comment-row"><input data-mega-card="${escapeAttr(cardId)}" data-mega-section="${escapeAttr(sectionKey)}" data-mega-idx="${i}" data-mega-field="comment" value="${escapeAttr(item.comment || '')}" placeholder="—" />${item._custom ? `<button class="v116-multi-remove" data-mega-card="${escapeAttr(cardId)}" data-mega-section="${escapeAttr(sectionKey)}" data-mega-remove="${i}" title="Удалить">×</button>` : ''}</div></td>
+      </tr>`).join('')}</tbody>
+    </table>
+    <button class="v116-multi-add" data-mega-card="${escapeAttr(cardId)}" data-mega-add="${escapeAttr(sectionKey)}">+ ${escapeHtml(addLabel)}</button>
+  </div>`;
+}
+
+function megaChannelsSectionHtml(cardId, items) {
+  return `<div class="mega-section">
+    <div class="mega-section-title">Каналы</div>
+    <div class="mega-section-hint">Что сейчас запущено — Яндекс Директ, VK, SEO, SMM, геосервисы</div>
+    <table class="cr-table">
+      <thead><tr><th>Канал</th><th>Платформа</th><th>Тип</th><th>Материалы</th><th>Статус</th><th></th></tr></thead>
       <tbody>${items.map((item, i) => `<tr>
         <td class="cr-label">${escapeHtml(item.channel)}</td>
         <td>${escapeHtml(item.platform)}</td>
         <td>${escapeHtml(item.type)}</td>
         <td class="channels-materials">${escapeHtml(item.materials)}</td>
-        <td><select data-channel-card-id="${escapeAttr(card.id)}" data-channel-index="${i}">
-          <option value="" ${!item.status ? 'selected' : ''}>Выбрать</option>
-          <option value="active" ${item.status === 'active' ? 'selected' : ''}>Активен</option>
-          <option value="planned" ${item.status === 'planned' ? 'selected' : ''}>Планируется</option>
-          <option value="inactive" ${item.status === 'inactive' ? 'selected' : ''}>Не используется</option>
+        <td><select data-mega-card="${escapeAttr(cardId)}" data-mega-section="channels" data-mega-idx="${i}" data-mega-field="status">
+          ${MEGA_CHANNEL_STATUSES.map(([v,l]) => `<option value="${escapeAttr(v)}" ${item.status === v ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}
         </select></td>
+        <td>${item._custom ? `<button class="v116-multi-remove" data-mega-card="${escapeAttr(cardId)}" data-mega-section="channels" data-mega-remove="${i}" title="Удалить">×</button>` : ''}</td>
       </tr>`).join('')}</tbody>
     </table>
+    <button class="v116-multi-add" data-mega-card="${escapeAttr(cardId)}" data-mega-add="channels">+ добавить канал</button>
   </div>`;
 }
 
-function updateChannelItem(e) {
-  const card = findCard(e.target.dataset.channelCardId);
+function megaPlatformProducts() {
+  const main = String(state.project?.whatSell || '').trim();
+  const extra = Array.isArray(state.project?.whatSellExtra) ? state.project.whatSellExtra : [];
+  return [main, ...extra].filter(Boolean);
+}
+
+function megaPlatformSectionHtml(cardId, pv2) {
+  const products = megaPlatformProducts();
+  const landingStatuses = [['','Выбрать'],['yes','Есть'],['no','Нет'],['in_progress','В работе']];
+
+  const fundamentalHtml = `<div class="mega-subsection">
+    <div class="mega-subsection-title">Обязательные страницы и элементы для любого сайта</div>
+    <table class="cr-table"><thead><tr><th>Элемент</th><th>Статус</th><th>URL</th><th>Комментарий</th></tr></thead>
+    <tbody>${pv2.fundamental.map((r, i) => `<tr class="${r.status === 'not_implemented' ? 'mega-row-bad' : ''}">
+      <td class="cr-label">${escapeHtml(r.name)}</td>
+      <td><select data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="fundamental" data-mega-idx="${i}" data-mega-field="status">
+        ${MEGA_TOOL_STATUSES.map(([v,l]) => `<option value="${v}" ${r.status===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}
+      </select></td>
+      <td><input data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="fundamental" data-mega-idx="${i}" data-mega-field="url" value="${escapeAttr(r.url||'')}" placeholder="—" /></td>
+      <td><input data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="fundamental" data-mega-idx="${i}" data-mega-field="comment" value="${escapeAttr(r.comment||'')}" placeholder="—" /></td>
+    </tr>`).join('')}</tbody></table>
+  </div>`;
+
+  const landingsHtml = products.length ? `<div class="mega-subsection">
+    <div class="mega-subsection-title">Проверь — у каждого продукта должна быть своя посадочная</div>
+    <table class="cr-table"><thead><tr><th>Продукт</th><th>URL посадочной</th><th>Статус</th><th>Комментарий</th></tr></thead>
+    <tbody>${products.map((p, i) => {
+      const d = pv2.landings[p] || {};
+      const warn = d.status === 'yes' && !String(d.url||'').trim();
+      return `<tr class="${d.status === 'no' ? 'mega-row-bad' : ''}">
+        <td class="cr-label">${escapeHtml(p)}</td>
+        <td><input data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="landing" data-mega-product="${escapeAttr(p)}" data-mega-field="url" value="${escapeAttr(d.url||'')}" placeholder="${warn ? 'Укажи URL посадочной' : '—'}" class="${warn ? 'mega-warn-input' : ''}" /></td>
+        <td><select data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="landing" data-mega-product="${escapeAttr(p)}" data-mega-field="status">
+          ${landingStatuses.map(([v,l]) => `<option value="${v}" ${(d.status||'')===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}
+        </select></td>
+        <td><input data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="landing" data-mega-product="${escapeAttr(p)}" data-mega-field="comment" value="${escapeAttr(d.comment||'')}" placeholder="—" /></td>
+      </tr>`;
+    }).join('')}</tbody></table>
+  </div>` : '';
+
+  const extraHtml = `<div class="mega-subsection">
+    <div class="mega-subsection-title">Страницы которые усиливают конверсию — добавь нужные</div>
+    ${pv2.extra.length ? `<table class="cr-table"><thead><tr><th>Элемент</th><th>Статус</th><th>URL</th><th>Комментарий</th><th></th></tr></thead>
+    <tbody>${pv2.extra.map((r, i) => `<tr class="${r.status === 'not_implemented' ? 'mega-row-bad' : ''}">
+      <td class="cr-label">${escapeHtml(r.name)}</td>
+      <td><select data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="extra" data-mega-idx="${i}" data-mega-field="status">
+        ${MEGA_TOOL_STATUSES.map(([v,l]) => `<option value="${v}" ${r.status===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}
+      </select></td>
+      <td><input data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="extra" data-mega-idx="${i}" data-mega-field="url" value="${escapeAttr(r.url||'')}" placeholder="—" /></td>
+      <td><input data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="extra" data-mega-idx="${i}" data-mega-field="comment" value="${escapeAttr(r.comment||'')}" placeholder="—" /></td>
+      <td><button class="v116-multi-remove" data-mega-card="${escapeAttr(cardId)}" data-mega-pv2-remove="${i}" title="Удалить">×</button></td>
+    </tr>`).join('')}</tbody></table>` : ''}
+    <div class="mega-presets">${MEGA_PLATFORM_EXTRA_PRESETS.map(name => `<button class="mega-preset-btn" data-mega-card="${escapeAttr(cardId)}" data-mega-preset="${escapeAttr(name)}">${escapeHtml(name)}</button>`).join('')}</div>
+    <button class="v116-multi-add" data-mega-card="${escapeAttr(cardId)}" data-mega-add-extra>+ добавить страницу</button>
+  </div>`;
+
+  return `<div class="mega-section">
+    <div class="mega-section-title">Платформа</div>
+    <div class="mega-section-hint">Есть ли сайт, работают ли формы, как выглядит на телефоне, есть ли кнопка заказа</div>
+    ${fundamentalHtml}
+    ${landingsHtml}
+    ${extraHtml}
+  </div>`;
+}
+
+function megaMarketingHtml(card) {
+  const m = ensureMegaMarketing(card, state);
+  return `<div class="mega-marketing">
+    ${megaPlatformSectionHtml(card.id, m.platformV2)}
+    ${megaToolSectionHtml(card.id, 'infra', 'Инфраструктура', 'Подключена ли Метрика, настроены ли цели, есть ли CRM, размечены ли ссылки UTM', m.infra, 'добавить элемент')}
+    ${megaChannelsSectionHtml(card.id, m.channels)}
+  </div>`;
+}
+
+function megaMarketingStatus(card) {
+  const m = card.megaMarketing;
+  if (!m) return 'not_started';
+  const pv2 = m.platformV2 || {};
+  const products = megaPlatformProducts();
+  const fundamentalItems = pv2.fundamental || [];
+  const landingItems = products.map(p => pv2.landings?.[p] || {});
+  const extraItems = pv2.extra || [];
+  const allItems = [...fundamentalItems, ...landingItems, ...extraItems, ...m.infra, ...m.channels];
+  const filled = allItems.filter(i => i.status);
+  if (!filled.length) return 'not_started';
+  if (filled.length === allItems.length) return 'ready';
+  return 'in_progress';
+}
+
+function updateMegaMarketing(target) {
+  const card = findCard(target.dataset.megaCard);
   if (!card) return;
-  const index = Number(e.target.dataset.channelIndex);
-  ensureChannelItems(card);
-  if (card.channelItems[index]) card.channelItems[index].status = e.target.value;
+  const m = ensureMegaMarketing(card, state);
+  const section = target.dataset.megaSection;
+  const pv2 = target.dataset.megaPv2;
+  const idx = Number(target.dataset.megaIdx);
+  const field = target.dataset.megaField;
+  const product = target.dataset.megaProduct;
+  if (pv2 === 'fundamental' && m.platformV2?.fundamental?.[idx]) {
+    m.platformV2.fundamental[idx][field] = target.value;
+  } else if (pv2 === 'landing' && product) {
+    m.platformV2.landings = m.platformV2.landings || {};
+    m.platformV2.landings[product] = m.platformV2.landings[product] || {};
+    m.platformV2.landings[product][field] = target.value;
+  } else if (pv2 === 'extra' && m.platformV2?.extra?.[idx]) {
+    m.platformV2.extra[idx][field] = target.value;
+  } else if (section && field && m[section]?.[idx]) {
+    m[section][idx][field] = target.value;
+  }
   recalculateStatusForCard(card);
   flashSaving();
 }
 
-const __guruPrevCardUserFieldsHtmlV120Channels = cardUserFieldsHtml;
-cardUserFieldsHtml = function(c) {
-  if (isChannelsCard(c)) return `<div class="field-row">${channelsHtml(c)}</div>`;
-  return __guruPrevCardUserFieldsHtmlV120Channels(c);
-};
-
-const __guruPrevRecalcStatusV120Channels = recalculateStatusForCard;
-recalculateStatusForCard = function(card, workspace = state) {
-  if (isChannelsCard(card)) {
-    const items = ensureChannelItems(card);
-    const chosen = items.filter(i => i.status);
-    if (!chosen.length) { card.status = 'not_started'; return; }
-    if (chosen.length === items.length) { card.status = 'ready'; return; }
-    card.status = 'in_progress';
-    return;
+function megaAddRow(cardId, sectionKey) {
+  const card = findCard(cardId);
+  if (!card) return;
+  const m = ensureMegaMarketing(card, state);
+  if (sectionKey === 'channels') {
+    m.channels.push({ channel: '', platform: '', type: '', materials: '', status: '', _custom: true });
+  } else {
+    const name = prompt('Название элемента:');
+    if (!name?.trim()) return;
+    m[sectionKey].push({ name: name.trim(), status: '', comment: '', _custom: true });
   }
-  __guruPrevRecalcStatusV120Channels(card, workspace);
+  flashSaving();
+  renderGate();
+}
+
+function megaRemoveRow(cardId, sectionKey, idx) {
+  const card = findCard(cardId);
+  if (!card) return;
+  const m = ensureMegaMarketing(card, state);
+  if (m[sectionKey]) m[sectionKey].splice(idx, 1);
+  flashSaving();
+  renderGate();
+}
+
+const __guruPrevCardUserFieldsHtmlV120Mega = cardUserFieldsHtml;
+cardUserFieldsHtml = function(c) {
+  if (isMegaMarketingCard(c)) return `<div class="field-row">${megaMarketingHtml(c)}</div>`;
+  return __guruPrevCardUserFieldsHtmlV120Mega(c);
 };
 
-const __guruPrevIsSystemSpecialV120Channels = isSystemSpecialCard;
+const __guruPrevRecalcStatusV120Mega = recalculateStatusForCard;
+recalculateStatusForCard = function(card, workspace = state) {
+  if (isMegaMarketingCard(card)) { card.status = megaMarketingStatus(card); return; }
+  return __guruPrevRecalcStatusV120Mega(card, workspace);
+};
+
+const __guruPrevIsSystemSpecialV120Mega = isSystemSpecialCard;
 isSystemSpecialCard = function(card) {
-  return isChannelsCard(card) || __guruPrevIsSystemSpecialV120Channels(card);
+  return isMegaMarketingCard(card) || __guruPrevIsSystemSpecialV120Mega(card);
 };
 
-const __guruPrevBindV120Channels = bindCardInputs;
+const __guruPrevBindV120Mega = bindCardInputs;
 bindCardInputs = function() {
-  __guruPrevBindV120Channels();
-  document.querySelectorAll('[data-channel-card-id]').forEach(el => {
-    el.addEventListener('change', updateChannelItem);
+  __guruPrevBindV120Mega();
+  document.querySelectorAll('[data-mega-card][data-mega-field]').forEach(el => {
+    const ev = el.tagName === 'SELECT' ? 'change' : 'input';
+    el.addEventListener(ev, e => updateMegaMarketing(e.target));
+  });
+  document.querySelectorAll('[data-mega-add]').forEach(btn => {
+    btn.addEventListener('click', () => megaAddRow(btn.dataset.megaCard, btn.dataset.megaAdd));
+  });
+  document.querySelectorAll('[data-mega-remove]').forEach(btn => {
+    btn.addEventListener('click', () => megaRemoveRow(btn.dataset.megaCard, btn.dataset.megaSection, Number(btn.dataset.megaRemove)));
+  });
+  document.querySelectorAll('[data-mega-add-extra]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = findCard(btn.dataset.megaCard);
+      if (!card) return;
+      const name = prompt('Название страницы:');
+      if (!name?.trim()) return;
+      const m = ensureMegaMarketing(card, state);
+      m.platformV2.extra.push({ name: name.trim(), status: '', url: '', comment: '' });
+      flashSaving();
+      renderGate();
+    });
+  });
+  document.querySelectorAll('[data-mega-preset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = findCard(btn.dataset.megaCard);
+      if (!card) return;
+      const m = ensureMegaMarketing(card, state);
+      const name = btn.dataset.megaPreset;
+      if (m.platformV2.extra.some(r => r.name === name)) return;
+      m.platformV2.extra.push({ name, status: '', url: '', comment: '' });
+      flashSaving();
+      renderGate();
+    });
+  });
+  document.querySelectorAll('[data-mega-pv2-remove]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = findCard(btn.dataset.megaCard);
+      if (!card) return;
+      const m = ensureMegaMarketing(card, state);
+      m.platformV2.extra.splice(Number(btn.dataset.megaPv2Remove), 1);
+      flashSaving();
+      renderGate();
+    });
   });
 };
 
@@ -10948,7 +11229,7 @@ renderGate1Accordion = function(gate, cards) {
   const accState = getGate1AccordionState();
   const queryActive = els.searchInput.value.trim() || els.statusFilter.value !== 'all';
   els.contentArea.innerHTML = `<div class="g1-redesign">
-    ${sections.map(section => {
+    ${sections.filter(s => !s.hidden).map(section => {
       const sectionOpen = Boolean(accState.subblocks[section.key]);
       const status = section.key === 'demand_semantics' ? getDemandRouteStatus()
         : section.key === 'pain_jtbd_offer' ? getPainOfferStatus()
@@ -10969,7 +11250,7 @@ renderGate1Accordion = function(gate, cards) {
           <span class="g1-section-toggle">${sectionOpen ? 'Закрыть' : 'Открыть'}</span>
         </button>
         ${sectionOpen ? `<div class="g1-section-body">
-          ${section.key === 'demand_semantics' ? g1RenderDemand()
+          ${section.key === 'demand_semantics' ? ''
             : section.key === 'pain_jtbd_offer' ? g1RenderPainOffer()
             : section.key === 'unit_economics' ? g1RenderUnitEconomics()
             : (displayCards.length ? displayCards.map(card => g1CardHtml(card)).join('') : '<div class="g1-empty">По текущему фильтру ничего не найдено.</div>')}
@@ -13192,7 +13473,7 @@ document.addEventListener('click', e => {
 
 const PAIN_V130_STEPS = [
   { key:'search', title:'1. Поисковое поведение', task:'Понять, как рынок формулирует потребность, какой смысл стоит за поиском и какие сегменты скрываются внутри спроса.', standard:'Понятно: какими словами рынок описывает потребность, какой интент стоит за поиском, какой скрытый мотив запускает поиск, какие сегменты присутствуют внутри спроса.', fields:[
-    {k:'cluster',l:'Кластер спроса',p:'исследуемый кластер или группа запросов'},
+    {k:'cluster',l:'Кластер спроса',h:'Группировка поискового спроса по намерению',p:''},
     {k:'mainQueries',l:'Основные запросы',p:'3–7 наиболее показательных запросов',t:'textarea'},
     {k:'intent',l:'Интент клиента',p:'купить / выбрать / изучить',sel:[['','—'],['buy','Купить / заказать'],['compare','Выбрать / сравнить'],['research','Изучить / вдохновиться']]},
     {k:'clientLanguage',l:'Язык клиента',p:'реальные слова и формулировки рынка',t:'textarea'},
@@ -15361,7 +15642,7 @@ dv130FieldHtml = function(prefix, stepKey, field, value) {
 };
 
 // G0 hint for pain v1.3.0 cluster field
-const PV130_G0_MAP = { cluster: '__clusters_all__', clientLanguage: '__client_language__' };
+const PV130_G0_MAP = { clientLanguage: '__client_language__' };
 
 const __prevPainV130StepHtml = painV130StepHtml;
 painV130StepHtml = function(step, data, isOpen) {
@@ -15512,10 +15793,391 @@ renderGate = function() {
   });
 };
 
+function offerPsychContextHtml() {
+  ensureOfferPsychGlobals(state);
+  return `<div class="g1-fields-grid" style="margin-bottom:16px;">
+    ${OFFER_PSYCH_GLOBAL_FIELDS.map(field => {
+      const value = readOfferPsychValue(field, state);
+      return `<label class="g1-field"><span>${escapeHtml(field.label)}</span><small style="color:var(--muted);font-size:11px;">${escapeHtml(field.hint)}</small><textarea class="g1-input ${String(value).trim() ? 'is-filled' : 'is-empty'}" data-offer-psych-field="${escapeAttr(field.key)}" rows="2" placeholder="${escapeAttr(field.hint)}">${escapeHtml(value)}</textarea></label>`;
+    }).join('')}
+  </div>`;
+}
+
 const __prevPv130OfferJtbdHtml = pv130OfferJtbdHtml;
 pv130OfferJtbdHtml = function(step, data) {
   let html = __prevPv130OfferJtbdHtml(step, data);
   const jtbdBtn = '<button type="button" class="g0-hint-btn" data-jtbd-tasks-hint>G0</button>';
   html = html.replace(/(<span style="font-weight:900;font-size:14px;">Задача \d+)<\/span>/g, '$1 ' + jtbdBtn + '</span>');
-  return html;
+  return offerPsychContextHtml() + html;
 };
+
+/* ================================================================
+   v1.5.0 — Миграция: перенос производственного блока из Gate 1 в Gate 4
+   Gate 1 = понять спрос. Gate 4 = создать рекламную сущность.
+   ================================================================ */
+
+// 1. Миграция данных: скопировать groups step из demandV130 в gate4Production
+function migrateGate1ToGate4() {
+  if (!state) return;
+  if (state._gate4Migrated) return;
+  const d = state.demandV130?.search?.steps?.groups;
+  if (!d) { state._gate4Migrated = true; return; }
+  state.gate4Production = state.gate4Production || {};
+  state.gate4Production.semanticCore = state.gate4Production.semanticCore || d.semanticCore || '';
+  state.gate4Production.groupRows = state.gate4Production.groupRows || d.groupRows || [{}];
+  state.gate4Production.adsRows = state.gate4Production.adsRows || d.adsRows || {};
+  state.gate4Production.sitelinkRows = state.gate4Production.sitelinkRows || d.sitelinkRows || [{}];
+  state.gate4Production.openSteps = state.gate4Production.openSteps || {};
+  state._gate4Migrated = true;
+  saveState();
+}
+
+// 2. Убрать блок "groups" из DEMAND_V130_SEARCH_STEPS
+const __g1SearchStepsOriginal = DEMAND_V130_SEARCH_STEPS;
+while (DEMAND_V130_SEARCH_STEPS.length > 0) DEMAND_V130_SEARCH_STEPS.pop();
+__g1SearchStepsOriginal.filter(s => s.key !== 'groups').forEach(s => DEMAND_V130_SEARCH_STEPS.push(s));
+
+// 3. Gate 4 рендер производственного блока
+function ensureGate4Production() {
+  if (!state) return {};
+  migrateGate1ToGate4();
+  state.gate4Production = state.gate4Production || { semanticCore: '', groupRows: [{}], adsRows: {}, sitelinkRows: [{}], openSteps: {} };
+  state.gate4Production.openSteps = state.gate4Production.openSteps || {};
+  return state.gate4Production;
+}
+
+function gate4ProductionHtml() {
+  const g4 = ensureGate4Production();
+  const d = state.demandV130?.search?.steps || {};
+
+  // Read-only semantic core from Gate 1
+  const g1Clusters = d.clusters?.clusterRows || [];
+  const g1CorePreview = g1Clusters.length ? g1Clusters.map((r, i) => {
+    const type = r.col0 || '';
+    const intent = r.col1 || '';
+    const cluster = r.col2 || '';
+    return `${i+1}. ${intent || cluster || 'Кластер ' + (i+1)}${type ? ' [' + type + ']' : ''}`;
+  }).join('\n') : 'Кластеры не заполнены в Gate 1';
+
+  const scFilled = String(g4.semanticCore || '').trim();
+  const groupRows = g4.groupRows || [{}];
+  const sitelinkRows = g4.sitelinkRows || [{}];
+
+  return `<div class="g1-route" style="margin-top:16px;">
+    <div class="g1-card"><div class="g1-card-header-static"><span class="g1-card-title">Креативы и рекламные сущности</span></div>
+    <div class="g1-card-body">
+      <details class="g1-prompt-toggle"><summary>Кластеры из Gate 1 (только чтение)</summary><div>${escapeHtml(g1CorePreview)}</div></details>
+      <label class="g1-field" style="margin-top:12px;"><span>Семантическое ядро</span><small style="color:var(--muted);font-size:11px;">Группы, ключевые фразы, минус-слова, структура кампании</small><textarea class="g1-input ${scFilled ? 'is-filled' : 'is-empty'}" data-g4prod-field="semanticCore" rows="1" placeholder="семантическое ядро">${escapeHtml(g4.semanticCore || '')}</textarea></label>
+      <label class="g1-field" style="margin-top:8px;"><span>Минус-фразы</span><small style="color:var(--muted);font-size:11px;">Общие минус-фразы кампании</small><textarea class="g1-input ${String(g4.minusPhrases||'').trim() ? 'is-filled' : 'is-empty'}" data-g4prod-field="minusPhrases" rows="1" placeholder="минус-фразы">${escapeHtml(g4.minusPhrases || '')}</textarea></label>
+
+      <div style="margin-top:16px;font-weight:900;font-size:14px;margin-bottom:10px;">Группы объявлений</div>
+      <div class="g1-fields-grid">
+        ${groupRows.map((row, ri) => {
+          const cols = ['Группа','Ключевые фразы'];
+          const colKeys = ['col0','col1'];
+          const firstVal = String(row.col0 || '').trim();
+          const preview = firstVal || 'Группа';
+          const ads = (g4.adsRows || {})[ri] || [{}];
+          return `<div class="g1-card g1-card-collapsible" style="border-radius:14px;padding:0;">
+            <div class="g1-card-collapse-header" style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;cursor:pointer;" data-g1-collapse>
+              <span><span style="font-weight:800;font-size:13px;color:var(--muted);">Группа ${ri+1}</span> <span class="g1-collapse-preview" style="font-size:13px;color:var(--text);margin-left:8px;">${escapeHtml(preview.substring(0,60))}</span></span>
+              <button class="small-btn danger-mini" data-g4prod-group-remove="${ri}" ${groupRows.length<=1?'disabled':''}>×</button>
+            </div>
+            <div class="g1-card-collapse-body" style="padding:0 18px 14px;">
+              <div class="g1-fields-grid">
+                ${colKeys.map((ck, ci) => {
+                  const val = row[ck] || '';
+                  const cls = String(val).trim() ? 'is-filled' : 'is-empty';
+                  return '<label class="g1-field"><span>' + escapeHtml(cols[ci]) + '</span><textarea class="g1-input ' + cls + '" data-g4prod-group="' + ri + '" data-g4prod-col="' + ck + '" rows="1" placeholder="' + escapeAttr(cols[ci]) + '">' + escapeHtml(val) + '</textarea></label>';
+                }).join('')}
+              </div>
+              <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);">
+                <span style="font-weight:800;font-size:12px;color:var(--muted);display:block;margin-bottom:8px;">Объявления</span>
+                ${ads.map((ad, ai) => '<div style="padding:8px 0;' + (ai>0?'border-top:1px dashed var(--line);':'') + '"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-weight:700;font-size:12px;color:var(--muted);">Объявление ' + (ai+1) + '</span><button class="small-btn danger-mini" data-g4prod-ad-remove="' + ri + '" data-g4prod-ad-idx="' + ai + '" ' + (ads.length<=1?'disabled':'') + ' style="font-size:11px;">×</button></div><div class="g1-fields-grid">' + ['Заголовок (≤ 56)','Доп. заголовок (≤ 30)','Текст (≤ 81)'].map((col, ci) => { const ak = 'ad' + ci; const av = ad[ak] || ''; const ac = String(av).trim() ? 'is-filled' : 'is-empty'; return '<label class="g1-field"><span>' + escapeHtml(col) + '</span><textarea class="g1-input ' + ac + '" data-g4prod-ad-group="' + ri + '" data-g4prod-ad-idx="' + ai + '" data-g4prod-ad-col="' + ak + '" rows="1" placeholder="' + escapeAttr(col) + '">' + escapeHtml(av) + '</textarea></label>'; }).join('') + '</div></div>').join('')}
+                <button class="small-btn add-inline-btn" style="font-size:12px;margin-top:4px;" data-g4prod-ad-add="${ri}">+ Добавить объявление</button>
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <button class="small-btn add-inline-btn" data-g4prod-group-add>+ Добавить группу</button>
+
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);">
+        <div style="font-weight:900;font-size:14px;margin-bottom:10px;">Быстрые ссылки</div>
+        <div class="g1-fields-grid">
+          ${sitelinkRows.map((row, ri) => {
+            const cols = ['Заголовок (≤ 30)','Описание (≤ 60)','Ссылка'];
+            const colKeys = ['sl0','sl1','sl2'];
+            return `<div class="g1-card g1-card-collapsible" style="border-radius:14px;padding:0;">
+              <div class="g1-card-collapse-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;" data-g1-collapse>
+                <span><span style="font-weight:700;font-size:12px;color:var(--muted);">Быстрая ссылка ${ri+1}</span> <span class="g1-collapse-preview" style="font-size:12px;color:var(--text);margin-left:6px;">${escapeHtml(String(row.sl0||'').substring(0,40))}</span></span>
+                <button class="small-btn danger-mini" data-g4prod-sl-remove="${ri}" ${sitelinkRows.length<=1?'disabled':''} style="font-size:11px;">×</button>
+              </div>
+              <div class="g1-card-collapse-body" style="padding:0 16px 12px;">
+                <div class="g1-fields-grid">${colKeys.map((sk, ci) => { const sv = row[sk]||''; const sc = String(sv).trim()?'is-filled':'is-empty'; return '<label class="g1-field"><span>'+escapeHtml(cols[ci])+'</span><textarea class="g1-input '+sc+'" data-g4prod-sl="'+ri+'" data-g4prod-sl-col="'+sk+'" rows="1" placeholder="'+escapeAttr(cols[ci])+'">'+escapeHtml(sv)+'</textarea></label>'; }).join('')}</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <button class="small-btn add-inline-btn" data-g4prod-sl-add>+ Добавить быструю ссылку</button>
+      </div>
+    </div></div>
+  </div>`;
+}
+
+// 4. Override Gate 4 rendering
+const __g4PrevRenderGateTable = renderGateTable;
+renderGateTable = function(gate, cards) {
+  if (gate.id === 'gate-4') {
+    __g4PrevRenderGateTable(gate, cards);
+    const area = document.getElementById('contentArea');
+    if (area) area.insertAdjacentHTML('beforeend', gate4ProductionHtml());
+    bindGate4ProductionEvents();
+    return;
+  }
+  __g4PrevRenderGateTable(gate, cards);
+};
+
+function bindGate4ProductionEvents() {
+  // Already handled by delegated listeners below
+}
+
+// 5. Event handlers for Gate 4 production
+document.addEventListener('input', e => {
+  if (e.target?.dataset?.g4prodField) {
+    const g4 = ensureGate4Production();
+    g4[e.target.dataset.g4prodField] = e.target.value;
+    flashSaving();
+    return;
+  }
+  if (e.target?.dataset?.g4prodCol !== undefined) {
+    const g4 = ensureGate4Production();
+    const ri = Number(e.target.dataset.g4prodGroup);
+    g4.groupRows = g4.groupRows || [{}];
+    g4.groupRows[ri] = g4.groupRows[ri] || {};
+    g4.groupRows[ri][e.target.dataset.g4prodCol] = e.target.value;
+    flashSaving();
+    return;
+  }
+  if (e.target?.dataset?.g4prodAdCol) {
+    const g4 = ensureGate4Production();
+    const gi = Number(e.target.dataset.g4prodAdGroup);
+    const ai = Number(e.target.dataset.g4prodAdIdx);
+    g4.adsRows = g4.adsRows || {};
+    g4.adsRows[gi] = g4.adsRows[gi] || [{}];
+    g4.adsRows[gi][ai] = g4.adsRows[gi][ai] || {};
+    g4.adsRows[gi][ai][e.target.dataset.g4prodAdCol] = e.target.value;
+    flashSaving();
+    return;
+  }
+  if (e.target?.dataset?.g4prodSlCol) {
+    const g4 = ensureGate4Production();
+    const ri = Number(e.target.dataset.g4prodSl);
+    g4.sitelinkRows = g4.sitelinkRows || [{}];
+    g4.sitelinkRows[ri] = g4.sitelinkRows[ri] || {};
+    g4.sitelinkRows[ri][e.target.dataset.g4prodSlCol] = e.target.value;
+    flashSaving();
+    return;
+  }
+});
+
+document.addEventListener('click', e => {
+  if (e.target?.dataset?.g4prodGroupAdd !== undefined) { const g4 = ensureGate4Production(); g4.groupRows.push({}); flashSaving(); renderGate(); return; }
+  if (e.target?.dataset?.g4prodGroupRemove !== undefined) { const g4 = ensureGate4Production(); if (g4.groupRows.length > 1) { g4.groupRows.splice(Number(e.target.dataset.g4prodGroupRemove), 1); flashSaving(); renderGate(); } return; }
+  if (e.target?.dataset?.g4prodAdAdd !== undefined) { const g4 = ensureGate4Production(); const gi = Number(e.target.dataset.g4prodAdAdd); g4.adsRows = g4.adsRows || {}; g4.adsRows[gi] = g4.adsRows[gi] || [{}]; g4.adsRows[gi].push({}); flashSaving(); renderGate(); return; }
+  if (e.target?.dataset?.g4prodAdRemove !== undefined) { const g4 = ensureGate4Production(); const gi = Number(e.target.dataset.g4prodAdRemove); const ai = Number(e.target.dataset.g4prodAdIdx); if (g4.adsRows?.[gi]?.length > 1) { g4.adsRows[gi].splice(ai, 1); flashSaving(); renderGate(); } return; }
+  if (e.target?.dataset?.g4prodSlAdd !== undefined) { const g4 = ensureGate4Production(); g4.sitelinkRows.push({}); flashSaving(); renderGate(); return; }
+  if (e.target?.dataset?.g4prodSlRemove !== undefined) { const g4 = ensureGate4Production(); if (g4.sitelinkRows.length > 1) { g4.sitelinkRows.splice(Number(e.target.dataset.g4prodSlRemove), 1); flashSaving(); renderGate(); } return; }
+});
+
+/* v1.2.1 — Bug fixes + Offers restructuring */
+
+// Bug 2: beforeunload guarantee — flush pending save + force sync save
+window.addEventListener('beforeunload', () => {
+  if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; }
+  if (state && activeProjectId) saveState();
+});
+
+// Bug 1: debounced gate0 refresh — prevents 8x calls per keystroke
+let _gate0RefreshPending = false;
+let _saveTimer = null;
+const __guruPrevFlashSavingV121 = flashSaving;
+flashSaving = function() {
+  if (!state) return;
+  els.saveStatus.textContent = 'Сохраняю...';
+  els.autosaveDot.style.background = '#d4b05f';
+  if (_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => { _saveTimer = null; saveState(); }, 120);
+  if (activeGateId === 'gate-0' && !_gate0RefreshPending) {
+    _gate0RefreshPending = true;
+    requestAnimationFrame(() => {
+      _gate0RefreshPending = false;
+      gate0RefreshStatuses();
+    });
+  }
+};
+
+// Offers restructuring: new v116 block with product-linked offers
+const OFFER_STATUSES_V121 = [['','Выбрать'],['filled','Заполнено'],['not_filled','Не заполнено'],['in_progress','В работе']];
+const PROMO_STATUSES_V121 = [['','Выбрать'],['active','Активна'],['planned','Планируется'],['archive','Архив']];
+
+function v121OffersBlockDef() {
+  return GATE0_PASSPORT_V116_BLOCKS['Текущее позиционирование, УТП, офферы и CTA'];
+}
+
+function v121EnsureOffers(workspace = state) {
+  workspace.project = workspace.project || {};
+  if (!workspace.project.offersV2) {
+    workspace.project.offersV2 = { productOffers: {}, extraOffers: [], promos: [] };
+    const oldOffers = String(workspace.project.currentOffers || '').trim();
+    const oldCtas = String(workspace.project.currentCtas || '').trim();
+    if (oldOffers || oldCtas) {
+      workspace.project.offersV2.promos.push({
+        name: oldOffers || 'Перенесено из старой версии',
+        cta: oldCtas,
+        status: 'active',
+        _migrated: true
+      });
+      console.log('Offers v2 migration: old offers/CTA → promos');
+    }
+  }
+  return workspace.project.offersV2;
+}
+
+function v121OffersProducts() {
+  return megaPlatformProducts();
+}
+
+function v121OffersHtml(card) {
+  const o = v121EnsureOffers(state);
+  const products = v121OffersProducts();
+
+  const productOffersHtml = products.length ? `<div class="mega-subsection">
+    <div class="mega-subsection-title">Каждый продукт должен иметь своё предложение</div>
+    <table class="cr-table"><thead><tr><th>Продукт</th><th>Оффер</th><th>CTA</th><th>Статус</th></tr></thead>
+    <tbody>${products.map(p => {
+      const d = o.productOffers[p] || {};
+      const bad = d.status === 'not_filled' || (!d.offer && !d.status);
+      return `<tr class="${bad ? 'mega-row-bad' : ''}">
+        <td class="cr-label">${escapeHtml(p)}</td>
+        <td><input data-offer-v2-product="${escapeAttr(p)}" data-offer-v2-field="offer" value="${escapeAttr(d.offer||'')}" placeholder="предложение" class="g1-input ${d.offer ? 'is-filled' : 'is-empty'}" /></td>
+        <td><input data-offer-v2-product="${escapeAttr(p)}" data-offer-v2-field="cta" value="${escapeAttr(d.cta||'')}" placeholder="действие" class="g1-input ${d.cta ? 'is-filled' : 'is-empty'}" /></td>
+        <td><select data-offer-v2-product="${escapeAttr(p)}" data-offer-v2-field="status">
+          ${OFFER_STATUSES_V121.map(([v,l]) => `<option value="${v}" ${(d.status||'')===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}
+        </select></td>
+      </tr>`;
+    }).join('')}
+    ${o.extraOffers.map((ex, i) => `<tr>
+      <td><select data-offer-v2-extra="${i}" data-offer-v2-field="product" class="g1-input">${['', ...products].map(p => `<option value="${escapeAttr(p)}" ${ex.product===p?'selected':''}>${escapeHtml(p||'Выбрать продукт')}</option>`).join('')}</select></td>
+      <td><input data-offer-v2-extra="${i}" data-offer-v2-field="offer" value="${escapeAttr(ex.offer||'')}" placeholder="альтернативный оффер" class="g1-input" /></td>
+      <td><input data-offer-v2-extra="${i}" data-offer-v2-field="cta" value="${escapeAttr(ex.cta||'')}" placeholder="действие" class="g1-input" /></td>
+      <td><div class="mega-comment-row"><select data-offer-v2-extra="${i}" data-offer-v2-field="status">
+        ${OFFER_STATUSES_V121.map(([v,l]) => `<option value="${v}" ${(ex.status||'')===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}
+      </select><button class="v116-multi-remove" data-offer-v2-extra-remove="${i}" title="Удалить">×</button></div></td>
+    </tr>`).join('')}
+    </tbody></table>
+    <button class="v116-multi-add" data-offer-v2-add-extra>+ добавить оффер</button>
+  </div>` : '';
+
+  const promosHtml = `<div class="mega-subsection">
+    <div class="mega-subsection-title">Офферы которые работают на весь ассортимент</div>
+    ${o.promos.length ? `<table class="cr-table"><thead><tr><th>Акция / предложение</th><th>CTA</th><th>Статус</th><th></th></tr></thead>
+    <tbody>${o.promos.map((pr, i) => `<tr>
+      <td><input data-offer-v2-promo="${i}" data-offer-v2-field="name" value="${escapeAttr(pr.name||'')}" placeholder="скидка, бонус, бесплатная доставка" class="g1-input" /></td>
+      <td><input data-offer-v2-promo="${i}" data-offer-v2-field="cta" value="${escapeAttr(pr.cta||'')}" placeholder="действие" class="g1-input" /></td>
+      <td><select data-offer-v2-promo="${i}" data-offer-v2-field="status">
+        ${PROMO_STATUSES_V121.map(([v,l]) => `<option value="${v}" ${(pr.status||'')===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}
+      </select></td>
+      <td><button class="v116-multi-remove" data-offer-v2-promo-remove="${i}" title="Удалить">×</button></td>
+    </tr>`).join('')}</tbody></table>` : ''}
+    <button class="v116-multi-add" data-offer-v2-add-promo>+ добавить акцию</button>
+  </div>`;
+
+  return `<div class="mega-marketing">${productOffersHtml}${promosHtml}</div>`;
+}
+
+// Override cardUserFieldsHtml for the merged positioning+offers block to include offers section
+const __guruPrevCardUserFieldsHtmlV121 = cardUserFieldsHtml;
+cardUserFieldsHtml = function(c) {
+  const def = v116PassportDef(c);
+  if (def && def.key === 'positioning_utp_offers_cta') {
+    v116EnsureBlock(c, state);
+    return `<div class="field-row passport-v116-row"><div class="passport-v116">
+      <div class="passport-v116-topline"><div><div class="passport-v116-orient">${escapeHtml(def.orient)}</div></div>
+        <span class="passport-v116-status">${escapeHtml(STATUS_LABELS[v116Status(c, state)] || v116Status(c, state))}</span>
+      </div>
+      <div class="passport-v116-grid">${def.fields.slice(0, 3).map(field => v116PassportFieldCard(def, field)).join('')}</div>
+      <div class="mega-section"><div class="mega-section-title">Офферы и CTA</div>
+        <div class="mega-section-hint">Без оффера — трафик запускать некуда</div>
+        ${v121OffersHtml(c)}
+      </div>
+      <div class="passport-v116-grid">${def.fields.slice(3).map(field => v116PassportFieldCard(def, field)).join('')}</div>
+    </div></div>`;
+  }
+  return __guruPrevCardUserFieldsHtmlV121(c);
+};
+
+// Event delegation for offers
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (!t?.dataset) return;
+  if (t.dataset.offerV2Product && t.dataset.offerV2Field) {
+    const o = v121EnsureOffers(state);
+    o.productOffers[t.dataset.offerV2Product] = o.productOffers[t.dataset.offerV2Product] || {};
+    o.productOffers[t.dataset.offerV2Product][t.dataset.offerV2Field] = t.value;
+    flashSaving();
+  }
+  if (t.dataset.offerV2Extra !== undefined && t.dataset.offerV2Field) {
+    const o = v121EnsureOffers(state);
+    const idx = Number(t.dataset.offerV2Extra);
+    if (o.extraOffers[idx]) o.extraOffers[idx][t.dataset.offerV2Field] = t.value;
+    flashSaving();
+  }
+  if (t.dataset.offerV2Promo !== undefined && t.dataset.offerV2Field) {
+    const o = v121EnsureOffers(state);
+    const idx = Number(t.dataset.offerV2Promo);
+    if (o.promos[idx]) o.promos[idx][t.dataset.offerV2Field] = t.value;
+    flashSaving();
+  }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (!t?.dataset) return;
+  if (t.dataset.offerV2Product && t.dataset.offerV2Field) {
+    const o = v121EnsureOffers(state);
+    o.productOffers[t.dataset.offerV2Product] = o.productOffers[t.dataset.offerV2Product] || {};
+    o.productOffers[t.dataset.offerV2Product][t.dataset.offerV2Field] = t.value;
+    flashSaving();
+  }
+  if (t.dataset.offerV2Extra !== undefined && t.dataset.offerV2Field) {
+    const o = v121EnsureOffers(state);
+    const idx = Number(t.dataset.offerV2Extra);
+    if (o.extraOffers[idx]) o.extraOffers[idx][t.dataset.offerV2Field] = t.value;
+    flashSaving();
+  }
+  if (t.dataset.offerV2Promo !== undefined && t.dataset.offerV2Field) {
+    const o = v121EnsureOffers(state);
+    const idx = Number(t.dataset.offerV2Promo);
+    if (o.promos[idx]) o.promos[idx][t.dataset.offerV2Field] = t.value;
+    flashSaving();
+  }
+});
+document.addEventListener('click', e => {
+  const t = e.target;
+  if (t?.dataset?.offerV2AddExtra !== undefined) {
+    v121EnsureOffers(state).extraOffers.push({ product: '', offer: '', cta: '', status: '' });
+    flashSaving(); renderGate();
+  }
+  if (t?.dataset?.offerV2ExtraRemove !== undefined) {
+    v121EnsureOffers(state).extraOffers.splice(Number(t.dataset.offerV2ExtraRemove), 1);
+    flashSaving(); renderGate();
+  }
+  if (t?.dataset?.offerV2AddPromo !== undefined) {
+    v121EnsureOffers(state).promos.push({ name: '', cta: '', status: '' });
+    flashSaving(); renderGate();
+  }
+  if (t?.dataset?.offerV2PromoRemove !== undefined) {
+    v121EnsureOffers(state).promos.splice(Number(t.dataset.offerV2PromoRemove), 1);
+    flashSaving(); renderGate();
+  }
+});
