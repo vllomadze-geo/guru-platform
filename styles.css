@@ -1729,6 +1729,8 @@ select:disabled {
   .gate5-grid-2,.gate5-grid-3,.gate5-grid-4,.gate5-report-list{grid-template-columns:1fr}
   .gate5-block-head{grid-template-columns:1fr;gap:8px}
 }
+.gate5-iter-section{font-size:13px;color:var(--text-muted);margin-top:6px}
+.gate5-iter-entry{border-left:3px solid var(--accent, #4a7cff)}
 :root{--border:var(--line);--surface:var(--panel);--surface-soft:var(--panel-soft);}
 
 
@@ -2732,12 +2734,17 @@ textarea.passport-v116-input {
   padding: 20px 24px;
   background: var(--panel);
 }
-.gate0-card-head {
+summary.gate0-card-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
 }
+summary.gate0-card-head::-webkit-details-marker { display: none; }
+.gate0-card:not([open]) { padding-bottom: 16px; }
 .gate0-card-title {
   font-size: 16px;
   font-weight: 900;
@@ -3070,6 +3077,10 @@ select.g1-input { cursor: pointer; }
   line-height: 1.5;
   white-space: pre-wrap;
 }
+.g1-card-collapsible.is-collapsed .g1-card-collapse-body { display: none !important; }
+.g1-card-collapsible.is-collapsed .g1-collapse-preview { display: inline !important; }
+.g1-card-collapsible:not(.is-collapsed) .g1-collapse-preview { display: none !important; }
+.g1-card-collapsible:not(.is-collapsed) .g1-card-collapse-header { border-bottom: 1px solid var(--line); }
 .g1-empty {
   padding: 22px;
   border: 1px dashed var(--line);
@@ -3276,13 +3287,154 @@ select.g1-input { cursor: pointer; }
 }
 
 /* Gate 3 — funnel visual */
-.g3-funnel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
+/* Gate 3 · 5A funnel — Brockmann grid */
+.g1-section-body.g3-funnel {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 16px !important;
+  padding: 24px 24px 24px !important;
 }
 .g3-funnel-card {
-  transition: width .2s ease;
-  min-width: 280px;
+  transition: width .25s ease;
+  min-width: 300px;
+}
+.g3-funnel-card .g1-card-header {
+  padding: 16px 20px;
+}
+.g3-funnel-card .g1-card-body {
+  padding: 20px 24px 24px;
+}
+.g3-dyn-block {
+  margin-bottom: 20px;
+}
+.g3-dyn-block .g1-field {
+  margin-bottom: 2px;
+}
+.g3-dyn-block .g1-field > span {
+  font-size: 13px;
+  font-weight: 800;
+}
+.g3-dyn-block .g1-task {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.g3-dyn-block .small-btn {
+  padding: 5px 12px;
+  font-size: 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: #fff;
+  margin-top: 4px;
+}
+.g3-dyn-block .small-btn:hover { background: rgba(0,0,0,.03); }
+.g3-dyn-block .danger-mini { color: #dc2626; border-color: rgba(180,50,50,.3); padding: 4px 10px; margin-top: 0; }
+.g3-dyn-block .danger-mini:disabled { opacity: .3; cursor: default; }
+
+/* Gate 3 · tools checklist — Brockmann grid */
+.g3-tools-list { margin-bottom: 20px; }
+.g3-tools-list > .g1-field { margin-bottom: 10px; }
+.g3-tool-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 10px;
+  margin-bottom: 3px;
+  border: 1px solid transparent;
+  transition: background .15s, border-color .15s;
+}
+.g3-tool-name {
+  font-size: 13px;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
+}
+.g3-tool-select {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: 12px;
+  text-align: center;
+  width: 130px;
+}
+.g3-tool-unused { background: transparent; }
+.g3-tool-unused .g3-tool-name { color: var(--muted); }
+.g3-tool-unused .g3-tool-select { color: #9ca3af; border-color: #e5e7eb; background: rgba(0,0,0,.02); }
+.g3-tool-working { background: rgba(245,158,11,.06); border-color: rgba(245,158,11,.2); }
+.g3-tool-working .g3-tool-name { color: var(--text); }
+.g3-tool-working .g3-tool-select { color: #b45309; border-color: #f59e0b; background: rgba(245,158,11,.1); }
+.g3-tool-done { background: rgba(22,163,74,.06); border-color: rgba(22,163,74,.2); }
+.g3-tool-done .g3-tool-name { color: var(--text); }
+.g3-tool-done .g3-tool-select { color: #15803d; border-color: #16a34a; background: rgba(22,163,74,.1); }
+
+/* Gate 4 upstream readonly rows */
+.g4-upstream {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 18px;
+  background: rgba(0,0,0,.02);
+  margin-bottom: 12px;
+}
+.g4-upstream-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  margin-bottom: 10px;
+}
+.g4-readonly {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(0,0,0,.05);
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+.g4-readonly:last-child { border-bottom: 0; }
+.g4-readonly-label {
+  font-weight: 700;
+  color: #2a241d;
+  min-width: 140px;
+  flex-shrink: 0;
+}
+.g4-readonly-value {
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+}
+.g4-readonly-empty {
+  color: rgba(180,50,50,.7);
+  font-style: italic;
+  flex: 1;
+}
+.g4-readonly-source {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.g4-launch-ok {
+  margin-top: 16px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  background: rgba(22,163,74,.1);
+  border: 1px solid rgba(22,163,74,.3);
+  font-weight: 800;
+  font-size: 15px;
+  color: #15803d;
+  text-align: center;
+}
+@media (max-width: 760px) {
+  .g4-readonly { flex-direction: column; gap: 2px; }
+  .g4-readonly-label { min-width: 0; }
 }

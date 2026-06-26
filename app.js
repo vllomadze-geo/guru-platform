@@ -617,12 +617,12 @@ const GATE1_SUBBLOCKS = [
   },
   {
     key: 'demand_semantics',
-    title: 'Спрос: семантика, кластеризация, намерения',
+    title: 'Спрос и структура кампаний',
     aliases: ['спрос: семантика, кластеризация, намерения']
   },
   {
     key: 'pain_jtbd_offer',
-    title: 'Боль → JTBD → офер',
+    title: 'Ценность и позиционирование',
     aliases: ['боль → jtbd → офер', 'боль -> jtbd -> офер']
   },
   {
@@ -2062,7 +2062,7 @@ function renderPainOfferRoute(section) {
     <div class="demand-route-head">
       <div>
         <div class="analytics-path">Gate 1 → ${escapeHtml(section.title)}</div>
-        <h3>Боль → JTBD → офер</h3>
+        <h3>Ценность и позиционирование</h3>
         <p class="muted">Цель: превратить спрос, боли и конкурентную среду в готовый офер по сегментам.</p>
       </div>
       <span class="status-pill status-${status}">${STATUS_LABELS[status] || status}</span>
@@ -6762,7 +6762,9 @@ function gate5BlankState() {
     imports: {},
     goals: [],
     links: [],
-    pending: {}
+    pending: {},
+    iterations: [],
+    iterationCounter: 0
   };
 }
 
@@ -6781,6 +6783,8 @@ function ensureGate5State() {
   state.gate5.goals = Array.isArray(state.gate5.goals) ? state.gate5.goals : [];
   state.gate5.links = Array.isArray(state.gate5.links) ? state.gate5.links : [];
   state.gate5.pending = state.gate5.pending || {};
+  state.gate5.iterations = Array.isArray(state.gate5.iterations) ? state.gate5.iterations : [];
+  state.gate5.iterationCounter = state.gate5.iterationCounter || 0;
   return state.gate5;
 }
 
@@ -7041,9 +7045,10 @@ function getGate5BlockStatus(key) {
   if (key === 'ad') return g5.reports.perf.length ? (f.cpa && goal?.cpa && f.cpa > goal.cpa ? 'problem' : 'ready') : 'not_started';
   if (key === 'bridge') return g5LatestLink() ? 'ready' : (f.leads ? 'in_progress' : 'not_started');
   if (key === 'finance') return f.revenue ? (goal && ((goal.cpa && f.cpa > goal.cpa) || (goal.cac && f.cac > goal.cac) || (goal.drr && f.drr > goal.drr / 100)) ? 'problem' : 'ready') : 'not_started';
+  if (key === 'journal') { const iters = ensureGate5State().iterations; if (!iters.length) return 'not_started'; const last = iters[iters.length - 1]; if (last.result && last.result.verdict) return last.result.verdict === 'next' ? 'in_progress' : 'ready'; return 'in_progress'; }
   return 'not_started';
 }
-function getGate5Progress() { const ready = ['setup','input','ad','bridge','finance'].filter(key => getGate5BlockStatus(key) === 'ready').length; return Math.round((ready / 5) * 100); }
+function getGate5Progress() { const ready = ['setup','input','ad','bridge','finance','journal'].filter(key => getGate5BlockStatus(key) === 'ready').length; return Math.round((ready / 6) * 100); }
 
 function renderGate5Integrated(gate) {
   const g5 = ensureGate5State();
@@ -7074,6 +7079,7 @@ function renderGate5Integrated(gate) {
     ${g5AccordionBlock('ad', '3. Рекламная оценка', 'Понятно, что работает, а что сливает бюджет.', renderGate5Ad())}
     ${g5AccordionBlock('bridge', '4. Связка с бизнесом', 'Лиды связаны с заказами, выручкой и конверсией лид → заказ.', renderGate5Bridge())}
     ${g5AccordionBlock('finance', '5. Финансовая оценка', 'Понятно, окупается реклама или нет: CPA, CAC, ROAS, DRR, ROI и решение.', renderGate5Finance())}
+    ${g5AccordionBlock('journal', '6. Журнал итераций', 'Живой протокол: обнаружил → решил → зафиксировал → проверяю.', renderGate5Journal())}
   </div>`;
   bindGate5Events();
 }
@@ -7148,12 +7154,98 @@ function renderGate5Finance() {
   return `<div class="gate5-grid-4"><div class="gate5-kpi"><span>CPA</span><strong>${f.cpa ? g5Rub(f.cpa) : '—'}</strong><small>цель ${goal?.cpa ? g5Rub(goal.cpa) : '—'}</small></div><div class="gate5-kpi"><span>CAC</span><strong>${f.cac ? g5Rub(f.cac) : '—'}</strong><small>цель ${goal?.cac ? g5Rub(goal.cac) : '—'}</small></div><div class="gate5-kpi"><span>ROAS</span><strong>${f.roas ? f.roas.toFixed(2).replace('.', ',') + '×' : '—'}</strong><small>выручка / расход</small></div><div class="gate5-kpi"><span>DRR</span><strong>${f.drr ? g5Pct(f.drr) : '—'}</strong><small>цель ${goal?.drr ? goal.drr + '%' : '—'}</small></div></div><div class="gate5-decision ${status === 'problem' ? 'gate5-problem' : status === 'ready' ? 'gate5-good' : 'gate5-warning'}" style="margin-top:14px"><strong>${g5Esc(decision)}</strong><p class="gate5-muted">ROI: ${f.spend ? g5Pct(f.roi) : '—'}. Решение строится из связки: рекламные отчёты → цели → лиды → заказы → выручка.</p></div>${g5FinanceChecks()}`;
 }
 function g5FinanceChecks() { const f = g5Finance(); const goal = g5ActiveGoal(); const checks = []; if (!f.spend) checks.push(['not_started','Нет загруженных рекламных отчётов.']); if (!goal) checks.push(['in_progress','Нет целей CPA / CAC / DRR.']); if (!g5LatestLink()) checks.push(['in_progress','Нет связки лидов с заказами и выручкой.']); if (goal?.cpa && f.cpa > goal.cpa) checks.push(['problem','CPA выше допустимого значения.']); if (goal?.cac && f.cac > goal.cac) checks.push(['problem','CAC выше допустимого значения.']); if (goal?.drr && f.drr > goal.drr / 100) checks.push(['problem','DRR выше допустимого значения.']); if (!checks.length) checks.push(['ready','Критичных финансовых проблем не найдено.']); return `<div class="gate5-checks">${checks.map(([st, text]) => `<div class="gate5-check"><span class="status-pill status-${st}">${g5Esc(STATUS_LABELS[st] || st)}</span> ${g5Esc(text)}</div>`).join('')}</div>`; }
+function renderGate5Journal() {
+  const g5 = ensureGate5State();
+  const iters = g5.iterations.slice().reverse();
+  const GATE4_BLOCKS = ['Посадочная', 'Креатив', 'Параметры кампании', 'Оффер'];
+  const METRICS = ['CPL', 'Конверсия', 'CTR', 'CPA', 'CAC', 'DRR', 'ROAS'];
+  const SOURCES = ['Метрика', 'CRM', 'Вручную', 'Рекламный кабинет'];
+  const VERDICTS = { worked: 'Сработало', not_worked: 'Не сработало', next: 'Нужна следующая итерация' };
+  const nextNum = g5.iterationCounter + 1;
+  const form = `<div class="gate5-card" style="margin-bottom:16px">
+    <h4>Новая итерация #${nextNum}</h4>
+    <div class="gate5-iter-section"><strong>1. Триггер итерации</strong></div>
+    <div class="gate5-grid-2" style="margin-top:8px">
+      <label class="gate5-field">Дата обнаружения<input type="date" data-g5iter="triggerDate" value="${new Date().toISOString().slice(0,10)}"></label>
+      <label class="gate5-field">Источник сигнала<select data-g5iter="triggerSource">${SOURCES.map(s => `<option>${g5Esc(s)}</option>`).join('')}</select></label>
+    </div>
+    <label class="gate5-field" style="margin-top:8px">Проблема одной строкой<input data-g5iter="triggerProblem" placeholder="Что обнаружили"></label>
+    <label class="gate5-field" style="margin-top:8px">Затронутый блок Gate 4<select data-g5iter="triggerGate4Block">${GATE4_BLOCKS.map(b => `<option>${g5Esc(b)}</option>`).join('')}</select></label>
+    <div class="gate5-iter-section" style="margin-top:14px"><strong>2. Решение и изменения</strong></div>
+    <div class="gate5-grid-2" style="margin-top:8px">
+      <label class="gate5-field">Что изменено<select data-g5iter="changeType">${GATE4_BLOCKS.map(b => `<option>${g5Esc(b)}</option>`).join('')}</select></label>
+      <label class="gate5-field">Дата внесения<input type="date" data-g5iter="changeDate" value="${new Date().toISOString().slice(0,10)}"></label>
+    </div>
+    <label class="gate5-field" style="margin-top:8px">Описание изменения<input data-g5iter="changeDesc" placeholder="Что конкретно изменили в Gate 4"></label>
+    <div class="gate5-iter-section" style="margin-top:14px"><strong>3. Параметры проверки</strong></div>
+    <div class="gate5-grid-4" style="margin-top:8px">
+      <label class="gate5-field">Метрика<select data-g5iter="checkMetric">${METRICS.map(m => `<option>${g5Esc(m)}</option>`).join('')}</select></label>
+      <label class="gate5-field">Целевое значение<input data-g5iter="checkTarget" inputmode="decimal"></label>
+      <label class="gate5-field">Текущее значение<input data-g5iter="checkBefore" inputmode="decimal"></label>
+      <label class="gate5-field">Срок проверки<input type="date" data-g5iter="checkDeadline"></label>
+    </div>
+    <div class="gate5-actions" style="margin-top:12px"><button class="btn primary" data-g5iter-save>Создать итерацию</button></div>
+  </div>`;
+  const rows = iters.map(it => {
+    const hasResult = it.result && it.result.verdict;
+    const verdictLabel = hasResult ? VERDICTS[it.result.verdict] || it.result.verdict : '—';
+    const verdictStatus = hasResult ? (it.result.verdict === 'worked' ? 'ready' : it.result.verdict === 'not_worked' ? 'problem' : 'in_progress') : 'not_started';
+    return `<div class="gate5-card gate5-iter-entry" style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h4>Итерация ${it.number} <small class="gate5-muted">${g5Esc(it.trigger.date)}</small></h4>
+        <span class="status-pill status-${verdictStatus}">${g5Esc(verdictLabel)}</span>
+      </div>
+      <div class="gate5-grid-2" style="margin-top:6px">
+        <div><small class="gate5-muted">Триггер:</small> ${g5Esc(it.trigger.problem)} <small>(${g5Esc(it.trigger.source)}, ${g5Esc(it.trigger.gate4Block)})</small></div>
+        <div><small class="gate5-muted">Изменение:</small> ${g5Esc(it.change.desc)} <small>(${g5Esc(it.change.type)}, ${g5Esc(it.change.date)})</small></div>
+      </div>
+      <div style="margin-top:6px"><small class="gate5-muted">Проверка:</small> ${g5Esc(it.check.metric)} — цель: ${g5Esc(it.check.target)}, было: ${g5Esc(it.check.before)}, срок: ${g5Esc(it.check.deadline || '—')}</div>
+      ${hasResult ? `<div style="margin-top:6px"><small class="gate5-muted">Результат:</small> факт: ${g5Esc(it.result.actual)}, ${g5Esc(verdictLabel)}${it.result.nextStep ? '. Следующий шаг: ' + g5Esc(it.result.nextStep) : ''}</div>` : `<div class="gate5-iter-result-form" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--c-border,#e0e0e0)">
+        <strong>4. Результат итерации</strong>
+        <div class="gate5-grid-4" style="margin-top:6px">
+          <label class="gate5-field">Фактическое значение<input data-g5result="${g5Attr(it.id)}" data-g5rfield="actual" inputmode="decimal"></label>
+          <label class="gate5-field">Вывод<select data-g5result="${g5Attr(it.id)}" data-g5rfield="verdict"><option value="">—</option><option value="worked">Сработало</option><option value="not_worked">Не сработало</option><option value="next">Нужна следующая итерация</option></select></label>
+          <label class="gate5-field">Следующий шаг<input data-g5result="${g5Attr(it.id)}" data-g5rfield="nextStep"></label>
+          <div class="gate5-field" style="display:flex;align-items:flex-end"><button class="btn secondary" data-g5result-save="${g5Attr(it.id)}">Сохранить результат</button></div>
+        </div>
+      </div>`}
+    </div>`;
+  }).join('');
+  return `${form}${iters.length ? `<h4 style="margin-top:8px">История итераций (${iters.length})</h4>${rows}` : '<div class="gate5-note">Итераций пока нет. Создайте первую после цикла трафика.</div>'}`;
+}
 function bindGate5Events() {
   document.querySelectorAll('[data-gate5-open]').forEach(btn => btn.addEventListener('click', () => { const g5 = ensureGate5State(); g5.ui.openBlock = g5.ui.openBlock === btn.dataset.gate5Open ? '' : btn.dataset.gate5Open; saveState(); renderGate(); }));
   document.querySelectorAll('[data-gate5-import]').forEach(input => input.addEventListener('change', async e => { const kind = e.target.dataset.gate5Import; const file = e.target.files?.[0]; if (!file) return; try { const rows = await g5ReadTableFile(file); const ex = g5ExtractRows(rows, kind === 'structure' ? 'structure' : kind); const g5 = ensureGate5State(); if (kind === 'structure') { g5SyncStructure(ex.records); } else { g5.reports[kind] = ex.records; g5.imports[kind] = { ...ex.meta, type: kind }; g5SyncStructure(ex.records); } saveState(); renderGate(); } catch (err) { alert(err.message || 'Не удалось импортировать файл'); } }));
   document.querySelectorAll('[data-gate5-clear]').forEach(btn => btn.addEventListener('click', () => { const kind = btn.dataset.gate5Clear; const g5 = ensureGate5State(); if (kind === 'structure') { g5.setup = { projectName: '', campaigns: {}, groups: {}, ads: {} }; } else { g5.reports[kind] = []; delete g5.imports[kind]; } saveState(); renderGate(); }));
   document.querySelector('[data-gate5-save-goal]')?.addEventListener('click', () => { const goal = { id: makeId('g5-goal'), createdAt: new Date().toISOString() }; document.querySelectorAll('[data-gate5-goal]').forEach(input => { goal[input.dataset.gate5Goal] = ['comment'].includes(input.dataset.gate5Goal) ? input.value : g5Num(input.value); }); ensureGate5State().goals.push(goal); saveState(); renderGate(); });
   document.querySelector('[data-gate5-save-link]')?.addEventListener('click', () => { const link = { id: makeId('g5-link'), createdAt: new Date().toISOString() }; document.querySelectorAll('[data-gate5-link]').forEach(input => { link[input.dataset.gate5Link] = ['comment'].includes(input.dataset.gate5Link) ? input.value : g5Num(input.value); }); ensureGate5State().links.push(link); saveState(); renderGate(); });
+  document.querySelector('[data-g5iter-save]')?.addEventListener('click', () => {
+    const g5 = ensureGate5State();
+    const v = k => { const el = document.querySelector(`[data-g5iter="${k}"]`); return el ? el.value.trim() : ''; };
+    if (!v('triggerProblem')) { alert('Опишите проблему одной строкой'); return; }
+    g5.iterationCounter = (g5.iterationCounter || 0) + 1;
+    g5.iterations.push({
+      id: makeId('g5-iter'),
+      number: g5.iterationCounter,
+      createdAt: new Date().toISOString(),
+      trigger: { date: v('triggerDate'), source: v('triggerSource'), problem: v('triggerProblem'), gate4Block: v('triggerGate4Block') },
+      change: { type: v('changeType'), date: v('changeDate'), desc: v('changeDesc') },
+      check: { metric: v('checkMetric'), target: v('checkTarget'), before: v('checkBefore'), deadline: v('checkDeadline') },
+      result: null
+    });
+    saveState(); renderGate();
+  });
+  document.querySelectorAll('[data-g5result-save]').forEach(btn => btn.addEventListener('click', () => {
+    const iterId = btn.dataset.g5resultSave;
+    const g5 = ensureGate5State();
+    const iter = g5.iterations.find(i => i.id === iterId);
+    if (!iter) return;
+    const rv = field => { const el = document.querySelector(`[data-g5result="${iterId}"][data-g5rfield="${field}"]`); return el ? el.value.trim() : ''; };
+    const verdict = rv('verdict');
+    if (!verdict) { alert('Выберите вывод'); return; }
+    iter.result = { actual: rv('actual'), verdict, nextStep: rv('nextStep'), savedAt: new Date().toISOString() };
+    saveState(); renderGate();
+  }));
 }
 
 const __guruPrevRenderGateTableV29 = renderGateTable;
@@ -7170,7 +7262,7 @@ renderGateNav = function() {
   els.gateNav.innerHTML = state.gates.map(g => {
     const progress = g.id === 'gate-5' ? getGate5Progress() : getProgress(g.cards);
     const cls = activeView === 'gate' && activeGateId === g.id ? 'active' : '';
-    return `<button class="gate-btn ${cls}" data-gate-id="${g.id}">${escapeHtml(g.title)}<span class="small">${g.id === 'gate-5' ? '5 подблоков' : g.cards.length + ' блоков'}, готово ${progress}%</span></button>`;
+    return `<button class="gate-btn ${cls}" data-gate-id="${g.id}">${escapeHtml(g.title)}<span class="small">${g.id === 'gate-5' ? '6 подблоков' : g.cards.length + ' блоков'}, готово ${progress}%</span></button>`;
   }).join('');
   document.querySelectorAll('[data-gate-id]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -7548,7 +7640,7 @@ renderGateNav = function() {
   els.gateNav.innerHTML = state.gates.map(g => {
     const progress = g.id === 'gate-5' ? getGate5Progress() : (g.id === 'gate-6' ? getGate6Progress() : getProgress(g.cards));
     const cls = activeView === 'gate' && activeGateId === g.id ? 'active' : '';
-    const countText = g.id === 'gate-5' ? '5 подблоков' : (g.id === 'gate-6' ? '7 сезонов' : g.cards.length + ' блоков');
+    const countText = g.id === 'gate-5' ? '6 подблоков' : (g.id === 'gate-6' ? '7 сезонов' : g.cards.length + ' блоков');
     return `<button class="gate-btn ${cls}" data-gate-id="${escapeAttr(g.id)}">${escapeHtml(g.title)}<span class="small">${countText}, готово ${progress}%</span></button>`;
   }).join('');
   document.querySelectorAll('[data-gate-id]').forEach(btn => {
@@ -7905,7 +7997,7 @@ renderGateNav = function() {
   els.gateNav.innerHTML = state.gates.map(g => {
     const progress = g.id === 'gate-5' ? getGate5Progress() : (g.id === 'gate-6' ? getGate6Progress() : getProgress(g.cards));
     const cls = activeView === 'gate' && activeGateId === g.id ? 'active' : '';
-    const countText = g.id === 'gate-5' ? '5 подблоков' : (g.id === 'gate-6' ? '4 квартала' : g.cards.length + ' блоков');
+    const countText = g.id === 'gate-5' ? '6 подблоков' : (g.id === 'gate-6' ? '4 квартала' : g.cards.length + ' блоков');
     return `<button class="gate-btn ${cls}" data-gate-id="${escapeAttr(g.id)}">${escapeHtml(g.title)}<span class="small">${countText}, готово ${progress}%</span></button>`;
   }).join('');
   document.querySelectorAll('[data-gate-id]').forEach(btn => {
@@ -8215,7 +8307,7 @@ renderGateNav = function() {
   els.gateNav.innerHTML = state.gates.map(g => {
     const progress = g.id === 'gate-5' ? getGate5Progress() : (g.id === 'gate-6' ? getGate6Progress() : (g.id === 'gate-7' ? getGate7Progress() : getProgress(g.cards)));
     const cls = activeView === 'gate' && activeGateId === g.id ? 'active' : '';
-    const countText = g.id === 'gate-5' ? '5 подблоков' : (g.id === 'gate-6' ? '4 квартала' : (g.id === 'gate-7' ? 'живой журнал' : g.cards.length + ' блоков'));
+    const countText = g.id === 'gate-5' ? '6 подблоков' : (g.id === 'gate-6' ? '4 квартала' : (g.id === 'gate-7' ? 'живой журнал' : g.cards.length + ' блоков'));
     return `<button class="gate-btn ${cls}" data-gate-id="${escapeAttr(g.id)}">${escapeHtml(g.title)}<span class="small">${countText}, готово ${progress}%</span></button>`;
   }).join('');
   document.querySelectorAll('[data-gate-id]').forEach(btn => {
@@ -10633,15 +10725,25 @@ const __guruPrevRenderGateTableV120 = renderGateTable;
 renderGateTable = function(gate, cards) {
   if (gate && gate.id === 'gate-0') {
     recalculateAllStatuses(state);
-    els.contentArea.innerHTML = `<div class="gate0-vertical">${cards.map(c => `
-      <section class="gate0-card" data-card-row="${c.id}">
-        <div class="gate0-card-head">
+    state._gate0Open = state._gate0Open || {};
+    els.contentArea.innerHTML = `<div class="gate0-vertical">${cards.map(c => {
+      const isOpen = state._gate0Open[c.id] !== false;
+      return `<details class="gate0-card" data-card-row="${c.id}" ${isOpen ? 'open' : ''}>
+        <summary class="gate0-card-head">
           <div class="gate0-card-title">${escapeHtml(c.title)}</div>
           <span class="gate0-card-status status-${c.status}">${STATUS_LABELS[c.status] || c.status}</span>
-        </div>
+        </summary>
         ${instructionToggleHtml(c)}
         <div class="gate0-card-body">${cardUserFieldsHtml(c)}</div>
-      </section>`).join('')}</div>`;
+      </details>`;
+    }).join('')}</div>`;
+    document.querySelectorAll('details.gate0-card').forEach(el => {
+      el.addEventListener('toggle', () => {
+        state._gate0Open = state._gate0Open || {};
+        state._gate0Open[el.dataset.cardRow] = el.open;
+        flashSaving();
+      });
+    });
     bindCardInputs();
     renderGateNav();
     return;
@@ -12619,7 +12721,7 @@ document.addEventListener('change', e => {
 });
 
 /* ================================================================
-   v1.3.0 — Спрос: семантика, кластеризация, намерения (полный редизайн)
+   v1.3.0 — Спрос и структура кампаний (полный редизайн)
    Два независимых раздела: Поиск и Баннерные/сетевые кампании
    ================================================================ */
 
@@ -12769,11 +12871,15 @@ function dv130TableHtml(prefix, step, data) {
   const cols = step.tableCols;
   const colKeys = cols.map((c, i) => 'col' + i);
   return `${dv130TableSummary(rows)}<div class="g1-fields-grid">
-    ${rows.map((row, ri) => `<div class="g1-card" style="border-radius:14px;padding:14px 18px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <span style="font-weight:800;font-size:13px;color:var(--muted);">${escapeHtml(step.tableItemLabel || 'Элемент')} ${ri + 1}</span>
+    ${rows.map((row, ri) => {
+      const firstVal = String(row[colKeys[0]] || '').trim();
+      const preview = firstVal || cols[0];
+      return `<div class="g1-card g1-card-collapsible" style="border-radius:14px;padding:0;">
+      <div class="g1-card-collapse-header" style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;cursor:pointer;" data-g1-collapse>
+        <span><span style="font-weight:800;font-size:13px;color:var(--muted);">${escapeHtml(step.tableItemLabel || 'Элемент')} ${ri + 1}</span> <span class="g1-collapse-preview" style="font-size:13px;color:var(--text);margin-left:8px;">${escapeHtml(preview.substring(0, 60))}</span></span>
         <button class="small-btn danger-mini" data-dv130-table-remove="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(step.key)}" data-dv130-table-key="${escapeAttr(step.tableKey)}" data-dv130-row="${ri}" ${rows.length <= 1 ? 'disabled' : ''}>×</button>
       </div>
+      <div class="g1-card-collapse-body" style="padding:0 18px 14px;">
       <div class="g1-fields-grid">
         ${colKeys.map((ck, ci) => {
           const val = row[ck] || '';
@@ -12788,7 +12894,7 @@ function dv130TableHtml(prefix, step, data) {
         }).join('')}
       </div>
       ${step.table2 ? dv130InlineAdsHtml(prefix, step, data, ri) : ''}
-    </div>`).join('')}
+    </div></div>`;}).join('')}
   </div>
   <button class="small-btn add-inline-btn" data-dv130-table-add="${escapeAttr(prefix)}" data-dv130-step="${escapeAttr(step.key)}" data-dv130-table-key="${escapeAttr(step.tableKey)}">+ Добавить ${escapeHtml((step.tableItemLabel || 'элемент').toLowerCase())}</button>
   ${step.tablePrompt ? `<details class="g1-prompt-toggle"><summary>Показать промт</summary><div>${escapeHtml(step.tablePrompt)}</div></details>` : ''}`;
@@ -13080,51 +13186,30 @@ document.addEventListener('click', e => {
 });
 
 /* ================================================================
-   v1.3.0 — Боль → JTBD → офер (полный редизайн)
+   v1.3.0 — Ценность и позиционирование (полный редизайн)
    7 этапов: боль → поиск → конкуренты → JTBD → сегменты → офер → коллаборации
    ================================================================ */
 
 const PAIN_V130_STEPS = [
-  { key:'search', title:'1. Поисковое поведение', task:'Понять, как люди формулируют свою боль в поиске.', standard:'Понятно, какими словами люди ищут решение и какие запросы имеют коммерческий смысл.', fields:[
-    {k:'mainQueries',l:'Основные запросы',p:'ядро запросов',t:'textarea'},
-    {k:'colloquial',l:'Разговорные формулировки',p:'жаргон, ошибки, сокращения',t:'textarea'},
-    {k:'repeatingWords',l:'Повторяющиеся слова',p:'какие слова встречаются чаще всего'},
-    {k:'commercialIntent',l:'Коммерческий интент',p:'купить, заказать, цена, стоимость',t:'textarea'},
-    {k:'infoIntent',l:'Информационный интент',p:'как выбрать, что лучше, отзывы',t:'textarea'},
-    {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'Wordstat / Keyword Planner / Search Console'}
+  { key:'search', title:'1. Поисковое поведение', task:'Понять, как рынок формулирует потребность, какой смысл стоит за поиском и какие сегменты скрываются внутри спроса.', standard:'Понятно: какими словами рынок описывает потребность, какой интент стоит за поиском, какой скрытый мотив запускает поиск, какие сегменты присутствуют внутри спроса.', fields:[
+    {k:'cluster',l:'Кластер спроса',p:'исследуемый кластер или группа запросов'},
+    {k:'mainQueries',l:'Основные запросы',p:'3–7 наиболее показательных запросов',t:'textarea'},
+    {k:'intent',l:'Интент клиента',p:'купить / выбрать / изучить',sel:[['','—'],['buy','Купить / заказать'],['compare','Выбрать / сравнить'],['research','Изучить / вдохновиться']]},
+    {k:'clientLanguage',l:'Язык клиента',p:'реальные слова и формулировки рынка',t:'textarea'},
+    {k:'hiddenNeed',l:'Скрытая потребность',p:'какую проблему решает, почему начал искать, какой результат хочет',t:'textarea'},
+    {k:'demandSegments',l:'Сегменты внутри спроса',p:'группы клиентов, скрытые внутри одного кластера',t:'textarea'}
   ]},
-  { key:'pain', title:'2. Боль и причина спроса', task:'Понять, что заставляет человека искать решение.', standard:'Понятно, какая проблема запускает спрос и какой результат человек хочет получить.', fields:[
-    {k:'explicitPain',l:'Явная боль',p:'проблема, которую человек формулирует прямо',t:'textarea'},
-    {k:'hiddenPain',l:'Скрытая боль',p:'проблема, которая стоит за запросом',t:'textarea'},
-    {k:'demandReason',l:'Причина спроса',p:'событие-триггер: поломка, срочность, сравнение'},
-    {k:'situation',l:'Ситуация запуска',p:'что произошло до обращения'},
-    {k:'fear',l:'Страх / риск',p:'чего боится клиент'},
-    {k:'desiredResult',l:'Желанный результат',p:'что хочет получить'},
-    {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'интервью / CRM / заявки / звонки'}
+  { key:'pain', title:'2. Боль и причина спроса', task:'Понять, почему клиент начал искать решение и что должно измениться после покупки.', standard:'Понятно: какую проблему клиент осознаёт, какая глубинная причина стоит за ней, что запускает поиск, что мешает покупке и какой результат клиент хочет получить.', fields:[
+    {k:'explicitProblem',l:'Явная проблема',h:'Проблема, которую клиент формулирует и осознаёт',p:'',t:'textarea'},
+    {k:'deepProblem',l:'Глубинная проблема',h:'Реальная причина, которая стоит за запросом',p:'',t:'textarea'},
+    {k:'searchTrigger',l:'Триггер поиска',h:'Событие, которое запустило поиск решения именно сейчас',p:''},
+    {k:'purchaseBarrier',l:'Барьер выбора',h:'Что мешает принять решение или выбрать поставщика',p:'',t:'textarea'},
+    {k:'desiredResult',l:'Желаемый результат',h:'Что должно измениться после решения проблемы',p:'',t:'textarea'}
   ]},
-  { key:'competitors', title:'3. Конкуренты', task:'Понять, как рынок уже отвечает на эту боль.', standard:'Понятно, какие обещания есть на рынке и где можно отличиться.', fields:[
-    {k:'competitors',l:'Конкуренты и их оферы',p:'конкурент → офер → УТП → цена → доверие',t:'textarea'},
-    {k:'repeatingPromises',l:'Повторяющиеся обещания рынка',p:'что все говорят одинаково',t:'textarea'},
-    {k:'weakSpots',l:'Слабые места и пустоты',p:'что рынок недоговаривает или не раскрывает',t:'textarea'},
-    {k:'differentiation',l:'Возможность отличиться',p:'где наш разрыв с конкурентами'},
-    {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'сайты конкурентов / объявления / отчёт'}
-  ]},
-  { key:'jtbd', title:'4. JTBD', task:'Перевести боль в задачу клиента. JTBD — про клиента, не про продукт.', standard:'Понятно, какую работу клиент нанимает продукт выполнить.', fields:[
-    {k:'functionalJob',l:'Функциональная работа',p:'какую практическую задачу хочет решить',t:'textarea'},
-    {k:'emotionalJob',l:'Эмоциональная работа',p:'что хочет перестать чувствовать / начать чувствовать',t:'textarea'},
-    {k:'socialJob',l:'Социальная работа',p:'как хочет выглядеть в глазах других',t:'textarea'},
-    {k:'situation',l:'Ситуация запуска',p:'когда возникает потребность'},
-    {k:'progress',l:'Прогресс клиента',p:'что меняется после решения'},
-    {k:'barrier',l:'Барьер выбора',p:'что мешает принять решение'},
-    {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'интервью / CRM / анализ'}
-  ]},
-  { key:'segments', title:'5. Сегменты', task:'Понять, у кого одна и та же боль проявляется по-разному.', standard:'Понятно, кому продаём, в какой ситуации и через какой смысл.', fields:[
-    {k:'segments',l:'Сегменты',p:'сегмент → сценарий → боль → JTBD → барьер → что показать',t:'textarea'},
-    {k:'mainSegment',l:'Основной сегмент',p:'кому продаём в первую очередь'},
-    {k:'criteria',l:'Критерии выбора по сегментам',p:'цена / срок / доверие / результат',t:'textarea'},
-    {k:'source',l:'Источник / ссылка / скрин / отчёт',p:'CRM / интервью / аналитика'}
-  ]},
-  { key:'offer', title:'6. Офер', task:'Собрать офер из боли, поиска, JTBD и конкурентного разрыва.', standard:'Офер понятен за 3 секунды: кому, что, зачем и почему стоит поверить.', fields:[], table: true, tableCols:['Заголовок (≤ 40)','Краткое описание (50–90)','Основной текст (180–300)','Цена','SEO Title (≤ 70)','SEO Description (≤ 170)','SEO Ключевые слова'], tableHints:['до 40 символов','50–90 символов','180–300 символов','₽','до 70 символов','до 170 символов','5–15 фраз через запятую'], tableKey:'offerRows', tableItemLabel:'Офер (товар/услуга)', tablePrompt:'Создай карточку товара по фото и краткому описанию.\n\nСтиль: ясно, просто, естественно. Пиши для человека, но учитывай SEO. Не выдумывай характеристики, которых нет во входных данных.\n\nВыдай:\n1. Заголовок, до 40 символов.\n2. Краткое описание, 50–90 символов.\n3. Основной текст, 180–300 символов.\n4. Цена, если указана.\n5. SEO Title, до 70 символов.\n6. SEO Description, до 170 символов.\n7. SEO ключевые слова, 5–15 фраз через запятую.\n\nЛогика текста:\n— что это;\n— из чего сделано;\n— для чего используется;\n— кому или для какого случая подходит;\n— в чём ценность товара.\n\nНе использовать пустые рекламные слова: «идеальный», «лучший», «уникальный», «невероятный», «роскошный», «эксклюзивный», если это не подтверждено фактом.\n\nФормат ответа:\n\nЗаголовок:\n...\n\nКраткое описание:\n...\n\nОсновной текст:\n...\n\nЦена:\n...\n\nSEO Title:\n...\n\nSEO Description:\n...\n\nSEO ключевые слова:\n...' }
+  { key:'competitors', title:'3. Конкуренты', task:'Понять конкурентное поле глазами клиента: с чем нас сравнивают, какие обещания заняты и где пространство для дифференциации.', standard:'Понятно: альтернативы клиента, занятые обещания, незакрытые потребности и позиция проекта.', fields:[], table: true, tableCols:['Название конкурента','Ссылка','Тип альтернативы','Офер','УТП','Ценовая позиция','Слабое место','Вывод','Комментарии и записи'], tableHints:['Название бренда / магазина / мастерской','Сайт / соцсеть / маркетплейс','','Что обещает клиенту','Чем пытается отличаться','Только если влияет на выбор','Что не закрывает для клиента','Чем мы можем отличиться','Дополнительные наблюдения, гипотезы, заметки'], tableKey:'competitorRows', tableItemLabel:'Конкурент', tablePrompt:'Типы альтернатив:\n• Прямой конкурент — похожий продукт, похожая аудитория, похожая цена\n• Категорийный конкурент — та же категория продукта\n• Альтернатива по форме — другой формат решения той же задачи\n• Замена по потребности — другой продукт закрывает ту же базовую потребность\n• Конкурент за бюджет — борется за те же деньги клиента\n\nСтратегии ценообразования:\n• На основе ценности — цена определяется воспринимаемой ценностью для клиента\n• На основе издержек — цена строится от издержек\n• Относительно конкурентов — цена определяется относительно конкурентов\n• Соотношение цены и качества — клиент оценивает через баланс цены и качества\n• Снятие сливок — высокая стартовая цена для максимальной прибыли от раннего спроса\n• Проникновение на рынок — низкая стартовая цена для захвата доли рынка\n• Сегментированное — разные цены для разных сегментов\n• Психологическое — цена влияет на восприятие качества, статуса и ценности\n• Стимулирующее — временное изменение цены для стимулирования спроса', tableSelects:{col2:[['','—'],['direct','Прямой конкурент'],['category','Категорийный конкурент'],['alt_form','Альтернатива по форме'],['alt_need','Замена по потребности'],['budget','Конкурент за бюджет']], col5:[['','—'],['value','Ценообразование на основе ценности'],['cost','Ценообразование на основе издержек'],['competitive','Ценообразование относительно конкурентов'],['quality_ratio','Соотношение цены и качества'],['skimming','Стратегия снятия сливок'],['penetration','Стратегия проникновения на рынок'],['segmented','Сегментированное ценообразование'],['psychological','Психологическое ценообразование'],['promo','Стимулирующее ценообразование']]} },
+  { key:'segments', title:'4. Сегменты', task:'Понять, у кого одна и та же боль проявляется по-разному.', standard:'Понятно, кому продаём, в какой ситуации и через какой смысл.', fields:[], table: true, tableCols:['Сегмент','Триггер','Глубинная проблема','Желаемый результат'], tableHints:['Кто этот клиент / сценарий','Что запускает поиск решения','Реальная причина обращения','Что хочет получить в итоге'], tableKey:'segmentRows', tableItemLabel:'Сегмент' },
+  { key:'jtbd', title:'5. JTBD', task:'Перевести боль в задачу клиента. JTBD — про клиента, не про продукт.', standard:'Понятно, какую работу клиент нанимает продукт выполнить.', fields:[], table: true, tableCols:['Какую задачу решает клиент'], tableHints:['Когда [ситуация], я хочу [действие], чтобы [результат]'], tableKey:'jtbdRows', tableItemLabel:'Задача клиента', tablePrompt:'Ты маркетолог уровня Филипа Котлера.\n\nНа основе данных сегмента сформулируй JTBD, то есть задачу клиента.\n\nДанные:\nСегмент: [сегмент]\nТриггер: [что запустило поиск]\nГлубинная проблема: [реальная причина обращения]\nЖелаемый результат: [что клиент хочет получить в итоге]\n\nСформулируй 1 точный JTBD по формуле:\n\nКогда [триггер],\nя хочу [решить глубинную проблему через действие],\nчтобы [получить желаемый результат].\n\nТребования:\n1. Без общих слов.\n2. Без описания продукта.\n3. От лица клиента.\n4. Один сегмент, один JTBD.\n5. Не длиннее 25 слов.\n6. Сохрани смысл триггера, проблемы и результата.' },
+  { key:'offer', title:'6. Офер', task:'Собрать офер из боли, поиска, JTBD и конкурентного разрыва. Связка: 1 задача → несколько оферов.', standard:'Офер понятен за 3 секунды: кому, что, зачем и почему стоит поверить.', fields:[], customRender: 'offerJtbd', tablePrompt:'Создай карточку товара по фото и краткому описанию.\n\nСтиль: ясно, просто, естественно. Пиши для человека, но учитывай SEO. Не выдумывай характеристики, которых нет во входных данных.\n\nВыдай:\n1. Заголовок, до 40 символов.\n2. Краткое описание, 50–90 символов.\n3. Основной текст, 180–300 символов.\n4. Цена, если указана.\n5. SEO Title, до 70 символов.\n6. SEO Description, до 170 символов.\n7. SEO ключевые слова, 5–15 фраз через запятую.\n\nЛогика текста:\n— что это;\n— из чего сделано;\n— для чего используется;\n— кому или для какого случая подходит;\n— в чём ценность товара.\n\nНе использовать пустые рекламные слова: «идеальный», «лучший», «уникальный», «невероятный», «роскошный», «эксклюзивный», если это не подтверждено фактом.\n\nФормат ответа:\n\nЗаголовок:\n...\n\nКраткое описание:\n...\n\nОсновной текст:\n...\n\nЦена:\n...\n\nSEO Title:\n...\n\nSEO Description:\n...\n\nSEO ключевые слова:\n...' }
 ];
 
 function ensurePainV130() {
@@ -13135,6 +13220,13 @@ function ensurePainV130() {
 }
 
 function painV130StepStatus(data, step) {
+  if (step.customRender === 'offerJtbd') {
+    const tasks = data.offerTasks || [];
+    if (!tasks.length || !tasks.some(t => String(t.name || '').trim())) return 'not_started';
+    const hasOffer = tasks.some(t => (t.offers || []).some(o => String(o.of0 || '').trim()));
+    if (hasOffer) return 'ready';
+    return 'in_progress';
+  }
   const fields = step.fields || [];
   const fieldsFilled = fields.filter(f => String(data[f.k] || '').trim()).length;
   let tableFilled = false, tableReady = false;
@@ -13151,26 +13243,142 @@ function painV130StepStatus(data, step) {
   return 'in_progress';
 }
 
+function pv130OfferJtbdHtml(step, data) {
+  const tasks = data.offerTasks || [{ name: '', offers: [{}] }];
+  const offerCols = ['Заголовок (≤ 40)','Краткое описание (50–90)','Основной текст (180–300)','Цена','SEO Title (≤ 70)','SEO Description (≤ 170)','SEO Ключевые слова'];
+  const offerHints = ['до 40 символов','50–90 символов','180–300 символов','₽','до 70 символов','до 170 символов','5–15 фраз через запятую'];
+  const offerKeys = offerCols.map((c, i) => 'of' + i);
+
+  return `<div class="g1-fields-grid">
+    ${tasks.map((task, ti) => {
+      const taskName = String(task.name || '').trim();
+      const offers = task.offers || [{}];
+      return `<div class="g1-card" style="border-radius:14px;padding:0;border:2px solid var(--line);">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);">
+          <span style="font-weight:900;font-size:14px;">Задача ${ti + 1}</span>
+          <button class="small-btn danger-mini" data-pv130-offer-task-remove="${ti}" ${tasks.length <= 1 ? 'disabled' : ''}>×</button>
+        </div>
+        <div style="padding:14px 18px;">
+          <label class="g1-field"><span>Задача клиента</span><small style="color:var(--muted);font-size:11px;">Какую задачу решает клиент</small><textarea class="g1-input ${taskName ? 'is-filled' : 'is-empty'}" data-pv130-step="offer" data-pv130-offer-task="${ti}" data-pv130-offer-task-field="name" rows="1" placeholder="Когда [ситуация], я хочу [действие], чтобы [результат]">${escapeHtml(task.name || '')}</textarea></label>
+          <div class="g1-fields-grid" style="margin-top:12px;">
+            ${offers.map((offer, oi) => `<div class="g1-card g1-card-collapsible" style="border-radius:14px;padding:0;">
+              <div class="g1-card-collapse-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;" data-g1-collapse>
+                <span><span style="font-weight:700;font-size:12px;color:var(--muted);">Офер ${oi + 1}</span> <span class="g1-collapse-preview" style="font-size:12px;color:var(--text);margin-left:6px;">${escapeHtml(String(offer.of0 || '').substring(0, 50))}</span></span>
+                <button class="small-btn danger-mini" data-pv130-offer-remove="${ti}" data-pv130-offer-idx="${oi}" ${offers.length <= 1 ? 'disabled' : ''} style="font-size:11px;">×</button>
+              </div>
+              <div class="g1-card-collapse-body" style="padding:0 16px 12px;">
+              <div class="g1-fields-grid">
+                ${offerKeys.map((ok, ci) => {
+                  const val = offer[ok] || '';
+                  const cls = String(val).trim() ? 'is-filled' : 'is-empty';
+                  return '<label class="g1-field"><span>' + escapeHtml(offerCols[ci]) + '</span><small style="color:var(--muted);font-size:11px;">' + escapeHtml(offerHints[ci]) + '</small><textarea class="g1-input ' + cls + '" data-pv130-step="offer" data-pv130-offer-task="' + ti + '" data-pv130-offer-idx="' + oi + '" data-pv130-offer-col="' + ok + '" rows="1" placeholder="' + escapeAttr(offerCols[ci]) + '">' + escapeHtml(val) + '</textarea></label>';
+                }).join('')}
+              </div>
+              </div>
+            </div>`).join('')}
+          </div>
+          <button class="small-btn add-inline-btn" style="margin-top:8px;font-size:12px;" data-pv130-offer-add="${ti}">+ Добавить офер</button>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+  <button class="small-btn add-inline-btn" data-pv130-offer-task-add>+ Добавить задачу</button>
+  <details class="g1-prompt-toggle"><summary>Показать промт</summary><div>${escapeHtml('Создай карточку товара по фото и краткому описанию.\n\nСтиль: ясно, просто, естественно. Пиши для человека, но учитывай SEO.\n\nВыдай:\n1. Заголовок, до 40 символов.\n2. Краткое описание, 50–90 символов.\n3. Основной текст, 180–300 символов.\n4. Цена, если указана.\n5. SEO Title, до 70 символов.\n6. SEO Description, до 170 символов.\n7. SEO ключевые слова, 5–15 фраз через запятую.')}</div></details>`;
+}
+
+function pv130DynamicSelects(step) {
+  const dynSel = step.tableSelectsDynamic || {};
+  const result = { ...(step.tableSelects || {}) };
+  if (dynSel.col0 === 'jtbd') {
+    const d = ensurePainV130();
+    const jtbdRows = d.steps?.jtbd?.[PAIN_V130_STEPS.find(s => s.key === 'jtbd')?.tableKey] || [];
+    const opts = [['', '—']];
+    jtbdRows.forEach((r, i) => {
+      const val = String(r.col0 || '').trim();
+      if (val) opts.push([val, val.substring(0, 60)]);
+    });
+    if (opts.length === 1) opts.push(['', 'Сначала заполните JTBD']);
+    result.col0 = opts;
+  }
+  return result;
+}
+
 function pv130TableHtml(step, data) {
   const rows = data[step.tableKey] || [{}];
   const cols = step.tableCols;
   const colKeys = cols.map((c, i) => 'col' + i);
   const label = step.tableItemLabel || 'Элемент';
-  return `<div class="g1-fields-grid">
-    ${rows.map((row, ri) => `<div class="g1-card" style="border-radius:14px;padding:14px 18px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <span style="font-weight:800;font-size:13px;color:var(--muted);">${escapeHtml(label)} ${ri + 1}</span>
+  const dynSelects = step.tableSelectsDynamic ? pv130DynamicSelects(step) : (step.tableSelects || {});
+  const hasJtbdGrouping = step.tableSelectsDynamic?.col0 === 'jtbd';
+  const jtbdTasks = hasJtbdGrouping ? [...new Set(rows.map(r => String(r.col0 || '').trim()).filter(Boolean))] : [];
+  const ungrouped = hasJtbdGrouping ? rows.filter(r => !String(r.col0 || '').trim()) : [];
+
+  const renderCard = (row, ri) => {
+      const firstVal = hasJtbdGrouping ? String(row[colKeys[1]] || '').trim() : String(row[colKeys[0]] || '').trim();
+      const preview = firstVal || (hasJtbdGrouping ? cols[1] : cols[0]);
+
+  return `<div class="g1-card g1-card-collapsible" style="border-radius:14px;padding:0;">
+      <div class="g1-card-collapse-header" style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;cursor:pointer;" data-g1-collapse>
+        <span><span style="font-weight:800;font-size:13px;color:var(--muted);">${escapeHtml(label)} ${ri + 1}</span> <span class="g1-collapse-preview" style="font-size:13px;color:var(--text);margin-left:8px;">${escapeHtml(preview.substring(0, 60))}</span></span>
         <button class="small-btn danger-mini" data-pv130-table-remove="${escapeAttr(step.key)}" data-pv130-table-key="${escapeAttr(step.tableKey)}" data-pv130-row="${ri}" ${rows.length <= 1 ? 'disabled' : ''}>×</button>
       </div>
+      <div class="g1-card-collapse-body" style="padding:0 18px 14px;">
       <div class="g1-fields-grid">
         ${colKeys.map((ck, ci) => {
           const val = row[ck] || '';
           const cls = String(val).trim() ? 'is-filled' : 'is-empty';
           const hint = (step.tableHints || [])[ci] || '';
-          return `<label class="g1-field"><span>${escapeHtml(cols[ci])}</span>${hint ? `<small style="color:var(--muted);font-size:11px;">${escapeHtml(hint)}</small>` : ''}<textarea class="g1-input ${cls}" data-pv130-step="${escapeAttr(step.key)}" data-pv130-table="${escapeAttr(step.tableKey)}" data-pv130-row="${ri}" data-pv130-col="${ck}" rows="1" placeholder="${escapeAttr(cols[ci])}">${escapeHtml(val)}</textarea></label>`;
+          const hintHtml = hint ? '<small style="color:var(--muted);font-size:11px;">' + escapeHtml(hint) + '</small>' : '';
+          const selOpts = dynSelects[ck];
+          if (selOpts) return '<label class="g1-field"><span>' + escapeHtml(cols[ci]) + '</span>' + hintHtml + '<select class="g1-input is-filled" data-pv130-step="' + escapeAttr(step.key) + '" data-pv130-table="' + escapeAttr(step.tableKey) + '" data-pv130-row="' + ri + '" data-pv130-col="' + ck + '">' + selOpts.map(([v,l]) => '<option value="' + escapeAttr(v) + '"' + (val===v?' selected':'') + '>' + escapeHtml(l) + '</option>').join('') + '</select></label>';
+          return '<label class="g1-field"><span>' + escapeHtml(cols[ci]) + '</span>' + hintHtml + '<textarea class="g1-input ' + cls + '" data-pv130-step="' + escapeAttr(step.key) + '" data-pv130-table="' + escapeAttr(step.tableKey) + '" data-pv130-row="' + ri + '" data-pv130-col="' + ck + '" rows="1" placeholder="' + escapeAttr(cols[ci]) + '">' + escapeHtml(val) + '</textarea></label>';
         }).join('')}
       </div>
-    </div>`).join('')}
+      </div></div>`;
+  };
+
+  if (hasJtbdGrouping && jtbdTasks.length) {
+    const grouped = jtbdTasks.map(task => {
+      const taskOffers = rows.map((r, ri) => ({ row: r, ri })).filter(({ row }) => String(row.col0 || '').trim() === task);
+      return `<div style="margin-bottom:16px;">
+        <div style="padding:10px 0;border-bottom:2px solid var(--line);margin-bottom:10px;">
+          <span style="font-weight:900;font-size:14px;">Задача:</span>
+          <span style="font-size:14px;margin-left:6px;">${escapeHtml(task.substring(0, 80))}</span>
+        </div>
+        <div class="g1-fields-grid">${taskOffers.map(({ row, ri }) => renderCard(row, ri)).join('')}</div>
+      </div>`;
+    }).join('');
+    const ungroupedHtml = ungrouped.length ? `<div style="margin-bottom:16px;">
+      <div style="padding:10px 0;border-bottom:2px solid var(--line);margin-bottom:10px;">
+        <span style="font-weight:900;font-size:14px;color:var(--muted);">Без привязки к задаче</span>
+      </div>
+      <div class="g1-fields-grid">${rows.map((r, ri) => !String(r.col0 || '').trim() ? renderCard(r, ri) : '').join('')}</div>
+    </div>` : '';
+    return `${grouped}${ungroupedHtml}`;
+  }
+
+  return `<div class="g1-fields-grid">
+    ${rows.map((row, ri) => {
+      const firstVal = String(row[colKeys[0]] || '').trim();
+      const preview = firstVal || cols[0];
+      return `<div class="g1-card g1-card-collapsible" style="border-radius:14px;padding:0;">
+      <div class="g1-card-collapse-header" style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;cursor:pointer;" data-g1-collapse>
+        <span><span style="font-weight:800;font-size:13px;color:var(--muted);">${escapeHtml(label)} ${ri + 1}</span> <span class="g1-collapse-preview" style="font-size:13px;color:var(--text);margin-left:8px;">${escapeHtml(preview.substring(0, 60))}</span></span>
+        <button class="small-btn danger-mini" data-pv130-table-remove="${escapeAttr(step.key)}" data-pv130-table-key="${escapeAttr(step.tableKey)}" data-pv130-row="${ri}" ${rows.length <= 1 ? 'disabled' : ''}>×</button>
+      </div>
+      <div class="g1-card-collapse-body" style="padding:0 18px 14px;">
+      <div class="g1-fields-grid">
+        ${colKeys.map((ck, ci) => {
+          const val = row[ck] || '';
+          const cls = String(val).trim() ? 'is-filled' : 'is-empty';
+          const hint = (step.tableHints || [])[ci] || '';
+          const hintHtml = hint ? `<small style="color:var(--muted);font-size:11px;">${escapeHtml(hint)}</small>` : '';
+          const selOpts = dynSelects[ck];
+          if (selOpts) return `<label class="g1-field"><span>${escapeHtml(cols[ci])}</span>${hintHtml}<select class="g1-input is-filled" data-pv130-step="${escapeAttr(step.key)}" data-pv130-table="${escapeAttr(step.tableKey)}" data-pv130-row="${ri}" data-pv130-col="${ck}">${selOpts.map(([v,l]) => `<option value="${escapeAttr(v)}" ${val===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}</select></label>`;
+          return `<label class="g1-field"><span>${escapeHtml(cols[ci])}</span>${hintHtml}<textarea class="g1-input ${cls}" data-pv130-step="${escapeAttr(step.key)}" data-pv130-table="${escapeAttr(step.tableKey)}" data-pv130-row="${ri}" data-pv130-col="${ck}" rows="1" placeholder="${escapeAttr(cols[ci])}">${escapeHtml(val)}</textarea></label>`;
+        }).join('')}
+      </div>
+    </div></div>`;}).join('')}
   </div>
   <button class="small-btn add-inline-btn" data-pv130-table-add="${escapeAttr(step.key)}" data-pv130-table-key="${escapeAttr(step.tableKey)}">+ Добавить ${escapeHtml(label.toLowerCase())}</button>
   ${step.tablePrompt ? `<details class="g1-prompt-toggle"><summary>Показать промт</summary><div>${escapeHtml(step.tablePrompt)}</div></details>` : ''}`;
@@ -13191,10 +13399,12 @@ function painV130StepHtml(step, data, isOpen) {
           const filled = String(value).trim();
           const cls = filled ? 'is-filled' : 'is-empty';
           const attr = `data-pv130-step="${escapeAttr(step.key)}" data-pv130-field="${escapeAttr(f.k)}"`;
-          return `<label class="g1-field"><span>${escapeHtml(f.l)}</span><textarea class="g1-input ${cls}" ${attr} rows="1" placeholder="${escapeAttr(f.p)}">${escapeHtml(value)}</textarea></label>`;
+          const hintHtml = f.h ? `<small style="color:var(--muted);font-size:11px;">${escapeHtml(f.h)}</small>` : '';
+          if (f.sel) return `<label class="g1-field"><span>${escapeHtml(f.l)}</span>${hintHtml}<select class="g1-input is-filled" ${attr}>${f.sel.map(([v,l]) => `<option value="${escapeAttr(v)}" ${value===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}</select></label>`;
+          return `<label class="g1-field"><span>${escapeHtml(f.l)}</span>${hintHtml}<textarea class="g1-input ${cls}" ${attr} rows="1" placeholder="${escapeAttr(f.p)}">${escapeHtml(value)}</textarea></label>`;
         }).join('')}
       </div>` : ''}
-      ${step.table ? pv130TableHtml(step, data) : ''}
+      ${step.customRender === 'offerJtbd' ? pv130OfferJtbdHtml(step, data) : (step.table ? pv130TableHtml(step, data) : '')}
       <p class="g1-task" style="margin-top:8px;font-style:italic;">Стандарт: ${escapeHtml(step.standard)}</p>
     </div>` : ''}
   </div>`;
@@ -13205,18 +13415,8 @@ function g1RenderPainV130() {
   const userTouched = Object.keys(d.openSteps).length > 0;
   const readyCount = PAIN_V130_STEPS.filter(s => painV130StepStatus(d.steps[s.key] || {}, s) === 'ready').length;
 
-  const summaryHtml = readyCount === PAIN_V130_STEPS.length ? `<div class="g1-card">
-    <div class="g1-card-header-static"><span class="g1-card-title">Итог: Боль → JTBD → офер</span></div>
-    <div class="g1-card-body" style="font-size:13px;">
-      <div style="display:grid;gap:6px;">
-        ${[['Главная боль', d.steps.pain?.explicitPain],['Причина спроса', d.steps.pain?.demandReason],['Как ищут', d.steps.search?.mainQueries],['Конкурентный разрыв', d.steps.competitors?.differentiation],['Главный JTBD', d.steps.jtbd?.functionalJob],['Основной сегмент', d.steps.segments?.mainSegment],['Базовый офер', d.steps.offer?.baseOffer],['Главный CTA', d.steps.offer?.mainCta],['Коллаборации', d.steps.collab?.partners]].map(([label, val]) => `<div><strong>${escapeHtml(label)}:</strong> ${escapeHtml(String(val || '—').substring(0,150))}</div>`).join('')}
-      </div>
-    </div>
-  </div>` : '';
-
   return `<div class="g1-route">
     ${PAIN_V130_STEPS.map(s => painV130StepHtml(s, d.steps[s.key] || {}, !!d.openSteps[s.key])).join('')}
-    ${summaryHtml}
   </div>`;
 }
 
@@ -13300,6 +13500,54 @@ document.addEventListener('click', e => {
     const ri = Number(e.target.dataset.pv130Row);
     const rows = d.steps?.[stepKey]?.[tableKey] || [];
     if (rows.length > 1) { rows.splice(ri, 1); flashSaving(); renderGate(); }
+    return;
+  }
+  if (e.target?.dataset?.pv130OfferTaskAdd !== undefined) {
+    const d = ensurePainV130();
+    d.steps.offer = d.steps.offer || {};
+    d.steps.offer.offerTasks = d.steps.offer.offerTasks || [{ name: '', offers: [{}] }];
+    d.steps.offer.offerTasks.push({ name: '', offers: [{}] });
+    flashSaving(); renderGate(); return;
+  }
+  if (e.target?.dataset?.pv130OfferTaskRemove !== undefined) {
+    const d = ensurePainV130();
+    const tasks = d.steps.offer?.offerTasks || [];
+    if (tasks.length > 1) { tasks.splice(Number(e.target.dataset.pv130OfferTaskRemove), 1); flashSaving(); renderGate(); }
+    return;
+  }
+  if (e.target?.dataset?.pv130OfferAdd !== undefined) {
+    const d = ensurePainV130();
+    const ti = Number(e.target.dataset.pv130OfferAdd);
+    const tasks = d.steps.offer?.offerTasks || [];
+    if (tasks[ti]) { tasks[ti].offers = tasks[ti].offers || [{}]; tasks[ti].offers.push({}); flashSaving(); renderGate(); }
+    return;
+  }
+  if (e.target?.dataset?.pv130OfferRemove !== undefined) {
+    const d = ensurePainV130();
+    const ti = Number(e.target.dataset.pv130OfferRemove);
+    const oi = Number(e.target.dataset.pv130OfferIdx);
+    const tasks = d.steps.offer?.offerTasks || [];
+    if (tasks[ti]?.offers?.length > 1) { tasks[ti].offers.splice(oi, 1); flashSaving(); renderGate(); }
+    return;
+  }
+});
+
+document.addEventListener('input', e => {
+  if (e.target?.dataset?.pv130OfferTaskField) {
+    const d = ensurePainV130();
+    const ti = Number(e.target.dataset.pv130OfferTask);
+    d.steps.offer = d.steps.offer || {};
+    d.steps.offer.offerTasks = d.steps.offer.offerTasks || [{ name: '', offers: [{}] }];
+    if (d.steps.offer.offerTasks[ti]) { d.steps.offer.offerTasks[ti][e.target.dataset.pv130OfferTaskField] = e.target.value; flashSaving(); renderGateNav(); }
+    return;
+  }
+  if (e.target?.dataset?.pv130OfferCol) {
+    const d = ensurePainV130();
+    const ti = Number(e.target.dataset.pv130OfferTask);
+    const oi = Number(e.target.dataset.pv130OfferIdx);
+    d.steps.offer = d.steps.offer || {};
+    d.steps.offer.offerTasks = d.steps.offer.offerTasks || [{ name: '', offers: [{}] }];
+    if (d.steps.offer.offerTasks[ti]?.offers?.[oi]) { d.steps.offer.offerTasks[ti].offers[oi][e.target.dataset.pv130OfferCol] = e.target.value; flashSaving(); renderGateNav(); }
     return;
   }
 });
@@ -13490,14 +13738,70 @@ document.addEventListener('click', e => {
 });
 
 /* ================================================================
-   v1.4.0 — Gate 2 «Инструментирование — ДО трафика»
+   v1.4.0 — Gate 2 «Готовность к трафику»
+   Технический аудит pre-traffic. Каждый пункт: работает / не работает.
    Дизайн-система ГУРУ (Брокманн): g1-redesign, одна колонка, 820px
    ================================================================ */
+
+const G2_SECTIONS = [
+  { key:'platform', title:'Платформа бренда', match:/^(tilda|.*сайт.*структур|.*сайт.*мобильн|.*сайт.*форм|.*сайт.*квиз|.*сайт.*cta|.*сайт.*кнопк|скорость|core.?web)/i },
+  { key:'technical', title:'Техническая доступность', match:/^(домен|ssl|https|редирект|каноничес)/i },
+  { key:'analytics', title:'Аналитика', match:/^(яндекс метрик|utm|фильтр внутр|антибот)/i },
+  { key:'search', title:'Поисковая инфраструктура', match:/^(яндекс вебмастер)/i },
+  { key:'local', title:'Локальное присутствие', match:/^(яндекс бизнес)/i },
+  { key:'crm', title:'CRM и обработка лидов', match:/^crm/i },
+  { key:'integrations', title:'Интеграции', match:/^(интеграция сайта|email.уведомл|telegram|whatsapp|коллтрекинг)/i },
+  { key:'throughput', title:'Сквозная аналитика', match:/^передач/i },
+  { key:'legal', title:'Юридическая готовность', match:/^(политика конфиденц|согласие на обработк|антиспам)/i },
+];
+
+const G2_NEW_CARDS = [
+  { id:'g2-cwv', title:'Скорость / Core Web Vitals', instruction:'Суть: \nпроверяет скорость загрузки и пользовательский опыт по метрикам Google.\n\nОтвечает за: \nкачество технической основы для конверсий и SEO.\n\nИнструкция: \nпроверить LCP, FID/INP, CLS через PageSpeed Insights для ключевых страниц.', section:'platform' },
+  { id:'g2-canonical', title:'Канонические URL', instruction:'Суть: \nуказывает поисковику основную версию страницы.\n\nОтвечает за: \nотсутствие дублей в индексе и корректную передачу ссылочного веса.\n\nИнструкция: \nпроверить наличие canonical на всех ключевых страницах.', section:'technical' },
+  { id:'g2-internal-filter', title:'Фильтр внутреннего трафика', instruction:'Суть: \nисключает визиты команды из аналитики.\n\nОтвечает за: \nчистоту данных в Метрике.\n\nИнструкция: \nнастроить фильтр по IP или параметру и проверить, что внутренние визиты не попадают в отчёты.', section:'analytics' },
+  { id:'g2-antibot', title:'Антибот-фильтрация', instruction:'Суть: \nотсекает ботов и автоматический трафик из аналитики.\n\nОтвечает за: \nточность данных о реальных пользователях.\n\nИнструкция: \nвключить антибот-фильтр в Метрике и проверить влияние на данные.', section:'analytics' },
+];
+
+const G2_CHECK_OPTIONS = [
+  ['', '— выберите —'],
+  ['works', '✓ Работает'],
+  ['not_works', '✗ Не работает'],
+  ['not_required', 'Не требуется'],
+];
+
+function ensureGate2Structure(gate) {
+  if (!gate || gate.id !== 'gate-2') return;
+  if (gate.title === '2. Инструментирование - ДО трафика') gate.title = '2. Готовность к трафику';
+  const existingIds = new Set(gate.cards.map(c => c.id));
+  G2_NEW_CARDS.forEach(nc => {
+    if (!existingIds.has(nc.id)) {
+      gate.cards.push({ id: nc.id, title: nc.title, instruction: nc.instruction, status: 'not_started', evidence: '', pages: '', notes: '', fields: {} });
+    }
+  });
+}
 
 function getGate2AccordionState() {
   ensureUiState(state);
   if (!state.ui.gate2Accordion) state.ui.gate2Accordion = { sections: {}, cards: {} };
   return state.ui.gate2Accordion;
+}
+
+function g2GetSections(gate, visibleIds) {
+  ensureGate2Structure(gate);
+  const isHeader = c => /^\s*\d+\.\s+/.test(c.title || '');
+  const contentCards = gate.cards.filter(c => !isHeader(c) && visibleIds.has(c.id));
+  const sections = G2_SECTIONS.map(def => ({ ...def, cards: [] }));
+  contentCards.forEach(card => {
+    const newCardDef = G2_NEW_CARDS.find(nc => nc.id === card.id);
+    if (newCardDef) {
+      const sec = sections.find(s => s.key === newCardDef.section);
+      if (sec) { sec.cards.push(card); return; }
+    }
+    const title = card.title || '';
+    const sec = sections.find(s => s.match.test(title));
+    if (sec) sec.cards.push(card);
+  });
+  return sections.filter(s => s.cards.length);
 }
 
 function g2ParseOrient(instruction) {
@@ -13512,17 +13816,21 @@ function g2ParseStandard(instruction) {
   return m ? m[1].trim() : '';
 }
 
-function g2EnsureSource(card) {
+function g2EnsureFields(card) {
   if (!card.fields) card.fields = {};
+  if (card.fields.g2Check === undefined) card.fields.g2Check = '';
   if (card.fields.g2Source === undefined) card.fields.g2Source = card.evidence || '';
-  return card.fields.g2Source || '';
+  return card.fields;
 }
 
 function g2CardStatus(card) {
-  const src = String(g2EnsureSource(card) || '').trim();
+  const f = g2EnsureFields(card);
+  const check = f.g2Check || '';
   const notes = String(card.notes || '').trim();
-  if (src && notes) return 'ready';
-  if (src || notes) return 'in_progress';
+  if (check === 'not_required') return 'ready';
+  if (check === 'works') return 'ready';
+  if (check === 'not_works') return 'problem';
+  if (check || notes) return 'in_progress';
   return 'not_started';
 }
 
@@ -13530,6 +13838,7 @@ function g2SectionStatus(cards) {
   if (!cards.length) return 'not_started';
   const statuses = cards.map(g2CardStatus);
   if (statuses.every(s => s === 'ready')) return 'ready';
+  if (statuses.some(s => s === 'problem')) return 'problem';
   if (statuses.some(s => s !== 'not_started')) return 'in_progress';
   return 'not_started';
 }
@@ -13545,10 +13854,10 @@ function g2CardHtml(card) {
   const status = g2CardStatus(card);
   const orient = g2ParseOrient(card.instruction);
   const standard = g2ParseStandard(card.instruction);
+  const f = g2EnsureFields(card);
   const noteVal = card.notes || '';
-  const srcVal = g2EnsureSource(card);
   const noteCls = String(noteVal).trim() ? 'is-filled' : 'is-empty';
-  const srcCls = String(srcVal).trim() ? 'is-filled' : 'is-empty';
+  const checkVal = f.g2Check || '';
 
   return `<article class="g1-card ${isOpen ? 'is-open' : ''}" data-card="${escapeAttr(card.id)}">
     <button class="g1-card-header" data-g2-toggle-card="${escapeAttr(card.id)}">
@@ -13559,8 +13868,8 @@ function g2CardHtml(card) {
     ${isOpen ? `<div class="g1-card-body">
       ${orient ? `<p class="g1-task">${escapeHtml(orient)}</p>` : ''}
       <div class="g1-fields-grid">
+        <label class="g1-field"><span>Статус проверки</span><select class="g1-input is-filled" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="check">${G2_CHECK_OPTIONS.map(([v,l]) => `<option value="${escapeAttr(v)}" ${checkVal===v?'selected':''}>${escapeHtml(l)}</option>`).join('')}</select></label>
         <label class="g1-field"><span>Рабочие заметки</span><textarea class="g1-input ${noteCls}" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="notes" rows="3" placeholder="что сделано, результат">${escapeHtml(noteVal)}</textarea></label>
-        <label class="g1-field"><span>Источник / ссылка / скрин / отчёт</span><textarea class="g1-input ${srcCls}" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="source" rows="2" placeholder="URL, скриншот, описание проверки">${escapeHtml(srcVal)}</textarea></label>
       </div>
       ${standard ? `<p class="g1-task" style="font-style:italic;margin-top:12px;opacity:.7"><strong>Стандарт готовности:</strong> ${escapeHtml(standard)}</p>` : ''}
     </div>` : ''}
@@ -13568,13 +13877,14 @@ function g2CardHtml(card) {
 }
 
 function renderGate2Redesign(gate, cards) {
-  const sections = getNumberedHeaderSections(gate, new Set(cards.map(c => c.id)));
+  ensureGate2Structure(gate);
+  const sections = g2GetSections(gate, new Set(cards.map(c => c.id)));
   const acc = getGate2AccordionState();
 
   els.contentArea.innerHTML = `<div class="g1-redesign">
     ${sections.map(section => {
       const sectionOpen = Boolean(acc.sections[section.key]);
-      const innerCards = section.filteredInnerCards;
+      const innerCards = section.cards;
       const status = g2SectionStatus(innerCards);
       const progressText = g2SectionProgress(innerCards);
       return `<section class="g1-section ${sectionOpen ? 'is-open' : ''}">
@@ -13646,14 +13956,19 @@ function updateGate2Field(target) {
   if (!cardId || !field) return;
   const card = findCard(cardId);
   if (!card) return;
+  const f = g2EnsureFields(card);
   if (field === 'notes') card.notes = target.value;
-  else if (field === 'source') { if (!card.fields) card.fields = {}; card.fields.g2Source = target.value; }
-  const cls = String(target.value || '').trim() ? 'is-filled' : 'is-empty';
-  target.classList.remove('is-filled', 'is-empty');
-  target.classList.add(cls);
+  else if (field === 'source') f.g2Source = target.value;
+  else if (field === 'check') f.g2Check = target.value;
+  if (target.tagName !== 'SELECT') {
+    const cls = String(target.value || '').trim() ? 'is-filled' : 'is-empty';
+    target.classList.remove('is-filled', 'is-empty');
+    target.classList.add(cls);
+  }
   recalculateStatusForCard(card);
   flashSaving();
-  g2PointUpdateBadge(card);
+  if (target.tagName === 'SELECT') renderGate();
+  else g2PointUpdateBadge(card);
 }
 
 document.addEventListener('input', e => {
@@ -13676,265 +13991,627 @@ renderGateTable = function(gate, cards) {
   __guruPrevRenderGateTableV140(gate, cards);
 };
 
-// ─── Gate 3 Redesign (дизайн-система ГУРУ / Брокманн) ───
+// ─── Gate 3 Redesign · 5A Котлер (дизайн-система ГУРУ / Брокманн) ───
 
-function getGate3AccordionState() {
-  ensureUiState(state);
-  state.ui.gate3Accordion = state.ui.gate3Accordion || { sections: {}, cards: {} };
-  return state.ui.gate3Accordion;
+const G3_5A_STEPS = [
+  { key:'aware', title:'Aware / узнал', desc:'Первое знание о бренде',
+    fields:[
+      { k:'audience', label:'Кого охватываем' },
+      { k:'message',  label:'Какое первое сообщение' }
+    ], tools:[
+      'Яндекс Директ — Медийная кампания','Яндекс Директ — РСЯ баннерная кампания',
+      'Яндекс Директ — Мастер кампаний (охватный режим)','VK Ads — кампания «Охват»',
+      'Telegram Ads','Telegram-посевы','YouTube Shorts Ads','Instagram Reels Ads',
+      'Facebook Video Ads','PR-публикации'
+    ], question:'человек понял, что бренд существует' },
+  { key:'appeal', title:'Appeal / понравился', desc:'Что делает бренд привлекательным',
+    fields:[
+      { k:'hook',    label:'Что должно зацепить' },
+      { k:'image',   label:'Какой образ бренда' },
+      { k:'emotion', label:'Какая эмоция' },
+      { k:'promise', label:'Какое обещание бренда' }
+    ], tools:[
+      'Главная страница сайта','Страница «О нас»','Категория товаров','Карточка товара',
+      'ПромоСтраница Яндекса','Instagram Reels','Telegram-канал','YouTube Shorts',
+      'Shorts/Reels с отзывами клиентов','Видео о бренде','Фотогалерея работ','Портфолио'
+    ], question:'бренд стал интересен и запомнился' },
+  { key:'ask', title:'Ask / изучает', desc:'Что клиент уточняет перед выбором',
+    fields:[
+      { k:'questions', label:'Какие вопросы задаёт' },
+      { k:'compares',  label:'Что сравнивает' },
+      { k:'proof',     label:'Какие доказательства нужны' }
+    ], tools:[
+      'Яндекс Поиск','Google Поиск','Яндекс Карты','2ГИС','FAQ','Статья-кейс',
+      'Сравнительная страница (vs конкуренты)','Отзывы Яндекс Карты','Отзывы 2ГИС',
+      'Отзывы на сайте','WhatsApp Business','Telegram Bot','Jivo Chat',
+      'Форма обратной связи','Квиз','Страница доставки','Страница гарантий','Страница контактов'
+    ], question:'клиент получил основания доверять' },
+  { key:'act', title:'Act / покупает', desc:'Как переводим в заказ',
+    fields:[
+      { k:'offer',  label:'Какой оффер' },
+      { k:'cta',    label:'Какой CTA' },
+      { k:'form',   label:'Какая форма заявки' },
+      { k:'derisk', label:'Что снимает риск' }
+    ], tools:[
+      'Tilda ST340','Tilda — Попап с оффером','Корзина Tilda','Форма заказа Tilda',
+      'WhatsApp Business','Telegram Bot','Телефонный звонок','amoCRM',
+      'ЮKassa','CloudPayments','Сбербанк Pay / Mir Pay','Счёт на оплату'
+    ], question:'получена заявка / заказ / покупка' },
+  { key:'advocate', title:'Advocate / рекомендует', desc:'Как получаем повтор и рекомендацию',
+    fields:[
+      { k:'retention', label:'Почему вернётся' },
+      { k:'ask_after', label:'Что попросить после покупки' },
+      { k:'review',    label:'Как получить отзыв' }
+    ], tools:[
+      'Email-рассылка после покупки','WhatsApp Business рассылка',
+      'WhatsApp — запрос отзыва сразу после заказа','Telegram рассылка',
+      'Запрос отзыва Яндекс Карты','Запрос отзыва 2ГИС','Реферальная программа',
+      'Программа лояльности','Telegram-чат постоянных клиентов',
+      'Ретаргетинг Яндекс Директ','VK Ads ретаргетинг','Повторная email-кампания'
+    ], question:'получен повтор / отзыв / рекомендация' }
+];
+
+function ensureGate3_5A() {
+  state.gate3_5a = state.gate3_5a || { openSteps: {} };
+  G3_5A_STEPS.forEach(s => {
+    const d = state.gate3_5a[s.key] = state.gate3_5a[s.key] || { answer:'' };
+    d.fields = d.fields || {};
+    s.fields.forEach(f => {
+      if (!Array.isArray(d.fields[f.k])) d.fields[f.k] = [''];
+    });
+    d.toolStatuses = d.toolStatuses || {};
+    s.tools.forEach(t => { if (!d.toolStatuses[t]) d.toolStatuses[t] = 'unused'; });
+  });
+  state.gate3_5a.openSteps = state.gate3_5a.openSteps || {};
+  return state.gate3_5a;
+}
+
+function g3_5aStepStatus(d, step) {
+  const fields = d.fields || {};
+  const hasAny = Object.values(fields).some(arr => (arr||[]).some(v => String(v||'').trim()));
+  const hasTools = step && step.tools.some(t => (d.toolStatuses||{})[t] && (d.toolStatuses||{})[t] !== 'unused');
+  if (!hasAny && !hasTools && !d.answer) return 'not_started';
+  if (d.answer === 'да') return 'ready';
+  if (hasAny || hasTools || d.answer) return 'in_progress';
+  return 'not_started';
+}
+
+function g3_5aOverallStatus() {
+  const data = ensureGate3_5A();
+  const statuses = G3_5A_STEPS.map(s => g3_5aStepStatus(data[s.key], s));
+  if (statuses.every(s => s === 'ready')) return 'ready';
+  if (statuses.every(s => s === 'not_started')) return 'not_started';
+  return 'in_progress';
+}
+
+function g3_5aProgressText() {
+  const data = ensureGate3_5A();
+  const done = G3_5A_STEPS.filter(s => g3_5aStepStatus(data[s.key], s) === 'ready').length;
+  return `${done} из ${G3_5A_STEPS.length} этапов готово`;
 }
 
 function renderGate3Redesign(gate, cards) {
-  const sections = getSemanticGateSections(gate, cards);
-  const acc = getGate3AccordionState();
-  const queryActive = els.searchInput.value.trim() || els.statusFilter.value !== 'all';
+  const data = ensureGate3_5A();
+  const status = g3_5aOverallStatus();
+  const progressText = g3_5aProgressText();
 
   els.contentArea.innerHTML = `<div class="g1-redesign">
-    ${sections.map(section => {
-      const sectionOpen = Boolean(acc.sections[section.key]);
-      const status = getSectionStatus(section.allInnerCards);
-      const progressText = getSectionProgressText(section.allInnerCards);
-      const isFunnel = section.key === 'funnel_stages';
-      const allCards = (queryActive ? section.filteredInnerCards : section.allInnerCards)
-        .filter(c => !/[cсCС]писок этапов/i.test(c.title));
-      return `<section class="g1-section ${sectionOpen ? 'is-open' : ''}">
-        <button class="g1-section-header" data-g3-toggle-section="${escapeAttr(section.key)}">
-          <span class="g1-section-left">
-            <span class="g1-section-title">${escapeHtml(section.title)}</span>
-            <span class="g1-section-progress">${escapeHtml(progressText)}</span>
-          </span>
-          <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
-          <span class="g1-section-toggle">${sectionOpen ? 'Закрыть' : 'Открыть'}</span>
-        </button>
-        ${sectionOpen ? `<div class="g1-section-body${isFunnel ? ' g3-funnel' : ''}">
-          ${allCards.length ? allCards.map((card, i) => g3CardHtml(card, isFunnel ? { index: i, total: allCards.length } : null)).join('') : '<div class="g1-empty">По текущему фильтру ничего не найдено.</div>'}
-        </div>` : ''}
-      </section>`;
-    }).join('')}
+    <section class="g1-section is-open">
+      <div class="g1-card-header-static">
+        <span class="g1-section-left">
+          <span class="g1-section-title">5A — карта клиентского пути (Котлер, Marketing 4.0)</span>
+          <span class="g1-section-progress">${escapeHtml(progressText)}</span>
+        </span>
+        <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+      </div>
+      <div class="g1-section-body g3-funnel">
+        ${G3_5A_STEPS.map((step, i) => {
+          const d = data[step.key];
+          const isOpen = Boolean(data.openSteps[step.key]);
+          const stepStatus = g3_5aStepStatus(d, step);
+          const w = 100 - (i / (G3_5A_STEPS.length - 1)) * 50;
+          return `<article class="g1-card g3-funnel-card ${isOpen ? 'is-open' : ''}" data-g3-step="${escapeAttr(step.key)}" style="width:${w}%">
+            <button class="g1-card-header" data-g3-toggle="${escapeAttr(step.key)}">
+              <span class="g1-card-title">${escapeHtml(step.title)}</span>
+              <span class="status-pill status-${stepStatus}">${escapeHtml(STATUS_LABELS[stepStatus] || stepStatus)}</span>
+              <span class="g1-section-toggle">${isOpen ? 'Свернуть' : 'Раскрыть'}</span>
+            </button>
+            ${isOpen ? `<div class="g1-card-body">
+              <p class="g1-task">${escapeHtml(step.desc)}</p>
+              ${step.fields.map(f => g3_5aDynBlock(step.key, f.k, f.label, f.hint || '', d.fields[f.k])).join('')}
+              ${g3_5aToolsList(step.key, step.tools, d.toolStatuses)}
+              <div class="g1-fields-grid">
+                <label class="g1-field"><span>${escapeHtml(step.question)}</span>
+                  <select class="g1-input is-filled" data-g3a-step="${escapeAttr(step.key)}" data-g3a-field="answer">
+                    <option value=""${!d.answer ? ' selected' : ''}>—</option>
+                    <option value="да"${d.answer === 'да' ? ' selected' : ''}>да</option>
+                    <option value="нет"${d.answer === 'нет' ? ' selected' : ''}>нет</option>
+                  </select>
+                </label>
+              </div>
+              <p class="g1-task" style="font-style:italic;margin-top:12px;opacity:.7">Готово, когда ответ «да» и зафиксированы инструменты.</p>
+            </div>` : ''}
+          </article>`;
+        }).join('')}
+      </div>
+    </section>
   </div>`;
-  bindGate3Accordion();
-  bindCardInputs();
+  bindGate3_5A();
   renderGateNav();
 }
 
-function g3CardHtml(card, funnel) {
-  const acc = getGate3AccordionState();
-  const isOpen = Boolean(acc.cards[card.id]);
-  card.strategyFields = card.strategyFields || { decision:'', source:'', nextStep:'' };
-  const sf = card.strategyFields;
-  const funnelStyle = funnel ? ` style="width:${100 - (funnel.index / Math.max(funnel.total - 1, 1)) * 55}%"` : '';
-  return `<article class="g1-card ${isOpen ? 'is-open' : ''}${funnel ? ' g3-funnel-card' : ''}" data-card="${escapeAttr(card.id)}"${funnelStyle}>
-    <button class="g1-card-header" data-g3-toggle-card="${escapeAttr(card.id)}">
-      <span class="g1-card-title">${escapeHtml(card.title)}</span>
-      <span class="status-pill status-${card.status}">${STATUS_LABELS[card.status] || card.status}</span>
-      <span class="g1-section-toggle">${isOpen ? 'Свернуть' : 'Раскрыть'}</span>
-    </button>
-    ${isOpen ? `<div class="g1-card-body">
-      ${card.instruction ? `<p class="g1-task">${escapeHtml(card.instruction)}</p>` : ''}
-      <div class="g1-fields-grid">
-        ${g3Field('decision', 'Стратегическое решение', sf.decision, 'что решено / выбрано', 'textarea', card.id)}
-        ${g3Field('source', 'Источник решения', sf.source, 'спрос, боль, конкурент, экономика', 'input', card.id)}
-        ${g3Field('nextStep', 'Следующий шаг', sf.nextStep, 'конкретное действие', 'input', card.id)}
-      </div>
-      <p class="g1-task" style="font-style:italic;margin-top:12px;opacity:.7">Готово, когда решение сформулировано и подтверждено источником.</p>
-      <label class="g1-field"><span>Источник / ссылка / скрин / отчёт</span><input class="g1-input ${(sf.source||'').trim() ? 'is-filled' : 'is-empty'}" data-g3-card-id="${escapeAttr(card.id)}" data-g3-field="source" value="${escapeAttr(sf.source || '')}" placeholder="ссылка или описание подтверждения" /></label>
-    </div>` : ''}
-  </article>`;
+function g3_5aDynBlock(stepKey, listKey, label, hint, items) {
+  return `<div class="g3-dyn-block">
+    <div class="g1-field"><span>${escapeHtml(label)}</span></div>
+    <p class="g1-task" style="margin:0 0 8px">${escapeHtml(hint)}</p>
+    ${items.map((val, i) => {
+      const cls = String(val||'').trim() ? 'is-filled' : 'is-empty';
+      return `<div class="g3-dyn-row" style="display:flex;gap:8px;margin-bottom:6px;align-items:start">
+        <textarea class="g1-input ${cls}" style="flex:1" rows="1" data-g3a-step="${escapeAttr(stepKey)}" data-g3a-list="${escapeAttr(listKey)}" data-g3a-idx="${i}">${escapeHtml(val || '')}</textarea>
+        <button class="small-btn danger-mini" style="margin-top:8px" data-g3a-remove="${escapeAttr(stepKey)}" data-g3a-rm-list="${escapeAttr(listKey)}" data-g3a-rm-idx="${i}" ${items.length <= 1 ? 'disabled' : ''}>×</button>
+      </div>`;
+    }).join('')}
+    <button class="small-btn" data-g3a-add="${escapeAttr(stepKey)}" data-g3a-add-list="${escapeAttr(listKey)}">+ добавить</button>
+  </div>`;
 }
 
-function g3Field(name, label, value, placeholder, type, cardId) {
-  const filled = String(value || '').trim();
-  const cls = filled ? 'is-filled' : 'is-empty';
-  if (type === 'textarea') {
-    return `<label class="g1-field"><span>${escapeHtml(label)}</span><textarea class="g1-input ${cls}" data-g3-card-id="${escapeAttr(cardId)}" data-g3-field="${escapeAttr(name)}" rows="3" placeholder="${escapeAttr(placeholder)}">${escapeHtml(value || '')}</textarea></label>`;
+function g3_5aToolsList(stepKey, tools, statuses) {
+  const statusOpts = [
+    { v:'unused',   label:'не используется', cls:'g3-tool-unused' },
+    { v:'working',  label:'в работе',        cls:'g3-tool-working' },
+    { v:'done',     label:'реализован',      cls:'g3-tool-done' }
+  ];
+  return `<div class="g3-tools-list">
+    <div class="g1-field"><span>Инструменты</span></div>
+    ${tools.map(t => {
+      const cur = statuses[t] || 'unused';
+      return `<div class="g3-tool-row g3-tool-${cur}">
+        <span class="g3-tool-name">${escapeHtml(t)}</span>
+        <select class="g3-tool-select" data-g3a-tool-step="${escapeAttr(stepKey)}" data-g3a-tool-name="${escapeAttr(t)}">
+          ${statusOpts.map(o => `<option value="${o.v}"${o.v === cur ? ' selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}
+        </select>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function bindGate3_5A() {
+  document.querySelectorAll('[data-g3-toggle]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const data = ensureGate3_5A();
+      data.openSteps[btn.dataset.g3Toggle] = !data.openSteps[btn.dataset.g3Toggle];
+      saveState();
+      renderGate();
+    });
+  });
+  document.querySelectorAll('[data-g3a-add]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const data = ensureGate3_5A();
+      data[btn.dataset.g3aAdd].fields[btn.dataset.g3aAddList].push('');
+      saveState();
+      renderGate();
+    });
+  });
+  document.querySelectorAll('[data-g3a-remove]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const data = ensureGate3_5A();
+      const list = data[btn.dataset.g3aRemove].fields[btn.dataset.g3aRmList];
+      if (list.length > 1) list.splice(Number(btn.dataset.g3aRmIdx), 1);
+      saveState();
+      renderGate();
+    });
+  });
+}
+
+function g3_5aPointUpdate(stepKey) {
+  const data = ensureGate3_5A();
+  const card = document.querySelector(`[data-g3-step="${CSS.escape(stepKey)}"]`);
+  if (card) {
+    const pill = card.querySelector('.g1-card-header .status-pill');
+    if (pill) {
+      const stepDef = G3_5A_STEPS.find(s => s.key === stepKey);
+      const st = g3_5aStepStatus(data[stepKey], stepDef);
+      pill.className = `status-pill status-${st}`;
+      pill.textContent = STATUS_LABELS[st] || st;
+    }
   }
-  return `<label class="g1-field"><span>${escapeHtml(label)}</span><input class="g1-input ${cls}" data-g3-card-id="${escapeAttr(cardId)}" data-g3-field="${escapeAttr(name)}" value="${escapeAttr(value || '')}" placeholder="${escapeAttr(placeholder)}" /></label>`;
-}
-
-function bindGate3Accordion() {
-  document.querySelectorAll('[data-g3-toggle-section]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const acc = getGate3AccordionState();
-      acc.sections[btn.dataset.g3ToggleSection] = !acc.sections[btn.dataset.g3ToggleSection];
-      saveState();
-      renderGate();
-    });
-  });
-  document.querySelectorAll('[data-g3-toggle-card]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const acc = getGate3AccordionState();
-      acc.cards[btn.dataset.g3ToggleCard] = !acc.cards[btn.dataset.g3ToggleCard];
-      saveState();
-      renderGate();
-    });
-  });
-}
-
-function updateGate3Field(target) {
-  const card = findCard(target.dataset.g3CardId);
-  if (!card) return;
-  card.strategyFields = card.strategyFields || {};
-  card.strategyFields[target.dataset.g3Field] = target.value;
-  recalculateStatusForCard(card);
-  flashSaving();
-  g1PointUpdateBadge(card);
+  const headerPill = document.querySelector('.g1-card-header-static .status-pill');
+  if (headerPill) {
+    const ov = g3_5aOverallStatus();
+    headerPill.className = `status-pill status-${ov}`;
+    headerPill.textContent = STATUS_LABELS[ov] || ov;
+  }
+  const prog = document.querySelector('.g1-card-header-static .g1-section-progress');
+  if (prog) prog.textContent = g3_5aProgressText();
+  renderGateNav();
 }
 
 document.addEventListener('input', e => {
-  if (e.target?.dataset?.g3CardId && e.target.tagName !== 'SELECT') {
-    updateGate3Field(e.target);
-    const cls = e.target.value.trim() ? 'is-filled' : 'is-empty';
-    e.target.classList.remove('is-filled', 'is-empty');
-    e.target.classList.add(cls);
+  const t = e.target;
+  if (t?.dataset?.g3aList) {
+    const data = ensureGate3_5A();
+    data[t.dataset.g3aStep].fields[t.dataset.g3aList][Number(t.dataset.g3aIdx)] = t.value;
+    flashSaving();
+    t.classList.toggle('is-filled', !!t.value.trim());
+    t.classList.toggle('is-empty', !t.value.trim());
+    g3_5aPointUpdate(t.dataset.g3aStep);
   }
 });
 document.addEventListener('change', e => {
-  if (e.target?.dataset?.g3CardId) updateGate3Field(e.target);
+  const t = e.target;
+  if (t?.dataset?.g3aStep && t.dataset.g3aField === 'answer') {
+    const data = ensureGate3_5A();
+    data[t.dataset.g3aStep].answer = t.value;
+    flashSaving();
+    g3_5aPointUpdate(t.dataset.g3aStep);
+    renderGate();
+  }
+  if (t?.dataset?.g3aToolStep) {
+    const data = ensureGate3_5A();
+    data[t.dataset.g3aToolStep].toolStatuses[t.dataset.g3aToolName] = t.value;
+    flashSaving();
+    const row = t.closest('.g3-tool-row');
+    if (row) { row.className = `g3-tool-row g3-tool-${t.value}`; }
+    g3_5aPointUpdate(t.dataset.g3aToolStep);
+  }
 });
 
 /* ================================================================
-   Gate 4 · Реализация — redesign (g1-redesign pattern)
+   Gate 4 · Реализация — v2 (5 блоков, данные из Gate 0–3)
    ================================================================ */
 
 function isGate4(gate) { return gate?.id === 'gate-4'; }
 
-function getGate4AccordionState() {
-  if (!state.ui) state.ui = {};
-  if (!state.ui.gate4Accordion) state.ui.gate4Accordion = { sections: {}, cards: {} };
-  return state.ui.gate4Accordion;
+function ensureGate4State() {
+  if (!state.gate4) state.gate4 = {};
+  const d = state.gate4;
+  d.openSteps = d.openSteps || {};
+  d.offer = d.offer || { finalOffer: '', source: '' };
+  d.landing = d.landing || { framework: '', psychoLayers: '', offerLink: '', source: '' };
+  d.creatives = d.creatives || {
+    creativeFrame: '', creativeMatrix: '', creativePack: '', adEntities: '',
+    demandLandingLink: '', budget: '', stopCriteria: '', source: ''
+  };
+  d.launchParams = d.launchParams || { campaignGoals: '', utmTemplate: '', targetCpl: '', testBudget: '', source: '' };
+  d.readiness = d.readiness || { qaChecked: '', leadsHandling: '', launchConfirmed: '' };
+  return d;
 }
 
-function getGate4SectionStatus(cards) {
-  if (!cards.length) return 'not_started';
-  const filled = cards.filter(c => c.status === 'ready').length;
-  if (filled === cards.length) return 'ready';
-  if (filled > 0 || cards.some(c => c.status === 'in_progress')) return 'in_progress';
-  if (cards.some(c => c.status === 'needs_attention')) return 'needs_attention';
-  if (cards.some(c => c.status === 'problem')) return 'problem';
+function g4ReadGate0() {
+  const p = state?.project || {};
+  const se = state?.sharedEvidence || {};
+  return {
+    product: p.whatSell || se['что_продаем'] || '',
+    segment: p.targetSegment || se['кому_продаем'] || '',
+    result: p.clientResult || se['ради_какого_результата'] || ''
+  };
+}
+
+function g4ReadGate1Positioning() {
+  const p = state?.project || {};
+  const se = state?.sharedEvidence || {};
+  return {
+    positioning: p.positioningStatement || se['positioning_statement'] || '',
+    usp: p.usp || se['usp'] || '',
+    rationalCoverage: p.offerRationalCoverage || se['offer_rational_coverage'] || '',
+    irrationalDriver: p.offerIrrationalDriver || se['offer_irrational_driver'] || '',
+    socialMechanism: p.offerSocialMechanism || se['offer_social_mechanism'] || ''
+  };
+}
+
+function g4ReadUnitEconomics() {
+  const route = ensureUnitEconomicsState();
+  const computed = unitEconomicsComputed();
+  const sec = route.sections || {};
+  return {
+    aov: sec.revenue_aov?.aov || '',
+    marginPercent: sec.margin?.marginPercent || '',
+    allowedCpa: computed.allowedCpa ? formatUnitMoney(computed.allowedCpa) : (sec.cpa_cpl?.allowedCpa || ''),
+    allowedCpl: computed.allowedCpl ? formatUnitMoney(computed.allowedCpl) : (sec.cpa_cpl?.allowedCpl || ''),
+    targetDrr: sec.drr?.targetDrr || '',
+    ltv: sec.ltv?.ltv || '',
+    minTestBudget: sec.economic_limits?.minTestBudget || ''
+  };
+}
+
+function g4ReadGate2Status() {
+  const gate2 = state.gates?.find(g => g.id === 'gate-2');
+  if (!gate2) return { ready: false, total: 0, done: 0 };
+  const total = gate2.cards.length;
+  const done = gate2.cards.filter(c => c.status === 'ready').length;
+  return { ready: done === total && total > 0, total, done };
+}
+
+function g4ReadGate3Channels() {
+  const data = ensureGate3_5A();
+  const channels = [];
+  G3_5A_STEPS.forEach(step => {
+    const d = data[step.key];
+    if (!d?.toolStatuses) return;
+    step.tools.forEach(tool => {
+      const st = d.toolStatuses[tool];
+      if (st && st !== 'unused') channels.push({ name: tool, stage: step.title, status: st });
+    });
+  });
+  return channels;
+}
+
+function g4ReadGate3Appeal() {
+  const data = ensureGate3_5A();
+  const appeal = data.appeal || {};
+  const fields = appeal.fields || {};
+  return {
+    hook: (fields.hook || []).filter(v => v.trim()).join('; '),
+    image: (fields.image || []).filter(v => v.trim()).join('; '),
+    emotion: (fields.emotion || []).filter(v => v.trim()).join('; '),
+    promise: (fields.promise || []).filter(v => v.trim()).join('; ')
+  };
+}
+
+function g4ReadonlyRow(label, value, sourceLabel) {
+  const v = String(value || '').trim();
+  if (!v) return `<div class="g4-readonly"><span class="g4-readonly-label">${escapeHtml(label)}</span><span class="g4-readonly-empty">не заполнено в ${escapeHtml(sourceLabel)}</span></div>`;
+  return `<div class="g4-readonly"><span class="g4-readonly-label">${escapeHtml(label)}</span><span class="g4-readonly-value">${escapeHtml(v)}</span><span class="g4-readonly-source">← ${escapeHtml(sourceLabel)}</span></div>`;
+}
+
+function g4BlockStatus(blockKey) {
+  const d = ensureGate4State();
+  if (blockKey === 'offer') {
+    const g0 = g4ReadGate0();
+    const g1 = g4ReadGate1Positioning();
+    const hasUpstream = [g0.product, g0.segment, g1.usp].some(v => v.trim());
+    const hasFinal = d.offer.finalOffer.trim();
+    if (hasFinal) return 'ready';
+    if (hasUpstream) return 'in_progress';
+    return 'not_started';
+  }
+  if (blockKey === 'landing') {
+    const f = d.landing;
+    const filled = [f.framework, f.psychoLayers, f.offerLink].filter(v => v.trim()).length;
+    if (filled === 3 && f.source.trim()) return 'ready';
+    if (filled > 0) return 'in_progress';
+    return 'not_started';
+  }
+  if (blockKey === 'creatives') {
+    const f = d.creatives;
+    const keys = ['creativeFrame', 'creativeMatrix', 'creativePack', 'adEntities', 'demandLandingLink', 'budget', 'stopCriteria'];
+    const filled = keys.filter(k => f[k].trim()).length;
+    if (filled === keys.length && f.source.trim()) return 'ready';
+    if (filled > 0) return 'in_progress';
+    return 'not_started';
+  }
+  if (blockKey === 'launchParams') {
+    const f = d.launchParams;
+    const keys = ['campaignGoals', 'utmTemplate', 'targetCpl', 'testBudget'];
+    const filled = keys.filter(k => f[k].trim()).length;
+    if (filled === keys.length && f.source.trim()) return 'ready';
+    if (filled > 0) return 'in_progress';
+    return 'not_started';
+  }
+  if (blockKey === 'readiness') {
+    const f = d.readiness;
+    const vals = [f.qaChecked, f.leadsHandling, f.launchConfirmed];
+    if (vals.every(v => v === 'да')) return 'ready';
+    if (vals.some(v => v === 'нет')) return 'problem';
+    if (vals.some(v => v)) return 'in_progress';
+    return 'not_started';
+  }
   return 'not_started';
 }
 
-function getGate4SectionProgress(cards) {
-  if (!cards.length) return '';
-  const done = cards.filter(c => c.status === 'ready').length;
-  return `${cards.length} блоков, готово ${Math.round(done / cards.length * 100)}%`;
+const G4_BLOCKS = [
+  { key: 'offer', title: '1. Сборка оффера' },
+  { key: 'landing', title: '2. Посадочная под сегмент' },
+  { key: 'creatives', title: '3. Креативы и рекламные сущности' },
+  { key: 'launchParams', title: '4. Параметры запуска' },
+  { key: 'readiness', title: '5. Запусковая готовность' }
+];
+
+function g4OfferHtml() {
+  const d = ensureGate4State();
+  const g0 = g4ReadGate0();
+  const g1 = g4ReadGate1Positioning();
+  const ue = g4ReadUnitEconomics();
+  return `<p class="g1-task">Собрать финальную формулировку оффера из данных Gate 0–1. Все поля ниже — только чтение, кроме итоговой формулировки.</p>
+    <div class="g4-upstream">
+      <div class="g4-upstream-title">Данные из Gate 0</div>
+      ${g4ReadonlyRow('Продукт / услуга', g0.product, 'Gate 0')}
+      ${g4ReadonlyRow('Целевой сегмент', g0.segment, 'Gate 0')}
+      ${g4ReadonlyRow('Результат клиента', g0.result, 'Gate 0')}
+    </div>
+    <div class="g4-upstream">
+      <div class="g4-upstream-title">Ценность и позиционирование из Gate 1</div>
+      ${g4ReadonlyRow('Позиционирование', g1.positioning, 'Gate 1')}
+      ${g4ReadonlyRow('УТП', g1.usp, 'Gate 1')}
+      ${g4ReadonlyRow('Рациональное покрытие', g1.rationalCoverage, 'Gate 1')}
+      ${g4ReadonlyRow('Иррациональный драйвер', g1.irrationalDriver, 'Gate 1')}
+      ${g4ReadonlyRow('Социальный механизм', g1.socialMechanism, 'Gate 1')}
+    </div>
+    <div class="g4-upstream">
+      <div class="g4-upstream-title">Цена из юнит-экономики Gate 1</div>
+      ${g4ReadonlyRow('Средний чек (AOV)', ue.aov, 'Gate 1')}
+      ${g4ReadonlyRow('Допустимый CPA', ue.allowedCpa, 'Gate 1')}
+    </div>
+    <div class="g1-fields-grid" style="margin-top:16px">
+      <label class="g1-field"><span>Финальная формулировка оффера</span><small style="color:var(--muted);font-size:11px">продукт + цена + главное обещание</small><textarea class="g1-input ${d.offer.finalOffer.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="offer" data-g4-field="finalOffer" rows="3" placeholder="Например: [продукт] за [цена] — [обещание]">${escapeHtml(d.offer.finalOffer)}</textarea></label>
+      <label class="g1-field"><span>Источник / ссылка / скрин / отчёт</span><input class="g1-input ${d.offer.source.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="offer" data-g4-field="source" value="${escapeAttr(d.offer.source)}" placeholder="URL, файл или описание" /></label>
+    </div>
+    <p class="g1-task" style="font-style:italic;margin-top:8px">Готово, когда финальная формулировка оффера зафиксирована.</p>`;
 }
 
-function g4CardFieldsHtml(card) {
-  card.implementationFields = card.implementationFields || { what: '', where: '', output: '', comment: '', source: '' };
-  const f = card.implementationFields;
-  return `<div class="g1-fields-grid">
-    ${g1FieldInput('data-g4-card-id="' + escapeAttr(card.id) + '" data-g4-field', 'what', 'Что реализовать', f.what, 'описание задачи / элемента', 'textarea')}
-    ${g1FieldInput('data-g4-card-id="' + escapeAttr(card.id) + '" data-g4-field', 'where', 'Где реализовать', f.where, 'страница / канал / кампания', 'text')}
-    ${g1FieldInput('data-g4-card-id="' + escapeAttr(card.id) + '" data-g4-field', 'output', 'Результат на выходе', f.output, 'что должно получиться', 'text')}
-    ${g1FieldInput('data-g4-card-id="' + escapeAttr(card.id) + '" data-g4-field', 'comment', 'Комментарий', f.comment, 'если нужен', 'text')}
-    ${g1FieldInput('data-g4-card-id="' + escapeAttr(card.id) + '" data-g4-field', 'source', 'Источник / ссылка / скрин / отчёт', f.source, 'URL, файл или описание', 'text')}
-  </div>`;
+
+function g4LandingHtml() {
+  const d = ensureGate4State();
+  const appeal = g4ReadGate3Appeal();
+  const g2 = g4ReadGate2Status();
+  const g2StatusText = g2.ready ? 'Gate 2 готов (' + g2.done + '/' + g2.total + ')' : 'Gate 2: ' + g2.done + ' из ' + g2.total + ' блоков готово';
+  return `<p class="g1-task">Производство посадочной: каркас + психослои + связка с оффером. Техническая готовность проверена в Gate 2.</p>
+    <div class="g4-upstream">
+      <div class="g4-upstream-title">Оффер из блока 1</div>
+      ${g4ReadonlyRow('Финальный оффер', d.offer.finalOffer, 'блок 1')}
+    </div>
+    <div class="g4-upstream">
+      <div class="g4-upstream-title">Стадия Appeal из Gate 3</div>
+      ${g4ReadonlyRow('Что должно зацепить', appeal.hook, 'Gate 3')}
+      ${g4ReadonlyRow('Образ бренда', appeal.image, 'Gate 3')}
+      ${g4ReadonlyRow('Эмоция', appeal.emotion, 'Gate 3')}
+      ${g4ReadonlyRow('Обещание бренда', appeal.promise, 'Gate 3')}
+    </div>
+    <div class="g4-upstream">
+      <div class="g4-upstream-title">Техническая готовность</div>
+      <div class="g4-readonly"><span class="g4-readonly-label">Формы, мобильная, SSL</span><span class="g4-readonly-value status-pill status-${g2.ready ? 'ready' : 'in_progress'}" style="font-size:12px">${escapeHtml(g2StatusText)}</span><span class="g4-readonly-source">← Gate 2</span></div>
+    </div>
+    <div class="g1-fields-grid" style="margin-top:16px">
+      <label class="g1-field"><span>Каркас страницы</span><small style="color:var(--muted);font-size:11px">блоки, секции, порядок, логика прокрутки</small><textarea class="g1-input ${d.landing.framework.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="landing" data-g4-field="framework" rows="3" placeholder="hero → оффер → соцдоказательство → FAQ → CTA">${escapeHtml(d.landing.framework)}</textarea></label>
+      <label class="g1-field"><span>Психослои</span><small style="color:var(--muted);font-size:11px">какие эмоции / аргументы на каждом экране</small><textarea class="g1-input ${d.landing.psychoLayers.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="landing" data-g4-field="psychoLayers" rows="2" placeholder="1 экран — боль, 2 — решение, 3 — доверие…">${escapeHtml(d.landing.psychoLayers)}</textarea></label>
+      <label class="g1-field"><span>Связка с оффером</span><textarea class="g1-input ${d.landing.offerLink.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="landing" data-g4-field="offerLink" rows="1" placeholder="как оффер отражён в hero, CTA, формах">${escapeHtml(d.landing.offerLink)}</textarea></label>
+      <label class="g1-field"><span>Источник / ссылка / скрин / отчёт</span><input class="g1-input ${d.landing.source.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="landing" data-g4-field="source" value="${escapeAttr(d.landing.source)}" placeholder="URL макета или страницы" /></label>
+    </div>
+    <p class="g1-task" style="font-style:italic;margin-top:8px">Готово, когда каркас, психослои и связка с оффером заполнены.</p>`;
 }
 
-function g4CardHtml(card) {
-  const acc = getGate4AccordionState();
-  const isOpen = Boolean(acc.cards[card.id]);
-  const instr = String(card?.instruction || '').trim();
-  const taskText = instr ? instr.split(/\n/).slice(0, 2).join(' ').slice(0, 200) : '';
-  return `<article class="g1-card ${isOpen ? 'is-open' : ''}" data-card="${escapeAttr(card.id)}">
-    <button class="g1-card-header" data-g4-toggle-card="${escapeAttr(card.id)}">
-      <span class="g1-card-title">${escapeHtml(card.title)}</span>
-      <span class="status-pill status-${card.status}">${STATUS_LABELS[card.status] || card.status}</span>
-    </button>
-    ${isOpen ? `<div class="g1-card-body">
-      ${taskText ? `<p class="g1-task">${escapeHtml(taskText)}</p>` : ''}
-      ${g4CardFieldsHtml(card)}
-      <p class="g1-task" style="font-style:italic;margin-top:8px">Готово, когда все обязательные поля заполнены и есть источник подтверждения.</p>
-    </div>` : ''}
-  </article>`;
+function g4CreativesHtml() {
+  const d = ensureGate4State();
+  const channels = g4ReadGate3Channels();
+  const channelsText = channels.length ? channels.map(c => c.name).join(', ') : 'каналы не выбраны в Gate 3';
+  return `<p class="g1-task">Ядро Gate 4. Здесь создаётся новое: креативы, объявления, рекламные сущности под выбранные каналы.</p>
+    <div class="g4-upstream">
+      <div class="g4-upstream-title">Каналы из Gate 3 (карта 5A)</div>
+      <div class="g4-readonly"><span class="g4-readonly-label">Активные каналы</span><span class="g4-readonly-value" style="font-size:13px">${escapeHtml(channelsText)}</span><span class="g4-readonly-source">← Gate 3</span></div>
+    </div>
+    <div class="g4-upstream">
+      <div class="g4-upstream-title">Оффер из блока 1</div>
+      ${g4ReadonlyRow('Финальный оффер', d.offer.finalOffer, 'блок 1')}
+    </div>
+    <div class="g1-fields-grid" style="margin-top:16px">
+      <label class="g1-field"><span>Креативная рамка</span><small style="color:var(--muted);font-size:11px">тон, стиль, ключевое сообщение</small><textarea class="g1-input ${d.creatives.creativeFrame.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="creatives" data-g4-field="creativeFrame" rows="2" placeholder="какой тон, визуальный стиль, ключевой месседж">${escapeHtml(d.creatives.creativeFrame)}</textarea></label>
+      <label class="g1-field"><span>Матрица креативов</span><small style="color:var(--muted);font-size:11px">формат × сегмент × канал</small><textarea class="g1-input ${d.creatives.creativeMatrix.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="creatives" data-g4-field="creativeMatrix" rows="2" placeholder="какие варианты объявлений / баннеров / видео">${escapeHtml(d.creatives.creativeMatrix)}</textarea></label>
+      <label class="g1-field"><span>Пакет креативов</span><small style="color:var(--muted);font-size:11px">конкретные готовые единицы</small><textarea class="g1-input ${d.creatives.creativePack.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="creatives" data-g4-field="creativePack" rows="2" placeholder="список готовых креативов">${escapeHtml(d.creatives.creativePack)}</textarea></label>
+      <label class="g1-field"><span>Рекламные сущности</span><small style="color:var(--muted);font-size:11px">кампании, группы, объявления</small><textarea class="g1-input ${d.creatives.adEntities.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="creatives" data-g4-field="adEntities" rows="2" placeholder="структура аккаунта: кампания → группа → объявление">${escapeHtml(d.creatives.adEntities)}</textarea></label>
+      <label class="g1-field"><span>Связка спроса и посадок</span><textarea class="g1-input ${d.creatives.demandLandingLink.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="creatives" data-g4-field="demandLandingLink" rows="1" placeholder="какой спрос → на какую страницу">${escapeHtml(d.creatives.demandLandingLink)}</textarea></label>
+      <label class="g1-field"><span>Бюджет</span><textarea class="g1-input ${d.creatives.budget.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="creatives" data-g4-field="budget" rows="1" placeholder="бюджет на период">${escapeHtml(d.creatives.budget)}</textarea></label>
+      <label class="g1-field"><span>Стоп-критерий</span><textarea class="g1-input ${d.creatives.stopCriteria.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="creatives" data-g4-field="stopCriteria" rows="1" placeholder="CPL > X, DRR > Y%, бюджет исчерпан">${escapeHtml(d.creatives.stopCriteria)}</textarea></label>
+      <label class="g1-field"><span>Источник / ссылка / скрин / отчёт</span><input class="g1-input ${d.creatives.source.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="creatives" data-g4-field="source" value="${escapeAttr(d.creatives.source)}" placeholder="URL или описание" /></label>
+    </div>
+    <p class="g1-task" style="font-style:italic;margin-top:8px">Готово, когда все поля заполнены и есть источник подтверждения.</p>`;
 }
 
-function renderGate4Redesign(gate, cards) {
-  const sections = getSemanticGateSections(gate, cards);
-  const acc = getGate4AccordionState();
-  const queryActive = els.searchInput.value.trim() || els.statusFilter.value !== 'all';
+function g4LaunchParamsHtml() {
+  const d = ensureGate4State();
+  const ue = g4ReadUnitEconomics();
+  const g2 = g4ReadGate2Status();
+  return `<p class="g1-task">Кампанийный слой этого запуска: цели, UTM, целевой CPL, бюджет на тест. Юнит-экономика и Метрика — из предыдущих Gate.</p>
+    <div class="g4-upstream">
+      <div class="g4-upstream-title">Юнит-экономика из Gate 1</div>
+      ${g4ReadonlyRow('Допустимый CPA', ue.allowedCpa, 'Gate 1')}
+      ${g4ReadonlyRow('Допустимый CPL', ue.allowedCpl, 'Gate 1')}
+      ${g4ReadonlyRow('Целевой DRR', ue.targetDrr, 'Gate 1')}
+      ${g4ReadonlyRow('Средний чек (AOV)', ue.aov, 'Gate 1')}
+      ${g4ReadonlyRow('LTV', ue.ltv, 'Gate 1')}
+    </div>
+    <div class="g4-upstream">
+      <div class="g4-upstream-title">Инструментирование</div>
+      <div class="g4-readonly"><span class="g4-readonly-label">Готовность Метрики / Analytics</span><span class="g4-readonly-value status-pill status-${g2.ready ? 'ready' : 'in_progress'}" style="font-size:12px">${g2.done} из ${g2.total} блоков</span><span class="g4-readonly-source">← Gate 2</span></div>
+    </div>
+    <div class="g1-fields-grid" style="margin-top:16px">
+      <label class="g1-field"><span>Цели этой кампании</span><textarea class="g1-input ${d.launchParams.campaignGoals.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="launchParams" data-g4-field="campaignGoals" rows="2" placeholder="заявка, звонок, покупка — конкретно для этого запуска">${escapeHtml(d.launchParams.campaignGoals)}</textarea></label>
+      <label class="g1-field"><span>UTM-шаблон этого запуска</span><textarea class="g1-input ${d.launchParams.utmTemplate.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="launchParams" data-g4-field="utmTemplate" rows="1" placeholder="utm_source / utm_medium / utm_campaign / utm_content">${escapeHtml(d.launchParams.utmTemplate)}</textarea></label>
+      <label class="g1-field"><span>Целевой CPL этого запуска</span><input class="g1-input ${d.launchParams.targetCpl.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="launchParams" data-g4-field="targetCpl" value="${escapeAttr(d.launchParams.targetCpl)}" placeholder="₽" /></label>
+      <label class="g1-field"><span>Бюджет на тест</span><input class="g1-input ${d.launchParams.testBudget.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="launchParams" data-g4-field="testBudget" value="${escapeAttr(d.launchParams.testBudget)}" placeholder="₽" /></label>
+      <label class="g1-field"><span>Источник / ссылка / скрин / отчёт</span><input class="g1-input ${d.launchParams.source.trim() ? 'is-filled' : 'is-empty'}" data-g4-block="launchParams" data-g4-field="source" value="${escapeAttr(d.launchParams.source)}" placeholder="URL или описание" /></label>
+    </div>
+    <p class="g1-task" style="font-style:italic;margin-top:8px">Готово, когда цели, UTM, CPL и тестовый бюджет зафиксированы.</p>`;
+}
+
+function g4ReadinessHtml() {
+  const d = ensureGate4State();
+  const allStatuses = G4_BLOCKS.slice(0, 4).map(b => g4BlockStatus(b.key));
+  const sel = (field, value) => `<select class="g1-input is-filled" data-g4-block="readiness" data-g4-field="${escapeAttr(field)}">
+    <option value=""${!value ? ' selected' : ''}>—</option>
+    <option value="да"${value === 'да' ? ' selected' : ''}>да</option>
+    <option value="нет"${value === 'нет' ? ' selected' : ''}>нет</option>
+  </select>`;
+  const allBlocksReady = allStatuses.every(s => s === 'ready');
+  const allChecked = d.readiness.qaChecked === 'да' && d.readiness.leadsHandling === 'да' && d.readiness.launchConfirmed === 'да';
+  return `<p class="g1-task">Финальный QA перед стартом. Бинарно: да / нет.</p>
+    <div class="g4-upstream">
+      <div class="g4-upstream-title">Статусы блоков Gate 4</div>
+      ${G4_BLOCKS.slice(0, 4).map((b, i) => `<div class="g4-readonly"><span class="g4-readonly-label">${escapeHtml(b.title)}</span><span class="status-pill status-${allStatuses[i]}" style="font-size:12px">${escapeHtml(STATUS_LABELS[allStatuses[i]] || allStatuses[i])}</span></div>`).join('')}
+    </div>
+    <div class="g1-fields-grid" style="margin-top:16px">
+      <label class="g1-field"><span>Предзапусковый QA пройден</span>${sel('qaChecked', d.readiness.qaChecked)}</label>
+      <label class="g1-field"><span>Обработка заявок настроена</span>${sel('leadsHandling', d.readiness.leadsHandling)}</label>
+      <label class="g1-field"><span>Подтверждение запуска</span>${sel('launchConfirmed', d.readiness.launchConfirmed)}</label>
+    </div>
+    ${allBlocksReady && allChecked ? '<div class="g4-launch-ok">Все блоки готовы. Можно запускать.</div>' : ''}
+    <p class="g1-task" style="font-style:italic;margin-top:8px">Готово, когда все три пункта — «да».</p>`;
+}
+
+const G4_RENDERERS = {
+  offer: g4OfferHtml,
+  landing: g4LandingHtml,
+  creatives: g4CreativesHtml,
+  launchParams: g4LaunchParamsHtml,
+  readiness: g4ReadinessHtml
+};
+
+function renderGate4Redesign(gate) {
+  ensureGate4State();
+  const d = state.gate4;
   els.contentArea.innerHTML = `<div class="g1-redesign">
-    ${sections.map(section => {
-      const sectionOpen = Boolean(acc.sections[section.key]);
-      const status = getGate4SectionStatus(section.allInnerCards);
-      const progressText = getGate4SectionProgress(section.allInnerCards);
-      const displayCards = queryActive ? section.filteredInnerCards : section.allInnerCards;
-      return `<section class="g1-section ${sectionOpen ? 'is-open' : ''}">
-        <button class="g1-section-header" data-g4-toggle-section="${escapeAttr(section.key)}">
+    ${G4_BLOCKS.map(block => {
+      const isOpen = Boolean(d.openSteps[block.key]);
+      const status = g4BlockStatus(block.key);
+      return `<section class="g1-section ${isOpen ? 'is-open' : ''}">
+        <button class="g1-section-header" data-g4-toggle="${escapeAttr(block.key)}">
           <span class="g1-section-left">
-            <span class="g1-section-title">${escapeHtml(section.title)}</span>
-            <span class="g1-section-progress">${escapeHtml(progressText)}</span>
+            <span class="g1-section-title">${escapeHtml(block.title)}</span>
           </span>
           <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
         </button>
-        ${sectionOpen ? `<div class="g1-section-body">
-          ${displayCards.length ? displayCards.map(card => g4CardHtml(card)).join('') : '<div class="g1-empty">По текущему фильтру ничего не найдено.</div>'}
-        </div>` : ''}
+        ${isOpen ? `<div class="g1-section-body">${G4_RENDERERS[block.key]()}</div>` : ''}
       </section>`;
     }).join('')}
   </div>`;
-  bindGate4Accordion();
-  bindGate4Fields();
-  bindCardInputs();
+  bindGate4Events();
   renderGateNav();
 }
 
-function bindGate4Accordion() {
-  document.querySelectorAll('[data-g4-toggle-section]').forEach(btn => {
+function bindGate4Events() {
+  document.querySelectorAll('[data-g4-toggle]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const key = btn.dataset.g4ToggleSection;
-      const acc = getGate4AccordionState();
-      acc.sections[key] = !acc.sections[key];
+      const key = btn.dataset.g4Toggle;
+      const d = ensureGate4State();
+      d.openSteps[key] = !d.openSteps[key];
       saveState();
       renderGate();
     });
   });
-  document.querySelectorAll('[data-g4-toggle-card]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const cardId = btn.dataset.g4ToggleCard;
-      const acc = getGate4AccordionState();
-      acc.cards[cardId] = !acc.cards[cardId];
-      saveState();
-      renderGate();
-    });
-  });
-}
-
-function bindGate4Fields() {
-  document.querySelectorAll('[data-g4-card-id]').forEach(input => {
-    input.addEventListener('input', e => {
-      const cardId = e.target.dataset.g4CardId;
+  document.querySelectorAll('[data-g4-block][data-g4-field]').forEach(input => {
+    const handler = e => {
+      const block = e.target.dataset.g4Block;
       const field = e.target.dataset.g4Field;
-      const card = findCard(cardId);
-      if (!card) return;
-      card.implementationFields = card.implementationFields || {};
-      card.implementationFields[field] = e.target.value;
-      recalculateStatusForCard(card);
+      const d = ensureGate4State();
+      d[block][field] = e.target.value;
       flashSaving();
-      const cls = e.target.value.trim() ? 'is-filled' : 'is-empty';
-      e.target.classList.remove('is-filled', 'is-empty');
-      e.target.classList.add(cls);
-      g1PointUpdateBadge(card);
-    });
-    input.addEventListener('change', e => {
-      const cardId = e.target.dataset.g4CardId;
-      const field = e.target.dataset.g4Field;
-      const card = findCard(cardId);
-      if (!card) return;
-      card.implementationFields = card.implementationFields || {};
-      card.implementationFields[field] = e.target.value;
-      recalculateStatusForCard(card);
-      flashSaving();
-      if (e.target.tagName === 'SELECT') renderGate();
-    });
+      if (e.target.tagName === 'SELECT') {
+        renderGate();
+      } else {
+        const cls = e.target.value.trim() ? 'is-filled' : 'is-empty';
+        e.target.classList.remove('is-filled', 'is-empty');
+        e.target.classList.add(cls);
+        renderGateNav();
+      }
+    };
+    input.addEventListener('input', handler);
+    input.addEventListener('change', handler);
   });
 }
 
 const __prevRenderSemanticGateAccordionG4 = renderSemanticGateAccordion;
 renderSemanticGateAccordion = function(gate, cards) {
   if (isGate4(gate)) {
-    renderGate4Redesign(gate, cards);
+    renderGate4Redesign(gate);
     return;
   }
   __prevRenderSemanticGateAccordionG4(gate, cards);
@@ -14030,6 +14707,7 @@ const GATE1_G0_HINTS = {
 function g0HintBtnHtml(hintKey) {
   if (hintKey === '__demand_promoted_full__') return '<button type="button" class="g0-hint-btn" data-demand-promoted-hint>G0</button>';
   if (hintKey === '__clusters_all__') return '<button type="button" class="g0-hint-btn" data-clusters-hint>G0</button>';
+  if (hintKey === '__client_language__') return '<button type="button" class="g0-hint-btn" data-client-lang-hint>G0</button>';
   const sources = GATE1_G0_HINTS[hintKey];
   if (typeof sources === 'string') return g0HintBtnHtml(sources);
   if (!sources || !sources.length) return '';
@@ -14475,6 +15153,46 @@ document.addEventListener('click', e => {
   setTimeout(() => document.addEventListener('click', _g0ClickAway, true), 0);
 });
 
+function clientLanguagePopoverHtml() {
+  const d = state?.demandV130 || {};
+  const items = [];
+  ['search', 'banner'].forEach(section => {
+    const steps = d[section]?.steps || {};
+    const form = steps.formulations || {};
+    const realPhrases = String(form.realPhrases || '').trim();
+    const slang = String(form.slang || '').trim();
+    const pains = String(form.pains || '').trim();
+    if (realPhrases) items.push({ label: 'Реальные формулировки', value: realPhrases });
+    if (slang) items.push({ label: 'Разговорные / ошибки / сленг', value: slang });
+    if (pains) items.push({ label: 'Боли и ситуации', value: pains });
+  });
+
+  let html = '<div class="g0-popover">';
+  if (items.length) {
+    html += '<div class="g0-popover-title">Из «Пользовательские формулировки»</div>';
+    html += items.map(i => `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(i.label)}</div><div class="g0-popover-value">${escapeHtml(i.value)}</div></div>`).join('');
+  } else {
+    html += '<div class="g0-popover-empty">Шаг «Пользовательские формулировки» пока не заполнен.</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-client-lang-hint]');
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  closeG0Popover();
+  const el = document.createElement('div');
+  el.innerHTML = clientLanguagePopoverHtml();
+  const popover = el.firstElementChild;
+  document.body.appendChild(popover);
+  positionG0Popover(popover, btn.getBoundingClientRect());
+  _g0ActivePopover = popover;
+  setTimeout(() => document.addEventListener('click', _g0ClickAway, true), 0);
+});
+
 function clustersPopoverHtml() {
   const d = state?.demandV130 || {};
   const items = [];
@@ -14640,4 +15358,164 @@ dv130FieldHtml = function(prefix, stepKey, field, value) {
   const btn = g0HintBtnHtml(hintKey);
   if (!btn) return html;
   return html.replace('>' + escapeHtml(field.l) + '</span>', '>' + escapeHtml(field.l) + btn + '</span>');
+};
+
+// G0 hint for pain v1.3.0 cluster field
+const PV130_G0_MAP = { cluster: '__clusters_all__', clientLanguage: '__client_language__' };
+
+const __prevPainV130StepHtml = painV130StepHtml;
+painV130StepHtml = function(step, data, isOpen) {
+  let html = __prevPainV130StepHtml(step, data, isOpen);
+  if (!isOpen) return html;
+  (step.fields || []).forEach(f => {
+    const hintKey = PV130_G0_MAP[f.k];
+    if (!hintKey) return;
+    const btn = g0HintBtnHtml(hintKey);
+    if (!btn) return;
+    html = html.replace('>' + escapeHtml(f.l) + '</span>', '>' + escapeHtml(f.l) + btn + '</span>');
+  });
+  return html;
+};
+
+// G0 hint for JTBD table — show segments
+const __prevPv130TableHtml = pv130TableHtml;
+pv130TableHtml = function(step, data) {
+  let html = __prevPv130TableHtml(step, data);
+  if (step.key !== 'jtbd') return html;
+  const btn = '<button type="button" class="g0-hint-btn" data-segments-hint>G0</button>';
+  const col0 = step.tableCols[0];
+  html = html.replace('>' + escapeHtml(col0) + '</span>', '>' + escapeHtml(col0) + btn + '</span>');
+  return html;
+};
+
+function segmentsPopoverHtml() {
+  const d = state?.painV130 || {};
+  const rows = d.steps?.segments?.segmentRows || [];
+  const items = rows.map(row => {
+    const segment = String(row.col0 || '').trim();
+    const trigger = String(row.col1 || '').trim();
+    const problem = String(row.col2 || '').trim();
+    const result = String(row.col3 || '').trim();
+    if (!segment && !trigger && !problem && !result) return null;
+    return { segment: segment || '—', trigger, problem, result };
+  }).filter(Boolean);
+
+  let html = '<div class="g0-popover">';
+  if (items.length) {
+    html += '<div class="g0-popover-title">Сегменты из шага 4</div>';
+    html += items.map(i => {
+      let body = '';
+      if (i.trigger) body += `Триггер: ${i.trigger}\n`;
+      if (i.problem) body += `Проблема: ${i.problem}\n`;
+      if (i.result) body += `Результат: ${i.result}`;
+      return `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(i.segment)}</div><div class="g0-popover-value">${escapeHtml(body.trim())}</div></div>`;
+    }).join('');
+  } else {
+    html += '<div class="g0-popover-empty">Сегменты пока не заполнены в шаге 4.</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-segments-hint]');
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  closeG0Popover();
+  const el = document.createElement('div');
+  el.innerHTML = segmentsPopoverHtml();
+  const popover = el.firstElementChild;
+  document.body.appendChild(popover);
+  positionG0Popover(popover, btn.getBoundingClientRect());
+  _g0ActivePopover = popover;
+  setTimeout(() => document.addEventListener('click', _g0ClickAway, true), 0);
+});
+
+/* v1.3.0 — toggle collapse for card subblocks (persisted in state) */
+function g1CollapseKey(header) {
+  const spans = header.querySelectorAll('span');
+  return Array.from(spans).map(s => s.textContent.trim()).join('|').substring(0, 100);
+}
+function g1CollapsedSet() {
+  if (!state) return new Set();
+  state.g1Collapsed = state.g1Collapsed || [];
+  return new Set(state.g1Collapsed);
+}
+function g1SaveCollapsed(set) {
+  if (!state) return;
+  state.g1Collapsed = [...set];
+  saveState();
+}
+document.addEventListener('click', e => {
+  const header = e.target.closest('[data-g1-collapse]');
+  if (!header) return;
+  if (e.target.closest('.danger-mini')) return;
+  const card = header.closest('.g1-card-collapsible');
+  if (!card) return;
+  const key = g1CollapseKey(header);
+  const set = g1CollapsedSet();
+  if (set.has(key)) { set.delete(key); card.classList.remove('is-collapsed'); }
+  else { set.add(key); card.classList.add('is-collapsed'); }
+  g1SaveCollapsed(set);
+});
+
+// G0 hint for Offer tasks — show JTBD data
+function jtbdTasksPopoverHtml() {
+  const d = state?.painV130 || {};
+  const rows = d.steps?.jtbd?.jtbdRows || [];
+  const items = rows.map(row => String(row.col0 || '').trim()).filter(Boolean);
+
+  let html = '<div class="g0-popover">';
+  if (items.length) {
+    html += '<div class="g0-popover-title">Задачи клиента из JTBD</div>';
+    html += items.map((v, i) => `<div class="g0-popover-item"><div class="g0-popover-label">JTBD ${i + 1}</div><div class="g0-popover-value">${escapeHtml(v)}</div></div>`).join('');
+  } else {
+    html += '<div class="g0-popover-empty">JTBD пока не заполнены в шаге 5.</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-jtbd-tasks-hint]');
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  closeG0Popover();
+  const el = document.createElement('div');
+  el.innerHTML = jtbdTasksPopoverHtml();
+  const popover = el.firstElementChild;
+  document.body.appendChild(popover);
+  positionG0Popover(popover, btn.getBoundingClientRect());
+  _g0ActivePopover = popover;
+  setTimeout(() => document.addEventListener('click', _g0ClickAway, true), 0);
+});
+
+/* v1.3.0 — сохранять позицию скролла и состояние collapsed при renderGate() */
+const __g1PrevRenderGateScroll = renderGate;
+renderGate = function() {
+  const scrollY = window.scrollY;
+  const main = document.querySelector('main');
+  const mainScroll = main ? main.scrollTop : 0;
+  __g1PrevRenderGateScroll();
+  requestAnimationFrame(() => {
+    window.scrollTo(0, scrollY);
+    if (main) main.scrollTop = mainScroll;
+    const collapsed = g1CollapsedSet();
+    if (collapsed.size) {
+      document.querySelectorAll('.g1-card-collapsible').forEach(el => {
+        const header = el.querySelector('.g1-card-collapse-header');
+        if (header && collapsed.has(g1CollapseKey(header))) el.classList.add('is-collapsed');
+      });
+    }
+  });
+};
+
+const __prevPv130OfferJtbdHtml = pv130OfferJtbdHtml;
+pv130OfferJtbdHtml = function(step, data) {
+  let html = __prevPv130OfferJtbdHtml(step, data);
+  const jtbdBtn = '<button type="button" class="g0-hint-btn" data-jtbd-tasks-hint>G0</button>';
+  html = html.replace(/(<span style="font-weight:900;font-size:14px;">Задача \d+)<\/span>/g, '$1 ' + jtbdBtn + '</span>');
+  return html;
 };
