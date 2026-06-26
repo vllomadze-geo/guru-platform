@@ -1148,7 +1148,7 @@ function isProjectPassportCard(card) {
 }
 
 function isStartupSummaryCard(card) {
-  return card?.title === 'Проблемы и ограничения на старте';
+  return card?.title === 'Проблемы и ограничения на старте' || card?.title === 'Диагностика точки отсчёта';
 }
 
 function isToolStatusCard(card) {
@@ -1174,6 +1174,7 @@ function prepareSystemCards(workspace) {
       if (card.title === 'Текущее состояние сайта') { card.title = 'Текущее состояние маркетинговой системы'; card.instruction = 'Зафиксируй что уже есть до начала работы. Это точка отсчёта — с ней будем сравнивать результат.'; }
       if (card.title === 'Текущая инфраструктура маркетинга') card._merged = true;
       if (card.title === 'Текущие каналы и рекламные материалы') card._merged = true;
+      if (card.title === 'Проблемы и ограничения на старте') card.title = 'Диагностика точки отсчёта';
       if (isToolStatusCard(card)) {
         ensureToolItems(card);
         card.evidenceFields = [];
@@ -10835,37 +10836,133 @@ bindCardInputs = function() {
   });
 };
 
-/* v1.2.0 — Проблемы и ограничения на старте: сводка Gate 0 */
+/* v1.2.0 — Диагностика точки отсчёта: воронка 5A */
+function diag5AStages() {
+  const mega = state?.gates?.find(g => g.id === 'gate-0')?.cards?.find(c => isMegaMarketingCard(c));
+  const m = mega?.megaMarketing || {};
+  const pv2 = m.platformV2 || {};
+  const products = megaPlatformProducts();
+  const offers = state?.project?.offersV2 || {};
+
+  function stageAware() {
+    const issues = [];
+    const channels = m.channels || [];
+    const coverageChannels = channels.filter(c => /Поиск|РСЯ|Мастер|Search|Display|Таргет|Feed|Reels|Посевы|Ads/i.test(c.type));
+    const active = coverageChannels.filter(c => c.status === 'active');
+    if (!active.length) issues.push('Нет ни одного активного охватного канала');
+    else coverageChannels.filter(c => c.status !== 'active').forEach(c => issues.push(`${c.platform} ${c.type} — не активен`));
+    const total = coverageChannels.length || 1;
+    const pct = Math.round((active.length / total) * 100);
+    return { name: 'Aware', label: 'Узнал', desc: 'Охватные каналы для привлечения трафика', pct, issues };
+  }
+
+  function stageAppeal() {
+    const issues = [];
+    const fund = pv2.fundamental || [];
+    const trust = fund.find(r => r.name.includes('Блоки доверия'));
+    if (trust && (trust.status === 'not_implemented' || !trust.status)) issues.push('Блоки доверия — ' + (trust.status === 'not_implemented' ? 'не реализованы' : 'статус не указан'));
+    const contacts = fund.find(r => r.name.includes('Контакты'));
+    if (contacts && (contacts.status === 'not_implemented' || !contacts.status)) issues.push('Контакты — ' + (contacts.status === 'not_implemented' ? 'не реализованы' : 'статус не указан'));
+    let landingOk = 0;
+    products.forEach(p => {
+      const d = (pv2.landings || {})[p] || {};
+      if (d.status === 'no' || !d.status) issues.push(`Нет посадочной под продукт «${p}»`);
+      else landingOk++;
+    });
+    const extraPages = pv2.extra || [];
+    const total = 2 + products.length + extraPages.length || 1;
+    const ok = (trust?.status === 'implemented' ? 1 : 0) + (contacts?.status === 'implemented' ? 1 : 0) + landingOk + extraPages.filter(r => r.status === 'implemented').length;
+    return { name: 'Appeal', label: 'Понравился', desc: 'Посадочные, доверие, контент', pct: Math.round((ok / total) * 100), issues };
+  }
+
+  function stageAsk() {
+    const issues = [];
+    const infra = m.infra || [];
+    const askItems = infra.filter(r => /Метрика|Analytics|CRM|UTM|Коллтрекинг|Уведомления/i.test(r.name));
+    askItems.forEach(r => {
+      if (r.status === 'not_implemented') issues.push(`${r.name} — не реализовано`);
+      else if (!r.status) issues.push(`${r.name} — статус не указан`);
+    });
+    const ok = askItems.filter(r => r.status === 'implemented').length;
+    return { name: 'Ask', label: 'Изучает', desc: 'Аналитика, цели, CRM, UTM', pct: Math.round((ok / (askItems.length || 1)) * 100), issues };
+  }
+
+  function stageAct() {
+    const issues = [];
+    const fund = pv2.fundamental || [];
+    const forms = fund.find(r => r.name.includes('Форма'));
+    if (forms && (forms.status === 'not_implemented' || !forms.status)) issues.push('Форма заявки / корзина — ' + (forms.status === 'not_implemented' ? 'не реализована' : 'статус не указан'));
+    products.forEach(p => {
+      const d = (offers.productOffers || {})[p] || {};
+      if (!d.offer && d.status !== 'filled') issues.push(`Нет оффера под продукт «${p}»`);
+    });
+    const formsOk = forms?.status === 'implemented' ? 1 : 0;
+    const offersOk = products.filter(p => (offers.productOffers?.[p] || {}).status === 'filled').length;
+    const total = 1 + products.length || 1;
+    return { name: 'Act', label: 'Покупает', desc: 'Формы, CTA, офферы', pct: Math.round(((formsOk + offersOk) / total) * 100), issues };
+  }
+
+  function stageAdvocate() {
+    const issues = [];
+    const mega2 = state?.gates?.find(g => g.id === 'gate-0')?.cards?.find(c => c.title === 'Текущие результаты');
+    const results = mega2?.currentResults || [];
+    const meta = mega2?.currentResultsMeta || {};
+    if (!String(meta.period || '').trim()) issues.push('Не указан период фиксации результатов');
+    const filled = results.filter(r => String(r.value || '').trim());
+    if (!filled.length) issues.push('Не заполнены текущие результаты');
+    return { name: 'Advocate', label: 'Рекомендует', desc: 'Результаты, повторные покупки', pct: filled.length ? Math.round((filled.length / (results.length || 1)) * 100) : 0, issues };
+  }
+
+  return [stageAware(), stageAppeal(), stageAsk(), stageAct(), stageAdvocate()];
+}
+
+function diag5ALight(pct) {
+  if (pct >= 80) return '<span class="diag-dot diag-green"></span>';
+  if (pct >= 40) return '<span class="diag-dot diag-yellow"></span>';
+  return '<span class="diag-dot diag-red"></span>';
+}
+
 function gate0SummaryHtml() {
-  const gate = state?.gates?.find(g => g.id === 'gate-0');
-  if (!gate) return '<div class="empty">Gate 0 не найден.</div>';
-  const cards = gate.cards.filter(c => !isStartupSummaryCard(c));
-  const total = cards.length;
-  const ready = cards.filter(c => c.status === 'ready').length;
-  const inProgress = cards.filter(c => c.status === 'in_progress').length;
-  const notStarted = cards.filter(c => c.status === 'not_started').length;
-  const needsReview = cards.filter(c => c.status === 'needs_review' || c.status === 'problem').length;
-  return `<div class="gate0-summary-v2">
-    <div class="gate0-summary-stats">
-      <div class="gate0-stat"><span class="gate0-stat-value">${total}</span><span class="gate0-stat-label">блоков</span></div>
-      <div class="gate0-stat ready"><span class="gate0-stat-value">${ready}</span><span class="gate0-stat-label">готово</span></div>
-      <div class="gate0-stat progress"><span class="gate0-stat-value">${inProgress}</span><span class="gate0-stat-label">в работе</span></div>
-      <div class="gate0-stat empty-stat"><span class="gate0-stat-value">${notStarted}</span><span class="gate0-stat-label">не начато</span></div>
-      ${needsReview ? `<div class="gate0-stat review"><span class="gate0-stat-value">${needsReview}</span><span class="gate0-stat-label">внимание</span></div>` : ''}
-    </div>
-    <table class="cr-table">
-      <thead><tr><th>Блок</th><th>Статус</th><th>Заполненность</th></tr></thead>
-      <tbody>${cards.map(c => {
-        const statusLabel = STATUS_LABELS[c.status] || c.status;
-        const pct = c.status === 'ready' ? 100 : c.status === 'not_started' ? 0 : 50;
-        return `<tr>
-          <td class="cr-label">${escapeHtml(c.title)}</td>
-          <td><span class="gate0-summary-pill status-${c.status}">${escapeHtml(statusLabel)}</span></td>
-          <td><div class="gate0-summary-bar"><div class="gate0-summary-fill" style="width:${pct}%"></div></div><span class="gate0-summary-pct">${pct}%</span></td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table>
-  </div>`;
+  const stages = diag5AStages();
+  const allIssues = [];
+  const priorityOrder = ['Act','Ask','Aware','Appeal','Advocate'];
+  const priorityLabels = { Act:'Нет механики конверсии', Ask:'Нет аналитики', Aware:'Нет охвата', Appeal:'Нет доверия', Advocate:'Нет удержания' };
+
+  priorityOrder.forEach(name => {
+    const stage = stages.find(s => s.name === name);
+    if (stage) stage.issues.forEach(issue => allIssues.push({ stage: name, label: stage.label, reason: priorityLabels[name], issue }));
+  });
+
+  const stagesHtml = stages.map(s => {
+    const light = diag5ALight(s.pct);
+    const isRed = s.pct < 40;
+    return `<details class="diag-stage" ${isRed ? 'open' : ''}>
+      <summary class="diag-stage-head">
+        <span class="diag-light">${light}</span>
+        <div class="diag-stage-info">
+          <div class="diag-stage-name">${escapeHtml(s.name)} · ${escapeHtml(s.label)}</div>
+          <div class="diag-stage-desc">${escapeHtml(s.desc)}</div>
+        </div>
+        <div class="diag-stage-bar-wrap">
+          <div class="gate0-summary-bar"><div class="gate0-summary-fill" style="width:${s.pct}%"></div></div>
+          <span class="gate0-summary-pct">${s.pct}%</span>
+        </div>
+      </summary>
+      ${s.issues.length ? `<ul class="diag-issues">${s.issues.map(i => `<li>${escapeHtml(i)}</li>`).join('')}</ul>` : '<div class="diag-ok">Всё в порядке</div>'}
+    </details>`;
+  }).join('');
+
+  const prioritiesHtml = allIssues.length ? `<div class="diag-priorities">
+    <div class="mega-section-title">Приоритеты к закрытию</div>
+    <table class="cr-table"><thead><tr><th>Стадия</th><th>Почему критично</th><th>Что закрыть</th></tr></thead>
+    <tbody>${allIssues.slice(0, 15).map(i => `<tr>
+      <td class="cr-label">${escapeHtml(i.label)}</td>
+      <td class="diag-reason">${escapeHtml(i.reason)}</td>
+      <td>${escapeHtml(i.issue)}</td>
+    </tr>`).join('')}</tbody></table>
+  </div>` : '';
+
+  return `<div class="diag-5a">${stagesHtml}${prioritiesHtml}</div>`;
 }
 
 const __guruPrevCardUserFieldsHtmlV120Summary = cardUserFieldsHtml;
@@ -10897,11 +10994,10 @@ const MEGA_PLATFORM_FUNDAMENTAL = [
   'Главная страница',
   'Страница продукта / услуги / каталог',
   'Форма заявки / корзина',
-  'CTA (кнопка целевого действия)',
   'Контакты (телефон, адрес, мессенджер)',
-  'Мобильная версия',
   'Блоки доверия (отзывы, гарантии, сертификаты)',
-  'Политика конфиденциальности'
+  'Политика конфиденциальности',
+  'Мобильная версия'
 ];
 const MEGA_PLATFORM_OLD_MAP = {
   'Главные посадочные': 'Главная страница',
@@ -10912,16 +11008,44 @@ const MEGA_PLATFORM_OLD_MAP = {
   'Мобильная версия': 'Мобильная версия'
 };
 const MEGA_PLATFORM_EXTRA_PRESETS = ['О нас / история бренда','FAQ','Портфолио / кейсы','Страница доставки и оплаты','Квиз / калькулятор'];
-const MEGA_INFRA_DEFAULTS = ['Яндекс Метрика','Цели Метрики','CRM','Формы → CRM','UTM-разметка','Уведомления о заявках','Рекламные кабинеты'];
+const MEGA_INFRA_DEFAULTS_V2 = [
+  { name: 'Яндекс Метрика', hint: 'счётчик установлен, цели настроены, вебвизор включён', group: 'Аналитика' },
+  { name: 'Google Analytics 4', hint: 'счётчик установлен, конверсии настроены', group: 'Аналитика' },
+  { name: 'CRM', hint: 'подключена, воронка настроена, лиды фиксируются', group: 'Лиды и коммуникации' },
+  { name: 'UTM-разметка', hint: 'шаблон UTM зафиксирован, все ссылки размечены', group: 'Лиды и коммуникации' },
+  { name: 'Коллтрекинг', hint: 'номера подменяются, звонки фиксируются в аналитике', group: 'Лиды и коммуникации' },
+  { name: 'Уведомления о заявках', hint: 'Email / Telegram уведомления приходят мгновенно', group: 'Лиды и коммуникации' },
+  { name: 'Яндекс Вебмастер', hint: 'сайт подтверждён, sitemap отправлен, ошибки проверены', group: 'SEO-инфраструктура' },
+  { name: 'Google Search Console', hint: 'сайт подтверждён, sitemap отправлен, индексация проверена', group: 'SEO-инфраструктура' },
+  { name: 'Яндекс Директ', hint: 'аккаунт создан, доступы выданы, счёт пополнен', group: 'Рекламные кабинеты' },
+  { name: 'Google Ads', hint: 'аккаунт создан, доступы выданы', group: 'Рекламные кабинеты' },
+  { name: 'VK Ads', hint: 'аккаунт создан, пиксель установлен', group: 'Рекламные кабинеты' },
+  { name: 'Meta Ads', hint: 'аккаунт создан, пиксель установлен', group: 'Рекламные кабинеты' },
+  { name: 'Telegram Ads', hint: 'аккаунт создан, пополнен', group: 'Рекламные кабинеты' }
+];
+const MEGA_INFRA_OLD_MAP = {
+  'Яндекс Метрика': 'Яндекс Метрика', 'Цели Метрики': 'Яндекс Метрика',
+  'CRM': 'CRM', 'Формы → CRM': 'CRM', 'Формы': 'CRM',
+  'UTM-разметка': 'UTM-разметка', 'UTM': 'UTM-разметка',
+  'Уведомления о заявках': 'Уведомления о заявках', 'Уведомления': 'Уведомления о заявках',
+  'Рекламные кабинеты': 'Яндекс Директ'
+};
 const MEGA_CHANNEL_DEFAULTS = [
   { channel:'Платная реклама', platform:'Яндекс Директ', type:'Поиск', materials:'объявления, быстрые ссылки, уточнения' },
   { channel:'Платная реклама', platform:'Яндекс Директ', type:'РСЯ', materials:'баннеры, объявления, видео' },
-  { channel:'Платная реклама', platform:'Google Ads', type:'Search', materials:'RSA, assets, keywords' },
-  { channel:'Платная реклама', platform:'Google Ads', type:'Display', materials:'баннеры, responsive display ads' },
+  { channel:'Платная реклама', platform:'Яндекс Директ', type:'Мастер кампаний', materials:'объявления, изображения' },
+  { channel:'Платная реклама', platform:'Google Ads', type:'Search', materials:'RSA, keywords' },
+  { channel:'Платная реклама', platform:'Google Ads', type:'Display', materials:'баннеры, responsive ads' },
+  { channel:'Платная реклама', platform:'VK Ads', type:'Таргет', materials:'посты, баннеры, видео' },
+  { channel:'Платная реклама', platform:'Meta Ads', type:'Feed / Reels', materials:'баннеры, видео, карусель' },
+  { channel:'Платная реклама', platform:'Telegram Ads', type:'Посевы / Ads', materials:'текст, баннер' },
   { channel:'Органика', platform:'SEO', type:'Страницы сайта', materials:'title, description, H1, тексты' },
   { channel:'Геосервисы', platform:'Яндекс Карты', type:'Карточка организации', materials:'фото, отзывы, описание, акции' },
   { channel:'Геосервисы', platform:'Google Business Profile', type:'Карточка организации', materials:'фото, отзывы, описание' },
-  { channel:'SMM', platform:'VK / Telegram / другое', type:'Контент / посевы', materials:'посты, баннеры, видео' }
+  { channel:'SMM', platform:'VK', type:'Контент', materials:'посты, баннеры, видео' },
+  { channel:'SMM', platform:'Telegram', type:'Контент / посевы', materials:'посты, баннеры' },
+  { channel:'SMM', platform:'Instagram', type:'Reels / Stories', materials:'видео, баннеры' },
+  { channel:'SMM', platform:'YouTube', type:'Shorts / Pre-roll', materials:'видео' }
 ];
 const MEGA_TOOL_STATUSES = [['','Выбрать'],['implemented','Реализовано'],['not_implemented','Не реализовано'],['in_progress','В работе']];
 const MEGA_CHANNEL_STATUSES = [['','Выбрать'],['active','Активен'],['planned','Планируется'],['inactive','Не используется']];
@@ -10966,13 +11090,35 @@ function ensureMegaMarketing(card, workspace = state) {
       console.log('Platform v2 migration: fundamental', m.platformV2.fundamental.filter(r => r.status).length + ' with data');
     }
   }
-  if (!m.platformV2.fundamental.length) {
-    m.platformV2.fundamental = MEGA_PLATFORM_FUNDAMENTAL.map(name => ({ name, status: '', url: '', comment: '' }));
-  }
+  const prevFund = new Map(m.platformV2.fundamental.map(r => [r.name, r]));
+  m.platformV2.fundamental = MEGA_PLATFORM_FUNDAMENTAL.map(name => {
+    const old = prevFund.get(name) || {};
+    return { name, status: old.status || '', url: old.url || '', comment: old.comment || '' };
+  });
   m.platformV2.landings = m.platformV2.landings || {};
   m.platformV2.extra = m.platformV2.extra || [];
-  if (!m.infra.length) m.infra = MEGA_INFRA_DEFAULTS.map(name => ({ name, status: '', comment: '' }));
-  if (!m.channels.length) m.channels = MEGA_CHANNEL_DEFAULTS.map(c => ({ ...c, status: '' }));
+  // Sync infra with v2 config, migrate old data
+  const prevInfra = new Map(m.infra.map(r => [r.name, r]));
+  const infraCustom = m.infra.filter(r => r._custom);
+  m.infra = MEGA_INFRA_DEFAULTS_V2.map(cfg => {
+    let old = prevInfra.get(cfg.name);
+    if (!old) {
+      const mappedOldName = Object.entries(MEGA_INFRA_OLD_MAP).find(([,v]) => v === cfg.name);
+      if (mappedOldName) old = prevInfra.get(mappedOldName[0]);
+    }
+    return { name: cfg.name, hint: cfg.hint, group: cfg.group, status: old?.status || '', comment: old?.comment || '' };
+  });
+  infraCustom.forEach(r => m.infra.push(r));
+
+  // Sync channels with config, preserve old data by platform+type key
+  const prevCh = new Map(m.channels.map(r => [r.platform + '|' + r.type, r]));
+  const chCustom = m.channels.filter(r => r._custom);
+  m.channels = MEGA_CHANNEL_DEFAULTS.map(cfg => {
+    const old = prevCh.get(cfg.platform + '|' + cfg.type);
+    return { ...cfg, status: old?.status || '' };
+  });
+  chCustom.forEach(r => m.channels.push(r));
+
   return m;
 }
 
@@ -10991,6 +11137,33 @@ function megaToolSectionHtml(cardId, sectionKey, title, hint, items, addLabel) {
       </tr>`).join('')}</tbody>
     </table>
     <button class="v116-multi-add" data-mega-card="${escapeAttr(cardId)}" data-mega-add="${escapeAttr(sectionKey)}">+ ${escapeHtml(addLabel)}</button>
+  </div>`;
+}
+
+function megaInfraSectionHtml(cardId, items) {
+  let lastGroup = '';
+  const rowsHtml = items.map((item, i) => {
+    let groupHeader = '';
+    if (item.group && item.group !== lastGroup) {
+      lastGroup = item.group;
+      groupHeader = `<tr class="mega-group-row"><td colspan="4" class="mega-group-label">${escapeHtml(item.group)}</td></tr>`;
+    }
+    const bad = item.status === 'not_implemented';
+    return `${groupHeader}<tr class="${bad ? 'mega-row-bad' : ''}">
+      <td class="cr-label">${escapeHtml(item.name)}</td>
+      <td class="mega-hint-cell">${escapeHtml(item.hint || '')}</td>
+      <td><select data-mega-card="${escapeAttr(cardId)}" data-mega-section="infra" data-mega-idx="${i}" data-mega-field="status">
+        ${MEGA_TOOL_STATUSES.map(([v,l]) => `<option value="${escapeAttr(v)}" ${item.status === v ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}
+      </select></td>
+      <td><div class="mega-comment-row"><input data-mega-card="${escapeAttr(cardId)}" data-mega-section="infra" data-mega-idx="${i}" data-mega-field="comment" value="${escapeAttr(item.comment || '')}" placeholder="—" />${item._custom ? `<button class="v116-multi-remove" data-mega-card="${escapeAttr(cardId)}" data-mega-section="infra" data-mega-remove="${i}" title="Удалить">×</button>` : ''}</div></td>
+    </tr>`;
+  }).join('');
+  return `<div class="mega-section">
+    <div class="mega-section-title">Инфраструктура</div>
+    <div class="mega-section-hint">Подключена ли аналитика, настроены ли цели, есть ли CRM, размечены ли ссылки</div>
+    <table class="cr-table"><thead><tr><th>Инструмент</th><th>Базовый минимум</th><th>Статус</th><th>Комментарий</th></tr></thead>
+    <tbody>${rowsHtml}</tbody></table>
+    <button class="v116-multi-add" data-mega-card="${escapeAttr(cardId)}" data-mega-add="infra">+ добавить инструмент</button>
   </div>`;
 }
 
@@ -11084,7 +11257,7 @@ function megaMarketingHtml(card) {
   const m = ensureMegaMarketing(card, state);
   return `<div class="mega-marketing">
     ${megaPlatformSectionHtml(card.id, m.platformV2)}
-    ${megaToolSectionHtml(card.id, 'infra', 'Инфраструктура', 'Подключена ли Метрика, настроены ли цели, есть ли CRM, размечены ли ссылки UTM', m.infra, 'добавить элемент')}
+    ${megaInfraSectionHtml(card.id, m.infra)}
     ${megaChannelsSectionHtml(card.id, m.channels)}
   </div>`;
 }
@@ -16111,7 +16284,7 @@ cardUserFieldsHtml = function(c) {
         <div class="mega-section-hint">Без оффера — трафик запускать некуда</div>
         ${v121OffersHtml(c)}
       </div>
-      <div class="passport-v116-grid">${def.fields.slice(3).map(field => v116PassportFieldCard(def, field)).join('')}</div>
+      <div class="passport-v116-grid">${def.fields.filter(f => f.key === 'primaryTargetAction').map(field => v116PassportFieldCard(def, field)).join('')}</div>
     </div></div>`;
   }
   return __guruPrevCardUserFieldsHtmlV121(c);
