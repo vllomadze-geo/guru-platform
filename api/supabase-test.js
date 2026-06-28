@@ -13,7 +13,7 @@ module.exports = async function handler(req, res) {
   }
 
   const supabaseUrl = rawUrl.replace(/\/+$/, '');
-  const endpoint = `${supabaseUrl}/rest/v1/guru_projects?select=id,name,slug,website_url&limit=1`;
+  const endpoint = `${supabaseUrl}/rest/v1/guru_workspaces?select=project_id,project_name,updated_at&limit=1`;
 
   try {
     const response = await fetch(endpoint, {
@@ -63,7 +63,11 @@ module.exports = async function handler(req, res) {
       ok: true,
       status: 'connected',
       httpStatus: response.status,
-      project: rows[0],
+      project: {
+        id: rows[0].project_id,
+        name: rows[0].project_name || rows[0].project_id,
+        updated_at: rows[0].updated_at
+      },
       rowsVisible: rows.length
     });
   } catch (error) {

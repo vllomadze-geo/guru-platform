@@ -31,24 +31,26 @@ module.exports = async function handler(req, res) {
       const projectName = state?.project?.name || (project_id === '__guru_project_registry__' ? 'GURU Project Registry' : '');
       const schemaVersion = state?.schemaVersion || state?.schema_version || '';
 
-      let response = await fetch(endpoint, {
-        method: 'POST',
-        headers: commonHeaders,
-        body: JSON.stringify({
+      const writeAttempts = [
+        {
           project_id,
           project_name: projectName,
           workspace_data: state,
           schema_version: schemaVersion,
           updated_at: updatedAt
-        })
-      });
+        },
+        { project_id, workspace_data: state, updated_at: updatedAt },
+        { project_id, state, updated_at: updatedAt }
+      ];
 
-      if (!response.ok) {
+      let response = null;
+      for (const row of writeAttempts) {
         response = await fetch(endpoint, {
           method: 'POST',
           headers: commonHeaders,
-          body: JSON.stringify({ project_id, state, updated_at: updatedAt })
+          body: JSON.stringify(row)
         });
+        if (response.ok) break;
       }
 
       if (!response.ok) {
