@@ -1,7 +1,12 @@
 const LEGACY_STORAGE_KEY = 'guru-platform-mvp-v1';
 const PROJECTS_STORAGE_KEY = 'guru-platform-projects-v02';
+const PROJECTS_DELETED_STORAGE_KEY = 'guru-platform-project-deletions-v01';
+const PROJECT_REGISTRY_CLOUD_ID = '__guru_project_registry__';
+const PROJECT_REGISTRY_SCHEMA_VERSION = 'guru-project-registry-v1';
 const WORKSPACE_STORAGE_PREFIX = 'guru-platform-workspace-v02-';
 const PLATFORM_VERSION = 'v1.1.11';
+var _syncTimer = null;
+var _projectRegistrySyncTimer = null;
 const STATUS_LABELS = {
   not_started: 'Не начато',
   in_progress: 'В работе',
@@ -83,18 +88,112 @@ function loadProjects() {
   return normalizeProjects([defaultProject]);
 }
 
-function saveProjects() {
+function saveProjects(options = {}) {
+  const { cloud = true, immediate = false } = options || {};
+  projects = normalizeProjects(projects);
   localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projects));
+  if (!cloud) return;
+  if (immediate) pushProjectsToSupabase();
+  else scheduleProjectsCloudSync();
 }
 
 
 function normalizeProjects(list = []) {
-  return (Array.isArray(list) ? list : []).map(project => ({
+  return (Array.isArray(list) ? list : []).filter(project => project?.id).map(project => ({
     ...project,
     archived: Boolean(project.archived),
     lifecycleStatus: project.lifecycleStatus || (project.archived ? 'archived' : 'active'),
     icon: project.icon || getProjectIcon(project.name)
   }));
+}
+
+function readDeletedProjects() {
+  try {
+    const saved = localStorage.getItem(PROJECTS_DELETED_STORAGE_KEY);
+    const parsed = saved ? JSON.parse(saved) : {};
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch (err) {
+    console.warn('Не удалось прочитать журнал удалённых проектов', err);
+    return {};
+  }
+}
+
+function saveDeletedProjects(deletedProjects) {
+  try {
+    localStorage.setItem(PROJECTS_DELETED_STORAGE_KEY, JSON.stringify(deletedProjects || {}));
+  } catch (err) {
+    console.warn('Не удалось сохранить журнал удалённых проектов', err);
+  }
+}
+
+function rememberDeletedProject(projectId) {
+  if (!projectId) return;
+  const deletedProjects = readDeletedProjects();
+  deletedProjects[projectId] = new Date().toISOString();
+  saveDeletedProjects(deletedProjects);
+}
+
+function mergeDeletionLogs(localLog = {}, cloudLog = {}) {
+  const merged = { ...(localLog || {}) };
+  Object.entries(cloudLog || {}).forEach(([projectId, deletedAt]) => {
+    if (!merged[projectId] || String(deletedAt || '') > String(merged[projectId] || '')) {
+      merged[projectId] = deletedAt;
+    }
+  });
+  return merged;
+}
+
+function projectUpdatedAt(project = {}) {
+  return String(project.updatedAt || project.createdAt || '');
+}
+
+function projectRegistryUpdatedAt(list = projects, deletedProjects = readDeletedProjects()) {
+  const dates = [
+    ...normalizeProjects(list).map(projectUpdatedAt),
+    ...Object.values(deletedProjects || {}).map(value => String(value || ''))
+  ].filter(Boolean).sort();
+  return dates[dates.length - 1] || new Date().toISOString();
+}
+
+function projectRegistryPayload() {
+  const deletedProjects = readDeletedProjects();
+  return {
+    type: 'guru-project-registry',
+    schemaVersion: PROJECT_REGISTRY_SCHEMA_VERSION,
+    updatedAt: projectRegistryUpdatedAt(projects, deletedProjects),
+    deletedProjects,
+    projects: normalizeProjects(projects)
+  };
+}
+
+function mergeProjectRegistries(localList = [], cloudList = [], deletedProjects = {}) {
+  const byId = new Map();
+  [...normalizeProjects(localList), ...normalizeProjects(cloudList)].forEach(project => {
+    const deletedAt = String(deletedProjects[project.id] || '');
+    if (deletedAt && deletedAt >= projectUpdatedAt(project)) return;
+    const existing = byId.get(project.id);
+    if (!existing || projectUpdatedAt(project) >= projectUpdatedAt(existing)) {
+      byId.set(project.id, project);
+    }
+  });
+  return [...byId.values()].sort((a, b) => {
+    const aDate = projectUpdatedAt(a);
+    const bDate = projectUpdatedAt(b);
+    if (aDate !== bDate) return aDate < bDate ? 1 : -1;
+    return String(a.name || '').localeCompare(String(b.name || ''), 'ru');
+  });
+}
+
+function applyProjectRegistryPayload(payload = {}) {
+  const cloudProjects = Array.isArray(payload) ? payload : payload.projects;
+  if (!Array.isArray(cloudProjects)) return false;
+  const deletedProjects = mergeDeletionLogs(readDeletedProjects(), payload.deletedProjects || {});
+  saveDeletedProjects(deletedProjects);
+  const before = JSON.stringify(normalizeProjects(projects));
+  projects = mergeProjectRegistries(projects, cloudProjects, deletedProjects);
+  saveProjects({ cloud: false });
+  if (!els.launcher.hidden) renderProjectLauncher();
+  return before !== JSON.stringify(projects);
 }
 
 function currentProjectIdSafe() {
@@ -178,6 +277,7 @@ function saveState() {
   syncActiveProjectMeta();
   els.saveStatus.textContent = 'Сохранено: ' + new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   els.autosaveDot.style.background = '#82d48d';
+  scheduleCloudSync();
 }
 
 function syncActiveProjectMeta() {
@@ -225,18 +325,24 @@ function openProject(projectId) {
   activeGateId = state.gates[0]?.id || null;
   els.launcher.hidden = true;
   els.appShell.hidden = false;
-  saveState();
   render();
   loadFromSupabase(projectId).then(cloudState => {
-    if (!cloudState) return;
+    if (activeProjectId !== projectId) return;
+    if (!cloudState) {
+      saveState();
+      return;
+    }
     const local = state?.updatedAt || '';
     const cloud = cloudState.updatedAt || '';
     if (cloud > local) {
       state = migrateWorkspace(cloudState, projectId);
       localStorage.setItem(WORKSPACE_STORAGE_PREFIX + projectId, JSON.stringify(state));
+      syncActiveProjectMeta();
       render();
       els.saveStatus.textContent = 'Загружено из облака';
       els.autosaveDot.style.background = '#4a9eff';
+    } else {
+      saveState();
     }
   });
 }
@@ -352,7 +458,7 @@ function archiveProject(projectId) {
   project.archived = true;
   project.lifecycleStatus = 'archived';
   project.updatedAt = new Date().toISOString();
-  saveProjects();
+  saveProjects({ immediate: true });
   launcherProjectFilter = 'active';
   renderProjectLauncher();
 }
@@ -363,7 +469,7 @@ function restoreProject(projectId) {
   project.archived = false;
   project.lifecycleStatus = 'active';
   project.updatedAt = new Date().toISOString();
-  saveProjects();
+  saveProjects({ immediate: true });
   launcherProjectFilter = 'archive';
   renderProjectLauncher();
 }
@@ -456,12 +562,14 @@ function updateDeleteConfirmState() {
 function deleteProjectForever(projectId) {
   const project = projects.find(p => p.id === projectId);
   if (!project) return;
+  rememberDeletedProject(projectId);
   project.lifecycleStatus = 'deleting';
   project.updatedAt = new Date().toISOString();
-  saveProjects();
+  saveProjects({ cloud: false });
   localStorage.removeItem(WORKSPACE_STORAGE_PREFIX + projectId);
   projects = projects.filter(p => p.id !== projectId);
-  saveProjects();
+  saveProjects({ immediate: true });
+  deleteWorkspaceFromSupabase(projectId);
   if (activeProjectId === projectId) {
     showLauncher();
   } else {
@@ -535,8 +643,10 @@ function createProjectFromModal() {
     updatedAt: new Date().toISOString()
   };
   projects.push(project);
-  saveProjects();
-  localStorage.setItem(WORKSPACE_STORAGE_PREFIX + project.id, JSON.stringify(createFreshWorkspace(project)));
+  saveProjects({ immediate: true });
+  const workspace = createFreshWorkspace(project);
+  localStorage.setItem(WORKSPACE_STORAGE_PREFIX + project.id, JSON.stringify(workspace));
+  pushToSupabase(project.id, workspace, { silent: true });
   hideNewProjectModal();
   openProject(project.id);
 }
@@ -3693,11 +3803,31 @@ document.getElementById('newProjectName').addEventListener('keydown', e => {
   if (e.key === 'Enter') createProjectFromModal();
 });
 
-if (projects.length === 1) {
-  openProject(projects[0].id);
-} else {
-  showLauncher();
+async function hydrateProjectsFromCloud() {
+  const registry = await loadProjectRegistryFromSupabase();
+  if (!registry) {
+    saveProjects();
+    return;
+  }
+  const changed = applyProjectRegistryPayload(registry);
+  if (changed || JSON.stringify(normalizeProjects(registry.projects || [])) !== JSON.stringify(normalizeProjects(projects))) {
+    scheduleProjectsCloudSync();
+  }
 }
+
+async function bootstrapApp() {
+  showLauncher();
+  await hydrateProjectsFromCloud();
+  if (activeProjectId) return;
+  const activeProjects = projects.filter(project => !project.archived);
+  if (activeProjects.length === 1 && projects.length === 1) {
+    openProject(activeProjects[0].id);
+  } else {
+    showLauncher();
+  }
+}
+
+bootstrapApp();
 
 /* v0.14 — Context-first simplification overrides */
 
@@ -8331,32 +8461,51 @@ renderGateNav = function() {
 })();
 
 // === Supabase sync ===
-let _syncTimer = null;
-
 function scheduleCloudSync() {
   if (_syncTimer) clearTimeout(_syncTimer);
   _syncTimer = setTimeout(pushToSupabase, 2000);
 }
 
-async function pushToSupabase() {
-  if (!state || !activeProjectId) return;
+function scheduleProjectsCloudSync() {
+  if (_projectRegistrySyncTimer) clearTimeout(_projectRegistrySyncTimer);
+  _projectRegistrySyncTimer = setTimeout(pushProjectsToSupabase, 800);
+}
+
+async function pushToSupabase(projectId = activeProjectId, workspace = state, options = {}) {
+  if (!workspace || !projectId) return;
   try {
     const response = await fetch('/api/workspace-sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ project_id: activeProjectId, state: state })
+      body: JSON.stringify({ project_id: projectId, state: workspace })
     });
     const data = await response.json();
-    if (data.ok) {
+    if (data.ok && !options.silent) {
       els.saveStatus.textContent = 'Облако ✓ ' + new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
       els.autosaveDot.style.background = '#4a9eff';
-    } else {
+    } else if (!data.ok) {
       console.warn('Supabase sync error:', data.error, data.detail);
-      els.saveStatus.textContent = 'Облако: ошибка записи';
-      els.autosaveDot.style.background = '#d4605f';
+      if (!options.silent) {
+        els.saveStatus.textContent = 'Облако: ошибка записи';
+        els.autosaveDot.style.background = '#d4605f';
+      }
     }
   } catch (e) {
     console.warn('Supabase sync failed, localStorage ok', e);
+  }
+}
+
+async function pushProjectsToSupabase() {
+  try {
+    const response = await fetch('/api/workspace-sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project_id: PROJECT_REGISTRY_CLOUD_ID, state: projectRegistryPayload() })
+    });
+    const data = await response.json();
+    if (!data.ok) console.warn('Supabase projects sync error:', data.error, data.detail);
+  } catch (e) {
+    console.warn('Supabase projects sync failed, localStorage ok', e);
   }
 }
 
@@ -8364,11 +8513,33 @@ async function loadFromSupabase(projectId) {
   try {
     const response = await fetch(`/api/workspace-sync?project_id=${encodeURIComponent(projectId)}`);
     const data = await response.json();
-    if (data.ok && data.state) return data.state;
+    if (data.ok && data.state) {
+      return { ...data.state, updatedAt: data.state.updatedAt || data.updated_at || data.updatedAt };
+    }
   } catch (e) {
     console.warn('Supabase load failed, using localStorage', e);
   }
   return null;
+}
+
+async function loadProjectRegistryFromSupabase() {
+  try {
+    const response = await fetch(`/api/workspace-sync?project_id=${encodeURIComponent(PROJECT_REGISTRY_CLOUD_ID)}`);
+    const data = await response.json();
+    if (data.ok && data.state) return data.state;
+  } catch (e) {
+    console.warn('Supabase projects load failed, using localStorage', e);
+  }
+  return null;
+}
+
+async function deleteWorkspaceFromSupabase(projectId) {
+  if (!projectId) return;
+  try {
+    await fetch(`/api/workspace-sync?project_id=${encodeURIComponent(projectId)}`, { method: 'DELETE' });
+  } catch (e) {
+    console.warn('Supabase delete failed', e);
+  }
 }
 
 
