@@ -2,7 +2,7 @@ module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store, max-age=0');
 
   const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!rawUrl || !key) {
     return res.status(200).json({
@@ -13,7 +13,7 @@ module.exports = async function handler(req, res) {
   }
 
   const supabaseUrl = rawUrl.replace(/\/+$/, '');
-  const endpoint = `${supabaseUrl}/rest/v1/guru_workspaces?select=project_id,project_name,updated_at&limit=1`;
+  const endpoint = `${supabaseUrl}/rest/v1/guru_workspaces?select=project_id&limit=1`;
 
   try {
     const response = await fetch(endpoint, {
@@ -65,8 +65,7 @@ module.exports = async function handler(req, res) {
       httpStatus: response.status,
       project: {
         id: rows[0].project_id,
-        name: rows[0].project_name || rows[0].project_id,
-        updated_at: rows[0].updated_at
+        name: rows[0].project_id
       },
       rowsVisible: rows.length
     });
