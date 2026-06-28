@@ -4,9 +4,23 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>УНИВЕРСАЛ / ГУРУ — платформа v1.2.0</title>
-  <link rel="stylesheet" href="styles.css?v=1.6.0" />
+  <link rel="stylesheet" href="styles.css?v=1.6.1" />
 </head>
-<body>
+<body class="access-locked">
+  <section class="access-gate" id="accessGate" aria-labelledby="accessTitle" aria-describedby="accessHint">
+    <div class="access-card">
+      <div class="access-kicker">УНИВЕРСАЛ / ГУРУ</div>
+      <h1 id="accessTitle">Код доступа</h1>
+      <p id="accessHint">Введите код, чтобы открыть проекты, Gates, отчёты и настройки платформы.</p>
+      <form class="access-form" id="accessForm" autocomplete="off">
+        <label for="accessCodeInput">Код</label>
+        <input id="accessCodeInput" type="password" inputmode="numeric" maxlength="4" placeholder="1111" aria-describedby="accessError" />
+        <button type="submit" class="btn primary">Открыть платформу</button>
+        <p class="access-error" id="accessError" hidden>Неверный код. Попробуйте ещё раз.</p>
+      </form>
+    </div>
+  </section>
+
   <section class="project-launcher" id="projectLauncher">
     <div class="launcher-inner">
       <div class="launcher-kicker">УНИВЕРСАЛ / ГУРУ · v1.2.0</div>
@@ -197,7 +211,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="seed-data.js?v=1.1.11"></script>
-  <script src="app.js?v=1.6.2"></script>
+  <script src="app.js?v=1.6.3"></script>
   <script src="supabase-test.js?v=1.1.11"></script>
 </body>
 </html>
