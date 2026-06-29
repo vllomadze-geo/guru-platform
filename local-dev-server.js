@@ -4,6 +4,23 @@ const path = require('path');
 
 const root = __dirname;
 const port = Number(process.env.PORT || 3000);
+const liveReloadClients = new Set();
+const liveReloadExtensions = new Set(['.html', '.css', '.js', '.json']);
+const ignoredLiveReloadDirs = new Set(['.git', 'node_modules']);
+
+const liveReloadScript = `
+<script>
+(() => {
+  if (!("EventSource" in window)) return;
+  const source = new EventSource("/__live-reload");
+  let opened = false;
+  source.addEventListener("open", () => {
+    if (opened) window.location.reload();
+    opened = true;
+  });
+  source.addEventListener("reload", () => window.location.reload());
+})();
+</script>`;
 
 const contentTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -38,6 +55,63 @@ function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.end(JSON.stringify(payload));
+}
+
+function serveLiveReload(req, res) {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive'
+  });
+  res.write('retry: 1000\n\n');
+
+  liveReloadClients.add(res);
+  const heartbeat = setInterval(() => {
+    res.write(': heartbeat\n\n');
+  }, 15000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    liveReloadClients.delete(res);
+  });
+}
+
+function notifyLiveReloadClients() {
+  const payload = `event: reload\ndata: ${Date.now()}\n\n`;
+  liveReloadClients.forEach(client => {
+    client.write(payload);
+  });
+}
+
+function shouldLiveReload(fileName) {
+  if (!fileName) return false;
+  const parts = path.normalize(String(fileName)).split(path.sep);
+  if (parts.some(part => ignoredLiveReloadDirs.has(part))) return false;
+  return liveReloadExtensions.has(path.extname(String(fileName)));
+}
+
+function injectLiveReloadScript(html) {
+  if (html.includes('/__live-reload')) return html;
+  if (html.includes('</body>')) {
+    return html.replace('</body>', `${liveReloadScript}\n</body>`);
+  }
+  return `${html}\n${liveReloadScript}`;
+}
+
+function startLiveReloadWatcher() {
+  if (process.env.LIVE_RELOAD === '0') return;
+
+  let reloadTimer = null;
+  try {
+    fs.watch(root, { recursive: true }, (_eventType, fileName) => {
+      if (!shouldLiveReload(fileName)) return;
+      clearTimeout(reloadTimer);
+      reloadTimer = setTimeout(notifyLiveReloadClients, 150);
+    });
+    console.log('Live reload enabled for HTML/CSS/JS/JSON changes.');
+  } catch (error) {
+    console.warn(`Live reload watcher unavailable: ${error.message}`);
+  }
 }
 
 function decorateResponse(res) {
@@ -107,12 +181,23 @@ function serveStatic(req, res, url) {
       return;
     }
     res.setHeader('Content-Type', contentTypes[path.extname(filePath)] || 'application/octet-stream');
+    res.setHeader('Cache-Control', 'no-store');
+    if (path.extname(filePath) === '.html' && process.env.LIVE_RELOAD !== '0') {
+      res.end(injectLiveReloadScript(data.toString('utf8')));
+      return;
+    }
     res.end(data);
   });
 }
 
+startLiveReloadWatcher();
+
 http.createServer((req, res) => {
   const url = new URL(req.url, `http://localhost:${port}`);
+  if (url.pathname === '/__live-reload') {
+    serveLiveReload(req, res);
+    return;
+  }
   if (url.pathname.startsWith('/api/')) {
     serveApi(req, res, url);
     return;

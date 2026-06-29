@@ -1,217 +1,365 @@
 <!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>УНИВЕРСАЛ / ГУРУ — платформа v1.2.0</title>
-  <link rel="stylesheet" href="styles.css?v=1.6.1" />
-</head>
-<body class="access-locked">
-  <section class="access-gate" id="accessGate" aria-labelledby="accessTitle" aria-describedby="accessHint">
-    <div class="access-card">
-      <div class="access-kicker">УНИВЕРСАЛ / ГУРУ</div>
-      <h1 id="accessTitle">Код доступа</h1>
-      <p id="accessHint">Введите код, чтобы открыть проекты, Gates, отчёты и настройки платформы.</p>
-      <form class="access-form" id="accessForm" autocomplete="off">
-        <label for="accessCodeInput">Код</label>
-        <input id="accessCodeInput" type="password" inputmode="numeric" maxlength="4" aria-describedby="accessError" />
-        <button type="submit" class="btn primary">Открыть платформу</button>
-        <p class="access-error" id="accessError" hidden>Неверный код. Попробуйте ещё раз.</p>
-      </form>
-    </div>
-  </section>
-
-  <section class="project-launcher" id="projectLauncher">
-    <div class="launcher-inner">
-      <div class="launcher-kicker">УНИВЕРСАЛ / ГУРУ · v1.2.0</div>
-      <h1>Выберите проект</h1>
-      <p class="launcher-lead">Откройте рабочий интерфейс нужного проекта или создайте новый проект.</p>
-      <div class="launcher-actions" aria-label="Фильтр проектов">
-        <button type="button" class="launcher-filter is-active" data-project-filter="active">Активные <span data-filter-count>0</span></button>
-        <button type="button" class="launcher-filter" data-project-filter="archive">Архив <span data-filter-count>0</span></button>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>УНИВЕРСАЛ / ГУРУ — платформа v1.2.0</title>
+    <link rel="stylesheet" href="styles.css?v=1.6.1" />
+  </head>
+  <body class="access-locked">
+    <section
+      class="access-gate"
+      id="accessGate"
+      aria-labelledby="accessTitle"
+      aria-describedby="accessHint"
+    >
+      <div class="access-card">
+        <div class="access-kicker">УНИВЕРСАЛ / ГУРУ</div>
+        <h1 id="accessTitle">Код доступа</h1>
+        <p id="accessHint">
+          Введите код, чтобы открыть проекты, Gates, отчёты и настройки
+          платформы.
+        </p>
+        <form class="access-form" id="accessForm" autocomplete="off">
+          <label for="accessCodeInput">Код</label>
+          <input
+            id="accessCodeInput"
+            type="password"
+            inputmode="numeric"
+            maxlength="4"
+            aria-describedby="accessError"
+          />
+          <button type="submit" class="btn primary">Открыть платформу</button>
+          <p class="access-error" id="accessError" hidden>
+            Неверный код. Попробуйте ещё раз.
+          </p>
+        </form>
       </div>
-      <div class="project-grid" id="projectGrid"></div>
-    </div>
-  </section>
+    </section>
 
-  <div class="modal-backdrop" id="newProjectModal" hidden>
-    <div class="modal-card">
-      <div class="modal-head">
-        <div>
-          <div class="eyebrow">Новый проект</div>
-          <h2>Создать проект</h2>
+    <section class="project-launcher" id="projectLauncher">
+      <div class="launcher-inner">
+        <div class="launcher-kicker">УНИВЕРСАЛ / ГУРУ · v1.2.0</div>
+        <h1>Выберите проект</h1>
+        <p class="launcher-lead">
+          Откройте рабочий интерфейс нужного проекта или создайте новый проект.
+        </p>
+        <div class="launcher-actions" aria-label="Фильтр проектов">
+          <button
+            type="button"
+            class="launcher-filter is-active"
+            data-project-filter="active"
+          >
+            Активные <span data-filter-count>0</span>
+          </button>
+          <button
+            type="button"
+            class="launcher-filter"
+            data-project-filter="archive"
+          >
+            Архив <span data-filter-count>0</span>
+          </button>
         </div>
-        <button class="icon-btn" id="closeProjectModal" aria-label="Закрыть">×</button>
+        <div class="project-grid" id="projectGrid"></div>
       </div>
-      <div class="form-grid">
-        <label>Название проекта<input id="newProjectName" placeholder="Например: iCleaning" /></label>
-        <label>Тип / ниша проекта<input id="newProjectType" placeholder="Сайт, реклама, бренд, премиальная химчистка" /></label>
-        <label>Ссылка на сайт<input id="newProjectWebsite" placeholder="https://" /></label>
-        <label>География<input id="newProjectGeography" placeholder="Москва, Грузия, онлайн" /></label>
-        <label>Главный CTA<input id="newProjectMainCta" placeholder="Например: Рассчитать стоимость" /></label>
-        <label>Иконка / буква<input id="newProjectIcon" maxlength="2" placeholder="G" /></label>
-        <label class="full">УТП<textarea id="newProjectUsp" rows="3" placeholder="Главное отличие проекта"></textarea></label>
-        <label class="full">Оффер<textarea id="newProjectOffer" rows="3" placeholder="Что получает клиент"></textarea></label>
-        <label class="full">Короткое описание<textarea id="newProjectDescription" rows="3" placeholder="Для чего нужен этот проект"></textarea></label>
-      </div>
-      <div class="modal-actions">
-        <button class="btn secondary" id="cancelProjectCreate">Отмена</button>
-        <button class="btn primary" id="createProjectConfirm">Создать проект</button>
-      </div>
-    </div>
-  </div>
+    </section>
 
-  <div class="modal-backdrop" id="projectDeleteModal" hidden>
-    <div class="modal-card danger-modal">
-      <div class="modal-head">
-        <div>
-          <div class="eyebrow">Опасное действие</div>
-          <h2>Удалить проект?</h2>
-        </div>
-        <button class="icon-btn" id="closeProjectDeleteModal" aria-label="Закрыть">×</button>
-      </div>
-      <div class="danger-copy">
-        <p>Вы собираетесь удалить проект <strong id="deleteProjectName"></strong>.</p>
-        <p>Будут удалены паспорт проекта, Gate, заполненные блоки, глобальные поля, отчёты, календарь и журнал выполнения.</p>
-        <p>Перед удалением рекомендуется экспортировать диагностику проекта.</p>
-      </div>
-      <button type="button" class="btn secondary" id="exportProjectBeforeDelete">Экспортировать проект</button>
-      <label class="delete-confirm-label">Введите точное название проекта для подтверждения
-        <input id="deleteProjectConfirmName" autocomplete="off" />
-      </label>
-      <div class="modal-actions">
-        <button class="btn secondary" id="cancelProjectDelete">Отмена</button>
-        <button class="btn danger" id="confirmProjectDelete" disabled>Удалить навсегда</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="app-shell" id="appShell" hidden>
-    <aside class="sidebar">
-      <div class="brand-block">
-        <div class="brand-mark" id="brandMark">G</div>
-        <div>
-          <div class="brand-title" id="brandTitle">УНИВЕРСАЛ / ГУРУ</div>
-          <div class="brand-subtitle">маркетинговая платформа</div>
-        </div>
-      </div>
-
-      <button class="side-action" id="switchProjectBtn">← Выбор проекта</button>
-      <button class="side-action" id="projectBtn">Паспорт проекта</button>
-
-      <div class="side-section-title">Gate</div>
-      <nav id="gateNav" class="gate-nav"></nav>
-
-      <div class="side-footer">
-        <div class="autosave-dot" id="autosaveDot"></div>
-        <span id="saveStatus">Автосохранение включено</span>
-      </div>
-    </aside>
-
-    <main class="main">
-      <header class="topbar">
-        <div>
-          <div class="eyebrow">Рабочая версия MVP · v1.2.0</div>
-          <div id="supabaseStatus" class="supabase-status is-checking">Supabase: проверка подключения</div>
-          <h1 id="pageTitle">Платформа</h1>
-        </div>
-        <div class="topbar-actions">
-          <input type="file" id="csvInput" accept=".csv,text/csv" hidden />
-          <input type="file" id="csvInputProject" accept=".csv,text/csv" hidden />
-          <div class="btn-group">
-            <button class="btn secondary" id="importGateBtn">Импорт CSV (Gate)</button>
-            <button class="btn secondary" id="importProjectBtn">Импорт CSV (Проект)</button>
+    <div class="modal-backdrop" id="newProjectModal" hidden>
+      <div class="modal-card">
+        <div class="modal-head">
+          <div>
+            <div class="eyebrow">Новый проект</div>
+            <h2>Создать проект</h2>
           </div>
-          <div class="btn-group">
-            <button class="btn secondary" id="exportGateBtn">Экспорт CSV (Gate)</button>
-            <button class="btn secondary" id="exportProjectBtn">Экспорт CSV (Проект)</button>
-          </div>
-          <div class="btn-group">
-            <button class="btn secondary" id="exportPdfGateBtn">PDF (Gate)</button>
-            <button class="btn secondary" id="exportPdfProjectBtn">PDF (Проект)</button>
-          </div>
-          <button class="btn danger" id="resetBtn">Сбросить демо</button>
+          <button class="icon-btn" id="closeProjectModal" aria-label="Закрыть">
+            ×
+          </button>
         </div>
-      </header>
-
-      <section class="summary-grid" id="summaryGrid"></section>
-
-      <section class="workspace">
-        <div class="workspace-toolbar" id="workspaceToolbar">
-          <div class="search-wrap">
-            <input id="searchInput" class="search-input" placeholder="Поиск по блокам, инструкциям, доказательствам" />
-          </div>
-          <select id="statusFilter" class="select-input">
-            <option value="all">Все статусы</option>
-            <option value="not_started">Не начато</option>
-            <option value="in_progress">В работе</option>
-            <option value="ready">Готово</option>
-            <option value="needs_review">Проверить</option>
-          </select>
-          <span class="view-lock">Режим: таблица</span>
+        <div class="form-grid">
+          <label
+            >Название проекта<input
+              id="newProjectName"
+              placeholder="Например: iCleaning"
+          /></label>
+          <label
+            >Тип / ниша проекта<input
+              id="newProjectType"
+              placeholder="Сайт, реклама, бренд, премиальная химчистка"
+          /></label>
+          <label
+            >Ссылка на сайт<input id="newProjectWebsite" placeholder="https://"
+          /></label>
+          <label
+            >География<input
+              id="newProjectGeography"
+              placeholder="Москва, Грузия, онлайн"
+          /></label>
+          <label
+            >Главный CTA<input
+              id="newProjectMainCta"
+              placeholder="Например: Рассчитать стоимость"
+          /></label>
+          <label
+            >Иконка / буква<input
+              id="newProjectIcon"
+              maxlength="2"
+              placeholder="G"
+          /></label>
+          <label class="full"
+            >УТП<textarea
+              id="newProjectUsp"
+              rows="3"
+              placeholder="Главное отличие проекта"
+            ></textarea>
+          </label>
+          <label class="full"
+            >Оффер<textarea
+              id="newProjectOffer"
+              rows="3"
+              placeholder="Что получает клиент"
+            ></textarea>
+          </label>
+          <label class="full"
+            >Короткое описание<textarea
+              id="newProjectDescription"
+              rows="3"
+              placeholder="Для чего нужен этот проект"
+            ></textarea>
+          </label>
         </div>
-
-        <div id="contentArea" class="content-area"></div>
-      </section>
-    </main>
-  </div>
-
-  <template id="projectTemplate">
-    <div class="panel two-col">
-      <div>
-        <h2>Паспорт проекта</h2>
-        <p class="muted">Главные данные проекта. Эти поля потом используются в оффере, УТП, рекламе и отчётах.</p>
-      </div>
-      <div class="form-grid">
-        <label>Название проекта<input data-project="name" /></label>
-        <label>Ниша<input data-project="niche" placeholder="например: премиальная химчистка" /></label>
-        <label>Сайт<input data-project="website" placeholder="https://" /></label>
-        <label>География<input data-project="geography" placeholder="Москва, Грузия, онлайн" /></label>
-        <label>Главный CTA<input data-project="mainCta" /></label>
-        <label class="full">УТП<textarea data-project="usp" rows="3"></textarea></label>
-        <label class="full">Оффер<textarea data-project="offer" rows="3"></textarea></label>
-        <label class="full">Описание проекта<textarea data-project="description" rows="3"></textarea></label>
+        <div class="modal-actions">
+          <button class="btn secondary" id="cancelProjectCreate">Отмена</button>
+          <button class="btn primary" id="createProjectConfirm">
+            Создать проект
+          </button>
+        </div>
       </div>
     </div>
-  </template>
 
-  <template id="metricsTemplate">
-    <div class="panel">
-      <div class="panel-head">
+    <div class="modal-backdrop" id="projectDeleteModal" hidden>
+      <div class="modal-card danger-modal">
+        <div class="modal-head">
+          <div>
+            <div class="eyebrow">Опасное действие</div>
+            <h2>Удалить проект?</h2>
+          </div>
+          <button
+            class="icon-btn"
+            id="closeProjectDeleteModal"
+            aria-label="Закрыть"
+          >
+            ×
+          </button>
+        </div>
+        <div class="danger-copy">
+          <p>
+            Вы собираетесь удалить проект
+            <strong id="deleteProjectName"></strong>.
+          </p>
+          <p>
+            Будут удалены паспорт проекта, Gate, заполненные блоки, глобальные
+            поля, отчёты, календарь и журнал выполнения.
+          </p>
+          <p>
+            Перед удалением рекомендуется экспортировать диагностику проекта.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="btn secondary"
+          id="exportProjectBeforeDelete"
+        >
+          Экспортировать проект
+        </button>
+        <label class="delete-confirm-label"
+          >Введите точное название проекта для подтверждения
+          <input id="deleteProjectConfirmName" autocomplete="off" />
+        </label>
+        <div class="modal-actions">
+          <button class="btn secondary" id="cancelProjectDelete">Отмена</button>
+          <button class="btn danger" id="confirmProjectDelete" disabled>
+            Удалить навсегда
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-shell" id="appShell" hidden>
+      <aside class="sidebar">
+        <div class="brand-block">
+          <div class="brand-mark" id="brandMark">G</div>
+          <div>
+            <div class="brand-title" id="brandTitle">УНИВЕРСАЛ / ГУРУ</div>
+            <div class="brand-subtitle">маркетинговая платформа</div>
+          </div>
+        </div>
+
+        <button class="side-action" id="switchProjectBtn">
+          ← Выбор проекта
+        </button>
+        <button class="side-action" id="projectBtn">Паспорт проекта</button>
+
+        <div class="side-section-title">Gate</div>
+        <nav id="gateNav" class="gate-nav"></nav>
+
+        <div class="side-footer">
+          <div class="autosave-dot" id="autosaveDot"></div>
+          <span id="saveStatus">Автосохранение включено</span>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">Рабочая версия MVP · v1.2.0</div>
+            <div id="supabaseStatus" class="supabase-status is-checking">
+              Supabase: проверка подключения
+            </div>
+            <h1 id="pageTitle">Платформа</h1>
+          </div>
+          <div class="topbar-actions">
+            <input type="file" id="csvInput" accept=".csv,text/csv" hidden />
+            <input
+              type="file"
+              id="csvInputProject"
+              accept=".csv,text/csv"
+              hidden
+            />
+            <div class="btn-group">
+              <button class="btn secondary" id="importGateBtn">
+                Импорт CSV (Gate)
+              </button>
+              <button class="btn secondary" id="importProjectBtn">
+                Импорт CSV (Проект)
+              </button>
+            </div>
+            <div class="btn-group">
+              <button class="btn secondary" id="exportGateBtn">
+                Экспорт CSV (Gate)
+              </button>
+              <button class="btn secondary" id="exportProjectBtn">
+                Экспорт CSV (Проект)
+              </button>
+            </div>
+            <div class="btn-group">
+              <button class="btn secondary" id="exportPdfGateBtn">
+                PDF (Gate)
+              </button>
+              <button class="btn secondary" id="exportPdfProjectBtn">
+                PDF (Проект)
+              </button>
+            </div>
+            <button class="btn danger" id="resetBtn">Сбросить демо</button>
+          </div>
+        </header>
+
+        <section class="summary-grid" id="summaryGrid"></section>
+
+        <section class="workspace">
+          <div class="workspace-toolbar" id="workspaceToolbar">
+            <div class="search-wrap">
+              <input
+                id="searchInput"
+                class="search-input"
+                placeholder="Поиск по блокам, инструкциям, доказательствам"
+              />
+            </div>
+            <select id="statusFilter" class="select-input">
+              <option value="all">Все статусы</option>
+              <option value="not_started">Не начато</option>
+              <option value="in_progress">В работе</option>
+              <option value="ready">Готово</option>
+              <option value="needs_review">Проверить</option>
+            </select>
+            <span class="view-lock">Режим: таблица</span>
+          </div>
+
+          <div id="contentArea" class="content-area"></div>
+        </section>
+      </main>
+    </div>
+
+    <template id="projectTemplate">
+      <div class="panel two-col">
         <div>
-          <h2>Метрики проекта</h2>
-          <p class="muted">Здесь фиксируются данные из Метрики, Директа, CRM и других источников.</p>
+          <h2>Паспорт проекта</h2>
+          <p class="muted">
+            Главные данные проекта. Эти поля потом используются в оффере, УТП,
+            рекламе и отчётах.
+          </p>
         </div>
-        <button class="btn primary" id="addMetricRow">Добавить строку</button>
+        <div class="form-grid">
+          <label>Название проекта<input data-project="name" /></label>
+          <label
+            >Ниша<input
+              data-project="niche"
+              placeholder="например: премиальная химчистка"
+          /></label>
+          <label
+            >Сайт<input data-project="website" placeholder="https://"
+          /></label>
+          <label
+            >География<input
+              data-project="geography"
+              placeholder="Москва, Грузия, онлайн"
+          /></label>
+          <label>Главный CTA<input data-project="mainCta" /></label>
+          <label class="full"
+            >УТП<textarea data-project="usp" rows="3"></textarea>
+          </label>
+          <label class="full"
+            >Оффер<textarea data-project="offer" rows="3"></textarea>
+          </label>
+          <label class="full"
+            >Описание проекта<textarea
+              data-project="description"
+              rows="3"
+            ></textarea>
+          </label>
+        </div>
       </div>
-      <div class="table-scroll">
-        <table class="data-table" id="metricsTable">
-          <thead>
-            <tr>
-              <th>Дата</th>
-              <th>Канал</th>
-              <th>Показы</th>
-              <th>Клики</th>
-              <th>Расход</th>
-              <th>Лиды</th>
-              <th>CTR</th>
-              <th>CPA</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="chart-card">
-        <h3>Расход и лиды по каналам</h3>
-        <div id="metricsChart" class="chart"></div>
-      </div>
-    </div>
-  </template>
+    </template>
 
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="seed-data.js?v=1.1.11"></script>
-  <script src="app.js?v=1.6.3"></script>
-  <script src="supabase-test.js?v=1.1.11"></script>
-</body>
+    <template id="metricsTemplate">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Метрики проекта</h2>
+            <p class="muted">
+              Здесь фиксируются данные из Метрики, Директа, CRM и других
+              источников.
+            </p>
+          </div>
+          <button class="btn primary" id="addMetricRow">Добавить строку</button>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table" id="metricsTable">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Канал</th>
+                <th>Показы</th>
+                <th>Клики</th>
+                <th>Расход</th>
+                <th>Лиды</th>
+                <th>CTR</th>
+                <th>CPA</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="chart-card">
+          <h3>Расход и лиды по каналам</h3>
+          <div id="metricsChart" class="chart"></div>
+        </div>
+      </div>
+    </template>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="seed-data.js?v=1.1.11"></script>
+    <script src="app.js?v=1.6.3"></script>
+    <script src="supabase-test.js?v=1.1.11"></script>
+  </body>
 </html>

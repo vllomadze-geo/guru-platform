@@ -4,7 +4,8 @@
   "private": true,
   "description": "ГУРУ — маркетинговая операционная система",
   "scripts": {
-    "dev": "node local-dev-server.js",
+    "dev": "node --watch local-dev-server.js",
+    "dev:plain": "node local-dev-server.js",
     "build": "echo 'No build'",
     "start": "serve ."
   },
