@@ -17356,6 +17356,29 @@ bindCardInputs = function () {
 };
 
 /* v1.2.0 — Диагностика точки отсчёта: воронка 5A */
+function diagToolIssueText(name, status, labels = {}) {
+  const s = String(status || "");
+  if (s === "implemented" || s === "active") return "";
+  if (s === "in_progress") return `${name} — в работе`;
+  if (s === "planned") return `${name} — планируется`;
+  if (s === "not_implemented") return `${name} — не реализовано`;
+  if (s === "inactive") return `${name} — не используется`;
+  if (!s) return `${name} — статус не указан`;
+  return `${name} — ${labels[s] || "не готово"}`;
+}
+
+function diagChannelTitle(c) {
+  return [c.platform, c.type].filter(Boolean).join(" / ");
+}
+
+function diagPct(ready, total, blockers = 0) {
+  const safeTotal = total || 1;
+  const raw = Math.round((ready / safeTotal) * 100);
+  if (!blockers) return raw;
+  if (blockers >= safeTotal) return Math.min(raw, 20);
+  return Math.min(raw, 35);
+}
+
 function diag5AStages() {
   const mega = state?.gates
     ?.find((g) => g.id === "gate-0")
@@ -17374,13 +17397,19 @@ function diag5AStages() {
       ),
     );
     const active = coverageChannels.filter((c) => c.status === "active");
-    if (!active.length) issues.push("Нет ни одного активного охватного канала");
-    else
-      coverageChannels
-        .filter((c) => c.status !== "active")
-        .forEach((c) => issues.push(`${c.platform} ${c.type} — не активен`));
+    coverageChannels.forEach((c) => {
+      const issue = diagToolIssueText(diagChannelTitle(c), c.status, {
+        active: "активен",
+        planned: "планируется",
+        inactive: "не используется",
+      });
+      if (issue) issues.push(issue);
+    });
     const total = coverageChannels.length || 1;
-    const pct = Math.round((active.length / total) * 100);
+    const blockers = coverageChannels.filter(
+      (c) => c.status === "inactive" || !c.status,
+    ).length;
+    const pct = diagPct(active.length, total, blockers);
     return {
       name: "Aware",
       label: "Узнал",
@@ -17394,27 +17423,30 @@ function diag5AStages() {
     const issues = [];
     const fund = pv2.fundamental || [];
     const trust = fund.find((r) => r.name.includes("Блоки доверия"));
-    if (trust && (trust.status === "not_implemented" || !trust.status))
-      issues.push(
-        "Блоки доверия — " +
-          (trust.status === "not_implemented"
-            ? "не реализованы"
-            : "статус не указан"),
-      );
+    const trustIssue = trust
+      ? diagToolIssueText("Блоки доверия", trust.status)
+      : "Блоки доверия — элемент отсутствует в диагностике";
+    if (trustIssue) issues.push(trustIssue);
     const contacts = fund.find((r) => r.name.includes("Контакты"));
-    if (contacts && (contacts.status === "not_implemented" || !contacts.status))
-      issues.push(
-        "Контакты — " +
-          (contacts.status === "not_implemented"
-            ? "не реализованы"
-            : "статус не указан"),
-      );
+    const contactsIssue = contacts
+      ? diagToolIssueText("Контакты", contacts.status)
+      : "Контакты — элемент отсутствует в диагностике";
+    if (contactsIssue) issues.push(contactsIssue);
     let landingOk = 0;
+    let landingBlockers = 0;
     products.forEach((p) => {
       const d = (pv2.landings || {})[p] || {};
-      if (d.status === "no" || !d.status)
-        issues.push(`Нет посадочной под продукт «${p}»`);
-      else landingOk++;
+      if (d.status === "yes") landingOk++;
+      else {
+        const statusText =
+          d.status === "in_progress"
+            ? "в работе"
+            : d.status === "no"
+              ? "не реализована"
+              : "статус не указан";
+        issues.push(`Посадочная под продукт «${p}» — ${statusText}`);
+        if (d.status === "no" || !d.status) landingBlockers++;
+      }
     });
     const extraPages = pv2.extra || [];
     const total = 2 + products.length + extraPages.length || 1;
@@ -17423,11 +17455,15 @@ function diag5AStages() {
       (contacts?.status === "implemented" ? 1 : 0) +
       landingOk +
       extraPages.filter((r) => r.status === "implemented").length;
+    const blockers =
+      (trust?.status === "not_implemented" || !trust?.status ? 1 : 0) +
+      (contacts?.status === "not_implemented" || !contacts?.status ? 1 : 0) +
+      landingBlockers;
     return {
       name: "Appeal",
       label: "Понравился",
       desc: "Посадочные, доверие, контент",
-      pct: Math.round((ok / total) * 100),
+      pct: diagPct(ok, total, blockers),
       issues,
     };
   }
@@ -17439,16 +17475,18 @@ function diag5AStages() {
       /Метрика|Analytics|CRM|UTM|Коллтрекинг|Уведомления/i.test(r.name),
     );
     askItems.forEach((r) => {
-      if (r.status === "not_implemented")
-        issues.push(`${r.name} — не реализовано`);
-      else if (!r.status) issues.push(`${r.name} — статус не указан`);
+      const issue = diagToolIssueText(r.name, r.status);
+      if (issue) issues.push(issue);
     });
     const ok = askItems.filter((r) => r.status === "implemented").length;
+    const blockers = askItems.filter(
+      (r) => r.status === "not_implemented" || !r.status,
+    ).length;
     return {
       name: "Ask",
       label: "Изучает",
       desc: "Аналитика, цели, CRM, UTM",
-      pct: Math.round((ok / (askItems.length || 1)) * 100),
+      pct: diagPct(ok, askItems.length, blockers),
       issues,
     };
   }
@@ -17457,28 +17495,26 @@ function diag5AStages() {
     const issues = [];
     const fund = pv2.fundamental || [];
     const forms = fund.find((r) => r.name.includes("Форма"));
-    if (forms && (forms.status === "not_implemented" || !forms.status))
-      issues.push(
-        "Форма заявки / корзина — " +
-          (forms.status === "not_implemented"
-            ? "не реализована"
-            : "статус не указан"),
-      );
+    const formIssue = forms
+      ? diagToolIssueText("Форма заявки / корзина", forms.status)
+      : "Форма заявки / корзина — элемент отсутствует в диагностике";
+    if (formIssue) issues.push(formIssue);
     products.forEach((p) => {
       const d = (offers.productOffers || {})[p] || {};
-      if (!d.offer && d.status !== "filled")
-        issues.push(`Нет оффера под продукт «${p}»`);
+      if (!v121ProductOfferReady(d))
+        issues.push(`Нет оффера и CTA под продукт «${p}»`);
     });
     const formsOk = forms?.status === "implemented" ? 1 : 0;
     const offersOk = products.filter(
-      (p) => (offers.productOffers?.[p] || {}).status === "filled",
+      (p) => v121ProductOfferReady(offers.productOffers?.[p] || {}),
     ).length;
     const total = 1 + products.length || 1;
+    const criticalBlocker = forms?.status !== "implemented";
     return {
       name: "Act",
       label: "Покупает",
       desc: "Формы, CTA, офферы",
-      pct: Math.round(((formsOk + offersOk) / total) * 100),
+      pct: criticalBlocker ? 0 : diagPct(formsOk + offersOk, total, 0),
       issues,
     };
   }
@@ -17494,13 +17530,14 @@ function diag5AStages() {
       issues.push("Не указан период фиксации результатов");
     const filled = results.filter((r) => String(r.value || "").trim());
     if (!filled.length) issues.push("Не заполнены текущие результаты");
+    const blockers =
+      (!String(meta.period || "").trim() ? 1 : 0) + (!filled.length ? 1 : 0);
+    const criticalBlocker = !String(meta.period || "").trim() || !filled.length;
     return {
       name: "Advocate",
       label: "Рекомендует",
       desc: "Результаты, повторные покупки",
-      pct: filled.length
-        ? Math.round((filled.length / (results.length || 1)) * 100)
-        : 0,
+      pct: criticalBlocker ? 0 : diagPct(filled.length, results.length || 1, blockers),
       issues,
     };
   }
@@ -17516,34 +17553,13 @@ function diag5ALight(pct) {
 
 function gate0SummaryHtml() {
   const stages = diag5AStages();
-  const allIssues = [];
-  const priorityOrder = ["Act", "Ask", "Aware", "Appeal", "Advocate"];
-  const priorityLabels = {
-    Act: "Нет механики конверсии",
-    Ask: "Нет аналитики",
-    Aware: "Нет охвата",
-    Appeal: "Нет доверия",
-    Advocate: "Нет удержания",
-  };
-
-  priorityOrder.forEach((name) => {
-    const stage = stages.find((s) => s.name === name);
-    if (stage)
-      stage.issues.forEach((issue) =>
-        allIssues.push({
-          stage: name,
-          label: stage.label,
-          reason: priorityLabels[name],
-          issue,
-        }),
-      );
-  });
 
   const stagesHtml = stages
     .map((s) => {
       const light = diag5ALight(s.pct);
       const isRed = s.pct < 40;
-      return `<details class="diag-stage" ${isRed ? "open" : ""}>
+      const tone = s.pct >= 80 ? "green" : s.pct >= 40 ? "yellow" : "red";
+      return `<details class="diag-stage diag-stage-${tone}" ${isRed ? "open" : ""}>
       <summary class="diag-stage-head">
         <span class="diag-light">${light}</span>
         <div class="diag-stage-info">
@@ -17560,24 +17576,7 @@ function gate0SummaryHtml() {
     })
     .join("");
 
-  const prioritiesHtml = allIssues.length
-    ? `<div class="diag-priorities">
-    <div class="mega-section-title">Приоритеты к закрытию</div>
-    <table class="cr-table"><thead><tr><th>Стадия</th><th>Почему критично</th><th>Что закрыть</th></tr></thead>
-    <tbody>${allIssues
-      .slice(0, 15)
-      .map(
-        (i) => `<tr>
-      <td class="cr-label">${escapeHtml(i.label)}</td>
-      <td class="diag-reason">${escapeHtml(i.reason)}</td>
-      <td>${escapeHtml(i.issue)}</td>
-    </tr>`,
-      )
-      .join("")}</tbody></table>
-  </div>`
-    : "";
-
-  return `<div class="diag-5a">${stagesHtml}${prioritiesHtml}</div>`;
+  return `<div class="diag-5a">${stagesHtml}</div>`;
 }
 
 const __guruPrevCardUserFieldsHtmlV120Summary = cardUserFieldsHtml;
@@ -21530,9 +21529,10 @@ const PAIN_V130_STEPS = [
   {
     key: "search",
     title: "1. Поисковое поведение",
-    task: "Понять, как рынок формулирует потребность, какой смысл стоит за поиском и какие сегменты скрываются внутри спроса.",
+    task: "Берём, что продаём в Gate 0, и под каждый продукт формируем поисковое поведение: как рынок называет потребность, какой интент стоит за поиском и какие сегменты скрываются внутри спроса.",
     standard:
-      "Понятно: какими словами рынок описывает потребность, какой интент стоит за поиском, какой скрытый мотив запускает поиск, какие сегменты присутствуют внутри спроса.",
+      "Понятно: что продаём, какой кластер спроса относится к продукту, какими словами рынок описывает потребность, какой интент стоит за поиском, какой скрытый мотив запускает поиск и какие сегменты присутствуют внутри спроса.",
+    customRender: "searchClusters",
     fields: [
       {
         k: "cluster",
@@ -21734,6 +21734,35 @@ function ensurePainV130() {
 }
 
 function painV130StepStatus(data, step) {
+  if (step.customRender === "searchClusters") {
+    const clusters = pv130EnsureSearchClusters(data);
+    const touched = clusters.some((row) =>
+      [
+        "product",
+        "cluster",
+        "mainQueries",
+        "intent",
+        "clientLanguage",
+        "hiddenNeed",
+        "demandSegments",
+      ].some((key) => String(row[key] || "").trim()),
+    );
+    if (!touched) return "not_started";
+    const ready = clusters.length
+      ? clusters.every((row) =>
+          [
+            "product",
+            "cluster",
+            "mainQueries",
+            "intent",
+            "clientLanguage",
+            "hiddenNeed",
+            "demandSegments",
+          ].every((key) => String(row[key] || "").trim()),
+        )
+      : false;
+    return ready ? "ready" : "in_progress";
+  }
   if (step.customRender === "offerJtbd") {
     const tasks = data.offerTasks || [];
     if (!tasks.length || !tasks.some((t) => String(t.name || "").trim()))
@@ -21853,6 +21882,339 @@ function pv130OfferJtbdHtml(step, data) {
   </div>
   <button class="small-btn add-inline-btn" data-pv130-offer-task-add>+ Добавить задачу</button>
   <details class="g1-prompt-toggle"><summary>Показать промт</summary><div>${escapeHtml("Создай карточку товара по фото и краткому описанию.\n\nСтиль: ясно, просто, естественно. Пиши для человека, но учитывай SEO.\n\nВыдай:\n1. Заголовок, до 40 символов.\n2. Краткое описание, 50–90 символов.\n3. Основной текст, 180–300 символов.\n4. Цена, если указана.\n5. SEO Title, до 70 символов.\n6. SEO Description, до 170 символов.\n7. SEO ключевые слова, 5–15 фраз через запятую.")}</div></details>`;
+}
+
+function pv130ProductsFromGate0() {
+  const project = state?.project || {};
+  const main = String(project.whatSell || "").trim();
+  const extra = Array.isArray(project.whatSellExtra)
+    ? project.whatSellExtra
+    : [];
+  return [main, ...extra]
+    .map((item) => String(item || "").trim())
+    .filter(Boolean);
+}
+
+function pv130EmptySearchCluster(product = "") {
+  return {
+    product,
+    cluster: "",
+    mainQueries: "",
+    intent: "",
+    clientLanguage: "",
+    hiddenNeed: "",
+    demandSegments: "",
+  };
+}
+
+function pv130EnsureSearchClusters(data = {}) {
+  data.searchClusters = Array.isArray(data.searchClusters)
+    ? data.searchClusters
+    : [];
+
+  if (
+    !data.searchClusters.length &&
+    [
+      data.cluster,
+      data.mainQueries,
+      data.intent,
+      data.clientLanguage,
+      data.hiddenNeed,
+      data.demandSegments,
+    ].some((value) => String(value || "").trim())
+  ) {
+    data.searchClusters.push({
+      product: pv130ProductsFromGate0()[0] || "",
+      cluster: data.cluster || "",
+      mainQueries: data.mainQueries || "",
+      intent: data.intent || "",
+      clientLanguage: data.clientLanguage || "",
+      hiddenNeed: data.hiddenNeed || "",
+      demandSegments: data.demandSegments || "",
+    });
+  }
+
+  const existingByProduct = new Set(
+    data.searchClusters
+      .map((row) => String(row.product || "").trim())
+      .filter(Boolean),
+  );
+  pv130ProductsFromGate0().forEach((product) => {
+    if (!existingByProduct.has(product)) {
+      data.searchClusters.push(pv130EmptySearchCluster(product));
+      existingByProduct.add(product);
+    }
+  });
+  if (!data.searchClusters.length) data.searchClusters.push(pv130EmptySearchCluster());
+  return data.searchClusters;
+}
+
+function pv130SearchField(rowIndex, key, label, value, placeholder, type = "textarea") {
+  const filled = String(value || "").trim();
+  const cls = filled ? "is-filled" : "is-empty";
+  const attr = `data-pv130-step="search" data-pv130-search-cluster="${rowIndex}" data-pv130-search-field="${escapeAttr(key)}"`;
+  if (key === "intent") {
+    const opts = [
+      ["", "—"],
+      ["buy", "Купить / заказать"],
+      ["compare", "Выбрать / сравнить"],
+      ["research", "Изучить / вдохновиться"],
+    ];
+    return `<label class="g1-field"><span>${escapeHtml(label)}</span><select class="g1-input ${cls}" ${attr}>${opts.map(([v, l]) => `<option value="${escapeAttr(v)}" ${value === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}</select></label>`;
+  }
+  if (type === "input")
+    return `<label class="g1-field"><span>${escapeHtml(label)}</span><input class="g1-input ${cls}" ${attr} value="${escapeAttr(value || "")}" placeholder="${escapeAttr(placeholder || "")}" /></label>`;
+  return `<label class="g1-field"><span>${escapeHtml(label)}</span><textarea class="g1-input ${cls}" ${attr} rows="1" placeholder="${escapeAttr(placeholder || "")}">${escapeHtml(value || "")}</textarea></label>`;
+}
+
+function pv130SearchClustersHtml(step, data) {
+  const clusters = pv130EnsureSearchClusters(data);
+  return `<div class="g1-fields-grid">
+    ${clusters
+      .map((row, ri) => {
+        const product = String(row.product || "").trim();
+        const cluster = String(row.cluster || "").trim();
+        const preview = cluster || product || "Кластер спроса";
+        return `<div class="g1-card g1-card-collapsible pv130-search-cluster" style="border-radius:14px;padding:0;">
+        <div class="g1-card-collapse-header pv130-search-cluster-head" data-g1-collapse>
+          <span class="pv130-search-cluster-title"><span class="pv130-search-cluster-index">Кластер ${ri + 1}</span>${product ? ` <span class="pv130-search-cluster-product">${escapeHtml(product)}</span>` : ""}<span class="g1-collapse-preview pv130-search-cluster-preview">${escapeHtml(preview)}</span></span>
+          <button class="small-btn danger-mini" data-pv130-search-cluster-remove="${ri}" ${clusters.length <= pv130ProductsFromGate0().length ? "disabled" : ""}>×</button>
+        </div>
+        <div class="g1-card-collapse-body pv130-search-cluster-body">
+          <div class="g1-fields-grid">
+            ${pv130SearchField(ri, "product", "Что продаём", row.product, "продукт из Gate 0", "input")}
+            ${pv130SearchField(ri, "cluster", "Кластер спроса", row.cluster, "группировка поискового спроса по намерению", "input")}
+            ${pv130SearchField(ri, "mainQueries", "Основные запросы", row.mainQueries, "3–7 наиболее показательных запросов")}
+            ${pv130SearchField(ri, "intent", "Интент клиента", row.intent, "")}
+            ${pv130SearchField(ri, "clientLanguage", "Язык клиента", row.clientLanguage, "реальные слова и формулировки рынка")}
+            ${pv130SearchField(ri, "hiddenNeed", "Скрытая потребность", row.hiddenNeed, "какую проблему решает, почему начал искать, какой результат хочет")}
+            ${pv130SearchField(ri, "demandSegments", "Сегменты внутри спроса", row.demandSegments, "группы клиентов, скрытые внутри одного кластера")}
+          </div>
+        </div>
+      </div>`;
+      })
+      .join("")}
+  </div>
+  <button class="small-btn add-inline-btn" data-pv130-search-cluster-add>+ Добавить кластер спроса</button>`;
+}
+
+const PV140_PRODUCT_FIELDS = [
+  {
+    group: "Спрос и тренд",
+    fields: [
+      ["trendDemand", "Насколько востребовано", "Wordstat / Google Trends / Search Console: объём, динамика, сила спроса"],
+      ["trendTiming", "Когда спрос растёт", "сезонность, момент покупки, событие или триггер рынка"],
+      ["trendSource", "Источник подтверждения", "ссылка, период, регион, инструмент или комментарий по данным"],
+    ],
+  },
+  {
+    group: "Поисковое поведение",
+    fields: [
+      ["cluster", "Кластер спроса", "группировка спроса по намерению"],
+      ["mainQueries", "Основные запросы", "3–7 запросов, которые лучше всего показывают спрос"],
+      ["keywords", "Ключевые слова", "рабочие SEO/SEM-ключи и фразы для контента/рекламы"],
+      ["clientLanguage", "Язык клиента", "как рынок сам формулирует проблему и желаемый результат"],
+      ["hiddenNeed", "Скрытая потребность", "что клиент на самом деле хочет получить, кроме продукта"],
+    ],
+  },
+  {
+    group: "Боль и причина спроса",
+    fields: [
+      ["explicitProblem", "Явная проблема", "проблема, которую клиент осознаёт и называет"],
+      ["deepProblem", "Глубинная проблема", "реальная причина, которая стоит за запросом"],
+      ["searchTrigger", "Триггер поиска", "что запустило поиск решения именно сейчас"],
+      ["choiceBarrier", "Барьер выбора", "что мешает выбрать нас или принять решение"],
+      ["desiredResult", "Желаемый результат", "что должно измениться после покупки"],
+    ],
+  },
+  {
+    group: "Сегмент и задача",
+    fields: [
+      ["demandSegments", "Сегменты внутри спроса", "кто скрывается внутри одного кластера спроса"],
+      ["jtbd", "JTBD / задача клиента", "Когда [ситуация], я хочу [действие], чтобы [результат]"],
+    ],
+  },
+  {
+    group: "Оффер",
+    fields: [
+      ["initialOffer", "Оффер из точки отсчёта", "что было зафиксировано в Gate 0"],
+      ["finalOffer", "Финальный оффер после анализа", "кому, что, зачем и почему стоит поверить"],
+      ["offerConclusion", "Вывод по офферу", "оставить / усилить / заменить / разделить на несколько офферов"],
+    ],
+  },
+];
+
+const PV140_REQUIRED_FIELDS = [
+  "trendDemand",
+  "trendTiming",
+  "trendSource",
+  "cluster",
+  "mainQueries",
+  "keywords",
+  "clientLanguage",
+  "hiddenNeed",
+  "explicitProblem",
+  "deepProblem",
+  "searchTrigger",
+  "choiceBarrier",
+  "desiredResult",
+  "demandSegments",
+  "jtbd",
+  "finalOffer",
+];
+
+function pv140OfferFromGate0(product) {
+  const offers = v121EnsureOffers(state);
+  const row = offers.productOffers?.[product] || {};
+  return [row.offer, row.cta].filter((value) => String(value || "").trim()).join(" → ");
+}
+
+function pv140EmptyProductMap(product = "") {
+  return {
+    product,
+    trendDemand: "",
+    trendTiming: "",
+    trendSource: "",
+    cluster: "",
+    mainQueries: "",
+    keywords: "",
+    clientLanguage: "",
+    hiddenNeed: "",
+    explicitProblem: "",
+    deepProblem: "",
+    searchTrigger: "",
+    choiceBarrier: "",
+    desiredResult: "",
+    demandSegments: "",
+    jtbd: "",
+    initialOffer: product ? pv140OfferFromGate0(product) : "",
+    finalOffer: "",
+    offerConclusion: "",
+  };
+}
+
+function pv140LegacySearchByProduct() {
+  const d = ensurePainV130();
+  const rows = pv130EnsureSearchClusters(d.steps?.search || {});
+  const byProduct = new Map();
+  rows.forEach((row) => {
+    const product = String(row.product || "").trim();
+    if (product && !byProduct.has(product)) byProduct.set(product, row);
+  });
+  return byProduct;
+}
+
+function pv140EnsureProductMaps() {
+  const d = ensurePainV130();
+  d.productMaps = Array.isArray(d.productMaps) ? d.productMaps : [];
+  const legacySearch = pv140LegacySearchByProduct();
+  const products = pv130ProductsFromGate0();
+  const existingByProduct = new Set(
+    d.productMaps.map((row) => String(row.product || "").trim()).filter(Boolean),
+  );
+
+  products.forEach((product, index) => {
+    if (existingByProduct.has(product)) return;
+    const row = pv140EmptyProductMap(product);
+    const legacy = legacySearch.get(product) || legacySearch.get(products[0]) || {};
+    row.cluster = legacy.cluster || "";
+    row.mainQueries = legacy.mainQueries || "";
+    row.clientLanguage = legacy.clientLanguage || "";
+    row.hiddenNeed = legacy.hiddenNeed || "";
+    row.demandSegments = legacy.demandSegments || "";
+
+    if (!index) {
+      const pain = d.steps?.pain || {};
+      row.explicitProblem = pain.explicitProblem || "";
+      row.deepProblem = pain.deepProblem || "";
+      row.searchTrigger = pain.searchTrigger || "";
+      row.choiceBarrier = pain.purchaseBarrier || "";
+      row.desiredResult = pain.desiredResult || "";
+      const jtbd = d.steps?.jtbd?.jtbdRows?.[0]?.col0 || "";
+      row.jtbd = jtbd;
+    }
+    d.productMaps.push(row);
+    existingByProduct.add(product);
+  });
+
+  if (!d.productMaps.length) d.productMaps.push(pv140EmptyProductMap());
+  d.productMaps.forEach((row) => {
+    const product = String(row.product || "").trim();
+    if (!String(row.initialOffer || "").trim() && product)
+      row.initialOffer = pv140OfferFromGate0(product);
+  });
+  return d.productMaps;
+}
+
+function pv140ProductMapStatus(row) {
+  const touched = PV140_REQUIRED_FIELDS.some((key) =>
+    String(row[key] || "").trim(),
+  );
+  const filled = PV140_REQUIRED_FIELDS.filter((key) =>
+    String(row[key] || "").trim(),
+  ).length;
+  if (!touched) return { status: "not_started", filled, total: PV140_REQUIRED_FIELDS.length };
+  if (filled === PV140_REQUIRED_FIELDS.length)
+    return { status: "ready", filled, total: PV140_REQUIRED_FIELDS.length };
+  return { status: "in_progress", filled, total: PV140_REQUIRED_FIELDS.length };
+}
+
+function pv140ProductStrategyStatus() {
+  const maps = pv140EnsureProductMaps();
+  const statuses = maps.map(pv140ProductMapStatus);
+  if (statuses.every((item) => item.status === "not_started")) return "not_started";
+  if (statuses.every((item) => item.status === "ready")) return "ready";
+  return "in_progress";
+}
+
+function pv140Field(rowIndex, key, label, value, placeholder) {
+  const filled = String(value || "").trim();
+  return `<label class="g1-field pv140-field"><span>${escapeHtml(label)}</span><textarea class="g1-input ${filled ? "is-filled" : "is-empty"}" data-pv140-map="${rowIndex}" data-pv140-field="${escapeAttr(key)}" rows="1" placeholder="${escapeAttr(placeholder || "")}">${escapeHtml(value || "")}</textarea></label>`;
+}
+
+function pv140ProductMapHtml(row, index, totalBaseProducts) {
+  const product = String(row.product || "").trim();
+  const mapStatus = pv140ProductMapStatus(row);
+  const statusLabel = STATUS_LABELS[mapStatus.status] || mapStatus.status;
+  return `<div class="g1-card g1-card-collapsible pv140-product-card" style="border-radius:14px;padding:0;">
+    <div class="g1-card-collapse-header pv140-product-head" data-g1-collapse>
+      <span class="pv140-product-title">
+        <span class="pv140-product-index">Продукт ${index + 1}</span>
+        <span class="pv140-product-name">${escapeHtml(product || "Что продаём")}</span>
+      </span>
+      <span class="pv140-product-progress">${mapStatus.filled}/${mapStatus.total}</span>
+      <span class="status-pill status-${mapStatus.status}">${escapeHtml(statusLabel)}</span>
+      <button class="small-btn danger-mini" data-pv140-map-remove="${index}" ${index < totalBaseProducts ? "disabled" : ""}>×</button>
+    </div>
+    <div class="g1-card-collapse-body pv140-product-body">
+      <div class="pv140-product-grid">
+        ${pv140Field(index, "product", "Что продаём", row.product, "продукт / услуга из Gate 0")}
+        ${PV140_PRODUCT_FIELDS.map(
+          (section) => `<section class="pv140-section">
+          <div class="pv140-section-title">${escapeHtml(section.group)}</div>
+          <div class="g1-fields-grid">
+            ${section.fields
+              .map(([key, label, placeholder]) =>
+                pv140Field(index, key, label, row[key], placeholder),
+              )
+              .join("")}
+          </div>
+        </section>`,
+        ).join("")}
+      </div>
+    </div>
+  </div>`;
+}
+
+function pv140ProductStrategyHtml() {
+  const maps = pv140EnsureProductMaps();
+  const baseProducts = pv130ProductsFromGate0();
+  return `<div class="pv140-product-strategy">
+    <div class="g1-fields-grid">
+      ${maps.map((row, index) => pv140ProductMapHtml(row, index, baseProducts.length)).join("")}
+    </div>
+    <button class="small-btn add-inline-btn" data-pv140-map-add>+ Добавить продуктовую карту</button>
+  </div>`;
 }
 
 function pv130DynamicSelects(step) {
@@ -22044,7 +22406,7 @@ function painV130StepHtml(step, data, isOpen) {
         ? `<div class="g1-card-body">
       <p class="g1-task">${escapeHtml(step.task)}</p>
       ${
-        (step.fields || []).length
+        (step.fields || []).length && step.customRender !== "searchClusters"
           ? `<div class="g1-fields-grid">
         ${step.fields
           .map((f) => {
@@ -22063,7 +22425,7 @@ function painV130StepHtml(step, data, isOpen) {
       </div>`
           : ""
       }
-      ${step.customRender === "offerJtbd" ? pv130OfferJtbdHtml(step, data) : step.table ? pv130TableHtml(step, data) : ""}
+      ${step.customRender === "searchClusters" ? pv130SearchClustersHtml(step, data) : step.customRender === "offerJtbd" ? pv130OfferJtbdHtml(step, data) : step.table ? pv130TableHtml(step, data) : ""}
       <p class="g1-task" style="margin-top:8px;font-style:italic;">Стандарт: ${escapeHtml(step.standard)}</p>
     </div>`
         : ""
@@ -22114,6 +22476,18 @@ getPainOfferProgressText = function () {
 function updatePainV130(target) {
   const d = ensurePainV130();
   const stepKey = target.dataset.pv130Step;
+  const searchClusterIdx = target.dataset.pv130SearchCluster;
+  const searchField = target.dataset.pv130SearchField;
+  if (stepKey === "search" && searchClusterIdx !== undefined && searchField) {
+    d.steps.search = d.steps.search || {};
+    const clusters = pv130EnsureSearchClusters(d.steps.search);
+    clusters[Number(searchClusterIdx)] =
+      clusters[Number(searchClusterIdx)] || pv130EmptySearchCluster();
+    clusters[Number(searchClusterIdx)][searchField] = target.value;
+    flashSaving();
+    renderGateNav();
+    return;
+  }
   const field = target.dataset.pv130Field;
   const tableKey = target.dataset.pv130Table;
   const rowIdx = target.dataset.pv130Row;
@@ -22172,6 +22546,27 @@ document.addEventListener("click", (e) => {
     const rows = d.steps?.[stepKey]?.[tableKey] || [];
     if (rows.length > 1) {
       rows.splice(ri, 1);
+      flashSaving();
+      renderGate();
+    }
+    return;
+  }
+  if (e.target?.dataset?.pv130SearchClusterAdd !== undefined) {
+    const d = ensurePainV130();
+    d.steps.search = d.steps.search || {};
+    const clusters = pv130EnsureSearchClusters(d.steps.search);
+    clusters.push(pv130EmptySearchCluster());
+    flashSaving();
+    renderGate();
+    return;
+  }
+  if (e.target?.dataset?.pv130SearchClusterRemove !== undefined) {
+    const d = ensurePainV130();
+    d.steps.search = d.steps.search || {};
+    const clusters = pv130EnsureSearchClusters(d.steps.search);
+    const idx = Number(e.target.dataset.pv130SearchClusterRemove);
+    if (clusters.length > pv130ProductsFromGate0().length) {
+      clusters.splice(idx, 1);
       flashSaving();
       renderGate();
     }
@@ -22255,6 +22650,61 @@ document.addEventListener("input", (e) => {
       renderGateNav();
     }
     return;
+  }
+});
+
+/* v1.4.0 — product-first demand/value map */
+g1RenderPainV130 = function () {
+  const status = pv140ProductStrategyStatus();
+  return `<div class="g1-route">
+    <div class="g1-card is-open">
+      <button class="g1-card-header" data-pv130-toggle="productStrategy">
+        <span class="g1-card-title">1. Продуктовые карты спроса, боли и оффера</span>
+        <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+      </button>
+      <div class="g1-card-body">
+        ${pv140ProductStrategyHtml()}
+      </div>
+    </div>
+  </div>`;
+};
+
+getPainOfferStatus = function () {
+  return pv140ProductStrategyStatus();
+};
+
+getPainOfferProgressText = function () {
+  const maps = pv140EnsureProductMaps();
+  const ready = maps.filter((row) => pv140ProductMapStatus(row).status === "ready").length;
+  return `${ready} из ${maps.length} продуктовых карт готово`;
+};
+
+document.addEventListener("input", (e) => {
+  const field = e.target?.dataset?.pv140Field;
+  const mapIndex = e.target?.dataset?.pv140Map;
+  if (field === undefined || mapIndex === undefined) return;
+  const maps = pv140EnsureProductMaps();
+  maps[Number(mapIndex)] = maps[Number(mapIndex)] || pv140EmptyProductMap();
+  maps[Number(mapIndex)][field] = e.target.value;
+  flashSaving();
+  renderGateNav();
+});
+
+document.addEventListener("click", (e) => {
+  if (e.target?.dataset?.pv140MapAdd !== undefined) {
+    pv140EnsureProductMaps().push(pv140EmptyProductMap());
+    flashSaving();
+    renderGate();
+    return;
+  }
+  if (e.target?.dataset?.pv140MapRemove !== undefined) {
+    const maps = pv140EnsureProductMaps();
+    const idx = Number(e.target.dataset.pv140MapRemove);
+    if (idx >= pv130ProductsFromGate0().length && maps.length > 1) {
+      maps.splice(idx, 1);
+      flashSaving();
+      renderGate();
+    }
   }
 });
 
@@ -22391,6 +22841,8 @@ const UNIT_V130_STEPS = [
 const UNIT_V130_BLANK_ITEM = {
   type: "",
   name: "",
+  productKey: "",
+  open: false,
   period: "",
   model: "",
   dataSource: "",
@@ -22398,13 +22850,52 @@ const UNIT_V130_BLANK_ITEM = {
   steps: {},
 };
 
+function uv130BlankItem(product = "") {
+  const item = JSON.parse(JSON.stringify(UNIT_V130_BLANK_ITEM));
+  if (product) {
+    item.type = "product";
+    item.name = product;
+    item.productKey = product;
+  }
+  return item;
+}
+
 function ensureUnitV130() {
-  state.unitV130 = state.unitV130 || {
-    items: [JSON.parse(JSON.stringify(UNIT_V130_BLANK_ITEM))],
-  };
+  const products = pv130ProductsFromGate0();
+  state.unitV130 = state.unitV130 || { items: [] };
   if (!state.unitV130.items?.length)
-    state.unitV130.items = [JSON.parse(JSON.stringify(UNIT_V130_BLANK_ITEM))];
+    state.unitV130.items = products.length
+      ? products.map((product) => uv130BlankItem(product))
+      : [uv130BlankItem()];
+
+  if (
+    products.length &&
+    state.unitV130.items.length === 1 &&
+    !String(state.unitV130.items[0].name || "").trim()
+  ) {
+    Object.assign(state.unitV130.items[0], uv130BlankItem(products[0]), {
+      openSteps: state.unitV130.items[0].openSteps || {},
+      steps: state.unitV130.items[0].steps || {},
+    });
+  }
+
+  products.forEach((product) => {
+    const existing = state.unitV130.items.find(
+      (item) =>
+        String(item.productKey || item.name || "").trim() === product,
+    );
+    if (existing) {
+      existing.productKey = existing.productKey || product;
+      existing.name = existing.name || product;
+      existing.type = existing.type || "product";
+    } else {
+      state.unitV130.items.push(uv130BlankItem(product));
+    }
+  });
+
   state.unitV130.items.forEach((item) => {
+    item.productKey = item.productKey || "";
+    if (item.open === undefined) item.open = !products.length && state.unitV130.items.length === 1;
     item.openSteps = item.openSteps || {};
     item.steps = item.steps || {};
   });
@@ -22450,24 +22941,31 @@ function uv130StepHtml(itemIdx, step, data, isOpen) {
   </div>`;
 }
 
-function uv130ItemHtml(item, idx, total) {
+function uv130ItemHtml(item, idx, total, baseProductCount) {
   const status = uv130ItemStatus(item);
   const nameFilled = String(item.name || "").trim();
-  return `<div class="g1-card" style="border:2px solid var(--line);border-radius:18px;padding:0;">
-    <div class="g1-card-header-static">
-      <span class="g1-card-title">${escapeHtml(nameFilled || "Единица " + (idx + 1))}</span>
+  const isGate0Product = Boolean(String(item.productKey || "").trim());
+  return `<div class="g1-card ${item.open ? "is-open" : ""}" style="border:2px solid var(--line);border-radius:18px;padding:0;">
+    <div class="g1-card-header-static" data-uv130-item-toggle="${idx}" style="cursor:pointer;">
+      <span class="g1-card-title">${escapeHtml(isGate0Product ? "Продукт " + (idx + 1) : "Единица " + (idx + 1))}${nameFilled ? ` · ${escapeHtml(nameFilled)}` : ""}</span>
       <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
-      ${total > 1 ? `<button class="small-btn danger-mini" data-uv130-remove="${idx}">×</button>` : ""}
+      ${total > 1 ? `<button class="small-btn danger-mini" data-uv130-remove="${idx}" ${isGate0Product || idx < baseProductCount ? "disabled" : ""}>×</button>` : ""}
     </div>
+    ${
+      item.open
+        ? `
     <div style="padding:14px 20px;display:flex;flex-direction:column;gap:12px;">
       <div class="g1-fields-grid">
         <label class="g1-field"><span>Тип</span><select class="g1-input is-filled" data-uv130-item="${idx}" data-uv130-meta="type">${UNIT_V130_TYPES.map(([v, l]) => `<option value="${escapeAttr(v)}" ${item.type === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}</select></label>
-        <label class="g1-field"><span>Название</span><input class="g1-input ${nameFilled ? "is-filled" : "is-empty"}" data-uv130-item="${idx}" data-uv130-meta="name" value="${escapeAttr(item.name || "")}" placeholder="Подарочные наборы / Химчистка обуви" /></label>
+        <label class="g1-field"><span>Что продаём</span><input class="g1-input ${nameFilled ? "is-filled" : "is-empty"}" data-uv130-item="${idx}" data-uv130-meta="name" value="${escapeAttr(item.name || "")}" placeholder="продукт / услуга из Gate 0" /></label>
         <label class="g1-field"><span>Период</span><input class="g1-input ${String(item.period || "").trim() ? "is-filled" : "is-empty"}" data-uv130-item="${idx}" data-uv130-meta="period" value="${escapeAttr(item.period || "")}" placeholder="месяц / квартал / сезон" /></label>
         <label class="g1-field"><span>Модель продажи</span><select class="g1-input is-filled" data-uv130-item="${idx}" data-uv130-meta="model">${UNIT_V130_MODELS.map(([v, l]) => `<option value="${escapeAttr(v)}" ${item.model === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}</select></label>
       </div>
       <div class="g1-route">${UNIT_V130_STEPS.map((s) => uv130StepHtml(idx, s, item.steps[s.key] || {}, !!item.openSteps[s.key])).join("")}</div>
     </div>
+    `
+        : ""
+    }
   </div>`;
 }
 
@@ -22490,8 +22988,9 @@ function uv130SummaryHtml(items) {
 
 g1RenderUnitEconomics = function () {
   const d = ensureUnitV130();
+  const baseProducts = pv130ProductsFromGate0();
   return `<div class="g1-route">
-    ${d.items.map((item, i) => uv130ItemHtml(item, i, d.items.length)).join("")}
+    ${d.items.map((item, i) => uv130ItemHtml(item, i, d.items.length, baseProducts.length)).join("")}
     <button class="small-btn add-inline-btn" data-uv130-add>+ Добавить продукт / услугу</button>
     ${uv130SummaryHtml(d.items)}
   </div>`;
@@ -22508,7 +23007,7 @@ getUnitEconomicsStatus = function () {
 getUnitEconomicsProgressText = function () {
   const d = ensureUnitV130();
   const ready = d.items.filter((i) => uv130ItemStatus(i) === "ready").length;
-  return `${ready} из ${d.items.length} единиц готово`;
+  return `${ready} из ${d.items.length} продуктов / услуг готово`;
 };
 
 function updateUnitV130(target) {
@@ -22540,6 +23039,17 @@ document.addEventListener("change", (e) => {
   if (e.target?.dataset?.uv130Item !== undefined) updateUnitV130(e.target);
 });
 document.addEventListener("click", (e) => {
+  const itemToggle = e.target.closest("[data-uv130-item-toggle]");
+  if (itemToggle && !e.target.closest(".danger-mini")) {
+    const d = ensureUnitV130();
+    const idx = Number(itemToggle.dataset.uv130ItemToggle);
+    if (d.items[idx]) {
+      d.items[idx].open = !d.items[idx].open;
+      saveState();
+      renderGate();
+    }
+    return;
+  }
   const toggle = e.target.closest("[data-uv130-toggle]");
   if (toggle) {
     const d = ensureUnitV130();
@@ -22553,9 +23063,9 @@ document.addEventListener("click", (e) => {
     return;
   }
   if (e.target?.dataset?.uv130Add !== undefined) {
-    ensureUnitV130().items.push(
-      JSON.parse(JSON.stringify(UNIT_V130_BLANK_ITEM)),
-    );
+    const item = uv130BlankItem();
+    item.open = true;
+    ensureUnitV130().items.push(item);
     flashSaving();
     renderGate();
   }
@@ -22685,6 +23195,11 @@ function g2GetSections(gate, visibleIds) {
     (c) => !isHeader(c) && visibleIds.has(c.id),
   );
   const sections = G2_SECTIONS.map((def) => ({ ...def, cards: [] }));
+  const other = {
+    key: "other",
+    title: "Прочее",
+    cards: [],
+  };
   contentCards.forEach((card) => {
     const newCardDef = G2_NEW_CARDS.find((nc) => nc.id === card.id);
     if (newCardDef) {
@@ -22697,7 +23212,9 @@ function g2GetSections(gate, visibleIds) {
     const title = card.title || "";
     const sec = sections.find((s) => s.match.test(title));
     if (sec) sec.cards.push(card);
+    else other.cards.push(card);
   });
+  if (other.cards.length) sections.push(other);
   return sections.filter((s) => s.cards.length);
 }
 
@@ -22746,66 +23263,124 @@ function g2SectionProgress(cards) {
   return `${ready} из ${cards.length} готово`;
 }
 
+function g2Gate0PlatformV2() {
+  const gate0 = state?.gates?.find((g) => g.id === "gate-0");
+  const card = gate0?.cards?.find(isMegaMarketingCard);
+  if (card) ensureMegaMarketing(card, state);
+  return card?.megaMarketing?.platformV2 || { landings: {} };
+}
+
+function g2ProductContextRows() {
+  const products = pv130ProductsFromGate0();
+  const maps = pv140EnsureProductMaps();
+  const units = ensureUnitV130().items || [];
+  const offers = v121EnsureOffers(state);
+  const pv2 = g2Gate0PlatformV2();
+
+  return products.map((product) => {
+    const map = maps.find((row) => String(row.product || "").trim() === product) || {};
+    const unit = units.find(
+      (item) =>
+        String(item.productKey || item.name || "").trim() === product,
+    ) || {};
+    const productOffer = offers.productOffers?.[product] || {};
+    const landing = pv2.landings?.[product] || {};
+    return {
+      product,
+      offer: map.finalOffer || map.initialOffer || productOffer.offer || "",
+      segment: map.demandSegments || state.project?.targetSegment || "",
+      jtbd: map.jtbd || "",
+      queries: map.keywords || map.mainQueries || "",
+      cta: productOffer.cta || state.project?.primaryTargetAction || "",
+      cpa: unit.steps?.adLimits?.allowedCpa || "",
+      cpl: unit.steps?.adLimits?.allowedCpl || "",
+      landingUrl: landing.url || "",
+      landingStatus: landing.status || "",
+    };
+  });
+}
+
+function g2ShortValue(value) {
+  const text = String(value || "").trim();
+  return text ? escapeHtml(text) : '<span class="g2-muted">—</span>';
+}
+
+function g2LaunchContextHtml() {
+  const rows = g2ProductContextRows();
+  if (!rows.length) return "";
+  return `<section class="g1-section g2-launch-context">
+    <div class="g1-section-header g2-open-header">
+      <span class="g1-section-left">
+        <span class="g1-section-title">Контекст запуска из Gate 0 / 1</span>
+        <span class="g1-section-progress">${rows.length} продуктов</span>
+      </span>
+    </div>
+    <div class="g2-product-context-list">
+      ${rows
+        .map(
+          (row, index) => `<article class="g2-product-context-row">
+        <div class="g2-product-main">
+          <span class="g2-product-index">Продукт ${index + 1}</span>
+          <strong>${escapeHtml(row.product)}</strong>
+        </div>
+        <div class="g2-context-cell"><span>Оффер</span><b>${g2ShortValue(row.offer)}</b></div>
+        <div class="g2-context-cell"><span>Сегмент / JTBD</span><b>${g2ShortValue(row.jtbd || row.segment)}</b></div>
+        <div class="g2-context-cell"><span>Запросы</span><b>${g2ShortValue(row.queries)}</b></div>
+        <div class="g2-context-cell"><span>CTA</span><b>${g2ShortValue(row.cta)}</b></div>
+        <div class="g2-context-cell"><span>CPA / CPL</span><b>${g2ShortValue([row.cpa && "CPA " + row.cpa, row.cpl && "CPL " + row.cpl].filter(Boolean).join(" / "))}</b></div>
+        <div class="g2-context-cell"><span>Посадочная</span><b>${g2ShortValue(row.landingUrl || row.landingStatus)}</b></div>
+      </article>`,
+        )
+        .join("")}
+    </div>
+  </section>`;
+}
+
 function g2CardHtml(card) {
-  const acc = getGate2AccordionState();
-  const isOpen = Boolean(acc.cards[card.id]);
   const status = g2CardStatus(card);
-  const orient = g2ParseOrient(card.instruction);
-  const standard = g2ParseStandard(card.instruction);
   const f = g2EnsureFields(card);
   const noteVal = card.notes || "";
   const noteCls = String(noteVal).trim() ? "is-filled" : "is-empty";
   const checkVal = f.g2Check || "";
 
-  return `<article class="g1-card ${isOpen ? "is-open" : ""}" data-card="${escapeAttr(card.id)}">
-    <button class="g1-card-header" data-g2-toggle-card="${escapeAttr(card.id)}">
-      <span class="g1-card-title">${escapeHtml(card.title)}</span>
+  return `<article class="g2-check-row" data-card="${escapeAttr(card.id)}">
+    <div class="g2-check-title">
+      <span>${escapeHtml(card.title)}</span>
       <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
-      <span class="g1-section-toggle">${isOpen ? "Свернуть" : "Раскрыть"}</span>
-    </button>
-    ${
-      isOpen
-        ? `<div class="g1-card-body">
-      ${orient ? `<p class="g1-task">${escapeHtml(orient)}</p>` : ""}
-      <div class="g1-fields-grid">
-        <label class="g1-field"><span>Статус проверки</span><select class="g1-input is-filled" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="check">${G2_CHECK_OPTIONS.map(([v, l]) => `<option value="${escapeAttr(v)}" ${checkVal === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}</select></label>
-        <label class="g1-field"><span>Рабочие заметки</span><textarea class="g1-input ${noteCls}" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="notes" rows="3" placeholder="что сделано, результат">${escapeHtml(noteVal)}</textarea></label>
-      </div>
-      ${standard ? `<p class="g1-task" style="font-style:italic;margin-top:12px;opacity:.7"><strong>Стандарт готовности:</strong> ${escapeHtml(standard)}</p>` : ""}
-    </div>`
-        : ""
-    }
+    </div>
+    <label class="g2-check-status">
+      <span>Статус</span>
+      <select class="g1-input is-filled" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="check">${G2_CHECK_OPTIONS.map(([v, l]) => `<option value="${escapeAttr(v)}" ${checkVal === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}</select>
+    </label>
+    <label class="g2-check-notes">
+      <span>Заметки</span>
+      <textarea class="g1-input ${noteCls}" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="notes" rows="1" placeholder="что сделано, результат">${escapeHtml(noteVal)}</textarea>
+    </label>
   </article>`;
 }
 
 function renderGate2Redesign(gate, cards) {
   ensureGate2Structure(gate);
   const sections = g2GetSections(gate, new Set(cards.map((c) => c.id)));
-  const acc = getGate2AccordionState();
 
   els.contentArea.innerHTML = `<div class="g1-redesign">
+    ${g2LaunchContextHtml()}
     ${sections
       .map((section) => {
-        const sectionOpen = Boolean(acc.sections[section.key]);
         const innerCards = section.cards;
         const status = g2SectionStatus(innerCards);
         const progressText = g2SectionProgress(innerCards);
-        return `<section class="g1-section ${sectionOpen ? "is-open" : ""}">
-        <button class="g1-section-header" data-g2-toggle-section="${escapeAttr(section.key)}">
+        return `<section class="g1-section is-open g2-open-section">
+        <div class="g1-section-header g2-open-header">
           <span class="g1-section-left">
             <span class="g1-section-title">${escapeHtml(section.title)}</span>
             <span class="g1-section-progress">${escapeHtml(progressText)}</span>
           </span>
           <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
-          <span class="g1-section-toggle">${sectionOpen ? "Закрыть" : "Открыть"}</span>
-        </button>
-        ${
-          sectionOpen
-            ? `<div class="g1-section-body">
+        </div>
+        <div class="g1-section-body g2-section-body">
           ${innerCards.length ? innerCards.map((card) => g2CardHtml(card)).join("") : '<div class="g1-empty">Нет блоков в этой секции.</div>'}
-        </div>`
-            : ""
-        }
+        </div>
       </section>`;
       })
       .join("")}
@@ -23090,57 +23665,698 @@ function g3_5aProgressText() {
   return `${done} из ${G3_5A_STEPS.length} этапов готово`;
 }
 
+function g3AutoValue(value) {
+  const text = String(value || "").trim();
+  return text ? escapeHtml(text) : '<span class="g3-auto-empty">—</span>';
+}
+
+function g3AutoJoin(parts, separator = " / ") {
+  return parts.map((item) => String(item || "").trim()).filter(Boolean).join(separator);
+}
+
+function g3AutoStatusFromValues(values) {
+  const filled = values.filter((value) => String(value || "").trim()).length;
+  if (!filled) return "not_started";
+  if (filled === values.length) return "ready";
+  return "in_progress";
+}
+
+function g3Gate0Marketing() {
+  const gate0 = state?.gates?.find((g) => g.id === "gate-0");
+  const card = gate0?.cards?.find(isMegaMarketingCard);
+  if (card) ensureMegaMarketing(card, state);
+  return card?.megaMarketing || { infra: [], channels: [], platformV2: { landings: {} } };
+}
+
+function g3ChannelSummary() {
+  const m = g3Gate0Marketing();
+  const active = (m.channels || [])
+    .filter((row) => ["active", "planned"].includes(row.status))
+    .map((row) => g3AutoJoin([row.channel, row.platform, row.type], " · "));
+  return active.slice(0, 6).join("; ");
+}
+
+function g3InfraSummary(pattern) {
+  const m = g3Gate0Marketing();
+  return (m.infra || [])
+    .filter((row) => pattern.test(row.name || ""))
+    .map((row) => {
+      const label =
+        row.status === "implemented"
+          ? "реализовано"
+          : row.status === "not_implemented"
+            ? "не реализовано"
+            : row.status === "in_progress"
+              ? "в работе"
+              : "";
+      return g3AutoJoin([row.name, label], " — ");
+    })
+    .filter(Boolean)
+    .join("; ");
+}
+
+function g3Gate2SectionSummary(keys) {
+  const gate2 = state.gates?.find((g) => g.id === "gate-2");
+  if (!gate2) return "";
+  ensureGate2Structure(gate2);
+  const sections = g2GetSections(gate2, new Set(gate2.cards.map((card) => card.id)));
+  return sections
+    .filter((section) => keys.includes(section.key))
+    .map((section) => `${section.title}: ${g2SectionProgress(section.cards)}`)
+    .join("; ");
+}
+
+function g3AutoProductRows() {
+  const products = pv130ProductsFromGate0();
+  const maps = pv140EnsureProductMaps();
+  const units = ensureUnitV130().items || [];
+  const launches = g2ProductContextRows();
+  const offers = v121EnsureOffers(state);
+  return products.map((product, index) => {
+    const map = maps.find((row) => String(row.product || "").trim() === product) || {};
+    const unit =
+      units.find((item) => String(item.productKey || item.name || "").trim() === product) || {};
+    const launch = launches.find((row) => row.product === product) || {};
+    const productOffer = offers.productOffers?.[product] || {};
+    const decisionValue = unit.steps?.decision?.decision || "";
+    const decisionLabel =
+      (UNIT_V130_DECISIONS.find(([value]) => value === decisionValue) || [])[1] || "";
+    return {
+      index,
+      product,
+      map,
+      unit,
+      launch,
+      productOffer,
+      decisionLabel,
+      project: state.project || {},
+    };
+  });
+}
+
+const G3_AUTO_5A = [
+  {
+    key: "aware",
+    title: "Aware / узнал",
+    subtitle: "Рынок впервые встречает продукт и понимает, какую потребность он закрывает.",
+    cells: [
+      {
+        label: "Кого охватываем",
+        value: (row) => row.map.demandSegments || row.launch.segment || row.project.targetSegment,
+      },
+      {
+        label: "Спрос и сообщение",
+        value: (row) =>
+          g3AutoJoin(
+            [
+              row.map.trendDemand,
+              row.map.trendTiming,
+              row.map.cluster,
+              row.map.mainQueries,
+            ],
+            "\n",
+          ),
+      },
+      {
+        label: "Каналы / готовность",
+        value: () => g3AutoJoin([g3ChannelSummary(), g3Gate2SectionSummary(["platform", "search"])], "\n"),
+      },
+    ],
+  },
+  {
+    key: "appeal",
+    title: "Appeal / понравился",
+    subtitle: "Продукт становится привлекательным: клиент видит ценность, доказательство и обещание.",
+    cells: [
+      {
+        label: "Что цепляет",
+        value: (row) => g3AutoJoin([row.map.hiddenNeed, row.map.desiredResult], "\n"),
+      },
+      {
+        label: "Оффер",
+        value: (row) =>
+          row.map.finalOffer || row.launch.offer || row.map.initialOffer || row.productOffer.offer,
+      },
+      {
+        label: "Посадочная",
+        value: (row) =>
+          g3AutoJoin(
+            [
+              row.launch.landingUrl,
+              row.launch.landingStatus,
+              g3Gate2SectionSummary(["platform"]),
+            ],
+            "\n",
+          ),
+      },
+    ],
+  },
+  {
+    key: "ask",
+    title: "Ask / изучает",
+    subtitle: "Клиент сравнивает варианты, проверяет доверие и ищет ответы на барьеры выбора.",
+    cells: [
+      {
+        label: "Запросы / ключи",
+        value: (row) => g3AutoJoin([row.map.mainQueries, row.map.keywords], "\n"),
+      },
+      {
+        label: "Язык и сомнения",
+        value: (row) =>
+          g3AutoJoin(
+            [
+              row.map.clientLanguage,
+              row.map.explicitProblem,
+              row.map.deepProblem,
+              row.map.choiceBarrier,
+            ],
+            "\n",
+          ),
+      },
+      {
+        label: "Ответы / аналитика",
+        value: () =>
+          g3AutoJoin(
+            [
+              g3InfraSummary(/метрик|analytics|crm|utm|коллтрекинг|уведомл/i),
+              g3Gate2SectionSummary(["analytics", "search", "crm"]),
+            ],
+            "\n",
+          ),
+      },
+    ],
+  },
+  {
+    key: "act",
+    title: "Act / покупает",
+    subtitle: "Переход от интереса к заявке, звонку, оплате или другому целевому действию.",
+    cells: [
+      {
+        label: "CTA",
+        value: (row) => row.launch.cta || row.productOffer.cta || row.project.primaryTargetAction,
+      },
+      {
+        label: "Конверсия",
+        value: (row) =>
+          g3AutoJoin(
+            [
+              row.launch.landingUrl || row.launch.landingStatus,
+              g3Gate2SectionSummary(["platform", "crm", "integrations"]),
+            ],
+            "\n",
+          ),
+      },
+      {
+        label: "Экономика",
+        value: (row) =>
+          g3AutoJoin(
+            [
+              row.launch.cpa && `CPA ${row.launch.cpa}`,
+              row.launch.cpl && `CPL ${row.launch.cpl}`,
+              row.decisionLabel,
+            ],
+            "\n",
+          ),
+      },
+    ],
+  },
+  {
+    key: "advocate",
+    title: "Advocate / рекомендует",
+    subtitle: "После покупки фиксируем результат, повтор, отзыв и повод рекомендовать.",
+    cells: [
+      {
+        label: "Результат",
+        value: (row) => row.map.desiredResult || row.project.clientResult,
+      },
+      {
+        label: "Повтор / LTV",
+        value: (row) =>
+          g3AutoJoin(
+            [
+              row.unit.steps?.ltv?.repeatType,
+              row.unit.steps?.ltv?.avgPurchases,
+              row.unit.steps?.ltv?.repeatPeriod,
+              row.unit.steps?.ltv?.ltv && `LTV ${row.unit.steps.ltv.ltv}`,
+            ],
+            "\n",
+          ),
+      },
+      {
+        label: "Усиление оффера",
+        value: (row) =>
+          g3AutoJoin([row.map.offerConclusion, row.map.finalOffer || row.launch.offer], "\n"),
+      },
+    ],
+  },
+];
+
+function g3AutoStageStatus(stage, rows) {
+  if (!rows.length) return "not_started";
+  const statuses = rows.map((row) =>
+    g3AutoStatusFromValues(stage.cells.map((cell) => cell.value(row))),
+  );
+  if (statuses.every((status) => status === "ready")) return "ready";
+  if (statuses.every((status) => status === "not_started")) return "not_started";
+  return "in_progress";
+}
+
+function g3AutoOverallStatus(rows) {
+  const statuses = G3_AUTO_5A.map((stage) => g3AutoStageStatus(stage, rows));
+  if (statuses.every((status) => status === "ready")) return "ready";
+  if (statuses.every((status) => status === "not_started")) return "not_started";
+  return "in_progress";
+}
+
+function g3AutoProgressText(rows) {
+  const ready = G3_AUTO_5A.filter((stage) => g3AutoStageStatus(stage, rows) === "ready").length;
+  return `${ready} из ${G3_AUTO_5A.length} этапов готово · ${rows.length} продуктов`;
+}
+
+function g3AutoProductCell(row) {
+  const cluster = String(row.map.cluster || row.launch.queries || "").trim();
+  return `<div class="g3-auto-product">
+    <span>Продукт ${row.index + 1}</span>
+    <strong>${escapeHtml(row.product)}</strong>
+    ${cluster ? `<small>${escapeHtml(cluster)}</small>` : ""}
+  </div>`;
+}
+
+function g3AutoStageHtml(stage, rows) {
+  const status = g3AutoStageStatus(stage, rows);
+  return `<section class="g3-auto-stage">
+    <div class="g3-auto-stage-head">
+      <span>
+        <strong>${escapeHtml(stage.title)}</strong>
+        <small>${escapeHtml(stage.subtitle)}</small>
+      </span>
+      <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+    </div>
+    <div class="g3-auto-table">
+      ${rows
+        .map((row) => {
+          const values = stage.cells.map((cell) => cell.value(row));
+          const rowStatus = g3AutoStatusFromValues(values);
+          return `<article class="g3-auto-row status-${rowStatus}">
+            ${g3AutoProductCell(row)}
+            ${stage.cells
+              .map(
+                (cell, index) => `<div class="g3-auto-cell">
+                  <span>${escapeHtml(cell.label)}</span>
+                  <b>${g3AutoValue(values[index])}</b>
+                </div>`,
+              )
+              .join("")}
+          </article>`;
+        })
+        .join("")}
+    </div>
+  </section>`;
+}
+
+function g3ItemStatusLabel(status) {
+  if (status === "implemented" || status === "active" || status === "works")
+    return "реализовано";
+  if (status === "planned" || status === "in_progress") return "в работе";
+  if (status === "not_implemented" || status === "inactive" || status === "not_works")
+    return "не реализовано";
+  if (status === "not_required") return "не требуется";
+  return "статус не указан";
+}
+
+function g3ActionStatus(ready, total, hasWork = false) {
+  if (!total) return hasWork ? "in_progress" : "not_started";
+  if (ready >= total) return "ready";
+  if (ready > 0 || hasWork) return "in_progress";
+  return "problem";
+}
+
+function g3ActionRow(action, fact, gap, status, source) {
+  return { action, fact, gap, status, source };
+}
+
+function g3PlatformRows(pattern) {
+  const pv2 = g3Gate0Marketing().platformV2 || { fundamental: [], extra: [] };
+  return [...(pv2.fundamental || []), ...(pv2.extra || [])].filter((row) =>
+    pattern.test(row.name || ""),
+  );
+}
+
+function g3InfraRows(pattern) {
+  return (g3Gate0Marketing().infra || []).filter((row) =>
+    pattern.test(row.name || ""),
+  );
+}
+
+function g3ChannelRows(pattern) {
+  return (g3Gate0Marketing().channels || []).filter((row) =>
+    pattern.test(g3AutoJoin([row.channel, row.platform, row.type], " ")),
+  );
+}
+
+function g3RowsSummary(rows, nameGetter = (row) => row.name || row.platform || row.channel) {
+  const items = rows
+    .map((row) => {
+      const name = nameGetter(row);
+      return g3AutoJoin([name, g3ItemStatusLabel(row.status)], " — ");
+    });
+  return g3CompactList(items);
+}
+
+function g3CompactList(items, limit = 5) {
+  const clean = items.map((item) => String(item || "").trim()).filter(Boolean);
+  if (clean.length <= limit) return clean.join("; ");
+  return `${clean.slice(0, limit).join("; ")}; ещё ${clean.length - limit}`;
+}
+
+function g3MissingRows(rows, readyStatuses, nameGetter = (row) => row.name || row.platform || row.channel) {
+  const items = rows
+    .filter((row) => !readyStatuses.includes(row.status))
+    .map((row) => `${nameGetter(row)} — ${g3ItemStatusLabel(row.status)}`)
+  return g3CompactList(items);
+}
+
+function g3ProductCoverage(rows, requiredKeys) {
+  const total = rows.length;
+  const ready = rows.filter((row) =>
+    requiredKeys.every((key) => String(row.map?.[key] || row.launch?.[key] || row.productOffer?.[key] || "").trim()),
+  ).length;
+  return { ready, total };
+}
+
+function g3LandingCoverage(products) {
+  const pv2 = g3Gate0Marketing().platformV2 || { landings: {} };
+  const rows = products.map((product) => {
+    const landing = pv2.landings?.[product] || {};
+    const isReady = landing.status === "yes" && String(landing.url || "").trim();
+    return { product, landing, isReady };
+  });
+  return {
+    ready: rows.filter((row) => row.isReady).length,
+    total: rows.length,
+    missing: rows
+      .filter((row) => !row.isReady)
+      .map((row) => {
+        const status = row.landing.status === "yes" ? "URL не указан" : g3ItemStatusLabel(row.landing.status);
+        return `${row.product} — ${status}`;
+      })
+      .join("; "),
+  };
+}
+
+function g3OfferCoverage(products) {
+  const offers = v121EnsureOffers(state);
+  const rows = products.map((product) => ({
+    product,
+    offer: offers.productOffers?.[product] || {},
+  }));
+  return {
+    ready: rows.filter((row) => v121ProductOfferReady(row.offer)).length,
+    total: rows.length,
+    missing: rows
+      .filter((row) => !v121ProductOfferReady(row.offer))
+      .map((row) => `${row.product} — нет оффера или CTA`)
+      .join("; "),
+  };
+}
+
+function g3UnitCoverage(products, predicate, missingText) {
+  const units = ensureUnitV130().items || [];
+  const rows = products.map((product) => {
+    const unit =
+      units.find((item) => String(item.productKey || item.name || "").trim() === product) || {};
+    return { product, unit, isReady: predicate(unit) };
+  });
+  return {
+    ready: rows.filter((row) => row.isReady).length,
+    total: rows.length,
+    missing: rows
+      .filter((row) => !row.isReady)
+      .map((row) => `${row.product} — ${missingText}`)
+      .join("; "),
+  };
+}
+
+function g3ActionStages() {
+  const productRows = g3AutoProductRows();
+  const products = productRows.map((row) => row.product);
+  const activeChannels = g3ChannelRows(/директ|ads|seo|smm|vk|telegram|instagram|youtube|карты|business|google/i);
+  const activeChannelCount = activeChannels.filter((row) =>
+    ["active", "planned"].includes(row.status),
+  ).length;
+  const adInfra = g3InfraRows(/директ|google ads|vk ads|meta ads|telegram ads|вебмастер|search console/i);
+  const adInfraReady = adInfra.filter((row) => row.status === "implemented").length;
+  const demand = g3ProductCoverage(productRows, ["cluster", "mainQueries"]);
+  const offers = g3OfferCoverage(products);
+  const landings = g3LandingCoverage(products);
+  const trustRows = g3PlatformRows(/блоки доверия|контакты|о нас|faq|портфолио|кейсы/i);
+  const trustReady = trustRows.filter((row) => row.status === "implemented").length;
+  const analyticsRows = g3InfraRows(/метрик|analytics|utm|коллтрекинг/i);
+  const analyticsReady = analyticsRows.filter((row) => row.status === "implemented").length;
+  const barrier = g3ProductCoverage(productRows, ["clientLanguage", "explicitProblem", "deepProblem", "choiceBarrier"]);
+  const crmRows = g3InfraRows(/crm|уведомления|коллтрекинг/i);
+  const crmReady = crmRows.filter((row) => row.status === "implemented").length;
+  const formRows = g3PlatformRows(/форма|корзина/i);
+  const formReady = formRows.filter((row) => row.status === "implemented").length;
+  const economics = g3UnitCoverage(
+    products,
+    (unit) =>
+      String(unit.steps?.adLimits?.allowedCpa || "").trim() &&
+      String(unit.steps?.adLimits?.allowedCpl || "").trim() &&
+      String(unit.steps?.decision?.decision || "").trim(),
+    "нет CPA/CPL или решения по продвижению",
+  );
+  const ltv = g3UnitCoverage(
+    products,
+    (unit) =>
+      String(unit.steps?.ltv?.repeatType || "").trim() ||
+      String(unit.steps?.ltv?.ltv || "").trim(),
+    "не зафиксированы повтор / LTV",
+  );
+  const resultReady = productRows.filter((row) =>
+    String(row.map.desiredResult || row.project.clientResult || "").trim(),
+  ).length;
+  const reviewRows = g3PlatformRows(/отзыв|блоки доверия|портфолио|кейсы/i);
+  const reviewReady = reviewRows.filter((row) => row.status === "implemented").length;
+
+  return [
+    {
+      key: "aware",
+      title: "Aware / узнал",
+      subtitle: "Проект создаёт первое знание: кому показываемся, через какие каналы и с каким спросом.",
+      rows: [
+        g3ActionRow(
+          "Сформировать спрос и сегмент для трафика",
+          `${demand.ready} из ${demand.total} продуктовых карт имеют кластер и запросы`,
+          demand.ready === demand.total ? "" : "Заполнить кластеры и основные запросы в Gate 1",
+          g3ActionStatus(demand.ready, demand.total),
+          "Gate 1",
+        ),
+        g3ActionRow(
+          "Запустить или запланировать охватные каналы",
+          activeChannelCount
+            ? g3RowsSummary(activeChannels, (row) => g3AutoJoin([row.platform, row.type], " / "))
+            : "Активных или запланированных каналов нет",
+          g3MissingRows(activeChannels, ["active", "planned"], (row) => g3AutoJoin([row.platform, row.type], " / ")) ||
+            "Канал привлечения зафиксирован",
+          g3ActionStatus(activeChannelCount, activeChannels.length || 1),
+          "Gate 0",
+        ),
+        g3ActionRow(
+          "Подготовить рекламные кабинеты и SEO-инфраструктуру",
+          adInfra.length ? g3RowsSummary(adInfra) : "Инфраструктура привлечения не заведена",
+          g3MissingRows(adInfra, ["implemented"]) || "Кабинеты и поисковая инфраструктура готовы",
+          g3ActionStatus(adInfraReady, adInfra.length || 1),
+          "Gate 0 / 2",
+        ),
+      ],
+    },
+    {
+      key: "appeal",
+      title: "Appeal / понравился",
+      subtitle: "Проект должен стать понятным и привлекательным: оффер, доверие, посадочные.",
+      rows: [
+        g3ActionRow(
+          "Собрать оффер и CTA под каждый продукт",
+          `${offers.ready} из ${offers.total} продуктов имеют оффер и CTA`,
+          offers.missing || "Офферы закрыты",
+          g3ActionStatus(offers.ready, offers.total),
+          "Gate 0 / 1",
+        ),
+        g3ActionRow(
+          "Подготовить посадочную под каждый продукт",
+          `${landings.ready} из ${landings.total} продуктов имеют посадочную с URL`,
+          landings.missing || "Посадочные закрыты",
+          g3ActionStatus(landings.ready, landings.total),
+          "Gate 0 / 2",
+        ),
+        g3ActionRow(
+          "Добавить доверие, контакты и доказательства",
+          trustRows.length ? g3RowsSummary(trustRows) : "Доверие и контакты не описаны",
+          g3MissingRows(trustRows, ["implemented"]) || "Доверие и контакты реализованы",
+          g3ActionStatus(trustReady, trustRows.length || 1),
+          "Gate 0 / 2",
+        ),
+      ],
+    },
+    {
+      key: "ask",
+      title: "Ask / изучает",
+      subtitle: "Проект отвечает на вопросы клиента и фиксирует данные перед выбором.",
+      rows: [
+        g3ActionRow(
+          "Подключить аналитику, цели и UTM",
+          analyticsRows.length ? g3RowsSummary(analyticsRows) : "Аналитика не заведена",
+          g3MissingRows(analyticsRows, ["implemented"]) || "Аналитика и разметка реализованы",
+          g3ActionStatus(analyticsReady, analyticsRows.length || 1),
+          "Gate 0 / 2",
+        ),
+        g3ActionRow(
+          "Закрыть язык клиента, боли и барьеры выбора",
+          `${barrier.ready} из ${barrier.total} продуктовых карт имеют язык, боль и барьер`,
+          barrier.ready === barrier.total ? "" : "Дописать язык клиента, явную/глубинную проблему и барьер в Gate 1",
+          g3ActionStatus(barrier.ready, barrier.total),
+          "Gate 1",
+        ),
+        g3ActionRow(
+          "Подготовить каналы ответа и обработки вопросов",
+          crmRows.length ? g3RowsSummary(crmRows) : "CRM и коммуникации не заведены",
+          g3MissingRows(crmRows, ["implemented"]) || "Каналы обработки вопросов готовы",
+          g3ActionStatus(crmReady, crmRows.length || 1),
+          "Gate 0 / 2",
+        ),
+      ],
+    },
+    {
+      key: "act",
+      title: "Act / покупает",
+      subtitle: "Проект переводит спрос в заявку, звонок, оплату или другое целевое действие.",
+      rows: [
+        g3ActionRow(
+          "Поставить форму / корзину и основной CTA",
+          g3AutoJoin([formRows.length ? g3RowsSummary(formRows) : "Форма / корзина не заведена", `${offers.ready} из ${offers.total} CTA заполнены`], "\n"),
+          g3AutoJoin([g3MissingRows(formRows, ["implemented"]), offers.missing], "\n") || "Форма и CTA готовы",
+          g3ActionStatus(formReady + offers.ready, (formRows.length || 1) + offers.total),
+          "Gate 0 / 2",
+        ),
+        g3ActionRow(
+          "Передавать заявки в CRM без потерь",
+          crmRows.length ? g3RowsSummary(crmRows) : "CRM и уведомления не заведены",
+          g3MissingRows(crmRows, ["implemented"]) || "CRM-контур готов",
+          g3ActionStatus(crmReady, crmRows.length || 1),
+          "Gate 0 / 2",
+        ),
+        g3ActionRow(
+          "Принять решение по запуску через CPA/CPL",
+          `${economics.ready} из ${economics.total} продуктов имеют CPA/CPL и решение`,
+          economics.missing || "Юнит-экономика позволяет запускать трафик",
+          g3ActionStatus(economics.ready, economics.total),
+          "Gate 1 / 2",
+        ),
+      ],
+    },
+    {
+      key: "advocate",
+      title: "Advocate / рекомендует",
+      subtitle: "Проект фиксирует результат, повтор и основания для рекомендации.",
+      rows: [
+        g3ActionRow(
+          "Зафиксировать результат клиента",
+          `${resultReady} из ${productRows.length} продуктов имеют желаемый результат или общий результат проекта`,
+          resultReady === productRows.length ? "" : "Дописать желаемый результат в Gate 1 или результат клиента в Gate 0",
+          g3ActionStatus(resultReady, productRows.length),
+          "Gate 0 / 1",
+        ),
+        g3ActionRow(
+          "Понять повтор / LTV",
+          `${ltv.ready} из ${ltv.total} продуктов имеют данные по повтору или LTV`,
+          ltv.missing || "Повтор и LTV зафиксированы",
+          g3ActionStatus(ltv.ready, ltv.total),
+          "Gate 1",
+        ),
+        g3ActionRow(
+          "Собрать отзывы, кейсы и повод рекомендовать",
+          reviewRows.length ? g3RowsSummary(reviewRows) : "Отзывы / кейсы не заведены",
+          g3MissingRows(reviewRows, ["implemented"]) || "Доказательства для рекомендации есть",
+          g3ActionStatus(reviewReady, reviewRows.length || 1),
+          "Gate 0 / 2",
+        ),
+      ],
+    },
+  ];
+}
+
+function g3ActionStageStatus(stage) {
+  const statuses = stage.rows.map((row) => row.status);
+  if (statuses.every((status) => status === "ready")) return "ready";
+  if (statuses.every((status) => status === "not_started")) return "not_started";
+  if (statuses.some((status) => status === "problem")) return "problem";
+  return "in_progress";
+}
+
+function g3ActionOverallStatus(stages) {
+  const statuses = stages.map(g3ActionStageStatus);
+  if (statuses.every((status) => status === "ready")) return "ready";
+  if (statuses.every((status) => status === "not_started")) return "not_started";
+  if (statuses.some((status) => status === "problem")) return "problem";
+  return "in_progress";
+}
+
+function g3ActionProgressText(stages) {
+  const rows = stages.flatMap((stage) => stage.rows);
+  const ready = rows.filter((row) => row.status === "ready").length;
+  return `${ready} из ${rows.length} действий реализовано`;
+}
+
+function g3ActionStageHtml(stage) {
+  const status = g3ActionStageStatus(stage);
+  return `<section class="g3-auto-stage">
+    <div class="g3-auto-stage-head">
+      <span>
+        <strong>${escapeHtml(stage.title)}</strong>
+        <small>${escapeHtml(stage.subtitle)}</small>
+      </span>
+      <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+    </div>
+    <div class="g3-auto-table">
+      ${stage.rows
+        .map(
+          (row, index) => `<article class="g3-auto-row g3-action-row status-${row.status}">
+            <div class="g3-auto-product">
+              <span>Действие ${index + 1}</span>
+              <strong>${escapeHtml(row.action)}</strong>
+              <small>${escapeHtml(row.source)}</small>
+            </div>
+            <div class="g3-auto-cell"><span>Что есть сейчас</span><b>${g3AutoValue(row.fact)}</b></div>
+            <div class="g3-auto-cell"><span>Что закрыть</span><b>${g3AutoValue(row.gap)}</b></div>
+            <div class="g3-auto-cell"><span>Статус</span><b>${escapeHtml(STATUS_LABELS[row.status] || row.status)}</b></div>
+          </article>`,
+        )
+        .join("")}
+    </div>
+  </section>`;
+}
+
 function renderGate3Redesign(gate, cards) {
-  const data = ensureGate3_5A();
-  const status = g3_5aOverallStatus();
-  const progressText = g3_5aProgressText();
+  ensureGate3_5A();
+  const stages = g3ActionStages();
+  const status = g3ActionOverallStatus(stages);
+  const progressText = g3ActionProgressText(stages);
 
   els.contentArea.innerHTML = `<div class="g1-redesign">
-    <section class="g1-section is-open">
+    <section class="g1-section is-open g3-auto-map">
       <div class="g1-card-header-static">
         <span class="g1-section-left">
-          <span class="g1-section-title">5A — карта клиентского пути (Котлер, Marketing 4.0)</span>
+          <span class="g1-section-title">5A — действия проекта для привлечения трафика</span>
           <span class="g1-section-progress">${escapeHtml(progressText)}</span>
         </span>
         <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
       </div>
-      <div class="g1-section-body g3-funnel">
-        ${G3_5A_STEPS.map((step, i) => {
-          const d = data[step.key];
-          const isOpen = Boolean(data.openSteps[step.key]);
-          const stepStatus = g3_5aStepStatus(d, step);
-          const w = 100 - (i / (G3_5A_STEPS.length - 1)) * 50;
-          return `<article class="g1-card g3-funnel-card ${isOpen ? "is-open" : ""}" data-g3-step="${escapeAttr(step.key)}" style="width:${w}%">
-            <button class="g1-card-header" data-g3-toggle="${escapeAttr(step.key)}">
-              <span class="g1-card-title">${escapeHtml(step.title)}</span>
-              <span class="status-pill status-${stepStatus}">${escapeHtml(STATUS_LABELS[stepStatus] || stepStatus)}</span>
-              <span class="g1-section-toggle">${isOpen ? "Свернуть" : "Раскрыть"}</span>
-            </button>
-            ${
-              isOpen
-                ? `<div class="g1-card-body">
-              <p class="g1-task">${escapeHtml(step.desc)}</p>
-              ${step.fields.map((f) => g3_5aDynBlock(step.key, f.k, f.label, f.hint || "", d.fields[f.k])).join("")}
-              ${g3_5aToolsList(step.key, step.tools, d.toolStatuses)}
-              <div class="g1-fields-grid">
-                <label class="g1-field"><span>${escapeHtml(step.question)}</span>
-                  <select class="g1-input is-filled" data-g3a-step="${escapeAttr(step.key)}" data-g3a-field="answer">
-                    <option value=""${!d.answer ? " selected" : ""}>—</option>
-                    <option value="да"${d.answer === "да" ? " selected" : ""}>да</option>
-                    <option value="нет"${d.answer === "нет" ? " selected" : ""}>нет</option>
-                  </select>
-                </label>
-              </div>
-              <p class="g1-task" style="font-style:italic;margin-top:12px;opacity:.7">Готово, когда ответ «да» и зафиксированы инструменты.</p>
-            </div>`
-                : ""
-            }
-          </article>`;
-        }).join("")}
+      <div class="g1-section-body g3-auto-body">
+        ${stages.map(g3ActionStageHtml).join("")}
       </div>
     </section>
   </div>`;
-  bindGate3_5A();
   renderGateNav();
 }
 
@@ -24663,7 +25879,7 @@ painV130StepHtml = function (step, data, isOpen) {
     if (!btn) return;
     html = html.replace(
       ">" + escapeHtml(f.l) + "</span>",
-      ">" + escapeHtml(f.l) + btn + "</span>",
+      ">" + escapeHtml(f.l) + " " + btn + "</span>",
     );
   });
   return html;
@@ -24902,6 +26118,495 @@ function ensureGate4Production() {
   return state.gate4Production;
 }
 
+function g4NumFormat(value, suffix = "") {
+  const n = Number(value || 0);
+  if (!n) return "—";
+  return Math.round(n).toLocaleString("ru") + suffix;
+}
+
+function g4FactMetric(value) {
+  const text = String(value || "").trim();
+  if (!text || text === "0") return "—";
+  return escapeHtml(text);
+}
+
+function g4SearchCampaignPlanFromGate1() {
+  const d = state.demandV130?.search || {};
+  const rows = d.steps?.clusters?.clusterRows || [];
+  let impressions = 0;
+  let clicks = 0;
+  let budget = 0;
+  rows.forEach((row) => {
+    impressions += dv130ParseNum(row.col3);
+    clicks += dv130ParseNum(row.col4);
+    budget += dv130ParseNum(row.col5);
+  });
+  const platformLabel =
+    (DEMAND_V130_PLATFORMS_SEARCH.find(([value]) => value === d.platform) || [])[1] ||
+    "";
+  return {
+    platform: platformLabel,
+    clusters: rows.filter((row) =>
+      Object.values(row || {}).some((value) => String(value || "").trim()),
+    ).length,
+    impressions,
+    clicks,
+    budget,
+  };
+}
+
+function g4CurrentSearchMetricsFromGate1() {
+  const card = allCardsFromWorkspace(state).find((item) => item?.title === "Текущие результаты");
+  if (!card) return null;
+  const rows = ensureCurrentResults(card);
+  const byKey = new Map(rows.map((row) => [row.key, row]));
+  const read = (key) => byKey.get(key)?.value || "";
+  return {
+    period: card.currentResultsMeta?.period || "",
+    traffic: read("traffic"),
+    impressions: read("impressions"),
+    clicks: read("clicks"),
+    leads: read("leads"),
+    cost: read("cost"),
+  };
+}
+
+function g4SearchCampaignMetricsHtml() {
+  const plan = g4SearchCampaignPlanFromGate1();
+  const fact = g4CurrentSearchMetricsFromGate1();
+  const hasPlan = plan.clusters || plan.impressions || plan.clicks || plan.budget || plan.platform;
+  const hasFact =
+    fact &&
+    [fact.traffic, fact.impressions, fact.clicks, fact.leads, fact.cost].some((value) =>
+      String(value || "").trim() && String(value || "").trim() !== "0",
+    );
+  return `<div class="g4-search-metrics">
+    <div class="g4-upstream-title">Поисковая кампания из Gate 1</div>
+    <div class="g4-search-metrics-grid">
+      <div class="g4-search-metric">
+        <span>Платформа</span>
+        <strong>${escapeHtml(plan.platform || "—")}</strong>
+      </div>
+      <div class="g4-search-metric">
+        <span>Кластеры</span>
+        <strong>${g4NumFormat(plan.clusters)}</strong>
+      </div>
+      <div class="g4-search-metric">
+        <span>Прогноз показов</span>
+        <strong>${g4NumFormat(plan.impressions)}</strong>
+      </div>
+      <div class="g4-search-metric">
+        <span>Прогноз кликов</span>
+        <strong>${g4NumFormat(plan.clicks)}</strong>
+      </div>
+      <div class="g4-search-metric">
+        <span>Бюджет без НДС</span>
+        <strong>${g4NumFormat(plan.budget, " ₽")}</strong>
+      </div>
+    </div>
+    <div class="g4-search-metrics-grid">
+      <div class="g4-search-metric">
+        <span>Период факта</span>
+        <strong>${escapeHtml(fact?.period || "—")}</strong>
+      </div>
+      <div class="g4-search-metric">
+        <span>Просмотры / трафик</span>
+        <strong>${g4FactMetric(fact?.traffic)}</strong>
+      </div>
+      <div class="g4-search-metric">
+        <span>Показы факт</span>
+        <strong>${g4FactMetric(fact?.impressions)}</strong>
+      </div>
+      <div class="g4-search-metric">
+        <span>Клики факт</span>
+        <strong>${g4FactMetric(fact?.clicks)}</strong>
+      </div>
+      <div class="g4-search-metric">
+        <span>Лиды / расход</span>
+        <strong>${escapeHtml(g3AutoJoin([String(fact?.leads || "").trim() && String(fact?.leads || "").trim() !== "0" && "лиды " + fact.leads, String(fact?.cost || "").trim() && String(fact?.cost || "").trim() !== "0" && "расход " + fact.cost], " / ") || "—")}</strong>
+      </div>
+    </div>
+    ${!hasPlan ? '<div class="g4-search-empty">Заполните «Частотность и кластеры» в Gate 1, чтобы здесь появился план показов и кликов.</div>' : ""}
+    ${!hasFact ? '<div class="g4-search-empty">Заполните «Текущие результаты» в Gate 1, чтобы здесь появился факт: просмотры/трафик, показы и клики.</div>' : ""}
+  </div>`;
+}
+
+const G4_CAMPAIGN_DECISIONS = [
+  ["", "—"],
+  ["prepare", "Готовим запуск"],
+  ["hold", "Не запускаем сейчас"],
+  ["launched", "Запущено"],
+];
+
+const G4_CAMPAIGN_LAUNCH_STATUSES = [
+  ["", "—"],
+  ["draft", "Черновик"],
+  ["ready", "Готово к запуску"],
+  ["launched", "Запущено"],
+  ["paused", "Пауза"],
+];
+
+function g4LaunchChannelLabel(row) {
+  return g3AutoJoin([row.platform, row.type], " / ") || row.channel || "Платформа";
+}
+
+function g4LaunchChannelKey(row, index) {
+  return normalizeAspectKey(
+    g3AutoJoin([row.channel, row.platform, row.type, String(index)], "_"),
+  );
+}
+
+function g4LaunchChannelType(row) {
+  const text = g3AutoJoin([row.channel, row.platform, row.type], " ").toLowerCase();
+  if (/поиск|search|seo|карты|business|maps/.test(text)) return "search";
+  return "media";
+}
+
+function g4LaunchChannelStatus(row) {
+  if (row.status === "active") return "Активен";
+  if (row.status === "planned") return "Планируется";
+  if (row.status === "inactive") return "Не используется";
+  return "Не указан";
+}
+
+function g4LaunchChannels() {
+  const m = g3Gate0Marketing();
+  return (m.channels || []).map((row, index) => ({
+    ...row,
+    key: g4LaunchChannelKey(row, index),
+    launchType: g4LaunchChannelType(row),
+  }));
+}
+
+function g4Gate3ProductContext(product) {
+  const row = g3AutoProductRows().find((item) => item.product === product) || {};
+  const stageStatuses = G3_AUTO_5A.map((stage) => {
+    const status = row.product
+      ? g3AutoStatusFromValues(stage.cells.map((cell) => cell.value(row)))
+      : "not_started";
+    return `${stage.title.split(" / ")[0]}: ${STATUS_LABELS[status] || status}`;
+  }).join(" / ");
+  return {
+    stageStatuses,
+    route: g3AutoJoin(
+      [
+        row.map?.cluster || row.launch?.queries,
+        row.map?.hiddenNeed || row.map?.explicitProblem,
+        row.map?.desiredResult || row.project?.clientResult,
+      ],
+      " → ",
+    ),
+  };
+}
+
+function g4Gate3ChannelRole(channel) {
+  const label = g4LaunchChannelLabel(channel);
+  if (channel.launchType === "search") {
+    return /seo|карты|business|maps/i.test(label)
+      ? "Ask / изучает: найденность, доверие, сравнение"
+      : "Ask → Act: спрос, объявление, заявка";
+  }
+  if (/telegram|vk|meta|instagram|youtube|display|рся|таргет|reels|shorts/i.test(label)) {
+    return "Aware → Appeal: охват, интерес, доказательство";
+  }
+  return "Aware → Act: канал запуска по карте 5A";
+}
+
+function g4DefaultCampaignName(channel, campaign, ctx) {
+  return g3AutoJoin(
+    [
+      channel.launchType === "search" ? "Search" : "Media",
+      channel.platform,
+      channel.type,
+      campaign.product || ctx.product,
+    ],
+    " · ",
+  );
+}
+
+function g4DefaultCampaignObjective(channel, ctx) {
+  if (ctx.offer) return ctx.offer;
+  if (ctx.cta) return ctx.cta;
+  return channel.launchType === "search"
+    ? "Собрать заявки из сформированного поискового спроса"
+    : "Дать охват и привести аудиторию к офферу";
+}
+
+function g4CampaignContext(product) {
+  const rows = g2ProductContextRows();
+  const selected = rows.find((row) => row.product === product);
+  return selected || rows[0] || {};
+}
+
+function g4LaunchProducts() {
+  const products = pv130ProductsFromGate0();
+  return products.length ? products : [""];
+}
+
+function g4SelectedLaunchProduct() {
+  const g4 = ensureGate4Production();
+  const products = g4LaunchProducts();
+  if (!products.includes(g4.launchProduct)) {
+    g4.launchProduct = products[0] || "";
+  }
+  return g4.launchProduct || "";
+}
+
+function g4CampaignStateKey(product, channelKey) {
+  return normalizeAspectKey(g3AutoJoin([product || "product", channelKey], "__"));
+}
+
+function g4EnsureLaunchUiState() {
+  const g4 = ensureGate4Production();
+  g4.launchOpen = g4.launchOpen || {};
+  if (g4.launchOpen.search === undefined) g4.launchOpen.search = true;
+  if (g4.launchOpen.media === undefined) g4.launchOpen.media = true;
+  g4.launchOpen.rows = g4.launchOpen.rows || {};
+  return g4.launchOpen;
+}
+
+function g4EnsureLaunchCampaigns() {
+  const g4 = ensureGate4Production();
+  g4EnsureLaunchUiState();
+  g4.campaigns = g4.campaigns || {};
+  const products = g4LaunchProducts();
+  g4LaunchChannels().forEach((channel) => {
+    products.forEach((product) => {
+      const stateKey = g4CampaignStateKey(product, channel.key);
+      const legacy = g4.campaigns[channel.key] || {};
+      const current = g4.campaigns[stateKey] || legacy || {};
+      g4.campaigns[stateKey] = {
+        decision: current.decision || "",
+        product,
+        campaignName: current.campaignName || "",
+        objective: current.objective || "",
+        landing: current.landing || "",
+        budget: current.budget || "",
+        utm: current.utm || "",
+        creative: current.creative || "",
+        launchStatus: current.launchStatus || "",
+        notes: current.notes || "",
+      };
+    });
+  });
+  return g4.campaigns;
+}
+
+function g4CampaignStatus(campaign) {
+  if (campaign.decision === "hold") return "not_required";
+  if (campaign.launchStatus === "launched") return "ready";
+  const operational = [
+    campaign.decision,
+    campaign.campaignName,
+    campaign.objective,
+    campaign.landing,
+    campaign.budget,
+    campaign.utm,
+    campaign.creative,
+    campaign.launchStatus,
+    campaign.notes,
+  ];
+  if (!operational.some((value) => String(value || "").trim())) return "not_started";
+  const required = [
+    campaign.decision,
+    campaign.product,
+    campaign.campaignName,
+    campaign.objective,
+    campaign.landing,
+    campaign.budget,
+    campaign.utm,
+    campaign.launchStatus,
+  ];
+  const filled = required.filter((value) => String(value || "").trim()).length;
+  if (!filled) return "not_started";
+  if (filled === required.length && campaign.launchStatus === "ready") return "ready";
+  return "in_progress";
+}
+
+function g4CampaignStatusLabel(campaign) {
+  const status = g4CampaignStatus(campaign);
+  if (campaign.decision === "hold") return "Не запускаем";
+  if (campaign.launchStatus === "launched") return "Запущено";
+  return STATUS_LABELS[status] || status;
+}
+
+function g4CampaignOptions(options, value) {
+  return options
+    .map(
+      ([optionValue, label]) =>
+        `<option value="${escapeAttr(optionValue)}" ${value === optionValue ? "selected" : ""}>${escapeHtml(label)}</option>`,
+    )
+    .join("");
+}
+
+function g4CampaignProductOptions(value) {
+  const products = pv130ProductsFromGate0();
+  const list = products.length ? ["", ...products] : [""];
+  return list
+    .map(
+      (product) =>
+        `<option value="${escapeAttr(product)}" ${value === product ? "selected" : ""}>${escapeHtml(product || "Выбрать продукт")}</option>`,
+    )
+    .join("");
+}
+
+function g4CampaignInput(channelKey, field, label, value, placeholder, multiline = false) {
+  const filled = String(value || "").trim();
+  const attrs = `data-g4camp-key="${escapeAttr(channelKey)}" data-g4camp-field="${escapeAttr(field)}"`;
+  if (multiline) {
+    return `<label class="g4-campaign-field"><span>${escapeHtml(label)}</span><textarea class="g1-input ${filled ? "is-filled" : "is-empty"}" ${attrs} rows="1" placeholder="${escapeAttr(placeholder || "")}">${escapeHtml(value || "")}</textarea></label>`;
+  }
+  return `<label class="g4-campaign-field"><span>${escapeHtml(label)}</span><input class="g1-input ${filled ? "is-filled" : "is-empty"}" ${attrs} value="${escapeAttr(value || "")}" placeholder="${escapeAttr(placeholder || "")}" /></label>`;
+}
+
+function g4CampaignContextHtml(ctx) {
+  const gate3 = g4Gate3ProductContext(ctx.product);
+  return `<div class="g4-campaign-context">
+    <div><span>Gate 1 · оффер</span><b>${g2ShortValue(ctx.offer)}</b></div>
+    <div><span>Gate 1 · спрос</span><b>${g2ShortValue(ctx.queries)}</b></div>
+    <div><span>Gate 1 · экономика</span><b>${g2ShortValue([ctx.cpa && "CPA " + ctx.cpa, ctx.cpl && "CPL " + ctx.cpl].filter(Boolean).join(" / "))}</b></div>
+    <div><span>Gate 2 · посадочная</span><b>${g2ShortValue(ctx.landingUrl || ctx.landingStatus)}</b></div>
+    <div><span>Gate 3 · 5A</span><b>${g2ShortValue(gate3.stageStatuses)}</b></div>
+  </div>`;
+}
+
+function g4CampaignRowHtml(channel, campaign, index, product) {
+  const ctx = g4CampaignContext(product);
+  const status = g4CampaignStatus(campaign);
+  const channelStatus = channel.status || "";
+  const stateKey = g4CampaignStateKey(product, channel.key);
+  const launchOpen = g4EnsureLaunchUiState();
+  const hasWork = [
+    campaign.decision,
+    campaign.campaignName,
+    campaign.objective,
+    campaign.landing,
+    campaign.budget,
+    campaign.utm,
+    campaign.creative,
+    campaign.launchStatus,
+    campaign.notes,
+  ].some((value) => String(value || "").trim());
+  const isOpen =
+    launchOpen.rows[stateKey] === undefined ? hasWork : Boolean(launchOpen.rows[stateKey]);
+  const defaultName = g4DefaultCampaignName(channel, campaign, ctx);
+  const defaultObjective = g4DefaultCampaignObjective(channel, ctx);
+  const defaultLanding = ctx.landingUrl || "";
+  const defaultBudget = campaign.budget || [ctx.cpa && "CPA " + ctx.cpa, ctx.cpl && "CPL " + ctx.cpl].filter(Boolean).join(" / ");
+  return `<article class="g4-campaign-shell status-${status} ${isOpen ? "is-open" : ""}">
+    <button class="g4-campaign-row-head" data-g4camp-toggle="${escapeAttr(stateKey)}">
+      <span class="g4-campaign-platform">
+        <span>${channel.launchType === "search" ? "Поиск" : "Медиа"} ${index + 1}</span>
+        <strong>${escapeHtml(g4LaunchChannelLabel(channel))}</strong>
+        <small>Gate 0: ${escapeHtml(g4LaunchChannelStatus(channel))}${channel.materials ? " · " + escapeHtml(channel.materials) : ""}</small>
+      </span>
+      <span class="g4-campaign-5a">
+        <span>Gate 3 · роль</span>
+        <b>${escapeHtml(g4Gate3ChannelRole(channel))}</b>
+      </span>
+      <span class="g4-campaign-status">
+        <span class="status-pill status-${status}">${escapeHtml(g4CampaignStatusLabel(campaign))}</span>
+        <small class="${channelStatus === "active" ? "is-ok" : channelStatus === "planned" ? "is-warn" : "is-bad"}">${escapeHtml(g4LaunchChannelStatus(channel))}</small>
+      </span>
+      <span class="g4-toggle-mark">${isOpen ? "Свернуть" : "Открыть"}</span>
+    </button>
+    ${
+      isOpen
+        ? `<div class="g4-campaign-row">
+          <label class="g4-campaign-field">
+            <span>Решение</span>
+            <select class="g1-input ${campaign.decision ? "is-filled" : "is-empty"}" data-g4camp-key="${escapeAttr(channel.key)}" data-g4camp-field="decision">${g4CampaignOptions(G4_CAMPAIGN_DECISIONS, campaign.decision)}</select>
+          </label>
+          <label class="g4-campaign-field">
+            <span>Статус запуска</span>
+            <select class="g1-input ${campaign.launchStatus ? "is-filled" : "is-empty"}" data-g4camp-key="${escapeAttr(channel.key)}" data-g4camp-field="launchStatus">${g4CampaignOptions(G4_CAMPAIGN_LAUNCH_STATUSES, campaign.launchStatus)}</select>
+          </label>
+          ${g4CampaignInput(channel.key, "campaignName", "Название кампании", campaign.campaignName, defaultName)}
+          ${g4CampaignInput(channel.key, "objective", "Оффер / цель", campaign.objective, defaultObjective, true)}
+          ${g4CampaignInput(channel.key, "landing", "Посадочная", campaign.landing, defaultLanding || "URL посадочной")}
+          ${g4CampaignInput(channel.key, "budget", "Бюджет / лимит", campaign.budget, defaultBudget || "бюджет, CPA/CPL")}
+          ${g4CampaignInput(channel.key, "utm", "UTM", campaign.utm, "utm_source / utm_medium / utm_campaign")}
+          ${g4CampaignInput(channel.key, "creative", "Креатив / объявление", campaign.creative, channel.launchType === "search" ? "заголовок, текст, быстрые ссылки" : "баннер, видео, пост", true)}
+          ${g4CampaignInput(channel.key, "notes", "Следующее действие", campaign.notes, "что нужно закрыть перед запуском", true)}
+          ${g4CampaignContextHtml(ctx)}
+        </div>`
+        : ""
+    }
+  </article>`;
+}
+
+function g4SelectedProductHtml(product) {
+  const products = g4LaunchProducts();
+  const ctx = g4CampaignContext(product);
+  const gate3 = g4Gate3ProductContext(product);
+  return `<div class="g4-product-launch-head">
+    <label class="g4-product-select">
+      <span>Что продаём</span>
+      <select class="g1-input ${product ? "is-filled" : "is-empty"}" data-g4launch-product>${products
+        .map(
+          (item) =>
+            `<option value="${escapeAttr(item)}" ${item === product ? "selected" : ""}>${escapeHtml(item || "Продукт не указан")}</option>`,
+        )
+        .join("")}</select>
+    </label>
+    <div class="g4-product-launch-context">
+      <div><span>Gate 1 · оффер</span><b>${g2ShortValue(ctx.offer)}</b></div>
+      <div><span>Gate 1 · сегмент / JTBD</span><b>${g2ShortValue(ctx.jtbd || ctx.segment)}</b></div>
+      <div><span>Gate 0/1 · CTA</span><b>${g2ShortValue(ctx.cta)}</b></div>
+      <div><span>Gate 2 · посадочная</span><b>${g2ShortValue(ctx.landingUrl || ctx.landingStatus)}</b></div>
+      <div><span>Gate 3 · маршрут 5A</span><b>${g2ShortValue(gate3.route || gate3.stageStatuses)}</b></div>
+    </div>
+  </div>`;
+}
+
+function g4CampaignSectionHtml(type, title, channels, campaigns, product) {
+  const filtered = channels.filter((channel) => channel.launchType === type);
+  const launchOpen = g4EnsureLaunchUiState();
+  const isOpen = launchOpen[type] !== false;
+  return `<section class="g4-campaign-section ${isOpen ? "is-open" : ""}">
+    <button class="g4-campaign-section-head" data-g4launch-section-toggle="${escapeAttr(type)}">
+      <span>${escapeHtml(title)}</span>
+      <b>${filtered.length} · ${isOpen ? "Свернуть" : "Открыть"}</b>
+    </button>
+    ${
+      isOpen
+        ? `<div class="g4-campaign-list">
+          ${filtered
+            .map((channel, index) =>
+              g4CampaignRowHtml(
+                channel,
+                campaigns[g4CampaignStateKey(product, channel.key)],
+                index,
+                product,
+              ),
+            )
+            .join("") || '<div class="g4-search-empty">Платформы не указаны в Gate 0.</div>'}
+        </div>`
+        : ""
+    }
+  </section>`;
+}
+
+function g4CampaignLaunchCenterHtml() {
+  const channels = g4LaunchChannels();
+  const campaigns = g4EnsureLaunchCampaigns();
+  const product = g4SelectedLaunchProduct();
+  if (!channels.length) {
+    return `<div class="g4-campaign-center"><div class="g4-upstream-title">Запуск кампаний по платформам</div><div class="g4-search-empty">Заполните каналы в Gate 0, чтобы здесь появились поисковые и медийные кампании.</div></div>`;
+  }
+  return `<div class="g4-campaign-center">
+    <div class="g4-campaign-center-head">
+      <div>
+        <span class="g4-upstream-title">Запуск кампаний по платформам</span>
+      </div>
+      <span class="status-pill status-in_progress">${channels.length} платформ</span>
+    </div>
+    ${g4SelectedProductHtml(product)}
+    ${g4CampaignSectionHtml("search", "Поисковые кампании", channels, campaigns, product)}
+    ${g4CampaignSectionHtml("media", "Медийные кампании", channels, campaigns, product)}
+  </div>`;
+}
+
 function gate4ProductionHtml() {
   const g4 = ensureGate4Production();
   const d = state.demandV130?.search?.steps || {};
@@ -24923,9 +26628,11 @@ function gate4ProductionHtml() {
   const groupRows = g4.groupRows || [{}];
   const sitelinkRows = g4.sitelinkRows || [{}];
 
-  return `<div class="g1-route" style="margin-top:16px;">
-    <div class="g1-card"><div class="g1-card-header-static"><span class="g1-card-title">Креативы и рекламные сущности</span></div>
+  return `<div class="g1-route g4-launch-workspace">
+    <div class="g1-card"><div class="g1-card-header-static"><span class="g1-card-title">Запуск рекламных кампаний</span></div>
     <div class="g1-card-body">
+      ${g4CampaignLaunchCenterHtml()}
+      ${g4SearchCampaignMetricsHtml()}
       <details class="g1-prompt-toggle"><summary>Кластеры из Gate 1 (только чтение)</summary><div>${escapeHtml(g1CorePreview)}</div></details>
       <label class="g1-field" style="margin-top:12px;"><span>Семантическое ядро</span><small style="color:var(--muted);font-size:11px;">Группы, ключевые фразы, минус-слова, структура кампании</small><textarea class="g1-input ${scFilled ? "is-filled" : "is-empty"}" data-g4prod-field="semanticCore" rows="1" placeholder="семантическое ядро">${escapeHtml(g4.semanticCore || "")}</textarea></label>
       <label class="g1-field" style="margin-top:8px;"><span>Минус-фразы</span><small style="color:var(--muted);font-size:11px;">Общие минус-фразы кампании</small><textarea class="g1-input ${String(g4.minusPhrases || "").trim() ? "is-filled" : "is-empty"}" data-g4prod-field="minusPhrases" rows="1" placeholder="минус-фразы">${escapeHtml(g4.minusPhrases || "")}</textarea></label>
@@ -25075,10 +26782,9 @@ function gate4ProductionHtml() {
 const __g4PrevRenderGateTable = renderGateTable;
 renderGateTable = function (gate, cards) {
   if (gate.id === "gate-4") {
-    __g4PrevRenderGateTable(gate, cards);
-    const area = document.getElementById("contentArea");
-    if (area) area.insertAdjacentHTML("beforeend", gate4ProductionHtml());
+    els.contentArea.innerHTML = gate4ProductionHtml();
     bindGate4ProductionEvents();
+    renderGateNav();
     return;
   }
   __g4PrevRenderGateTable(gate, cards);
@@ -25090,6 +26796,16 @@ function bindGate4ProductionEvents() {
 
 // 5. Event handlers for Gate 4 production
 document.addEventListener("input", (e) => {
+  if (e.target?.dataset?.g4campField) {
+    const campaigns = g4EnsureLaunchCampaigns();
+    const row =
+      campaigns[g4CampaignStateKey(g4SelectedLaunchProduct(), e.target.dataset.g4campKey)];
+    if (row) {
+      row[e.target.dataset.g4campField] = e.target.value;
+      flashSaving();
+    }
+    return;
+  }
   if (e.target?.dataset?.g4prodField) {
     const g4 = ensureGate4Production();
     g4[e.target.dataset.g4prodField] = e.target.value;
@@ -25128,6 +26844,24 @@ document.addEventListener("input", (e) => {
 });
 
 document.addEventListener("click", (e) => {
+  if (e.target?.closest?.("[data-g4launch-section-toggle]")) {
+    const btn = e.target.closest("[data-g4launch-section-toggle]");
+    const open = g4EnsureLaunchUiState();
+    const key = btn.dataset.g4launchSectionToggle;
+    open[key] = open[key] === false;
+    flashSaving();
+    renderGate();
+    return;
+  }
+  if (e.target?.closest?.("[data-g4camp-toggle]")) {
+    const btn = e.target.closest("[data-g4camp-toggle]");
+    const open = g4EnsureLaunchUiState();
+    const key = btn.dataset.g4campToggle;
+    open.rows[key] = !open.rows[key];
+    flashSaving();
+    renderGate();
+    return;
+  }
   if (e.target?.dataset?.g4prodGroupAdd !== undefined) {
     const g4 = ensureGate4Production();
     g4.groupRows.push({});
@@ -25183,6 +26917,26 @@ document.addEventListener("click", (e) => {
   }
 });
 
+document.addEventListener("change", (e) => {
+  if (e.target?.dataset?.g4launchProduct !== undefined) {
+    const g4 = ensureGate4Production();
+    g4.launchProduct = e.target.value;
+    flashSaving();
+    renderGate();
+    return;
+  }
+  if (e.target?.dataset?.g4campField) {
+    const campaigns = g4EnsureLaunchCampaigns();
+    const row =
+      campaigns[g4CampaignStateKey(g4SelectedLaunchProduct(), e.target.dataset.g4campKey)];
+    if (row) {
+      row[e.target.dataset.g4campField] = e.target.value;
+      flashSaving();
+      renderGate();
+    }
+  }
+});
+
 /* v1.2.1 — Bug fixes + Offers restructuring */
 
 // Bug 2: beforeunload guarantee — flush pending save + force sync save
@@ -25217,19 +26971,6 @@ flashSaving = function () {
 };
 
 // Offers restructuring: new v116 block with product-linked offers
-const OFFER_STATUSES_V121 = [
-  ["", "Выбрать"],
-  ["filled", "Заполнено"],
-  ["not_filled", "Не заполнено"],
-  ["in_progress", "В работе"],
-];
-const PROMO_STATUSES_V121 = [
-  ["", "Выбрать"],
-  ["active", "Активна"],
-  ["planned", "Планируется"],
-  ["archive", "Архив"],
-];
-
 function v121OffersBlockDef() {
   return GATE0_PASSPORT_V116_BLOCKS[
     "Текущее позиционирование, УТП, офферы и CTA"
@@ -25259,9 +27000,65 @@ function v121EnsureOffers(workspace = state) {
   return workspace.project.offersV2;
 }
 
-function v121OffersProducts() {
-  return megaPlatformProducts();
+function v121OffersProducts(workspace = state) {
+  const project = workspace?.project || {};
+  const main = String(project.whatSell || "").trim();
+  const extra = Array.isArray(project.whatSellExtra)
+    ? project.whatSellExtra
+    : [];
+  return [main, ...extra]
+    .map((item) => String(item || "").trim())
+    .filter(Boolean);
 }
+
+function v121HasText(value) {
+  return String(value || "").trim().length > 0;
+}
+
+function v121ProductOfferReady(item = {}) {
+  return v121HasText(item.offer) && v121HasText(item.cta);
+}
+
+function v121OfferTextarea(attrs, value, placeholder) {
+  const filled = v121HasText(value);
+  return `<textarea ${attrs} rows="1" placeholder="${escapeAttr(placeholder)}" class="g1-input offer-v2-textarea ${filled ? "is-filled" : "is-empty"}">${escapeHtml(value || "")}</textarea>`;
+}
+
+function v121PositioningOffersStatus(card, workspace = state) {
+  const def = v116PassportDef(card);
+  if (!def) return card?.status || "not_started";
+
+  const baseFields = def.fields.filter(
+    (field) => !["currentOffers", "currentCtas"].includes(field.key),
+  );
+  const baseFilled = baseFields.filter((field) =>
+    v121HasText(v116ReadValue(field, workspace)),
+  ).length;
+  const offers = v121EnsureOffers(workspace);
+  const products = v121OffersProducts(workspace);
+  const productRows = products.map(
+    (product) => offers.productOffers?.[product] || {},
+  );
+  const productTouched = productRows.filter(
+    (row) => v121HasText(row.offer) || v121HasText(row.cta),
+  ).length;
+  const productReady = productRows.filter(v121ProductOfferReady).length;
+
+  if (!baseFilled && !productTouched) return "not_started";
+  if (
+    baseFilled === baseFields.length &&
+    (!products.length || productReady === products.length)
+  )
+    return "ready";
+  return "in_progress";
+}
+
+const __guruPrevV116StatusV121 = v116Status;
+v116Status = function (card, workspace = state) {
+  if (v116PassportDef(card)?.key === "positioning_utp_offers_cta")
+    return v121PositioningOffersStatus(card, workspace);
+  return __guruPrevV116StatusV121(card, workspace);
+};
 
 function v121OffersHtml(card) {
   const o = v121EnsureOffers(state);
@@ -25270,34 +27067,25 @@ function v121OffersHtml(card) {
   const productOffersHtml = products.length
     ? `<div class="mega-subsection">
     <div class="mega-subsection-title">Каждый продукт должен иметь своё предложение</div>
-    <table class="cr-table"><thead><tr><th>Продукт</th><th>Оффер</th><th>CTA</th><th>Статус</th></tr></thead>
-    <tbody>${products
+    <div class="offer-v2-list">${products
       .map((p) => {
         const d = o.productOffers[p] || {};
-        const bad = d.status === "not_filled" || (!d.offer && !d.status);
-        return `<tr class="${bad ? "mega-row-bad" : ""}">
-        <td class="cr-label">${escapeHtml(p)}</td>
-        <td><input data-offer-v2-product="${escapeAttr(p)}" data-offer-v2-field="offer" value="${escapeAttr(d.offer || "")}" placeholder="предложение" class="g1-input ${d.offer ? "is-filled" : "is-empty"}" /></td>
-        <td><input data-offer-v2-product="${escapeAttr(p)}" data-offer-v2-field="cta" value="${escapeAttr(d.cta || "")}" placeholder="действие" class="g1-input ${d.cta ? "is-filled" : "is-empty"}" /></td>
-        <td><select data-offer-v2-product="${escapeAttr(p)}" data-offer-v2-field="status">
-          ${OFFER_STATUSES_V121.map(([v, l]) => `<option value="${v}" ${(d.status || "") === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}
-        </select></td>
-      </tr>`;
+        const bad = !v121ProductOfferReady(d);
+        return `<div class="offer-v2-row ${bad ? "mega-row-bad" : ""}">
+        <div class="offer-v2-product">${escapeHtml(p)}</div>
+        <label class="offer-v2-field"><span>Оффер</span>${v121OfferTextarea(`data-offer-v2-product="${escapeAttr(p)}" data-offer-v2-field="offer"`, d.offer, "предложение")}</label>
+        <label class="offer-v2-field"><span>CTA</span>${v121OfferTextarea(`data-offer-v2-product="${escapeAttr(p)}" data-offer-v2-field="cta"`, d.cta, "действие")}</label>
+      </div>`;
       })
       .join("")}
     ${o.extraOffers
-      .map(
-        (ex, i) => `<tr>
-      <td><select data-offer-v2-extra="${i}" data-offer-v2-field="product" class="g1-input">${["", ...products].map((p) => `<option value="${escapeAttr(p)}" ${ex.product === p ? "selected" : ""}>${escapeHtml(p || "Выбрать продукт")}</option>`).join("")}</select></td>
-      <td><input data-offer-v2-extra="${i}" data-offer-v2-field="offer" value="${escapeAttr(ex.offer || "")}" placeholder="альтернативный оффер" class="g1-input" /></td>
-      <td><input data-offer-v2-extra="${i}" data-offer-v2-field="cta" value="${escapeAttr(ex.cta || "")}" placeholder="действие" class="g1-input" /></td>
-      <td><div class="mega-comment-row"><select data-offer-v2-extra="${i}" data-offer-v2-field="status">
-        ${OFFER_STATUSES_V121.map(([v, l]) => `<option value="${v}" ${(ex.status || "") === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}
-      </select><button class="v116-multi-remove" data-offer-v2-extra-remove="${i}" title="Удалить">×</button></div></td>
-    </tr>`,
-      )
+      .map((ex, i) => `<div class="offer-v2-row ${v121ProductOfferReady(ex) ? "" : "mega-row-bad"}">
+      <div class="mega-comment-row"><select data-offer-v2-extra="${i}" data-offer-v2-field="product" class="g1-input ${ex.product ? "is-filled" : "is-empty"}">${["", ...products].map((p) => `<option value="${escapeAttr(p)}" ${ex.product === p ? "selected" : ""}>${escapeHtml(p || "Выбрать продукт")}</option>`).join("")}</select><button class="v116-multi-remove" data-offer-v2-extra-remove="${i}" title="Удалить">×</button></div>
+      <label class="offer-v2-field"><span>Оффер</span>${v121OfferTextarea(`data-offer-v2-extra="${i}" data-offer-v2-field="offer"`, ex.offer, "альтернативный оффер")}</label>
+      <label class="offer-v2-field"><span>CTA</span>${v121OfferTextarea(`data-offer-v2-extra="${i}" data-offer-v2-field="cta"`, ex.cta, "действие")}</label>
+    </div>`)
       .join("")}
-    </tbody></table>
+    </div>
     <button class="v116-multi-add" data-offer-v2-add-extra>+ добавить оффер</button>
   </div>`
     : "";
@@ -25306,19 +27094,14 @@ function v121OffersHtml(card) {
     <div class="mega-subsection-title">Офферы которые работают на весь ассортимент</div>
     ${
       o.promos.length
-        ? `<table class="cr-table"><thead><tr><th>Акция / предложение</th><th>CTA</th><th>Статус</th><th></th></tr></thead>
-    <tbody>${o.promos
+        ? `<div class="offer-v2-list">${o.promos
       .map(
-        (pr, i) => `<tr>
-      <td><input data-offer-v2-promo="${i}" data-offer-v2-field="name" value="${escapeAttr(pr.name || "")}" placeholder="скидка, бонус, бесплатная доставка" class="g1-input" /></td>
-      <td><input data-offer-v2-promo="${i}" data-offer-v2-field="cta" value="${escapeAttr(pr.cta || "")}" placeholder="действие" class="g1-input" /></td>
-      <td><select data-offer-v2-promo="${i}" data-offer-v2-field="status">
-        ${PROMO_STATUSES_V121.map(([v, l]) => `<option value="${v}" ${(pr.status || "") === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}
-      </select></td>
-      <td><button class="v116-multi-remove" data-offer-v2-promo-remove="${i}" title="Удалить">×</button></td>
-    </tr>`,
+        (pr, i) => `<div class="offer-v2-row">
+      <div class="mega-comment-row">${v121OfferTextarea(`data-offer-v2-promo="${i}" data-offer-v2-field="name"`, pr.name, "скидка, бонус, бесплатная доставка")}<button class="v116-multi-remove" data-offer-v2-promo-remove="${i}" title="Удалить">×</button></div>
+      <label class="offer-v2-field"><span>CTA</span>${v121OfferTextarea(`data-offer-v2-promo="${i}" data-offer-v2-field="cta"`, pr.cta, "действие")}</label>
+    </div>`,
       )
-      .join("")}</tbody></table>`
+      .join("")}</div>`
         : ""
     }
     <button class="v116-multi-add" data-offer-v2-add-promo>+ добавить акцию</button>
@@ -25410,7 +27193,6 @@ document.addEventListener("click", (e) => {
       product: "",
       offer: "",
       cta: "",
-      status: "",
     });
     flashSaving();
     renderGate();
@@ -25424,7 +27206,7 @@ document.addEventListener("click", (e) => {
     renderGate();
   }
   if (t?.dataset?.offerV2AddPromo !== undefined) {
-    v121EnsureOffers(state).promos.push({ name: "", cta: "", status: "" });
+    v121EnsureOffers(state).promos.push({ name: "", cta: "" });
     flashSaving();
     renderGate();
   }
@@ -25436,4 +27218,75 @@ document.addEventListener("click", (e) => {
     flashSaving();
     renderGate();
   }
+});
+
+/* Global field state: one visual rule for every Gate */
+const GURU_FIELD_NEGATIVE_VALUES = new Set([
+  "",
+  "no",
+  "not_implemented",
+  "inactive",
+  "disabled",
+  "missing",
+  "failed",
+  "error",
+  "problem",
+  "blocked",
+]);
+const GURU_FIELD_WARNING_VALUES = new Set([
+  "in_progress",
+  "planned",
+  "pending",
+  "review",
+  "needs_review",
+]);
+
+function guruFieldState(el) {
+  if (!el || el.disabled) return "";
+  if (el.tagName === "SELECT") {
+    const value = String(el.value || "").trim();
+    if (GURU_FIELD_NEGATIVE_VALUES.has(value)) return "empty";
+    if (GURU_FIELD_WARNING_VALUES.has(value)) return "warning";
+    return "filled";
+  }
+  const value = String(el.value || "").trim();
+  return value ? "filled" : "empty";
+}
+
+function guruApplyFieldStates(root = document) {
+  const scope = root.querySelector ? root : document;
+  scope
+    .querySelectorAll(
+      ".content-area input:not([type='button']):not([type='submit']):not([type='reset']):not([type='hidden']), .content-area textarea, .content-area select",
+    )
+    .forEach((el) => {
+      el.classList.remove(
+        "guru-field-empty",
+        "guru-field-filled",
+        "guru-field-warning",
+      );
+      const stateName = guruFieldState(el);
+      if (stateName) el.classList.add("guru-field-" + stateName);
+    });
+}
+
+const __guruPrevBindCardInputsFieldStates = bindCardInputs;
+bindCardInputs = function () {
+  __guruPrevBindCardInputsFieldStates();
+  guruApplyFieldStates(document);
+};
+
+const __guruPrevRenderGateFieldStates = renderGate;
+renderGate = function () {
+  __guruPrevRenderGateFieldStates();
+  guruApplyFieldStates(document);
+};
+
+document.addEventListener("input", (event) => {
+  if (event.target?.matches?.("input, textarea, select"))
+    guruApplyFieldStates(document);
+});
+document.addEventListener("change", (event) => {
+  if (event.target?.matches?.("input, textarea, select"))
+    guruApplyFieldStates(document);
 });
