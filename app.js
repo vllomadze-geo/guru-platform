@@ -5590,22 +5590,20 @@ async function hydrateAllProjectWorkspacesFromCloud() {
 
     _cloudWorkspaceVersions.set(projectId, cloudResult.cloudUpdatedAt || "");
     const cloudState = cloudResult.state;
-    const localUpdatedAt = String(localState?.updatedAt || "");
-    const cloudUpdatedAt = String(cloudState?.updatedAt || "");
 
-    if (!localState || cloudUpdatedAt > localUpdatedAt) {
-      if (localRaw) {
-        safeStorageSet(
-          STORAGE_BACKUP_PREFIX + projectId + "-before-cloud-" + Date.now(),
-          localRaw,
-          { silent: true },
-        );
-      }
-      const migrated = migrateWorkspace(cloudState, projectId);
-      safeStorageSet(localKey, JSON.stringify(migrated));
-    } else if (localUpdatedAt > cloudUpdatedAt) {
-      await pushToSupabase(projectId, localState, { silent: true });
+    // При старте облако — источник истины. Это особенно важно при первой
+    // миграции: недавно созданный пустой локальный seed может иметь более
+    // свежую дату, чем старый, но заполненный workspace в Supabase.
+    // Любую отличающуюся локальную версию сначала сохраняем как backup.
+    if (localRaw && JSON.stringify(localState) !== JSON.stringify(cloudState)) {
+      safeStorageSet(
+        STORAGE_BACKUP_PREFIX + projectId + "-before-cloud-" + Date.now(),
+        localRaw,
+        { silent: true },
+      );
     }
+    const migrated = migrateWorkspace(cloudState, projectId);
+    safeStorageSet(localKey, JSON.stringify(migrated));
   }
 }
 
@@ -22239,14 +22237,17 @@ function pv140ProductMapHtml(row, index, totalBaseProducts) {
   const product = String(row.product || "").trim();
   const mapStatus = pv140ProductMapStatus(row);
   const statusLabel = STATUS_LABELS[mapStatus.status] || mapStatus.status;
-  return `<div class="g1-card g1-card-collapsible pv140-product-card" style="border-radius:16px;padding:0;">
-    <div class="g1-card-collapse-header pv140-product-head" data-g1-collapse>
+  const collapseKey = `product-map-${index}-${product}`;
+  const isCollapsed = g1CollapsedSet().has(collapseKey);
+  return `<div class="g1-card g1-card-collapsible pv140-product-card${isCollapsed ? ' is-collapsed' : ''}" style="padding:0;">
+    <div class="g1-card-collapse-header pv140-product-head" data-g1-collapse data-g1-collapse-key="${escapeAttr(collapseKey)}">
       <span class="pv140-product-title">
         <span class="pv140-product-index">Продукт ${index + 1}</span>
         <span class="pv140-product-name">${escapeHtml(product || "Что продаём")}</span>
       </span>
       <span class="pv140-product-progress">${mapStatus.filled}/${mapStatus.total}</span>
       <span class="status-pill status-${mapStatus.status}">${escapeHtml(statusLabel)}</span>
+      <span class="pv140-collapse-mark" aria-hidden="true"></span>
       <button class="small-btn danger-mini" data-pv140-map-remove="${index}" ${index < totalBaseProducts ? "disabled" : ""}>×</button>
     </div>
     <div class="g1-card-collapse-body pv140-product-body">
@@ -22585,6 +22586,21 @@ document.addEventListener("click", (e) => {
   if (toggle) {
     const d = ensurePainV130();
     const key = toggle.dataset.pv130Toggle;
+    if (key === "productStrategy") {
+      const shell = toggle.closest(".pv140-strategy-shell");
+      const body = shell?.querySelector(":scope > .g1-card-body");
+      const anchorTop = toggle.getBoundingClientRect().top;
+      const willOpen = d.openSteps[key] === false;
+      d.openSteps[key] = willOpen;
+      shell?.classList.toggle("is-open", willOpen);
+      if (body) body.hidden = !willOpen;
+      saveState();
+      requestAnimationFrame(() => {
+        const shift = toggle.getBoundingClientRect().top - anchorTop;
+        if (Math.abs(shift) > 0.5) window.scrollBy(0, shift);
+      });
+      return;
+    }
     d.openSteps[key] = !d.openSteps[key];
     saveState();
     renderGate();
@@ -22719,13 +22735,14 @@ document.addEventListener("input", (e) => {
 /* v1.4.0 — product-first demand/value map */
 g1RenderPainV130 = function () {
   const status = pv140ProductStrategyStatus();
+  const isOpen = ensurePainV130().openSteps?.productStrategy !== false;
   return `<div class="g1-route">
-    <div class="g1-card is-open">
+    <div class="g1-card pv140-strategy-shell ${isOpen ? 'is-open' : ''}">
       <button class="g1-card-header" data-pv130-toggle="productStrategy">
-        <span class="g1-card-title">1. Продуктовые карты спроса, боли и оффера</span>
+        <span class="g1-card-title">Продуктовые карты спроса, боли и оффера</span>
         <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
       </button>
-      <div class="g1-card-body">
+      <div class="g1-card-body" ${isOpen ? '' : 'hidden'}>
         ${pv140ProductStrategyHtml()}
       </div>
     </div>
@@ -26274,9 +26291,10 @@ function g1SaveCollapsed(set) {
 document.addEventListener("click", (e) => {
   const header = e.target.closest("[data-g1-collapse]");
   if (!header) return;
-  if (e.target.closest(".danger-mini")) return;
+  if (e.target.closest("button, select, input, textarea, a, .danger-mini")) return;
   const card = header.closest(".g1-card-collapsible");
   if (!card) return;
+  const anchorTop = header.getBoundingClientRect().top;
   const key = g1CollapseKey(header);
   const set = g1CollapsedSet();
   if (set.has(key)) {
@@ -26287,6 +26305,10 @@ document.addEventListener("click", (e) => {
     card.classList.add("is-collapsed");
   }
   g1SaveCollapsed(set);
+  requestAnimationFrame(() => {
+    const shift = header.getBoundingClientRect().top - anchorTop;
+    if (Math.abs(shift) > 0.5) window.scrollBy(0, shift);
+  });
 });
 
 // G0 hint for Offer tasks — show JTBD data
@@ -28806,17 +28828,50 @@ function g4v192TypeGroupHtml(type, title, channels, campaigns, product) {
 }
 
 function g4v192ProductContextHtml(product) {
+  const g0 = g4ReadGate0();
   const ctx = g4CampaignContext(product);
   const gate3 = g4Gate3ProductContext(product);
+  const sem = g4ProductSemantics(product);
+  const launchOpen = g4EnsureLaunchUiState();
+  const strategyKey = "strategy__" + normalizeAspectKey(product || "no_product");
+  const isOpen = Boolean(launchOpen[strategyKey]);
+  const allPhrases = [
+    ...new Set(g4sbClusterList(product).flatMap((cluster) => cluster.phrases)),
+  ];
   return `<div class="g4-upstream">
     <div class="g4-upstream-title">Стратегическая основа из Gate 0–3</div>
+    ${g4ReadonlyRow("Продукт / направление", product || g0.product, product ? "направление Gate 4" : "Gate 0 «Что продаём»")}
+    ${g4ReadonlyRow("Посадочная страница", ctx.landingUrl || ctx.landingStatus, "Gate 2 «Посадочные под продукты»")}
     ${g4ReadonlyRow("Оффер", ctx.offer, "Gate 1")}
-    ${g4ReadonlyRow("Сегмент / JTBD", ctx.jtbd || ctx.segment, "Gate 1")}
     ${g4ReadonlyRow("CTA", ctx.cta, "Gate 0/1")}
-    ${g4ReadonlyRow("Посадочная", ctx.landingUrl || ctx.landingStatus, "Gate 2")}
+    ${g4ReadonlyRow("Допустимый CPL", ctx.cpl, "Gate 1 «Юнит-экономика»")}
     ${g4ReadonlyRow("Маршрут 5A (Котлер)", gate3.route || gate3.stageStatuses, "Gate 3")}
+    ${g4ReadonlyRow("Стратегическая основа", `Сегменты: ${sem.segments.length} · JTBD: ${sem.languageJtbd.length} · Фразы: ${allPhrases.length}`, "Gate 1")}
+    <div style="margin-top:8px">
+      <button class="small-btn add-inline-btn" data-g4-strategy-toggle="${escapeAttr(strategyKey)}">${isOpen ? "Скрыть стратегическую основу" : "Показать стратегическую основу"}</button>
+    </div>
+    ${
+      isOpen
+        ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);">
+      ${g4ReadonlyRow("Сегменты (полный текст)", sem.segmentsText || ctx.segment, "Gate 1 «Спрос, ценность, позиционирование»")}
+      ${g4ReadonlyRow("JTBD (полный текст)", sem.languageJtbd.join("; ") || ctx.jtbd, "Gate 1 «Продуктовые карты»")}
+      ${g4ReadonlyRow("Ключевые фразы", allPhrases.slice(0, 80).join(", "), "Gate 1")}
+      ${g4sbItemsListHtml(product)}
+    </div>`
+        : ""
+    }
   </div>`;
 }
+
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-g4-strategy-toggle]");
+  if (!button) return;
+  const launchOpen = g4EnsureLaunchUiState();
+  const key = button.dataset.g4StrategyToggle;
+  launchOpen[key] = !launchOpen[key];
+  flashSaving();
+  renderGate();
+});
 
 g4CampaignLaunchCenterHtml = function () {
   const channels = g4LaunchChannels();
@@ -30125,13 +30180,13 @@ gate1PageStructureHtml = function (card) {
     const rowStatus = pageStructureStatus(entry.row);
     const collapseKey = 'pagecard-' + (entry.row.id || entry.i);
     const isCollapsed = g1CollapsedSet().has(collapseKey);
-    return `<div class="g1-card g1-card-collapsible${isCollapsed ? ' is-collapsed' : ''}" style="border-radius:14px;padding:0;margin-top:10px;border:1px solid var(--line);">
-    <div class="g1-card-collapse-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;" data-g1-collapse data-g1-collapse-key="${escapeAttr(collapseKey)}">
-      <span><span style="font-weight:800;font-size:13px;">${escapeHtml(rowName)}</span></span>
+    return `<div class="g1pc-child-card g1-card-collapsible${isCollapsed ? ' is-collapsed' : ''}">
+    <div class="g1-card-collapse-header g1pc-child-header" data-g1-collapse data-g1-collapse-key="${escapeAttr(collapseKey)}">
+      <span class="g1pc-child-heading"><span class="g1pc-index">02.${String(pos + 1).padStart(2, '0')}</span><span class="g1pc-child-title">${escapeHtml(rowName)}</span></span>
       <span class="status-pill status-${rowStatus}">${escapeHtml(STATUS_LABELS[rowStatus] || rowStatus)}</span>
     </div>
-    <div class="g1-card-collapse-body" style="padding:0 12px 12px;">
-      <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end;margin:4px 0;">
+    <div class="g1-card-collapse-body g1pc-child-body">
+      <div class="g1pc-child-tools">
         <span style="font-size:11px;color:var(--muted);font-weight:700;">Направление:</span>${dirSelect(entry.row, entry.i)}
         <button class="small-btn" data-g1pc-move="-1" data-g1pc-card="${escapeAttr(card.id)}" data-g1pc-index="${entry.i}" ${pos === 0 ? 'disabled' : ''}>↑</button>
         <button class="small-btn" data-g1pc-move="1" data-g1pc-card="${escapeAttr(card.id)}" data-g1pc-index="${entry.i}" ${pos === len - 1 ? 'disabled' : ''}>↓</button>
@@ -30618,20 +30673,36 @@ gate1PageStructureHtml = function (card) {
     const off = offers[g.product] || {};
     const offer = String(off.offer || '').trim();
     const cta = String(off.cta || '').trim();
-    return `<div style="margin-bottom:22px;">
-      <div style="padding:12px 0 8px;border-bottom:2px solid var(--line);margin-bottom:10px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-          <div style="font-weight:900;font-size:15px;">${escapeHtml(g.product)}</div>
+    const groupCollapseKey = `page-direction-${g.product}`;
+    const groupIsCollapsed = g1CollapsedSet().has(groupCollapseKey);
+    return `<section class="g1pc-page-system g1-card-collapsible${groupIsCollapsed ? ' is-collapsed' : ''}">
+      <header class="g1pc-primary-page g1-card-collapse-header" data-g1-collapse data-g1-collapse-key="${escapeAttr(groupCollapseKey)}">
+        <div class="g1pc-kicker"><span class="g1pc-index">01</span><span>Основная страница</span></div>
+        <h3 class="g1pc-primary-title">${escapeHtml(g.product)}</h3>
+        <div class="g1pc-primary-actions">
           ${placementSelect(g.product)}
+          <span class="g1pc-collapse-label"><span class="when-open">Свернуть ↑</span><span class="when-closed">Развернуть ↓</span></span>
         </div>
-        <small style="display:block;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.06em;margin-top:6px;">ОФФЕР</small>
-        <div class="g1-input ${offer ? 'is-filled' : 'is-empty'}" style="cursor:default;margin-top:2px;${offer ? 'background:#eef5ee;' : ''}">${escapeHtml(offer || 'Оффер не заполнен в Gate 0')}</div>
-        <small style="display:block;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.06em;margin-top:6px;">CTA</small>
-        <div class="g1-input ${cta ? 'is-filled' : 'is-empty'}" style="cursor:default;margin-top:2px;${cta ? 'background:#eef5ee;' : ''}">${escapeHtml(cta || 'CTA не заполнен в Gate 0')}</div>
+      </header>
+      <div class="g1-card-collapse-body g1pc-page-body">
+        <div class="g1pc-message-grid">
+          <div class="g1pc-message-label">Оффер</div>
+          <div class="g1pc-message-value ${offer ? 'is-filled' : 'is-empty'}">${escapeHtml(offer || 'Оффер не заполнен в Gate 0')}</div>
+          <div class="g1pc-message-label">CTA</div>
+          <div class="g1pc-message-value ${cta ? 'is-filled' : 'is-empty'}">${escapeHtml(cta || 'CTA не заполнен в Gate 0')}</div>
+        </div>
+        <div class="g1pc-content-level">
+          <div class="g1pc-content-head">
+            <div class="g1pc-kicker"><span class="g1pc-index">02</span><span>Содержимое страницы</span></div>
+            <span class="g1pc-content-count">${g.entries.length} ${g.entries.length === 1 ? 'элемент' : 'элементов'}</span>
+          </div>
+          <div class="g1pc-child-list">
+            ${g.entries.length ? g.entries.map((entry, pos) => pageBlock(entry, pos, g.entries.length)).join('') : '<div class="g1pc-empty">На странице пока нет содержимого.</div>'}
+          </div>
+          <button class="small-btn add-inline-btn g1pc-add-child" data-g1pc-add="${escapeAttr(card.id)}" data-g1pc-dir="${escapeAttr(g.product)}">+ Добавить содержимое</button>
+        </div>
       </div>
-      ${g.entries.map((entry, pos) => pageBlock(entry, pos, g.entries.length)).join('')}
-      <button class="small-btn add-inline-btn" style="margin-top:6px;" data-g1pc-add="${escapeAttr(card.id)}" data-g1pc-dir="${escapeAttr(g.product)}">+ Добавить страницу</button>
-    </div>`;
+    </section>`;
   };
 
   const noGroupsHint = !products.length
@@ -30782,8 +30853,72 @@ g4ProductSemantics = function (product) {
    автоматически и один раз — без дублирования.
    ================================================================ */
 
+function g4SearchBuildValueHasData(value) {
+  if (Array.isArray(value))
+    return value.some((item) => g4SearchBuildValueHasData(item));
+  if (value && typeof value === "object")
+    return Object.values(value).some((item) => g4SearchBuildValueHasData(item));
+  return value !== null && value !== undefined && String(value).trim() !== "";
+}
+
+function g4MergeSearchBuildData(target, source) {
+  if (!source || typeof source !== "object") return target;
+  Object.entries(source).forEach(([key, sourceValue]) => {
+    const targetValue = target[key];
+    if (Array.isArray(sourceValue)) {
+      if (!Array.isArray(targetValue) || !g4SearchBuildValueHasData(targetValue)) {
+        target[key] = structuredClone(sourceValue);
+        return;
+      }
+      if (key === "clusters") {
+        const ids = new Set(targetValue.map((item) => item?.id).filter(Boolean));
+        sourceValue.forEach((item) => {
+          if (!item?.id || !ids.has(item.id)) targetValue.push(structuredClone(item));
+        });
+      }
+      return;
+    }
+    if (sourceValue && typeof sourceValue === "object") {
+      if (!targetValue || typeof targetValue !== "object" || Array.isArray(targetValue))
+        target[key] = {};
+      g4MergeSearchBuildData(target[key], sourceValue);
+      return;
+    }
+    if (!g4SearchBuildValueHasData(targetValue) && g4SearchBuildValueHasData(sourceValue))
+      target[key] = sourceValue;
+  });
+  return target;
+}
+
+function g4MigrateBrokenSearchBuildKey(product) {
+  const builds = state.gate4SearchBuild;
+  if (!builds) return false;
+  const canonicalKey = normalizeAspectKey(product || "no_product");
+  const productLabel = canonicalKey.replace(/_/g, " ");
+  let changed = false;
+  Object.keys(builds).forEach((candidateKey) => {
+    if (candidateKey === canonicalKey || !candidateKey.includes("�")) return;
+    const candidateLabel = candidateKey.replace(/_/g, " ").replace(/�+/g, " ");
+    if (guruProductSimilarity(candidateLabel, productLabel) < 0.5) return;
+    const target = (builds[canonicalKey] = builds[canonicalKey] || {});
+    g4MergeSearchBuildData(target, builds[candidateKey]);
+    delete builds[candidateKey];
+    changed = true;
+  });
+  if (changed && !state._gate4BrokenKeyMigrationScheduled) {
+    state._gate4BrokenKeyMigrationScheduled = true;
+    setTimeout(() => {
+      if (!state) return;
+      delete state._gate4BrokenKeyMigrationScheduled;
+      saveState();
+    }, 0);
+  }
+  return changed;
+}
+
 function ensureGate4SearchBuild(product) {
   state.gate4SearchBuild = state.gate4SearchBuild || {};
+  g4MigrateBrokenSearchBuildKey(product);
   const key = normalizeAspectKey(product || "no_product");
   const d = (state.gate4SearchBuild[key] = state.gate4SearchBuild[key] || {});
   d.minusPhrases = d.minusPhrases || "";
@@ -31679,19 +31814,6 @@ const G4_SEARCH_STATUS_CLASS = {
    импортированных отчётов Gate 5 к конкретной кампании Gate 4 —
    договорились использовать ручное подтверждение). */
 function g4sbCampaignStatus(product, campaign, d) {
-  if (d.settings.launchConfirmed === "да") return "launched";
-  if (campaign.decision !== "launch") return "not_started";
-
-  const requiredSettings = [
-    campaign.campaignName,
-    d.settings.geo,
-    campaign.objective,
-    d.settings.strategy,
-    campaign.budget,
-    campaign.utm,
-  ];
-  const settingsFilled = requiredSettings.every((v) => String(v || "").trim());
-
   const touchedGroups = d.groupRows.filter(
     (row) =>
       String(row.col0 || "").trim() ||
@@ -31701,8 +31823,7 @@ function g4sbCampaignStatus(product, campaign, d) {
       String(row.col3 || "").trim() ||
       String(row.col4 || "").trim(),
   );
-  const anySettingsFilled = requiredSettings.some((v) => String(v || "").trim());
-  if (!anySettingsFilled && !touchedGroups.length) return "not_started";
+  if (!touchedGroups.length) return "not_started";
 
   const groupsToCheck = touchedGroups.length ? touchedGroups : d.groupRows;
   const groupChecks = groupsToCheck.map((row) => {
@@ -31716,15 +31837,13 @@ function g4sbCampaignStatus(product, campaign, d) {
       readiness: g4sbGroupReadiness(row, phraseCount, ads),
     };
   });
-  const anyGroupReady = groupChecks.some((g) => g.readiness === "ready");
   const allHavePhrases = groupChecks.every((g) => g.hasPhrases);
   const allHaveForecast = groupChecks.every((g) => g.hasForecast);
   const allHaveAd = groupChecks.every((g) => g.hasAd);
 
   if (
-    settingsFilled &&
     groupChecks.length > 0 &&
-    anyGroupReady &&
+    groupChecks.every((g) => g.readiness === "ready") &&
     allHavePhrases &&
     allHaveForecast &&
     allHaveAd
@@ -31733,43 +31852,6 @@ function g4sbCampaignStatus(product, campaign, d) {
   }
   return "in_progress";
 }
-
-/* ---- Универсальная шапка: компактная сводка + разворот ---- */
-g4sbUniversalHeaderHtml = function (product, d) {
-  const g0 = g4ReadGate0();
-  const ctx = g4CampaignContext(product);
-  const sem = g4ProductSemantics(product);
-  const isOpen = Boolean(d.headerOpen);
-  const p = `data-g4sb-product="${escapeAttr(product)}"`;
-  /* Считаем через g4sbClusterList — ту же функцию, что формирует
-     группы (страничные + поисковые фразы каждого кластера/товара).
-     sem.queries.length занижен: не включает страничные фразы
-     (ур. 1), которые уже участвуют в создании групп — используем
-     единый источник счёта, чтобы «Фразы» совпадали с суммой групп. */
-  const allPhrasesFlat = g4sbClusterList(product).flatMap((c) => c.phrases);
-  const phraseCount = new Set(allPhrasesFlat).size;
-  return `<div class="g4-upstream">
-    ${g4ReadonlyRow("Продукт / направление", product || g0.product, product ? "направление Gate 4" : "Gate 0 «Что продаём»")}
-    ${g4ReadonlyRow("Посадочная страница", ctx.landingUrl || ctx.landingStatus, "Gate 2 «Посадочные под продукты»")}
-    ${g4ReadonlyRow("Оффер", ctx.offer, "Gate 1 «Продуктовые карты»")}
-    ${g4ReadonlyRow("CTA", ctx.cta, "Gate 0 «Офферы и CTA»")}
-    ${g4ReadonlyRow("Допустимый CPL", ctx.cpl, "Gate 1 «Юнит-экономика»")}
-    ${g4ReadonlyRow("Стратегическая основа", `Сегменты: ${sem.segments.length} · JTBD: ${sem.languageJtbd.length} · Фразы: ${phraseCount}`, "Gate 1")}
-    <div style="margin-top:8px">
-      <button class="small-btn add-inline-btn" ${p} data-g4sb-toggle-header>${isOpen ? "Скрыть стратегическую основу" : "Показать стратегическую основу"}</button>
-    </div>
-    ${
-      isOpen
-        ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);">
-      ${g4ReadonlyRow("Сегменты (полный текст)", sem.segmentsText || ctx.segment, "Gate 1 «Спрос, ценность, позиционирование»")}
-      ${g4ReadonlyRow("JTBD (полный текст)", sem.languageJtbd.join("; ") || ctx.jtbd, "Gate 1 «Продуктовые карты»")}
-      ${g4ReadonlyRow("Ключевые фразы", phraseCount ? [...new Set(allPhrasesFlat)].slice(0, 80).join(", ") : "", "Gate 1")}
-      ${g4sbItemsListHtml(product)}
-    </div>`
-        : ""
-    }
-  </div>`;
-};
 
 /* ---- Настройки кампании: один блок, порядок строго по ТЗ ---- */
 g4sbSettingsHtml = function (product, channel, campaign, d) {
@@ -31803,12 +31885,13 @@ g4sbSettingsHtml = function (product, channel, campaign, d) {
     </div>`;
 };
 
-/* ---- Настройки/групп-состояние: launchConfirmed + headerOpen ---- */
+/* ---- Миграция UI-состояния после удаления шага настроек ---- */
 const __g4V1130PrevEnsureSearchBuild = ensureGate4SearchBuild;
 ensureGate4SearchBuild = function (product) {
   const d = __g4V1130PrevEnsureSearchBuild(product);
-  if (d.settings.launchConfirmed === undefined) d.settings.launchConfirmed = "";
-  if (d.headerOpen === undefined) d.headerOpen = false;
+  if (Object.hasOwn(d, "headerOpen")) delete d.headerOpen;
+  if (d.searchStepOpen && Object.hasOwn(d.searchStepOpen, "settings"))
+    delete d.searchStepOpen.settings;
   return d;
 };
 
@@ -31906,16 +31989,6 @@ g4CampaignRowHtml = function (channel, campaign, index, product) {
   }
   return __g4V1130PrevCampaignRowHtml(channel, campaign, index, product);
 };
-
-/* Разворот/сворот стратегической основы в шапке */
-document.addEventListener("click", (e) => {
-  const t = e.target;
-  if (t?.dataset?.g4sbToggleHeader === undefined) return;
-  const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
-  d.headerOpen = !d.headerOpen;
-  flashSaving();
-  renderGate();
-});
 
 /* ================================================================
    v1.14.0 — Связь Сегмент → JTBD → Кластер внутри группы «Яндекс
@@ -32398,6 +32471,11 @@ function g4sbClusterDemand(product, itemId, phraseList) {
    против текущего пула фраз товара (если фраза пропала из Gate 1 —
    она перестаёт учитываться, без ручной чистки). */
 function g4sbClusterPhrases(product, cluster) {
+  if (Array.isArray(cluster.demandRows)) {
+    return cluster.demandRows
+      .map((row) => String(row.kw || "").trim())
+      .filter(Boolean);
+  }
   const itemCluster = g4sbClusterList(product).find((c) => c.id === cluster.itemId);
   const validBase = itemCluster ? new Set(itemCluster.phrases) : new Set();
   const kept = (cluster.phraseSelection || []).filter((p) => validBase.has(p));
@@ -32723,19 +32801,21 @@ g4sbSearchChannelCardHtml = function (channel, campaign, index, product) {
   const hasSemantics = g4sbClusterList(product).length > 0;
 
   if (!d.searchStepOpen)
-    d.searchStepOpen = { header: false, settings: true, clusters: true, groups: true, check: false };
+    d.searchStepOpen = { clusters: true, groups: true, check: false };
+  if (Object.hasOwn(d.searchStepOpen, "header")) delete d.searchStepOpen.header;
+  if (Object.hasOwn(d.searchStepOpen, "settings")) delete d.searchStepOpen.settings;
   const steps = d.searchStepOpen;
 
   const clustersBody =
     `<p class="g1-task">Сначала соберите кластер: сегмент → JTBD → фразы → спрос. 1 кластер = 1 группа.</p>` +
-    (!d.clusterDraft.open
-      ? `<button class="small-btn add-inline-btn" ${p} data-g4sb-draft-open>+ Собрать новый кластер</button>` +
-        (!hasSemantics
-          ? `<div class="g1-empty" style="margin-top:8px">В Gate 1 пока нет заполненной семантики (сегменты, JTBD, фразы) ни по одному товару этого направления.</div>`
-          : "")
-      : "") +
     g4sbClusterAssemblyHtml(product, d) +
-    g4sbClusterListSectionHtml(product, d);
+    g4sbClusterListSectionHtml(product, d) +
+    (!d.clusterDraft.open
+      ? (!hasSemantics
+          ? `<div class="g1-empty" style="margin-top:8px">В Gate 1 пока нет заполненной семантики (сегменты, JTBD, фразы) ни по одному товару этого направления.</div>`
+          : "") +
+        `<button class="small-btn add-inline-btn" style="width:100%;margin-top:12px;" ${p} data-g4sb-draft-open>+ Добавить кластер</button>`
+      : "");
 
   const groupsBody = d.groupRows.length
     ? `<div class="g1-fields-grid" style="margin-top:4px">${d.groupRows
@@ -32774,11 +32854,9 @@ g4sbSearchChannelCardHtml = function (channel, campaign, index, product) {
     </button>
     <div class="g1-card-body">
       <p class="g1-task">${escapeHtml(g4Gate3ChannelRole(channel))}</p>
-      ${g4sbStepHtml(product, "1", "Шапка кампании", "из Gate 0–3", "header", steps.header, g4sbUniversalHeaderHtml(product, d))}
-      ${g4sbStepHtml(product, "2", "Настройки кампании", "", "settings", steps.settings, g4sbSettingsHtml(product, channel, campaign, d))}
-      ${g4sbStepHtml(product, "3", "Кластеры", String(d.clusters.length), "clusters", steps.clusters, clustersBody)}
-      ${g4sbStepHtml(product, "4", "Группы объявлений", String(d.groupRows.length), "groups", steps.groups, groupsBody)}
-      ${g4sbStepHtml(product, "5", "Быстрые ссылки и проверка", "", "check", steps.check, checkBody)}
+      ${g4sbStepHtml(product, "1", "Кластеры", String(d.clusters.length), "clusters", steps.clusters, clustersBody)}
+      ${g4sbStepHtml(product, "2", "Группы объявлений", String(d.groupRows.length), "groups", steps.groups, groupsBody)}
+      ${g4sbStepHtml(product, "3", "Быстрые ссылки и проверка", "", "check", steps.check, checkBody)}
     </div>
   </article>`;
 };
@@ -32790,7 +32868,7 @@ document.addEventListener("click", (e) => {
   if (!btn) return;
   const d = ensureGate4SearchBuild(btn.dataset.g4sbProduct);
   if (!d.searchStepOpen)
-    d.searchStepOpen = { header: false, settings: true, clusters: true, groups: true, check: false };
+    d.searchStepOpen = { clusters: true, groups: true, check: false };
   const key = btn.dataset.g4sbStep;
   d.searchStepOpen[key] = !d.searchStepOpen[key];
   flashSaving();
@@ -32876,6 +32954,7 @@ document.addEventListener("change", (e) => {
       d.clusterDraft.mainJtbdIndex = "";
       d.clusterDraft.extraJtbdIndexes = [];
       d.clusterDraft.extraPhrases = [];
+      d.clusterDraft.keywordRows = undefined;
     }
     d.clusterDraft.itemId = itemId;
     d.clusterDraft.segmentIndex = index;
@@ -33044,116 +33123,17 @@ function g4sbClusterUsageMaps(d, itemId, excludeClusterId) {
   return { usedMainJtbd, jtbdUsage, phraseUsage };
 }
 
-/* ---- Gate 4: управляемая модель продуктовых JTBD-кластеров.
-   Gate 1 остаётся источником исходных JTBD и фраз; здесь мы только
-   определяем, какие элементы совместимы в одной рекламной группе. ---- */
-const G4SB_JTBD_CLUSTER_RULES = [
-  {
-    key: "general_cleaning",
-    name: "Общая химчистка обуви",
-    main: ["вернуть обуви аккуратный и первоначальный внешний вид"],
-    extras: [
-      "удалить пятна с замши и поднять ворс",
-      "почистить кроссовки из комбинированных материалов",
-      "очистить обувь внутри и провести дезинфекцию",
-    ],
-    phrases: ["химчист", "чистк", "почист", "кроссов", "замш", "пятн", "ворс", "дезинф", "внутри"],
-  },
-  {
-    key: "reagents",
-    name: "Реагенты и солевые разводы",
-    main: ["почистить обувь после реагентов и удалить солевые разводы"],
-    extras: [
-      "восстановить цвет мягкость и фактуру материала",
-      "сохранить оригинальный оттенок и естественную фактуру",
-    ],
-    phrases: ["реагент", "солев", "соль", "развод", "цвет", "фактур"],
-  },
-  {
-    key: "restoration",
-    name: "Реставрация обуви",
-    main: ["продолжить носить любимую пару вместо покупки новой"],
-    extras: [
-      "замаскировать сбитые мысы и царапины",
-      "восстановить форму замятой обуви",
-      "восстановить лакированную обувь и вернуть покрытию блеск",
-    ],
-    phrases: ["реставр", "восстанов", "ремонт", "любим", "царап", "мыс", "замят", "лакирован", "блеск"],
-  },
-  {
-    key: "sole_whitening",
-    name: "Отбеливание подошвы",
-    main: ["убрать желтизну с подошвы"],
-    extras: [],
-    phrases: ["подошв", "желтиз", "отбел"],
-  },
-  {
-    key: "high_boots",
-    name: "Высокие сапоги",
-    main: ["вернуть высокому сапогу форму голенища и вертикальную посадку"],
-    extras: ["восстановить форму замятой обуви"],
-    phrases: ["сапог", "голенищ", "вертикаль", "форма"],
-  },
-  {
-    key: "premium_care",
-    name: "Премиальный уход",
-    main: ["передать дорогую обувь мастерам которые подберут индивидуальную технологию"],
-    extras: [
-      "сохранить оригинальный оттенок и фактуру",
-      "подготовить обувь для делового или вечернего образа",
-    ],
-    phrases: ["преми", "дорог", "люкс", "индивидуальн", "делов", "вечерн", "уход"],
-  },
-];
-
-const G4SB_SERVICE_JTBD = [
-  "передать обувь через консьержа",
-  "узнать стоимость по фото",
-  "получить срочную обработку за 24 часа",
-];
-
-function g4sbNormalizeClusterText(value) {
-  return String(value || "")
-    .toLowerCase()
-    .replace(/ё/g, "е")
-    .replace(/[^a-zа-я0-9]+/g, " ")
-    .trim();
-}
-
-function g4sbTextMatchesRule(value, samples) {
-  const normalized = g4sbNormalizeClusterText(value);
-  return (samples || []).some((sample) => {
-    const wanted = g4sbNormalizeClusterText(sample);
-    return normalized === wanted || normalized.includes(wanted) || wanted.includes(normalized);
-  });
-}
-
-function g4sbRuleForMainJtbd(jtbdList, mainIndex) {
-  const main = jtbdList.find((j) => String(j.index) === String(mainIndex));
-  if (!main) return null;
-  return G4SB_JTBD_CLUSTER_RULES.find((rule) => g4sbTextMatchesRule(main.text, rule.main)) || null;
-}
-
-function g4sbIsServiceJtbd(text) {
-  return g4sbTextMatchesRule(text, G4SB_SERVICE_JTBD);
-}
-
-function g4sbRelevantPhraseRows(product, itemId, rule, selectedSet) {
-  if (!rule) return [];
-  return g4sbClusterPhraseRows(product, itemId).filter((row) => {
-    if (selectedSet?.has(row.phrase)) return true;
-    const phrase = g4sbNormalizeClusterText(row.phrase);
-    return rule.phrases.some((part) => phrase.includes(g4sbNormalizeClusterText(part)));
-  });
-}
-
 /* ---- Таблица ключевых фраз: чекбокс + фраза + показов/мес +
    период спроса + источник, с фильтрами. Дизайн-система та же
-   (.g1-table-scroll), редактор Gate 1 не дублируем. ---- */
-function g4sbPhraseTableHtml(product, itemId, selectedSet, filter, p, phraseUsage, clusterRule) {
-  const rows = g4sbRelevantPhraseRows(product, itemId, clusterRule, selectedSet);
+   (.g1-table-scroll), редактор Gate 1 не дублируем. Показываются ВСЕ
+   фразы товара — никакой жёсткой предфильтрации: пользователь сам
+   решает, какие фразы относятся к текущему кластеру. Уже занятые в
+   других кластерах этого товара — помечаются (phraseUsage), не
+   блокируются. ---- */
+function g4sbPhraseTableHtml(product, itemId, selectedSet, filter, p, phraseUsage) {
+  const rows = g4sbClusterPhraseRows(product, itemId);
   if (!rows.length) {
-    return `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${clusterRule ? "Для этого кластера в Gate 1 пока нет релевантных ключевых фраз" : "Сначала выберите основной JTBD, чтобы увидеть фразы кластера"}</div>`;
+    return `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${itemId ? "У этого товара пока нет базовых фраз в Gate 1" : "Сначала выберите сегмент, чтобы увидеть фразы товара"}</div>`;
   }
   const filtered = rows.filter((r) => {
     if (filter === "selected") return selectedSet.has(r.phrase);
@@ -33202,6 +33182,73 @@ function g4sbPhraseTableHtml(product, itemId, selectedSet, filter, p, phraseUsag
   <small style="color:var(--muted);font-size:11px;display:block;margin-top:4px;">Данные из Gate 1 → Аналитика → «Объём показов/мес» (то же поле, что заполняется по товару). Здесь — только выбор для кластера, редактирование самих данных — в Gate 1.</small>`;
 }
 
+function g4sbKeywordRow(row = {}) {
+  return {
+    kw: String(row.kw || row.phrase || ""),
+    vol: String(row.vol ?? row.volText ?? ""),
+    growth: String(row.growth || row.period || ""),
+    source: String(row.source || ""),
+  };
+}
+
+function g4sbEnsureDraftKeywordRows(product, draft) {
+  if (Array.isArray(draft.keywordRows)) return draft.keywordRows;
+  const sem = g4ProductSemantics(product);
+  const sourceRows = sem.row?.items?.[draft.itemId]?.demandRows || [];
+  const byKeyword = new Map(
+    sourceRows.map((row) => [String(row.kw || "").trim().toLowerCase(), row]),
+  );
+  const selected = [
+    ...(draft.phraseSelection || []),
+    ...(draft.extraPhrases || []),
+  ].filter((value) => String(value || "").trim());
+  draft.keywordRows = (selected.length ? selected : sourceRows).map((value) => {
+    if (typeof value === "object") return g4sbKeywordRow(value);
+    return g4sbKeywordRow(byKeyword.get(String(value).trim().toLowerCase()) || { kw: value });
+  });
+  if (!draft.keywordRows.length) draft.keywordRows.push(g4sbKeywordRow());
+  return draft.keywordRows;
+}
+
+function g4sbKeywordEditorHtml(product, draft, p) {
+  const rows = g4sbEnsureDraftKeywordRows(product, draft);
+  return `<div class="g4-cluster-demand-editor">
+    <div style="font-weight:800;font-size:13px;">Уровень 1 — Объём показов/мес</div>
+    <small style="color:var(--muted);display:block;margin:3px 0 10px;">Число, из Wordstat / Google Trends. Новые запросы синхронизируются с Gate 1.</small>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${rows.map((row, index) => `<div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;border-bottom:1px dashed var(--line);padding-bottom:8px;">
+        ${[["kw", "Ключевое слово"], ["vol", "Объём показов/мес"], ["growth", "Когда спрос растёт"], ["source", "Wordstat/тренды"]].map(([field, label]) => {
+          const value = row[field] || "";
+          return `<label class="g1-field" style="flex:1;min-width:140px;"><span style="font-size:11px;">${escapeHtml(label)}</span><textarea class="g1-input ${String(value).trim() ? "is-filled" : "is-empty"}" ${p} data-g4sb-keyword-row="${index}" data-g4sb-keyword-field="${field}" rows="1" placeholder="${escapeAttr(label)}">${escapeHtml(value)}</textarea></label>`;
+        }).join("")}
+        <button type="button" class="small-btn danger-mini" style="align-self:center;" ${p} data-g4sb-keyword-remove="${index}" ${rows.length <= 1 ? "disabled" : ""}>×</button>
+      </div>`).join("")}
+    </div>
+    <button type="button" class="small-btn add-inline-btn" style="margin-top:4px;font-size:12px;" ${p} data-g4sb-keyword-add>+</button>
+  </div>`;
+}
+
+function g4sbSyncKeywordRowsToGate1(product, itemId, rows) {
+  const sem = g4ProductSemantics(product);
+  const itemData = sem.row?.items?.[itemId];
+  if (!itemData) return;
+  if (!Array.isArray(itemData.demandRows)) itemData.demandRows = [];
+  const byKeyword = new Map(
+    itemData.demandRows.map((row) => [String(row.kw || "").trim().toLowerCase(), row]),
+  );
+  rows.forEach((source) => {
+    const clean = g4sbKeywordRow(source);
+    const key = clean.kw.trim().toLowerCase();
+    if (!key) return;
+    const target = byKeyword.get(key);
+    if (target) Object.assign(target, clean);
+    else {
+      itemData.demandRows.push(clean);
+      byKeyword.set(key, clean);
+    }
+  });
+}
+
 /* ---- Форма «Сборка кластера»: Сегмент → Основной JTBD →
    Дополнительные JTBD → Таблица фраз → Название → Итог ---- */
 g4sbClusterAssemblyHtml = function (product, d) {
@@ -33220,31 +33267,39 @@ g4sbClusterAssemblyHtml = function (product, d) {
 
   const jtbdList = draft.itemId ? g4sbItemJtbdList(product, draft.itemId) : [];
   const usage = g4sbClusterUsageMaps(d, draft.itemId, draft.editingClusterId);
+  /* Основной JTBD: доступны ВСЕ JTBD товара — никакого зашитого списка
+     «допустимых намерений». Единственное реальное ограничение —
+     1 JTBD не может быть основным сразу у двух кластеров (правило
+     «1 кластер = 1 намерение», которое сам пользователь задал);
+     собственный текущий основной JTBD редактируемого кластера не
+     исключается. */
   const mainJtbdCandidates = jtbdList.filter(
-    (j) =>
-      !g4sbIsServiceJtbd(j.text) &&
-      G4SB_JTBD_CLUSTER_RULES.some((rule) => g4sbTextMatchesRule(j.text, rule.main)) &&
-      (!usage.usedMainJtbd.has(String(j.index)) || String(j.index) === String(draft.mainJtbdIndex)),
+    (j) => !usage.usedMainJtbd.has(String(j.index)) || String(j.index) === String(draft.mainJtbdIndex),
   );
   const hiddenMainCount = jtbdList.length - mainJtbdCandidates.length;
   const mainJtbdOptionsHtml = mainJtbdCandidates
     .map((j) => `<option value="${j.index}" ${String(draft.mainJtbdIndex) === String(j.index) ? "selected" : ""}>${escapeHtml(j.text.slice(0, 80))}</option>`)
     .join("");
 
-  const clusterRule = g4sbRuleForMainJtbd(jtbdList, draft.mainJtbdIndex);
-  const extraJtbdCandidates = clusterRule
-    ? jtbdList.filter(
-        (j) =>
-          String(j.index) !== String(draft.mainJtbdIndex) &&
-          clusterRule.extras.some((extra) => g4sbTextMatchesRule(j.text, [extra])),
-      )
-    : [];
+  /* Дополнительные JTBD: все JTBD товара, кроме уже выбранного
+     основного — пользователь сам решает, какие считать схожими.
+     Уже занятые в других кластерах этого товара помечаются
+     (usage.jtbdUsage), но не исключаются — деталь может законно
+     повторяться в нескольких кластерах. */
+  const extraJtbdCandidates = jtbdList.filter((j) => String(j.index) !== String(draft.mainJtbdIndex));
   const extraJtbdSet = new Set((draft.extraJtbdIndexes || []).map(String));
   const extraJtbdSelectedList = extraJtbdCandidates.filter((j) => extraJtbdSet.has(String(j.index)));
-  const extraJtbdFiltered = extraJtbdCandidates;
+  const jtbdFilter = draft.extraJtbdFilter || "all";
+  const extraJtbdFiltered = extraJtbdCandidates.filter((j) => (jtbdFilter === "selected" ? extraJtbdSet.has(String(j.index)) : true));
+  const jtbdFilterBtn = (key, label) =>
+    `<button type="button" class="small-btn ${jtbdFilter === key ? "" : "secondary"}" ${p} data-g4sb-draft-jtbd-filter="${key}" style="font-size:11px;">${escapeHtml(label)}</button>`;
   const extraJtbdHtml = extraJtbdCandidates.length
     ? `<div class="g4-jtbd-block" ${p}>
-        <div class="g1-fields-grid" style="grid-template-columns:1fr !important;margin-top:8px;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;">
+          ${jtbdFilterBtn("all", "Все")}
+          ${jtbdFilterBtn("selected", "Только выбранные")}
+        </div>
+        <div class="g1-fields-grid" style="grid-template-columns:1fr !important;">
           ${
             extraJtbdFiltered.length
               ? extraJtbdFiltered
@@ -33257,7 +33312,7 @@ g4sbClusterAssemblyHtml = function (product, d) {
               </label>`;
                   })
                   .join("")
-              : `<div class="g4-jtbd-empty-row">Для этого кластера нет дополнительных JTBD</div>`
+              : `<div class="g4-jtbd-empty-row">${jtbdFilter === "selected" ? "Ничего не выбрано" : "Других JTBD у этого товара нет"}</div>`
           }
         </div>
         <div data-g4sb-jtbd-summary style="margin-top:8px;font-size:12px;${extraJtbdSelectedList.length ? "" : "display:none;"}">
@@ -33267,39 +33322,31 @@ g4sbClusterAssemblyHtml = function (product, d) {
           </ul>
         </div>
       </div>`
-    : `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${clusterRule ? "Для этого кластера дополнительные JTBD отсутствуют" : "Сначала выберите основной JTBD"}</div>`;
+    : `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${draft.itemId ? "Других JTBD у этого товара нет" : ""}</div>`;
 
   const itemCluster = draft.itemId ? g4sbClusterList(product).find((c) => c.id === draft.itemId) : null;
-  const selectedSet = new Set(draft.phraseSelection || []);
-  const phraseTableHtml = g4sbPhraseTableHtml(product, draft.itemId, selectedSet, draft.phraseFilter, p, usage.phraseUsage, clusterRule);
-
-  const extraPhrasesHtml = `<div style="margin-top:10px;">
-    <span style="font-weight:700;font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Дополнительные фразы (свои, не из Gate 1)</span>
-    ${(draft.extraPhrases || [])
-      .map(
-        (phrase, pi) => `<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
-      <input class="g1-input is-filled" style="flex:1;" ${p} data-g4sb-draft-extra="${pi}" value="${escapeAttr(phrase)}" placeholder="дополнительная фраза" />
-      <button type="button" class="small-btn danger-mini" ${p} data-g4sb-draft-extra-remove="${pi}">×</button>
-    </div>`,
-      )
-      .join("")}
-    <button type="button" class="small-btn add-inline-btn" style="font-size:12px;" ${p} data-g4sb-draft-extra-add>+ Добавить фразу</button>
-  </div>`;
-
-  const summary = draft.itemId ? g4sbSelectionSummary(product, draft.itemId, draft.phraseSelection || []) : { count: 0, total: 0, withDemand: 0 };
-  const extraCount = (draft.extraPhrases || []).map((v) => String(v || "").trim()).filter(Boolean).length;
-  const totalCount = summary.count + extraCount;
-  const demandText = summary.withDemand
-    ? `${g4NumFormat(summary.total)} показов/мес (совпало фраз со спросом: ${summary.withDemand})`
+  const keywordRows = g4sbEnsureDraftKeywordRows(product, draft);
+  const keywordEditorHtml = g4sbKeywordEditorHtml(product, draft, p);
+  const filledKeywordRows = keywordRows.filter((row) => String(row.kw || "").trim());
+  const totalDemand = filledKeywordRows.reduce(
+    (sum, row) => sum + (parseUnitNumber(row.vol) || 0),
+    0,
+  );
+  const totalCount = filledKeywordRows.length;
+  const demandText = totalDemand
+    ? `${g4NumFormat(totalDemand)} показов/мес`
     : draft.itemId
-      ? "нет данных о спросе для выбранных фраз"
+      ? "нет заполненных данных о спросе"
       : "нет данных";
 
-  const nameSuggestion = draft.name || clusterRule?.name || (allSegments.find((s) => s.itemId === draft.itemId && String(s.index) === String(draft.segmentIndex))?.name) || (itemCluster ? itemCluster.name : "");
+  const nameSuggestion = draft.name || (allSegments.find((s) => s.itemId === draft.itemId && String(s.index) === String(draft.segmentIndex))?.name) || (itemCluster ? itemCluster.name : "");
 
   return `<div class="g4-upstream" style="margin-top:12px">
     <div class="g4-upstream-title">${draft.editingClusterId ? "Изменение кластера" : "Сборка кластера"}</div>
     <p class="g1-task">1 кластер = 1 поисковое намерение = 1 группа объявлений. Основной JTBD определяет намерение, сообщение, оффер и посадочную. Дополнительный JTBD добавляйте, только если оффер, посадочная, сообщение и фразы у него те же — иначе соберите новый кластер.</p>
+    <div class="g1-fields-grid" style="margin-bottom:10px">
+      <label class="g1-field"><span>Название кластера</span><small style="color:var(--muted);font-size:11px;">Название отображается в заголовке карточки и в связанной группе объявлений.</small><input class="g1-input ${draft.name.trim() ? "is-filled" : "is-empty"}" ${p} data-g4sb-draft-field="name" value="${escapeAttr(draft.name)}" placeholder="${escapeAttr(nameSuggestion || "например: Отбеливание подошвы")}" /></label>
+    </div>
     <div class="g1-fields-grid">
       <label class="g1-field"><span>1. Сегмент</span><small style="color:var(--muted);font-size:11px;">Кто клиент и зачем ищет услугу. Данные Gate 1, по товарам.</small>
         <select class="g1-input is-filled" ${p} data-g4sb-draft-field="segmentPick">
@@ -33313,7 +33360,7 @@ g4sbClusterAssemblyHtml = function (product, d) {
           ${mainJtbdOptionsHtml}
         </select>
         ${draft.itemId && !jtbdList.length ? '<small style="color:var(--muted);font-size:11px;">У товара нет JTBD в Gate 1</small>' : ""}
-        ${hiddenMainCount > 0 ? `<small style="color:var(--muted);font-size:11px;">Показываются только продуктовые JTBD, которые могут быть основой отдельного кластера. Сервисные JTBD «Консьерж и быстрый заказ» используются в CTA и объявлениях.</small>` : ""}
+        ${hiddenMainCount > 0 ? `<small style="color:var(--muted);font-size:11px;">Скрыто ${hiddenMainCount} — уже основные в других кластерах этого товара.</small>` : ""}
       </label>
     </div>
     <div style="margin-top:12px;">
@@ -33323,14 +33370,10 @@ g4sbClusterAssemblyHtml = function (product, d) {
     </div>
     <div style="margin-top:12px;">
       <span style="font-weight:800;font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">4. Ключевые фразы</span>
-      ${phraseTableHtml}
-      ${extraPhrasesHtml}
-    </div>
-    <div class="g1-fields-grid" style="margin-top:10px">
-      <label class="g1-field"><span>5. Название кластера</span><small style="color:var(--muted);font-size:11px;">Независимо от названия JTBD — своё название кластера.</small><input class="g1-input ${draft.name.trim() ? "is-filled" : "is-empty"}" ${p} data-g4sb-draft-field="name" value="${escapeAttr(draft.name)}" placeholder="${escapeAttr(nameSuggestion || "например: Отбеливание подошвы")}" /></label>
+      ${keywordEditorHtml}
     </div>
     <div class="g4-upstream" style="margin-top:10px;">
-      <div class="g4-upstream-title">6. Итог</div>
+      <div class="g4-upstream-title">5. Итог</div>
       ${g4ReadonlyRow("Выбрано фраз", String(totalCount), "расчёт")}
       ${g4ReadonlyRow("Суммарный спрос", demandText, "Gate 1")}
     </div>
@@ -33341,25 +33384,26 @@ g4sbClusterAssemblyHtml = function (product, d) {
   </div>`;
 };
 
-/* ---- Сохранение черновика: пишем mainJtbdIndex/extraJtbdIndexes ---- */
+/* ---- Сохранение черновика: пишем mainJtbdIndex/extraJtbdIndexes.
+   Никакой зашитой проверки «допустимости» — пользователь сам выбрал
+   основной JTBD, доп. JTBD (до 3, лимит уже применён в обработчике
+   чекбоксов) и фразы; здесь только защита от мусора (сам себя как
+   доп. JTBD, дубли). ---- */
 g4sbSaveClusterDraft = function (product, d) {
   const draft = d.clusterDraft;
   if (!draft.itemId || !draft.mainJtbdIndex) return null;
-  const phraseSelection = (draft.phraseSelection || []).slice();
-  const extraPhrases = (draft.extraPhrases || []).map((p) => String(p || "").trim()).filter(Boolean);
-  if (!phraseSelection.length && !extraPhrases.length) return null;
   const itemCluster = g4sbClusterList(product).find((c) => c.id === draft.itemId);
   const name = String(draft.name || "").trim() || (itemCluster ? itemCluster.name : "Кластер");
-  const jtbdList = g4sbItemJtbdList(product, draft.itemId);
-  const clusterRule = g4sbRuleForMainJtbd(jtbdList, draft.mainJtbdIndex);
-  if (!clusterRule) return null;
-  const allowedExtraIndexes = new Set(
-    jtbdList
-      .filter((j) => clusterRule.extras.some((extra) => g4sbTextMatchesRule(j.text, [extra])))
-      .map((j) => String(j.index)),
-  );
+  const keywordRows = g4sbEnsureDraftKeywordRows(product, draft)
+    .map(g4sbKeywordRow)
+    .filter((row) => row.kw.trim());
+  if (!keywordRows.length) return null;
+  const phraseSelection = keywordRows.map((row) => row.kw.trim());
+  const extraPhrases = [];
+  g4sbSyncKeywordRowsToGate1(product, draft.itemId, keywordRows);
   const extraJtbdIndexes = (draft.extraJtbdIndexes || [])
-    .filter((idx) => allowedExtraIndexes.has(String(idx)))
+    .map(String)
+    .filter((idx, i, arr) => idx !== String(draft.mainJtbdIndex) && arr.indexOf(idx) === i)
     .slice(0, 3);
 
   if (draft.editingClusterId) {
@@ -33373,6 +33417,7 @@ g4sbSaveClusterDraft = function (product, d) {
       delete cluster.jtbdIndex;
       cluster.phraseSelection = phraseSelection;
       cluster.extraPhrases = extraPhrases;
+      cluster.demandRows = keywordRows;
       const linkedGroup = d.groupRows.find((r) => r.clusterId === cluster.id);
       if (linkedGroup && linkedGroup.nameAutoSynced !== false) linkedGroup.col0 = name;
     }
@@ -33390,6 +33435,7 @@ g4sbSaveClusterDraft = function (product, d) {
     extraJtbdIndexes,
     phraseSelection,
     extraPhrases,
+    demandRows: keywordRows,
   };
   d.clusters.push(cluster);
   d.groupRows.push({
@@ -33447,6 +33493,9 @@ document.addEventListener("click", (e) => {
     extraJtbdIndexes: (cluster.extraJtbdIndexes || []).slice(),
     phraseSelection: (cluster.phraseSelection || []).slice(),
     extraPhrases: (cluster.extraPhrases || []).slice(),
+    keywordRows: Array.isArray(cluster.demandRows)
+      ? cluster.demandRows.map(g4sbKeywordRow)
+      : undefined,
     name: cluster.name,
     phraseFilter: "all",
   };
@@ -33468,15 +33517,8 @@ document.addEventListener("change", (e) => {
       d.clusterDraft.extraJtbdIndexes = [];
       d.clusterDraft.phraseSelection = [];
       d.clusterDraft.extraPhrases = [];
+      d.clusterDraft.keywordRows = undefined;
       d.clusterDraft.phraseFilter = "all";
-      const rule = g4sbRuleForMainJtbd(
-        g4sbItemJtbdList(t.dataset.g4sbProduct, d.clusterDraft.itemId),
-        t.value,
-      );
-      if (rule && (!d.clusterDraft.name || d.clusterDraft.name === d.clusterDraft._suggestedName)) {
-        d.clusterDraft.name = rule.name;
-        d.clusterDraft._suggestedName = rule.name;
-      }
     }
     flashSaving();
     renderGate();
@@ -33534,6 +33576,44 @@ document.addEventListener("click", (e) => {
   if (t?.dataset?.g4sbDraftFilter === undefined) return;
   const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
   d.clusterDraft.phraseFilter = t.dataset.g4sbDraftFilter;
+  flashSaving();
+  renderGate();
+});
+
+document.addEventListener("input", (event) => {
+  const target = event.target;
+  if (target?.dataset?.g4sbKeywordRow === undefined) return;
+  const d = ensureGate4SearchBuild(target.dataset.g4sbProduct);
+  const rows = g4sbEnsureDraftKeywordRows(
+    target.dataset.g4sbProduct,
+    d.clusterDraft,
+  );
+  const row = rows[Number(target.dataset.g4sbKeywordRow)];
+  const field = target.dataset.g4sbKeywordField;
+  if (!row || !["kw", "vol", "growth", "source"].includes(field)) return;
+  row[field] = target.value;
+  target.classList.toggle("is-filled", Boolean(target.value.trim()));
+  target.classList.toggle("is-empty", !target.value.trim());
+  flashSaving();
+});
+
+document.addEventListener("click", (event) => {
+  const target = event.target;
+  if (
+    target?.dataset?.g4sbKeywordAdd === undefined &&
+    target?.dataset?.g4sbKeywordRemove === undefined
+  )
+    return;
+  const d = ensureGate4SearchBuild(target.dataset.g4sbProduct);
+  const rows = g4sbEnsureDraftKeywordRows(
+    target.dataset.g4sbProduct,
+    d.clusterDraft,
+  );
+  if (target.dataset.g4sbKeywordAdd !== undefined) {
+    rows.push(g4sbKeywordRow());
+  } else if (rows.length > 1) {
+    rows.splice(Number(target.dataset.g4sbKeywordRemove), 1);
+  }
   flashSaving();
   renderGate();
 });
@@ -33661,6 +33741,9 @@ function g4sbDuplicateCluster(product, d, clusterId) {
     extraJtbdIndexes: (original.extraJtbdIndexes || []).slice(),
     phraseSelection: (original.phraseSelection || []).slice(),
     extraPhrases: (original.extraPhrases || []).slice(),
+    demandRows: Array.isArray(original.demandRows)
+      ? original.demandRows.map(g4sbKeywordRow)
+      : undefined,
   };
   d.clusters.push(copy);
   d.groupRows.push({
@@ -33733,7 +33816,7 @@ function g4sbClusterListSectionHtml(product, d) {
   return `<p class="g1-task">Кластер — самостоятельная единица: сегмент, JTBD и фразы редактируются только здесь. Изменения сразу видны во всех группах, которые на него ссылаются.</p>
     ${
       d.clusters.length
-        ? `<div class="g1-fields-grid" style="margin-top:12px">
+        ? `<div class="g1-route" style="margin-top:12px;display:flex;flex-direction:column;gap:12px;">
       ${d.clusters.map((cluster) => g4sbClusterListItemHtml(product, d, cluster)).join("")}
     </div>`
         : `<div class="g1-empty">Кластеров пока нет — соберите первый кластер выше.</div>`
