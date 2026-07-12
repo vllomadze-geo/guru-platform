@@ -32789,6 +32789,9 @@ document.addEventListener("change", (e) => {
       // сменился товар — фразы и JTBD прошлого товара больше не подходят
       d.clusterDraft.phraseSelection = [];
       d.clusterDraft.jtbdIndex = "";
+      d.clusterDraft.mainJtbdIndex = "";
+      d.clusterDraft.extraJtbdIndexes = [];
+      d.clusterDraft.extraPhrases = [];
     }
     d.clusterDraft.itemId = itemId;
     d.clusterDraft.segmentIndex = index;
@@ -32957,13 +32960,116 @@ function g4sbClusterUsageMaps(d, itemId, excludeClusterId) {
   return { usedMainJtbd, jtbdUsage, phraseUsage };
 }
 
+/* ---- Gate 4: управляемая модель продуктовых JTBD-кластеров.
+   Gate 1 остаётся источником исходных JTBD и фраз; здесь мы только
+   определяем, какие элементы совместимы в одной рекламной группе. ---- */
+const G4SB_JTBD_CLUSTER_RULES = [
+  {
+    key: "general_cleaning",
+    name: "Общая химчистка обуви",
+    main: ["вернуть обуви аккуратный и первоначальный внешний вид"],
+    extras: [
+      "удалить пятна с замши и поднять ворс",
+      "почистить кроссовки из комбинированных материалов",
+      "очистить обувь внутри и провести дезинфекцию",
+    ],
+    phrases: ["химчист", "чистк", "почист", "кроссов", "замш", "пятн", "ворс", "дезинф", "внутри"],
+  },
+  {
+    key: "reagents",
+    name: "Реагенты и солевые разводы",
+    main: ["почистить обувь после реагентов и удалить солевые разводы"],
+    extras: [
+      "восстановить цвет мягкость и фактуру материала",
+      "сохранить оригинальный оттенок и естественную фактуру",
+    ],
+    phrases: ["реагент", "солев", "соль", "развод", "цвет", "фактур"],
+  },
+  {
+    key: "restoration",
+    name: "Реставрация обуви",
+    main: ["продолжить носить любимую пару вместо покупки новой"],
+    extras: [
+      "замаскировать сбитые мысы и царапины",
+      "восстановить форму замятой обуви",
+      "восстановить лакированную обувь и вернуть покрытию блеск",
+    ],
+    phrases: ["реставр", "восстанов", "ремонт", "любим", "царап", "мыс", "замят", "лакирован", "блеск"],
+  },
+  {
+    key: "sole_whitening",
+    name: "Отбеливание подошвы",
+    main: ["убрать желтизну с подошвы"],
+    extras: [],
+    phrases: ["подошв", "желтиз", "отбел"],
+  },
+  {
+    key: "high_boots",
+    name: "Высокие сапоги",
+    main: ["вернуть высокому сапогу форму голенища и вертикальную посадку"],
+    extras: ["восстановить форму замятой обуви"],
+    phrases: ["сапог", "голенищ", "вертикаль", "форма"],
+  },
+  {
+    key: "premium_care",
+    name: "Премиальный уход",
+    main: ["передать дорогую обувь мастерам которые подберут индивидуальную технологию"],
+    extras: [
+      "сохранить оригинальный оттенок и фактуру",
+      "подготовить обувь для делового или вечернего образа",
+    ],
+    phrases: ["преми", "дорог", "люкс", "индивидуальн", "делов", "вечерн", "уход"],
+  },
+];
+
+const G4SB_SERVICE_JTBD = [
+  "передать обувь через консьержа",
+  "узнать стоимость по фото",
+  "получить срочную обработку за 24 часа",
+];
+
+function g4sbNormalizeClusterText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/ё/g, "е")
+    .replace(/[^a-zа-я0-9]+/g, " ")
+    .trim();
+}
+
+function g4sbTextMatchesRule(value, samples) {
+  const normalized = g4sbNormalizeClusterText(value);
+  return (samples || []).some((sample) => {
+    const wanted = g4sbNormalizeClusterText(sample);
+    return normalized === wanted || normalized.includes(wanted) || wanted.includes(normalized);
+  });
+}
+
+function g4sbRuleForMainJtbd(jtbdList, mainIndex) {
+  const main = jtbdList.find((j) => String(j.index) === String(mainIndex));
+  if (!main) return null;
+  return G4SB_JTBD_CLUSTER_RULES.find((rule) => g4sbTextMatchesRule(main.text, rule.main)) || null;
+}
+
+function g4sbIsServiceJtbd(text) {
+  return g4sbTextMatchesRule(text, G4SB_SERVICE_JTBD);
+}
+
+function g4sbRelevantPhraseRows(product, itemId, rule, selectedSet) {
+  if (!rule) return [];
+  return g4sbClusterPhraseRows(product, itemId).filter((row) => {
+    if (selectedSet?.has(row.phrase)) return true;
+    const phrase = g4sbNormalizeClusterText(row.phrase);
+    return rule.phrases.some((part) => phrase.includes(g4sbNormalizeClusterText(part)));
+  });
+}
+
 /* ---- Таблица ключевых фраз: чекбокс + фраза + показов/мес +
    период спроса + источник, с фильтрами. Дизайн-система та же
    (.g1-table-scroll), редактор Gate 1 не дублируем. ---- */
-function g4sbPhraseTableHtml(product, itemId, selectedSet, filter, p, phraseUsage) {
-  const rows = g4sbClusterPhraseRows(product, itemId);
+function g4sbPhraseTableHtml(product, itemId, selectedSet, filter, p, phraseUsage, clusterRule) {
+  const rows = g4sbRelevantPhraseRows(product, itemId, clusterRule, selectedSet);
   if (!rows.length) {
-    return `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${itemId ? "У этого товара пока нет базовых фраз в Gate 1" : "Сначала выберите сегмент, чтобы увидеть фразы товара"}</div>`;
+    return `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${clusterRule ? "Для этого кластера в Gate 1 пока нет релевантных ключевых фраз" : "Сначала выберите основной JTBD, чтобы увидеть фразы кластера"}</div>`;
   }
   const filtered = rows.filter((r) => {
     if (filter === "selected") return selectedSet.has(r.phrase);
@@ -33031,27 +33137,30 @@ g4sbClusterAssemblyHtml = function (product, d) {
   const jtbdList = draft.itemId ? g4sbItemJtbdList(product, draft.itemId) : [];
   const usage = g4sbClusterUsageMaps(d, draft.itemId, draft.editingClusterId);
   const mainJtbdCandidates = jtbdList.filter(
-    (j) => !usage.usedMainJtbd.has(String(j.index)) || String(j.index) === String(draft.mainJtbdIndex),
+    (j) =>
+      !g4sbIsServiceJtbd(j.text) &&
+      G4SB_JTBD_CLUSTER_RULES.some((rule) => g4sbTextMatchesRule(j.text, rule.main)) &&
+      (!usage.usedMainJtbd.has(String(j.index)) || String(j.index) === String(draft.mainJtbdIndex)),
   );
   const hiddenMainCount = jtbdList.length - mainJtbdCandidates.length;
   const mainJtbdOptionsHtml = mainJtbdCandidates
     .map((j) => `<option value="${j.index}" ${String(draft.mainJtbdIndex) === String(j.index) ? "selected" : ""}>${escapeHtml(j.text.slice(0, 80))}</option>`)
     .join("");
 
-  const extraJtbdCandidates = jtbdList.filter((j) => String(j.index) !== String(draft.mainJtbdIndex));
+  const clusterRule = g4sbRuleForMainJtbd(jtbdList, draft.mainJtbdIndex);
+  const extraJtbdCandidates = clusterRule
+    ? jtbdList.filter(
+        (j) =>
+          String(j.index) !== String(draft.mainJtbdIndex) &&
+          clusterRule.extras.some((extra) => g4sbTextMatchesRule(j.text, [extra])),
+      )
+    : [];
   const extraJtbdSet = new Set((draft.extraJtbdIndexes || []).map(String));
   const extraJtbdSelectedList = extraJtbdCandidates.filter((j) => extraJtbdSet.has(String(j.index)));
-  const jtbdFilter = draft.extraJtbdFilter || "all";
-  const extraJtbdFiltered = extraJtbdCandidates.filter((j) => (jtbdFilter === "selected" ? extraJtbdSet.has(String(j.index)) : true));
-  const jtbdFilterBtn = (key, label) =>
-    `<button type="button" class="small-btn ${jtbdFilter === key ? "" : "secondary"}" ${p} data-g4sb-draft-jtbd-filter="${key}" style="font-size:11px;">${escapeHtml(label)}</button>`;
+  const extraJtbdFiltered = extraJtbdCandidates;
   const extraJtbdHtml = extraJtbdCandidates.length
     ? `<div class="g4-jtbd-block" ${p}>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;">
-          ${jtbdFilterBtn("all", "Все")}
-          ${jtbdFilterBtn("selected", "Только выбранные")}
-        </div>
-        <div class="g1-fields-grid" style="grid-template-columns:1fr !important;">
+        <div class="g1-fields-grid" style="grid-template-columns:1fr !important;margin-top:8px;">
           ${
             extraJtbdFiltered.length
               ? extraJtbdFiltered
@@ -33064,7 +33173,7 @@ g4sbClusterAssemblyHtml = function (product, d) {
               </label>`;
                   })
                   .join("")
-              : `<div class="g4-jtbd-empty-row">${jtbdFilter === "selected" ? "Ничего не выбрано" : "Других JTBD у этого товара нет"}</div>`
+              : `<div class="g4-jtbd-empty-row">Для этого кластера нет дополнительных JTBD</div>`
           }
         </div>
         <div data-g4sb-jtbd-summary style="margin-top:8px;font-size:12px;${extraJtbdSelectedList.length ? "" : "display:none;"}">
@@ -33074,11 +33183,11 @@ g4sbClusterAssemblyHtml = function (product, d) {
           </ul>
         </div>
       </div>`
-    : `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${draft.itemId ? "Других JTBD у этого товара нет" : ""}</div>`;
+    : `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${clusterRule ? "Для этого кластера дополнительные JTBD отсутствуют" : "Сначала выберите основной JTBD"}</div>`;
 
   const itemCluster = draft.itemId ? g4sbClusterList(product).find((c) => c.id === draft.itemId) : null;
   const selectedSet = new Set(draft.phraseSelection || []);
-  const phraseTableHtml = g4sbPhraseTableHtml(product, draft.itemId, selectedSet, draft.phraseFilter, p, usage.phraseUsage);
+  const phraseTableHtml = g4sbPhraseTableHtml(product, draft.itemId, selectedSet, draft.phraseFilter, p, usage.phraseUsage, clusterRule);
 
   const extraPhrasesHtml = `<div style="margin-top:10px;">
     <span style="font-weight:700;font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Дополнительные фразы (свои, не из Gate 1)</span>
@@ -33102,7 +33211,7 @@ g4sbClusterAssemblyHtml = function (product, d) {
       ? "нет данных о спросе для выбранных фраз"
       : "нет данных";
 
-  const nameSuggestion = draft.name || (allSegments.find((s) => s.itemId === draft.itemId && String(s.index) === String(draft.segmentIndex))?.name) || (itemCluster ? itemCluster.name : "");
+  const nameSuggestion = draft.name || clusterRule?.name || (allSegments.find((s) => s.itemId === draft.itemId && String(s.index) === String(draft.segmentIndex))?.name) || (itemCluster ? itemCluster.name : "");
 
   return `<div class="g4-upstream" style="margin-top:12px">
     <div class="g4-upstream-title">${draft.editingClusterId ? "Изменение кластера" : "Сборка кластера"}</div>
@@ -33120,11 +33229,11 @@ g4sbClusterAssemblyHtml = function (product, d) {
           ${mainJtbdOptionsHtml}
         </select>
         ${draft.itemId && !jtbdList.length ? '<small style="color:var(--muted);font-size:11px;">У товара нет JTBD в Gate 1</small>' : ""}
-        ${hiddenMainCount > 0 ? `<small style="color:var(--muted);font-size:11px;">Скрыто ${hiddenMainCount} — уже основные в других кластерах этого товара.</small>` : ""}
+        ${hiddenMainCount > 0 ? `<small style="color:var(--muted);font-size:11px;">Показываются только продуктовые JTBD, которые могут быть основой отдельного кластера. Сервисные JTBD «Консьерж и быстрый заказ» используются в CTA и объявлениях.</small>` : ""}
       </label>
     </div>
     <div style="margin-top:12px;">
-      <span style="font-weight:800;font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">3. Дополнительные JTBD (необязательно, можно несколько)</span>
+      <span style="font-weight:800;font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">3. Дополнительные JTBD (необязательно, максимум 3)</span>
       <small style="color:var(--muted);font-size:11px;">Только если тот же оффер, та же посадочная, то же сообщение и те же фразы. Для другого объявления/оффера/посадочной — новый кластер.</small>
       ${extraJtbdHtml}
     </div>
@@ -33157,7 +33266,17 @@ g4sbSaveClusterDraft = function (product, d) {
   if (!phraseSelection.length && !extraPhrases.length) return null;
   const itemCluster = g4sbClusterList(product).find((c) => c.id === draft.itemId);
   const name = String(draft.name || "").trim() || (itemCluster ? itemCluster.name : "Кластер");
-  const extraJtbdIndexes = (draft.extraJtbdIndexes || []).slice();
+  const jtbdList = g4sbItemJtbdList(product, draft.itemId);
+  const clusterRule = g4sbRuleForMainJtbd(jtbdList, draft.mainJtbdIndex);
+  if (!clusterRule) return null;
+  const allowedExtraIndexes = new Set(
+    jtbdList
+      .filter((j) => clusterRule.extras.some((extra) => g4sbTextMatchesRule(j.text, [extra])))
+      .map((j) => String(j.index)),
+  );
+  const extraJtbdIndexes = (draft.extraJtbdIndexes || [])
+    .filter((idx) => allowedExtraIndexes.has(String(idx)))
+    .slice(0, 3);
 
   if (draft.editingClusterId) {
     const cluster = d.clusters.find((c) => c.id === draft.editingClusterId);
@@ -33257,10 +33376,24 @@ document.addEventListener("change", (e) => {
   const t = e.target;
   if (t?.dataset?.g4sbDraftField === "mainJtbdIndex") {
     const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
+    const previousMain = d.clusterDraft.mainJtbdIndex;
     d.clusterDraft.mainJtbdIndex = t.value;
-    // основной JTBD сменился — прежние доп. JTBD могли включать
-    // новый основной или потерять смысл, пересобираем список без него
-    d.clusterDraft.extraJtbdIndexes = (d.clusterDraft.extraJtbdIndexes || []).filter((idx) => String(idx) !== String(t.value));
+    if (String(previousMain) !== String(t.value)) {
+      // Новый поисковый интент требует заново выбрать совместимые
+      // дополнительные JTBD и фразы именно этого кластера.
+      d.clusterDraft.extraJtbdIndexes = [];
+      d.clusterDraft.phraseSelection = [];
+      d.clusterDraft.extraPhrases = [];
+      d.clusterDraft.phraseFilter = "all";
+      const rule = g4sbRuleForMainJtbd(
+        g4sbItemJtbdList(t.dataset.g4sbProduct, d.clusterDraft.itemId),
+        t.value,
+      );
+      if (rule && (!d.clusterDraft.name || d.clusterDraft.name === d.clusterDraft._suggestedName)) {
+        d.clusterDraft.name = rule.name;
+        d.clusterDraft._suggestedName = rule.name;
+      }
+    }
     flashSaving();
     renderGate();
     return;
@@ -33270,7 +33403,11 @@ document.addEventListener("change", (e) => {
     const idx = t.dataset.g4sbDraftExtraJtbd;
     const list = d.clusterDraft.extraJtbdIndexes;
     const pos = list.findIndex((v) => String(v) === String(idx));
-    if (t.checked && pos === -1) list.push(idx);
+    if (t.checked && pos === -1 && list.length < 3) list.push(idx);
+    else if (t.checked && pos === -1) {
+      t.checked = false;
+      return;
+    }
     else if (!t.checked && pos !== -1) list.splice(pos, 1);
     flashSaving();
     // Точечное обновление вида (без renderGate — список теперь часть
