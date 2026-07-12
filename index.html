@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>УНИВЕРСАЛ / ГУРУ — платформа v1.2.0</title>
-    <link rel="stylesheet" href="styles.css?v=1.6.1" />
+    <link rel="stylesheet" href="styles.css?v=1.13.0" />
   </head>
   <body class="access-locked">
     <section
@@ -185,7 +185,26 @@
     </div>
 
     <div class="app-shell" id="appShell" hidden>
-      <aside class="sidebar">
+      <button
+        type="button"
+        class="sidebar-toggle"
+        id="sidebarToggle"
+        aria-label="Открыть меню"
+        aria-controls="appSidebar"
+        aria-expanded="false"
+      >
+        ☰
+      </button>
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <aside class="sidebar" id="appSidebar">
+        <button
+          type="button"
+          class="sidebar-close"
+          id="sidebarClose"
+          aria-label="Закрыть меню"
+        >
+          ×
+        </button>
         <div class="brand-block">
           <div class="brand-mark" id="brandMark">G</div>
           <div>
@@ -210,13 +229,13 @@
 
       <main class="main">
         <header class="topbar">
-          <div>
+          <div class="topbar-meta">
             <div class="eyebrow">Рабочая версия MVP · v1.2.0</div>
             <div id="supabaseStatus" class="supabase-status is-checking">
               Supabase: проверка подключения
             </div>
-            <h1 id="pageTitle">Платформа</h1>
           </div>
+          <h1 id="pageTitle">Платформа</h1>
           <div class="topbar-actions">
             <input type="file" id="csvInput" accept=".csv,text/csv" hidden />
             <input
@@ -359,7 +378,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="seed-data.js?v=1.1.11"></script>
-    <script src="app.js?v=1.6.3"></script>
+    <script src="app.js?v=1.25.0"></script>
     <script src="supabase-test.js?v=1.1.11"></script>
   </body>
 </html>

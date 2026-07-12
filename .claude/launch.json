@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "guru",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "/Users/vl/Developer/guru-platform"],
-      "port": 8765
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "PORT=${PORT:-3000} node local-dev-server.js"],
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }

@@ -8,7 +8,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       ok: false,
       status: 'missing_env',
-      message: 'Supabase environment variables are missing in Vercel.'
+      message: 'Supabase environment variables are missing on the server.'
     });
   }
 
