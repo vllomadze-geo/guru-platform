@@ -33600,3 +33600,228 @@ document.addEventListener("click", (e) => {
     drawerQuery.addListener(handleModeChange);
   }
 })();
+
+/* ============================================================
+   v1.23.0 — Единый механизм готовности Gate 0–7
+   ------------------------------------------------------------
+   Одна формула на все Gate:
+       готовность = (Готово + Не требуется) / рабочие_блоки × 100
+   Блоки собираются по-разному (данные Gate неоднородны), но сама
+   формула и обновление интерфейса — общие. Проценты нигде не
+   задаются вручную: всегда вычисляются из реального состояния.
+   Блок «Не требуется» на уровне готовности возникает автоматически,
+   когда все его элементы помечены «Не требуется» (такой блок уже
+   даёт статус «Готово») либо когда событие/кампания исключены.
+   ============================================================ */
+
+// Приведение любого статуса (блока, элемента, события, кампании) к
+// канонической шкале готовности блока. «Готово»-состояния: ready,
+// not_required — они попадают в числитель. Остальное снижает процент.
+function guruNormBlockStatus(value) {
+  const s = String(value || "");
+  if (s === "ready" || s === "ready_prepare" || s === "ready_launch" || s === "done" || s === "works")
+    return "ready";
+  if (s === "not_required" || s === "excluded" || s === "not_needed")
+    return "not_required";
+  if (s === "problem" || s === "broken") return "problem";
+  if (s === "in_progress" || s === "needs_review" || s === "needs_improvement")
+    return "in_progress";
+  return "not_started";
+}
+
+// Единая свёртка массива статусов рабочих блоков → готовность Gate.
+// Это ЕДИНСТВЕННАЯ формула готовности; для Gate 0–7 она одна и та же.
+function guruReadinessFromStatuses(rawStatuses) {
+  const statuses = (rawStatuses || []).map(guruNormBlockStatus);
+  const total = statuses.length;
+  const ready = statuses.filter((s) => s === "ready").length;
+  const notRequired = statuses.filter((s) => s === "not_required").length;
+  const inProgress = statuses.filter((s) => s === "in_progress").length;
+  const problem = statuses.filter((s) => s === "problem").length;
+  const notStarted = statuses.filter((s) => s === "not_started").length;
+  const done = ready + notRequired;
+  return {
+    total,
+    done,
+    ready,
+    notRequired,
+    inProgress,
+    problem,
+    notStarted,
+    percent: total ? Math.round((done / total) * 100) : 0,
+  };
+}
+
+// Сбор статусов рабочих блоков Gate. Формула общая — различается только
+// перечисление блоков, т.к. данные Gate 0–7 хранятся по-разному.
+function guruGateBlockStatuses(gate) {
+  if (!gate) return [];
+  const id = gate.id;
+  const cards = Array.isArray(gate.cards) ? gate.cards : [];
+  const safe = (fn, fallback) => {
+    try {
+      return fn();
+    } catch (e) {
+      return fallback;
+    }
+  };
+  const cardStatuses = () =>
+    cards
+      .filter(
+        (c) =>
+          !(
+            typeof isRemovedGate1StandaloneBlock === "function" &&
+            isRemovedGate1StandaloneBlock(c)
+          ),
+      )
+      .map((c) => c.status);
+
+  if (id === "gate-1") {
+    // Типизированные единицы: продуктовые карты + маршрут спроса +
+    // юнит-экономика + карточки технического аудита.
+    const out = [];
+    safe(
+      () =>
+        typeof pv140EnsureProductMaps === "function"
+          ? pv140EnsureProductMaps()
+          : [],
+      [],
+    ).forEach((m) => {
+      const ms = pv140ProductMapStatus(m);
+      out.push(ms && ms.status ? ms.status : ms);
+    });
+    if (typeof getDemandRouteStatus === "function")
+      out.push(safe(() => getDemandRouteStatus(), "not_started"));
+    if (typeof getUnitEconomicsStatus === "function")
+      out.push(safe(() => getUnitEconomicsStatus(), "not_started"));
+    cards
+      .filter((c) => typeof isTechCard === "function" && isTechCard(c))
+      .forEach((c) => out.push(c.status));
+    return out.length ? out : cardStatuses();
+  }
+
+  if (id === "gate-4") {
+    // Типизированные единицы: кампании запуска (товар × канал).
+    return safe(() => {
+      const campaigns =
+        typeof g4EnsureLaunchCampaigns === "function"
+          ? g4EnsureLaunchCampaigns()
+          : {};
+      const products =
+        typeof g4LaunchProducts === "function" ? g4LaunchProducts() : [];
+      const channels =
+        typeof g4LaunchChannels === "function" ? g4LaunchChannels() : [];
+      const out = [];
+      products.forEach((product) => {
+        channels.forEach((channel) => {
+          const key = g4CampaignStateKey(product, channel.key);
+          out.push(g4CampaignStatus(campaigns[key] || {}));
+        });
+      });
+      return out.length ? out : cardStatuses();
+    }, cardStatuses());
+  }
+
+  if (id === "gate-5") {
+    return safe(
+      () =>
+        ["setup", "input", "ad", "bridge", "finance", "journal"].map((k) =>
+          getGate5BlockStatus(k),
+        ),
+      [],
+    );
+  }
+
+  if (id === "gate-6") {
+    return safe(() => {
+      const g6 = ensureGate6State();
+      return GATE6_QUARTERS.flatMap((q) =>
+        q.events.map((ev) =>
+          gate6EventStatus(g6.events[gate6QuarterEventKey(q.key, ev.key)]),
+        ),
+      );
+    }, []);
+  }
+
+  if (id === "gate-7") {
+    return safe(
+      () =>
+        ensureGate7State().tasks.map((t) =>
+          t.sectionId === "done" ? "ready" : gate7TaskStatus(t),
+        ),
+      [],
+    );
+  }
+
+  // Gate 0, 2, 3 — карточки-блоки (минус явно удалённые).
+  return cardStatuses();
+}
+
+function guruGateReadiness(gate) {
+  return guruReadinessFromStatuses(guruGateBlockStatuses(gate));
+}
+
+function guruProjectReadiness() {
+  const all = [];
+  (state && state.gates ? state.gates : []).forEach((g) => {
+    guruGateBlockStatuses(g).forEach((s) => all.push(s));
+  });
+  return guruReadinessFromStatuses(all);
+}
+
+// Левое меню: число рабочих блоков и процент — из единого механизма.
+renderGateNav = function () {
+  if (!state || !state.gates) return;
+  els.gateNav.innerHTML = state.gates
+    .map((g) => {
+      const r = guruGateReadiness(g);
+      const cls =
+        activeView === "gate" && activeGateId === g.id ? "active" : "";
+      return `<button class="gate-btn ${cls}" data-gate-id="${escapeAttr(g.id)}">${escapeHtml(g.title)}<span class="small">${r.total} блоков, готово ${r.percent}%</span></button>`;
+    })
+    .join("");
+  document.querySelectorAll("[data-gate-id]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeView = "gate";
+      activeGateId = btn.dataset.gateId;
+      render();
+    });
+  });
+};
+
+// Сводка проекта: общий процент и число рабочих блоков — тот же механизм.
+renderSummary = function () {
+  if (activeView !== "project") {
+    els.summaryGrid.hidden = true;
+    els.summaryGrid.innerHTML = "";
+    return;
+  }
+  els.summaryGrid.hidden = false;
+  const r = guruProjectReadiness();
+  const gatesCount = state.gates.length;
+  const metricsCount = state.metrics?.length || 0;
+  els.summaryGrid.innerHTML = `
+    <div class="summary-card"><div class="summary-label">Gate</div><div class="summary-value">${gatesCount}</div><div class="summary-help">крупных этапов</div></div>
+    <div class="summary-card"><div class="summary-label">Блоки</div><div class="summary-value">${r.total}</div><div class="summary-help">рабочих блоков</div></div>
+    <div class="summary-card"><div class="summary-label">Готово</div><div class="summary-value">${r.percent}%</div><div class="summary-help">${r.done} из ${r.total}, вкл. «не требуется»</div></div>
+    <div class="summary-card"><div class="summary-label">Метрики</div><div class="summary-value">${metricsCount}</div><div class="summary-help">строк данных</div></div>
+  `;
+};
+
+// Реалтайм: после любого сохранения статуса пересчитываем меню и сводку.
+// Контент-область НЕ трогаем — фокус и ввод пользователя не теряются.
+function guruRefreshReadiness() {
+  if (!state || !state.gates) return;
+  try {
+    renderGateNav();
+  } catch (e) {}
+  try {
+    renderSummary();
+  } catch (e) {}
+}
+const __guruPrevSaveStateReadiness = saveState;
+saveState = function () {
+  const result = __guruPrevSaveStateReadiness.apply(this, arguments);
+  guruRefreshReadiness();
+  return result;
+};
