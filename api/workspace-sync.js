@@ -7,15 +7,15 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url || !key) {
-    return res.status(200).json({ ok: false, error: 'missing_env', detail: 'SUPABASE_URL or key not set' });
+    return res.status(200).json({ ok: false, error: 'missing_env', detail: 'NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set' });
   }
 
   try {
     if (req.method === 'POST') {
-      const { project_id, state } = req.body || {};
+      const { project_id, state, base_updated_at = '', force = false } = req.body || {};
       if (!project_id || !state) {
         return res.status(200).json({ ok: false, error: 'missing_fields' });
       }
@@ -30,6 +30,55 @@ module.exports = async function handler(req, res) {
       };
       const projectName = state?.project?.name || (project_id === '__guru_project_registry__' ? 'GURU Project Registry' : '');
       const schemaVersion = state?.schemaVersion || state?.schema_version || '';
+
+      const currentEndpoint = `${url}/rest/v1/guru_workspaces?project_id=eq.${encodeURIComponent(project_id)}&select=*&limit=1`;
+      const currentResponse = await fetch(currentEndpoint, {
+        headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' }
+      });
+      if (!currentResponse.ok) {
+        const detail = await currentResponse.text();
+        return res.status(200).json({ ok: false, error: 'supabase_read_before_write_error', status: currentResponse.status, detail });
+      }
+      const currentRows = await currentResponse.json();
+      const currentRow = Array.isArray(currentRows) && currentRows.length ? currentRows[0] : null;
+      const currentState = currentRow?.workspace_data || currentRow?.state || null;
+      const currentUpdatedAt = currentRow?.updated_at || '';
+      const incomingStateUpdatedAt = String(state?.updatedAt || state?.updated_at || '');
+      const currentStateUpdatedAt = String(currentState?.updatedAt || currentState?.updated_at || currentUpdatedAt || '');
+
+      if (currentRow && !force) {
+        const baseChanged = base_updated_at && currentUpdatedAt && base_updated_at !== currentUpdatedAt;
+        const incomingIsOlder = !base_updated_at && currentStateUpdatedAt && (!incomingStateUpdatedAt || incomingStateUpdatedAt < currentStateUpdatedAt);
+        if (baseChanged || incomingIsOlder) {
+          return res.status(200).json({
+            ok: false,
+            error: 'conflict',
+            cloud_updated_at: currentUpdatedAt,
+            cloud_state_updated_at: currentStateUpdatedAt,
+            state: currentState,
+          });
+        }
+      }
+
+      if (currentRow && currentState) {
+        try {
+          await fetch(`${url}/rest/v1/guru_workspace_versions`, {
+            method: 'POST',
+            headers: {
+              apikey: key,
+              Authorization: `Bearer ${key}`,
+              'Content-Type': 'application/json',
+              Prefer: 'return=minimal'
+            },
+            body: JSON.stringify({
+              project_id,
+              workspace_data: currentState,
+              source_updated_at: currentUpdatedAt || null,
+              saved_at: updatedAt,
+            })
+          });
+        } catch (_) { /* version history is best effort */ }
+      }
 
       const writeAttempts = [
         {
@@ -57,7 +106,7 @@ module.exports = async function handler(req, res) {
         const errText = await response.text();
         return res.status(200).json({ ok: false, error: 'supabase_write_error', status: response.status, detail: errText });
       }
-      return res.status(200).json({ ok: true });
+      return res.status(200).json({ ok: true, updated_at: updatedAt });
     }
 
     if (req.method === 'GET') {

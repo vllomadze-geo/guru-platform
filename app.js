@@ -10,6 +10,8 @@ const WORKSPACE_STORAGE_PREFIX = "guru-platform-workspace-v02-";
 const PLATFORM_VERSION = "v1.1.11";
 var _syncTimer = null;
 var _projectRegistrySyncTimer = null;
+const _cloudWorkspaceVersions = new Map();
+let _cloudRegistryUpdatedAt = "";
 var _appBootstrapped = false;
 const STATUS_LABELS = {
   not_started: "Не начато",
@@ -710,6 +712,8 @@ function showLauncher() {
 }
 
 function openProject(projectId) {
+  const localRaw = localStorage.getItem(WORKSPACE_STORAGE_PREFIX + projectId);
+  const hadLocalWorkspace = Boolean(localRaw);
   activeProjectId = projectId;
   state = loadState(projectId);
   activeView = "project";
@@ -717,15 +721,30 @@ function openProject(projectId) {
   els.launcher.hidden = true;
   els.appShell.hidden = false;
   render();
-  loadFromSupabase(projectId).then((cloudState) => {
+  loadFromSupabase(projectId).then((cloudResult) => {
     if (activeProjectId !== projectId) return;
-    if (!cloudState) {
-      saveState();
+    if (!cloudResult) {
+      // Реестр проекта может существовать без workspace. Не отправляем
+      // автоматически созданный пустой seed поверх возможных данных.
+      if (hadLocalWorkspace) pushToSupabase(projectId, state);
+      else {
+        els.saveStatus.textContent = "Данных проекта пока нет";
+        els.autosaveDot.style.background = "#d4b05f";
+      }
       return;
     }
+    const cloudState = cloudResult.state;
+    _cloudWorkspaceVersions.set(projectId, cloudResult.cloudUpdatedAt || "");
     const local = state?.updatedAt || "";
     const cloud = cloudState.updatedAt || "";
-    if (cloud > local) {
+    if (!hadLocalWorkspace || cloud > local) {
+      if (hadLocalWorkspace && localRaw) {
+        safeStorageSet(
+          STORAGE_BACKUP_PREFIX + projectId + "-before-cloud-" + Date.now(),
+          localRaw,
+          { silent: true },
+        );
+      }
       state = migrateWorkspace(cloudState, projectId);
       safeStorageSet(
         WORKSPACE_STORAGE_PREFIX + projectId,
@@ -735,8 +754,11 @@ function openProject(projectId) {
       render();
       els.saveStatus.textContent = "Загружено из облака";
       els.autosaveDot.style.background = "#4a9eff";
+    } else if (local > cloud) {
+      pushToSupabase(projectId, state);
     } else {
-      saveState();
+      els.saveStatus.textContent = "Синхронизировано с облаком";
+      els.autosaveDot.style.background = "#4a9eff";
     }
   });
 }
@@ -5531,11 +5553,14 @@ document.getElementById("newProjectName").addEventListener("keydown", (e) => {
 });
 
 async function hydrateProjectsFromCloud() {
-  const registry = await loadProjectRegistryFromSupabase();
-  if (!registry) {
+  const registryResult = await loadProjectRegistryFromSupabase();
+  if (!registryResult) {
     saveProjects();
+    await hydrateAllProjectWorkspacesFromCloud();
     return;
   }
+  const registry = registryResult.state;
+  _cloudRegistryUpdatedAt = registryResult.cloudUpdatedAt || "";
   const changed = applyProjectRegistryPayload(registry);
   if (
     changed ||
@@ -5543,6 +5568,44 @@ async function hydrateProjectsFromCloud() {
       JSON.stringify(normalizeProjects(projects))
   ) {
     scheduleProjectsCloudSync();
+  }
+  await hydrateAllProjectWorkspacesFromCloud();
+}
+
+async function hydrateAllProjectWorkspacesFromCloud() {
+  for (const project of projects) {
+    const projectId = project.id;
+    const localKey = WORKSPACE_STORAGE_PREFIX + projectId;
+    const localRaw = localStorage.getItem(localKey);
+    let localState = null;
+    try {
+      localState = localRaw ? JSON.parse(localRaw) : null;
+    } catch (_) {}
+
+    const cloudResult = await loadFromSupabase(projectId);
+    if (!cloudResult?.state) {
+      if (localState) await pushToSupabase(projectId, localState, { silent: true });
+      continue;
+    }
+
+    _cloudWorkspaceVersions.set(projectId, cloudResult.cloudUpdatedAt || "");
+    const cloudState = cloudResult.state;
+    const localUpdatedAt = String(localState?.updatedAt || "");
+    const cloudUpdatedAt = String(cloudState?.updatedAt || "");
+
+    if (!localState || cloudUpdatedAt > localUpdatedAt) {
+      if (localRaw) {
+        safeStorageSet(
+          STORAGE_BACKUP_PREFIX + projectId + "-before-cloud-" + Date.now(),
+          localRaw,
+          { silent: true },
+        );
+      }
+      const migrated = migrateWorkspace(cloudState, projectId);
+      safeStorageSet(localKey, JSON.stringify(migrated));
+    } else if (localUpdatedAt > cloudUpdatedAt) {
+      await pushToSupabase(projectId, localState, { silent: true });
+    }
   }
 }
 
@@ -14076,10 +14139,16 @@ async function pushToSupabase(
     const response = await fetch("/api/workspace-sync", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ project_id: projectId, state: workspace }),
+      body: JSON.stringify({
+        project_id: projectId,
+        state: workspace,
+        base_updated_at: _cloudWorkspaceVersions.get(projectId) || "",
+      }),
     });
     const data = await response.json();
-    if (data.ok && !options.silent) {
+    if (data.ok) {
+      if (data.updated_at) _cloudWorkspaceVersions.set(projectId, data.updated_at);
+      if (options.silent) return data;
       els.saveStatus.textContent =
         "Облако ✓ " +
         new Date().toLocaleTimeString("ru-RU", {
@@ -14089,6 +14158,15 @@ async function pushToSupabase(
       els.autosaveDot.style.background = "#4a9eff";
     } else if (!data.ok) {
       console.warn("Supabase sync error:", data.error, data.detail);
+      if (data.error === "conflict" && data.state) {
+        safeStorageSet(
+          STORAGE_BACKUP_PREFIX + projectId + "-cloud-conflict-" + Date.now(),
+          JSON.stringify(data.state),
+          { silent: true },
+        );
+        if (data.cloud_updated_at)
+          _cloudWorkspaceVersions.set(projectId, data.cloud_updated_at);
+      }
       // missing_env — облако просто не настроено, локальное сохранение прошло:
       // не пугаем «ошибкой записи», статус «Сохранено» остаётся на месте
       if (!options.silent && data.error !== "missing_env") {
@@ -14109,9 +14187,11 @@ async function pushProjectsToSupabase() {
       body: JSON.stringify({
         project_id: PROJECT_REGISTRY_CLOUD_ID,
         state: projectRegistryPayload(),
+        base_updated_at: _cloudRegistryUpdatedAt,
       }),
     });
     const data = await response.json();
+    if (data.ok && data.updated_at) _cloudRegistryUpdatedAt = data.updated_at;
     if (!data.ok)
       console.warn("Supabase projects sync error:", data.error, data.detail);
   } catch (e) {
@@ -14127,8 +14207,11 @@ async function loadFromSupabase(projectId) {
     const data = await response.json();
     if (data.ok && data.state) {
       return {
-        ...data.state,
-        updatedAt: data.state.updatedAt || data.updated_at || data.updatedAt,
+        state: {
+          ...data.state,
+          updatedAt: data.state.updatedAt || data.updated_at || data.updatedAt,
+        },
+        cloudUpdatedAt: data.updated_at || "",
       };
     }
   } catch (e) {
@@ -14143,7 +14226,8 @@ async function loadProjectRegistryFromSupabase() {
       `/api/workspace-sync?project_id=${encodeURIComponent(PROJECT_REGISTRY_CLOUD_ID)}`,
     );
     const data = await response.json();
-    if (data.ok && data.state) return data.state;
+    if (data.ok && data.state)
+      return { state: data.state, cloudUpdatedAt: data.updated_at || "" };
   } catch (e) {
     console.warn("Supabase projects load failed, using localStorage", e);
   }
