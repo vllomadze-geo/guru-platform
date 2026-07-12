@@ -32927,10 +32927,40 @@ function g4sbSelectionSummary(product, itemId, selectedPhrases) {
   return { count: (selectedPhrases || []).length, total, withDemand };
 }
 
+/* ---- Связь JTBD/фраз между кластерами одного товара: связывание
+   живёт только в Gate 4 (Gate 1 остаётся источником сырых сегментов/
+   JTBD/фраз/спроса, без изменений). Основной JTBD, уже занятый под
+   намерение другого кластера этого товара, исключается из выбора —
+   1 намерение не может быть основным дважды. Доп. JTBD и фразы не
+   блокируются (одна и та же доп. деталь может подходить нескольким
+   кластерам — так и в реальных данных), но помечаются, в каком ещё
+   кластере уже используются, чтобы не задвоить по невнимательности.
+   editingClusterId исключается из подсчёта — редактируемый кластер
+   не конфликтует сам с собой. ---- */
+function g4sbClusterUsageMaps(d, itemId, excludeClusterId) {
+  const usedMainJtbd = new Set();
+  const jtbdUsage = new Map();
+  const phraseUsage = new Map();
+  const addUsage = (map, key, clusterName) => {
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(clusterName);
+  };
+  (d.clusters || []).forEach((c) => {
+    if (!itemId || c.itemId !== itemId || c.id === excludeClusterId) return;
+    if (c.mainJtbdIndex !== undefined && c.mainJtbdIndex !== "") {
+      usedMainJtbd.add(String(c.mainJtbdIndex));
+      addUsage(jtbdUsage, String(c.mainJtbdIndex), c.name);
+    }
+    (c.extraJtbdIndexes || []).forEach((idx) => addUsage(jtbdUsage, String(idx), c.name));
+    (c.phraseSelection || []).forEach((phrase) => addUsage(phraseUsage, phrase, c.name));
+  });
+  return { usedMainJtbd, jtbdUsage, phraseUsage };
+}
+
 /* ---- Таблица ключевых фраз: чекбокс + фраза + показов/мес +
    период спроса + источник, с фильтрами. Дизайн-система та же
    (.g1-table-scroll), редактор Gate 1 не дублируем. ---- */
-function g4sbPhraseTableHtml(product, itemId, selectedSet, filter, p) {
+function g4sbPhraseTableHtml(product, itemId, selectedSet, filter, p, phraseUsage) {
   const rows = g4sbClusterPhraseRows(product, itemId);
   if (!rows.length) {
     return `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${itemId ? "У этого товара пока нет базовых фраз в Gate 1" : "Сначала выберите сегмент, чтобы увидеть фразы товара"}</div>`;
@@ -32964,7 +32994,11 @@ function g4sbPhraseTableHtml(product, itemId, selectedSet, filter, p) {
               .map(
                 (r) => `<tr>
         <td style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--line);"><input type="checkbox" ${p} data-g4sb-draft-phrase="${escapeAttr(r.phrase)}" ${selectedSet.has(r.phrase) ? "checked" : ""} /></td>
-        <td style="padding:6px 8px;border-bottom:1px solid var(--line);">${escapeHtml(r.phrase)}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid var(--line);">${escapeHtml(r.phrase)}${
+          phraseUsage && phraseUsage.get(r.phrase)
+            ? `<span style="color:var(--muted);font-size:11px;margin-left:6px;">· уже в «${escapeHtml(phraseUsage.get(r.phrase).join("», «"))}»</span>`
+            : ""
+        }</td>
         <td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);">${r.volText ? escapeHtml(r.volText) : '<span style="color:var(--muted);">—</span>'}</td>
         <td style="padding:6px 8px;border-bottom:1px solid var(--line);">${r.period ? escapeHtml(r.period) : '<span style="color:var(--muted);">—</span>'}</td>
         <td style="padding:6px 8px;border-bottom:1px solid var(--line);">${r.source ? escapeHtml(r.source) : '<span style="color:var(--muted);">—</span>'}</td>
@@ -32995,7 +33029,12 @@ g4sbClusterAssemblyHtml = function (product, d) {
     .join("");
 
   const jtbdList = draft.itemId ? g4sbItemJtbdList(product, draft.itemId) : [];
-  const mainJtbdOptionsHtml = jtbdList
+  const usage = g4sbClusterUsageMaps(d, draft.itemId, draft.editingClusterId);
+  const mainJtbdCandidates = jtbdList.filter(
+    (j) => !usage.usedMainJtbd.has(String(j.index)) || String(j.index) === String(draft.mainJtbdIndex),
+  );
+  const hiddenMainCount = jtbdList.length - mainJtbdCandidates.length;
+  const mainJtbdOptionsHtml = mainJtbdCandidates
     .map((j) => `<option value="${j.index}" ${String(draft.mainJtbdIndex) === String(j.index) ? "selected" : ""}>${escapeHtml(j.text.slice(0, 80))}</option>`)
     .join("");
 
@@ -33018,9 +33057,10 @@ g4sbClusterAssemblyHtml = function (product, d) {
               ? extraJtbdFiltered
                   .map((j) => {
                     const checked = extraJtbdSet.has(String(j.index));
+                    const usedIn = usage.jtbdUsage.get(String(j.index));
                     return `<label class="g4-jtbd-row ${checked ? "is-checked" : ""}" data-g4sb-jtbd-row>
                 <input type="checkbox" ${p} data-g4sb-draft-extra-jtbd="${j.index}" ${checked ? "checked" : ""} ${!draft.mainJtbdIndex ? "disabled" : ""} />
-                <span class="g4-jtbd-row-text">${escapeHtml(j.text)}</span>
+                <span class="g4-jtbd-row-text">${escapeHtml(j.text)}${usedIn ? `<span style="color:var(--muted);font-size:11px;margin-left:6px;">· уже в «${escapeHtml(usedIn.join("», «"))}»</span>` : ""}</span>
               </label>`;
                   })
                   .join("")
@@ -33038,7 +33078,7 @@ g4sbClusterAssemblyHtml = function (product, d) {
 
   const itemCluster = draft.itemId ? g4sbClusterList(product).find((c) => c.id === draft.itemId) : null;
   const selectedSet = new Set(draft.phraseSelection || []);
-  const phraseTableHtml = g4sbPhraseTableHtml(product, draft.itemId, selectedSet, draft.phraseFilter, p);
+  const phraseTableHtml = g4sbPhraseTableHtml(product, draft.itemId, selectedSet, draft.phraseFilter, p, usage.phraseUsage);
 
   const extraPhrasesHtml = `<div style="margin-top:10px;">
     <span style="font-weight:700;font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Дополнительные фразы (свои, не из Gate 1)</span>
@@ -33080,6 +33120,7 @@ g4sbClusterAssemblyHtml = function (product, d) {
           ${mainJtbdOptionsHtml}
         </select>
         ${draft.itemId && !jtbdList.length ? '<small style="color:var(--muted);font-size:11px;">У товара нет JTBD в Gate 1</small>' : ""}
+        ${hiddenMainCount > 0 ? `<small style="color:var(--muted);font-size:11px;">Скрыто ${hiddenMainCount} — уже основные в других кластерах этого товара.</small>` : ""}
       </label>
     </div>
     <div style="margin-top:12px;">
