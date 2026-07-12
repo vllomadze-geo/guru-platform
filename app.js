@@ -30888,9 +30888,7 @@ document.addEventListener("click", (e) => {
   const t = e.target;
   if (t?.dataset?.g4sbProduct === undefined) return;
   const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
-  if (t.dataset.g4sbGroupAdd !== undefined) d.groupRows.push({});
-  else if (t.dataset.g4sbSync !== undefined) g4SeedGroupsFromSemantics(t.dataset.g4sbProduct, d);
-  else if (t.dataset.g4sbGroupRemove !== undefined) {
+  if (t.dataset.g4sbGroupRemove !== undefined) {
     if (d.groupRows.length <= 1) return;
     const gi = Number(t.dataset.g4sbGroupRemove);
     d.groupRows.splice(gi, 1);
@@ -31220,7 +31218,6 @@ ensureGate4SearchBuild = function (product) {
   const d = __g4V1120PrevEnsureSearchBuild(product);
   d.settings = d.settings || { geo: "", strategy: "", dateFrom: "", dateTo: "" };
   d.groupRows.forEach((row) => {
-    if (row.clusterKey === undefined) row.clusterKey = "";
     if (row.minus === undefined) row.minus = "";
   });
   return d;
@@ -31250,7 +31247,6 @@ function g4sbUniversalHeaderHtml(product) {
   const ctx = g4CampaignContext(product);
   const sem = g4ProductSemantics(product);
   return `<div class="g4-upstream">
-    <div class="g4-upstream-title">Шапка кампании — накопленные данные проекта</div>
     ${g4ReadonlyRow("Продукт / направление", product || g0.product, product ? "направление Gate 4" : "Gate 0 «Что продаём»")}
     ${g4ReadonlyRow("Посадочная страница", ctx.landingUrl || ctx.landingStatus, "Gate 2 «Посадочные под продукты»")}
     ${g4ReadonlyRow("Оффер", ctx.offer, "Gate 1 «Продуктовые карты»")}
@@ -31669,7 +31665,6 @@ g4sbUniversalHeaderHtml = function (product, d) {
   const allPhrasesFlat = g4sbClusterList(product).flatMap((c) => c.phrases);
   const phraseCount = new Set(allPhrasesFlat).size;
   return `<div class="g4-upstream">
-    <div class="g4-upstream-title">Шапка кампании — накопленные данные проекта</div>
     ${g4ReadonlyRow("Продукт / направление", product || g0.product, product ? "направление Gate 4" : "Gate 0 «Что продаём»")}
     ${g4ReadonlyRow("Посадочная страница", ctx.landingUrl || ctx.landingStatus, "Gate 2 «Посадочные под продукты»")}
     ${g4ReadonlyRow("Оффер", ctx.offer, "Gate 1 «Продуктовые карты»")}
@@ -31701,8 +31696,7 @@ g4sbSettingsHtml = function (product, channel, campaign, d) {
     campaign.budget ||
     [ctx.cpa && "CPA " + ctx.cpa, ctx.cpl && "CPL " + ctx.cpl].filter(Boolean).join(" / ");
   const decisionSelect = `<label class="g1-field"><span>Решение</span><small style="color:var(--muted);font-size:11px;">Выбирается вручную. Статус карточки система считает сама.</small><select class="g1-input is-filled" data-g4c2-product="${escapeAttr(product)}" data-g4c2-key="${escapeAttr(channel.key)}" data-g4c2-field="decision">${G4_SEARCH_DECISIONS.map(([v, l]) => `<option value="${escapeAttr(v)}" ${campaign.decision === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}</select></label>`;
-  return `<div style="margin-top:16px;font-weight:800;font-size:14px;margin-bottom:12px;">Настройки кампании</div>
-    <p class="g1-task">Уровень всей кампании. Оффер и посадочная — в шапке выше, здесь не дублируются.</p>
+  return `<p class="g1-task">Уровень всей кампании. Оффер и посадочная — в шапке выше, здесь не дублируются.</p>
     <div class="g1-fields-grid">
       ${decisionSelect}
       ${g4v192Field(product, channel.key, "campaignName", "Название кампании", campaign.campaignName, defaultName)}
@@ -31903,17 +31897,6 @@ g4sbClusterList = function (product) {
   return list;
 };
 
-function g4sbFindCluster(product, group) {
-  const clusters = g4sbClusterList(product);
-  if (group.itemId) {
-    const byId = clusters.find((c) => c.id === group.itemId);
-    if (byId) return byId;
-  }
-  // обратная совместимость: группы, созданные до появления itemId
-  if (group.clusterKey) return clusters.find((c) => c.name === group.clusterKey) || null;
-  return null;
-}
-
 /* Итоговые фразы группы = базовые фразы кластера (минус локально
    исключённые) + вручную добавленные фразы этой группы. Базовые
    фразы не копируются — читаются из Gate 1 каждый раз заново через
@@ -31927,120 +31910,15 @@ g4sbGroupPhrases = function (product, group) {
   return [...kept, ...extra];
 };
 
-/* ---- Расширение состояния группы: itemId/segmentIndex/jtbdIndex/
-   extraPhrases/excludedPhrases/nameAutoSynced + панель подбора ---- */
+/* ---- Расширение состояния группы: nameAutoSynced ---- */
 const __g4V1140PrevEnsureSearchBuild = ensureGate4SearchBuild;
 ensureGate4SearchBuild = function (product) {
   const d = __g4V1140PrevEnsureSearchBuild(product);
-  if (d.pickerOpen === undefined) d.pickerOpen = false;
-  if (!d.pickerChecked) d.pickerChecked = {};
   d.groupRows.forEach((row) => {
-    if (row.itemId === undefined) row.itemId = "";
-    if (row.segmentIndex === undefined) row.segmentIndex = "";
-    if (row.jtbdIndex === undefined) row.jtbdIndex = "";
-    if (!Array.isArray(row.extraPhrases)) row.extraPhrases = [];
-    if (!Array.isArray(row.excludedPhrases)) row.excludedPhrases = [];
     if (row.nameAutoSynced === undefined) row.nameAutoSynced = !String(row.col0 || "").trim() || row.col0 === row.clusterKey;
   });
   return d;
 };
-
-/* Автосоздание при первом открытии + добор из семантики — теперь
-   тоже пишут itemId и полный набор новых полей группы. */
-g4SeedGroupsFromSemantics = function (product, d) {
-  const clusters = g4sbClusterList(product);
-  const existingNames = new Set(d.groupRows.map((r) => String(r.col0 || "").trim()).filter(Boolean));
-  const existingClusters = new Set(d.groupRows.map((r) => r.clusterKey).filter(Boolean));
-  const existingItemIds = new Set(d.groupRows.map((r) => r.itemId).filter(Boolean));
-  let added = 0;
-  clusters.forEach((c) => {
-    if ((c.id && existingItemIds.has(c.id)) || existingClusters.has(c.name) || existingNames.has(c.name)) return;
-    d.groupRows.push({
-      col0: c.name,
-      clusterKey: c.name,
-      itemId: c.id || "",
-      col1: "",
-      minus: "",
-      segmentIndex: "",
-      jtbdIndex: "",
-      extraPhrases: [],
-      excludedPhrases: [],
-      nameAutoSynced: true,
-    });
-    existingNames.add(c.name);
-    existingClusters.add(c.name);
-    if (c.id) existingItemIds.add(c.id);
-    added += 1;
-  });
-  return added;
-};
-
-/* Создать ровно по одной группе на каждый ОТМЕЧЕННЫЙ в панели
-   подбора кластер (1 кластер = 1 группа, без исключений). */
-function g4sbCreateGroupsFromPicked(product, d) {
-  const clusters = g4sbClusterList(product);
-  const usedItemIds = new Set(d.groupRows.map((r) => r.itemId).filter(Boolean));
-  let added = 0;
-  clusters.forEach((c) => {
-    if (!d.pickerChecked[c.id || c.name]) return;
-    if (c.id && usedItemIds.has(c.id)) return; // уже используется — пропускаем без дублирования
-    d.groupRows.push({
-      col0: c.name,
-      clusterKey: c.name,
-      itemId: c.id || "",
-      col1: "",
-      minus: "",
-      segmentIndex: "",
-      jtbdIndex: "",
-      extraPhrases: [],
-      excludedPhrases: [],
-      nameAutoSynced: true,
-    });
-    if (c.id) usedItemIds.add(c.id);
-    added += 1;
-  });
-  d.pickerChecked = {};
-  d.pickerOpen = false;
-  return added;
-}
-
-/* ---- Панель подбора: Сегмент → JTBD → Кластер → фразы, чек-лист ---- */
-function g4sbClusterPickerHtml(product, d) {
-  if (!d.pickerOpen) return "";
-  const clusters = g4sbClusterList(product);
-  const usedItemIds = new Set(d.groupRows.map((r) => r.itemId).filter(Boolean));
-  const p = `data-g4sb-product="${escapeAttr(product)}"`;
-  if (!clusters.length) {
-    return `<div class="g1-empty" style="margin-top:12px">В Gate 1 пока нет ни одного товара с заполненными фразами — нечего подбирать.</div>`;
-  }
-  return `<div class="g4-upstream" style="margin-top:12px">
-    <div class="g4-upstream-title">Подбор кластеров из семантики Gate 1</div>
-    <p class="g1-task">Отметьте нужные кластеры (= товары). Сегмент и JTBD показаны как справка по товару — они независимы друг от друга. На каждый отмеченный кластер будет создана ровно одна группа.</p>
-    ${clusters
-      .map((c) => {
-        const key = c.id || c.name;
-        const already = c.id && usedItemIds.has(c.id);
-        const segments = g4sbItemSegments(product, c.id);
-        const jtbdList = g4sbItemJtbdList(product, c.id);
-        const segPreview = segments.length ? segments.map((s) => s.name).join(", ") : "сегменты не заполнены";
-        const jtbdPreview = jtbdList.length ? jtbdList.map((j) => j.text).slice(0, 3).join(" · ") : "JTBD не заполнены";
-        return `<label style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);">
-          <input type="checkbox" style="margin-top:3px;" ${p} data-g4sb-pick="${escapeAttr(key)}" ${already ? "disabled" : ""} ${d.pickerChecked[key] ? "checked" : ""} />
-          <span style="flex:1;min-width:0;">
-            <span style="font-weight:800;font-size:13px;">${escapeHtml(c.name)}</span>
-            <span style="color:var(--muted);font-size:12px;"> · ${c.phrases.length} фраз${already ? ' · <b style="color:#b45309;">уже используется в существующей группе</b>' : ""}</span>
-            <small style="display:block;color:var(--muted);font-size:11px;margin-top:2px;">Сегменты: ${escapeHtml(segPreview)}</small>
-            <small style="display:block;color:var(--muted);font-size:11px;">JTBD: ${escapeHtml(jtbdPreview)}</small>
-          </span>
-        </label>`;
-      })
-      .join("")}
-    <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
-      <button class="small-btn add-inline-btn" ${p} data-g4sb-picker-create>Создать группы из отмеченных</button>
-      <button class="small-btn" ${p} data-g4sb-picker-cancel>Отмена</button>
-    </div>
-  </div>`;
-}
 
 // ---- Горизонтальная оценка прогноза (только текущая группа) ----
 const G4SB_TIER_ROWS = [
@@ -32333,49 +32211,6 @@ g4sbSearchChannelCardHtml = function (channel, campaign, index, product) {
   </article>`;
 };
 
-/* ---- Обработчики: кластер/сегмент/jtbd, исключение и добавление
-   фраз, панель подбора. Существующие обработчики (col/ad/sl/minus/
-   settings/group-add/group-remove) не трогаем — они продолжают
-   работать как раньше. ---- */
-
-// Выбор кластера: пишем itemId, сбрасываем сегмент/JTBD (они
-// принадлежат конкретному товару и теряют смысл при смене),
-// подставляем имя группы, если оно ещё не редактировалось вручную.
-document.addEventListener("change", (e) => {
-  const t = e.target;
-  if (t?.dataset?.g4sbGfield === "itemId" && t.tagName === "SELECT") {
-    const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
-    const row = d.groupRows[Number(t.dataset.g4sbGroup)];
-    if (!row) return;
-    row.itemId = t.value;
-    const cluster = g4sbClusterList(t.dataset.g4sbProduct).find((c) => c.id === t.value);
-    row.clusterKey = cluster ? cluster.name : "";
-    row.segmentIndex = "";
-    row.jtbdIndex = "";
-    if (row.nameAutoSynced !== false) {
-      row.col0 = cluster ? cluster.name : "";
-      row.nameAutoSynced = true;
-    }
-    flashSaving();
-    renderGate();
-    return;
-  }
-  if ((t?.dataset?.g4sbGfield === "segmentIndex" || t?.dataset?.g4sbGfield === "jtbdIndex") && t.tagName === "SELECT") {
-    const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
-    const row = d.groupRows[Number(t.dataset.g4sbGroup)];
-    if (!row) return;
-    row[t.dataset.g4sbGfield] = t.value;
-    flashSaving();
-    renderGate();
-    return;
-  }
-  if (t?.dataset?.g4sbPick !== undefined) {
-    const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
-    d.pickerChecked[t.dataset.g4sbPick] = t.checked;
-    flashSaving();
-  }
-});
-
 // Ручное редактирование названия группы — считаем, что имя больше
 // не должно автоматически переписываться при смене кластера.
 document.addEventListener("input", (e) => {
@@ -32384,73 +32219,6 @@ document.addEventListener("input", (e) => {
     const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
     const row = d.groupRows[Number(t.dataset.g4sbGroup)];
     if (row) row.nameAutoSynced = false;
-  }
-  if (t?.dataset?.g4sbExtraPhrase !== undefined) {
-    const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
-    const row = d.groupRows[Number(t.dataset.g4sbGroup)];
-    if (!row) return;
-    row.extraPhrases[Number(t.dataset.g4sbExtraPhrase)] = t.value;
-    flashSaving();
-    const cls = t.value.trim() ? "is-filled" : "is-empty";
-    t.classList.remove("is-filled", "is-empty");
-    t.classList.add(cls);
-  }
-});
-
-document.addEventListener("click", (e) => {
-  const t = e.target;
-  if (t?.dataset?.g4sbExcludePhrase !== undefined) {
-    const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
-    const row = d.groupRows[Number(t.dataset.g4sbGroup)];
-    if (!row) return;
-    const phrase = t.dataset.g4sbExcludePhrase;
-    row.excludedPhrases = row.excludedPhrases || [];
-    const idx = row.excludedPhrases.indexOf(phrase);
-    if (idx === -1) row.excludedPhrases.push(phrase);
-    else row.excludedPhrases.splice(idx, 1);
-    flashSaving();
-    renderGate();
-    return;
-  }
-  if (t?.dataset?.g4sbExtraAdd !== undefined) {
-    const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
-    const row = d.groupRows[Number(t.dataset.g4sbGroup)];
-    if (!row) return;
-    row.extraPhrases = row.extraPhrases || [];
-    row.extraPhrases.push("");
-    flashSaving();
-    renderGate();
-    return;
-  }
-  if (t?.dataset?.g4sbExtraRemove !== undefined) {
-    const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
-    const row = d.groupRows[Number(t.dataset.g4sbGroup)];
-    if (!row) return;
-    row.extraPhrases.splice(Number(t.dataset.g4sbExtraRemove), 1);
-    flashSaving();
-    renderGate();
-    return;
-  }
-  if (t?.dataset?.g4sbPickerToggle !== undefined) {
-    const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
-    d.pickerOpen = true;
-    flashSaving();
-    renderGate();
-    return;
-  }
-  if (t?.dataset?.g4sbPickerCancel !== undefined) {
-    const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
-    d.pickerOpen = false;
-    d.pickerChecked = {};
-    flashSaving();
-    renderGate();
-    return;
-  }
-  if (t?.dataset?.g4sbPickerCreate !== undefined) {
-    const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
-    g4sbCreateGroupsFromPicked(t.dataset.g4sbProduct, d);
-    flashSaving();
-    renderGate();
   }
 });
 
@@ -32571,19 +32339,12 @@ function g4sbAllSegmentsFlat(product) {
   return out;
 }
 
-/* ---- Итоговое чтение фраз группы: сначала через кластер (новая
-   модель), затем — прежняя логика для групп без clusterId ---- */
+/* ---- Итоговое чтение фраз группы: только через кластер (единственный
+   источник данных — миграция гарантирует наличие clusterId у каждой
+   группы к моменту рендера). ---- */
 g4sbGroupPhrases = function (product, group) {
-  if (group.clusterId) {
-    const cluster = g4sbFindClusterById(product, group.clusterId);
-    if (cluster) return g4sbClusterPhrases(product, cluster);
-  }
-  const cluster = g4sbFindCluster(product, group);
-  const base = cluster ? cluster.phrases : pv180SplitLines(group.col1 || "");
-  const excluded = new Set(group.excludedPhrases || []);
-  const kept = base.filter((p) => !excluded.has(p));
-  const extra = (group.extraPhrases || []).map((p) => String(p || "").trim()).filter(Boolean);
-  return [...kept, ...extra];
+  const cluster = g4sbFindClusterById(product, group.clusterId);
+  return cluster ? g4sbClusterPhrases(product, cluster) : [];
 };
 
 /* ---- Форма «Сборка кластера»: Сегмент → JTBD → Фразы → Спрос → Имя ---- */
@@ -32741,11 +32502,8 @@ function g4sbSaveClusterDraft(product, d) {
 /* ---- Сводка кластера внутри карточки группы (только чтение) ---- */
 function g4sbGroupClusterSummaryHtml(product, row) {
   const p = row; // не используется напрямую, оставлено для читаемости
-  const cluster = row.clusterId ? g4sbFindClusterById(product, row.clusterId) : null;
-  if (!cluster) {
-    // группа старого формата (до появления сущности «Кластер») — прежнее поведение
-    return g4sbLegacyGroupClusterFieldsHtml(product, row);
-  }
+  const cluster = g4sbFindClusterById(product, row.clusterId);
+  if (!cluster) return `<div class="g4-upstream"><div class="g4-upstream-title">Кластер не найден</div></div>`;
   const segment = g4sbItemSegments(product, cluster.itemId).find((s) => String(s.index) === String(cluster.segmentIndex));
   const jtbd = g4sbItemJtbdList(product, cluster.itemId).find((j) => String(j.index) === String(cluster.jtbdIndex));
   const phrases = g4sbClusterPhrases(product, cluster);
@@ -32762,72 +32520,15 @@ function g4sbGroupClusterSummaryHtml(product, row) {
   </div>`;
 }
 
-/* Резерв для старых групп (созданы до v1.15.0): прежний инлайн-выбор
-   кластера/сегмента/JTBD и список базовых фраз с исключениями —
-   логику не меняем, чтобы не терять данные пользователей. */
-function g4sbLegacyGroupClusterFieldsHtml(product, row) {
-  const ri = row.__ri;
-  const clusters = g4sbClusterList(product);
-  const p = `data-g4sb-product="${escapeAttr(product)}"`;
-  const clusterOptionsHtml = clusters
-    .map((c) => `<option value="${escapeAttr(c.id || c.name)}" ${(row.itemId ? row.itemId === c.id : row.clusterKey === c.name) ? "selected" : ""}>${escapeHtml(c.name)} · ${c.phrases.length} фраз</option>`)
-    .join("");
-  const segments = g4sbItemSegments(product, row.itemId);
-  const jtbdList = g4sbItemJtbdList(product, row.itemId);
-  const cluster = g4sbFindCluster(product, row);
-  const basePhrases = cluster ? cluster.phrases : [];
-  const excludedSet = new Set(row.excludedPhrases || []);
-  return `<div class="g4-upstream">
-    <div class="g4-upstream-title">Кластер (старый формат карточки)</div>
-    <div class="g1-fields-grid">
-      <label class="g1-field"><span>Кластер спроса</span>
-        <select class="g1-input is-filled" ${p} data-g4sb-group="${ri}" data-g4sb-gfield="itemId">
-          <option value="">— свой список фраз (без кластера) —</option>
-          ${clusterOptionsHtml}
-        </select>
-      </label>
-      <label class="g1-field"><span>Сегмент</span>
-        <select class="g1-input is-filled" ${p} data-g4sb-group="${ri}" data-g4sb-gfield="segmentIndex" ${!row.itemId ? "disabled" : ""}>
-          <option value="">— не выбран —</option>
-          ${segments.map((s) => `<option value="${s.index}" ${String(row.segmentIndex) === String(s.index) ? "selected" : ""}>${escapeHtml(s.name)}</option>`).join("")}
-        </select>
-      </label>
-      <label class="g1-field"><span>JTBD</span>
-        <select class="g1-input is-filled" ${p} data-g4sb-group="${ri}" data-g4sb-gfield="jtbdIndex" ${!row.itemId ? "disabled" : ""}>
-          <option value="">— не выбран —</option>
-          ${jtbdList.map((j) => `<option value="${j.index}" ${String(row.jtbdIndex) === String(j.index) ? "selected" : ""}>${escapeHtml(j.text.slice(0, 70))}</option>`).join("")}
-        </select>
-      </label>
-    </div>
-    <div style="margin-top:10px;">
-      <span style="font-weight:700;font-size:12px;color:var(--muted);">Базовые фразы кластера · ${basePhrases.length}</span>
-      ${basePhrases.length
-        ? `<div class="g1-fields-grid" style="margin-top:6px;grid-template-columns:1fr !important;">
-            ${basePhrases
-              .map((phrase) => {
-                const isExcluded = excludedSet.has(phrase);
-                return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;${isExcluded ? "opacity:.5;text-decoration:line-through;" : ""}">
-                  <span style="font-size:12px;">${escapeHtml(phrase)}</span>
-                  <button type="button" class="small-btn danger-mini" ${p} data-g4sb-group="${ri}" data-g4sb-exclude-phrase="${escapeAttr(phrase)}" style="font-size:10px;">${isExcluded ? "Вернуть" : "Исключить"}</button>
-                </div>`;
-              })
-              .join("")}
-          </div>`
-        : '<div style="color:var(--muted);font-size:12px;margin-top:6px;">Кластер не выбран</div>'}
-    </div>
-  </div>`;
-}
-
 /* ---- Карточка группы: сводка кластера (не редактируется инлайн) →
    минус-фразы → прогноз → объявления. Прогноз/объявления/минус-фразы
    не меняли — только заменили верхнюю часть (было: инлайн-выбор
    кластера/сегмента/JTBD внутри группы) на readonly-сводку кластера,
    собранного заранее в отдельном шаге. ---- */
 g4sbGroupCardHtml = function (product, row, ri, groupRows, ads) {
-  row.__ri = ri; // для g4sbLegacyGroupClusterFieldsHtml (обратная совместимость)
   const phrases = g4sbGroupPhrases(product, row);
   const phraseCount = phrases.length;
-  const clusterForTitle = row.clusterId ? g4sbFindClusterById(product, row.clusterId) : g4sbFindCluster(product, row);
+  const clusterForTitle = g4sbFindClusterById(product, row.clusterId);
   const preview = String(row.col0 || "").trim() || (clusterForTitle ? clusterForTitle.name : `Группа ${ri + 1}`);
   const p = `data-g4sb-product="${escapeAttr(product)}"`;
 
@@ -32885,11 +32586,29 @@ g4sbGroupCardHtml = function (product, row, ri, groupRows, ads) {
   </div>`;
 };
 
-/* ---- Точка входа карточки канала: добавлен этап «Сборка кластера»
-   перед списком групп. Автосев групп из всех товаров без разбора
-   убран — теперь группа появляется только как результат сборки
-   кластера (осознанный выбор), либо через «+ Добавить группу»
-   (пустая, старый формат, для гибкости). ---- */
+/* ---- Сворачиваемый шаг кампании («лестница ориентирования»):
+   номер + название + счётчик справа + чек-контроль. Заголовок —
+   тот же паттерн g1-card-header, что у карточек кампании/группы,
+   тоггл состояния — data-g4sb-step. ---- */
+function g4sbStepHtml(product, num, title, meta, key, isOpen, bodyHtml) {
+  const p = `data-g4sb-product="${escapeAttr(product)}"`;
+  return `<article class="g1-card ${isOpen ? "is-open" : ""}" style="border-radius:14px;margin-top:12px;">
+    <button class="g1-card-header" ${p} data-g4sb-step="${escapeAttr(key)}">
+      <span class="g1-section-left">
+        <span class="g1-card-title"><span style="color:var(--muted);font-weight:700;margin-right:10px;">${escapeHtml(num)}</span>${escapeHtml(title)}</span>
+      </span>
+      <span style="display:flex;align-items:center;gap:12px;">
+        ${meta ? `<span style="color:var(--muted);font-size:12px;">${escapeHtml(meta)}</span>` : ""}
+        <span style="color:var(--muted);font-size:12px;white-space:nowrap;">${isOpen ? "свернуть ▾" : "развернуть ▸"}</span>
+      </span>
+    </button>
+    ${isOpen ? `<div class="g1-card-body">${bodyHtml}</div>` : ""}
+  </article>`;
+}
+
+/* ---- Точка входа карточки канала «Яндекс Директ / Поиск»:
+   тело кампании собрано лестницей из 5 сворачиваемых шагов
+   (шапка → настройки → кластеры → группы → ссылки+проверка). ---- */
 g4sbSearchChannelCardHtml = function (channel, campaign, index, product) {
   const stateKey = g4CampaignStateKey(product, channel.key);
   const launchOpen = g4EnsureLaunchUiState();
@@ -32919,44 +32638,32 @@ g4sbSearchChannelCardHtml = function (channel, campaign, index, product) {
   const p = `data-g4sb-product="${escapeAttr(product)}"`;
   const hasSemantics = g4sbClusterList(product).length > 0;
 
-  return `<article class="g1-card is-open">
-    <button class="g1-card-header" data-g4camp-toggle="${escapeAttr(stateKey)}">
-      <span class="g1-section-left">
-        <span class="g1-card-title">${escapeHtml(g4LaunchChannelLabel(channel))}</span>
-        <span class="g1-section-progress">${escapeHtml(subtitle)}</span>
-      </span>
-      <span class="status-pill status-${statusClass}">${escapeHtml(statusLabel)}</span>
-    </button>
-    <div class="g1-card-body">
-      <p class="g1-task">${escapeHtml(g4Gate3ChannelRole(channel))}</p>
-      ${g4sbUniversalHeaderHtml(product, d)}
-      ${g4sbSettingsHtml(product, channel, campaign, d)}
-      <div style="margin-top:16px;font-weight:800;font-size:14px;margin-bottom:12px;">Сборка кластера</div>
-      <p class="g1-task">Прежде чем создать группу, соберите кластер: сегмент → JTBD → фразы → спрос. 1 сохранённый кластер сразу создаёт 1 группу.</p>
-      ${
-        !d.clusterDraft.open
-          ? `<button class="small-btn add-inline-btn" ${p} data-g4sb-draft-open>+ Собрать новый кластер</button>${!hasSemantics ? '<div class="g1-empty" style="margin-top:8px">В Gate 1 пока нет заполненной семантики (сегменты, JTBD, фразы) ни по одному товару этого направления.</div>' : ""}`
-          : ""
-      }
-      ${g4sbClusterAssemblyHtml(product, d)}
-      <div style="margin-top:16px;font-weight:800;font-size:14px;margin-bottom:12px;">Группы объявлений · ${d.groupRows.length}</div>
-      ${
-        d.groupRows.length
-          ? `<div class="g1-fields-grid" style="margin-top:12px">
-        ${d.groupRows.map((row, ri) => g4sbGroupCardHtml(product, row, ri, d.groupRows, (d.adsRows || {})[ri] || [{}])).join("")}
-      </div>`
-          : `<div class="g1-empty">Группы пока нет — соберите кластер выше, она создастся автоматически.</div>`
-      }
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
-        <button class="small-btn add-inline-btn" data-g4sb-group-add ${p}>+ Добавить пустую группу</button>
-      </div>
-      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);">
-        <div style="font-weight:800;font-size:14px;margin-bottom:12px;">Быстрые ссылки и уточнения кампании</div>
-        <p class="g1-task">Уровень всей кампании — не дублируется внутри каждой группы.</p>
-        <div class="g1-fields-grid">
-          ${d.sitelinkRows
-            .map(
-              (row, ri) => `<div class="g1-card" style="border-radius:14px;">
+  if (!d.searchStepOpen)
+    d.searchStepOpen = { header: false, settings: true, clusters: true, groups: true, check: false };
+  const steps = d.searchStepOpen;
+
+  const clustersBody =
+    `<p class="g1-task">Сначала соберите кластер: сегмент → JTBD → фразы → спрос. 1 кластер = 1 группа.</p>` +
+    (!d.clusterDraft.open
+      ? `<button class="small-btn add-inline-btn" ${p} data-g4sb-draft-open>+ Собрать новый кластер</button>` +
+        (!hasSemantics
+          ? `<div class="g1-empty" style="margin-top:8px">В Gate 1 пока нет заполненной семантики (сегменты, JTBD, фразы) ни по одному товару этого направления.</div>`
+          : "")
+      : "") +
+    g4sbClusterAssemblyHtml(product, d) +
+    g4sbClusterListSectionHtml(product, d);
+
+  const groupsBody = d.groupRows.length
+    ? `<div class="g1-fields-grid" style="margin-top:4px">${d.groupRows
+        .map((row, ri) => g4sbGroupCardHtml(product, row, ri, d.groupRows, (d.adsRows || {})[ri] || [{}]))
+        .join("")}</div>`
+    : `<div class="g1-empty">Групп пока нет — соберите кластер выше, она создастся автоматически.</div>`;
+
+  const sitelinksBody =
+    `<p class="g1-task">Быстрые ссылки — уровень всей кампании, не дублируются внутри групп.</p>` +
+    `<div class="g1-fields-grid">${d.sitelinkRows
+      .map(
+        (row, ri) => `<div class="g1-card" style="border-radius:14px;">
             <div class="g1-card-header-static" style="padding:12px 16px;">
               <span><span style="font-weight:700;font-size:12px;color:var(--muted);">Быстрая ссылка ${ri + 1}</span> <span style="font-size:12px;margin-left:6px;">${escapeHtml(String(row.sl0 || "").substring(0, 40))}</span></span>
               <button class="small-btn danger-mini" data-g4sb-sl-remove="${ri}" ${p} ${d.sitelinkRows.length <= 1 ? "disabled" : ""} style="font-size:11px;">×</button>
@@ -32967,15 +32674,44 @@ g4sbSearchChannelCardHtml = function (channel, campaign, index, product) {
                 .join("")}</div>
             </div>
           </div>`,
-            )
-            .join("")}
-        </div>
-        <button class="small-btn add-inline-btn" data-g4sb-sl-add ${p}>+ Добавить быструю ссылку</button>
-      </div>
-      ${g4sbFinalCheckHtml(product, d)}
+      )
+      .join("")}</div>` +
+    `<button class="small-btn add-inline-btn" data-g4sb-sl-add ${p}>+ Добавить быструю ссылку</button>`;
+
+  const checkBody = sitelinksBody + g4sbFinalCheckHtml(product, d);
+
+  return `<article class="g1-card is-open">
+    <button class="g1-card-header" data-g4camp-toggle="${escapeAttr(stateKey)}">
+      <span class="g1-section-left">
+        <span class="g1-card-title">${escapeHtml(g4LaunchChannelLabel(channel))}</span>
+        <span class="g1-section-progress">${escapeHtml(subtitle)}</span>
+      </span>
+      <span class="status-pill status-${statusClass}">${escapeHtml(statusLabel)}</span>
+    </button>
+    <div class="g1-card-body">
+      <p class="g1-task">${escapeHtml(g4Gate3ChannelRole(channel))}</p>
+      ${g4sbStepHtml(product, "1", "Шапка кампании", "из Gate 0–3", "header", steps.header, g4sbUniversalHeaderHtml(product, d))}
+      ${g4sbStepHtml(product, "2", "Настройки кампании", "", "settings", steps.settings, g4sbSettingsHtml(product, channel, campaign, d))}
+      ${g4sbStepHtml(product, "3", "Кластеры", String(d.clusters.length), "clusters", steps.clusters, clustersBody)}
+      ${g4sbStepHtml(product, "4", "Группы объявлений", String(d.groupRows.length), "groups", steps.groups, groupsBody)}
+      ${g4sbStepHtml(product, "5", "Быстрые ссылки и проверка", "", "check", steps.check, checkBody)}
     </div>
   </article>`;
 };
+
+/* Тоггл шага кампании — по closest, т.к. клик приходит на вложенный
+   span заголовка (тот же приём, что у data-g4camp-toggle). */
+document.addEventListener("click", (e) => {
+  const btn = e.target?.closest?.("[data-g4sb-step]");
+  if (!btn) return;
+  const d = ensureGate4SearchBuild(btn.dataset.g4sbProduct);
+  if (!d.searchStepOpen)
+    d.searchStepOpen = { header: false, settings: true, clusters: true, groups: true, check: false };
+  const key = btn.dataset.g4sbStep;
+  d.searchStepOpen[key] = !d.searchStepOpen[key];
+  flashSaving();
+  renderGate();
+});
 
 /* ---- Обработчики сборки кластера. Существующие обработчики полей
    группы (колонки, объявления, быстрые ссылки, минус-фразы,
@@ -33429,8 +33165,8 @@ g4sbSaveClusterDraft = function (product, d) {
 /* ---- Сводка кластера в карточке группы: основной JTBD отдельно от
    дополнительных ---- */
 g4sbGroupClusterSummaryHtml = function (product, row) {
-  const cluster = row.clusterId ? g4sbFindClusterById(product, row.clusterId) : null;
-  if (!cluster) return g4sbLegacyGroupClusterFieldsHtml(product, row);
+  const cluster = g4sbFindClusterById(product, row.clusterId);
+  if (!cluster) return `<div class="g4-upstream"><div class="g4-upstream-title">Кластер не найден</div></div>`;
   const segment = g4sbItemSegments(product, cluster.itemId).find((s) => String(s.index) === String(cluster.segmentIndex));
   const jtbdAll = g4sbItemJtbdList(product, cluster.itemId);
   const mainJtbd = jtbdAll.find((j) => String(j.index) === String(cluster.mainJtbdIndex));
@@ -33575,6 +33311,75 @@ ensureGate4SearchBuild = function (product) {
   return d;
 };
 
+/* ---- Миграция групп старого формата (itemId/segmentIndex/jtbdIndex/
+   clusterKey/excludedPhrases/extraPhrases без clusterId) в
+   самостоятельные кластеры d.clusters[]. Идемпотентна: группа с уже
+   валидным clusterId пропускается. Существующий кластер переиспользуется
+   только при точном совпадении itemId+segmentIndex+mainJtbdIndex и если
+   он ещё ни к одной группе не привязан — никогда не сопоставляем по
+   одному только названию, чтобы не создать ложную связь. Минус-фразы/
+   прогноз/объявления/название/статус группы не трогаем. ---- */
+function g4sbMigrateLegacyGroupsToClusters(product, d) {
+  const sourceClusters = g4sbClusterList(product);
+  d.groupRows.forEach((row) => {
+    if (row.clusterId && d.clusters.some((c) => c.id === row.clusterId)) return;
+
+    let legacy = null;
+    if (row.itemId) legacy = sourceClusters.find((c) => c.id === row.itemId) || null;
+    if (!legacy && row.clusterKey) legacy = sourceClusters.find((c) => c.name === row.clusterKey) || null;
+    const itemId = legacy ? legacy.id : row.itemId || "";
+    const segmentIndex = row.segmentIndex === undefined || row.segmentIndex === null ? "" : row.segmentIndex;
+    const mainJtbdIndex = row.jtbdIndex === undefined || row.jtbdIndex === null ? "" : row.jtbdIndex;
+    const basePhrases = legacy ? legacy.phrases : [];
+    const excludedSet = new Set(row.excludedPhrases || []);
+    const phraseSelection = basePhrases.filter((p) => !excludedSet.has(p));
+    const oldestFreeform = !itemId ? pv180SplitLines(row.col1 || "") : [];
+    const extraPhrases = [
+      ...(row.extraPhrases || []).map((p) => String(p || "").trim()).filter(Boolean),
+      ...oldestFreeform,
+    ];
+
+    let cluster = null;
+    if (itemId) {
+      cluster = d.clusters.find(
+        (c) =>
+          c.itemId === itemId &&
+          String(c.segmentIndex) === String(segmentIndex) &&
+          String(c.mainJtbdIndex) === String(mainJtbdIndex) &&
+          !d.groupRows.some((r) => r !== row && r.clusterId === c.id),
+      );
+    }
+    if (!cluster) {
+      cluster = {
+        id: makeId("cluster"),
+        name: String(row.col0 || "").trim() || (legacy ? legacy.name : "Кластер"),
+        itemId,
+        segmentIndex,
+        mainJtbdIndex,
+        extraJtbdIndexes: [],
+        phraseSelection,
+        extraPhrases,
+      };
+      d.clusters.push(cluster);
+    }
+    row.clusterId = cluster.id;
+    delete row.itemId;
+    delete row.segmentIndex;
+    delete row.jtbdIndex;
+    delete row.clusterKey;
+    delete row.excludedPhrases;
+    delete row.extraPhrases;
+    delete row.col1;
+  });
+}
+
+const __g4V1200PrevEnsureSearchBuild = ensureGate4SearchBuild;
+ensureGate4SearchBuild = function (product) {
+  const d = __g4V1200PrevEnsureSearchBuild(product);
+  g4sbMigrateLegacyGroupsToClusters(product, d);
+  return d;
+};
+
 function g4sbClusterGroupCount(d, clusterId) {
   return d.groupRows.filter((r) => r.clusterId === clusterId).length;
 }
@@ -33663,8 +33468,7 @@ function g4sbClusterListItemHtml(product, d, cluster) {
 
 /* ---- Самостоятельный список кластеров направления ---- */
 function g4sbClusterListSectionHtml(product, d) {
-  return `<div style="margin-top:16px;font-weight:800;font-size:14px;margin-bottom:12px;">Кластеры · ${d.clusters.length}</div>
-    <p class="g1-task">Кластер — самостоятельная единица: сегмент, JTBD и фразы редактируются только здесь. Изменения сразу видны во всех группах, которые на него ссылаются.</p>
+  return `<p class="g1-task">Кластер — самостоятельная единица: сегмент, JTBD и фразы редактируются только здесь. Изменения сразу видны во всех группах, которые на него ссылаются.</p>
     ${
       d.clusters.length
         ? `<div class="g1-fields-grid" style="margin-top:12px">
@@ -33674,21 +33478,9 @@ function g4sbClusterListSectionHtml(product, d) {
     }`;
 }
 
-/* ---- Точка входа: вставляем список кластеров между сборкой и
-   группами; кнопка в группе теперь называется «Открыть кластер»
-   и просто открывает ту же форму редактирования — состав кластера
-   больше нигде, кроме списка кластеров, не редактируется. ---- */
-const __g4V1190PrevSearchChannelCardHtml = g4sbSearchChannelCardHtml;
-g4sbSearchChannelCardHtml = function (channel, campaign, index, product) {
-  let html = __g4V1190PrevSearchChannelCardHtml(channel, campaign, index, product);
-  if (!g4IsYandexSearchChannel(channel)) return html;
-  const d = ensureGate4SearchBuild(product);
-  const marker = `<div style="margin-top:16px;font-weight:800;font-size:14px;margin-bottom:12px;">Группы объявлений · ${d.groupRows.length}</div>`;
-  if (html.includes(marker)) {
-    html = html.replace(marker, g4sbClusterListSectionHtml(product, d) + marker);
-  }
-  return html;
-};
+/* Список кластеров теперь рендерится прямо в шаге 3 «Кластеры»
+   внутри g4sbSearchChannelCardHtml — отдельная вставка через
+   marker-replace больше не нужна. */
 
 /* Кнопка внутри группы переименована: «Открыть кластер» вместо
    «Изменить состав кластера» — состав редактируется только в
