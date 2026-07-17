@@ -22039,7 +22039,7 @@ const PV140_PRODUCT_FIELDS = [
     group: "Спрос и тренд",
     fields: [
       ["trendDemand", "Насколько востребовано", "Wordstat / Google Trends / Search Console: объём, динамика, сила спроса"],
-      ["trendTiming", "Когда спрос растёт", "сезонность, момент покупки, событие или триггер рынка"],
+      ["trendTiming", "Общее число запросов за", "сезонность, момент покупки, событие или триггер рынка"],
       ["trendSource", "Источник подтверждения", "ссылка, период, регион, инструмент или комментарий по данным"],
     ],
   },
@@ -22242,7 +22242,7 @@ function pv140ProductMapHtml(row, index, totalBaseProducts) {
   return `<div class="g1-card g1-card-collapsible pv140-product-card${isCollapsed ? ' is-collapsed' : ''}" style="padding:0;">
     <div class="g1-card-collapse-header pv140-product-head" data-g1-collapse data-g1-collapse-key="${escapeAttr(collapseKey)}">
       <span class="pv140-product-title">
-        <span class="pv140-product-index">Продукт ${index + 1}</span>
+        <span class="pv140-product-index">продукт / услуга / направление ${index + 1}</span>
         <span class="pv140-product-name">${escapeHtml(product || "Что продаём")}</span>
       </span>
       <span class="pv140-product-progress">${mapStatus.filled}/${mapStatus.total}</span>
@@ -22252,7 +22252,6 @@ function pv140ProductMapHtml(row, index, totalBaseProducts) {
     </div>
     <div class="g1-card-collapse-body pv140-product-body">
       <div class="pv140-product-grid">
-        ${pv140Field(index, "product", "Что продаём", row.product, "продукт / услуга из Gate 0")}
         ${PV140_PRODUCT_FIELDS.map(
           (section) => `<section class="pv140-section">
           <div class="pv140-section-title">${escapeHtml(section.group)}</div>
@@ -22589,16 +22588,11 @@ document.addEventListener("click", (e) => {
     if (key === "productStrategy") {
       const shell = toggle.closest(".pv140-strategy-shell");
       const body = shell?.querySelector(":scope > .g1-card-body");
-      const anchorTop = toggle.getBoundingClientRect().top;
       const willOpen = d.openSteps[key] === false;
       d.openSteps[key] = willOpen;
       shell?.classList.toggle("is-open", willOpen);
       if (body) body.hidden = !willOpen;
       saveState();
-      requestAnimationFrame(() => {
-        const shift = toggle.getBoundingClientRect().top - anchorTop;
-        if (Math.abs(shift) > 0.5) window.scrollBy(0, shift);
-      });
       return;
     }
     d.openSteps[key] = !d.openSteps[key];
@@ -26294,7 +26288,6 @@ document.addEventListener("click", (e) => {
   if (e.target.closest("button, select, input, textarea, a, .danger-mini")) return;
   const card = header.closest(".g1-card-collapsible");
   if (!card) return;
-  const anchorTop = header.getBoundingClientRect().top;
   const key = g1CollapseKey(header);
   const set = g1CollapsedSet();
   if (set.has(key)) {
@@ -26305,10 +26298,6 @@ document.addEventListener("click", (e) => {
     card.classList.add("is-collapsed");
   }
   g1SaveCollapsed(set);
-  requestAnimationFrame(() => {
-    const shift = header.getBoundingClientRect().top - anchorTop;
-    if (Math.abs(shift) > 0.5) window.scrollBy(0, shift);
-  });
 });
 
 // G0 hint for Offer tasks — show JTBD data
@@ -27582,7 +27571,7 @@ function guruApplyFieldStates(root = document) {
   const scope = root.querySelector ? root : document;
   scope
     .querySelectorAll(
-      ".content-area input:not([type='button']):not([type='submit']):not([type='reset']):not([type='hidden']):not([data-g4sb-jtbd-search]), .content-area textarea, .content-area select",
+      ".content-area input:not([type='button']):not([type='submit']):not([type='reset']):not([type='hidden']):not([data-g4sb-jtbd-search]):not([data-guru-field-neutral]), .content-area textarea:not([data-guru-field-neutral]), .content-area select:not([data-guru-field-neutral])",
     )
     .forEach((el) => {
       el.classList.remove(
@@ -27955,6 +27944,99 @@ document.addEventListener('change', (e) => {
   renderGate();
 });
 
+function g4sbV138UpdateBankPhrase(product, draft, phrase, field, value) {
+  if (!["vol", "forecast", "forecastClicks", "forecastBudget"].includes(field)) return;
+  const key = g4sbV128PhraseKey(phrase);
+  const items = g4ProductSemantics(product).row?.items || {};
+  const storedValue = value === null || value === undefined ? "" : String(value);
+  const zeroDemand = field === "vol" && storedValue.trim() !== "" && parseUnitNumber(storedValue) === 0;
+  const updateRow = (row) => {
+    row[field] = storedValue;
+    // Нулевой спрос означает отсутствие доступных показов: клики и бюджет
+    // для такой фразы также должны быть нулевыми во всех представлениях.
+    if (zeroDemand) {
+      row.forecastClicks = "0";
+      row.forecastBudget = "0";
+    }
+  };
+  let found = false;
+  Object.values(items).forEach((item) => {
+    if (!Array.isArray(item?.demandRows)) return;
+    item.demandRows.forEach((row) => {
+      if (g4sbV128PhraseKey(row.kw) !== key) return;
+      updateRow(row);
+      found = true;
+    });
+  });
+  if (!found && items[draft.itemId]) {
+    if (!Array.isArray(items[draft.itemId].demandRows)) items[draft.itemId].demandRows = [];
+    const newRow = g4sbKeywordRow({ kw: phrase, [field]: storedValue, originStage: "gate4" });
+    updateRow(newRow);
+    items[draft.itemId].demandRows.push(newRow);
+  }
+  [draft.keywordRows, draft.forecastBaselineRows].forEach((rows) => {
+    if (!Array.isArray(rows)) return;
+    rows.forEach((row) => {
+      if (g4sbV128PhraseKey(row.kw) === key) updateRow(row);
+    });
+  });
+}
+
+document.addEventListener("input", (event) => {
+  const target = event.target;
+  if (target?.dataset?.g4sbBankPhraseField === undefined) return;
+  const product = target.dataset.g4sbProduct;
+  const d = ensureGate4SearchBuild(product);
+  g4sbV138UpdateBankPhrase(
+    product,
+    d.clusterDraft,
+    target.dataset.g4sbBankPhrase,
+    target.dataset.g4sbBankPhraseField,
+    target.value,
+  );
+  d.clusterDraft.validationError = "";
+  flashSaving();
+});
+
+document.addEventListener("change", (event) => {
+  const target = event.target;
+  if (target?.dataset?.g4sbBankPhraseField === undefined) return;
+  renderGate();
+});
+
+document.addEventListener("change", (event) => {
+  const target = event.target;
+  if (target?.dataset?.g4sbSegmentJtbdToggle === undefined) return;
+  const product = target.dataset.g4sbProduct;
+  const d = ensureGate4SearchBuild(product);
+  const [itemId, segmentIndex, jtbdIndex] = JSON.parse(target.dataset.g4sbSegmentJtbdToggle);
+  const used = d.groupRows.some((row) =>
+    row.itemId === itemId &&
+    String(row.segmentIndex) === String(segmentIndex) &&
+    String(row.mainJtbdIndex) === String(jtbdIndex),
+  );
+  const usedByOpenDraft = Boolean(
+    d.clusterDraft?.open &&
+    d.clusterDraft.itemId === itemId &&
+    String(d.clusterDraft.segmentIndex) === String(segmentIndex) &&
+    String(d.clusterDraft.mainJtbdIndex) === String(jtbdIndex),
+  );
+  if (!target.checked && (used || usedByOpenDraft)) {
+    target.checked = true;
+    return;
+  }
+  d.segmentJtbdLinks = d.segmentJtbdLinks || {};
+  const key = g4sbSegmentJtbdLinkKey(itemId, segmentIndex);
+  const links = d.segmentJtbdLinks[key] = Array.isArray(d.segmentJtbdLinks[key])
+    ? d.segmentJtbdLinks[key]
+    : [];
+  const position = links.findIndex((value) => String(value) === String(jtbdIndex));
+  if (target.checked && position === -1) links.push(Number(jtbdIndex));
+  if (!target.checked && position !== -1) links.splice(position, 1);
+  flashSaving();
+  renderGate();
+});
+
 /* ================================================================
    v1.8.0 — Продуктовая карта: Семантика (4 уровня) + Спрос
    По вайрфрейму: Продукт и Посадочная — только чтение из Gate 0;
@@ -28022,13 +28104,12 @@ function pv180SemLevelHtml(index, level, items) {
 
 function pv180DemandHtml(index, row) {
   const rows = row.demandRows;
-  const segs = row.segments;
   return `<div>
     <div style="font-weight:800;font-size:13px;">Уровень 1 — Объём показов/мес</div>
     <small style="display:block;color:var(--muted);font-size:11px;">Число, из Wordstat / Google Trends</small>
     <div class="g1-fields-grid" style="margin-top:8px;">
       ${rows.map((r, i) => `<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;border-bottom:1px dashed var(--line);padding-bottom:8px;">
-        ${[['kw','Ключевое слово'],['vol','Объём показов/мес'],['growth','Когда спрос растёт'],['source','Wordstat/тренды']].map(([f, l]) => {
+        ${[['kw','Ключевое слово'],['vol','Объём показов/мес'],['growth','Общее число запросов за'],['source','Wordstat/тренды']].map(([f, l]) => {
           const v = r[f] || '';
           return `<label class="g1-field" style="flex:1;min-width:140px;"><span style="font-size:11px;">${escapeHtml(l)}</span><textarea class="g1-input ${String(v).trim() ? 'is-filled' : 'is-empty'}" data-pv180-map="${index}" data-pv180-demand="${i}" data-pv180-dfield="${f}" rows="1" placeholder="${escapeAttr(l)}">${escapeHtml(v)}</textarea></label>`;
         }).join('')}
@@ -28036,26 +28117,6 @@ function pv180DemandHtml(index, row) {
       </div>`).join('')}
     </div>
     <button class="small-btn add-inline-btn" style="margin-top:4px;font-size:12px;" data-pv180-demand-add data-pv180-map-i="${index}">+</button>
-
-    <div style="font-weight:800;font-size:13px;margin-top:16px;">Уровень 2 — Сегментация + позиционирование</div>
-    <small style="display:block;color:var(--muted);font-size:11px;">Кто создаёт спрос на этот продукт и какие сегменты покупают этот продукт</small>
-    <small style="display:block;color:var(--muted);font-size:11px;">Место продукта в голове потребителя относительно альтернатив</small>
-    <small style="display:block;color:var(--muted);font-size:11px;">Самая релевантная семантика по сегментам</small>
-    <div class="g1-fields-grid" style="margin-top:8px;">
-      ${segs.map((s, i) => `<div style="border:1px solid var(--line);border-radius:12px;padding:12px 12px;">
-        <div style="display:flex;gap:8px;align-items:flex-start;">
-          <label class="g1-field" style="flex:1;"><span style="font-size:11px;">Сегмент ${i + 1}</span><textarea class="g1-input ${String(s.name||'').trim() ? 'is-filled' : 'is-empty'}" data-pv180-map="${index}" data-pv180-seg="${i}" data-pv180-sfield="name" rows="1" placeholder="название сегмента">${escapeHtml(s.name || '')}</textarea></label>
-          <button class="small-btn danger-mini" style="align-self:center;" data-pv180-seg-remove="${i}" data-pv180-map-i="${index}" ${segs.length <= 1 ? 'disabled' : ''}>×</button>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          ${[['seeks','Что ищет'],['why','Почему ищет'],['show','Что важно показать']].map(([f, l]) => {
-            const v = s[f] || '';
-            return `<label class="g1-field" style="flex:1;min-width:140px;"><span style="font-size:11px;">${escapeHtml(l)}</span><textarea class="g1-input ${String(v).trim() ? 'is-filled' : 'is-empty'}" data-pv180-map="${index}" data-pv180-seg="${i}" data-pv180-sfield="${f}" rows="1" placeholder="${escapeAttr(l)}">${escapeHtml(v)}</textarea></label>`;
-          }).join('')}
-        </div>
-      </div>`).join('')}
-    </div>
-    <button class="small-btn add-inline-btn" style="margin-top:4px;font-size:12px;" data-pv180-seg-add data-pv180-map-i="${index}">+</button>
   </div>`;
 }
 
@@ -28068,7 +28129,6 @@ pv140ProductMapStatus = function (row) {
     row.semL3.some(v => String(v).trim()),
     row.semL4.some(v => String(v).trim()),
     row.demandRows.some(r => String(r.kw || '').trim() && String(r.vol || '').trim()),
-    row.segments.some(s => String(s.name || '').trim()),
   ];
   const filled = checks.filter(Boolean).length;
   const total = checks.length;
@@ -28085,16 +28145,12 @@ pv140ProductMapHtml = function (row, index, totalBaseProducts) {
   const mapStatus = pv140ProductMapStatus(row);
   const statusLabel = STATUS_LABELS[mapStatus.status] || mapStatus.status;
 
-  const productCell = isBase
-    ? `<div class="g1-field"><span>Продукт / Услуга</span><small style="color:var(--muted);font-size:11px;">Автоподтяжка из Gate 0 «Что продаём» / «Офферы и CTA», только чтение</small><div class="g1-input is-filled" style="background:#eef5ee;cursor:default;">${escapeHtml(product || '—')}</div></div>`
-    : pv140Field(index, 'product', 'Продукт / Услуга', row.product, 'название продукта / услуги');
-
   const landingCell = `<div class="g1-field"><span>Посадочная — URL</span><small style="color:var(--muted);font-size:11px;">Автоподтяжка из Gate 0 «Посадочные под продукты», только чтение</small><div class="g1-input ${landingUrl ? 'is-filled' : 'is-empty'}" style="cursor:default;${landingUrl ? 'background:#eef5ee;' : ''}word-break:break-all;">${escapeHtml(landingUrl || 'В Gate 0 посадочная не указана')}</div></div>`;
 
   return `<div class="g1-card g1-card-collapsible pv140-product-card" style="border-radius:16px;padding:0;">
     <div class="g1-card-collapse-header pv140-product-head" data-g1-collapse>
       <span class="pv140-product-title">
-        <span class="pv140-product-index">Продукт ${index + 1}</span>
+        <span class="pv140-product-index">продукт / услуга / направление ${index + 1}</span>
         <span class="pv140-product-name">${escapeHtml(product || 'Что продаём')}</span>
       </span>
       <span class="pv140-product-progress">${mapStatus.filled}/${mapStatus.total}</span>
@@ -28103,7 +28159,6 @@ pv140ProductMapHtml = function (row, index, totalBaseProducts) {
     </div>
     <div class="g1-card-collapse-body pv140-product-body">
       <div class="pv140-product-grid">
-        ${productCell}
         ${landingCell}
 
         <section class="pv140-section">
@@ -28132,7 +28187,9 @@ document.addEventListener('input', (e) => {
   if (e.target.dataset.pv180Sem) {
     row[e.target.dataset.pv180Sem][Number(e.target.dataset.pv180Idx)] = e.target.value;
   } else if (e.target.dataset.pv180Demand !== undefined) {
-    row.demandRows[Number(e.target.dataset.pv180Demand)][e.target.dataset.pv180Dfield] = e.target.value;
+    const demandRow = row.demandRows[Number(e.target.dataset.pv180Demand)];
+    demandRow[e.target.dataset.pv180Dfield] = e.target.value;
+    if (!demandRow.originStage) demandRow.originStage = 'gate1';
   } else if (e.target.dataset.pv180Seg !== undefined) {
     row.segments[Number(e.target.dataset.pv180Seg)][e.target.dataset.pv180Sfield] = e.target.value;
   } else return;
@@ -29250,8 +29307,10 @@ document.addEventListener('click', (e) => {
   pv180Ensure(row);
   // Вставить в первую пустую строку, иначе добавить новую
   const blank = row.demandRows.find(r => !String(r.kw || '').trim());
-  if (blank) blank.kw = phrase;
-  else row.demandRows.push({ kw: phrase, vol: '', growth: '', source: '' });
+  if (blank) {
+    blank.kw = phrase;
+    blank.originStage = 'gate1';
+  } else row.demandRows.push({ kw: phrase, vol: '', growth: '', source: '', originStage: 'gate1' });
   closeG0Popover();
   flashSaving();
   renderGate();
@@ -29273,6 +29332,11 @@ document.addEventListener('click', (e) => {
    не спорить с их логикой.
    ================================================================ */
 function uiKeeperDetailsKey(node) {
+  const card = node.closest("[data-card]");
+  const cardKey = card ? card.getAttribute("data-card") : "";
+  const stableKey =
+    node.getAttribute("data-ui-keeper-key") || String(node.id || "").trim();
+  if (stableKey) return `${cardKey}|stable|${stableKey}`;
   const summary = node.querySelector(":scope > summary");
   let label = "";
   if (summary) {
@@ -29286,10 +29350,7 @@ function uiKeeperDetailsKey(node) {
     .filter((c) => !c.startsWith("status-"))
     .sort()
     .join(".");
-  const card = node.closest("[data-card]");
-  return (
-    (card ? card.getAttribute("data-card") : "") + "|" + classes + "|" + label
-  );
+  return cardKey + "|" + classes + "|" + label;
 }
 
 function uiKeeperEachDetails(root, fn) {
@@ -29974,9 +30035,9 @@ function g4ProductSemantics(product) {
   const lines = (arr) =>
     Array.isArray(arr) ? arr.map((v) => String(v || "").trim()).filter(Boolean) : [];
   const demandRows = (row.demandRows || []).filter((r) => String(r.kw || "").trim());
-  const segments = (row.segments || []).filter((s) =>
-    Object.values(s).some((v) => String(v || "").trim()),
-  );
+  // Сегментация удалена из активной модели Gate 1. Старые значения
+  // остаются в workspace только как архив совместимости.
+  const segments = [];
   const clusters = (state.painV130?.steps?.search?.searchClusters || []).filter(
     (c) => !norm(c.product) || norm(c.product) === norm(product),
   );
@@ -29997,11 +30058,6 @@ function g4ProductSemantics(product) {
   ]
     .map((v) => String(v || "").trim())
     .filter((v, i, a) => v && a.indexOf(v) === i);
-  const segmentTexts = segments.map((s) =>
-    [s.name, s.seeks && "ищет: " + s.seeks, s.why && "почему: " + s.why]
-      .filter(Boolean)
-      .join(" · "),
-  );
   return {
     row,
     demandRows,
@@ -30011,14 +30067,7 @@ function g4ProductSemantics(product) {
     pagePhrases,
     queries,
     languageJtbd,
-    segmentsText: [
-      ...segmentTexts,
-      row.demandSegments,
-      ...clusters.map((c) => c.demandSegments),
-    ]
-      .map((v) => String(v || "").trim())
-      .filter((v, i, a) => v && a.indexOf(v) === i)
-      .join("\n"),
+    segmentsText: "",
     scenario: [row.hiddenNeed, row.searchTrigger, ...clusters.map((c) => c.hiddenNeed)]
       .map((v) => String(v || "").trim())
       .filter((v, i, a) => v && a.indexOf(v) === i)
@@ -30290,8 +30339,8 @@ document.addEventListener('change', (e) => {
 
 const PV181_ITEM_LEVELS = [
   { key: 'semL2', title: 'Уровень 1 — Страничный (конкретный, по посадочной)', hints: ['Источники: H1, Соцдоказательство, H2 (заголовки секций), H3 и ниже (Gate 1 «Аудит сайта» под URL этого товара)', 'Даёт точные, «долгохвостые» фразы — то как товар описан на уровне конкретной страницы'], g0: 'page' },
-  { key: 'semL3', title: 'Уровень 2 — Основные запросы + Ключевые слова', hints: ['От 10 запросов, которые лучше всего показывают спрос', 'От 15 ключевых слов, которые лучше всего показывают спрос'] },
-  { key: 'semL4', title: 'Уровень 3 — JTBD + Язык клиента + скрытая потребность', hints: ['Как именно ищут: с каким намерением, какими словами, что за этим стоит. Язык клиента и скрытая потребность — это то, что потом ляжет в заголовки объявлений и посадочных'] },
+  { key: 'semL3', title: 'Уровень 2 — Главный запрос + Ключевые фразы', hints: ['Одна группа: 1 главный запрос и примерно 5–15 похожих ключевых фраз', 'Если для части запросов нужен другой текст объявления — создайте отдельную группу'] },
+  { key: 'semL4', title: 'Уровень 3 — Основной и дополнительные JTBD', hints: ['Один основной JTBD определяет намерение и сообщение', 'Можно добавить до 3 дополнительных JTBD, если для них подходят те же запросы и текст объявления'] },
 ];
 
 // Товары направления из Gate 1 «Аудит сайта» → КАРТОЧКА ТОВАРА
@@ -30314,13 +30363,160 @@ function pv181ItemData(row, itemId) {
   const d = row.items[itemId] = row.items[itemId] || {};
   if (!Array.isArray(d.semL2)) d.semL2 = [''];
   if (!Array.isArray(d.semL3)) d.semL3 = [''];
+  if (!Array.isArray(d.semL3Groups)) {
+    const legacy = d.semL3.map((value) => String(value || '').trim()).filter(Boolean);
+    d.semL3Groups = [{ mainQuery: legacy[0] || '', keywords: legacy.slice(1) }];
+  }
+  d.semL3Groups = d.semL3Groups.map((group) => ({
+    mainQuery: String(group?.mainQuery || ''),
+    keywords: Array.isArray(group?.keywords) ? group.keywords.map((value) => String(value || '')) : [],
+  }));
+  if (!d.semL3Groups.length) d.semL3Groups.push({ mainQuery: '', keywords: [] });
+  pv181SyncQueryGroups(d);
   if (!Array.isArray(d.semL4)) d.semL4 = [''];
+  if (!d.semL4Model || typeof d.semL4Model !== 'object') {
+    const legacy = [...new Map(d.semL4
+      .map((value) => String(value || '').trim())
+      .filter(Boolean)
+      .map((value) => [value.toLocaleLowerCase('ru-RU'), value])).values()];
+    const desiredMain = 'Вернуть обуви аккуратный и первоначальный внешний вид';
+    const desiredAdditional = [
+      'Почистить обувь после реагентов и удалить солевые разводы',
+      'Удалить пятна с замши и поднять ворс',
+      'Очистить обувь внутри и провести дезинфекцию',
+    ];
+    const byKey = new Map(legacy.map((value) => [value.toLocaleLowerCase('ru-RU'), value]));
+    const hasShoeMain = byKey.has(desiredMain.toLocaleLowerCase('ru-RU'));
+    const mainJtbd = hasShoeMain ? byKey.get(desiredMain.toLocaleLowerCase('ru-RU')) : legacy[0] || '';
+    let additionalJtbds = hasShoeMain
+      ? desiredAdditional.map((value) => byKey.get(value.toLocaleLowerCase('ru-RU')) || value)
+      : legacy.filter((value) => value !== mainJtbd).slice(0, 3);
+    additionalJtbds = additionalJtbds.slice(0, 3);
+    const selected = new Set([mainJtbd, ...additionalJtbds].map((value) => value.toLocaleLowerCase('ru-RU')));
+    d.semL4Archive = legacy.filter((value) => !selected.has(value.toLocaleLowerCase('ru-RU')));
+    d.semL4Model = { mainJtbd, additionalJtbds };
+  }
+  d.semL4Model.mainJtbd = String(d.semL4Model.mainJtbd || '');
+  d.semL4Model.additionalJtbds = Array.isArray(d.semL4Model.additionalJtbds)
+    ? d.semL4Model.additionalJtbds.slice(0, 3).map((value) => String(value || ''))
+    : [];
+  pv181SyncJtbdModel(d);
   if (!Array.isArray(d.demandRows)) d.demandRows = [{ kw: '', vol: '', growth: '', source: '' }];
   if (!Array.isArray(d.segments)) d.segments = [{ name: '', seeks: '', why: '', show: '' }];
   return d;
 }
 
+function pv181SyncQueryGroups(itemData) {
+  if (!itemData || !Array.isArray(itemData.semL3Groups)) return;
+  itemData.semL3 = itemData.semL3Groups.flatMap((group) => [
+    String(group?.mainQuery || '').trim(),
+    ...(Array.isArray(group?.keywords) ? group.keywords : []).map((value) => String(value || '').trim()),
+  ]).filter(Boolean);
+  if (!itemData.semL3.length) itemData.semL3 = [''];
+}
+
+function pv181SyncJtbdModel(itemData) {
+  if (!itemData?.semL4Model) return;
+  itemData.semL4 = [
+    String(itemData.semL4Model.mainJtbd || '').trim(),
+    ...itemData.semL4Model.additionalJtbds.map((value) => String(value || '').trim()),
+  ].filter(Boolean);
+  if (!itemData.semL4.length) itemData.semL4 = [''];
+}
+
+function pv181JtbdModelHtml(mapIndex, itemId, itemData, level) {
+  const model = itemData.semL4Model;
+  const count = model.additionalJtbds.filter((value) => String(value || '').trim()).length;
+  return `<div class="pv181-jtbd-level">
+    <div class="pv181-query-level-head">
+      <div>
+        <div class="pv181-query-level-title">${escapeHtml(level.title)}</div>
+        ${level.hints.map((hint) => `<small>${escapeHtml(hint)}</small>`).join('')}
+      </div>
+      <span class="pv181-query-level-count">1 основной · ${count} из 3 дополнительных</span>
+    </div>
+    <section class="pv181-jtbd-model">
+      <label class="g1-field pv181-main-query">
+        <span><b class="pv181-query-number">№1</b> Основной JTBD</span>
+        <small>Когда [что-то произошло], клиент хочет [конкретный результат], чтобы [зачем ему это нужно].</small>
+        <textarea class="g1-input ${model.mainJtbd.trim() ? 'is-filled' : 'is-empty'}" data-pv181-map="${mapIndex}" data-pv181-item="${escapeAttr(itemId)}" data-pv181-jtbd-main rows="1" placeholder="Введите основной JTBD">${escapeHtml(model.mainJtbd)}</textarea>
+      </label>
+      <aside class="pv181-jtbd-quality">
+        <strong>Проверка качества</strong>
+        <p>Хороший JTBD отвечает на три вопроса:</p>
+        <ul>
+          <li><b>Что произошло?</b></li>
+          <li><b>Какой результат нужен?</b></li>
+          <li><b>Зачем клиенту этот результат?</b></li>
+        </ul>
+        <p>Если хотя бы на один вопрос ответа нет — JTBD неполный.</p>
+        <p class="pv181-jtbd-rule"><b>Главное правило:</b> JTBD — это не услуга, а результат, ради которого клиент платит.</p>
+      </aside>
+      <div class="pv181-keyword-list">
+        <div class="pv181-keyword-list-title">Дополнительные JTBD · максимум 3</div>
+        ${model.additionalJtbds.length ? model.additionalJtbds.map((value, index) => `<div class="pv181-keyword-row">
+          <span class="pv181-query-number">№${index + 2}</span>
+          <textarea class="g1-input ${String(value).trim() ? 'is-filled' : 'is-empty'}" data-pv181-map="${mapIndex}" data-pv181-item="${escapeAttr(itemId)}" data-pv181-jtbd-additional="${index}" rows="1" placeholder="Дополнительный JTBD">${escapeHtml(value)}</textarea>
+          <button type="button" class="small-btn danger-mini" data-pv181-jtbd-remove="${index}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" aria-label="Удалить дополнительный JTBD">×</button>
+        </div>`).join('') : '<div class="pv181-keyword-empty">Дополнительные JTBD пока не добавлены.</div>'}
+        <button type="button" class="small-btn add-inline-btn" data-pv181-jtbd-add data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" ${model.additionalJtbds.length >= 3 ? 'disabled' : ''}>+ Добавить дополнительный JTBD</button>
+      </div>
+    </section>
+  </div>`;
+}
+
+function pv181QueryGroupsHtml(mapIndex, itemId, itemData, level) {
+  const groups = itemData.semL3Groups;
+  return `<div class="pv181-query-level">
+    <div class="pv181-query-level-head">
+      <div>
+        <div class="pv181-query-level-title">${escapeHtml(level.title)}</div>
+        ${level.hints.map((hint) => `<small>${escapeHtml(hint)}</small>`).join('')}
+      </div>
+      <span class="pv181-query-level-count">${groups.length} ${groups.length === 1 ? 'группа' : groups.length >= 2 && groups.length <= 4 ? 'группы' : 'групп'}</span>
+    </div>
+    <div class="pv181-query-groups">
+      ${groups.map((group, groupIndex) => {
+        const filledKeywords = group.keywords.filter((value) => String(value || '').trim()).length;
+        const countClass = filledKeywords >= 5 && filledKeywords <= 15 ? 'is-ready' : 'is-attention';
+        return `<section class="pv181-query-group">
+          <header class="pv181-query-group-head">
+            <span>Группа запросов ${groupIndex + 1}</span>
+            <span class="pv181-query-count ${countClass}">${filledKeywords} из 5–15 фраз</span>
+            <button type="button" class="small-btn danger-mini" data-pv181-query-group-remove="${groupIndex}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" ${groups.length <= 1 ? 'disabled' : ''} aria-label="Удалить группу запросов">×</button>
+          </header>
+          <label class="g1-field pv181-main-query">
+            <span><b class="pv181-query-number">№1</b> Главный запрос</span>
+            <small>Один запрос, который точнее всего выражает намерение группы</small>
+            <textarea class="g1-input ${String(group.mainQuery).trim() ? 'is-filled' : 'is-empty'}" data-pv181-map="${mapIndex}" data-pv181-item="${escapeAttr(itemId)}" data-pv181-query-group="${groupIndex}" data-pv181-main-query rows="1" placeholder="Введите главный запрос">${escapeHtml(group.mainQuery)}</textarea>
+          </label>
+          <div class="pv181-keyword-list">
+            <div class="pv181-keyword-list-title">Похожие ключевые фразы</div>
+            ${group.keywords.length ? group.keywords.map((value, keywordIndex) => `<div class="pv181-keyword-row">
+              <span class="pv181-query-number">№${keywordIndex + 2}</span>
+              <textarea class="g1-input ${String(value).trim() ? 'is-filled' : 'is-empty'}" data-pv181-map="${mapIndex}" data-pv181-item="${escapeAttr(itemId)}" data-pv181-query-group="${groupIndex}" data-pv181-query-keyword="${keywordIndex}" rows="1" placeholder="Ключевая фраза">${escapeHtml(value)}</textarea>
+              <button type="button" class="small-btn danger-mini" data-pv181-query-keyword-remove="${keywordIndex}" data-pv181-query-group-i="${groupIndex}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" aria-label="Удалить ключевую фразу">×</button>
+            </div>`).join('') : '<div class="pv181-keyword-empty">Добавьте 5–15 фраз, для которых подходит одно объявление.</div>'}
+            <button type="button" class="small-btn add-inline-btn pv181-keyword-add" data-pv181-query-keyword-add data-pv181-query-group-i="${groupIndex}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}">+ Добавить ключевую фразу</button>
+          </div>
+        </section>`;
+      }).join('')}
+    </div>
+    <button type="button" class="small-btn add-inline-btn pv181-query-group-add" data-pv181-query-group-add data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}">+ Добавить группу запросов</button>
+  </div>`;
+}
+
 function pv181SemLevelHtml(mapIndex, itemId, level, items, itemUrl) {
+  if (level.key === 'semL3') {
+    const row = pv140EnsureProductMaps()[Number(mapIndex)];
+    const itemData = row ? pv181ItemData(row, itemId) : { semL3Groups: [{ mainQuery: '', keywords: [] }] };
+    return pv181QueryGroupsHtml(mapIndex, itemId, itemData, level);
+  }
+  if (level.key === 'semL4') {
+    const row = pv140EnsureProductMaps()[Number(mapIndex)];
+    const itemData = row ? pv181ItemData(row, itemId) : { semL4Model: { mainJtbd: '', additionalJtbds: [] } };
+    return pv181JtbdModelHtml(mapIndex, itemId, itemData, level);
+  }
   const list = items.length ? items : [''];
   const g0btn = level.g0 === 'page' && itemUrl
     ? ` <button type="button" class="g0-hint-btn" data-pv181-page-hint="${escapeAttr(itemUrl)}">G0</button>` : '';
@@ -30342,8 +30538,37 @@ function pv181ItemHtml(mapIndex, item, row) {
   const collapseKey = 'pv181-item-' + item.id;
   const isCollapsed = g1CollapsedSet().has(collapseKey);
   const anyFilled = ['semL2','semL3','semL4'].some(k => d[k].some(v => String(v).trim()))
-    || d.demandRows.some(r => Object.values(r).some(v => String(v).trim()))
-    || d.segments.some(s => Object.values(s).some(v => String(v).trim()));
+    || d.demandRows.some(r => Object.values(r).some(v => String(v).trim()));
+
+  // Фразы, зафиксированные в группах запросов Gate 1, остаются аналитическим
+  // фундаментом. Всё, что впервые пришло из Gate 4, хранится отдельно по
+  // originStage и не смешивается с аналитикой после сохранения/загрузки.
+  const analyticsPhraseKeys = new Set(
+    (d.semL3Groups || []).flatMap((group) => [
+      group?.mainQuery,
+      ...(Array.isArray(group?.keywords) ? group.keywords : []),
+    ]).map((value) => String(value || '').trim().toLocaleLowerCase('ru-RU')).filter(Boolean),
+  );
+  const demandEntries = d.demandRows.map((demandRow, index) => {
+    const key = String(demandRow?.kw || '').trim().toLocaleLowerCase('ru-RU');
+    let originStage = demandRow?.originStage;
+    if (originStage !== 'gate1' && originStage !== 'gate4') {
+      originStage = analyticsPhraseKeys.size && key && !analyticsPhraseKeys.has(key) ? 'gate4' : 'gate1';
+      // Миграция старых непомеченных данных. Пустую строку не помечаем, чтобы
+      // метаданные не влияли на расчёт заполненности карточки.
+      if (key) demandRow.originStage = originStage;
+    }
+    return { demandRow, index, originStage };
+  });
+  const analyticsDemandEntries = demandEntries.filter((entry) => entry.originStage === 'gate1');
+  const implementationDemandEntries = demandEntries.filter((entry) => entry.originStage === 'gate4');
+  const demandRowsHtml = (entries) => entries.map(({ demandRow: r, index: i }) => `<div class="pv181-demand-row">
+    ${[['kw','Ключевое слово'],['vol','Объём показов/мес'],['growth','Общее число запросов за'],['source','Wordstat/тренды']].map(([f, l]) => {
+      const v = r[f] || '';
+      return `<label class="g1-field" style="flex:1;min-width:140px;"><span style="font-size:11px;">${escapeHtml(l)}</span><textarea class="g1-input ${String(v).trim() ? 'is-filled' : 'is-empty'}" data-pv181-map="${mapIndex}" data-pv181-item="${escapeAttr(item.id)}" data-pv181-demand="${i}" data-pv181-dfield="${f}" rows="1" placeholder="${escapeAttr(l)}">${escapeHtml(v)}</textarea></label>`;
+    }).join('')}
+    <button class="small-btn danger-mini" style="align-self:center;" data-pv181-demand-remove="${i}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(item.id)}" ${d.demandRows.length <= 1 ? 'disabled' : ''}>×</button>
+  </div>`).join('');
 
   const demandG0 = ` <button type="button" class="g0-hint-btn" data-pv181-demand-hint data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(item.id)}">G0</button>`;
 
@@ -30359,36 +30584,17 @@ function pv181ItemHtml(mapIndex, item, row) {
       <div class="pv140-section-title" style="margin-top:14px;">Спрос</div>
       <div style="font-weight:800;font-size:13px;">Уровень 1 — Объём показов/мес${demandG0}</div>
       <small style="display:block;color:var(--muted);font-size:11px;">Число, из Wordstat / Google Trends</small>
-      <div class="g1-fields-grid" style="margin-top:6px;">
-        ${d.demandRows.map((r, i) => `<div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;border-bottom:1px dashed var(--line);padding-bottom:8px;">
-          ${[['kw','Ключевое слово'],['vol','Объём показов/мес'],['growth','Когда спрос растёт'],['source','Wordstat/тренды']].map(([f, l]) => {
-            const v = r[f] || '';
-            return `<label class="g1-field" style="flex:1;min-width:140px;"><span style="font-size:11px;">${escapeHtml(l)}</span><textarea class="g1-input ${String(v).trim() ? 'is-filled' : 'is-empty'}" data-pv181-map="${mapIndex}" data-pv181-item="${escapeAttr(item.id)}" data-pv181-demand="${i}" data-pv181-dfield="${f}" rows="1" placeholder="${escapeAttr(l)}">${escapeHtml(v)}</textarea></label>`;
-          }).join('')}
-          <button class="small-btn danger-mini" style="align-self:center;" data-pv181-demand-remove="${i}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(item.id)}" ${d.demandRows.length <= 1 ? 'disabled' : ''}>×</button>
-        </div>`).join('')}
+      <div class="g1-fields-grid pv181-demand-origin-list" style="margin-top:6px;">
+        <div class="pv181-demand-origin-label"><span>Зафиксировано в аналитике</span><b>${analyticsDemandEntries.filter(({ demandRow }) => String(demandRow.kw || '').trim()).length}</b></div>
+        ${demandRowsHtml(analyticsDemandEntries)}
+        <div class="pv181-demand-origin-divider" role="separator" aria-label="Фразы, добавленные на этапе реализации">
+          <span>Добавлено на этапе реализации</span><b>${implementationDemandEntries.length}</b>
+        </div>
+        ${implementationDemandEntries.length
+          ? demandRowsHtml(implementationDemandEntries)
+          : '<div class="pv181-demand-origin-empty">Новых фраз из Gate 4 пока нет</div>'}
       </div>
       <button class="small-btn add-inline-btn" style="margin-top:4px;font-size:12px;" data-pv181-demand-add data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(item.id)}">+</button>
-
-      <div style="font-weight:800;font-size:13px;margin-top:14px;">Уровень 2 — Сегментация + позиционирование</div>
-      <small style="display:block;color:var(--muted);font-size:11px;">Кто создаёт спрос на этот товар и какие сегменты его покупают</small>
-      <small style="display:block;color:var(--muted);font-size:11px;">Место товара в голове потребителя относительно альтернатив</small>
-      <small style="display:block;color:var(--muted);font-size:11px;">Самая релевантная семантика по сегментам</small>
-      <div class="g1-fields-grid" style="margin-top:6px;">
-        ${d.segments.map((s, i) => `<div style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;">
-          <div style="display:flex;gap:6px;align-items:flex-start;">
-            <label class="g1-field" style="flex:1;"><span style="font-size:11px;">Сегмент ${i + 1}</span><textarea class="g1-input ${String(s.name||'').trim() ? 'is-filled' : 'is-empty'}" data-pv181-map="${mapIndex}" data-pv181-item="${escapeAttr(item.id)}" data-pv181-seg="${i}" data-pv181-sfield="name" rows="1" placeholder="название сегмента">${escapeHtml(s.name || '')}</textarea></label>
-            <button class="small-btn danger-mini" style="align-self:center;" data-pv181-seg-remove="${i}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(item.id)}" ${d.segments.length <= 1 ? 'disabled' : ''}>×</button>
-          </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            ${[['seeks','Что ищет'],['why','Почему ищет'],['show','Что важно показать']].map(([f, l]) => {
-              const v = s[f] || '';
-              return `<label class="g1-field" style="flex:1;min-width:140px;"><span style="font-size:11px;">${escapeHtml(l)}</span><textarea class="g1-input ${String(v).trim() ? 'is-filled' : 'is-empty'}" data-pv181-map="${mapIndex}" data-pv181-item="${escapeAttr(item.id)}" data-pv181-seg="${i}" data-pv181-sfield="${f}" rows="1" placeholder="${escapeAttr(l)}">${escapeHtml(v)}</textarea></label>`;
-            }).join('')}
-          </div>
-        </div>`).join('')}
-      </div>
-      <button class="small-btn add-inline-btn" style="margin-top:4px;font-size:12px;" data-pv181-seg-add data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(item.id)}">+</button>
     </div>
   </div>`;
 }
@@ -30403,10 +30609,6 @@ pv140ProductMapHtml = function (row, index, totalBaseProducts) {
   const statusLabel = STATUS_LABELS[mapStatus.status] || mapStatus.status;
   const items = product ? pv181ProductItems(product) : [];
 
-  const productCell = isBase
-    ? `<div class="g1-field"><span>Продукт / Услуга</span><small style="color:var(--muted);font-size:11px;">Автоподтяжка из Gate 0 «Что продаём» / «Офферы и CTA», только чтение</small><div class="g1-input is-filled" style="background:#eef5ee;cursor:default;">${escapeHtml(product || '—')}</div></div>`
-    : pv140Field(index, 'product', 'Продукт / Услуга', row.product, 'название продукта / услуги');
-
   const landingCell = `<div class="g1-field"><span>Посадочная — URL</span><small style="color:var(--muted);font-size:11px;">Автоподтяжка из Gate 0 «Посадочные под продукты», только чтение</small><div class="g1-input ${landingUrl ? 'is-filled' : 'is-empty'}" style="cursor:default;${landingUrl ? 'background:#eef5ee;' : ''}word-break:break-all;">${escapeHtml(landingUrl || 'В Gate 0 посадочная не указана')}</div></div>`;
 
   const brandLevel = PV180_SEM_LEVELS[0];
@@ -30414,7 +30616,7 @@ pv140ProductMapHtml = function (row, index, totalBaseProducts) {
   return `<div class="g1-card g1-card-collapsible pv140-product-card" style="border-radius:14px;padding:0;">
     <div class="g1-card-collapse-header pv140-product-head" data-g1-collapse>
       <span class="pv140-product-title">
-        <span class="pv140-product-index">Продукт ${index + 1}</span>
+        <span class="pv140-product-index">продукт / услуга / направление ${index + 1}</span>
         <span class="pv140-product-name">${escapeHtml(product || 'Что продаём')}</span>
       </span>
       <span class="pv140-product-progress">${mapStatus.filled}/${mapStatus.total}</span>
@@ -30423,7 +30625,6 @@ pv140ProductMapHtml = function (row, index, totalBaseProducts) {
     </div>
     <div class="g1-card-collapse-body pv140-product-body">
       <div class="pv140-product-grid">
-        ${productCell}
         ${landingCell}
 
         <section class="pv140-section">
@@ -30454,9 +30655,9 @@ document.addEventListener('input', (e) => {
   if (e.target.dataset.pv181List) {
     d[e.target.dataset.pv181List][Number(e.target.dataset.pv181Idx)] = e.target.value;
   } else if (e.target.dataset.pv181Demand !== undefined) {
-    d.demandRows[Number(e.target.dataset.pv181Demand)][e.target.dataset.pv181Dfield] = e.target.value;
-  } else if (e.target.dataset.pv181Seg !== undefined) {
-    d.segments[Number(e.target.dataset.pv181Seg)][e.target.dataset.pv181Sfield] = e.target.value;
+    const demandRow = d.demandRows[Number(e.target.dataset.pv181Demand)];
+    demandRow[e.target.dataset.pv181Dfield] = e.target.value;
+    if (!demandRow.originStage) demandRow.originStage = 'gate1';
   } else return;
   flashSaving();
   renderGateNav();
@@ -30479,10 +30680,6 @@ document.addEventListener('click', (e) => {
   else if (t.dataset.pv181DemandAdd !== undefined) { d.demandRows.push({ kw: '', vol: '', growth: '', source: '' }); }
   else if (t.dataset.pv181DemandRemove !== undefined) {
     if (d.demandRows.length > 1) d.demandRows.splice(Number(t.dataset.pv181DemandRemove), 1); else return;
-  }
-  else if (t.dataset.pv181SegAdd !== undefined) { d.segments.push({ name: '', seeks: '', why: '', show: '' }); }
-  else if (t.dataset.pv181SegRemove !== undefined) {
-    if (d.segments.length > 1) d.segments.splice(Number(t.dataset.pv181SegRemove), 1); else return;
   }
   else if (t.dataset.pv181DemandHint !== undefined) {
     // G0: все фразы товара → вставка в «Ключевое слово»
@@ -30547,8 +30744,10 @@ document.addEventListener('click', (e) => {
     const d = pv181ItemData(row, kwItem.dataset.pv181KwItem);
     const phrase = kwItem.dataset.pv181KwInsert;
     const blank = d.demandRows.find(r => !String(r.kw || '').trim());
-    if (blank) blank.kw = phrase;
-    else d.demandRows.push({ kw: phrase, vol: '', growth: '', source: '' });
+    if (blank) {
+      blank.kw = phrase;
+      blank.originStage = 'gate1';
+    } else d.demandRows.push({ kw: phrase, vol: '', growth: '', source: '', originStage: 'gate1' });
     closeG0Popover();
     flashSaving();
     renderGate();
@@ -30779,7 +30978,7 @@ window.addEventListener('resize', () => {
    v1.10.5 — Аккумулятор семантики читает товары направления.
    v1.10.4 перенесла детальную семантику в row.items[itemId]
    (товары из Gate 1 «Аудит сайта»): semL2–semL4, demandRows,
-   segments. Аккумулятор теперь собирает уровень направления +
+   архивные поля сегментов. Аккумулятор собирает уровень направления +
    ВСЕ его товары; каждый товар становится кластером-группой
    для сборки поисковой кампании (группа = товар).
    ================================================================ */
@@ -30802,26 +31001,13 @@ g4ProductSemantics = function (product) {
     const queryPhrases = lines(d.semL3);
     const jtbdPhrases = lines(d.semL4);
     const demandRows = (d.demandRows || []).filter((r) => String(r.kw || "").trim());
-    const segments = (d.segments || []).filter((s) =>
-      Object.values(s).some((v) => String(v || "").trim()),
-    );
     const allPhrases = uniq([...queryPhrases, ...demandRows.map((r) => r.kw.trim()), ...pagePhrases]);
-    if (!allPhrases.length && !jtbdPhrases.length && !segments.length) return;
+    if (!allPhrases.length && !jtbdPhrases.length) return;
 
     sem.pagePhrases = uniq([...sem.pagePhrases, ...pagePhrases]);
     sem.queries = uniq([...sem.queries, ...queryPhrases, ...demandRows.map((r) => r.kw.trim())]);
     sem.languageJtbd = uniq([...sem.languageJtbd, ...jtbdPhrases]);
     sem.demandRows = [...sem.demandRows, ...demandRows];
-    sem.segments = [...sem.segments, ...segments];
-    const segTexts = segments.map((s) =>
-      [s.name, s.seeks && "ищет: " + s.seeks, s.why && "почему: " + s.why]
-        .filter(Boolean)
-        .join(" · "),
-    );
-    sem.segmentsText = uniq([
-      ...String(sem.segmentsText || "").split("\n").filter(Boolean),
-      ...segTexts,
-    ]).join("\n");
 
     if (allPhrases.length) {
       itemClusters.push({
@@ -30831,7 +31017,7 @@ g4ProductSemantics = function (product) {
         mainQueries: allPhrases.join("\n"),
         clientLanguage: jtbdPhrases.join("; "),
         hiddenNeed: "",
-        demandSegments: segTexts.join("; "),
+        demandSegments: "",
         landing: item.url || "",
       });
     }
@@ -31148,6 +31334,101 @@ function guruRowHasData(row) {
   return !!row && Object.values(row).some((v) => String(v || "").trim());
 }
 
+function guruMergeRenamedValue(oldValue, newValue) {
+  if (newValue === undefined || newValue === null || newValue === "") return oldValue;
+  if (
+    oldValue && newValue &&
+    typeof oldValue === "object" && typeof newValue === "object" &&
+    !Array.isArray(oldValue) && !Array.isArray(newValue)
+  ) {
+    const merged = { ...oldValue };
+    Object.keys(newValue).forEach((key) => {
+      merged[key] = guruMergeRenamedValue(oldValue[key], newValue[key]);
+    });
+    return merged;
+  }
+  if (Array.isArray(oldValue) && Array.isArray(newValue))
+    return newValue.length ? newValue : oldValue;
+  return newValue;
+}
+
+// Название продукта пока является связующим ключом старой схемы.
+// Переносим как точные значения ссылочных полей, так и ключи словарей.
+function guruRenameProductReferencesDeep(root, oldName, newName) {
+  const seen = new WeakSet();
+  const visit = (node) => {
+    if (!node || typeof node !== "object" || seen.has(node)) return;
+    seen.add(node);
+    if (Array.isArray(node)) {
+      node.forEach((value, index) => {
+        if (typeof value === "string" && value.trim() === oldName)
+          node[index] = newName;
+        else visit(value);
+      });
+      return;
+    }
+    if (!Array.isArray(node) && Object.prototype.hasOwnProperty.call(node, oldName)) {
+      node[newName] = guruMergeRenamedValue(node[oldName], node[newName]);
+      delete node[oldName];
+    }
+    Object.keys(node).forEach((key) => {
+      // Исторически название продукта попадало не только в product/direction,
+      // но и в name, option, массивы и другие производные поля. Точное
+      // совпадение является ссылкой на продукт и должно переезжать вместе с ним.
+      if (typeof node[key] === "string" && node[key].trim() === oldName)
+        node[key] = newName;
+      if (key !== "_productRenameAliases") visit(node[key]);
+    });
+  };
+  visit(root);
+}
+
+function guruRenameNormalizedProductKeys(workspace, oldName, newName) {
+  const oldKey = normalizeAspectKey(oldName);
+  const newKey = normalizeAspectKey(newName);
+  if (!oldKey || !newKey || oldKey === newKey) return;
+  const renamePrefixedKeys = (map) => {
+    if (!map || typeof map !== "object") return;
+    Object.keys(map).forEach((key) => {
+      if (key !== oldKey && !key.startsWith(oldKey + "__")) return;
+      const nextKey = newKey + key.slice(oldKey.length);
+      map[nextKey] = guruMergeRenamedValue(map[key], map[nextKey]);
+      delete map[key];
+    });
+  };
+  renamePrefixedKeys(workspace.gate4Production?.campaigns);
+  renamePrefixedKeys(workspace.gate4Rsya);
+  renamePrefixedKeys(workspace.gate4SearchBuild);
+}
+
+function guruRememberProductRename(workspace, oldName, newName) {
+  if (!workspace?.project) return;
+  const oldValue = String(oldName || "").trim();
+  const newValue = String(newName || "").trim();
+  if (!oldValue || !newValue || oldValue === newValue) return;
+  const aliases = (workspace.project._productRenameAliases =
+    workspace.project._productRenameAliases || {});
+  Object.keys(aliases).forEach((source) => {
+    if (String(aliases[source] || "").trim() === oldValue)
+      aliases[source] = newValue;
+  });
+  aliases[oldValue] = newValue;
+  delete aliases[newValue];
+}
+
+function guruApplyRememberedProductRenames(workspace) {
+  const aliases = workspace?.project?._productRenameAliases;
+  if (!aliases || typeof aliases !== "object") return;
+  const products = v121OffersProducts(workspace);
+  Object.entries({ ...aliases }).forEach(([oldName, newName]) => {
+    const oldValue = String(oldName || "").trim();
+    const newValue = String(newName || "").trim();
+    if (!oldValue || !newValue || oldValue === newValue) return;
+    if (products.includes(newValue) && !products.includes(oldValue))
+      guruRenameProductData(oldValue, newValue, workspace);
+  });
+}
+
 function guruRenameProductData(oldName, newName, workspace = state) {
   const o = String(oldName || "").trim();
   const n = String(newName || "").trim();
@@ -31178,6 +31459,16 @@ function guruRenameProductData(oldName, newName, workspace = state) {
   (workspace.painV130?.productMaps || []).forEach((row) => {
     if (String(row.product || "").trim() === o && !oldStillUsed) row.product = n;
   });
+  (workspace.unitV130?.items || []).forEach((item) => {
+    if (oldStillUsed) return;
+    if (String(item.productKey || "").trim() === o) item.productKey = n;
+    if (String(item.name || "").trim() === o) item.name = n;
+  });
+
+  if (!oldStillUsed) {
+    guruRenameNormalizedProductKeys(workspace, o, n);
+    guruRenameProductReferencesDeep(workspace, o, n);
+  }
 }
 
 // Похожесть названий: доля общих корней слов (первые 6 букв слов от 4 букв)
@@ -31200,6 +31491,59 @@ function guruProductSimilarity(a, b) {
     if (tb.has(t)) inter++;
   });
   return inter / Math.min(ta.size, tb.size);
+}
+
+function guruClosestCurrentProduct(orphan, products) {
+  const ranked = products
+    .map((product) => ({ product, score: guruProductSimilarity(orphan, product) }))
+    .sort((a, b) => b.score - a.score);
+  if (!ranked[0] || ranked[0].score < 0.55) return "";
+  if (ranked[1] && ranked[0].score === ranked[1].score) return "";
+  return ranked[0].product;
+}
+
+function guruReferencedProductNames(workspace) {
+  const names = new Set();
+  const add = (value) => {
+    const text = String(value || "").trim();
+    if (text) names.add(text);
+  };
+  (workspace.painV130?.productMaps || []).forEach((row) => add(row.product));
+  (workspace.painV130?.steps?.search?.searchClusters || []).forEach((row) => add(row.product));
+  (workspace.unitV130?.items || []).forEach((row) => {
+    add(row.productKey);
+    if (row.productKey) add(row.name);
+  });
+  (workspace.gates || []).forEach((gate) =>
+    (gate.cards || []).forEach((card) =>
+      (card.pageRows || []).forEach((row) => add(row.direction)),
+    ),
+  );
+  add(workspace.gate4Production?.launchProduct);
+  Object.keys(workspace.project?.offersV2?.productOffers || {}).forEach(add);
+  Object.keys(workspace.project?.directionPlacement || {}).forEach(add);
+  Object.values(workspace.gate4Production?.campaigns || {}).forEach((row) => add(row?.product));
+  return [...names];
+}
+
+function guruConsolidateProductRows(rows, keyOf) {
+  if (!Array.isArray(rows)) return;
+  const order = [];
+  const merged = new Map();
+  rows.forEach((row) => {
+    const key = String(keyOf(row) || "").trim();
+    if (!key) {
+      order.push({ key: "", row });
+      return;
+    }
+    if (!merged.has(key)) {
+      merged.set(key, row);
+      order.push({ key });
+    } else {
+      merged.set(key, guruMergeRenamedValue(merged.get(key), row));
+    }
+  });
+  rows.splice(0, rows.length, ...order.map((item) => item.key ? merged.get(item.key) : item.row));
 }
 
 // Пристыковать осиротевшие записи map[староеНазвание] к лучшему совпадению
@@ -31264,20 +31608,48 @@ function guruRescueOrphanKeys(map, products) {
 
 function guruSyncProductKeys(workspace = state) {
   if (!workspace?.project) return;
+  const signature = () => JSON.stringify({
+    offers: Object.keys(workspace.project?.offersV2?.productOffers || {}).sort(),
+    placements: Object.keys(workspace.project?.directionPlacement || {}).sort(),
+    refs: guruReferencedProductNames(workspace).sort(),
+    campaigns: Object.keys(workspace.gate4Production?.campaigns || {}).sort(),
+    rsya: Object.keys(workspace.gate4Rsya || {}).sort(),
+    productMaps: (workspace.painV130?.productMaps || []).map((row) => row?.product),
+    units: (workspace.unitV130?.items || []).map((row) => [row?.productKey, row?.name]),
+  });
+  const before = signature();
   const products = v121OffersProducts(workspace).filter(Boolean);
-  if (!products.length) return;
+  if (!products.length) return false;
+  guruApplyRememberedProductRenames(workspace);
   guruRescueOrphanKeys(workspace.project.offersV2?.productOffers, products);
   const mega = workspace.gates
     ?.find((g) => g.id === "gate-0")
     ?.cards?.find((c) => isMegaMarketingCard(c));
   guruRescueOrphanKeys(mega?.megaMarketing?.platformV2?.landings, products);
+  // Исправляет проекты, переименованные до полной миграции ссылок.
+  guruReferencedProductNames(workspace).forEach((orphan) => {
+    if (products.includes(orphan)) return;
+    const match = guruClosestCurrentProduct(orphan, products);
+    if (match) guruRenameProductData(orphan, match, workspace);
+  });
+  guruConsolidateProductRows(
+    workspace.painV130?.productMaps,
+    (row) => row?.product,
+  );
+  guruConsolidateProductRows(
+    workspace.unitV130?.items,
+    (row) => row?.productKey || row?.name,
+  );
+  return before !== signature();
 }
 
 const __guruPrevPrepareSystemCardsV1101 = prepareSystemCards;
 prepareSystemCards = function (workspace) {
   __guruPrevPrepareSystemCardsV1101(workspace);
   try {
-    guruSyncProductKeys(workspace);
+    const changed = guruSyncProductKeys(workspace);
+    if (changed && workspace === state)
+      queueMicrotask(() => saveState());
   } catch (err) {
     console.warn("Не удалось синхронизировать ключи продуктов", err);
   }
@@ -31306,6 +31678,33 @@ bindCardInputs = function () {
     });
   });
 };
+
+// Делегированная страховка для новых/перерисованных полей Gate 0:
+// фиксируем исходное имя при входе в поле и мигрируем после завершения ввода.
+const __guruProductEditAnchors = new WeakMap();
+document.addEventListener("focusin", (event) => {
+  const el = event.target?.closest?.(
+    '[data-v116-key="whatSell"], [data-v116-multi="whatSellExtra"]',
+  );
+  if (el) __guruProductEditAnchors.set(el, String(el.value || "").trim());
+}, true);
+document.addEventListener("change", (event) => {
+  const el = event.target?.closest?.(
+    '[data-v116-key="whatSell"], [data-v116-multi="whatSellExtra"]',
+  );
+  if (!el) return;
+  const oldName = __guruProductEditAnchors.get(el) || "";
+  const newName = String(el.value || "").trim();
+  __guruProductEditAnchors.set(el, newName);
+  if (!oldName || !newName || oldName === newName) return;
+  queueMicrotask(() => {
+    guruRenameProductData(oldName, newName);
+    guruRememberProductRename(state, oldName, newName);
+    guruSyncProductKeys(state);
+    saveState();
+    if (activeGateId === "gate-0") renderGate();
+  });
+}, true);
 
 /* ================================================================
    v1.12.0 — Полная изоляция групп в «Яндекс Директ / Поиск» (ЕПК).
@@ -31421,7 +31820,15 @@ function g4sbGroupPhrases(product, group) {
 
 function g4sbGroupReadiness(row, phraseCount, ads) {
   const hasPhrases = Boolean(row.clusterKey) || phraseCount > 0;
-  const required = [row.col0, hasPhrases ? "x" : "", row.col2, row.col3, row.col4];
+  const hasJtbd = row.mainJtbdIndex !== "" && row.mainJtbdIndex !== undefined;
+  const required = [
+    row.col0,
+    hasJtbd ? "x" : "",
+    hasPhrases ? "x" : "",
+    row.col2,
+    row.col3,
+    row.col4,
+  ];
   const filled = required.filter((v) => String(v || "").trim()).length;
   const hasAd = (ads || []).some((ad) => String(ad.ad0 || "").trim());
   if (filled === required.length && hasAd) return "ready";
@@ -31581,14 +31988,9 @@ function g4sbFinalCheckHtml(product, d) {
     const impressions = parseUnitNumber(row.col2);
     const clicks = parseUnitNumber(row.col3);
     const budget = parseUnitNumber(row.col4);
-    const verdict = g4GroupVerdict([
-      g4BandImpressions(row.col2),
-      g4BandClicks(row.col3),
-      g4BandBudget(row.col4),
-      g4BandPhrases(phraseCount),
-    ]);
+    const forecastStatus = g4sbV140ForecastAssessment(row, phraseCount, d.settings || {}, product).overall;
     const name = String(row.col0 || "").trim() || row.clusterKey || `Группа ${ri + 1}`;
-    return { name, impressions, clicks, budget, phraseCount, verdict };
+    return { name, impressions, clicks, budget, phraseCount, forecastStatus };
   });
   const totals = rows.reduce(
     (acc, r) => ({
@@ -31620,7 +32022,7 @@ function g4sbFinalCheckHtml(product, d) {
           <td style="text-align:right;padding:8px;border-bottom:1px solid var(--line);">${cell(r.clicks)}</td>
           <td style="text-align:right;padding:8px;border-bottom:1px solid var(--line);">${cell(r.budget, " ₽")}</td>
           <td style="text-align:right;padding:8px;border-bottom:1px solid var(--line);">${r.phraseCount}</td>
-          <td style="padding:8px;border-bottom:1px solid var(--line);">${r.verdict ? `<span class="status-pill status-${G4_BAND_CLASS[r.verdict]}" style="font-size:11px;">${escapeHtml(G4_BAND_LABELS[r.verdict])}</span>` : '<span style="color:var(--muted);font-size:12px;">нет данных</span>'}</td>
+          <td style="padding:8px;border-bottom:1px solid var(--line);">${g4sbV140StatusHtml(r.forecastStatus)}</td>
         </tr>`,
           )
           .join("")}
@@ -32038,6 +32440,18 @@ function g4sbItemJtbdList(product, itemId) {
     .filter((j) => j.text);
 }
 
+function g4sbSegmentJtbdLinkKey(itemId, segmentIndex) {
+  return `${String(itemId || "")}::${String(segmentIndex ?? "")}`;
+}
+
+function g4sbSegmentJtbdList(product, itemId, segmentIndex, build = null) {
+  if (!itemId || segmentIndex === "" || segmentIndex === undefined) return [];
+  const d = build || ensureGate4SearchBuild(product);
+  d.segmentJtbdLinks = d.segmentJtbdLinks || {};
+  const allowed = new Set((d.segmentJtbdLinks[g4sbSegmentJtbdLinkKey(itemId, segmentIndex)] || []).map(String));
+  return g4sbItemJtbdList(product, itemId).filter((jtbd) => allowed.has(String(jtbd.index)));
+}
+
 // ---- Кластеры: id = реальный item.id (не текст) ----
 g4sbClusterList = function (product) {
   const sem = g4ProductSemantics(product);
@@ -32077,66 +32491,10 @@ ensureGate4SearchBuild = function (product) {
   return d;
 };
 
-// ---- Горизонтальная оценка прогноза (только текущая группа) ----
-const G4SB_TIER_ROWS = [
-  { key: "col2", label: "Прогноз показов", below: "< 300", mid: "300–1000", good: "1000+", belowMax: 300, goodMin: 1000, suffix: "" },
-  { key: "col3", label: "Прогноз кликов", below: "< 20", mid: "20–100", good: "100+", belowMax: 20, goodMin: 100, suffix: "" },
-  { key: "col4", label: "Бюджет без НДС", below: "< 500 ₽", mid: "500–3000 ₽", good: "3000+ ₽", belowMax: 500, goodMin: 3000, suffix: " ₽" },
-];
-
-function g4sbTierOf(value, belowMax, goodMin) {
-  if (!String(value || "").trim()) return null;
-  const n = parseUnitNumber(value);
-  if (n < belowMax) return "below";
-  if (n < goodMin) return "minimum";
-  return "good";
-}
-
-function g4sbHorizontalForecastTableHtml(row, phraseCount) {
-  const phraseTier = phraseCount ? (phraseCount < 5 ? "below" : phraseCount < 20 ? "minimum" : "good") : null;
-  const dataRows = [
-    ...G4SB_TIER_ROWS.map((r) => ({
-      label: r.label,
-      below: r.below,
-      mid: r.mid,
-      good: r.good,
-      value: row[r.key],
-      display: String(row[r.key] || "").trim() ? g4NumFormat(parseUnitNumber(row[r.key]), r.suffix) : "",
-      tier: g4sbTierOf(row[r.key], r.belowMax, r.goodMin),
-    })),
-    {
-      label: "Количество фраз",
-      below: "< 5",
-      mid: "5–20",
-      good: "20–50",
-      display: String(phraseCount || ""),
-      tier: phraseTier,
-    },
-  ];
-  return `<div class="g1-table-scroll" style="margin-top:10px">
-    <table style="width:100%;border-collapse:collapse;font-size:12px;">
-      <thead><tr>
-        <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--muted);">Показатель</th>
-        <th style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--muted);">Ниже нормы</th>
-        <th style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--muted);">Рабочий минимум</th>
-        <th style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--muted);">Хорошо</th>
-        <th style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--muted);">Ваше значение</th>
-      </tr></thead>
-      <tbody>
-        ${dataRows
-          .map(
-            (r) => `<tr>
-          <td style="padding:6px 8px;border-bottom:1px solid var(--line);">${escapeHtml(r.label)}</td>
-          <td style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--line);${r.tier === "below" ? "background:rgba(220,38,38,.08);" : ""}">${escapeHtml(r.below)}</td>
-          <td style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--line);${r.tier === "minimum" ? "background:rgba(245,158,11,.12);" : ""}">${escapeHtml(r.mid)}</td>
-          <td style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--line);${r.tier === "good" ? "background:rgba(22,163,74,.1);" : ""}">${escapeHtml(r.good)}</td>
-          <td style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--line);font-weight:800;">${r.display ? escapeHtml(r.display) : '<span style="color:var(--muted);font-weight:400;">Нет данных</span>'}</td>
-        </tr>`,
-          )
-          .join("")}
-      </tbody>
-    </table>
-  </div>`;
+// Оценка прогноза строится только по официальным ограничениям Директа
+// и условиям выбранной стратегии. Реализация находится в v1.40 ниже.
+function g4sbHorizontalForecastTableHtml(row, phraseCount, settings = {}, product = "") {
+  return g4sbV140ForecastTableHtml(row, phraseCount, settings, product);
 }
 
 // ---- Карточка группы: Кластер → Сегмент → JTBD → Фразы → Прогноз → Объявления ----
@@ -32700,18 +33058,22 @@ g4sbGroupCardHtml = function (product, row, ri, groupRows, ads) {
   const bPhr = g4BandPhrases(phraseCount);
   const verdict = g4GroupVerdict([bImp, bClk, bBud, bPhr]);
   const readiness = g4sbGroupReadiness(row, phraseCount, ads);
+  const isOpen = Boolean(ensureGate4SearchBuild(product).clusterListOpen[row.clusterId]);
 
-  return `<div class="g1-card" style="border-radius:14px;">
-    <div class="g1-card-header-static" style="padding:14px 18px;">
-      <span><span style="font-weight:800;font-size:13px;color:var(--muted);">Группа ${ri + 1}</span> <span style="font-size:13px;margin-left:8px;">${escapeHtml(preview.substring(0, 60))}</span></span>
+  return `<article class="g1-card ${isOpen ? "is-open" : ""}" style="border-radius:14px;">
+    <button class="g1-card-header" ${p} data-g4sb-unit-toggle="${escapeAttr(row.clusterId || "")}">
+      <span class="g1-section-left">
+        <span class="g1-card-title"><span style="color:var(--muted);font-weight:700;margin-right:8px;">Кластер-группа ${ri + 1}</span>${escapeHtml(preview.substring(0, 60))}</span>
+        <span class="g1-section-progress">${phraseCount} фраз</span>
+      </span>
       <span style="display:flex;align-items:center;gap:8px;">
         ${verdict ? g4BandBadge(verdict) : ""}
         <span class="status-pill status-${readiness}">${escapeHtml(STATUS_LABELS[readiness] || readiness)}</span>
-        <button class="small-btn danger-mini" data-g4sb-group-remove="${ri}" ${p} ${groupRows.length <= 1 ? "disabled" : ""}>×</button>
+        <span style="color:var(--muted);font-size:12px;white-space:nowrap;">${isOpen ? "свернуть ▾" : "развернуть ▸"}</span>
       </span>
-    </div>
-    <div class="g1-card-body" style="padding:14px 18px;">
-      <p class="g1-task">Самостоятельная единица: свой кластер (собран заранее), свои минус-фразы, свой прогноз, свои объявления.</p>
+    </button>
+    ${isOpen ? `<div class="g1-card-body" style="padding:14px 18px;">
+      <p class="g1-task">Одна единица: кластер (сегмент → JTBD → фразы) и его группа объявлений — минус-фразы, прогноз и объявления свои у каждой единицы.</p>
       ${g4sbField("col", `${p} data-g4sb-group="${ri}" data-g4sb-col="col0"`, "Название группы", row.col0, "подставится из кластера, можно изменить")}
       ${g4sbGroupClusterSummaryHtml(product, row)}
       <div class="g1-fields-grid" style="margin-top:12px">
@@ -32744,9 +33106,109 @@ g4sbGroupCardHtml = function (product, row, ri, groupRows, ads) {
           .join("")}
         <button class="small-btn add-inline-btn" style="font-size:12px;margin-top:4px;" data-g4sb-ad-add="${ri}" ${p}>+ Добавить объявление</button>
       </div>
+    </div>` : ""}
+  </article>`;
+};
+
+/* ---- Индикатор покрытия сегментов: какие сегменты из Gate 1
+   «Уровень 2 — Сегментация + позиционирование» уже реализованы
+   кластером, а какие нет. Считается вживую по d.clusters (сегмент
+   реализован, если хотя бы один кластер собран на нём). У
+   нереализованных — кнопка «Собрать кластер», которая открывает
+   форму сборки с уже подставленным сегментом. ---- */
+function g4sbSegmentCoverageHtml(product, d) {
+  const segments = g4sbAllSegmentsFlat(product);
+  if (!segments.length) {
+    return `<div class="g1-empty" style="margin-top:8px">В Gate 1 «Уровень 2 — Сегментация + позиционирование» пока нет ни одного сегмента.</div>`;
+  }
+  const p = `data-g4sb-product="${escapeAttr(product)}"`;
+  const isCovered = (s) =>
+    (d.clusters || []).some(
+      (c) => c.itemId === s.itemId && String(c.segmentIndex) === String(s.index),
+    );
+  const covered = segments.filter(isCovered).length;
+  return `<div class="g4-upstream" style="margin-top:12px">
+    <div class="g4-upstream-title">Покрытие сегментов Уровня 2 — реализовано ${covered} из ${segments.length}</div>
+    <p class="g1-task">Источник — Gate 1 «Уровень 2 — Сегментация + позиционирование». Сегмент считается реализованным, когда на нём собран хотя бы один кластер.</p>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+      ${segments
+        .map((s) => {
+          const done = isCovered(s);
+          return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;">
+            <span style="font-size:13px;min-width:0;">${escapeHtml(s.name)} <span style="color:var(--muted);font-size:12px;">(${escapeHtml(s.itemName)})</span></span>
+            <span style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+              <span class="status-pill status-${done ? "ready" : "not_started"}">${done ? "Реализован" : "Не реализован"}</span>
+              ${done ? "" : `<button class="small-btn add-inline-btn" style="font-size:11px;" ${p} data-g4sb-segment-build="${escapeAttr(JSON.stringify([s.itemId, s.index]))}">Собрать кластер</button>`}
+            </span>
+          </div>`;
+        })
+        .join("")}
     </div>
   </div>`;
-};
+}
+
+/* ---- Обзор занятости JTBD и ключевых фраз: перед созданием новой
+   кластер-группы видно, что уже занято другими единицами (и какими
+   именно), а что свободно. Считается вживую по d.clusters через
+   g4sbClusterUsageMaps — тот же источник, что и пометки в форме
+   сборки. Свёрнут по умолчанию (details), uiKeeper сохраняет
+   раскрытие при перерисовке. ---- */
+function g4sbUsageOverviewHtml(product, d) {
+  const items = g4sbClusterList(product);
+  if (!items.length) return "";
+  const pill = (cls, text) => `<span class="status-pill status-${cls}" style="flex-shrink:0;">${escapeHtml(text)}</span>`;
+  const rowHtml = (label, pillHtml) =>
+    `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 12px;border:1px solid var(--line);border-radius:12px;">
+      <span style="font-size:12px;min-width:0;">${escapeHtml(label)}</span>${pillHtml}
+    </div>`;
+  const sections = items
+    .map((item) => {
+      const usage = g4sbClusterUsageMaps(d, item.id, "");
+      const jtbdList = g4sbItemJtbdList(product, item.id);
+      const phraseRows = g4sbClusterPhraseRows(product, item.id);
+      if (!jtbdList.length && !phraseRows.length) return "";
+      const jtbdHtml = jtbdList
+        .map((j) => {
+          const names = usage.jtbdUsage.get(String(j.index));
+          if (!names) return rowHtml(j.text, pill("not_started", "Свободен"));
+          const kind = usage.usedMainJtbd.has(String(j.index)) ? "Основной" : "Доп.";
+          return rowHtml(j.text, pill("ready", `${kind} в «${names.join("», «")}»`));
+        })
+        .join("");
+      const phrasesHtml = phraseRows
+        .map((r) => {
+          const names = usage.phraseUsage.get(r.phrase);
+          return rowHtml(r.phrase, names ? pill("ready", `В «${names.join("», «")}»`) : pill("not_started", "Свободна"));
+        })
+        .join("");
+      return `${items.length > 1 ? `<div style="font-weight:700;font-size:12px;color:var(--muted);margin-top:10px;">${escapeHtml(item.name)}</div>` : ""}
+        <div style="font-weight:700;font-size:12px;color:var(--muted);margin-top:8px;">JTBD · ${jtbdList.length}</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">${jtbdHtml || '<div class="g1-empty">Нет JTBD в Gate 1</div>'}</div>
+        <div style="font-weight:700;font-size:12px;color:var(--muted);margin-top:10px;">Ключевые фразы · ${phraseRows.length}</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">${phrasesHtml || '<div class="g1-empty">Нет фраз в Gate 1</div>'}</div>`;
+    })
+    .join("");
+  if (!sections.trim()) return "";
+  return `<details class="g4-upstream" style="margin-top:12px">
+    <summary style="cursor:pointer;"><span class="g4-upstream-title" style="display:inline;">Занятость JTBD и ключевых фраз — что уже использовано в кластер-группах</span></summary>
+    <p class="g1-task" style="margin-top:8px;">Занятые элементы можно использовать повторно осознанно — здесь видно, в какой кластер-группе они уже работают.</p>
+    ${sections}
+  </details>`;
+}
+
+/* Кнопка «Собрать кластер» у нереализованного сегмента: открывает
+   форму сборки с подставленными товаром и сегментом. */
+document.addEventListener("click", (e) => {
+  const t = e.target;
+  if (t?.dataset?.g4sbSegmentBuild === undefined) return;
+  const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
+  const [itemId, segmentIndex] = JSON.parse(t.dataset.g4sbSegmentBuild);
+  g4sbResetDraft(d);
+  d.clusterDraft.itemId = itemId;
+  d.clusterDraft.segmentIndex = segmentIndex;
+  flashSaving();
+  renderGate();
+});
 
 /* ---- Сворачиваемый шаг кампании («лестница ориентирования»):
    номер + название + счётчик справа + чек-контроль. Заголовок —
@@ -32801,27 +33263,28 @@ g4sbSearchChannelCardHtml = function (channel, campaign, index, product) {
   const hasSemantics = g4sbClusterList(product).length > 0;
 
   if (!d.searchStepOpen)
-    d.searchStepOpen = { clusters: true, groups: true, check: false };
+    d.searchStepOpen = { clusters: true, check: false };
   if (Object.hasOwn(d.searchStepOpen, "header")) delete d.searchStepOpen.header;
   if (Object.hasOwn(d.searchStepOpen, "settings")) delete d.searchStepOpen.settings;
+  if (Object.hasOwn(d.searchStepOpen, "groups")) delete d.searchStepOpen.groups;
   const steps = d.searchStepOpen;
 
   const clustersBody =
-    `<p class="g1-task">Сначала соберите кластер: сегмент → JTBD → фразы → спрос. 1 кластер = 1 группа.</p>` +
+    `<p class="g1-task">Кластер и его группа объявлений — одна единица: соберите кластер (сегмент → JTBD → фразы → спрос), группа с прогнозом и объявлениями создастся автоматически.</p>` +
+    g4sbSegmentCoverageHtml(product, d) +
+    g4sbUsageOverviewHtml(product, d) +
+    (d.groupRows.length
+      ? `<div class="g1-fields-grid" style="margin-top:12px">${d.groupRows
+          .map((row, ri) => g4sbGroupCardHtml(product, row, ri, d.groupRows, (d.adsRows || {})[ri] || [{}]))
+          .join("")}</div>`
+      : `<div class="g1-empty" style="margin-top:12px">Кластер-групп пока нет — создайте первую: сегмент → JTBD → фразы.</div>`) +
     g4sbClusterAssemblyHtml(product, d) +
-    g4sbClusterListSectionHtml(product, d) +
     (!d.clusterDraft.open
       ? (!hasSemantics
           ? `<div class="g1-empty" style="margin-top:8px">В Gate 1 пока нет заполненной семантики (сегменты, JTBD, фразы) ни по одному товару этого направления.</div>`
           : "") +
-        `<button class="small-btn add-inline-btn" style="width:100%;margin-top:12px;" ${p} data-g4sb-draft-open>+ Добавить кластер</button>`
+        `<button class="small-btn add-inline-btn" style="width:100%;margin-top:12px;" ${p} data-g4sb-draft-open>+ Создать кластер-группу</button>`
       : "");
-
-  const groupsBody = d.groupRows.length
-    ? `<div class="g1-fields-grid" style="margin-top:4px">${d.groupRows
-        .map((row, ri) => g4sbGroupCardHtml(product, row, ri, d.groupRows, (d.adsRows || {})[ri] || [{}]))
-        .join("")}</div>`
-    : `<div class="g1-empty">Групп пока нет — соберите кластер выше, она создастся автоматически.</div>`;
 
   const sitelinksBody =
     `<p class="g1-task">Быстрые ссылки — уровень всей кампании, не дублируются внутри групп.</p>` +
@@ -32854,9 +33317,8 @@ g4sbSearchChannelCardHtml = function (channel, campaign, index, product) {
     </button>
     <div class="g1-card-body">
       <p class="g1-task">${escapeHtml(g4Gate3ChannelRole(channel))}</p>
-      ${g4sbStepHtml(product, "1", "Кластеры", String(d.clusters.length), "clusters", steps.clusters, clustersBody)}
-      ${g4sbStepHtml(product, "2", "Группы объявлений", String(d.groupRows.length), "groups", steps.groups, groupsBody)}
-      ${g4sbStepHtml(product, "3", "Быстрые ссылки и проверка", "", "check", steps.check, checkBody)}
+      ${g4sbStepHtml(product, "1", "Кластеры и группы", String(d.clusters.length), "clusters", steps.clusters, clustersBody)}
+      ${g4sbStepHtml(product, "2", "Быстрые ссылки и проверка", "", "check", steps.check, checkBody)}
     </div>
   </article>`;
 };
@@ -32868,7 +33330,7 @@ document.addEventListener("click", (e) => {
   if (!btn) return;
   const d = ensureGate4SearchBuild(btn.dataset.g4sbProduct);
   if (!d.searchStepOpen)
-    d.searchStepOpen = { clusters: true, groups: true, check: false };
+    d.searchStepOpen = { clusters: true, check: false };
   const key = btn.dataset.g4sbStep;
   d.searchStepOpen[key] = !d.searchStepOpen[key];
   flashSaving();
@@ -32898,7 +33360,8 @@ document.addEventListener("click", (e) => {
   }
   if (t?.dataset?.g4sbDraftSave !== undefined) {
     const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
-    g4sbSaveClusterDraft(t.dataset.g4sbProduct, d);
+    const saved = g4sbSaveClusterDraft(t.dataset.g4sbProduct, d);
+    if (saved) d.clusterListOpen[saved.id] = true;
     flashSaving();
     renderGate();
     return;
@@ -32947,8 +33410,11 @@ document.addEventListener("change", (e) => {
       return;
     }
     const [itemId, index] = JSON.parse(t.value);
-    if (d.clusterDraft.itemId !== itemId) {
-      // сменился товар — фразы и JTBD прошлого товара больше не подходят
+    if (
+      d.clusterDraft.itemId !== itemId ||
+      String(d.clusterDraft.segmentIndex) !== String(index)
+    ) {
+      // Сменился сегмент — его JTBD и поисковый набор выбираются заново.
       d.clusterDraft.phraseSelection = [];
       d.clusterDraft.jtbdIndex = "";
       d.clusterDraft.mainJtbdIndex = "";
@@ -33185,9 +33651,13 @@ function g4sbPhraseTableHtml(product, itemId, selectedSet, filter, p, phraseUsag
 function g4sbKeywordRow(row = {}) {
   return {
     kw: String(row.kw || row.phrase || ""),
-    vol: String(row.vol ?? row.volText ?? ""),
+    vol: String(row.vol ?? row.volText ?? row.forecastImpressions ?? row.manualImpressions ?? ""),
     growth: String(row.growth || row.period || ""),
     source: String(row.source || ""),
+    forecast: String(row.forecast || row.additionForecast || ""),
+    forecastClicks: String(row.forecastClicks ?? row.manualClicks ?? ""),
+    forecastBudget: String(row.forecastBudget ?? row.manualBudget ?? ""),
+    originStage: row.originStage === "gate4" ? "gate4" : row.originStage === "gate1" ? "gate1" : "",
   };
 }
 
@@ -33217,7 +33687,7 @@ function g4sbKeywordEditorHtml(product, draft, p) {
     <small style="color:var(--muted);display:block;margin:3px 0 10px;">Число, из Wordstat / Google Trends. Новые запросы синхронизируются с Gate 1.</small>
     <div style="display:flex;flex-direction:column;gap:10px;">
       ${rows.map((row, index) => `<div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;border-bottom:1px dashed var(--line);padding-bottom:8px;">
-        ${[["kw", "Ключевое слово"], ["vol", "Объём показов/мес"], ["growth", "Когда спрос растёт"], ["source", "Wordstat/тренды"]].map(([field, label]) => {
+        ${[["kw", "Ключевое слово"], ["vol", "Объём показов/мес"], ["growth", "Общее число запросов за"], ["source", "Wordstat/тренды"]].map(([field, label]) => {
           const value = row[field] || "";
           return `<label class="g1-field" style="flex:1;min-width:140px;"><span style="font-size:11px;">${escapeHtml(label)}</span><textarea class="g1-input ${String(value).trim() ? "is-filled" : "is-empty"}" ${p} data-g4sb-keyword-row="${index}" data-g4sb-keyword-field="${field}" rows="1" placeholder="${escapeAttr(label)}">${escapeHtml(value)}</textarea></label>`;
         }).join("")}
@@ -33233,6 +33703,12 @@ function g4sbSyncKeywordRowsToGate1(product, itemId, rows) {
   const itemData = sem.row?.items?.[itemId];
   if (!itemData) return;
   if (!Array.isArray(itemData.demandRows)) itemData.demandRows = [];
+  const analyticsPhraseKeys = new Set(
+    (itemData.semL3Groups || []).flatMap((group) => [
+      group?.mainQuery,
+      ...(Array.isArray(group?.keywords) ? group.keywords : []),
+    ]).map((value) => String(value || "").trim().toLocaleLowerCase("ru-RU")).filter(Boolean),
+  );
   const byKeyword = new Map(
     itemData.demandRows.map((row) => [String(row.kw || "").trim().toLowerCase(), row]),
   );
@@ -33241,8 +33717,15 @@ function g4sbSyncKeywordRowsToGate1(product, itemId, rows) {
     const key = clean.kw.trim().toLowerCase();
     if (!key) return;
     const target = byKeyword.get(key);
-    if (target) Object.assign(target, clean);
+    if (target) {
+      const existingOrigin = target.originStage;
+      Object.assign(target, clean);
+      // Если фраза уже была в Gate 1 до синхронизации, она остаётся
+      // аналитической даже после обновления прогноза из Gate 4.
+      target.originStage = existingOrigin || (analyticsPhraseKeys.has(key) ? "gate1" : "gate4");
+    }
     else {
+      clean.originStage = clean.originStage || "gate4";
       itemData.demandRows.push(clean);
       byKeyword.set(key, clean);
     }
@@ -33325,7 +33808,9 @@ g4sbClusterAssemblyHtml = function (product, d) {
     : `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${draft.itemId ? "Других JTBD у этого товара нет" : ""}</div>`;
 
   const itemCluster = draft.itemId ? g4sbClusterList(product).find((c) => c.id === draft.itemId) : null;
-  const keywordRows = g4sbEnsureDraftKeywordRows(product, draft);
+  const keywordRows = Array.isArray(draft.keywordRows)
+    ? draft.keywordRows
+    : (draft.keywordRows = []);
   const keywordEditorHtml = g4sbKeywordEditorHtml(product, draft, p);
   const filledKeywordRows = keywordRows.filter((row) => String(row.kw || "").trim());
   const totalDemand = filledKeywordRows.reduce(
@@ -33470,8 +33955,10 @@ g4sbGroupClusterSummaryHtml = function (product, row) {
     ${extraJtbd.length ? g4ReadonlyRow("Дополнительные JTBD", extraJtbd.map((j) => j.text).join(" · "), "сборка кластера") : ""}
     ${g4ReadonlyRow("Ключевые фразы · " + phrases.length, phrases.join(", "), "сборка кластера")}
     ${g4ReadonlyRow("Суммарный спрос", demand.matched ? g4NumFormat(demand.total) + " показов/мес" : "нет данных", "Gate 1")}
-    <div style="margin-top:8px">
-      <button class="small-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-edit-cluster="${escapeAttr(cluster.id)}">Изменить состав кластера</button>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+      <button class="small-btn add-inline-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-edit-cluster="${escapeAttr(cluster.id)}">Редактировать кластер</button>
+      <button class="small-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-duplicate-cluster="${escapeAttr(cluster.id)}">Дублировать</button>
+      <button class="small-btn danger-mini" data-g4sb-product="${escapeAttr(product)}" data-g4sb-delete-unit="${escapeAttr(cluster.id)}" title="Удалить кластер вместе с группой">Удалить</button>
     </div>
   </div>`;
 };
@@ -33719,6 +34206,22 @@ const __g4V1200PrevEnsureSearchBuild = ensureGate4SearchBuild;
 ensureGate4SearchBuild = function (product) {
   const d = __g4V1200PrevEnsureSearchBuild(product);
   g4sbMigrateLegacyGroupsToClusters(product, d);
+  // Кластер и группа — одна единица: кластеру без группы (сироте из
+  // старых данных, где группу удалили отдельно) группа создаётся
+  // автоматически, иначе он был бы невидим в объединённом списке.
+  // Идемпотентно: у спаренного кластера группа уже есть.
+  d.clusters.forEach((c) => {
+    if (d.groupRows.some((r) => r.clusterId === c.id)) return;
+    d.groupRows.push({
+      col0: c.name,
+      clusterId: c.id,
+      minus: "",
+      col2: "",
+      col3: "",
+      col4: "",
+      nameAutoSynced: true,
+    });
+  });
   return d;
 };
 
@@ -33758,94 +34261,49 @@ function g4sbDuplicateCluster(product, d, clusterId) {
   return copy;
 }
 
-/* Удалить можно только кластер без единой связанной группы —
-   иначе группа осталась бы ссылаться в никуда. */
-function g4sbDeleteCluster(d, clusterId) {
-  if (g4sbClusterGroupCount(d, clusterId) > 0) return false;
-  const idx = d.clusters.findIndex((c) => c.id === clusterId);
-  if (idx === -1) return false;
-  d.clusters.splice(idx, 1);
+/* Удаление единицы «кластер + группа»: убираем кластер и все его
+   группы вместе (1 кластер = 1 группа, раздельного удаления нет).
+   adsRows переиндексируются так же, как в старом удалении группы —
+   объявления остальных групп не смещаются на чужие места. */
+function g4sbDeleteClusterUnit(d, clusterId) {
+  const ci = d.clusters.findIndex((c) => c.id === clusterId);
+  if (ci === -1) return false;
+  let gi = d.groupRows.findIndex((r) => r.clusterId === clusterId);
+  while (gi !== -1) {
+    d.groupRows.splice(gi, 1);
+    const ads = {};
+    Object.keys(d.adsRows).forEach((k) => {
+      const n = Number(k);
+      if (n < gi) ads[n] = d.adsRows[k];
+      else if (n > gi) ads[n - 1] = d.adsRows[k];
+    });
+    d.adsRows = ads;
+    gi = d.groupRows.findIndex((r) => r.clusterId === clusterId);
+  }
+  d.clusters.splice(ci, 1);
   return true;
 }
 
-/* ---- Карточка одного кластера в самостоятельном списке ---- */
-function g4sbClusterListItemHtml(product, d, cluster) {
-  const p = `data-g4sb-product="${escapeAttr(product)}"`;
-  const isOpen = Boolean(d.clusterListOpen[cluster.id]);
-  const groupCount = g4sbClusterGroupCount(d, cluster.id);
-  const segment = g4sbItemSegments(product, cluster.itemId).find((s) => String(s.index) === String(cluster.segmentIndex));
-  const jtbdAll = g4sbItemJtbdList(product, cluster.itemId);
-  const mainJtbd = jtbdAll.find((j) => String(j.index) === String(cluster.mainJtbdIndex));
-  const extraJtbd = jtbdAll.filter((j) => (cluster.extraJtbdIndexes || []).some((idx) => String(idx) === String(j.index)));
-  const phrases = g4sbClusterPhrases(product, cluster);
-  const demand = g4sbClusterDemand(product, cluster.itemId, phrases);
-  const usageLabel = groupCount ? `Групп: ${groupCount}` : "Групп: 0 · не используется";
-  const usageClass = groupCount ? "ready" : "not_started";
+/* Отдельный список кластеров удалён: кластер и его группа теперь
+   показываются одной объединённой карточкой (сводка кластера +
+   Редактировать/Дублировать/Удалить + название/минус-фразы/прогноз/
+   объявления группы) в едином шаге «Кластеры и группы». */
 
-  return `<article class="g1-card ${isOpen ? "is-open" : ""}">
-    <button class="g1-card-header" ${p} data-g4sb-cluster-toggle="${escapeAttr(cluster.id)}">
-      <span class="g1-section-left">
-        <span class="g1-card-title">${escapeHtml(cluster.name)}</span>
-        <span class="g1-section-progress">${escapeHtml(mainJtbd ? mainJtbd.text.slice(0, 60) : "основной JTBD не выбран")} · ${phrases.length} фраз</span>
-      </span>
-      <span class="status-pill status-${usageClass}">${escapeHtml(usageLabel)}</span>
-    </button>
-    ${
-      isOpen
-        ? `<div class="g1-card-body">
-      ${g4ReadonlyRow("Сегмент", segment ? segment.name : "", "сборка кластера")}
-      ${g4ReadonlyRow("Основной JTBD", mainJtbd ? mainJtbd.text : "", "сборка кластера")}
-      ${extraJtbd.length ? g4ReadonlyRow("Дополнительные JTBD", extraJtbd.map((j) => j.text).join(" · "), "сборка кластера") : ""}
-      ${g4ReadonlyRow("Ключевые фразы · " + phrases.length, phrases.join(", "), "сборка кластера")}
-      ${g4ReadonlyRow("Суммарный спрос", demand.matched ? g4NumFormat(demand.total) + " показов/мес" : "нет данных", "Gate 1")}
-      ${g4ReadonlyRow("Использование", groupCount ? `${groupCount} ${groupCount === 1 ? "группа" : "групп"}` : "ни одна группа не использует этот кластер", "расчёт")}
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
-        <button class="small-btn add-inline-btn" ${p} data-g4sb-edit-cluster="${escapeAttr(cluster.id)}">Редактировать</button>
-        <button class="small-btn" ${p} data-g4sb-duplicate-cluster="${escapeAttr(cluster.id)}">Дублировать</button>
-        <button class="small-btn danger-mini" ${p} data-g4sb-delete-cluster="${escapeAttr(cluster.id)}" ${groupCount ? "disabled" : ""} ${groupCount ? `title="Нельзя удалить — используется в ${groupCount} ${groupCount === 1 ? "группе" : "группах"}"` : ""}>Удалить</button>
-      </div>
-      ${groupCount ? `<small style="color:var(--muted);font-size:11px;display:block;margin-top:6px;">Удаление недоступно, пока кластер используется хотя бы одной группой.</small>` : ""}
-    </div>`
-        : ""
-    }
-  </article>`;
-}
-
-/* ---- Самостоятельный список кластеров направления ---- */
-function g4sbClusterListSectionHtml(product, d) {
-  return `<p class="g1-task">Кластер — самостоятельная единица: сегмент, JTBD и фразы редактируются только здесь. Изменения сразу видны во всех группах, которые на него ссылаются.</p>
-    ${
-      d.clusters.length
-        ? `<div class="g1-route" style="margin-top:12px;display:flex;flex-direction:column;gap:12px;">
-      ${d.clusters.map((cluster) => g4sbClusterListItemHtml(product, d, cluster)).join("")}
-    </div>`
-        : `<div class="g1-empty">Кластеров пока нет — соберите первый кластер выше.</div>`
-    }`;
-}
-
-/* Список кластеров теперь рендерится прямо в шаге 3 «Кластеры»
-   внутри g4sbSearchChannelCardHtml — отдельная вставка через
-   marker-replace больше не нужна. */
-
-/* Кнопка внутри группы переименована: «Открыть кластер» вместо
-   «Изменить состав кластера» — состав редактируется только в
-   списке кластеров, из группы это лишь переход к тому же экрану. */
-const __g4V1190PrevGroupClusterSummaryHtml = g4sbGroupClusterSummaryHtml;
-g4sbGroupClusterSummaryHtml = function (product, row) {
-  let html = __g4V1190PrevGroupClusterSummaryHtml(product, row);
-  return html.replace(">Изменить состав кластера<", ">Открыть кластер<");
-};
-
+/* ---- Действия объединённой карточки «Кластер + Группа»:
+   Дублировать (копия кластера сразу со своей группой) и Удалить
+   (кластер и его группа удаляются вместе — раздельного удаления
+   больше нет, они одна единица). ---- */
 document.addEventListener("click", (e) => {
-  const t = e.target;
-  if (t?.dataset?.g4sbClusterToggle !== undefined) {
-    const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
-    const id = t.dataset.g4sbClusterToggle;
+  const toggle = e.target?.closest?.("[data-g4sb-unit-toggle]");
+  if (toggle) {
+    const d = ensureGate4SearchBuild(toggle.dataset.g4sbProduct);
+    const id = toggle.dataset.g4sbUnitToggle;
     d.clusterListOpen[id] = !d.clusterListOpen[id];
     flashSaving();
     renderGate();
     return;
   }
+  const t = e.target;
   if (t?.dataset?.g4sbDuplicateCluster !== undefined) {
     const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
     const copy = g4sbDuplicateCluster(t.dataset.g4sbProduct, d, t.dataset.g4sbDuplicateCluster);
@@ -33854,9 +34312,9 @@ document.addEventListener("click", (e) => {
     renderGate();
     return;
   }
-  if (t?.dataset?.g4sbDeleteCluster !== undefined) {
+  if (t?.dataset?.g4sbDeleteUnit !== undefined) {
     const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
-    const ok = g4sbDeleteCluster(d, t.dataset.g4sbDeleteCluster);
+    const ok = g4sbDeleteClusterUnit(d, t.dataset.g4sbDeleteUnit);
     if (ok) {
       flashSaving();
       renderGate();
@@ -33864,8 +34322,9 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// === Адаптивная левая навигация: выдвижная панель для планшета/мобильного ===
-// Desktop (>1100px) — панель остаётся постоянной sticky-колонкой, код ниже не активен.
+// === Адаптивная левая навигация: выдвижная панель при нехватке рабочей ширины ===
+// Desktop (>1640px) — панель остаётся постоянной sticky-колонкой. Порог учитывает
+// контейнер 1280px, ширину панели 300px и внешние отступы рабочего пространства.
 // Содержимое и логика самой навигации (клики по Gate/проекту) не меняются —
 // добавляется только открытие/закрытие панели поверх контента.
 (function initSidebarDrawer() {
@@ -33876,7 +34335,11 @@ document.addEventListener("click", (e) => {
   const overlay = document.getElementById("sidebarOverlay");
   if (!appShell || !sidebar || !toggleBtn || !closeBtn || !overlay) return;
 
-  const drawerQuery = window.matchMedia("(max-width: 1100px)");
+  // Старые версии прокручивали весь sidebar. После перехода на отдельный
+  // скролл списка Gate сбрасываем возможную сохранённую позицию контейнера.
+  sidebar.scrollTop = 0;
+
+  const drawerQuery = window.matchMedia("(max-width: 1640px)");
 
   function openDrawer() {
     appShell.classList.add("sidebar-open");
@@ -33896,6 +34359,10 @@ document.addEventListener("click", (e) => {
   });
   closeBtn.addEventListener("click", closeDrawer);
   overlay.addEventListener("click", closeDrawer);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && appShell.classList.contains("sidebar-open"))
+      closeDrawer();
+  });
 
   // Закрытие после выбора Gate / переключения проекта / паспорта проекта.
   // Делегирование на document: пункты Gate перерисовываются (innerHTML),
@@ -34169,4 +34636,2561 @@ saveState = function () {
   const result = __guruPrevSaveStateReadiness.apply(this, arguments);
   guruRefreshReadiness();
   return result;
+};
+
+/* ================================================================
+   v1.26.0 — Яндекс Директ / Поиск: группа объявлений является
+   практической реализацией кластера.
+
+   Рабочая модель: Сегмент → зафиксированный JTBD →
+   группа с названием JTBD → совместимые фразы → объявления.
+   Старые d.clusters сохраняются как совместимый индекс для загрузки
+   существующих проектов, но редактируемая сущность в UI — группа.
+   ================================================================ */
+
+const __g4V126PrevEnsureSearchBuild = ensureGate4SearchBuild;
+ensureGate4SearchBuild = function (product) {
+  const d = __g4V126PrevEnsureSearchBuild(product);
+  d.segmentJtbdLinks = d.segmentJtbdLinks || {};
+  d.excludedCampaignPhrases = [...new Set(
+    (Array.isArray(d.excludedCampaignPhrases) ? d.excludedCampaignPhrases : [])
+      .map(g4sbV128PhraseKey)
+      .filter(Boolean),
+  )];
+  let migratedSegmentJtbdLink = false;
+  // Переносим ошибочно созданную в предыдущей версии связь из Gate 1
+  // в рабочий план Gate 4 и сразу убираем её из аналитических данных.
+  const productItems = g4ProductSemantics(product).row?.items || {};
+  Object.entries(productItems).forEach(([itemId, item]) => {
+    (item.segments || []).forEach((segment, segmentIndex) => {
+      if (!Array.isArray(segment.jtbdIndexes)) return;
+      const key = g4sbSegmentJtbdLinkKey(itemId, segmentIndex);
+      const links = d.segmentJtbdLinks[key] = Array.isArray(d.segmentJtbdLinks[key])
+        ? d.segmentJtbdLinks[key]
+        : [];
+      segment.jtbdIndexes.forEach((jtbdIndex) => {
+        if (!links.some((value) => String(value) === String(jtbdIndex))) {
+          links.push(Number(jtbdIndex));
+          migratedSegmentJtbdLink = true;
+        }
+      });
+      delete segment.jtbdIndexes;
+      migratedSegmentJtbdLink = true;
+    });
+  });
+  d.groupRows.forEach((row) => {
+    const legacy = d.clusters.find((cluster) => cluster.id === row.clusterId);
+    row.groupId = row.groupId || row.clusterId || makeId("ad-group");
+    row.clusterId = row.groupId;
+    if (legacy) {
+      if (row.itemId === undefined) row.itemId = legacy.itemId || "";
+      if (row.segmentIndex === undefined) row.segmentIndex = legacy.segmentIndex ?? "";
+      if (row.mainJtbdIndex === undefined) row.mainJtbdIndex = legacy.mainJtbdIndex ?? legacy.jtbdIndex ?? "";
+      if (!Array.isArray(row.demandRows))
+        row.demandRows = Array.isArray(legacy.demandRows)
+          ? legacy.demandRows.map(g4sbKeywordRow)
+          : g4sbClusterPhrases(product, legacy).map((kw) => g4sbKeywordRow({ kw }));
+      if (row.searchIntent === undefined) row.searchIntent = legacy.searchIntent || "";
+      legacy.name = String(row.col0 || "").trim() || legacy.name;
+      legacy.itemId = row.itemId;
+      legacy.segmentIndex = row.segmentIndex;
+      legacy.mainJtbdIndex = row.mainJtbdIndex;
+      legacy.extraJtbdIndexes = [];
+      legacy.demandRows = row.demandRows.map(g4sbKeywordRow);
+      legacy.phraseSelection = row.demandRows.map((item) => item.kw.trim()).filter(Boolean);
+      legacy.extraPhrases = [];
+      legacy.searchIntent = row.searchIntent;
+    }
+    if (Object.prototype.hasOwnProperty.call(row, "accent")) {
+      delete row.accent;
+      migratedSegmentJtbdLink = true;
+    }
+    // Ручной CPA больше не является данными группы: норматив приходит
+    // только из юнит-экономики связанного продукта.
+    if (Object.prototype.hasOwnProperty.call(row, "targetCPA")) {
+      delete row.targetCPA;
+      migratedSegmentJtbdLink = true;
+    }
+    if (legacy && Object.prototype.hasOwnProperty.call(legacy, "accent")) {
+      delete legacy.accent;
+      migratedSegmentJtbdLink = true;
+    }
+    const fixedJtbd = g4sbItemJtbdList(product, row.itemId).find(
+      (item) => String(item.index) === String(row.mainJtbdIndex),
+    );
+    if (fixedJtbd?.text) {
+      if (row.col0 !== fixedJtbd.text) {
+        row.col0 = fixedJtbd.text;
+        migratedSegmentJtbdLink = true;
+      }
+      if (row.searchIntent !== fixedJtbd.text) {
+        row.searchIntent = fixedJtbd.text;
+        migratedSegmentJtbdLink = true;
+      }
+      if (legacy && legacy.name !== fixedJtbd.text) {
+        legacy.name = fixedJtbd.text;
+        migratedSegmentJtbdLink = true;
+      }
+      if (legacy && legacy.searchIntent !== fixedJtbd.text) {
+        legacy.searchIntent = fixedJtbd.text;
+        migratedSegmentJtbdLink = true;
+      }
+    }
+    // Одноразовая совместимость существующих проектов: ранее выбранный
+    // JTBD группы переносим в план реализации сегмента внутри Gate 4.
+    if (row.itemId && row.segmentIndex !== "" && row.mainJtbdIndex !== "" && row.mainJtbdIndex !== undefined) {
+      const linkKey = g4sbSegmentJtbdLinkKey(row.itemId, row.segmentIndex);
+      const links = d.segmentJtbdLinks[linkKey] = Array.isArray(d.segmentJtbdLinks[linkKey])
+        ? d.segmentJtbdLinks[linkKey]
+        : [];
+      if (!links.some((value) => String(value) === String(row.mainJtbdIndex))) {
+        links.push(Number(row.mainJtbdIndex));
+        migratedSegmentJtbdLink = true;
+      }
+    }
+  });
+  if (d.clusterDraft && Object.prototype.hasOwnProperty.call(d.clusterDraft, "accent")) {
+    delete d.clusterDraft.accent;
+    migratedSegmentJtbdLink = true;
+  }
+  if (d.clusterDraft && Object.prototype.hasOwnProperty.call(d.clusterDraft, "targetCPA")) {
+    delete d.clusterDraft.targetCPA;
+    migratedSegmentJtbdLink = true;
+  }
+  if (migratedSegmentJtbdLink && !state._segmentJtbdLinkMigrationScheduled) {
+    state._segmentJtbdLinkMigrationScheduled = true;
+    setTimeout(() => {
+      if (!state) return;
+      delete state._segmentJtbdLinkMigrationScheduled;
+      saveState();
+    }, 0);
+  }
+  return d;
+};
+
+const __g4V126PrevResetDraft = g4sbResetDraft;
+g4sbResetDraft = function (d) {
+  __g4V126PrevResetDraft(d);
+  d.clusterDraft.searchIntent = "";
+  delete d.clusterDraft.accent;
+  d.clusterDraft.extraJtbdIndexes = [];
+  d.clusterDraft.minus = "";
+  d.clusterDraft.col2 = "";
+  d.clusterDraft.col3 = "";
+  d.clusterDraft.col4 = "";
+  d.clusterDraft.budgetType = "period";
+  d.clusterDraft.desiredLeads = "";
+  d.clusterDraft.desiredCpaScenario = "base";
+  d.clusterDraft.forecastCpc = "";
+  d.clusterDraft.ads = [{ ad0: "", ad1: "", ad2: "" }];
+  d.clusterDraft.forecastBaselineRows = [];
+  d.clusterDraft.phraseConflictMessage = "";
+};
+
+g4sbGroupPhrases = function (_product, group) {
+  return (group.demandRows || [])
+    .map((row) => String(row.kw || "").trim())
+    .filter(Boolean);
+};
+
+function g4sbV126Jtbd(product, row) {
+  return g4sbItemJtbdList(product, row.itemId).find(
+    (item) => String(item.index) === String(row.mainJtbdIndex),
+  );
+}
+
+g4sbGroupClusterSummaryHtml = function (product, row) {
+  const segment = g4sbItemSegments(product, row.itemId).find(
+    (item) => String(item.index) === String(row.segmentIndex),
+  );
+  const jtbd = g4sbV126Jtbd(product, row);
+  const phrases = g4sbGroupPhrases(product, row);
+  const demand = g4sbClusterDemand(product, row.itemId, phrases);
+  return `<div class="g4-upstream g4-v126-group-summary">
+    <div class="g4-upstream-title">Логика группы</div>
+    ${g4ReadonlyRow("Сегмент", segment ? segment.name : "", "Gate 1 · Уровень 2")}
+    ${g4ReadonlyRow("JTBD", jtbd ? jtbd.text : "", "фундамент группы")}
+    ${g4ReadonlyRow("Основные поисковые запросы · " + phrases.length, phrases.join(", "), "группа")}
+    ${g4ReadonlyRow("Суммарный спрос", demand.matched ? g4NumFormat(demand.total) + " показов/мес" : "нет данных", "Gate 1")}
+    <div class="g4-v126-actions">
+      <button class="small-btn add-inline-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-edit-group="${escapeAttr(row.groupId)}">Редактировать группу</button>
+      <button class="small-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-duplicate-cluster="${escapeAttr(row.groupId)}">Дублировать</button>
+    </div>
+  </div>`;
+};
+
+function g4sbV126RenderGroupCard(product, row, index, rows, ads, launchPriority = null) {
+  const activeDraft = ensureGate4SearchBuild(product).clusterDraft;
+  if (
+    activeDraft?.open &&
+    activeDraft.editingClusterId &&
+    (activeDraft.editingClusterId === row.groupId || activeDraft.editingClusterId === row.clusterId)
+  ) return "";
+  const phrases = g4sbGroupPhrases(product, row);
+  const readiness = g4sbGroupReadiness(row, phrases.length, ads);
+  const groupId = row.groupId || row.clusterId;
+  return `<article class="g4-v127-group-row">
+    <div class="g4-v127-group-main">
+      <span class="g4-v126-level">Группа ${index + 1}</span>
+      <strong>${escapeHtml(String(row.col0 || "Без названия"))}</strong>
+      <small>${phrases.length} фраз</small>
+    </div>
+    <div class="g4-v127-group-status">
+      ${launchPriority?.rank ? `<span class="g4-v131-priority ${launchPriority.rank === 1 ? "is-first" : ""}">Запуск №${launchPriority.rank}</span>` : ""}
+      <span class="status-pill status-${readiness}">${escapeHtml(STATUS_LABELS[readiness] || readiness)}</span>
+    </div>
+    <div class="g4-v127-group-actions">
+      <button class="small-btn add-inline-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-edit-group="${escapeAttr(groupId)}">Редактировать</button>
+      <button class="small-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-copy-group-draft="${escapeAttr(groupId)}">Дублировать</button>
+      <button class="small-btn danger-mini" data-g4sb-product="${escapeAttr(product)}" data-g4sb-delete-unit="${escapeAttr(groupId)}" title="Удалить группу вместе с прогнозом и объявлениями">Удалить</button>
+    </div>
+  </article>`;
+}
+
+function g4sbV126SegmentHierarchyHtml(product, d) {
+  const segments = g4sbAllSegmentsFlat(product);
+  const rendered = new Set();
+  const segmentBlocks = segments.map((segment) => {
+    const segmentGroups = d.groupRows
+      .map((row, index) => ({ row, index }))
+      .filter(({ row }) =>
+        row.itemId === segment.itemId &&
+        String(row.segmentIndex) === String(segment.index),
+      );
+    const byJtbd = new Map();
+    segmentGroups.forEach((entry) => {
+      rendered.add(entry.index);
+      const key = String(entry.row.mainJtbdIndex ?? "");
+      if (!byJtbd.has(key)) byJtbd.set(key, []);
+      byJtbd.get(key).push(entry);
+    });
+    const jtbdBlocks = [...byJtbd.entries()].map(([jtbdIndex, entries]) => {
+      const jtbd = g4sbItemJtbdList(product, segment.itemId).find(
+        (item) => String(item.index) === jtbdIndex,
+      );
+      return `<section class="g4-v126-jtbd">
+        <div class="g4-v126-jtbd-head">
+          <span class="g4-v126-level">JTBD</span>
+          <strong>${escapeHtml(jtbd ? jtbd.text : "JTBD не выбран")}</strong>
+          <span>${entries.length} ${entries.length === 1 ? "группа" : "группы"}</span>
+        </div>
+        <div class="g4-v126-groups">${entries.map(({ row, index }) =>
+          g4sbV126RenderGroupCard(product, row, index, d.groupRows, (d.adsRows || {})[index] || [{}]),
+        ).join("")}</div>
+      </section>`;
+    }).join("");
+    const seed = escapeAttr(JSON.stringify([segment.itemId, segment.index]));
+    return `<section class="g4-v126-segment">
+      <div class="g4-v126-segment-head">
+        <span class="g4-v126-level">Сегмент</span>
+        <strong>${escapeHtml(segment.name)}</strong>
+        <span>${segmentGroups.length} ${segmentGroups.length === 1 ? "группа" : "групп"}</span>
+      </div>
+      ${jtbdBlocks || '<div class="g1-empty">Для сегмента ещё нет групп объявлений.</div>'}
+      <button class="small-btn add-inline-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-create-group="${seed}">+ Создать группу в сегменте</button>
+    </section>`;
+  }).join("");
+  const orphaned = d.groupRows
+    .map((row, index) => ({ row, index }))
+    .filter(({ index }) => !rendered.has(index));
+  const orphanedHtml = orphaned.length
+    ? `<section class="g4-v126-segment is-unassigned">
+        <div class="g4-v126-segment-head"><span class="g4-v126-level">Проверить</span><strong>Группы без выбранного сегмента</strong><span>${orphaned.length}</span></div>
+        <div class="g4-v126-groups">${orphaned.map(({ row, index }) =>
+          g4sbV126RenderGroupCard(product, row, index, d.groupRows, (d.adsRows || {})[index] || [{}]),
+        ).join("")}</div>
+      </section>`
+    : "";
+  return `<div class="g4-v126-hierarchy">${segmentBlocks}${orphanedHtml}</div>`;
+}
+
+// Сохраняем блок покрытия без изменений; следующий за ним обзор
+// теперь является рабочей иерархией сегментов, JTBD и групп.
+g4sbUsageOverviewHtml = function (product, d) {
+  return g4sbV126SegmentHierarchyHtml(product, d);
+};
+
+// Плоский повторный список больше не нужен: группы уже выведены внутри
+// сегментов и JTBD через g4sbV126SegmentHierarchyHtml.
+g4sbGroupCardHtml = function () { return ""; };
+
+function g4sbV140HasValue(value) {
+  return String(value ?? "").trim() !== "";
+}
+
+function g4sbV140HasDemandData(rows) {
+  return (rows || []).some((row) => g4sbV140HasValue(g4sbKeywordRow(row).vol));
+}
+
+function g4sbV140Status(label, tone) {
+  return { label, tone };
+}
+
+function g4sbV169ProductAllowedCpa(product) {
+  const productName = String(product || "").trim();
+  if (!productName) return null;
+  const productKey = normalizeAspectKey(productName);
+  const item = (ensureUnitV130().items || []).find((row) => {
+    const source = String(row?.productKey || row?.name || "").trim();
+    return source === productName || normalizeAspectKey(source) === productKey;
+  });
+  const value = parseUnitNumber(item?.steps?.adLimits?.allowedCpa);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function g4sbV140ForecastAssessment(draft, phraseCount, settings = {}, product = "") {
+  const format = (value, maximumFractionDigits = 0) => Number(value || 0).toLocaleString("ru-RU", { maximumFractionDigits });
+  const strategy = String(settings.strategy || "");
+  const isMaxClicks = strategy === "max_clicks";
+  // Все показатели таблицы фраз заданы за месяц. Пользователь не должен
+  // повторно указывать период: для официальных недельных проверок месяц
+  // автоматически нормализуется к 30 дням.
+  const budgetType = "period";
+  const period = { days: 30, missing: false, error: "" };
+  const hasImpressions = g4sbV140HasValue(draft.col2);
+  const hasClicks = g4sbV140HasValue(draft.col3);
+  const hasBudget = g4sbV140HasValue(draft.col4);
+  const productAllowedCpa = g4sbV169ProductAllowedCpa(product);
+  const hasCpa = productAllowedCpa !== null;
+  const hasDesiredLeads = g4sbV140HasValue(draft.desiredLeads);
+  const impressions = hasImpressions ? parseUnitNumber(draft.col2) : 0;
+  const clicks = hasClicks ? parseUnitNumber(draft.col3) : 0;
+  const budget = hasBudget ? parseUnitNumber(draft.col4) : 0;
+  const allowedBusinessCpa = hasCpa ? productAllowedCpa : 0;
+  const desiredLeads = hasDesiredLeads ? parseUnitNumber(draft.desiredLeads) : 0;
+  const desiredCpaScenario = ["cautious", "base", "optimistic"].includes(draft.desiredCpaScenario)
+    ? draft.desiredCpaScenario
+    : "base";
+  const scenarioDefinitions = [
+    ["cautious", "Осторожный", 3],
+    ["base", "Базовый", 5],
+    ["optimistic", "Оптимистичный", 8],
+  ];
+  const conversionScenarios = scenarioDefinitions.map(([key, label, rate]) => {
+    const conversions = hasClicks ? clicks * (rate / 100) : null;
+    return {
+      key,
+      label,
+      rate,
+      conversions,
+      cpa: hasBudget && conversions > 0 ? budget / conversions : null,
+    };
+  });
+  const baseScenario = conversionScenarios.find((scenario) => scenario.key === "base");
+  const hasConversions = baseScenario?.conversions !== null && baseScenario?.conversions !== undefined;
+  const conversions = hasConversions ? baseScenario.conversions : 0;
+  const weeklyClicks = period.days && hasClicks ? clicks / period.days * 7 : null;
+  const avgDailyBudget = period.days && hasBudget && budgetType === "period" ? budget / period.days : null;
+  const averageCpc = hasBudget && hasClicks && clicks > 0 ? budget / clicks : null;
+  const baseForecastCpa = baseScenario?.cpa ?? null;
+  const selectedScenario = conversionScenarios.find((scenario) => scenario.key === desiredCpaScenario) || baseScenario;
+  const requiredClicks = hasDesiredLeads && desiredLeads >= 0 && selectedScenario?.rate > 0
+    ? desiredLeads / (selectedScenario.rate / 100)
+    : null;
+  const hasDemandForDesiredResult = requiredClicks !== null && hasClicks && clicks >= 0;
+  const demandSufficient = hasDemandForDesiredResult && clicks >= requiredClicks;
+  const requiredPeriodBudget = demandSufficient && selectedScenario?.cpa !== null
+    ? selectedScenario.cpa * desiredLeads
+    : null;
+  const errors = [];
+  if (hasImpressions && impressions < 0) errors.push("Прогноз показов не может быть отрицательным");
+  if (hasClicks && clicks < 0) errors.push("Прогноз кликов не может быть отрицательным");
+  if (hasImpressions && hasClicks && clicks > impressions) errors.push("Количество кликов не может превышать количество показов");
+  if (hasBudget && budget < 0) errors.push("Бюджет не может быть отрицательным");
+  if (hasDesiredLeads && desiredLeads < 0) errors.push("Желаемое количество заявок не может быть отрицательным");
+  if (phraseCount < 0) errors.push("Количество фраз не может быть отрицательным");
+
+  const errorStatus = g4sbV140Status("Ошибка данных", "error");
+  const missingStatus = g4sbV140Status("Нет данных", "neutral");
+  const referenceStatus = g4sbV140Status("Справочно", "neutral");
+  const attentionStatus = g4sbV140Status("Требует внимания", "warning");
+  const enoughStatus = g4sbV140Status("Достаточно для стратегии", "success");
+  const limitStatus = g4sbV140Status("В пределах лимита", "success");
+  const belowStatus = g4sbV140Status("Ниже технического минимума", "error");
+  const exceededStatus = g4sbV140Status("Превышен лимит", "error");
+
+  const impressionsStatus = errors.some((message) => message.includes("показов")) ? errorStatus : hasImpressions ? referenceStatus : missingStatus;
+  const clicksStatus = errors.some((message) => message.includes("кликов"))
+    ? errorStatus
+    : !hasClicks || (isMaxClicks && !period.days)
+      ? missingStatus
+      : isMaxClicks ? weeklyClicks > 100 ? enoughStatus : attentionStatus : referenceStatus;
+  let budgetStatus = missingStatus;
+  let budgetBelowMinimum = false;
+  if (errors.some((message) => message.includes("Бюджет"))) budgetStatus = errorStatus;
+  else if (hasBudget) {
+    budgetBelowMinimum = budget < 300 || avgDailyBudget < 50;
+    if (budgetBelowMinimum) budgetStatus = belowStatus;
+    else budgetStatus = limitStatus;
+  }
+  const phraseStatus = phraseCount === 0 ? missingStatus : phraseCount <= 200 ? limitStatus : exceededStatus;
+  const cpaNotSpecifiedStatus = g4sbV140Status("Не указан", "neutral");
+  const cpaWithinStatus = g4sbV140Status("В пределах допустимого", "success");
+  const cpaExceededStatus = g4sbV140Status("Прогноз превышает допустимый CPA", "warning");
+  conversionScenarios.forEach((scenario) => {
+    scenario.cpaComparison = !hasCpa
+      ? "не указан"
+      : scenario.cpa === null
+        ? "недостаточно данных"
+        : scenario.cpa <= allowedBusinessCpa ? "в пределах допустимого" : "выше допустимого";
+  });
+  const cpaComparisonStatus = errors.some((message) => message.includes("CPA"))
+    ? errorStatus
+    : !hasCpa ? cpaNotSpecifiedStatus
+      : conversionScenarios.some((scenario) => scenario.cpa === null) ? missingStatus
+        : conversionScenarios.every((scenario) => scenario.cpa <= allowedBusinessCpa) ? cpaWithinStatus : cpaExceededStatus;
+  const insufficientDemandStatus = g4sbV140Status("Недостаточно поискового спроса", "warning");
+  const desiredBudgetStatus = errors.some((message) => message.includes("Желаемое"))
+    ? errorStatus
+    : !hasDesiredLeads || !hasClicks || selectedScenario?.cpa === null ? missingStatus
+      : !demandSufficient ? insufficientDemandStatus : referenceStatus;
+  const desiredBudgetDetail = !hasDesiredLeads
+    ? "Укажите желаемое количество заявок"
+    : !hasClicks
+      ? "Недостаточно данных о прогнозе кликов"
+      : selectedScenario?.cpa === null
+        ? "Недостаточно данных для расчёта прогнозного CPA"
+        : !demandSufficient
+          ? `Недостаточно поискового спроса: доступно ${format(clicks)} кликов, требуется ${format(Math.ceil(requiredClicks))}.`
+          : `Для получения ${format(desiredLeads, 1)} заявок по ${selectedScenario.label.toLocaleLowerCase("ru-RU")} сценарию потребуется примерно ${format(Math.round(requiredPeriodBudget))} ₽ на 30 дней. Доступно ${format(clicks)} кликов, требуется ${format(Math.ceil(requiredClicks))}.`;
+  const availableScenarioCpas = conversionScenarios.filter((scenario) => scenario.cpa !== null);
+  const scenariosWithinCpa = hasCpa
+    ? availableScenarioCpas.filter((scenario) => scenario.cpa <= allowedBusinessCpa)
+    : [];
+  const minimumForecastCpa = availableScenarioCpas.length
+    ? Math.min(...availableScenarioCpas.map((scenario) => scenario.cpa))
+    : null;
+  const cpaSummary = !hasCpa
+    ? "Допустимый CPA пока не рассчитан"
+    : minimumForecastCpa === null
+      ? "Недостаточно данных для сравнения CPA."
+      : scenariosWithinCpa.length === 0
+        ? `Ни один сценарий не укладывается в допустимый CPA ${format(Math.round(allowedBusinessCpa))} ₽. Минимальный прогноз — ${format(Math.round(minimumForecastCpa))} ₽ за заявку.`
+        : scenariosWithinCpa.length === availableScenarioCpas.length
+          ? `Все сценарии укладываются в допустимый CPA ${format(Math.round(allowedBusinessCpa))} ₽. Минимальный прогноз — ${format(Math.round(minimumForecastCpa))} ₽ за заявку.`
+          : `${scenariosWithinCpa.length} из ${availableScenarioCpas.length} сценариев укладываются в допустимый CPA ${format(Math.round(allowedBusinessCpa))} ₽. Минимальный прогноз — ${format(Math.round(minimumForecastCpa))} ₽ за заявку.`;
+
+  const rows = [
+    { key: "impressions", label: "Прогноз показов", official: "Норматив отсутствует", value: hasImpressions ? format(impressions) : "—", detail: hasImpressions ? "Официального универсального норматива нет" : "", status: impressionsStatus },
+    { key: "clicks", label: "Прогноз кликов", official: isMaxClicks ? "Более 100 кликов в неделю" : "Норматив для выбранной стратегии отсутствует", value: hasClicks ? format(clicks) : "—", detail: weeklyClicks !== null && isMaxClicks ? `В среднем: ${format(weeklyClicks)} кликов в неделю` : "Показатель используется справочно", status: clicksStatus },
+    { key: "budget", label: "Бюджет", official: "Не менее 300 ₽ за месяц и 50 ₽ в день", value: hasBudget ? format(budget, 2) + " ₽" : "—", detail: hasBudget ? `Автоматически: сумма бюджетов ${format(phraseCount)} фраз` : "Заполните бюджет у ключевых фраз", status: budgetStatus },
+    { key: "average-cpc", label: "Средняя цена клика", official: "Бюджет ÷ прогноз кликов", value: averageCpc !== null ? format(averageCpc, 2) + " ₽" : "—", detail: averageCpc !== null ? `${format(budget, 2)} ₽ ÷ ${format(clicks)} кликов` : "Недостаточно данных для расчёта", status: averageCpc !== null ? referenceStatus : missingStatus },
+    { key: "conversions", label: "Сценарии заявок и CPA", official: "Стартовая гипотеза для качественной поисковой рекламы: 3%, 5% и 8%. Заявки = клики × конверсия; CPA = бюджет ÷ заявки", value: hasConversions ? format(conversions, 1) : "—", detail: cpaSummary, status: hasCpa ? cpaComparisonStatus : cpaNotSpecifiedStatus },
+    { key: "desired-budget", label: "Бюджет под желаемый результат", official: "Сначала проверяется достаточность прогнозных кликов", value: requiredPeriodBudget !== null ? format(Math.round(requiredPeriodBudget)) + " ₽" : "—", detail: desiredBudgetDetail, status: desiredBudgetStatus },
+    { key: "phrases", label: "Количество фраз", official: "Не более 200 фраз в группе", value: format(phraseCount), detail: `Использовано ${format(phraseCount)} из 200 фраз`, status: phraseStatus },
+  ];
+
+  const mandatoryMissing = !strategy || !hasImpressions || !hasClicks || !hasBudget || phraseCount === 0;
+  const hasAttention = rows.some((row) => row.status.tone === "warning");
+  const hasBlocking = errors.length > 0 || phraseCount > 200 || budgetBelowMinimum;
+  const overall = hasBlocking
+    ? g4sbV140Status("Не готово", "error")
+    : mandatoryMissing
+      ? g4sbV140Status("Не начато", "neutral")
+      : hasAttention
+        ? g4sbV140Status("Готово к тесту", "warning")
+        : g4sbV140Status("Готово к запуску", "success");
+  return { strategy, period, budgetType, rows, conversionScenarios, averageCpc, baseForecastCpa, hasCpa, allowedBusinessCpa, cpaSummary, desiredLeads, desiredCpaScenario, selectedScenario, requiredClicks, demandSufficient, requiredPeriodBudget, errors: [...new Set(errors)], blockingErrors: [...new Set(errors)], phraseLimitExceeded: phraseCount > 200, budgetBelowMinimum, overall };
+}
+
+function g4sbV140StatusHtml(status) {
+  const className = status.tone === "success" ? "status-ready" : status.tone === "warning" ? "status-in_progress" : status.tone === "error" ? "status-needs_review" : "status-not_started";
+  return `<span class="status-pill ${className}">${escapeHtml(status.label)}</span>`;
+}
+
+function g4sbV140ForecastTableHtml(draft, phraseCount, settings = {}, product = "") {
+  const assessment = g4sbV140ForecastAssessment(draft, phraseCount, settings, product);
+  const editable = Boolean(product);
+  const p = editable ? `data-g4sb-product="${escapeAttr(product)}"` : "";
+  const valueHtml = (row) => {
+    if (!editable) return `<strong>${escapeHtml(row.value)}</strong>${row.detail ? `<small>${escapeHtml(row.detail)}</small>` : ""}`;
+    if (row.key === "budget") return `<strong>${escapeHtml(row.value)}</strong>${row.detail ? `<small>${escapeHtml(row.detail)}</small>` : ""}`;
+    if (row.key === "conversions") return `<div class="g4-v168-scenario-block">
+      ${assessment.hasCpa
+        ? `<div class="g4-v168-cpa-source"><span>Допустимый CPA бизнеса</span><strong>${Number(Math.round(assessment.allowedBusinessCpa)).toLocaleString("ru-RU")} ₽</strong><small>Автоматически из Gate 1 «Юнит-экономика» этого продукта</small></div>`
+        : `<div class="g4-v168-cpa-unavailable">Допустимый CPA пока не рассчитан</div>`}
+      <div class="g4-v168-scenario-scroll"><table class="g4-v168-scenario-table"><thead><tr><th>Сценарий</th><th>Конверсия</th><th>Заявки</th><th>CPA</th>${assessment.hasCpa ? "<th>Сравнение</th>" : ""}</tr></thead><tbody>${assessment.conversionScenarios.map((scenario) => `<tr><td>${escapeHtml(scenario.label)}</td><td>${scenario.rate}%</td><td>${scenario.conversions === null ? "—" : Number(scenario.conversions).toLocaleString("ru-RU", { maximumFractionDigits: 1 })}</td><td>${scenario.cpa === null ? "—" : `${Number(Math.round(scenario.cpa)).toLocaleString("ru-RU")} ₽`}</td>${assessment.hasCpa ? `<td>${escapeHtml(scenario.cpaComparison)}</td>` : ""}</tr>`).join("")}</tbody></table></div>
+      ${assessment.hasCpa ? `<div class="g4-v168-cpa-summary"><strong>${escapeHtml(assessment.cpaSummary)}</strong></div>` : ""}
+    </div>`;
+    if (row.key === "desired-budget") return `<div class="g4-v142-desired-budget"><label><span>Желаемое количество заявок за 30 дней</span><input type="number" min="0" step="1" class="g4-v142-compact-input" value="${escapeAttr(draft.desiredLeads || "")}" ${p} data-g4sb-draft-oper="desiredLeads" data-guru-field-neutral placeholder="Количество заявок"></label><label><span>Сценарий</span><select class="g4-v142-compact-input" ${p} data-g4sb-draft-oper="desiredCpaScenario" data-guru-field-neutral><option value="cautious" ${assessment.desiredCpaScenario === "cautious" ? "selected" : ""}>Осторожный</option><option value="base" ${assessment.desiredCpaScenario === "base" ? "selected" : ""}>Базовый</option><option value="optimistic" ${assessment.desiredCpaScenario === "optimistic" ? "selected" : ""}>Оптимистичный</option></select></label><strong>${escapeHtml(row.value)}</strong><small>${escapeHtml(row.detail)}</small></div>`;
+    return `<strong>${escapeHtml(row.value)}</strong>${row.detail ? `<small>${escapeHtml(row.detail)}</small>` : ""}`;
+  };
+  return `<div class="g1-table-scroll g4-v140-forecast-table"><table>
+    <thead><tr><th>Показатель</th><th>Официальная проверка</th><th>Ваш прогноз</th><th>Статус</th></tr></thead>
+    <tbody>${assessment.rows.map((row) => row.key === "conversions"
+      ? `<tr class="g4-v168-scenario-row"><td colspan="4"><strong class="g4-v168-scenario-title">${escapeHtml(row.label)}</strong><small>${escapeHtml(row.official)}</small>${valueHtml(row)}</td></tr>`
+      : `<tr><td><strong>${escapeHtml(row.label)}</strong></td><td>${escapeHtml(row.official)}</td><td>${valueHtml(row)}</td><td>${g4sbV140StatusHtml(row.status)}</td></tr>`).join("")}</tbody>
+  </table></div>`;
+}
+
+function g4sbV127DraftOperationsHtml(product, draft, phraseCount) {
+  const p = `data-g4sb-product="${escapeAttr(product)}"`;
+  const settings = ensureGate4SearchBuild(product).settings || {};
+  const forecast = g4sbV128Forecast(draft.keywordRows || [], draft);
+  const hasDemandData = g4sbV140HasDemandData(draft.keywordRows || []);
+  draft.col2 = forecast.count && hasDemandData ? String(forecast.impressions) : "";
+  draft.col3 = forecast.count && hasDemandData ? String(forecast.clicks) : "";
+  draft.col4 = forecast.hasPhraseBudget ? String(forecast.budget) : "";
+  const assessment = g4sbV140ForecastAssessment(draft, phraseCount, settings, product);
+  const ads = Array.isArray(draft.ads) && draft.ads.length
+    ? draft.ads
+    : (draft.ads = [{ ad0: "", ad1: "", ad2: "" }]);
+  const draftField = (key, label, placeholder, help = "") => {
+    const value = String(draft[key] || "");
+    return `<label class="g1-field"><span>${escapeHtml(label)}</span>${help ? `<small>${escapeHtml(help)}</small>` : ""}<textarea class="g1-input ${value.trim() ? "is-filled" : "is-empty"}" ${p} data-g4sb-draft-oper="${key}" rows="1" placeholder="${escapeAttr(placeholder)}">${escapeHtml(value)}</textarea></label>`;
+  };
+  return `<section class="g4-v127-editor-section">
+    <div class="g4-v140-forecast-head"><div><div class="g4-upstream-title">4. Прогноз группы</div><small>Автоматически по выбранным ключевым фразам</small></div>${g4sbV140StatusHtml(assessment.overall)}</div>
+    ${g4sbHorizontalForecastTableHtml(draft, phraseCount, settings, product)}
+    ${assessment.errors.length ? `<div class="g4-v140-errors" role="alert">${assessment.errors.map((message) => `<span>${escapeHtml(message)}</span>`).join("")}</div>` : ""}
+  </section>
+  <section class="g4-v127-editor-section">
+    <div class="g4-upstream-title">5. Минус-фразы группы</div>
+    ${draftField("minus", "Минус-фразы этой группы", "минус-фразы, независимые от других групп")}
+  </section>
+  <section class="g4-v127-editor-section">
+    <div class="g4-upstream-title">6. Объявления группы</div>
+    ${ads.map((ad, ai) => `<div class="g4-v127-ad">
+      <div class="g4-v127-ad-head"><strong>Объявление ${ai + 1}</strong><button type="button" class="small-btn danger-mini" ${p} data-g4sb-draft-ad-remove="${ai}" ${ads.length <= 1 ? "disabled" : ""}>×</button></div>
+      <div class="g1-fields-grid">
+        ${[["ad0", "Заголовок (≤ 56)"], ["ad1", "Доп. заголовок (≤ 30)"], ["ad2", "Текст (≤ 81)"]].map(([key, label]) => {
+          const value = String(ad[key] || "");
+          return `<label class="g1-field"><span>${escapeHtml(label)}</span><textarea class="g1-input ${value.trim() ? "is-filled" : "is-empty"}" ${p} data-g4sb-draft-ad-index="${ai}" data-g4sb-draft-ad-field="${key}" rows="1" placeholder="${escapeAttr(label)}">${escapeHtml(value)}</textarea></label>`;
+        }).join("")}
+      </div>
+    </div>`).join("")}
+    <button type="button" class="small-btn add-inline-btn" ${p} data-g4sb-draft-ad-add>+ Добавить объявление</button>
+  </section>`;
+}
+
+function g4sbV128PhraseKey(value) {
+  return String(value || "").trim().toLocaleLowerCase("ru-RU");
+}
+
+function g4sbV128SourcePhraseRows(product, draft) {
+  if (!draft.itemId) return [];
+  const sem = g4ProductSemantics(product);
+  const items = sem.row?.items || {};
+  const source = Object.values(items).flatMap((item) => item?.demandRows || []);
+  const semanticRows = Object.keys(items).flatMap((itemId) =>
+    g4sbClusterPhraseRows(product, itemId).map((row) => ({
+      kw: row.phrase,
+      vol: row.volText || "",
+      growth: row.period || "",
+      source: row.source || "",
+    })),
+  );
+  const all = [...source, ...semanticRows, ...(draft.keywordRows || []), ...(draft.forecastBaselineRows || [])];
+  const unique = new Map();
+  all.forEach((raw) => {
+    const row = g4sbKeywordRow(raw);
+    const key = g4sbV128PhraseKey(row.kw);
+    if (!key) return;
+    const previous = unique.get(key);
+    if (!previous) unique.set(key, row);
+    else {
+      ["vol", "growth", "source", "forecast", "forecastClicks", "forecastBudget"].forEach((field) => {
+        if (!previous[field] && row[field]) previous[field] = row[field];
+      });
+    }
+  });
+  return [...unique.values()];
+}
+
+function g4sbV128PhraseUsage(product, currentBuild, draft) {
+  const usage = new Map();
+  const builds = state.gate4SearchBuild || {};
+  const currentKey = normalizeAspectKey(product || "no_product");
+  Object.entries(builds).forEach(([campaignKey, build]) => {
+    (build.groupRows || []).forEach((group, groupIndex) => {
+      const groupId = group.groupId || group.clusterId;
+      if (build === currentBuild && draft.editingClusterId && groupId === draft.editingClusterId) return;
+      let rows = Array.isArray(group.demandRows) ? group.demandRows : [];
+      if (!rows.length && group.clusterId) {
+        const legacy = (build.clusters || []).find((cluster) => cluster.id === group.clusterId);
+        rows = legacy?.demandRows || (legacy?.phraseSelection || []).map((kw) => ({ kw }));
+      }
+      rows.forEach((raw) => {
+        const key = g4sbV128PhraseKey(raw.kw || raw);
+        if (!key) return;
+        if (!usage.has(key)) usage.set(key, []);
+        usage.get(key).push({
+          sameCampaign: campaignKey === currentKey || build === currentBuild,
+          campaign: campaignKey === currentKey
+            ? String(product || "Текущая кампания")
+            : campaignKey.replace(/_/g, " "),
+          group: String(group.col0 || `Группа ${groupIndex + 1}`),
+        });
+      });
+    });
+  });
+  return usage;
+}
+
+const g4sbV148ForecastImports = new Map();
+
+function g4sbV148ImportKey(product, scope = "group") {
+  return `${activeProjectId || "no-project"}::${normalizeAspectKey(product || "no-product")}::${scope}`;
+}
+
+function g4sbV148ImportPreviewHtml(product, d, draft, p) {
+  const preview = g4sbV148ForecastImports.get(g4sbV148ImportKey(product, "group"));
+  if (!preview) return "";
+  if (preview.loading) {
+    return `<div class="g4-v148-import-preview is-loading" role="status"><strong>Читаю прогноз…</strong><span>${escapeHtml(preview.fileName || "Файл Яндекс Директа")}</span></div>`;
+  }
+  if (preview.error) {
+    return `<div class="g4-v148-import-preview is-error" role="alert"><div><strong>Не удалось прочитать прогноз</strong><span>${escapeHtml(preview.error)}</span></div><button type="button" class="small-btn" ${p} data-g4sb-forecast-import-cancel>Закрыть</button></div>`;
+  }
+  if (preview.success) {
+    return `<div class="g4-v148-import-preview is-success" role="status"><div><strong>Прогноз импортирован</strong><span>Обновлено: ${preview.updated}. Добавлено в группу: ${preview.added}.${preview.skipped ? ` Пропущено: ${preview.skipped}.` : ""}</span></div><button type="button" class="small-btn" ${p} data-g4sb-forecast-import-cancel>Закрыть</button></div>`;
+  }
+
+  const selected = new Set((draft.keywordRows || []).map((row) => g4sbV128PhraseKey(row.kw)));
+  const excluded = new Set((d.excludedCampaignPhrases || []).map(g4sbV128PhraseKey));
+  const usage = g4sbV128PhraseUsage(product, d, draft);
+  const rows = Array.isArray(preview.rows) ? preview.rows : [];
+  const found = rows.filter((row) => selected.has(g4sbV128PhraseKey(row.phrase))).length;
+  const notFound = rows.length - found;
+  const conflicts = rows.filter((row) => {
+    const key = g4sbV128PhraseKey(row.phrase);
+    return !selected.has(key) && (usage.get(key) || []).some((record) => record.sameCampaign);
+  }).length;
+  const excludedCount = rows.filter((row) => {
+    const key = g4sbV128PhraseKey(row.phrase);
+    return !selected.has(key) && excluded.has(key);
+  }).length;
+  const addable = Math.max(0, notFound - conflicts - excludedCount);
+  return `<div class="g4-v148-import-preview">
+    <div class="g4-v148-import-head"><div><strong>${escapeHtml(preview.fileName || "Прогноз Яндекс Директа")}</strong><span>Лист «${escapeHtml(preview.sheetName || "Фразы")}» · ${rows.length} строк</span></div><button type="button" class="small-btn" ${p} data-g4sb-forecast-import-cancel>Отмена</button></div>
+    <div class="g4-v148-import-counts"><span><b>Найдено: ${found}</b><small>показатели существующих фраз будут обновлены</small></span><span><b>Не найдено: ${notFound}</b><small>${addable} новых фраз будут добавлены в группу</small></span></div>
+    ${conflicts || excludedCount ? `<p class="g4-v148-import-warning">Не будут добавлены: ${conflicts} заняты в другой группе этой кампании, ${excludedCount} ранее исключены для кампании.</p>` : ""}
+    <button type="button" class="small-btn add-inline-btn" ${p} data-g4sb-forecast-import-confirm ${found || addable ? "" : "disabled"}>Подтвердить импорт</button>
+  </div>`;
+}
+
+function g4sbV170ExcludedImportPreviewHtml(product, d, draft, p) {
+  const scope = "excluded";
+  const preview = g4sbV148ForecastImports.get(g4sbV148ImportKey(product, scope));
+  if (!preview) return "";
+  if (preview.loading) {
+    return `<div class="g4-v148-import-preview is-loading" role="status"><strong>Читаю прогноз…</strong><span>${escapeHtml(preview.fileName || "Файл Яндекс Директа")}</span></div>`;
+  }
+  if (preview.error) {
+    return `<div class="g4-v148-import-preview is-error" role="alert"><div><strong>Не удалось прочитать прогноз</strong><span>${escapeHtml(preview.error)}</span></div><button type="button" class="small-btn" ${p} data-g4sb-import-scope="${scope}" data-g4sb-forecast-import-cancel>Закрыть</button></div>`;
+  }
+  if (preview.success) {
+    return `<div class="g4-v148-import-preview is-success" role="status"><div><strong>Прогноз импортирован в исключения</strong><span>Обновлено: ${preview.updated}. Добавлено в исключения: ${preview.added}.${preview.skipped ? ` Пропущено: ${preview.skipped}.` : ""}</span></div><button type="button" class="small-btn" ${p} data-g4sb-import-scope="${scope}" data-g4sb-forecast-import-cancel>Закрыть</button></div>`;
+  }
+
+  const excluded = new Set((d.excludedCampaignPhrases || []).map(g4sbV128PhraseKey));
+  const usage = g4sbV128PhraseUsage(product, d, draft);
+  const rows = Array.isArray(preview.rows) ? preview.rows : [];
+  const found = rows.filter((row) => excluded.has(g4sbV128PhraseKey(row.phrase))).length;
+  const notFound = rows.length - found;
+  const conflicts = rows.filter((row) => {
+    const key = g4sbV128PhraseKey(row.phrase);
+    return !excluded.has(key) && (usage.get(key) || []).some((record) => record.sameCampaign);
+  }).length;
+  const addable = Math.max(0, notFound - conflicts);
+  return `<div class="g4-v148-import-preview">
+    <div class="g4-v148-import-head"><div><strong>${escapeHtml(preview.fileName || "Прогноз Яндекс Директа")}</strong><span>Лист «${escapeHtml(preview.sheetName || "Фразы") }» · ${rows.length} строк</span></div><button type="button" class="small-btn" ${p} data-g4sb-import-scope="${scope}" data-g4sb-forecast-import-cancel>Отмена</button></div>
+    <div class="g4-v148-import-counts"><span><b>Найдено: ${found}</b><small>показатели исключённых фраз будут обновлены</small></span><span><b>Не найдено: ${notFound}</b><small>${addable} фраз будут добавлены в исключения</small></span></div>
+    ${conflicts ? `<p class="g4-v148-import-warning">Не будут исключены: ${conflicts} фраз заняты в другой группе этой кампании.</p>` : ""}
+    <button type="button" class="small-btn add-inline-btn" ${p} data-g4sb-import-scope="${scope}" data-g4sb-forecast-import-confirm ${found || addable ? "" : "disabled"}>Подтвердить импорт</button>
+  </div>`;
+}
+
+function g4sbV128Forecast(rows, draft) {
+  const unique = new Map();
+  (rows || []).forEach((raw) => {
+    const row = g4sbKeywordRow(raw);
+    const key = g4sbV128PhraseKey(row.kw);
+    if (key && !unique.has(key)) unique.set(key, row);
+  });
+  const clean = [...unique.values()];
+  const demand = clean.reduce((sum, row) => sum + Math.max(0, parseUnitNumber(row.vol) || 0), 0);
+  const count = clean.length;
+  const ctr = .07;
+  // Спрос/мес. и прогноз показов — одно исходное значение.
+  const impressions = Math.round(demand);
+  const clicks = clean.reduce((sum, row) => sum + (
+    Math.max(0, parseUnitNumber(row.vol)) === 0
+      ? 0
+      : g4sbV140HasValue(row.forecastClicks)
+      ? Math.max(0, parseUnitNumber(row.forecastClicks))
+      : Math.round(Math.max(0, parseUnitNumber(row.vol)) * ctr)
+  ), 0);
+  const hasPhraseBudget = clean.some((row) => g4sbV140HasValue(row.forecastBudget));
+  const budget = hasPhraseBudget
+    ? Math.round(clean.reduce((sum, row) => sum + (
+      Math.max(0, parseUnitNumber(row.vol)) === 0 ? 0 : Math.max(0, parseUnitNumber(row.forecastBudget))
+    ), 0) * 100) / 100
+    : 0;
+  return { count, demand, impressions, clicks, ctr, budget, hasPhraseBudget };
+}
+
+function g4sbV146PhraseForecastClicks(row) {
+  if (Math.max(0, parseUnitNumber(row?.vol)) === 0) return 0;
+  if (g4sbV140HasValue(row?.forecastClicks)) return Math.max(0, parseUnitNumber(row.forecastClicks));
+  return Math.round(Math.max(0, parseUnitNumber(row?.vol)) * .07);
+}
+
+function g4sbV171PhraseMetricValue(row, field) {
+  const demand = Math.max(0, parseUnitNumber(row?.vol));
+  if ((field === "forecastClicks" || field === "forecastBudget") && demand === 0) return "0";
+  const value = row?.[field];
+  return value === null || value === undefined ? "" : String(value);
+}
+
+function g4sbV171PhraseMetricClass(row, field) {
+  return g4sbV171PhraseMetricValue(row, field).trim() === "" ? "is-empty" : "is-filled";
+}
+
+function g4sbV128PhraseSelectorHtml(product, d, draft, p) {
+  const deleted = new Set((d.deletedBankPhrases || []).map(g4sbV128PhraseKey));
+  const allSourceRows = g4sbV128SourcePhraseRows(product, draft);
+  const sourceRows = allSourceRows.filter((row) => !deleted.has(g4sbV128PhraseKey(row.kw)));
+  if (!draft.itemId) return '<div class="g1-empty">Сначала выберите сегмент.</div>';
+  if (!allSourceRows.length) return '<div class="g1-empty">В общем банке семантики Gate 1 пока нет ключевых фраз.</div>';
+  const selected = new Set((draft.keywordRows || []).map((row) => g4sbV128PhraseKey(row.kw)));
+  const excluded = new Set((d.excludedCampaignPhrases || []).map(g4sbV128PhraseKey));
+  const usage = g4sbV128PhraseUsage(product, d, draft);
+  const selectedRows = sourceRows.filter((row) => selected.has(g4sbV128PhraseKey(row.kw)));
+  const isOccupied = (row) => (usage.get(g4sbV128PhraseKey(row.kw)) || []).some((record) => record.sameCampaign);
+  let visibleRows = sourceRows.filter((row) => {
+    const key = g4sbV128PhraseKey(row.kw);
+    return selected.has(key) || (!excluded.has(key) && !isOccupied(row));
+  });
+  if (draft.phraseSort === "clicks_desc") {
+    visibleRows = visibleRows
+      .map((row, index) => ({ row, index }))
+      .sort((a, b) =>
+        g4sbV146PhraseForecastClicks(b.row) - g4sbV146PhraseForecastClicks(a.row) ||
+        parseUnitNumber(b.row.vol) - parseUnitNumber(a.row.vol) ||
+        String(a.row.kw || "").localeCompare(String(b.row.kw || ""), "ru") ||
+        a.index - b.index
+      )
+      .map(({ row }) => row);
+  }
+  const occupiedRows = sourceRows.filter((row) => {
+    const key = g4sbV128PhraseKey(row.kw);
+    return !selected.has(key) && isOccupied(row);
+  });
+  let excludedRows = sourceRows.filter((row) => {
+    const key = g4sbV128PhraseKey(row.kw);
+    return !selected.has(key) && excluded.has(key);
+  });
+  if (draft.excludedPhraseSort === "clicks_desc") {
+    excludedRows = excludedRows
+      .map((row, index) => ({ row, index }))
+      .sort((a, b) =>
+        g4sbV146PhraseForecastClicks(b.row) - g4sbV146PhraseForecastClicks(a.row) ||
+        parseUnitNumber(b.row.vol) - parseUnitNumber(a.row.vol) ||
+        String(a.row.kw || "").localeCompare(String(b.row.kw || ""), "ru") ||
+        a.index - b.index
+      )
+      .map(({ row }) => row);
+  }
+  const tableRows = visibleRows.map((row) => {
+    const key = g4sbV128PhraseKey(row.kw);
+    const isSelected = selected.has(key);
+    const records = usage.get(key) || [];
+    const sameCampaignRecords = records.filter((record) => record.sameCampaign);
+    const otherCampaignRecords = records.filter((record) => !record.sameCampaign);
+    const occupied = sameCampaignRecords.length > 0;
+    const isExcluded = excluded.has(key);
+    const status = occupied
+      ? `В группе «${sameCampaignRecords[0].group}»`
+      : isSelected
+        ? "В этой группе"
+        : isExcluded
+          ? "Исключена для всей кампании"
+          : "Не распределена";
+    const statusClass = occupied ? "in_progress" : isSelected ? "ready" : isExcluded ? "blocked" : "not_started";
+    const locations = occupied
+      ? `Фраза уже используется в группе «${sameCampaignRecords[0].group}»`
+      : isSelected
+        ? "Выбрана для создаваемой группы"
+        : otherCampaignRecords.length
+          ? `В другой кампании: ${otherCampaignRecords.map((record) => `«${record.group}»`).join(", ")}. Здесь доступна.`
+          : isExcluded
+            ? "Остаётся в банке, но не участвует в этой кампании"
+            : "Ожидает распределения в подходящую группу";
+    const action = occupied
+      ? ""
+      : `<div class="g4-v147-action-group">${isSelected
+        ? `<button type="button" class="g4-v147-action" ${p} data-g4sb-remove-from-draft="${escapeAttr(row.kw)}">Убрать</button>`
+        : `<button type="button" class="g4-v147-action" ${p} data-g4sb-campaign-phrase-exclusion="${escapeAttr(row.kw)}">${isExcluded ? "Вернуть" : "Исключить"}</button>`}
+        <button type="button" class="g4-v147-action is-danger" ${p} data-g4sb-delete-bank-phrase="${escapeAttr(row.kw)}">Удалить</button></div>`;
+    return `<tr class="${occupied ? "has-conflict" : isExcluded ? "is-campaign-excluded" : ""}">
+      <td><input type="checkbox" ${p} data-g4sb-phrase-select="${escapeAttr(row.kw)}" ${isSelected ? "checked" : ""} ${isExcluded ? "disabled" : ""} ${occupied ? `title="Фраза уже используется в группе «${escapeAttr(sameCampaignRecords[0].group)}»"` : ""}></td>
+      <td><strong>${escapeHtml(row.kw)}</strong>${row.source ? `<small>${escapeHtml(row.source)}</small>` : ""}</td>
+      <td class="is-number"><input class="g1-input ${g4sbV171PhraseMetricClass(row, "vol")}" type="number" min="0" step="1" value="${escapeAttr(g4sbV171PhraseMetricValue(row, "vol"))}" placeholder="0" ${p} data-g4sb-bank-phrase="${escapeAttr(row.kw)}" data-g4sb-bank-phrase-field="vol" aria-label="Спрос и показы в месяц"></td>
+      <td class="is-number"><input class="g1-input ${g4sbV171PhraseMetricClass(row, "forecastClicks")}" type="number" min="0" step="1" value="${escapeAttr(g4sbV171PhraseMetricValue(row, "forecastClicks"))}" placeholder="0" ${p} data-g4sb-bank-phrase="${escapeAttr(row.kw)}" data-g4sb-bank-phrase-field="forecastClicks" aria-label="Прогноз кликов"></td>
+      <td class="is-number"><input class="g1-input ${g4sbV171PhraseMetricClass(row, "forecastBudget")}" type="number" min="0" step="1" value="${escapeAttr(g4sbV171PhraseMetricValue(row, "forecastBudget"))}" placeholder="0" ${p} data-g4sb-bank-phrase="${escapeAttr(row.kw)}" data-g4sb-bank-phrase-field="forecastBudget" aria-label="Прогноз бюджета"></td>
+      <td><span class="status-pill status-${statusClass}">${status}</span><small>${escapeHtml(locations)}</small></td>
+      <td>${action}</td>
+    </tr>`;
+  }).join("");
+  const excludedTableRows = excludedRows.map((row) => `<tr>
+    <td><strong>${escapeHtml(row.kw)}</strong>${row.source ? `<small>${escapeHtml(row.source)}</small>` : ""}</td>
+    <td class="is-number"><input class="g1-input ${g4sbV171PhraseMetricClass(row, "vol")}" type="number" min="0" step="1" value="${escapeAttr(g4sbV171PhraseMetricValue(row, "vol"))}" placeholder="0" ${p} data-g4sb-bank-phrase="${escapeAttr(row.kw)}" data-g4sb-bank-phrase-field="vol" aria-label="Спрос и показы в месяц"></td>
+    <td class="is-number"><input class="g1-input ${g4sbV171PhraseMetricClass(row, "forecastClicks")}" type="number" min="0" step="1" value="${escapeAttr(g4sbV171PhraseMetricValue(row, "forecastClicks"))}" placeholder="0" ${p} data-g4sb-bank-phrase="${escapeAttr(row.kw)}" data-g4sb-bank-phrase-field="forecastClicks" aria-label="Прогноз кликов"></td>
+    <td class="is-number"><input class="g1-input ${g4sbV171PhraseMetricClass(row, "forecastBudget")}" type="number" min="0" step="1" value="${escapeAttr(g4sbV171PhraseMetricValue(row, "forecastBudget"))}" placeholder="0" ${p} data-g4sb-bank-phrase="${escapeAttr(row.kw)}" data-g4sb-bank-phrase-field="forecastBudget" aria-label="Прогноз бюджета"></td>
+    <td><div class="g4-v147-action-group"><button type="button" class="g4-v147-action" ${p} data-g4sb-campaign-phrase-exclusion="${escapeAttr(row.kw)}">Вернуть</button><button type="button" class="g4-v147-action is-danger" ${p} data-g4sb-delete-bank-phrase="${escapeAttr(row.kw)}">Удалить</button></div></td>
+  </tr>`).join("");
+  const openExcludedAfterMove = Boolean(d._g4V152OpenExcludedAfterMove);
+  delete d._g4V152OpenExcludedAfterMove;
+  const excludedImportPreview = g4sbV170ExcludedImportPreviewHtml(product, d, draft, p);
+  const excludedEmptyRow = `<tr><td colspan="5"><div class="g1-empty">Исключённых фраз пока нет. Импортируйте прогноз, чтобы добавить их из файла Яндекс Директа.</div></td></tr>`;
+  const excludedHtml = `<details class="g4-v137-separated-bank" data-ui-keeper-key="g4-excluded-campaign-phrases-${escapeAttr(product)}" ${openExcludedAfterMove ? "open" : ""}><summary>Исключённые для кампании · ${excludedRows.length}</summary><div class="g4-v141-excluded-tools"><p>Фразы не удалены из банка семантики. Значения сохраняются и вернутся вместе с фразой в распределение.</p><div class="g4-v170-excluded-actions"><div class="g4-v148-import-control"><button type="button" class="small-btn" ${p} data-g4sb-import-scope="excluded" data-g4sb-forecast-import-open>Импорт прогноза Яндекс Директа</button><input type="file" accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ${p} data-g4sb-import-scope="excluded" data-g4sb-forecast-import-file hidden></div>${excludedRows.length ? `<button type="button" class="small-btn" ${p} data-g4sb-copy-excluded>Копировать все фразы</button>` : ""}<label class="g4-v171-excluded-sort"><span>Порядок</span><select class="g4-v142-compact-input" ${p} data-g4sb-draft-oper="excludedPhraseSort"><option value="source"${draft.excludedPhraseSort !== "clicks_desc" ? " selected" : ""}>Исходный</option><option value="clicks_desc"${draft.excludedPhraseSort === "clicks_desc" ? " selected" : ""}>Прогноз кликов: больше → меньше</option></select></label></div></div>${excludedImportPreview}<div class="g1-table-scroll g4-v128-selector g4-v150-excluded-table"><table><thead><tr><th>Ключевая фраза</th><th>Спрос-показы/мес.</th><th>Клики</th><th>Бюджет, ₽</th><th>Действие</th></tr></thead><tbody>${excludedTableRows || excludedEmptyRow}</tbody></table></div></details>`;
+  const occupiedNote = occupiedRows.length
+    ? `<div class="g4-v137-hidden-note">Уже распределены в другие группы и скрыты из списка: ${occupiedRows.length}.</div>`
+    : "";
+  const warning = draft.phraseConflictMessage
+    ? `<div class="g4-v128-conflict" role="alert"><div><strong>Фраза занята другой группой</strong><span>${escapeHtml(draft.phraseConflictMessage)}</span></div></div>`
+    : "";
+  const copyCount = selectedRows.length;
+  const importPreview = g4sbV148ImportPreviewHtml(product, d, draft, p);
+  return `<p class="g1-task">Показаны только свободные фразы и фразы этой группы. Уже распределённые скрыты, исключённые хранятся отдельно. Удаление действует только на банк этой поисковой кампании и не уничтожает источник Gate 1.</p>
+    ${warning}
+    ${occupiedNote}
+    <div class="g4-v143-phrase-tools"><div class="g4-v148-import-control"><button type="button" class="small-btn add-inline-btn" ${p} data-g4sb-forecast-import-open>Импорт прогноза Яндекс Директа</button><input type="file" accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ${p} data-g4sb-forecast-import-file hidden></div><button type="button" class="small-btn" ${p} data-g4sb-copy-group-phrases ${copyCount ? "" : "disabled"}>Копировать все фразы группы · ${copyCount}</button><label><span>Порядок</span><select class="g4-v142-compact-input" ${p} data-g4sb-draft-oper="phraseSort"><option value="source"${draft.phraseSort !== "clicks_desc" ? " selected" : ""}>Исходный</option><option value="clicks_desc"${draft.phraseSort === "clicks_desc" ? " selected" : ""}>Прогноз кликов: больше → меньше</option></select></label></div>
+    ${importPreview}
+    <div class="g1-table-scroll g4-v128-selector"><table>
+      <thead><tr><th>Выбор</th><th>Ключевая фраза</th><th>Спрос-показы/мес.</th><th>Клики</th><th>Бюджет, ₽</th><th>Статус</th><th>Действие</th></tr></thead>
+      <tbody>${tableRows || '<tr><td colspan="7"><div class="g1-empty">Свободных фраз пока нет. Добавьте новую фразу ниже.</div></td></tr>'}</tbody>
+    </table></div>
+    <div class="g4-v137-manual-phrase"><label><span>Добавить ключевую фразу</span><input type="text" ${p} data-g4sb-manual-phrase data-guru-field-neutral placeholder="Введите новую ключевую фразу"></label><button type="button" class="small-btn add-inline-btn" ${p} data-g4sb-manual-phrase-add>+ Добавить фразу</button></div>
+    ${excludedHtml}`;
+}
+
+g4sbClusterAssemblyHtml = function (product, d) {
+  const draft = d.clusterDraft;
+  if (!draft.open) return "";
+  const p = `data-g4sb-product="${escapeAttr(product)}"`;
+  const segments = g4sbAllSegmentsFlat(product);
+  const fixedSegment = segments.find((segment) =>
+    draft.itemId === segment.itemId && String(draft.segmentIndex) === String(segment.index),
+  );
+  const fixedJtbd = g4sbItemJtbdList(product, draft.itemId).find(
+    (item) => String(item.index) === String(draft.mainJtbdIndex),
+  );
+  const fixedGroupName = String(fixedJtbd?.text || "JTBD не выбран");
+  const keywordRows = Array.isArray(draft.keywordRows)
+    ? draft.keywordRows
+    : (draft.keywordRows = []);
+  const filledRows = keywordRows.filter((row) => String(row.kw || "").trim());
+  const currentForecast = g4sbV128Forecast(filledRows, draft);
+  const hasDemandData = g4sbV140HasDemandData(filledRows);
+  draft.col2 = currentForecast.count && hasDemandData ? String(currentForecast.impressions) : "";
+  draft.col3 = currentForecast.count && hasDemandData ? String(currentForecast.clicks) : "";
+  draft.col4 = currentForecast.hasPhraseBudget ? String(currentForecast.budget) : "";
+  const saveAssessment = g4sbV140ForecastAssessment(draft, filledRows.length, d.settings || {}, product);
+  const saveBlocked = saveAssessment.phraseLimitExceeded || saveAssessment.blockingErrors.length > 0;
+  return `<div class="g4-upstream g4-v126-editor">
+    <div class="g4-upstream-title">${draft.editingClusterId ? "Редактирование группы объявлений" : "Создание группы объявлений"}</div>
+    <p class="g1-task">Сегмент и JTBD уже зафиксированы местом создания группы. Их нельзя менять внутри формы. Название группы всегда равно JTBD.</p>
+    <section class="g4-v134-foundation" aria-label="Фундамент группы">
+      <div class="g4-upstream-title">Фундамент группы</div>
+      ${g4ReadonlyRow("Сегмент", fixedSegment ? fixedSegment.name : "Сегмент не найден", "зафиксирован")}
+      ${g4ReadonlyRow("JTBD", fixedGroupName, "зафиксирован")}
+      ${g4ReadonlyRow("Название группы", fixedGroupName, "равно JTBD")}
+    </section>
+    <div class="g4-v126-keywords"><div class="g4-upstream-title">3. Ключевые фразы группы</div>${g4sbV128PhraseSelectorHtml(product, d, draft, p)}</div>
+    ${g4sbV127DraftOperationsHtml(product, draft, filledRows.length)}
+    ${draft.validationError ? `<div class="g4-v126-validation" role="alert">${escapeHtml(draft.validationError)}</div>` : ""}
+    <div class="g4-v126-actions">
+      <button class="small-btn add-inline-btn" ${p} data-g4sb-draft-save ${saveBlocked ? "disabled" : ""}>${draft.editingClusterId ? "Сохранить группу" : "Создать группу"}</button>
+      <button class="small-btn" ${p} data-g4sb-draft-cancel>Отмена</button>
+    </div>
+  </div>`;
+};
+
+g4sbSaveClusterDraft = function (product, d) {
+  const draft = d.clusterDraft;
+  draft.validationError = "";
+  if (!draft.itemId) {
+    draft.validationError = "Выберите сегмент.";
+    return null;
+  }
+  if (draft.mainJtbdIndex === "" || draft.mainJtbdIndex === undefined) {
+    draft.validationError = "Выберите основной JTBD.";
+    return null;
+  }
+  const linkedJtbd = g4sbSegmentJtbdList(product, draft.itemId, draft.segmentIndex, d);
+  if (!linkedJtbd.some((item) => String(item.index) === String(draft.mainJtbdIndex))) {
+    draft.validationError = "Зафиксированный JTBD больше не относится к реализации этого сегмента. Закройте форму и восстановите связь JTBD в сегменте.";
+    return null;
+  }
+  const keywordRows = g4sbEnsureDraftKeywordRows(product, draft)
+    .map(g4sbKeywordRow)
+    .filter((row) => row.kw.trim());
+  if (!keywordRows.length) {
+    draft.validationError = "Добавьте хотя бы один поисковый запрос.";
+    return null;
+  }
+  const forecast = g4sbV128Forecast(keywordRows, draft);
+  const hasDemandData = g4sbV140HasDemandData(keywordRows);
+  draft.col2 = forecast.count && hasDemandData ? String(forecast.impressions) : "";
+  draft.col3 = forecast.count && hasDemandData ? String(forecast.clicks) : "";
+  draft.col4 = forecast.hasPhraseBudget ? String(forecast.budget) : "";
+  const forecastAssessment = g4sbV140ForecastAssessment(draft, keywordRows.length, d.settings || {}, product);
+  if (forecastAssessment.phraseLimitExceeded) {
+    draft.validationError = "В группе может быть не более 200 ключевых фраз.";
+    return null;
+  }
+  if (forecastAssessment.blockingErrors.length) {
+    draft.validationError = forecastAssessment.blockingErrors[0];
+    return null;
+  }
+  const usage = g4sbV128PhraseUsage(product, d, draft);
+  const occupiedPhrase = keywordRows.find((row) => {
+    const key = g4sbV128PhraseKey(row.kw);
+    return (usage.get(key) || []).some((record) => record.sameCampaign);
+  });
+  if (occupiedPhrase) {
+    const record = (usage.get(g4sbV128PhraseKey(occupiedPhrase.kw)) || []).find((item) => item.sameCampaign);
+    draft.validationError = `Фраза уже используется в группе «${record?.group || "другая группа"}».`;
+    return null;
+  }
+  const excluded = new Set((d.excludedCampaignPhrases || []).map(g4sbV128PhraseKey));
+  const excludedPhrase = keywordRows.find((row) => excluded.has(g4sbV128PhraseKey(row.kw)));
+  if (excludedPhrase) {
+    draft.validationError = `Фраза «${excludedPhrase.kw}» исключена для всей кампании. Сначала верните её в распределение.`;
+    return null;
+  }
+  const selectedJtbd = g4sbItemJtbdList(product, draft.itemId).find(
+    (item) => String(item.index) === String(draft.mainJtbdIndex),
+  );
+  const name = String(selectedJtbd?.text || "").trim();
+  if (!name) {
+    draft.validationError = "Не удалось найти зафиксированный JTBD. Закройте форму и создайте группу из нужного JTBD заново.";
+    return null;
+  }
+  const searchIntent = name;
+  let group = d.groupRows.find((row) => row.groupId === draft.editingClusterId || row.clusterId === draft.editingClusterId);
+  let compatibility = group ? d.clusters.find((row) => row.id === group.clusterId) : null;
+  if (!group) {
+    const id = makeId("ad-group");
+    group = { groupId: id, clusterId: id, minus: "", col2: "", col3: "", col4: "", nameAutoSynced: true };
+    d.groupRows.push(group);
+    compatibility = { id };
+    d.clusters.push(compatibility);
+  }
+  if (!compatibility) {
+    compatibility = { id: group.clusterId || group.groupId || makeId("ad-group") };
+    group.groupId = group.groupId || compatibility.id;
+    group.clusterId = compatibility.id;
+    d.clusters.push(compatibility);
+  }
+  Object.assign(group, {
+    col0: name,
+    itemId: draft.itemId,
+    segmentIndex: draft.segmentIndex,
+    mainJtbdIndex: draft.mainJtbdIndex,
+    searchIntent,
+    demandRows: keywordRows,
+    minus: String(draft.minus || ""),
+    col2: String(draft.col2 || ""),
+    col3: String(draft.col3 || ""),
+    col4: String(draft.col4 || ""),
+    budgetType: draft.budgetType === "weekly" ? "weekly" : "period",
+    desiredLeads: String(draft.desiredLeads || ""),
+    desiredCpaScenario: ["cautious", "base", "optimistic"].includes(draft.desiredCpaScenario) ? draft.desiredCpaScenario : "base",
+  });
+  delete group.forecastConversions;
+  delete group.accent;
+  const groupIndex = d.groupRows.indexOf(group);
+  d.adsRows[groupIndex] = (Array.isArray(draft.ads) && draft.ads.length ? draft.ads : [{}])
+    .map((ad) => ({
+      ad0: String(ad.ad0 || ""),
+      ad1: String(ad.ad1 || ""),
+      ad2: String(ad.ad2 || ""),
+    }));
+  Object.assign(compatibility, {
+    name,
+    itemId: group.itemId,
+    segmentIndex: group.segmentIndex,
+    mainJtbdIndex: group.mainJtbdIndex,
+    extraJtbdIndexes: [],
+    searchIntent: group.searchIntent,
+    demandRows: keywordRows.map(g4sbKeywordRow),
+    phraseSelection: keywordRows.map((row) => row.kw),
+    extraPhrases: [],
+  });
+  delete compatibility.accent;
+  g4sbResetDraft(d);
+  d.clusterDraft.open = false;
+  return compatibility;
+};
+
+const __g4V126PrevDuplicate = g4sbDuplicateCluster;
+g4sbDuplicateCluster = function (product, d, groupId) {
+  const sourceGroup = d.groupRows.find((row) => row.groupId === groupId || row.clusterId === groupId);
+  const copy = __g4V126PrevDuplicate(product, d, groupId);
+  if (!copy || !sourceGroup) return copy;
+  copy.searchIntent = sourceGroup.searchIntent || "";
+  delete copy.accent;
+  const fixedJtbd = g4sbV126Jtbd(product, sourceGroup);
+  if (fixedJtbd?.text) copy.name = fixedJtbd.text;
+  const copiedGroup = d.groupRows.find((row) => row.clusterId === copy.id);
+  if (copiedGroup) {
+    copiedGroup.groupId = copy.id;
+    copiedGroup.itemId = sourceGroup.itemId;
+    copiedGroup.segmentIndex = sourceGroup.segmentIndex;
+    copiedGroup.mainJtbdIndex = sourceGroup.mainJtbdIndex;
+    copiedGroup.searchIntent = sourceGroup.searchIntent;
+    if (fixedJtbd?.text) copiedGroup.col0 = fixedJtbd.text;
+    delete copiedGroup.accent;
+    copiedGroup.demandRows = (sourceGroup.demandRows || []).map(g4sbKeywordRow);
+  }
+  return copy;
+};
+
+const __g4V126PrevSearchChannelHtml = g4sbSearchChannelCardHtml;
+g4sbSearchChannelCardHtml = function () {
+  return __g4V126PrevSearchChannelHtml.apply(this, arguments)
+    .replace(
+      "Кластер и его группа объявлений — одна единица: соберите кластер (сегмент → JTBD → фразы → спрос), группа с прогнозом и объявлениями создастся автоматически.",
+      "В Gate 4 выберите JTBD для реализации сегмента. Группа создаётся внутри конкретного JTBD, наследует его название и объединяет совместимые запросы и объявления.",
+    )
+    .replaceAll("Кластер-групп", "Групп объявлений")
+    .replaceAll("кластер-группу", "группу объявлений")
+    .replace("+ Создать кластер-группу", "+ Создать группу объявлений")
+    .replace("Кластеры и группы", "Сегменты, JTBD и группы")
+    .replace(/<div class="g1-empty" style="margin-top:12px">Групп объявлений пока нет[^<]*<\/div>/, "")
+    .replace('<div class="g1-fields-grid" style="margin-top:12px"></div>', "");
+};
+
+document.addEventListener("click", (event) => {
+  const target = event.target;
+  if (target?.dataset?.g4sbCreateGroupForJtbd !== undefined) {
+    const d = ensureGate4SearchBuild(target.dataset.g4sbProduct);
+    const [itemId, segmentIndex, mainJtbdIndex] = JSON.parse(target.dataset.g4sbCreateGroupForJtbd);
+    g4sbResetDraft(d);
+    d.clusterDraft.itemId = itemId;
+    d.clusterDraft.segmentIndex = segmentIndex;
+    d.clusterDraft.mainJtbdIndex = mainJtbdIndex;
+    const jtbd = g4sbItemJtbdList(target.dataset.g4sbProduct, itemId).find(
+      (item) => String(item.index) === String(mainJtbdIndex),
+    );
+    d.clusterDraft.searchIntent = jtbd?.text || "";
+    d.clusterDraft.name = jtbd?.text || "";
+    flashSaving();
+    renderGate();
+    return;
+  }
+  if (target?.dataset?.g4sbEditGroup !== undefined) {
+    const d = ensureGate4SearchBuild(target.dataset.g4sbProduct);
+    const group = d.groupRows.find((row) => row.groupId === target.dataset.g4sbEditGroup || row.clusterId === target.dataset.g4sbEditGroup);
+    if (!group) return;
+    d.clusterDraft = {
+      open: true,
+      editingClusterId: group.groupId,
+      itemId: group.itemId,
+      segmentIndex: group.segmentIndex,
+      mainJtbdIndex: group.mainJtbdIndex,
+      extraJtbdIndexes: [],
+      searchIntent: group.searchIntent || "",
+      keywordRows: (group.demandRows || []).map(g4sbKeywordRow),
+      phraseSelection: [],
+      extraPhrases: [],
+      name: group.col0 || "",
+      phraseFilter: "all",
+      minus: group.minus || "",
+      col2: group.col2 || "",
+      col3: group.col3 || "",
+      col4: group.col4 || "",
+      budgetType: group.budgetType === "weekly" ? "weekly" : "period",
+      desiredLeads: group.desiredLeads || "",
+      desiredCpaScenario: group.desiredCpaScenario || "base",
+      forecastCpc: parseUnitNumber(group.col3) && parseUnitNumber(group.col4)
+        ? String(Math.round(parseUnitNumber(group.col4) / parseUnitNumber(group.col3)))
+        : "",
+      ads: ((d.adsRows || {})[d.groupRows.indexOf(group)] || [{}]).map((ad) => ({
+        ad0: String(ad.ad0 || ""),
+        ad1: String(ad.ad1 || ""),
+        ad2: String(ad.ad2 || ""),
+      })),
+      forecastBaselineRows: (group.demandRows || []).map(g4sbKeywordRow),
+      phraseConflictMessage: "",
+    };
+    flashSaving();
+    renderGate();
+  }
+});
+
+const __g4V1261InlineGroupEditor = g4sbClusterAssemblyHtml;
+
+function g4sbV131LaunchPriorities(groups) {
+  const ranked = groups.map((entry) => {
+    const impressions = parseUnitNumber(entry.row.col2);
+    const clicks = parseUnitNumber(entry.row.col3);
+    const budget = parseUnitNumber(entry.row.col4);
+    const cpc = clicks && budget ? budget / clicks : Infinity;
+    return { ...entry, impressions, clicks, budget, cpc, hasForecast: Boolean(impressions && clicks && budget) };
+  }).sort((a, b) =>
+    Number(b.hasForecast) - Number(a.hasForecast) ||
+    a.cpc - b.cpc ||
+    b.clicks - a.clicks ||
+    b.impressions - a.impressions ||
+    a.index - b.index,
+  );
+  const priorities = new Map();
+  let rank = 0;
+  ranked.forEach((entry) => {
+    if (!entry.hasForecast) {
+      priorities.set(entry.index, { rank: 0, hasForecast: false });
+      return;
+    }
+    rank += 1;
+    priorities.set(entry.index, { rank, hasForecast: true, cpc: entry.cpc });
+  });
+  return { priorities, first: ranked.find((entry) => entry.hasForecast) || null };
+}
+
+/* v1.26.1 — покрытие становится рабочим контейнером: сегмент,
+   его JTBD и группы редактируются в одном месте. */
+g4sbSegmentCoverageHtml = function (product, d) {
+  const segments = g4sbAllSegmentsFlat(product);
+  if (!segments.length) {
+    return `<div class="g1-empty" style="margin-top:8px">В Gate 1 «Уровень 2 — Сегментация + позиционирование» пока нет ни одного сегмента.</div>`;
+  }
+  const groupsFor = (segment) => d.groupRows
+    .map((row, index) => ({ row, index }))
+    .filter(({ row }) =>
+      row.itemId === segment.itemId &&
+      String(row.segmentIndex) === String(segment.index),
+    );
+  const covered = segments.filter((segment) => groupsFor(segment).length > 0).length;
+  // Перекрёстный индекс показывает, в каких ещё сегментах уже выбран
+  // тот же JTBD. Индекс JTBD значим только внутри конкретного itemId.
+  const jtbdSegmentUsage = new Map();
+  const registerJtbdUsage = (segment, jtbdIndex, groupCount = 0) => {
+    const jtbdKey = `${segment.itemId}::${String(jtbdIndex)}`;
+    if (!jtbdSegmentUsage.has(jtbdKey)) jtbdSegmentUsage.set(jtbdKey, new Map());
+    const segmentKey = g4sbSegmentJtbdLinkKey(segment.itemId, segment.index);
+    const current = jtbdSegmentUsage.get(jtbdKey).get(segmentKey) || {
+      name: segment.name,
+      groupCount: 0,
+    };
+    current.groupCount = Math.max(current.groupCount, groupCount);
+    jtbdSegmentUsage.get(jtbdKey).set(segmentKey, current);
+  };
+  segments.forEach((candidate) => {
+    g4sbSegmentJtbdList(product, candidate.itemId, candidate.index, d)
+      .forEach((jtbd) => registerJtbdUsage(candidate, jtbd.index));
+    const counts = new Map();
+    groupsFor(candidate).forEach(({ row }) => {
+      const key = String(row.mainJtbdIndex ?? "");
+      if (key) counts.set(key, (counts.get(key) || 0) + 1);
+    });
+    counts.forEach((count, jtbdIndex) => registerJtbdUsage(candidate, jtbdIndex, count));
+  });
+  const segmentHtml = segments.map((segment) => {
+    const groups = groupsFor(segment);
+    const linkedJtbds = g4sbSegmentJtbdList(product, segment.itemId, segment.index, d);
+    const launch = g4sbV131LaunchPriorities(groups);
+    const allJtbds = g4sbItemJtbdList(product, segment.itemId);
+    const linkedSet = new Set(linkedJtbds.map((jtbd) => String(jtbd.index)));
+    const jtbdPlanHtml = `<section class="g4-v132-jtbd-map">
+      <div class="g4-v132-jtbd-map-head"><div><strong>JTBD сегмента для рекламной реализации</strong><small>Выберите JTBD как фундамент будущих групп. Каждая группа наследует название JTBD и получает собственные запросы и объявления.</small></div><span>${linkedJtbds.length} из ${allJtbds.length}</span></div>
+      <div class="g4-v132-jtbd-options">${allJtbds.map((jtbd) => {
+        const entries = groups.filter((entry) => String(entry.row.mainJtbdIndex) === String(jtbd.index));
+        const linked = linkedSet.has(String(jtbd.index));
+        const fixedInOpenDraft = Boolean(
+          d.clusterDraft?.open &&
+          d.clusterDraft.itemId === segment.itemId &&
+          String(d.clusterDraft.segmentIndex) === String(segment.index) &&
+          String(d.clusterDraft.mainJtbdIndex) === String(jtbd.index),
+        );
+        const seed = escapeAttr(JSON.stringify([segment.itemId, segment.index, jtbd.index]));
+        const currentSegmentKey = g4sbSegmentJtbdLinkKey(segment.itemId, segment.index);
+        const otherSegmentUsage = [...(jtbdSegmentUsage.get(`${segment.itemId}::${String(jtbd.index)}`)?.entries() || [])]
+          .filter(([segmentKey]) => segmentKey !== currentSegmentKey)
+          .map(([, record]) => record);
+        const stateLabel = entries.length ? `Используется · ${entries.length}` : fixedInOpenDraft ? "Зафиксирован в группе" : linked ? "Запланирован" : "Не добавлен";
+        const stateClass = entries.length ? "is-used" : linked ? "is-planned" : "is-free";
+        const usageHtml = entries.length
+          ? `<div class="g4-v132-jtbd-usage">${entries.map(({ row, index }) => {
+              const phrases = g4sbGroupPhrases(product, row).length;
+              const ads = ((d.adsRows || {})[index] || []).filter((ad) => Object.values(ad || {}).some((value) => String(value || "").trim())).length;
+              return `<span><b>${escapeHtml(jtbd.text)}</b><small>${phrases} фраз · ${ads} объявл.</small></span>`;
+            }).join("")}</div>`
+          : `<small>${linked ? "Создайте группу, чтобы реализовать этот JTBD." : "Не участвует в реализации сегмента."}</small>`;
+        const crossSegmentHtml = otherSegmentUsage.length
+          ? `<div class="g4-v155-cross-segment-note"><span>Также:</span><span>${otherSegmentUsage.map((record) => `<span><b>${escapeHtml(record.name)}</b><i> · ${record.groupCount ? `реализован, групп: ${record.groupCount}` : "запланирован"}</i></span>`).join("; ")}</span></div>`
+          : "";
+        return `<label class="g4-v132-jtbd-option ${stateClass} ${otherSegmentUsage.length ? "has-cross-segment" : ""}">
+          <input type="checkbox" data-g4sb-product="${escapeAttr(product)}" data-g4sb-segment-jtbd-toggle="${seed}" ${linked ? "checked" : ""} ${entries.length || fixedInOpenDraft ? "disabled" : ""}>
+          <span class="g4-v132-jtbd-copy"><strong>${escapeHtml(jtbd.text)}</strong>${usageHtml}${crossSegmentHtml}</span>
+          <em>${stateLabel}</em>
+        </label>`;
+      }).join("") || '<div class="g1-empty">В Gate 1 пока нет JTBD для этого направления.</div>'}</div>
+    </section>`;
+    const byJtbd = new Map();
+    linkedJtbds.forEach((jtbd) => byJtbd.set(String(jtbd.index), []));
+    groups.forEach((entry) => {
+      const key = String(entry.row.mainJtbdIndex ?? "");
+      if (!byJtbd.has(key)) byJtbd.set(key, []);
+      byJtbd.get(key).push(entry);
+    });
+    const editorIsInSegment = Boolean(
+      d.clusterDraft?.open &&
+      d.clusterDraft.itemId === segment.itemId &&
+      String(d.clusterDraft.segmentIndex) === String(segment.index),
+    );
+    let editorRenderedInJtbd = false;
+    const jtbdHtml = [...byJtbd.entries()].map(([jtbdIndex, entries]) => {
+      const jtbd = g4sbItemJtbdList(product, segment.itemId).find(
+        (item) => String(item.index) === jtbdIndex,
+      );
+      const jtbdSeed = escapeAttr(JSON.stringify([segment.itemId, segment.index, jtbdIndex]));
+      const editorIsThisJtbd = Boolean(
+        editorIsInSegment &&
+        d.clusterDraft.mainJtbdIndex !== "" &&
+        d.clusterDraft.mainJtbdIndex !== undefined &&
+        d.clusterDraft.mainJtbdIndex !== null &&
+        String(d.clusterDraft.mainJtbdIndex) === String(jtbdIndex),
+      );
+      const jtbdEditor = editorIsThisJtbd
+        ? `<div class="g4-v133-jtbd-editor">${__g4V1261InlineGroupEditor(product, d)}</div>`
+        : "";
+      if (editorIsThisJtbd) {
+        editorRenderedInJtbd = true;
+        d._g4V1261EditorRenderedInline = true;
+      }
+      const jtbdKeeperKey = `g4-search-jtbd-${normalizeAspectKey(product)}-${segment.itemId}-${segment.index}-${jtbdIndex}`;
+      return `<details class="g4-v126-jtbd" data-ui-keeper-key="${escapeAttr(jtbdKeeperKey)}" open>
+        <summary class="g4-v126-jtbd-head">
+          <span class="g4-v126-level">JTBD</span>
+          <strong>${escapeHtml(jtbd ? jtbd.text : "JTBD не выбран")}</strong>
+          <span class="g4-v160-jtbd-summary-actions"><span>${entries.length ? `${entries.length} ${entries.length === 1 ? "группа" : "группы"}` : "Не реализован"}</span><i aria-hidden="true"></i></span>
+        </summary>
+        <div class="g4-v160-jtbd-body">
+          ${entries.length
+            ? `<div class="g4-v126-groups">${entries.map(({ row, index }) =>
+                g4sbV126RenderGroupCard(product, row, index, d.groupRows, (d.adsRows || {})[index] || [{}], launch.priorities.get(index)),
+              ).join("")}</div>`
+            : editorIsThisJtbd
+              ? ""
+              : `<div class="g4-v131-jtbd-empty"><span>Для этого JTBD группа объявлений ещё не создана.</span><button type="button" class="small-btn add-inline-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-create-group-for-jtbd="${jtbdSeed}">+ Создать группу для JTBD</button></div>`}
+          ${jtbdEditor}
+        </div>
+      </details>`;
+    }).join("");
+    const done = groups.length > 0;
+    const inlineEditor = editorIsInSegment && !editorRenderedInJtbd
+      ? __g4V1261InlineGroupEditor(product, d)
+      : "";
+    if (editorIsInSegment && !editorRenderedInJtbd) d._g4V1261EditorRenderedInline = true;
+    const segmentKeeperKey = `g4-search-segment-${normalizeAspectKey(product)}-${segment.itemId}-${segment.index}`;
+    return `<details class="g4-v126-coverage-segment ${done ? "is-covered" : "is-empty"}" data-ui-keeper-key="${escapeAttr(segmentKeeperKey)}" open>
+      <summary class="g4-v126-coverage-head">
+        <div>
+          <span class="g4-v126-level">Сегмент</span>
+          <strong>${escapeHtml(segment.name)}</strong>
+          <small>${escapeHtml(segment.itemName)} · JTBD в реализации: ${linkedJtbds.length} из ${allJtbds.length} · реализовано группами: ${byJtbd.size ? [...byJtbd.values()].filter((entries) => entries.length).length : 0}</small>
+        </div>
+        <span class="g4-v149-segment-summary-actions">
+          <span class="status-pill status-${done ? "ready" : "not_started"}">${done ? `Реализован · ${groups.length}` : "Не реализован"}</span>
+          <span class="g4-v149-segment-toggle" aria-hidden="true"></span>
+        </span>
+      </summary>
+      <div class="g4-v149-segment-body">
+        ${jtbdPlanHtml}
+        ${launch.first ? `<div class="g4-v131-launch-note"><span>Приоритет запуска по прогнозу</span><strong>№1 — ${escapeHtml(launch.first.row.col0 || "Группа")}</strong><small>Прогноз ранжирует готовые группы по CPC, затем по кликам и показам. Он не выбирает основной JTBD.</small></div>` : groups.length > 1 ? '<div class="g4-v131-launch-note is-empty"><span>Приоритет запуска</span><small>Заполните показы, клики и бюджет групп — после этого появится порядок запуска.</small></div>' : ""}
+        ${jtbdHtml || '<div class="g1-empty">Добавьте один или несколько JTBD к рекламной реализации сегмента в карте выше.</div>'}
+        ${inlineEditor}
+      </div>
+    </details>`;
+  }).join("");
+  return `<div class="g4-upstream g4-v126-coverage" style="margin-top:12px">
+    <div class="g4-upstream-title">Покрытие сегментов Уровня 2 — реализовано ${covered} из ${segments.length}</div>
+    <p class="g1-task">Сегменты и общий список JTBD приходят из Gate 1. Здесь JTBD становится неизменяемым фундаментом группы: название группы равно JTBD, а внутри настраиваются запросы и объявления.</p>
+    <div class="g4-v126-coverage-list">${segmentHtml}</div>
+  </div>`;
+};
+
+// Отдельный повторный реестр ниже покрытия больше не выводим.
+g4sbUsageOverviewHtml = function () { return ""; };
+
+// Старое место формы находится после всего блока покрытия. Если форма
+// уже показана внутри выбранного сегмента, второй экземпляр не выводим.
+g4sbClusterAssemblyHtml = function (product, d) {
+  if (d._g4V1261EditorRenderedInline) {
+    delete d._g4V1261EditorRenderedInline;
+    return "";
+  }
+  return __g4V1261InlineGroupEditor(product, d);
+};
+
+/* v1.27.0 — вся практическая настройка группы живёт в единой форме
+   создания/редактирования, а сохранённая группа остаётся компактной
+   строкой внутри своего сегмента и JTBD. */
+let g4sbV142ForecastRenderTimer = null;
+document.addEventListener("input", (event) => {
+  const target = event.target;
+  if (target?.dataset?.g4sbProduct === undefined) return;
+  const isOperation = target.dataset.g4sbDraftOper !== undefined;
+  const isAd = target.dataset.g4sbDraftAdField !== undefined;
+  if (!isOperation && !isAd) return;
+  const d = ensureGate4SearchBuild(target.dataset.g4sbProduct);
+  const draft = d.clusterDraft;
+  if (isOperation) draft[target.dataset.g4sbDraftOper] = target.value;
+  else {
+    if (!Array.isArray(draft.ads)) draft.ads = [{ ad0: "", ad1: "", ad2: "" }];
+    const ad = draft.ads[Number(target.dataset.g4sbDraftAdIndex)];
+    if (!ad) return;
+    ad[target.dataset.g4sbDraftAdField] = target.value;
+  }
+  draft.validationError = "";
+  target.classList.toggle("is-filled", Boolean(target.value.trim()));
+  target.classList.toggle("is-empty", !target.value.trim());
+  flashSaving();
+  if (
+    isOperation &&
+    ["col4", "desiredLeads"].includes(target.dataset.g4sbDraftOper)
+  ) {
+    clearTimeout(g4sbV142ForecastRenderTimer);
+    g4sbV142ForecastRenderTimer = setTimeout(() => {
+      g4sbV142ForecastRenderTimer = null;
+      renderGate();
+    }, 180);
+  }
+});
+
+document.addEventListener("change", (event) => {
+  const target = event.target;
+  if (target?.dataset?.g4sbDraftOper !== undefined) {
+    const d = ensureGate4SearchBuild(target.dataset.g4sbProduct);
+    d.clusterDraft[target.dataset.g4sbDraftOper] = target.value;
+    d.clusterDraft.validationError = "";
+    flashSaving();
+    renderGate();
+    return;
+  }
+  if (
+    target?.dataset?.g4sbSetting !== undefined &&
+    target.tagName !== "SELECT" &&
+    ["dateFrom", "dateTo"].includes(target.dataset.g4sbSetting)
+  ) {
+    const d = ensureGate4SearchBuild(target.dataset.g4sbProduct);
+    d.settings[target.dataset.g4sbSetting] = target.value;
+    flashSaving();
+    renderGate();
+  }
+});
+
+document.addEventListener("input", (event) => {
+  const target = event.target;
+  if (target?.dataset?.g4sbDraftField === undefined && target?.dataset?.g4sbKeywordField === undefined) return;
+  const d = ensureGate4SearchBuild(target.dataset.g4sbProduct);
+  if (d.clusterDraft) d.clusterDraft.validationError = "";
+});
+
+document.addEventListener("click", (event) => {
+  const target = event.target;
+  if (target?.dataset?.g4sbDraftAdAdd === undefined && target?.dataset?.g4sbDraftAdRemove === undefined) return;
+  const d = ensureGate4SearchBuild(target.dataset.g4sbProduct);
+  if (!Array.isArray(d.clusterDraft.ads)) d.clusterDraft.ads = [{ ad0: "", ad1: "", ad2: "" }];
+  if (target.dataset.g4sbDraftAdAdd !== undefined) {
+    d.clusterDraft.ads.push({ ad0: "", ad1: "", ad2: "" });
+  } else if (d.clusterDraft.ads.length > 1) {
+    d.clusterDraft.ads.splice(Number(target.dataset.g4sbDraftAdRemove), 1);
+  } else return;
+  d.clusterDraft.validationError = "";
+  flashSaving();
+  renderGate();
+});
+
+document.addEventListener("click", (event) => {
+  const target = event.target;
+  if (target?.dataset?.g4sbCopyGroupDraft === undefined) return;
+  const product = target.dataset.g4sbProduct;
+  const d = ensureGate4SearchBuild(product);
+  const group = d.groupRows.find(
+    (row) => row.groupId === target.dataset.g4sbCopyGroupDraft || row.clusterId === target.dataset.g4sbCopyGroupDraft,
+  );
+  if (!group) return;
+  const groupIndex = d.groupRows.indexOf(group);
+  d.clusterDraft = {
+    open: true,
+    editingClusterId: "",
+    itemId: group.itemId,
+    segmentIndex: group.segmentIndex,
+    mainJtbdIndex: group.mainJtbdIndex,
+    extraJtbdIndexes: [],
+    searchIntent: group.searchIntent || "",
+    keywordRows: (group.demandRows || []).map(g4sbKeywordRow),
+    phraseSelection: [],
+    extraPhrases: [],
+    name: String(g4sbV126Jtbd(product, group)?.text || group.col0 || "JTBD"),
+    phraseFilter: "all",
+    minus: group.minus || "",
+    col2: group.col2 || "",
+    col3: group.col3 || "",
+    col4: group.col4 || "",
+    budgetType: group.budgetType === "weekly" ? "weekly" : "period",
+    desiredLeads: group.desiredLeads || "",
+    desiredCpaScenario: group.desiredCpaScenario || "base",
+    forecastCpc: parseUnitNumber(group.col3) && parseUnitNumber(group.col4)
+      ? String(Math.round(parseUnitNumber(group.col4) / parseUnitNumber(group.col3)))
+      : "",
+    ads: ((d.adsRows || {})[groupIndex] || [{}]).map((ad) => ({
+      ad0: String(ad.ad0 || ""),
+      ad1: String(ad.ad1 || ""),
+      ad2: String(ad.ad2 || ""),
+    })),
+    forecastBaselineRows: [],
+    phraseConflictMessage: "",
+    validationError: "",
+  };
+  flashSaving();
+  renderGate();
+});
+
+document.addEventListener("change", (event) => {
+  const target = event.target;
+  if (target?.dataset?.g4sbPhraseSelect === undefined) return;
+  const product = target.dataset.g4sbProduct;
+  const d = ensureGate4SearchBuild(product);
+  const draft = d.clusterDraft;
+  const phrase = target.dataset.g4sbPhraseSelect;
+  const key = g4sbV128PhraseKey(phrase);
+  const usage = g4sbV128PhraseUsage(product, d, draft).get(key) || [];
+  const occupied = usage.find((record) => record.sameCampaign);
+  if (target.checked && occupied) {
+    target.checked = false;
+    draft.phraseConflictMessage = `Фраза уже используется в группе «${occupied.group}».`;
+    draft.validationError = "";
+    flashSaving();
+    renderGate();
+    return;
+  }
+  const sourceRow = g4sbV128SourcePhraseRows(product, draft).find(
+    (row) => g4sbV128PhraseKey(row.kw) === key,
+  ) || g4sbKeywordRow({ kw: phrase });
+  const rows = Array.isArray(draft.keywordRows) ? draft.keywordRows : (draft.keywordRows = []);
+  const index = rows.findIndex((row) => g4sbV128PhraseKey(row.kw) === key);
+  if (target.checked && index === -1) rows.push(g4sbKeywordRow(sourceRow));
+  if (!target.checked && index !== -1) rows.splice(index, 1);
+  draft.phraseConflictMessage = "";
+  draft.validationError = "";
+  flashSaving();
+  renderGate();
+});
+
+document.addEventListener("click", (event) => {
+  const target = event.target;
+  if (target?.dataset?.g4sbManualPhraseAdd === undefined) return;
+  const product = target.dataset.g4sbProduct;
+  const d = ensureGate4SearchBuild(product);
+  const draft = d.clusterDraft;
+  const input = target.closest(".g4-v126-editor")?.querySelector("[data-g4sb-manual-phrase]");
+  const phrase = String(input?.value || "").trim();
+  if (!phrase) {
+    draft.validationError = "Введите ключевую фразу.";
+    renderGate();
+    return;
+  }
+  const key = g4sbV128PhraseKey(phrase);
+  d.deletedBankPhrases = Array.isArray(d.deletedBankPhrases) ? d.deletedBankPhrases : [];
+  const deletedPosition = d.deletedBankPhrases.findIndex((value) => g4sbV128PhraseKey(value) === key);
+  if (deletedPosition !== -1) d.deletedBankPhrases.splice(deletedPosition, 1);
+  const occupied = (g4sbV128PhraseUsage(product, d, draft).get(key) || []).find((record) => record.sameCampaign);
+  if (occupied) {
+    draft.phraseConflictMessage = `Фраза уже используется в группе «${occupied.group}».`;
+    draft.validationError = "";
+    renderGate();
+    return;
+  }
+  if ((d.excludedCampaignPhrases || []).some((value) => g4sbV128PhraseKey(value) === key)) {
+    draft.validationError = `Фраза «${phrase}» исключена для всей кампании. Верните её из отдельного списка ниже.`;
+    renderGate();
+    return;
+  }
+  const sourceRow = g4sbV128SourcePhraseRows(product, draft).find(
+    (row) => g4sbV128PhraseKey(row.kw) === key,
+  );
+  if (!sourceRow) g4sbSyncKeywordRowsToGate1(product, draft.itemId, [g4sbKeywordRow({ kw: phrase, originStage: "gate4" })]);
+  if (!Array.isArray(draft.keywordRows)) draft.keywordRows = [];
+  if (!draft.keywordRows.some((row) => g4sbV128PhraseKey(row.kw) === key))
+    draft.keywordRows.push(g4sbKeywordRow(sourceRow || { kw: phrase, originStage: "gate4" }));
+  draft.phraseConflictMessage = "";
+  draft.validationError = "";
+  flashSaving();
+  renderGate();
+});
+
+function g4sbV152MovePhraseToCampaignExclusions(product, d, phrase) {
+  const draft = d.clusterDraft;
+  const key = g4sbV128PhraseKey(phrase);
+  if (!key) return;
+  draft.keywordRows = (draft.keywordRows || [])
+    .filter((row) => g4sbV128PhraseKey(row.kw) !== key);
+  const excluded = d.excludedCampaignPhrases = Array.isArray(d.excludedCampaignPhrases)
+    ? d.excludedCampaignPhrases
+    : [];
+  if (!excluded.some((value) => g4sbV128PhraseKey(value) === key)) excluded.push(key);
+  // Если список уже есть на странице, раскрываем его до снимка UI Keeper.
+  // Если это первая исключённая фраза, флаг раскроет новый блок при рендере.
+  const excludedDetails = document.querySelector(".g4-v137-separated-bank");
+  if (excludedDetails) excludedDetails.open = true;
+  else d._g4V152OpenExcludedAfterMove = true;
+
+  // При редактировании существующей группы действие применяется сразу,
+  // иначе отмена формы могла бы оставить фразу одновременно в группе и
+  // в исключениях кампании.
+  if (draft.editingClusterId) {
+    const group = d.groupRows.find((row) =>
+      row.groupId === draft.editingClusterId || row.clusterId === draft.editingClusterId,
+    );
+    if (group) {
+      group.demandRows = (group.demandRows || [])
+        .map(g4sbKeywordRow)
+        .filter((row) => g4sbV128PhraseKey(row.kw) !== key);
+      const forecast = g4sbV128Forecast(group.demandRows, group);
+      const hasDemandData = g4sbV140HasDemandData(group.demandRows);
+      group.col2 = forecast.count && hasDemandData ? String(forecast.impressions) : "";
+      group.col3 = forecast.count && hasDemandData ? String(forecast.clicks) : "";
+      group.col4 = forecast.hasPhraseBudget ? String(forecast.budget) : "";
+      const compatibility = d.clusters.find((row) =>
+        row.id === group.clusterId || row.id === group.groupId,
+      );
+      if (compatibility) {
+        compatibility.demandRows = group.demandRows.map(g4sbKeywordRow);
+        compatibility.phraseSelection = group.demandRows.map((row) => row.kw);
+      }
+    }
+  }
+  draft.phraseConflictMessage = "";
+  draft.validationError = "";
+}
+
+document.addEventListener("click", (event) => {
+  const target = event.target;
+  if (target?.dataset?.g4sbCampaignPhraseExclusion === undefined) return;
+  const product = target.dataset.g4sbProduct;
+  const d = ensureGate4SearchBuild(product);
+  const draft = d.clusterDraft;
+  const phrase = target.dataset.g4sbCampaignPhraseExclusion;
+  const key = g4sbV128PhraseKey(phrase);
+  const selected = (draft.keywordRows || []).some((row) => g4sbV128PhraseKey(row.kw) === key);
+  const occupied = (g4sbV128PhraseUsage(product, d, draft).get(key) || []).find((record) => record.sameCampaign);
+  if (occupied) {
+    draft.phraseConflictMessage = `Фраза уже используется в группе «${occupied.group}».`;
+    flashSaving();
+    renderGate();
+    return;
+  }
+  if (selected) {
+    g4sbV152MovePhraseToCampaignExclusions(product, d, phrase);
+    flashSaving();
+    renderGate();
+    return;
+  }
+  const excluded = d.excludedCampaignPhrases = Array.isArray(d.excludedCampaignPhrases)
+    ? d.excludedCampaignPhrases
+    : [];
+  const position = excluded.findIndex((value) => g4sbV128PhraseKey(value) === key);
+  if (position === -1) excluded.push(key);
+  else excluded.splice(position, 1);
+  draft.phraseConflictMessage = "";
+  draft.validationError = "";
+  flashSaving();
+  renderGate();
+});
+
+async function g4sbV141CopyText(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  const copied = document.execCommand("copy");
+  textarea.remove();
+  if (!copied) throw new Error("Clipboard copy failed");
+}
+
+document.addEventListener("click", async (event) => {
+  const button = event.target?.closest?.("[data-g4sb-copy-excluded]");
+  if (!button) return;
+  const product = button.dataset.g4sbProduct;
+  const d = ensureGate4SearchBuild(product);
+  const excludedKeys = new Set(
+    (d.excludedCampaignPhrases || []).map((value) => g4sbV128PhraseKey(value)),
+  );
+  const phrases = [];
+  const seen = new Set();
+  g4sbV128SourcePhraseRows(product, d.clusterDraft).forEach((row) => {
+    const phrase = String(row.kw || "").trim();
+    const key = g4sbV128PhraseKey(phrase);
+    if (!phrase || !excludedKeys.has(key) || seen.has(key)) return;
+    seen.add(key);
+    phrases.push(phrase);
+  });
+  if (!phrases.length) return;
+
+  const initialLabel = button.textContent;
+  try {
+    await g4sbV141CopyText(phrases.join("\n"));
+    button.textContent = `Скопировано: ${phrases.length}`;
+  } catch (_error) {
+    button.textContent = "Не удалось скопировать";
+  }
+  button.disabled = true;
+  window.setTimeout(() => {
+    button.textContent = initialLabel;
+    button.disabled = false;
+  }, 1600);
+});
+
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-g4sb-remove-from-draft]");
+  if (!button) return;
+  const product = button.dataset.g4sbProduct;
+  const d = ensureGate4SearchBuild(product);
+  g4sbV152MovePhraseToCampaignExclusions(product, d, button.dataset.g4sbRemoveFromDraft);
+  flashSaving();
+  renderGate();
+});
+
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-g4sb-delete-bank-phrase]");
+  if (!button) return;
+  const product = button.dataset.g4sbProduct;
+  const d = ensureGate4SearchBuild(product);
+  const phrase = String(button.dataset.g4sbDeleteBankPhrase || "").trim();
+  const key = g4sbV128PhraseKey(phrase);
+  const occupied = (g4sbV128PhraseUsage(product, d, d.clusterDraft).get(key) || [])
+    .find((record) => record.sameCampaign);
+  if (occupied) {
+    d.clusterDraft.phraseConflictMessage = `Фраза уже используется в группе «${occupied.group}». Сначала освободите её.`;
+    renderGate();
+    return;
+  }
+  if (!window.confirm(`Удалить фразу «${phrase}» из банка этой поисковой кампании?`)) return;
+  d.deletedBankPhrases = Array.isArray(d.deletedBankPhrases) ? d.deletedBankPhrases : [];
+  if (!d.deletedBankPhrases.some((value) => g4sbV128PhraseKey(value) === key)) d.deletedBankPhrases.push(key);
+  d.clusterDraft.keywordRows = (d.clusterDraft.keywordRows || [])
+    .filter((row) => g4sbV128PhraseKey(row.kw) !== key);
+  d.clusterDraft.forecastBaselineRows = (d.clusterDraft.forecastBaselineRows || [])
+    .filter((row) => g4sbV128PhraseKey(row.kw) !== key);
+  d.excludedCampaignPhrases = (d.excludedCampaignPhrases || [])
+    .filter((value) => g4sbV128PhraseKey(value) !== key);
+  d.clusterDraft.phraseConflictMessage = "";
+  d.clusterDraft.validationError = "";
+  flashSaving();
+  renderGate();
+});
+
+document.addEventListener("click", async (event) => {
+  const button = event.target?.closest?.("[data-g4sb-copy-group-phrases]");
+  if (!button) return;
+  const d = ensureGate4SearchBuild(button.dataset.g4sbProduct);
+  const phrases = [...new Map((d.clusterDraft.keywordRows || [])
+    .map((row) => [g4sbV128PhraseKey(row.kw), String(row.kw || "").trim()])
+    .filter(([key, phrase]) => key && phrase)).values()];
+  if (!phrases.length) return;
+  const initialLabel = button.textContent;
+  try {
+    await g4sbV141CopyText(phrases.join("\n"));
+    button.textContent = `Скопировано: ${phrases.length}`;
+  } catch (_error) {
+    button.textContent = "Не удалось скопировать";
+  }
+  button.disabled = true;
+  window.setTimeout(() => {
+    button.textContent = initialLabel;
+    button.disabled = false;
+  }, 1600);
+});
+
+function g4sbV148ReadFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      const result = String(reader.result || "");
+      resolve(result.includes(",") ? result.slice(result.indexOf(",") + 1) : result);
+    });
+    reader.addEventListener("error", () => reject(reader.error || new Error("Не удалось прочитать файл.")));
+    reader.readAsDataURL(file);
+  });
+}
+
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-g4sb-forecast-import-open]");
+  if (!button) return;
+  const input = button.closest(".g4-v148-import-control")?.querySelector("[data-g4sb-forecast-import-file]");
+  if (!input) return;
+  input.value = "";
+  input.click();
+});
+
+document.addEventListener("change", async (event) => {
+  const input = event.target?.closest?.("[data-g4sb-forecast-import-file]");
+  if (!input) return;
+  const product = input.dataset.g4sbProduct;
+  const importScope = input.dataset.g4sbImportScope === "excluded" ? "excluded" : "group";
+  const file = input.files?.[0];
+  if (!file) return;
+  const importKey = g4sbV148ImportKey(product, importScope);
+  if (!/\.xlsx?$/i.test(file.name)) {
+    g4sbV148ForecastImports.set(importKey, { error: "Выберите файл формата .xls или .xlsx." });
+    renderGate();
+    return;
+  }
+  if (file.size > 8 * 1024 * 1024) {
+    g4sbV148ForecastImports.set(importKey, { error: "Размер файла не должен превышать 8 МБ." });
+    renderGate();
+    return;
+  }
+  g4sbV148ForecastImports.set(importKey, { loading: true, fileName: file.name });
+  renderGate();
+  try {
+    const fileBase64 = await g4sbV148ReadFileAsBase64(file);
+    const response = await fetch("/api/import-yandex-forecast", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file_name: file.name, file_base64: fileBase64 }),
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) throw new Error(result.detail || "Не удалось разобрать файл прогноза.");
+    g4sbV148ForecastImports.set(importKey, {
+      fileName: result.file_name || file.name,
+      sheetName: result.sheet_name || "Фразы",
+      rows: Array.isArray(result.rows) ? result.rows : [],
+    });
+  } catch (error) {
+    g4sbV148ForecastImports.set(importKey, {
+      fileName: file.name,
+      error: error?.message || "Не удалось прочитать файл прогноза.",
+    });
+  }
+  renderGate();
+});
+
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-g4sb-forecast-import-cancel]");
+  if (!button) return;
+  const importScope = button.dataset.g4sbImportScope === "excluded" ? "excluded" : "group";
+  g4sbV148ForecastImports.delete(g4sbV148ImportKey(button.dataset.g4sbProduct, importScope));
+  renderGate();
+});
+
+document.addEventListener("click", async (event) => {
+  const button = event.target?.closest?.("[data-g4sb-forecast-import-confirm]");
+  if (!button) return;
+  const product = button.dataset.g4sbProduct;
+  const d = ensureGate4SearchBuild(product);
+  const draft = d.clusterDraft;
+  const importScope = button.dataset.g4sbImportScope === "excluded" ? "excluded" : "group";
+  const importKey = g4sbV148ImportKey(product, importScope);
+  const preview = g4sbV148ForecastImports.get(importKey);
+  if (!preview || !Array.isArray(preview.rows)) return;
+
+  if (importScope === "excluded") {
+    const usage = g4sbV128PhraseUsage(product, d, draft);
+    const excluded = d.excludedCampaignPhrases = Array.isArray(d.excludedCampaignPhrases)
+      ? d.excludedCampaignPhrases
+      : [];
+    const excludedKeys = new Set(excluded.map(g4sbV128PhraseKey));
+    const selectedKeys = new Set((draft.keywordRows || []).map((row) => g4sbV128PhraseKey(row.kw)));
+    const sourceRows = new Map(g4sbV128SourcePhraseRows(product, draft).map((row) => [g4sbV128PhraseKey(row.kw), row]));
+    const importedRows = [];
+    let added = 0;
+    let updated = 0;
+    let skipped = 0;
+
+    preview.rows.forEach((source) => {
+      const phrase = String(source.phrase || "").trim();
+      const key = g4sbV128PhraseKey(phrase);
+      if (!key) return;
+      const occupied = (usage.get(key) || []).some((record) => record.sameCampaign);
+      if (!excludedKeys.has(key) && occupied) {
+        skipped += 1;
+        return;
+      }
+      const existed = excludedKeys.has(key);
+      const existingSourceRow = sourceRows.get(key);
+      const row = g4sbKeywordRow(existingSourceRow || { kw: phrase, originStage: "gate4" });
+      row.kw = phrase;
+      const impressions = Math.max(0, Number(source.impressions) || 0);
+      row.vol = String(impressions);
+      row.forecastClicks = String(impressions === 0 ? 0 : Math.max(0, Number(source.clicks) || 0));
+      row.forecastBudget = String(impressions === 0 ? 0 : Math.max(0, Number(source.budget) || 0));
+      row.source = "Прогноз Яндекс Директа";
+      importedRows.push(row);
+
+      if (selectedKeys.has(key)) g4sbV152MovePhraseToCampaignExclusions(product, d, phrase);
+      if (!excludedKeys.has(key)) {
+        excluded.push(key);
+        excludedKeys.add(key);
+      }
+      if (existed) updated += 1;
+      else added += 1;
+    });
+
+    g4sbSyncKeywordRowsToGate1(product, draft.itemId, importedRows);
+    const importedKeys = new Set(importedRows.map((row) => g4sbV128PhraseKey(row.kw)));
+    d.deletedBankPhrases = (d.deletedBankPhrases || []).filter((value) => !importedKeys.has(g4sbV128PhraseKey(value)));
+    draft.forecastBaselineRows = (draft.forecastBaselineRows || []).map((row) => {
+      const imported = importedRows.find((item) => g4sbV128PhraseKey(item.kw) === g4sbV128PhraseKey(row.kw));
+      return imported ? g4sbKeywordRow(imported) : g4sbKeywordRow(row);
+    });
+    const forecast = g4sbV128Forecast(draft.keywordRows, draft);
+    draft.col2 = forecast.count ? String(forecast.impressions) : "";
+    draft.col3 = forecast.count ? String(forecast.clicks) : "";
+    draft.col4 = forecast.hasPhraseBudget ? String(forecast.budget) : "";
+    draft.validationError = "";
+    draft.phraseConflictMessage = skipped
+      ? `Не импортировано ${skipped} фраз: они заняты другой группой этой кампании.`
+      : "";
+    g4sbV148ForecastImports.set(importKey, { success: true, updated, added, skipped });
+    saveState();
+    renderGate();
+    await pushToSupabase(activeProjectId, state);
+    return;
+  }
+
+  const usage = g4sbV128PhraseUsage(product, d, draft);
+  const excluded = new Set((d.excludedCampaignPhrases || []).map(g4sbV128PhraseKey));
+  const currentRows = new Map((draft.keywordRows || []).map((row) => [g4sbV128PhraseKey(row.kw), g4sbKeywordRow(row)]));
+  const sourceRows = new Map(g4sbV128SourcePhraseRows(product, draft).map((row) => [g4sbV128PhraseKey(row.kw), row]));
+  const importedRows = [];
+  let added = 0;
+  let updated = 0;
+  let skipped = 0;
+
+  preview.rows.forEach((source) => {
+    const phrase = String(source.phrase || "").trim();
+    const key = g4sbV128PhraseKey(phrase);
+    if (!key) return;
+    const occupied = (usage.get(key) || []).some((record) => record.sameCampaign);
+    if ((!currentRows.has(key) && occupied) || (!currentRows.has(key) && excluded.has(key))) {
+      skipped += 1;
+      return;
+    }
+    const existed = currentRows.has(key);
+    const existingRow = currentRows.get(key) || sourceRows.get(key);
+    const row = g4sbKeywordRow(existingRow || { kw: phrase, originStage: "gate4" });
+    row.kw = phrase;
+    const impressions = Math.max(0, Number(source.impressions) || 0);
+    row.vol = String(impressions);
+    row.forecastClicks = String(impressions === 0 ? 0 : Math.max(0, Number(source.clicks) || 0));
+    row.forecastBudget = String(impressions === 0 ? 0 : Math.max(0, Number(source.budget) || 0));
+    row.source = "Прогноз Яндекс Директа";
+    currentRows.set(key, row);
+    importedRows.push(row);
+    if (existed) updated += 1;
+    else added += 1;
+  });
+
+  draft.keywordRows = [...currentRows.values()];
+  draft.forecastBaselineRows = (draft.forecastBaselineRows || []).map((row) => {
+    const imported = currentRows.get(g4sbV128PhraseKey(row.kw));
+    return imported ? g4sbKeywordRow(imported) : g4sbKeywordRow(row);
+  });
+  g4sbSyncKeywordRowsToGate1(product, draft.itemId, importedRows);
+  const importedKeys = new Set(importedRows.map((row) => g4sbV128PhraseKey(row.kw)));
+  d.deletedBankPhrases = (d.deletedBankPhrases || []).filter((value) => !importedKeys.has(g4sbV128PhraseKey(value)));
+
+  const forecast = g4sbV128Forecast(draft.keywordRows, draft);
+  draft.col2 = forecast.count ? String(forecast.impressions) : "";
+  draft.col3 = forecast.count ? String(forecast.clicks) : "";
+  draft.col4 = forecast.hasPhraseBudget ? String(forecast.budget) : "";
+  draft.validationError = "";
+  draft.phraseConflictMessage = skipped
+    ? `Не импортировано ${skipped} фраз: они заняты другой группой этой кампании или исключены для кампании.`
+    : "";
+
+  if (draft.editingClusterId) {
+    const group = d.groupRows.find((row) => row.groupId === draft.editingClusterId || row.clusterId === draft.editingClusterId);
+    if (group) {
+      group.demandRows = draft.keywordRows.map(g4sbKeywordRow);
+      group.col2 = draft.col2;
+      group.col3 = draft.col3;
+      group.col4 = draft.col4;
+      const compatibility = d.clusters.find((row) => row.id === group.clusterId || row.id === group.groupId);
+      if (compatibility) {
+        compatibility.demandRows = group.demandRows.map(g4sbKeywordRow);
+        compatibility.phraseSelection = group.demandRows.map((row) => row.kw);
+      }
+    }
+  }
+
+  g4sbV148ForecastImports.set(importKey, { success: true, updated, added, skipped });
+  saveState();
+  renderGate();
+  await pushToSupabase(activeProjectId, state);
+});
+
+/* Gate 1 / Уровень 2: один главный запрос + совместимые фразы группы. */
+function pv181QueryGroupTarget(target) {
+  const mapIndex = target?.dataset?.pv181Map ?? target?.dataset?.pv181MapI;
+  const itemId = target?.dataset?.pv181Item ?? target?.dataset?.pv181ItemI;
+  if (mapIndex === undefined || itemId === undefined) return null;
+  const row = pv140EnsureProductMaps()[Number(mapIndex)];
+  if (!row) return null;
+  return { itemData: pv181ItemData(row, itemId), mapIndex: Number(mapIndex), itemId };
+}
+
+document.addEventListener('input', (event) => {
+  const target = event.target;
+  if (target?.dataset?.pv181QueryGroup === undefined) return;
+  const context = pv181QueryGroupTarget(target);
+  if (!context) return;
+  const group = context.itemData.semL3Groups[Number(target.dataset.pv181QueryGroup)];
+  if (!group) return;
+  if (target.dataset.pv181MainQuery !== undefined) {
+    group.mainQuery = target.value;
+  } else if (target.dataset.pv181QueryKeyword !== undefined) {
+    group.keywords[Number(target.dataset.pv181QueryKeyword)] = target.value;
+  } else return;
+  pv181SyncQueryGroups(context.itemData);
+  target.classList.toggle('is-filled', Boolean(target.value.trim()));
+  target.classList.toggle('is-empty', !target.value.trim());
+  flashSaving();
+  renderGateNav();
+});
+
+document.addEventListener('change', (event) => {
+  if (event.target?.dataset?.pv181QueryGroup === undefined) return;
+  renderGate();
+});
+
+document.addEventListener('click', (event) => {
+  const button = event.target?.closest?.(
+    '[data-pv181-query-group-add], [data-pv181-query-group-remove], [data-pv181-query-keyword-add], [data-pv181-query-keyword-remove]',
+  );
+  if (!button) return;
+  const context = pv181QueryGroupTarget(button);
+  if (!context) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const groups = context.itemData.semL3Groups;
+  if (button.dataset.pv181QueryGroupAdd !== undefined) {
+    groups.push({ mainQuery: '', keywords: [] });
+  } else if (button.dataset.pv181QueryGroupRemove !== undefined) {
+    if (groups.length <= 1) return;
+    groups.splice(Number(button.dataset.pv181QueryGroupRemove), 1);
+  } else {
+    const group = groups[Number(button.dataset.pv181QueryGroupI)];
+    if (!group) return;
+    if (button.dataset.pv181QueryKeywordAdd !== undefined) {
+      group.keywords.push('');
+    } else if (button.dataset.pv181QueryKeywordRemove !== undefined) {
+      group.keywords.splice(Number(button.dataset.pv181QueryKeywordRemove), 1);
+    }
+  }
+  pv181SyncQueryGroups(context.itemData);
+  flashSaving();
+  renderGate();
+});
+
+document.addEventListener('input', (event) => {
+  const target = event.target;
+  if (target?.dataset?.pv181JtbdMain === undefined && target?.dataset?.pv181JtbdAdditional === undefined) return;
+  const context = pv181QueryGroupTarget(target);
+  if (!context) return;
+  const model = context.itemData.semL4Model;
+  if (target.dataset.pv181JtbdMain !== undefined) {
+    model.mainJtbd = target.value;
+  } else {
+    model.additionalJtbds[Number(target.dataset.pv181JtbdAdditional)] = target.value;
+  }
+  pv181SyncJtbdModel(context.itemData);
+  target.classList.toggle('is-filled', Boolean(target.value.trim()));
+  target.classList.toggle('is-empty', !target.value.trim());
+  flashSaving();
+  renderGateNav();
+});
+
+document.addEventListener('change', (event) => {
+  if (event.target?.dataset?.pv181JtbdMain === undefined && event.target?.dataset?.pv181JtbdAdditional === undefined) return;
+  renderGate();
+});
+
+document.addEventListener('click', (event) => {
+  const button = event.target?.closest?.('[data-pv181-jtbd-add], [data-pv181-jtbd-remove]');
+  if (!button) return;
+  const context = pv181QueryGroupTarget(button);
+  if (!context) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const list = context.itemData.semL4Model.additionalJtbds;
+  if (button.dataset.pv181JtbdAdd !== undefined) {
+    if (list.length >= 3) return;
+    list.push('');
+  } else {
+    list.splice(Number(button.dataset.pv181JtbdRemove), 1);
+  }
+  pv181SyncJtbdModel(context.itemData);
+  flashSaving();
+  renderGate();
+});
+
+/* ================================================================
+   v1.64.0 — единая стабилизация прокрутки при сворачивании блоков.
+
+   В интерфейсе исторически есть несколько видов аккордеонов: часть
+   меняет DOM напрямую, часть полностью перерисовывает Gate, а часть
+   использует native <details>. Старые локальные обработчики пытались
+   удерживать только window.scrollY, поэтому вложенные карточки могли
+   «прыгать» после закрытия. Здесь позиция на экране привязана к
+   нажатому заголовку и восстанавливается после всех синхронных и rAF-
+   обновлений независимо от конкретного поколения компонента.
+   ================================================================ */
+const GURU_STABLE_TOGGLE_SELECTOR = [
+  '[data-g1-collapse]',
+  'summary',
+  '[data-pv130-toggle]',
+  '[data-gate1-toggle-card]',
+  '[data-gate1-toggle-section]',
+  '[data-unit-toggle-section]',
+  '[data-demand-toggle-step]',
+  '[data-dv130-toggle]',
+  '[data-g2-toggle-card]',
+  '[data-g2-toggle-section]',
+  '[data-g3-toggle]',
+  '[data-g4-toggle]',
+  '[data-g4camp-toggle]',
+  '[data-g4launch-section-toggle]',
+  '[data-g4sb-unit-toggle]',
+  '[data-g4sb-step]',
+  '[data-g7-toggle-section]',
+  '[data-pain-toggle-section]',
+  '[data-semantic-toggle-card]',
+  '[data-semantic-toggle-section]',
+  '[data-uv130-item-toggle]',
+  '[data-uv130-toggle]',
+  '[data-gate5-open]',
+  '[data-g6-open]',
+  '[data-g6-open-quarter]',
+].join(',');
+
+const GURU_STABLE_TOGGLE_KEYS = [
+  'g1CollapseKey',
+  'pv130Toggle',
+  'gate1ToggleCard',
+  'gate1ToggleSection',
+  'unitToggleSection',
+  'demandToggleStep',
+  'dv130Toggle',
+  'g2ToggleCard',
+  'g2ToggleSection',
+  'g3Toggle',
+  'g4Toggle',
+  'g4campToggle',
+  'g4launchSectionToggle',
+  'g4sbUnitToggle',
+  'g4sbStep',
+  'g7ToggleSection',
+  'painToggleSection',
+  'semanticToggleCard',
+  'semanticToggleSection',
+  'uv130ItemToggle',
+  'uv130Toggle',
+  'gate5Open',
+  'g6Open',
+  'g6OpenQuarter',
+];
+
+function guruStableToggleLocator(toggle) {
+  if (toggle.matches('summary')) {
+    const details = toggle.closest('details');
+    const keeperKey = details?.dataset?.uiKeeperKey;
+    if (keeperKey) {
+      return () =>
+        Array.from(document.querySelectorAll('details[data-ui-keeper-key]'))
+          .find((node) => node.dataset.uiKeeperKey === keeperKey)
+          ?.querySelector(':scope > summary') || null;
+    }
+  }
+  for (const key of GURU_STABLE_TOGGLE_KEYS) {
+    if (toggle.dataset?.[key] === undefined) continue;
+    const value = toggle.dataset[key];
+    return () =>
+      Array.from(document.querySelectorAll(GURU_STABLE_TOGGLE_SELECTOR)).find(
+        (node) => node.dataset?.[key] === value,
+      ) || null;
+  }
+  return () => (toggle.isConnected ? toggle : null);
+}
+
+function guruStableScrollContainer(toggle) {
+  let node = toggle.parentElement;
+  while (node && node !== document.body && node !== document.documentElement) {
+    const style = window.getComputedStyle(node);
+    if (
+      /(auto|scroll|overlay)/.test(style.overflowY) &&
+      node.scrollHeight > node.clientHeight + 1
+    ) {
+      return node;
+    }
+    node = node.parentElement;
+  }
+  return document.scrollingElement || document.documentElement;
+}
+
+function guruRestoreToggleAnchor(snapshot) {
+  const anchor = snapshot.locate();
+  if (!anchor) return;
+  const delta = anchor.getBoundingClientRect().top - snapshot.viewportTop;
+  if (Math.abs(delta) < 0.5) return;
+  if (
+    snapshot.scroller === document.scrollingElement ||
+    snapshot.scroller === document.documentElement ||
+    snapshot.scroller === document.body
+  ) {
+    window.scrollBy({ top: delta, left: 0, behavior: 'auto' });
+  } else if (snapshot.scroller?.isConnected) {
+    snapshot.scroller.scrollTop += delta;
+  }
+}
+
+document.addEventListener(
+  'click',
+  (event) => {
+    const toggle = event.target?.closest?.(GURU_STABLE_TOGGLE_SELECTOR);
+    if (!toggle) return;
+    const snapshot = {
+      locate: guruStableToggleLocator(toggle),
+      scroller: guruStableScrollContainer(toggle),
+      viewportTop: toggle.getBoundingClientRect().top,
+    };
+
+    // Два кадра нужны намеренно: первый забирают старые локальные
+    // обработчики и autosize, второй фиксирует уже итоговую геометрию.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => guruRestoreToggleAnchor(snapshot));
+    });
+  },
+  true,
+);
+
+/* ================================================================
+   v1.65.0 — Gate 0: один основной JTBD на каждое «Что продаём».
+
+   Источник истины теперь хранится как словарь по названию продукта.
+   Старые clientResult/clientResultExtra остаются совместимым зеркалом:
+   это сохраняет экспорт, статусы и данные проектов прежних версий, но
+   больше не создаёт отдельный, не связанный с продуктами список JTBD.
+   ================================================================ */
+const GURU_PRODUCT_TASK_DEF =
+  GATE0_PASSPORT_V116_BLOCKS['Продукт, сегмент и задача клиента'];
+
+if (GURU_PRODUCT_TASK_DEF) {
+  const fieldOrder = ['whatSell', 'clientResult', 'targetSegment'];
+  GURU_PRODUCT_TASK_DEF.fields.sort(
+    (a, b) => fieldOrder.indexOf(a.key) - fieldOrder.indexOf(b.key),
+  );
+  GURU_PRODUCT_TASK_DEF.orient =
+    'Зафиксируйте, что продаём, ради какого результата клиент это выбирает и кому продаём.';
+  GURU_PRODUCT_TASK_DEF.formula =
+    'Что продаём → основной JTBD → кому продаём → передать дальше';
+}
+
+function guruProductJtbdProducts(workspace = state) {
+  return v121OffersProducts(workspace)
+    .map((value) => String(value || '').trim())
+    .filter(Boolean);
+}
+
+function guruExistingGate1MainJtbd(product, workspace = state) {
+  const row = (workspace?.painV130?.productMaps || []).find(
+    (item) => String(item?.product || '').trim() === product,
+  );
+  if (!row) return '';
+  const itemWithMain = Object.values(row.items || {}).find((item) =>
+    String(item?.semL4Model?.mainJtbd || '').trim(),
+  );
+  return String(itemWithMain?.semL4Model?.mainJtbd || '').trim();
+}
+
+function guruEnsureProductMainJtbds(workspace = state) {
+  if (!workspace?.project) return {};
+  const project = workspace.project;
+  const products = guruProductJtbdProducts(workspace);
+  const legacy = [
+    String(project.clientResult || '').trim(),
+    ...(Array.isArray(project.clientResultExtra)
+      ? project.clientResultExtra.map((value) => String(value || '').trim())
+      : []),
+  ];
+  const map = (project.productMainJtbds =
+    project.productMainJtbds && typeof project.productMainJtbds === 'object'
+      ? project.productMainJtbds
+      : {});
+
+  products.forEach((product, index) => {
+    if (Object.prototype.hasOwnProperty.call(map, product)) return;
+    // Уже заполненный Gate 1 важнее старого несвязанного списка: так
+    // существующий основной JTBD не теряется при первой миграции.
+    map[product] =
+      guruExistingGate1MainJtbd(product, workspace) || legacy[index] || '';
+  });
+
+  // Совместимое зеркало старой схемы — строго в порядке «Что продаём».
+  project.clientResult = products[0] ? String(map[products[0]] || '') : '';
+  project.clientResultExtra = products
+    .slice(1)
+    .map((product) => String(map[product] || ''));
+  workspace.sharedEvidence = workspace.sharedEvidence || {};
+  workspace.sharedEvidence.ради_какого_результата = project.clientResult;
+  return map;
+}
+
+function guruProductMainJtbd(product, workspace = state) {
+  const key = String(product || '').trim();
+  if (!key) return '';
+  return String(guruEnsureProductMainJtbds(workspace)[key] || '').trim();
+}
+
+function guruSyncProductJtbdsToGate1(workspace = state) {
+  if (!workspace?.project) return;
+  const map = guruEnsureProductMainJtbds(workspace);
+  (workspace.painV130?.productMaps || []).forEach((row) => {
+    const product = String(row?.product || '').trim();
+    if (!product || !Object.prototype.hasOwnProperty.call(map, product)) return;
+    const mainJtbd = String(map[product] || '');
+    row.gate0MainJtbd = mainJtbd;
+    Object.values(row.items || {}).forEach((item) => {
+      if (!item || typeof item !== 'object') return;
+      if (!item.semL4Model || typeof item.semL4Model !== 'object') {
+        const legacy = Array.isArray(item.semL4)
+          ? item.semL4.map((value) => String(value || '').trim()).filter(Boolean)
+          : [];
+        item.semL4Model = {
+          mainJtbd,
+          additionalJtbds: legacy.filter((value) => value !== mainJtbd).slice(0, 3),
+        };
+      }
+      item.semL4Model.mainJtbd = mainJtbd;
+      item.semL4Model.additionalJtbds = Array.isArray(
+        item.semL4Model.additionalJtbds,
+      )
+        ? item.semL4Model.additionalJtbds.slice(0, 3)
+        : [];
+      pv181SyncJtbdModel(item);
+    });
+  });
+}
+
+function guruProductJtbdQualityHtml() {
+  return `<aside class="pv181-jtbd-quality guru-product-jtbd-quality">
+    <strong>Проверка качества</strong>
+    <p>Хороший JTBD отвечает на три вопроса:</p>
+    <ul>
+      <li><b>Что произошло?</b></li>
+      <li><b>Какой результат нужен?</b></li>
+      <li><b>Зачем клиенту этот результат?</b></li>
+    </ul>
+    <p>Если хотя бы на один вопрос ответа нет — JTBD неполный.</p>
+    <p class="pv181-jtbd-rule"><b>Главное правило:</b> JTBD — это не услуга, а результат, ради которого клиент платит.</p>
+  </aside>`;
+}
+
+function guruProductJtbdsFieldHtml(def, field) {
+  const products = guruProductJtbdProducts(state);
+  const map = guruEnsureProductMainJtbds(state);
+  return `<div class="passport-v116-field-card guru-product-jtbd-field">
+    <span class="passport-v116-field-title">${escapeHtml(field.label)}</span>
+    <span class="passport-v116-field-hint">jobs-to-be-done · Один основной JTBD жёстко связан с каждой строкой «Что продаём»</span>
+    <div class="guru-product-jtbd-list">
+      ${products.length
+        ? products
+            .map((product, index) => {
+              const value = String(map[product] || '');
+              return `<section class="pv181-jtbd-model guru-product-jtbd-card">
+                <div class="guru-product-jtbd-head">
+                  <span class="guru-product-jtbd-product">${escapeHtml(product)}</span>
+                  <span><b class="pv181-query-number">№1</b> Основной JTBD</span>
+                </div>
+                <label class="g1-field">
+                  <small>Когда [что-то произошло], клиент хочет [конкретный результат], чтобы [зачем ему это нужно].</small>
+                  <textarea class="passport-v116-input passport-v116-autosize ${value.trim() ? 'is-filled' : 'is-empty'}" data-guru-product-jtbd="${escapeAttr(product)}" rows="1" placeholder="Введите основной JTBD">${escapeHtml(value)}</textarea>
+                </label>
+                ${guruProductJtbdQualityHtml()}
+              </section>`;
+            })
+            .join('')
+        : '<div class="pv181-keyword-empty">Сначала добавьте продукт, услугу или направление в блоке «Что продаём».</div>'}
+    </div>
+  </div>`;
+}
+
+const __guruPrevPassportFieldCardV165 = v116PassportFieldCard;
+v116PassportFieldCard = function (def, field) {
+  if (def?.key === 'product_segment_client_task' && field?.key === 'clientResult')
+    return guruProductJtbdsFieldHtml(def, field);
+  return __guruPrevPassportFieldCardV165(def, field);
+};
+
+const __guruPrevPassportStatusV165 = v116Status;
+v116Status = function (card, workspace = state) {
+  const def = v116PassportDef(card);
+  if (def?.key !== 'product_segment_client_task')
+    return __guruPrevPassportStatusV165(card, workspace);
+  const products = guruProductJtbdProducts(workspace);
+  const map = guruEnsureProductMainJtbds(workspace);
+  const audience = String(workspace?.project?.targetSegment || '').trim();
+  const jtbdCount = products.filter((product) => String(map[product] || '').trim()).length;
+  if (!products.length && !audience && !jtbdCount) return 'not_started';
+  if (products.length && audience && jtbdCount === products.length) return 'ready';
+  return 'in_progress';
+};
+
+const __guruPrevItemDataV165 = pv181ItemData;
+pv181ItemData = function (row, itemId) {
+  const itemData = __guruPrevItemDataV165(row, itemId);
+  const linkedMain = guruProductMainJtbd(row?.product, state);
+  if (itemData?.semL4Model && itemData.semL4Model.mainJtbd !== linkedMain) {
+    itemData.semL4Model.mainJtbd = linkedMain;
+    pv181SyncJtbdModel(itemData);
+  }
+  return itemData;
+};
+
+const __guruPrevJtbdModelHtmlV165 = pv181JtbdModelHtml;
+pv181JtbdModelHtml = function (mapIndex, itemId, itemData, level) {
+  let html = __guruPrevJtbdModelHtmlV165(mapIndex, itemId, itemData, level);
+  const row = pv140EnsureProductMaps()[Number(mapIndex)];
+  const product = String(row?.product || '').trim();
+  if (!product) return html;
+  html = html.replace(
+    'data-pv181-jtbd-main rows="1"',
+    'data-pv181-jtbd-main readonly aria-readonly="true" rows="1"',
+  );
+  html = html.replace(
+    '<small>Когда [что-то произошло], клиент хочет [конкретный результат], чтобы [зачем ему это нужно].</small>',
+    `<small>Когда [что-то произошло], клиент хочет [конкретный результат], чтобы [зачем ему это нужно].</small><small class="guru-jtbd-source">Источник: Gate 0 · «Ради какого результата» для ${escapeHtml(product)}</small>`,
+  );
+  return html;
+};
+
+const __guruPrevPrepareSystemCardsV165 = prepareSystemCards;
+prepareSystemCards = function (workspace) {
+  __guruPrevPrepareSystemCardsV165(workspace);
+  guruEnsureProductMainJtbds(workspace);
+  guruSyncProductJtbdsToGate1(workspace);
+};
+
+document.addEventListener('input', (event) => {
+  const input = event.target?.closest?.('[data-guru-product-jtbd]');
+  if (!input) return;
+  const product = String(input.dataset.guruProductJtbd || '').trim();
+  if (!product) return;
+  const map = guruEnsureProductMainJtbds(state);
+  map[product] = input.value;
+  guruEnsureProductMainJtbds(state);
+  guruSyncProductJtbdsToGate1(state);
+  input.classList.toggle('is-filled', Boolean(input.value.trim()));
+  input.classList.toggle('is-empty', !input.value.trim());
+  autosizeTextarea(input);
+  const card = allCardsFromWorkspace(state).find(
+    (item) => item.title === GURU_PRODUCT_TASK_DEF?.title,
+  );
+  if (card) {
+    v116EnsureBlock(card, state);
+    card.status = v116Status(card, state);
+  }
+  flashSaving();
+  renderGateNav();
+});
+
+document.addEventListener('change', (event) => {
+  if (!event.target?.closest?.('[data-guru-product-jtbd]')) return;
+  saveState();
+  renderGate();
+});
+
+/* v1.66.0 — Gate 4 / Яндекс Директ: рабочая иерархия больше не
+   зависит от аналитических сегментов Gate 1. Направление содержит
+   JTBD, а каждый JTBD — одну или несколько групп объявлений.
+
+   segmentIndex оставлен только как скрытое поле совместимости со
+   старыми сохранениями. Новая логика, интерфейс и группировка его не
+   читают и не требуют. */
+const G4_V166_JTBD_SCOPE = "__jtbd__";
+
+function g4sbV166JtbdKey(text) {
+  return String(text || "").trim().toLocaleLowerCase("ru-RU").replace(/\s+/g, " ");
+}
+
+function g4sbV166DirectionJtbds(product) {
+  const sem = g4ProductSemantics(product);
+  const clusters = g4sbClusterList(product);
+  const itemIds = [
+    ...clusters.map((item) => item.id),
+    ...Object.keys(sem.row?.items || {}),
+  ].filter(Boolean);
+  const seenItems = new Set();
+  const byText = new Map();
+  itemIds.forEach((itemId) => {
+    if (seenItems.has(itemId)) return;
+    seenItems.add(itemId);
+    const itemName = clusters.find((item) => item.id === itemId)?.name || "";
+    g4sbItemJtbdList(product, itemId).forEach((jtbd) => {
+      const key = g4sbV166JtbdKey(jtbd.text);
+      if (!key) return;
+      if (!byText.has(key)) {
+        byText.set(key, {
+          key,
+          text: jtbd.text,
+          itemId,
+          index: jtbd.index,
+          itemName,
+          aliases: [],
+        });
+      }
+      byText.get(key).aliases.push({ itemId, index: jtbd.index });
+    });
+  });
+  return [...byText.values()];
+}
+
+function g4sbV166GroupJtbdKey(product, row) {
+  return g4sbV166JtbdKey(g4sbV126Jtbd(product, row)?.text || row.col0 || row.searchIntent);
+}
+
+function g4sbV166EditorHtml(product, d) {
+  const draft = d.clusterDraft;
+  if (!draft?.open) return "";
+  draft.segmentIndex = G4_V166_JTBD_SCOPE;
+  let html = __g4V1261InlineGroupEditor(product, d);
+  html = html.replace(
+    "Сегмент и JTBD уже зафиксированы местом создания группы. Их нельзя менять внутри формы. Название группы всегда равно JTBD.",
+    "JTBD уже зафиксирован местом создания группы и не меняется внутри формы. Название группы всегда равно JTBD.",
+  );
+  html = html.replace(
+    g4ReadonlyRow("Сегмент", "Сегмент не найден", "зафиксирован"),
+    "",
+  );
+  return html;
+}
+
+const __g4V166PrevSaveClusterDraft = g4sbSaveClusterDraft;
+g4sbSaveClusterDraft = function (product, d) {
+  const draft = d.clusterDraft;
+  const jtbd = g4sbItemJtbdList(product, draft.itemId).find(
+    (item) => String(item.index) === String(draft.mainJtbdIndex),
+  );
+  if (!jtbd) {
+    draft.validationError = "Не удалось найти выбранный JTBD в направлении. Закройте форму и выберите JTBD заново.";
+    return null;
+  }
+  // Старый валидатор получает техническую связь, которая не является
+  // сегментом и не показывается пользователю. Это позволяет безопасно
+  // читать и сохранять проекты прежних версий без потери полей группы.
+  draft.segmentIndex = G4_V166_JTBD_SCOPE;
+  d.segmentJtbdLinks = d.segmentJtbdLinks || {};
+  const linkKey = g4sbSegmentJtbdLinkKey(draft.itemId, G4_V166_JTBD_SCOPE);
+  d.segmentJtbdLinks[linkKey] = [Number(draft.mainJtbdIndex)];
+  return __g4V166PrevSaveClusterDraft(product, d);
+};
+
+g4sbGroupClusterSummaryHtml = function (product, row) {
+  const jtbd = g4sbV126Jtbd(product, row);
+  const phrases = g4sbGroupPhrases(product, row);
+  const demand = g4sbClusterDemand(product, row.itemId, phrases);
+  return `<div class="g4-upstream g4-v126-group-summary">
+    <div class="g4-upstream-title">Логика группы</div>
+    ${g4ReadonlyRow("JTBD", jtbd ? jtbd.text : row.col0, "фундамент группы")}
+    ${g4ReadonlyRow("Основные поисковые запросы · " + phrases.length, phrases.join(", "), "группа")}
+    ${g4ReadonlyRow("Суммарный спрос", demand.matched ? g4NumFormat(demand.total) + " показов/мес" : "нет данных", "Gate 1")}
+    <div class="g4-v126-actions">
+      <button class="small-btn add-inline-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-edit-group="${escapeAttr(row.groupId)}">Редактировать группу</button>
+      <button class="small-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-duplicate-cluster="${escapeAttr(row.groupId)}">Дублировать</button>
+    </div>
+  </div>`;
+};
+
+g4sbSegmentCoverageHtml = function (product, d) {
+  const jtbds = g4sbV166DirectionJtbds(product);
+  const indexedGroups = d.groupRows.map((row, index) => ({ row, index }));
+  const groupsByJtbd = new Map(jtbds.map((jtbd) => [jtbd.key, []]));
+  const orphaned = [];
+  indexedGroups.forEach((entry) => {
+    const key = g4sbV166GroupJtbdKey(product, entry.row);
+    if (key && groupsByJtbd.has(key)) groupsByJtbd.get(key).push(entry);
+    else orphaned.push(entry);
+  });
+  const implemented = jtbds.filter((jtbd) => groupsByJtbd.get(jtbd.key).length).length;
+  const launch = g4sbV131LaunchPriorities(indexedGroups);
+  let editorRendered = false;
+
+  const jtbdHtml = jtbds.map((jtbd) => {
+    const groups = groupsByJtbd.get(jtbd.key) || [];
+    const editorIsHere = Boolean(
+      d.clusterDraft?.open &&
+      g4sbV166JtbdKey(
+        g4sbItemJtbdList(product, d.clusterDraft.itemId).find(
+          (item) => String(item.index) === String(d.clusterDraft.mainJtbdIndex),
+        )?.text,
+      ) === jtbd.key,
+    );
+    const seed = escapeAttr(JSON.stringify([jtbd.itemId, G4_V166_JTBD_SCOPE, jtbd.index]));
+    const keeperKey = `g4-search-jtbd-v166-${normalizeAspectKey(product)}-${encodeURIComponent(jtbd.key)}`;
+    const editor = editorIsHere ? g4sbV166EditorHtml(product, d) : "";
+    if (editorIsHere) {
+      editorRendered = true;
+      d._g4V1261EditorRenderedInline = true;
+    }
+    return `<details class="g4-v126-jtbd g4-v166-jtbd ${groups.length ? "is-implemented" : "is-empty"}" data-ui-keeper-key="${escapeAttr(keeperKey)}" open>
+      <summary class="g4-v126-jtbd-head g4-v166-jtbd-head">
+        <span class="g4-v126-level">JTBD</span>
+        <strong>${escapeHtml(jtbd.text)}</strong>
+        <span class="g4-v160-jtbd-summary-actions"><span>${groups.length ? `${groups.length} ${groups.length === 1 ? "группа" : "группы"}` : "Нет групп"}</span><i aria-hidden="true"></i></span>
+      </summary>
+      <div class="g4-v160-jtbd-body">
+        ${groups.length ? `<div class="g4-v126-groups">${groups.map(({ row, index }) =>
+          g4sbV126RenderGroupCard(product, row, index, d.groupRows, (d.adsRows || {})[index] || [{}], launch.priorities.get(index)),
+        ).join("")}</div>` : editorIsHere ? "" : '<div class="g4-v166-empty">Для этого JTBD ещё нет групп объявлений.</div>'}
+        ${editor}
+        ${!editorIsHere ? `<button type="button" class="small-btn add-inline-btn g4-v166-create" data-g4sb-product="${escapeAttr(product)}" data-g4sb-create-group-for-jtbd="${seed}">+ Создать группу объявлений</button>` : ""}
+      </div>
+    </details>`;
+  }).join("");
+
+  const orphanedHtml = orphaned.length ? `<details class="g4-v126-jtbd g4-v166-jtbd is-orphaned" open>
+    <summary class="g4-v126-jtbd-head g4-v166-jtbd-head"><span class="g4-v126-level">Проверить</span><strong>Группы со старой или удалённой связью JTBD</strong><span>${orphaned.length}</span></summary>
+    <div class="g4-v160-jtbd-body"><div class="g4-v126-groups">${orphaned.map(({ row, index }) =>
+      g4sbV126RenderGroupCard(product, row, index, d.groupRows, (d.adsRows || {})[index] || [{}], launch.priorities.get(index)),
+    ).join("")}</div></div>
+  </details>` : "";
+
+  if (d.clusterDraft?.open && !editorRendered) d._g4V1261EditorRenderedInline = true;
+  return `<div class="g4-v166-coverage" data-g4-v166-jtbd-count="${jtbds.length}" data-g4-v166-implemented-count="${implemented}">
+    ${launch.first ? `<div class="g4-v131-launch-note"><span>Приоритет запуска по прогнозу</span><strong>№1 — ${escapeHtml(launch.first.row.col0 || "Группа")}</strong><small>Прогноз ранжирует готовые группы, но не меняет выбранный JTBD.</small></div>` : ""}
+    <div class="g4-v166-jtbd-list">${jtbdHtml || '<div class="g1-empty">В аналитике направления пока нет JTBD. Сначала заполните основной и дополнительные JTBD в Gate 1.</div>'}${orphanedHtml}</div>
+  </div>`;
+};
+
+g4sbClusterAssemblyHtml = function (product, d) {
+  if (d._g4V1261EditorRenderedInline) {
+    delete d._g4V1261EditorRenderedInline;
+    return "";
+  }
+  return d.clusterDraft?.open ? g4sbV166EditorHtml(product, d) : "";
+};
+
+const __g4V166PrevSearchChannelHtml = g4sbSearchChannelCardHtml;
+g4sbSearchChannelCardHtml = function () {
+  return __g4V166PrevSearchChannelHtml.apply(this, arguments)
+    .replace("Сегменты, JTBD и группы", "JTBD и группы")
+    .replace(
+      "В Gate 4 выберите JTBD для реализации сегмента. Группа создаётся внутри конкретного JTBD, наследует его название и объединяет совместимые запросы и объявления.",
+      "Выберите JTBD направления и создайте внутри него одну или несколько групп объявлений с совместимыми запросами и единым рекламным сообщением.",
+    )
+    .replace(/<button class="small-btn add-inline-btn"[^>]*data-g4sb-draft-open[^>]*>[^<]*<\/button>/, "");
 };
