@@ -1972,7 +1972,11 @@ function ensureGate1Structure(workspace = state) {
     evidenceFields: [
       { key: normalizeAspectKey(title + " значение"), label: "Значение" },
       { key: normalizeAspectKey(title + " период"), label: "Период" },
-      { key: normalizeAspectKey(title + " комментарий"), label: "Комментарий" },
+      {
+        key: normalizeAspectKey(title + " комментарий"),
+        label: "Комментарий (необязательно)",
+        required: false,
+      },
     ],
     pages: "",
     notes: "",
@@ -2193,6 +2197,56 @@ function hasFinalPeriod(text = "") {
   return value.endsWith(".");
 }
 
+// Служебные и явно необязательные поля не должны влиять на готовность.
+// Комментарии и заметки хранятся и экспортируются, но никогда не являются
+// условием готовности блока, секции или Gate.
+function guruOptionalFieldName(value = "") {
+  const name = String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/ё/g, "е");
+  if (!name) return false;
+  return (
+    /(?:^|[\s._-])(comment|comments|note|notes|комментарий|комментарии|заметка|заметки)(?:$|[\s._-])/.test(
+      name,
+    ) ||
+    /(?:comment|comments|note|notes|комментарий|комментарии|заметка|заметки)$/.test(
+      name,
+    )
+  );
+}
+
+function guruFieldIsOptional(field) {
+  if (!field) return false;
+  if (Array.isArray(field)) {
+    return (
+      guruOptionalFieldName(field[0]) || guruOptionalFieldName(field[1])
+    );
+  }
+  if (field.required === false || field.optional === true) return true;
+  return [
+    field.key,
+    field.k,
+    field.field,
+    field.name,
+    field.label,
+    field.l,
+    field.title,
+  ].some(guruOptionalFieldName);
+}
+
+function guruRequiredFields(fields = []) {
+  return (Array.isArray(fields) ? fields : []).filter(
+    (field) => !guruFieldIsOptional(field),
+  );
+}
+
+function guruRequiredRecordValues(record = {}) {
+  return Object.entries(record || {})
+    .filter(([key]) => !guruOptionalFieldName(key))
+    .map(([, value]) => value);
+}
+
 function textValuesForStatus(card, workspace = state) {
   if (!card) return [];
   if (isProjectPassportCard(card)) {
@@ -2204,10 +2258,10 @@ function textValuesForStatus(card, workspace = state) {
   }
   if (isCurrentResultsCard(card)) {
     return ensureCurrentResults(card).map((row) =>
-      [row.value, row.period, row.comment].join(" "),
+      [row.value, row.period].join(" "),
     );
   }
-  const fields = ensureEvidenceFields(card);
+  const fields = guruRequiredFields(ensureEvidenceFields(card));
   if (fields.length)
     return fields.map((field) => getEvidenceValue(field.key, workspace));
   return [card.evidence || ""];
@@ -2289,8 +2343,7 @@ function recalculateStatusForCard(card, workspace = state) {
           (row) =>
             String(row.url || "").trim() ||
             row.status ||
-            row.source ||
-            String(row.comment || "").trim(),
+            row.source,
         ).length || (toolWorkspaceTouched(card) ? 1 : 0);
       const complete = rows.filter(
         (row) =>
@@ -2342,13 +2395,12 @@ function recalculateStatusForCard(card, workspace = state) {
       (row) =>
         String(row.link || "").trim() ||
         row.status ||
-        String(row.result || "").trim() ||
-        String(row.comment || "").trim(),
+        String(row.result || "").trim(),
     );
     const completeRows = instructionRows.filter(
       (row) => row.status && String(row.result || "").trim(),
     );
-    const evidenceValues = ensureEvidenceFields(card)
+    const evidenceValues = guruRequiredFields(ensureEvidenceFields(card))
       .map((field) =>
         String(getEvidenceValue(field.key, workspace) || "").trim(),
       )
@@ -2422,7 +2474,7 @@ function toolItemsHtml(card) {
   const items = ensureToolItems(card);
   return `<div class="tool-status-list">
     <table class="mini-table">
-      <thead><tr><th>Элемент</th><th>Статус</th><th>Комментарий</th></tr></thead>
+      <thead><tr><th>Элемент</th><th>Статус</th><th>Комментарий (необязательно)</th></tr></thead>
       <tbody>${items
         .map(
           (item, index) => `<tr>
@@ -2430,7 +2482,7 @@ function toolItemsHtml(card) {
         <td><select data-tool-card-id="${escapeAttr(card.id)}" data-tool-index="${index}" data-tool-field="status">
           ${guruStatusOptionsHtml(item.status)}
         </select></td>
-        <td><input data-tool-card-id="${escapeAttr(card.id)}" data-tool-index="${index}" data-tool-field="comment" value="${escapeAttr(item.comment || "")}" placeholder="Краткое уточнение" /></td>
+        <td class="guru-optional-column"><input class="is-optional" data-guru-optional="true" aria-required="false" data-tool-card-id="${escapeAttr(card.id)}" data-tool-index="${index}" data-tool-field="comment" value="${escapeAttr(item.comment || "")}" placeholder="Краткое уточнение" /></td>
       </tr>`,
         )
         .join("")}</tbody>
@@ -3223,11 +3275,12 @@ function ensurePainOfferState() {
 function painSectionFilled(section) {
   const route = ensurePainOfferState();
   const data = route.sections?.[section.key] || {};
-  const filledFields = section.fields.filter(([key]) =>
+  const requiredFields = guruRequiredFields(section.fields || []);
+  const filledFields = requiredFields.filter(([key]) =>
     String(data[key] || "").trim(),
   ).length;
   return (
-    filledFields >= Math.min(2, section.fields.length) &&
+    filledFields >= Math.min(2, requiredFields.length) &&
     String(data.evidence || "").trim()
   );
 }
@@ -3236,7 +3289,9 @@ function painSectionTouched(section) {
   const route = ensurePainOfferState();
   const data = route.sections?.[section.key] || {};
   return (
-    section.fields.some(([key]) => String(data[key] || "").trim()) ||
+    guruRequiredFields(section.fields || []).some(([key]) =>
+      String(data[key] || "").trim(),
+    ) ||
     String(data.evidence || "").trim()
   );
 }
@@ -4065,7 +4120,7 @@ function instructionWorkspaceHtml(card) {
   return `<div class="instruction-workspace">
     <div class="workspace-unit-title">Рабочие элементы из инструкции</div>
     <table class="mini-table typed-table instruction-table">
-      <thead><tr><th>Элемент</th><th>Сервис</th><th>Ссылка / отчёт</th><th>Статус</th><th>Результат</th><th>Комментарий</th></tr></thead>
+      <thead><tr><th>Элемент</th><th>Сервис</th><th>Ссылка / отчёт</th><th>Статус</th><th>Результат</th><th>Комментарий (необязательно)</th></tr></thead>
       <tbody>${rows
         .map(
           (row, index) => `<tr>
@@ -4145,7 +4200,7 @@ function toolWorkspaceHtml(card) {
   return `<div class="tool-workspace">
     <div class="tool-workspace-title">Рабочее пространство включённых инструментов</div>
     <table class="mini-table typed-table tool-workspace-table">
-      <thead><tr><th>Инструмент</th><th>Сервис</th><th>Статус</th><th>Ссылка / данные / результат</th><th>Комментарий</th></tr></thead>
+      <thead><tr><th>Инструмент</th><th>Сервис</th><th>Статус</th><th>Ссылка / данные / результат</th><th>Комментарий (необязательно)</th></tr></thead>
       <tbody>${tools
         .map((tool) => {
           const row = workspace[tool.key] || {};
@@ -4180,8 +4235,7 @@ function toolWorkspaceTouched(card) {
     const row = workspace[tool.key] || {};
     return Boolean(
       row.status ||
-      String(row.value || "").trim() ||
-      String(row.comment || "").trim(),
+      String(row.value || "").trim(),
     );
   });
 }
@@ -4211,7 +4265,7 @@ function gate1LinkRowsHtml(card) {
     ${inlineToolControlsHtml()}
     ${toolWorkspaceHtml(card)}
     <table class="mini-table typed-table link-bank-table">
-      <thead><tr><th>Ссылка</th><th>Источник</th><th>Статус</th><th>Комментарий</th><th></th></tr></thead>
+      <thead><tr><th>Ссылка</th><th>Источник</th><th>Статус</th><th>Комментарий (необязательно)</th><th></th></tr></thead>
       <tbody>${rows
         .map(
           (row, index) => `<tr>
@@ -4285,7 +4339,7 @@ function gate1ComparisonRowsHtml(card) {
     ${inlineToolControlsHtml()}
     ${toolWorkspaceHtml(card)}
     <table class="mini-table typed-table">
-      <thead><tr><th>Показатель</th><th>Значение</th><th>Норма</th><th>Результат</th><th>Комментарий</th></tr></thead>
+      <thead><tr><th>Показатель</th><th>Значение</th><th>Норма</th><th>Результат</th><th>Комментарий (необязательно)</th></tr></thead>
       <tbody>${rows
         .map((row, index) => {
           const result = evaluateComparisonRow(row);
@@ -4351,7 +4405,7 @@ function pageStructureCardHtml(card, row, pageIndex, repeatable) {
       </select></label>
       ${row.ctaMode === "not_needed" ? "" : `<textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="finalCta" rows="2" placeholder="Текст финального CTA">${escapeHtml(row.finalCta || "")}</textarea>`}
     </div>
-    <label class="full page-comment">Комментарий<input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="comment" value="${escapeAttr(row.comment || "")}" placeholder="короткое уточнение" /></label>
+    <label class="full page-comment">Комментарий (необязательно)<input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="comment" value="${escapeAttr(row.comment || "")}" placeholder="короткое уточнение" /></label>
   </section>`;
 }
 
@@ -4370,7 +4424,7 @@ function currentResultsHtml(card) {
       </label>
     </div>
     <table class="cr-table">
-      <thead><tr><th>Показатель</th><th>Значение</th><th>Источник</th><th>Комментарий</th></tr></thead>
+      <thead><tr><th>Показатель</th><th>Значение</th><th>Источник</th><th>Комментарий (необязательно)</th></tr></thead>
       <tbody>${rows
         .map(
           (row, index) => `<tr>
@@ -4726,7 +4780,7 @@ function renderLinkBank() {
       </div>
       <div class="table-scroll">
         <table class="data-table link-bank-table">
-          <thead><tr><th>URL</th><th>Доступность</th><th>Индексация</th><th>SEO-видимость</th><th>Ошибки</th><th>Комментарий</th><th></th></tr></thead>
+          <thead><tr><th>URL</th><th>Доступность</th><th>Индексация</th><th>SEO-видимость</th><th>Ошибки</th><th>Комментарий (необязательно)</th><th></th></tr></thead>
           <tbody>${links.map((link, index) => linkBankRowHtml(link, index)).join("")}</tbody>
         </table>
       </div>
@@ -5499,6 +5553,43 @@ document
 document.getElementById("projectBtn")?.addEventListener("click", () => {
   activeView = "project";
   render();
+});
+const quickTaskComposer = document.getElementById("quickTaskComposer");
+const quickTaskInput = document.getElementById("quickTaskInput");
+
+function closeQuickTaskComposer() {
+  if (!quickTaskComposer || !quickTaskInput) return;
+  quickTaskComposer.hidden = true;
+  quickTaskInput.value = "";
+}
+
+document.getElementById("quickTaskBtn")?.addEventListener("click", () => {
+  if (!quickTaskComposer || !quickTaskInput) return;
+  quickTaskComposer.hidden = false;
+  quickTaskInput.focus();
+});
+document.getElementById("quickTaskCloseBtn")?.addEventListener("click", closeQuickTaskComposer);
+document.getElementById("quickTaskSaveBtn")?.addEventListener("click", () => {
+  const taskTitle = String(quickTaskInput?.value || "").trim();
+  if (!state || !taskTitle) {
+    quickTaskInput?.focus();
+    return;
+  }
+  const g7 = ensureGate7State();
+  g7.tasks.push({
+    id: makeId("g7-task"),
+    sectionId: "new",
+    order: gate7InsertAtTop("new"),
+    date: gate7Today(),
+    task: taskTitle,
+    where: "",
+    status: "not_started",
+    result: "",
+    createdAt: new Date().toISOString(),
+  });
+  g7.ui.openSections.new = true;
+  saveState();
+  closeQuickTaskComposer();
 });
 document
   .getElementById("importGateBtn")
@@ -6443,7 +6534,7 @@ function implementationFieldsHtml(card) {
     <label>Что реализовать<textarea data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="what" rows="2">${escapeHtml(card.implementationFields.what || "")}</textarea></label>
     <label>Где реализовать<input data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="where" value="${escapeAttr(card.implementationFields.where || "")}" placeholder="страница / канал / кампания" /></label>
     <label>Результат на выходе<input data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="output" value="${escapeAttr(card.implementationFields.output || "")}" /></label>
-    <label>Комментарий<input data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="comment" value="${escapeAttr(card.implementationFields.comment || "")}" placeholder="если нужен" /></label>
+    <label>Комментарий (необязательно)<input data-implementation-card-id="${escapeAttr(card.id)}" data-implementation-field="comment" value="${escapeAttr(card.implementationFields.comment || "")}" placeholder="если нужен" /></label>
   </div>`;
 }
 
@@ -6452,7 +6543,7 @@ function taskFieldsHtml(card) {
   return `<div class="task-fields context-panel">
     <label>Дата / период<input data-task-card-id="${escapeAttr(card.id)}" data-task-field="due" value="${escapeAttr(card.taskFields.due || "")}" /></label>
     <label>Результат<input data-task-card-id="${escapeAttr(card.id)}" data-task-field="result" value="${escapeAttr(card.taskFields.result || "")}" /></label>
-    <label>Комментарий<input data-task-card-id="${escapeAttr(card.id)}" data-task-field="comment" value="${escapeAttr(card.taskFields.comment || "")}" placeholder="если нужен" /></label>
+    <label>Комментарий (необязательно)<input data-task-card-id="${escapeAttr(card.id)}" data-task-field="comment" value="${escapeAttr(card.taskFields.comment || "")}" placeholder="если нужен" /></label>
   </div>`;
 }
 
@@ -6722,7 +6813,7 @@ function robotsYandexFieldsHtml(card) {
       <label>Служебные страницы закрыты${robotsYandexSelect("servicePagesClosed", fields.servicePagesClosed)}${statusChip("servicePagesClosed", fields.servicePagesClosed === "yes" ? "Да" : fields.servicePagesClosed === "no" ? "Нет" : "Не выбран")}</label>
       <label>Sitemap указан в robots.txt${robotsYandexSelect("sitemapInRobots", fields.sitemapInRobots)}${statusChip("sitemapInRobots", fields.sitemapInRobots === "yes" ? "Да" : fields.sitemapInRobots === "no" ? "Нет" : "Не выбран")}</label>
       <label class="full">Ссылка на проверку / скрин / отчёт<input data-robots-yandex-field="evidenceUrl" value="${escapeAttr(fields.evidenceUrl || "")}" placeholder="ссылка на проверку, скрин или отчёт" /></label>
-      <label class="full">Комментарий, только если есть проблема<input data-robots-yandex-field="comment" value="${escapeAttr(fields.comment || "")}" placeholder="короткое уточнение" /></label>
+      <label class="full">Комментарий (необязательно, только если есть проблема)<input data-robots-yandex-field="comment" value="${escapeAttr(fields.comment || "")}" placeholder="короткое уточнение" /></label>
     </div>
   </div>`;
 }
@@ -6749,7 +6840,7 @@ function robotsYandexStatus(card) {
     "evidenceUrl",
   ].map((key) => String(fields[key] || "").trim());
   const filled = values.filter(Boolean).length;
-  if (!filled && !String(fields.comment || "").trim()) return "not_started";
+  if (!filled) return "not_started";
   const hasProblem =
     fields.fileStatus === "not_found" ||
     fields.analysisStatus === "errors" ||
@@ -9791,10 +9882,14 @@ function v22PageTemplates() {
 }
 
 function ctxField(key, label, standard, type = "input") {
-  return { kind: "context", key, label, standard, type, required: true };
+  const field = { kind: "context", key, label, standard, type };
+  field.required = !guruFieldIsOptional(field);
+  return field;
 }
 function rowField(field, label, standard, type = "input") {
-  return { kind: "row", field, label, standard, type, required: true };
+  const definition = { kind: "row", field, label, standard, type };
+  definition.required = !guruFieldIsOptional(definition);
+  return definition;
 }
 function finalCtaSection(key) {
   return {
@@ -9856,9 +9951,7 @@ function v22SectionMode(row, section) {
 
 function v22SectionStatus(row, section) {
   if (v22SectionMode(row, section) === "not_needed") return "ready";
-  const requiredFields = (section.fields || []).filter(
-    (field) => field.required !== false,
-  );
+  const requiredFields = guruRequiredFields(section.fields || []);
   const checks = requiredFields.map((field) =>
     v22IsFilled(v22GetFieldValue(row, field)),
   );
@@ -10763,7 +10856,7 @@ const UNIT_ECONOMICS_SECTIONS = [
       ["aov", "Средний чек"],
       ["source", "Источник данных"],
       ["period", "Период"],
-      ["comment", "Комментарий"],
+      { k: "comment", l: "Комментарий (необязательно)", required: false },
     ],
   },
   {
@@ -10776,7 +10869,7 @@ const UNIT_ECONOMICS_SECTIONS = [
       ["marginPercent", "Маржа %"],
       ["variableCosts", "Себестоимость / переменные расходы"],
       ["grossProfit", "Валовая прибыль с продажи"],
-      ["comment", "Комментарий"],
+      { k: "comment", l: "Комментарий (необязательно)", required: false },
     ],
   },
   {
@@ -10924,7 +11017,8 @@ function unitEconomicsComputed() {
 function unitSectionFilled(section) {
   const route = ensureUnitEconomicsState();
   const data = route.sections?.[section.key] || {};
-  const filledFields = section.fields.filter(([key]) =>
+  const requiredFields = guruRequiredFields(section.fields || []);
+  const filledFields = requiredFields.filter(([key]) =>
     String(data[key] || "").trim(),
   ).length;
   if (section.key === "revenue_aov")
@@ -10952,14 +11046,16 @@ function unitSectionFilled(section) {
       String(data.promoteAllowed || "").trim() ||
       String(data.promoteForbidden || "").trim(),
     );
-  return filledFields >= Math.min(2, section.fields.length);
+  return filledFields >= Math.min(2, requiredFields.length);
 }
 
 function unitSectionTouched(section) {
   const route = ensureUnitEconomicsState();
   const data = route.sections?.[section.key] || {};
   return (
-    section.fields.some(([key]) => String(data[key] || "").trim()) ||
+    guruRequiredFields(section.fields || []).some(([key]) =>
+      String(data[key] || "").trim(),
+    ) ||
     String(data.evidence || "").trim()
   );
 }
@@ -12091,7 +12187,7 @@ function g5GoalFormAndHistory() {
     <label class="gate5-field">CPA ₽<input data-gate5-goal="cpa" inputmode="decimal"></label>
     <label class="gate5-field">CAC ₽<input data-gate5-goal="cac" inputmode="decimal"></label>
     <label class="gate5-field">DRR %<input data-gate5-goal="drr" inputmode="decimal"></label>
-  </div><label class="gate5-field" style="margin-top:12px">Комментарий<input data-gate5-goal="comment"></label><div class="gate5-actions"><button class="btn primary" data-gate5-save-goal>Сохранить цель</button></div>${goal ? `<div class="gate5-note gate5-good">Активная цель: ${g5Int(goal.leads)} лидов · CPA ${g5Rub(goal.cpa)} · CAC ${g5Rub(goal.cac)} · DRR ${goal.drr || "—"}%</div>` : '<div class="gate5-note">Цель ещё не задана.</div>'}</div><div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Дата</th><th>Лиды</th><th>CPA</th><th>CAC</th><th>DRR</th><th>Комментарий</th></tr></thead><tbody>${rows || '<tr><td colspan="6">Истории целей пока нет.</td></tr>'}</tbody></table></div>`;
+  </div><label class="gate5-field" style="margin-top:12px">Комментарий (необязательно)<input data-gate5-goal="comment"></label><div class="gate5-actions"><button class="btn primary" data-gate5-save-goal>Сохранить цель</button></div>${goal ? `<div class="gate5-note gate5-good">Активная цель: ${g5Int(goal.leads)} лидов · CPA ${g5Rub(goal.cpa)} · CAC ${g5Rub(goal.cac)} · DRR ${goal.drr || "—"}%</div>` : '<div class="gate5-note">Цель ещё не задана.</div>'}</div><div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Дата</th><th>Лиды</th><th>CPA</th><th>CAC</th><th>DRR</th><th>Комментарий</th></tr></thead><tbody>${rows || '<tr><td colspan="6">Истории целей пока нет.</td></tr>'}</tbody></table></div>`;
 }
 function renderGate5Ad() {
   const model = g5BuildModel();
@@ -12135,7 +12231,7 @@ function renderGate5Bridge() {
       return `<tr><td>${g5DateTime(l.createdAt)}</td><td>${g5Int(l.leads)}</td><td>${g5Int(l.orders)}</td><td>${g5Pct(g5Div(l.orders, l.leads))}</td><td>${g5Rub(l.adSpend)}</td><td>${g5Rub(cac)}</td><td>${g5Rub(revenue)}</td><td>${g5Esc(l.comment || "—")}</td></tr>`;
     })
     .join("");
-  return `<div class="gate5-grid-4"><label class="gate5-field">Лиды<input data-gate5-link="leads" value="${g5Attr(f.leads)}"></label><label class="gate5-field">Заказы<input data-gate5-link="orders" inputmode="numeric"></label><label class="gate5-field">Средний чек ₽<input data-gate5-link="avgCheck" inputmode="decimal"></label><label class="gate5-field">Фактическая выручка ₽<input data-gate5-link="actualRevenue" inputmode="decimal"></label></div><div class="gate5-grid-4" style="margin-top:12px"><label class="gate5-field">Расход рекламы<input data-gate5-link="adSpend" value="${g5Attr(Math.round(f.spend))}"></label><label class="gate5-field">Маржинальность %<input data-gate5-link="margin" inputmode="decimal"></label><label class="gate5-field">Минимальный чек ₽<input data-gate5-link="minCheck" inputmode="decimal"></label><label class="gate5-field">Комментарий<input data-gate5-link="comment"></label></div><div class="gate5-actions"><button class="btn primary" data-gate5-save-link>Сохранить связку</button></div>${link ? `<div class="gate5-note gate5-good">Последняя связка: ${g5Int(link.leads)} лидов → ${g5Int(link.orders)} заказов.</div>` : '<div class="gate5-note">Связка с заказами ещё не сохранена.</div>'}<div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Дата</th><th>Лиды</th><th>Заказы</th><th>Лид → заказ</th><th>Расход</th><th>CAC</th><th>Выручка</th><th>Комментарий</th></tr></thead><tbody>${rows || '<tr><td colspan="8">Истории связки пока нет.</td></tr>'}</tbody></table></div>`;
+  return `<div class="gate5-grid-4"><label class="gate5-field">Лиды<input data-gate5-link="leads" value="${g5Attr(f.leads)}"></label><label class="gate5-field">Заказы<input data-gate5-link="orders" inputmode="numeric"></label><label class="gate5-field">Средний чек ₽<input data-gate5-link="avgCheck" inputmode="decimal"></label><label class="gate5-field">Фактическая выручка ₽<input data-gate5-link="actualRevenue" inputmode="decimal"></label></div><div class="gate5-grid-4" style="margin-top:12px"><label class="gate5-field">Расход рекламы<input data-gate5-link="adSpend" value="${g5Attr(Math.round(f.spend))}"></label><label class="gate5-field">Маржинальность %<input data-gate5-link="margin" inputmode="decimal"></label><label class="gate5-field">Минимальный чек ₽<input data-gate5-link="minCheck" inputmode="decimal"></label><label class="gate5-field">Комментарий (необязательно)<input data-gate5-link="comment"></label></div><div class="gate5-actions"><button class="btn primary" data-gate5-save-link>Сохранить связку</button></div>${link ? `<div class="gate5-note gate5-good">Последняя связка: ${g5Int(link.leads)} лидов → ${g5Int(link.orders)} заказов.</div>` : '<div class="gate5-note">Связка с заказами ещё не сохранена.</div>'}<div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Дата</th><th>Лиды</th><th>Заказы</th><th>Лид → заказ</th><th>Расход</th><th>CAC</th><th>Выручка</th><th>Комментарий</th></tr></thead><tbody>${rows || '<tr><td colspan="8">Истории связки пока нет.</td></tr>'}</tbody></table></div>`;
 }
 function renderGate5Finance() {
   const f = g5Finance();
@@ -13662,39 +13758,31 @@ renderGateTable = function (gate, cards) {
    ========================================================= */
 const GATE7_BASE_SECTIONS = [
   {
-    id: "backlog",
-    title: "Бэклог",
-    hint: "Задачи, которые нужно зафиксировать, но ещё не ставить в работу.",
+    id: "new",
+    title: "Новые",
+    hint: "Задачи, которые ещё не взяты в работу.",
   },
   {
-    id: "yesterday",
-    title: "Нужно было вчера",
-    hint: "Срочные задачи, которые уже давят на результат.",
-  },
-  {
-    id: "implementation_regular",
+    id: "regular",
     title: "Регулярные задачи",
-    parent: "Задачи на реализацию",
-    hint: "Повторяемые задачи: отчёты, проверки, регулярные публикации.",
+    hint: "Ежедневные задачи: после выполнения запись уходит в «Готово», а задача переносится на следующий день.",
   },
   {
-    id: "implementation_project",
-    title: "Проектные задачи",
-    parent: "Задачи на реализацию",
-    hint: "Разовые задачи по проекту, сайту, рекламе или коммуникациям.",
+    id: "work",
+    title: "В работе",
+    hint: "Задачи, которые выполняются сейчас.",
   },
   {
     id: "done",
-    title: "Реализовано",
-    hint: "Завершённые задачи с зафиксированным результатом.",
+    title: "Готово",
+    hint: "Завершённые задачи и их результат.",
   },
 ];
 const GATE7_STATUSES = [
-  ["not_started", "Не начато"],
+  ["not_started", "Новая"],
+  ["regular", "Регулярная"],
   ["in_progress", "В работе"],
   ["ready", "Готово"],
-  ["problem", "Проблема"],
-  ["postponed", "Отложено"],
 ];
 function isGate7Journal(gate) {
   return (
@@ -13703,55 +13791,9 @@ function isGate7Journal(gate) {
   );
 }
 function gate7Today() {
-  return new Date().toISOString().slice(0, 10);
-}
-function ensureGate7State() {
-  if (!state.gate7Journal) {
-    state.gate7Journal = {
-      ui: {
-        period: "month",
-        statusFilter: "all",
-        openSections: {
-          backlog: true,
-          yesterday: true,
-          implementation_regular: true,
-          implementation_project: true,
-          done: true,
-        },
-      },
-      customSections: [],
-      tasks: [],
-    };
-  }
-  state.gate7Journal.ui = state.gate7Journal.ui || {
-    period: "month",
-    statusFilter: "all",
-    openSections: {},
-  };
-  state.gate7Journal.ui.openSections = state.gate7Journal.ui.openSections || {};
-  state.gate7Journal.customSections = Array.isArray(
-    state.gate7Journal.customSections,
-  )
-    ? state.gate7Journal.customSections
-    : [];
-  state.gate7Journal.tasks = Array.isArray(state.gate7Journal.tasks)
-    ? state.gate7Journal.tasks
-    : [];
-  return state.gate7Journal;
-}
-function gate7Sections() {
-  const g7 = ensureGate7State();
-  return [
-    ...GATE7_BASE_SECTIONS,
-    ...g7.customSections.map((s) => ({
-      ...s,
-      custom: true,
-      hint: s.hint || "Пользовательский раздел журнала.",
-    })),
-  ];
-}
-function gate7SectionTitle(sectionId) {
-  return gate7Sections().find((s) => s.id === sectionId)?.title || "Бэклог";
+  const now = new Date();
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 function gate7StatusLabel(status) {
   return (GATE7_STATUSES.find((s) => s[0] === status) || GATE7_STATUSES[0])[1];
@@ -13769,9 +13811,6 @@ function gate7StatusPill(status) {
             : "neutral";
   return `<span class="gate7-status ${cls}">${escapeHtml(gate7StatusLabel(status))}</span>`;
 }
-function gate7TaskStatus(task) {
-  return task?.status || "not_started";
-}
 function gate7IsOverdue(task) {
   return (
     task?.date &&
@@ -13780,52 +13819,15 @@ function gate7IsOverdue(task) {
     task.sectionId !== "done"
   );
 }
-function gate7VisibleTasks(sectionId) {
-  const g7 = ensureGate7State();
-  const filter = g7.ui.statusFilter || "all";
-  return g7.tasks
-    .filter((t) => (t.sectionId || "backlog") === sectionId)
-    .filter((t) => {
-      if (filter === "all") return true;
-      if (filter === "overdue") return gate7IsOverdue(t);
-      return gate7TaskStatus(t) === filter;
-    })
-    .sort(
-      (a, b) =>
-        String(a.date || "").localeCompare(String(b.date || "")) ||
-        String(a.createdAt || "").localeCompare(String(b.createdAt || "")),
-    );
+function gate7TaskCountLabel(count) {
+  const mod100 = count % 100;
+  const mod10 = count % 10;
+  if (mod100 >= 11 && mod100 <= 14) return `${count} задач`;
+  if (mod10 === 1) return `${count} задача`;
+  if (mod10 >= 2 && mod10 <= 4) return `${count} задачи`;
+  return `${count} задач`;
 }
-function gate7Stats() {
-  const tasks = ensureGate7State().tasks;
-  const total = tasks.length;
-  const ready = tasks.filter(
-    (t) => gate7TaskStatus(t) === "ready" || t.sectionId === "done",
-  ).length;
-  const progress = tasks.filter(
-    (t) => gate7TaskStatus(t) === "in_progress",
-  ).length;
-  const problems = tasks.filter(
-    (t) => gate7TaskStatus(t) === "problem" || gate7IsOverdue(t),
-  ).length;
-  return {
-    total,
-    ready,
-    progress,
-    problems,
-    percent: total ? Math.round((ready / total) * 100) : 0,
-  };
-}
-function getGate7Status() {
-  const st = gate7Stats();
-  if (!st.total) return "not_started";
-  if (st.problems) return "problem";
-  if (st.ready && st.ready === st.total) return "ready";
-  return "in_progress";
-}
-function getGate7Progress() {
-  return gate7Stats().percent;
-}
+/* Legacy Gate 7 renderer disabled. The canonical implementation starts at v1.81 below.
 function renderGate7Journal(gate) {
   const g7 = ensureGate7State();
   const st = gate7Stats();
@@ -13922,7 +13924,7 @@ function gate7TaskRowHtml(task) {
     <label><span>Где</span><input data-g7-task-field="where" value="${escapeAttr(task.where || "")}" placeholder="сайт / реклама / email / подрядчик"></label>
     <label><span>Статус</span><select data-g7-task-field="status">${GATE7_STATUSES.map((s) => gate7Option(s[0], s[1], status)).join("")}</select></label>
     <label><span>Результат</span><input data-g7-task-field="result" value="${escapeAttr(task.result || "")}" placeholder="что сделано"></label>
-    <label><span>Комментарий</span><input data-g7-task-field="comment" value="${escapeAttr(task.comment || "")}" placeholder="коротко, если нужно"></label>
+    <label><span>Комментарий (необязательно)</span><input data-g7-task-field="comment" value="${escapeAttr(task.comment || "")}" placeholder="коротко, если нужно"></label>
     <div class="gate7-actions">
       ${gate7StatusPill(overdue ? "problem" : status)}
       <select data-g7-move>${gate7Sections()
@@ -14072,6 +14074,516 @@ function gate7ExportPdf() {
     </body></html>`;
   openPrintableReport(html);
 }
+*/
+
+/* =========================================================
+   v1.81 — Gate 7: простой список задач
+   Старые задачи мигрируют в три понятных статуса без потери данных.
+   ========================================================= */
+function ensureGate7State() {
+  const g7 = state.gate7Journal || {};
+  g7.ui = g7.ui || {};
+  g7.ui.openSections = g7.ui.openSections || {};
+  g7.ui.openTasks = g7.ui.openTasks || {};
+  GATE7_BASE_SECTIONS.forEach((section) => {
+    if (typeof g7.ui.openSections[section.id] !== "boolean") {
+      g7.ui.openSections[section.id] = true;
+    }
+  });
+  g7.tasks = Array.isArray(g7.tasks) ? g7.tasks : [];
+  const validSections = new Set(GATE7_BASE_SECTIONS.map((section) => section.id));
+  g7.tasks.forEach((task, index) => {
+    task.id = task.id || makeId("g7-task");
+    task.task = String(task.task ?? task.title ?? task.name ?? "");
+    task.where = String(task.where ?? task.source ?? "");
+    task.date = String(task.date ?? task.dueDate ?? task.deadline ?? "");
+    task.result = String(task.result ?? "");
+
+    const previousStatus = String(task.status || "");
+    const previousSection = String(task.sectionId || "");
+    if (task.isRecurringTemplate || previousSection === "regular" || previousStatus === "regular") {
+      task.isRecurringTemplate = true;
+      task.status = "regular";
+      task.sectionId = "regular";
+    } else if (previousStatus === "ready" || previousSection === "done") {
+      task.status = "ready";
+      task.sectionId = "done";
+    } else if (
+      ["in_progress", "problem", "postponed"].includes(previousStatus) ||
+      [
+        "work",
+        "yesterday",
+        "implementation_regular",
+        "implementation_project",
+      ].includes(previousSection)
+    ) {
+      task.status = "in_progress";
+      task.sectionId = "work";
+    } else if (previousStatus === "not_started" || previousSection === "new") {
+      task.status = "not_started";
+      task.sectionId = "new";
+    } else if (!validSections.has(previousSection)) {
+      task.status = "not_started";
+      task.sectionId = "new";
+    }
+    if (!Number.isFinite(Number(task.order))) task.order = index;
+  });
+  state.gate7Journal = g7;
+  return g7;
+}
+
+function gate7Sections() {
+  return GATE7_BASE_SECTIONS;
+}
+
+function gate7SectionTitle(sectionId) {
+  return GATE7_BASE_SECTIONS.find((section) => section.id === sectionId)?.title || "Новые";
+}
+
+function gate7TaskStatus(task) {
+  return ["not_started", "regular", "in_progress", "ready"].includes(task?.status)
+    ? task.status
+    : "not_started";
+}
+
+function gate7VisibleTasks(sectionId) {
+  return ensureGate7State()
+    .tasks.filter((task) => task.sectionId === sectionId)
+    .sort(
+      (a, b) =>
+        Number(a.order || 0) - Number(b.order || 0) ||
+        String(a.createdAt || "").localeCompare(String(b.createdAt || "")),
+    );
+}
+
+function gate7NextOrder(sectionId) {
+  const orders = ensureGate7State().tasks
+    .filter((task) => task.sectionId === sectionId)
+    .map((task) => Number(task.order))
+    .filter(Number.isFinite);
+  return orders.length ? Math.max(...orders) + 1 : 0;
+}
+
+function gate7InsertAtTop(sectionId) {
+  ensureGate7State()
+    .tasks.filter((task) => task.sectionId === sectionId)
+    .forEach((task) => {
+      task.order = Number(task.order || 0) + 1;
+    });
+  return 0;
+}
+
+function gate7NormalizeOrder(sectionId) {
+  gate7VisibleTasks(sectionId).forEach((task, index) => {
+    task.order = index;
+  });
+}
+
+function gate7AddDays(value, days) {
+  const raw = String(value || "");
+  const base = /^\d{4}-\d{2}-\d{2}$/.test(raw)
+    ? new Date(`${raw}T12:00:00`)
+    : new Date();
+  base.setDate(base.getDate() + days);
+  const pad = (number) => String(number).padStart(2, "0");
+  return `${base.getFullYear()}-${pad(base.getMonth() + 1)}-${pad(base.getDate())}`;
+}
+
+function gate7CompleteRecurringTask(template) {
+  const g7 = ensureGate7State();
+  const occurrenceDate = template.date || gate7Today();
+  const alreadyCompleted = g7.tasks.some(
+    (task) =>
+      task.id !== template.id &&
+      task.recurringTemplateId === template.id &&
+      task.recurringDate === occurrenceDate,
+  );
+  if (!alreadyCompleted) {
+    const completed = {
+      ...template,
+      id: makeId("g7-task"),
+      isRecurringTemplate: false,
+      sectionId: "done",
+      status: "ready",
+      order: gate7NextOrder("done"),
+      date: occurrenceDate,
+      completedAt: gate7Today(),
+      recurringTemplateId: template.id,
+      recurringDate: occurrenceDate,
+      createdAt: new Date().toISOString(),
+    };
+    delete completed.lastGeneratedDate;
+    delete completed.lastCompletedDate;
+    g7.tasks.push(completed);
+  }
+  template.sectionId = "regular";
+  template.status = "regular";
+  template.date = gate7AddDays(gate7Today(), 1);
+  template.result = "";
+  template.lastCompletedDate = occurrenceDate;
+  template.updatedAt = new Date().toISOString();
+  delete template.lastGeneratedDate;
+  delete g7.ui.openTasks[template.id];
+  gate7NormalizeOrder("regular");
+  gate7NormalizeOrder("done");
+}
+
+function gate7Stats() {
+  const tasks = ensureGate7State().tasks.filter((task) => task.sectionId !== "regular");
+  const ready = tasks.filter((task) => gate7TaskStatus(task) === "ready").length;
+  return {
+    total: tasks.length,
+    ready,
+    progress: tasks.filter((task) => gate7TaskStatus(task) === "in_progress").length,
+    problems: 0,
+    percent: tasks.length ? Math.round((ready / tasks.length) * 100) : 0,
+  };
+}
+
+function getGate7Status() {
+  const stats = gate7Stats();
+  if (!stats.total) return "not_started";
+  if (stats.ready === stats.total) return "ready";
+  return "in_progress";
+}
+
+function getGate7Progress() {
+  return gate7Stats().percent;
+}
+
+function renderGate7Journal() {
+  ensureGate7State();
+  const stats = gate7Stats();
+  els.contentArea.innerHTML = `<div class="gate7-journal gate7-simple-journal">
+    <section class="gate7-toolbar gate7-toolbar-simple">
+      <button class="primary-btn" type="button" data-g7-add-task>+ Добавить задачу</button>
+      <span class="gate7-total">${gate7TaskCountLabel(stats.total)} · готово ${stats.percent}%</span>
+      <span class="gate7-toolbar-spacer"></span>
+      <button class="secondary-btn" type="button" data-g7-export-pdf>PDF</button>
+      <button class="secondary-btn" type="button" data-g7-export-csv>CSV</button>
+    </section>
+    <section class="gate7-sections">
+      ${GATE7_BASE_SECTIONS.map(gate7SectionHtml).join("")}
+    </section>
+  </div>`;
+  bindGate7Journal();
+}
+
+function gate7SectionHtml(section) {
+  const g7 = ensureGate7State();
+  const open = g7.ui.openSections[section.id] !== false;
+  const tasks = gate7VisibleTasks(section.id);
+  return `<section class="gate7-section ${open ? "is-open" : ""}" data-g7-section="${escapeAttr(section.id)}">
+    <button type="button" class="gate7-section-head" data-g7-toggle-section="${escapeAttr(section.id)}">
+      <span><b>${escapeHtml(section.title)}</b><em>${escapeHtml(section.hint)}</em></span>
+      <span class="gate7-section-meta">${tasks.length} · ${open ? "Свернуть ↑" : "Открыть ↓"}</span>
+    </button>
+    ${open ? `<div class="gate7-section-body">${gate7TaskListHtml(section, tasks)}${section.id === "regular" ? '<button class="gate7-add-regular" type="button" data-g7-add-regular>+ Добавить регулярную задачу</button>' : ""}</div>` : ""}
+  </section>`;
+}
+
+function gate7TaskListHtml(section, tasks) {
+  if (!tasks.length) {
+    return `<div class="empty compact-empty">В разделе «${escapeHtml(section.title)}» задач пока нет.</div>`;
+  }
+  return `<div class="gate7-task-table">
+    <div class="gate7-task-row gate7-task-head" aria-hidden="true">
+      <span></span><span>Название</span><span>Срок</span><span>Статус</span><span></span><span></span>
+    </div>
+    ${tasks.map((task) => gate7TaskRowHtml(task)).join("")}
+  </div>`;
+}
+
+function gate7StatusSelect(status, recurring = false) {
+  const options = recurring
+    ? [["regular", "Регулярная"], ["ready", "Готово"]]
+    : [["not_started", "Новые"], ["in_progress", "В работе"], ["ready", "Готово"]];
+  return `<select class="gate7-status-select is-${escapeAttr(status)}" data-g7-status-select aria-label="Переместить задачу в раздел" title="Выбрать раздел задачи">
+    ${options
+      .map(
+        ([value, label]) =>
+          `<option value="${value}"${value === status ? " selected" : ""}>${label}</option>`,
+      )
+      .join("")}
+  </select>`;
+}
+
+function gate7TaskRowHtml(task) {
+  const g7 = ensureGate7State();
+  const status = gate7TaskStatus(task);
+  const resultOpen = g7.ui.openTasks[task.id] === true;
+  return `<div class="gate7-task-row" data-g7-task="${escapeAttr(task.id)}">
+    <div class="gate7-task-order">
+      <button class="gate7-drag-handle" type="button" draggable="true" data-g7-drag-handle title="Перетащить задачу" aria-label="Перетащить задачу">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </button>
+    </div>
+    <label class="gate7-task-title-cell"><span>Название</span><textarea class="gate7-task-title" data-g7-task-field="task" rows="1" placeholder="Название задачи">${escapeHtml(task.task)}</textarea></label>
+    <label><span>Срок</span><input type="date" data-g7-task-field="date" value="${escapeAttr(task.date)}"></label>
+    ${gate7StatusSelect(status, task.sectionId === "regular" && task.isRecurringTemplate)}
+    <button class="gate7-result-toggle ${task.result ? "has-result" : ""}" type="button" data-g7-toggle-result>${task.result ? "Результат ✓" : "Результат"} ${resultOpen ? "↑" : "↓"}</button>
+    <button class="gate7-row-delete" type="button" data-g7-delete-task title="Удалить задачу" aria-label="Удалить задачу">×</button>
+    ${
+      resultOpen
+        ? `<div class="gate7-task-result">
+          <label><span>Результат</span><textarea data-g7-task-field="result" rows="2" placeholder="Что сделано и какой получен результат">${escapeHtml(task.result)}</textarea></label>
+        </div>`
+        : ""
+    }
+  </div>`;
+}
+
+function gate7Rerender(focusSelector = "") {
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+  renderGate();
+  requestAnimationFrame(() => {
+    window.scrollTo(scrollX, scrollY);
+    if (focusSelector) {
+      document.querySelector(focusSelector)?.focus({ preventScroll: true });
+    }
+  });
+}
+
+function gate7MoveTaskToStatus(task, status) {
+  task.status = status;
+  task.sectionId =
+    status === "ready" ? "done" : status === "in_progress" ? "work" : "new";
+  if (status === "ready") task.completedAt = task.completedAt || gate7Today();
+  task.order = gate7NextOrder(task.sectionId);
+}
+
+function gate7AutosizeTaskTitle(field) {
+  if (!field) return;
+  field.style.height = "0px";
+  field.style.height = `${Math.max(48, field.scrollHeight)}px`;
+}
+
+function bindGate7Journal() {
+  document.querySelector("[data-g7-add-task]")?.addEventListener("click", () => {
+    const g7 = ensureGate7State();
+    const id = makeId("g7-task");
+    g7.tasks.unshift({
+      id,
+      sectionId: "new",
+      order: gate7InsertAtTop("new"),
+      date: gate7Today(),
+      task: "",
+      where: "",
+      status: "not_started",
+      result: "",
+      createdAt: new Date().toISOString(),
+    });
+    g7.ui.openSections.new = true;
+    saveState();
+    gate7Rerender(`[data-g7-task="${id}"] [data-g7-task-field="task"]`);
+  });
+
+  document.querySelector("[data-g7-add-regular]")?.addEventListener("click", () => {
+    const g7 = ensureGate7State();
+    const id = makeId("g7-task");
+    g7.tasks.push({
+      id,
+      sectionId: "regular",
+      order: gate7InsertAtTop("regular"),
+      date: gate7Today(),
+      task: "",
+      where: "",
+      status: "regular",
+      result: "",
+      isRecurringTemplate: true,
+      createdAt: new Date().toISOString(),
+    });
+    g7.ui.openSections.regular = true;
+    saveState();
+    gate7Rerender(`[data-g7-task="${id}"] [data-g7-task-field="task"]`);
+  });
+
+  document.querySelectorAll("[data-g7-toggle-section]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const g7 = ensureGate7State();
+      const id = button.dataset.g7ToggleSection;
+      g7.ui.openSections[id] = g7.ui.openSections[id] === false;
+      saveState();
+      gate7Rerender();
+    });
+  });
+
+  let draggedTaskId = "";
+  const clearGate7DragState = () => {
+    document.querySelectorAll("[data-g7-task]").forEach((taskRow) => {
+      taskRow.classList.remove("is-dragging", "is-drop-before", "is-drop-after");
+    });
+  };
+
+  document.querySelectorAll("[data-g7-task]").forEach((row) => {
+    const id = row.dataset.g7Task;
+    const getTask = () => ensureGate7State().tasks.find((task) => task.id === id);
+
+    row.querySelector("[data-g7-drag-handle]")?.addEventListener("dragstart", (event) => {
+      const task = getTask();
+      if (!task) return;
+      draggedTaskId = task.id;
+      row.classList.add("is-dragging");
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", task.id);
+    });
+
+    row.querySelector("[data-g7-drag-handle]")?.addEventListener("dragend", () => {
+      draggedTaskId = "";
+      clearGate7DragState();
+    });
+
+    row.addEventListener("dragover", (event) => {
+      const draggedTask = ensureGate7State().tasks.find(
+        (task) => task.id === draggedTaskId,
+      );
+      const targetTask = getTask();
+      if (
+        !draggedTask ||
+        !targetTask ||
+        draggedTask.id === targetTask.id ||
+        draggedTask.sectionId !== targetTask.sectionId
+      ) {
+        return;
+      }
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      document.querySelectorAll("[data-g7-task]").forEach((taskRow) => {
+        taskRow.classList.remove("is-drop-before", "is-drop-after");
+      });
+      const bounds = row.getBoundingClientRect();
+      row.classList.add(
+        event.clientY > bounds.top + bounds.height / 2
+          ? "is-drop-after"
+          : "is-drop-before",
+      );
+    });
+
+    row.addEventListener("drop", (event) => {
+      const draggedTask = ensureGate7State().tasks.find(
+        (task) => task.id === draggedTaskId,
+      );
+      const targetTask = getTask();
+      if (
+        !draggedTask ||
+        !targetTask ||
+        draggedTask.id === targetTask.id ||
+        draggedTask.sectionId !== targetTask.sectionId
+      ) {
+        clearGate7DragState();
+        return;
+      }
+      event.preventDefault();
+      const insertAfter = row.classList.contains("is-drop-after");
+      const siblings = gate7VisibleTasks(targetTask.sectionId).filter(
+        (task) => task.id !== draggedTask.id,
+      );
+      const targetIndex = siblings.findIndex((task) => task.id === targetTask.id);
+      siblings.splice(targetIndex + (insertAfter ? 1 : 0), 0, draggedTask);
+      siblings.forEach((task, index) => {
+        task.order = index;
+      });
+      draggedTaskId = "";
+      clearGate7DragState();
+      saveState();
+      gate7Rerender();
+    });
+
+    row.querySelectorAll("[data-g7-task-field]").forEach((input) => {
+      if (input.classList.contains("gate7-task-title")) {
+        gate7AutosizeTaskTitle(input);
+      }
+      const persist = () => {
+        const task = getTask();
+        if (!task) return;
+        task[input.dataset.g7TaskField] = input.value;
+        saveState();
+      };
+      input.addEventListener("input", () => {
+        if (input.classList.contains("gate7-task-title")) {
+          gate7AutosizeTaskTitle(input);
+        }
+        persist();
+      });
+      input.addEventListener("change", persist);
+      input.addEventListener("blur", persist);
+    });
+
+    row.querySelector("[data-g7-status-select]")?.addEventListener("change", (event) => {
+      const task = getTask();
+      if (!task) return;
+      const nextStatus = event.currentTarget.value;
+      if (task.isRecurringTemplate && task.sectionId === "regular") {
+        if (nextStatus !== "ready") return;
+        gate7CompleteRecurringTask(task);
+        saveState();
+        gate7Rerender();
+        return;
+      }
+      if (!["not_started", "in_progress", "ready"].includes(nextStatus)) return;
+      const previousSection = task.sectionId;
+      gate7MoveTaskToStatus(task, nextStatus);
+      gate7NormalizeOrder(previousSection);
+      gate7NormalizeOrder(task.sectionId);
+      saveState();
+      gate7Rerender();
+    });
+
+    row.querySelector("[data-g7-toggle-result]")?.addEventListener("click", () => {
+      const g7 = ensureGate7State();
+      g7.ui.openTasks[id] = g7.ui.openTasks[id] !== true;
+      saveState();
+      gate7Rerender(
+        g7.ui.openTasks[id]
+          ? `[data-g7-task="${id}"] [data-g7-task-field="result"]`
+          : "",
+      );
+    });
+
+    row.querySelector("[data-g7-delete-task]")?.addEventListener("click", () => {
+      const task = getTask();
+      const recurring = task?.isRecurringTemplate || task?.sectionId === "regular";
+      if (
+        !confirm(
+          recurring
+            ? "Удалить регулярную задачу? Она больше не будет появляться. Уже выполненные записи в «Готово» сохранятся."
+            : "Удалить задачу без возможности восстановления?",
+        )
+      ) return;
+      const g7 = ensureGate7State();
+      g7.tasks = g7.tasks.filter((task) => task.id !== id);
+      delete g7.ui.openTasks[id];
+      saveState();
+      gate7Rerender();
+    });
+  });
+
+  document.querySelector("[data-g7-export-csv]")?.addEventListener("click", gate7ExportCsv);
+  document.querySelector("[data-g7-export-pdf]")?.addEventListener("click", gate7ExportPdf);
+}
+
+function gate7ExportRows() {
+  return ensureGate7State().tasks.map((task) => [
+    task.task || "",
+    task.date || "",
+    gate7StatusLabel(gate7TaskStatus(task)),
+    task.result || "",
+  ]);
+}
+
+function gate7ExportCsv() {
+  downloadText(
+    "guru-gate7-tasks.csv",
+    toCsv([["Название", "Срок", "Статус", "Результат"], ...gate7ExportRows()]),
+  );
+}
+
+function gate7ExportPdf() {
+  const rows = gate7ExportRows();
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Gate 7 · Задачи</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h1{font-size:24px}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}th{background:#f3f3f3}</style></head><body><h1>Gate 7 · Задачи и результаты</h1><table><thead><tr><th>Название</th><th>Срок</th><th>Статус</th><th>Результат</th></tr></thead><tbody>${rows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table><script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script></body></html>`;
+  openPrintableReport(html);
+}
 
 const __guruPrevRenderGateTableV32 = renderGateTable;
 renderGateTable = function (gate, cards) {
@@ -14102,7 +14614,7 @@ renderGateNav = function () {
           : g.id === "gate-6"
             ? "4 квартала"
             : g.id === "gate-7"
-              ? "живой журнал"
+              ? gate7TaskCountLabel(gate7Stats().total)
               : g.cards.length + " блоков";
       return `<button class="gate-btn ${cls}" data-gate-id="${escapeAttr(g.id)}">${escapeHtml(g.title)}<span class="small">${countText}, готово ${progress}%</span></button>`;
     })
@@ -15761,12 +16273,13 @@ function v116Plain(card, workspace = state) {
 function v116Status(card, workspace = state) {
   const def = v116PassportDef(card);
   if (!def) return card?.status || "not_started";
-  const values = def.fields.map((field) =>
+  const requiredFields = guruRequiredFields(def.fields || []);
+  const values = requiredFields.map((field) =>
     String(v116ReadValue(field, workspace) || "").trim(),
   );
   const filled = values.filter(Boolean).length;
   if (!filled) return "not_started";
-  if (filled === def.fields.length) return "ready";
+  if (filled === requiredFields.length) return "ready";
   return "in_progress";
 }
 
@@ -18012,7 +18525,7 @@ function megaToolSectionHtml(cardId, sectionKey, title, hint, items, addLabel) {
     <div class="mega-section-title">${escapeHtml(title)}</div>
     <div class="mega-section-hint">${escapeHtml(hint)}</div>
     <table class="cr-table">
-      <thead><tr><th>Элемент</th><th>Статус</th><th>Комментарий</th></tr></thead>
+      <thead><tr><th>Элемент</th><th>Статус</th><th>Комментарий (необязательно)</th></tr></thead>
       <tbody>${items
         .map(
           (item, i) => `<tr>
@@ -18052,7 +18565,7 @@ function megaInfraSectionHtml(cardId, items) {
   return `<div class="mega-section">
     <div class="mega-section-title">Инфраструктура</div>
     <div class="mega-section-hint">Подключена ли аналитика, настроены ли цели, есть ли CRM, размечены ли ссылки</div>
-    <table class="cr-table"><thead><tr><th>Инструмент</th><th>Базовый минимум</th><th>Статус</th><th>Комментарий</th></tr></thead>
+    <table class="cr-table"><thead><tr><th>Инструмент</th><th>Базовый минимум</th><th>Статус</th><th>Комментарий (необязательно)</th></tr></thead>
     <tbody>${rowsHtml}</tbody></table>
     <button class="v116-multi-add" data-mega-card="${escapeAttr(cardId)}" data-mega-add="infra">+ добавить инструмент</button>
   </div>`;
@@ -18096,7 +18609,7 @@ function megaPlatformSectionHtml(cardId, pv2) {
 
   const fundamentalHtml = `<div class="mega-subsection">
     <div class="mega-subsection-title">Обязательные страницы и элементы для любого сайта</div>
-    <table class="cr-table"><thead><tr><th>Элемент</th><th>Статус</th><th>URL</th><th>Комментарий</th></tr></thead>
+    <table class="cr-table"><thead><tr><th>Элемент</th><th>Статус</th><th>URL</th><th>Комментарий (необязательно)</th></tr></thead>
     <tbody>${pv2.fundamental
       .map(
         (
@@ -18117,7 +18630,7 @@ function megaPlatformSectionHtml(cardId, pv2) {
   const landingsHtml = products.length
     ? `<div class="mega-subsection">
     <div class="mega-subsection-title">Проверь — у каждого продукта должна быть своя посадочная</div>
-    <table class="cr-table"><thead><tr><th>Продукт</th><th>URL посадочной</th><th>Статус</th><th>Комментарий</th></tr></thead>
+    <table class="cr-table"><thead><tr><th>Продукт</th><th>URL посадочной</th><th>Статус</th><th>Комментарий (необязательно)</th></tr></thead>
     <tbody>${products
       .map((p, i) => {
         const d = pv2.landings[p] || {};
@@ -18139,7 +18652,7 @@ function megaPlatformSectionHtml(cardId, pv2) {
     <div class="mega-subsection-title">Страницы которые усиливают конверсию — добавь нужные</div>
     ${
       pv2.extra.length
-        ? `<table class="cr-table"><thead><tr><th>Элемент</th><th>Статус</th><th>URL</th><th>Комментарий</th><th></th></tr></thead>
+        ? `<table class="cr-table"><thead><tr><th>Элемент</th><th>Статус</th><th>URL</th><th>Комментарий (необязательно)</th><th></th></tr></thead>
     <tbody>${pv2.extra
       .map(
         (
@@ -18381,7 +18894,7 @@ renderGate1Accordion = function (gate, cards) {
         const displayCards = queryActive
           ? section.filteredInnerCards
           : section.allInnerCards;
-        return `<section class="g1-section ${sectionOpen ? "is-open" : ""}">
+        const sectionHtml = `<section class="g1-section ${sectionOpen ? "is-open" : ""}">
         <button class="g1-section-header" data-gate1-toggle-section="${escapeAttr(section.key)}">
           <span class="g1-section-left">
             <span class="g1-section-title">${escapeHtml(section.title)}</span>
@@ -18408,6 +18921,7 @@ renderGate1Accordion = function (gate, cards) {
             : ""
         }
       </section>`;
+        return `${sectionHtml}${section.key === "site_audit" ? `${projectComparisonHtml()}${targetAudienceHtml()}` : ""}`;
       })
       .join("")}
   </div>`;
@@ -18937,7 +19451,7 @@ function robotsV130FieldsHtml(card) {
       )
       .join("")}</tbody></table>`;
 
-  const yServiceTable = `<table class="cr-table"><thead><tr><th>URL</th><th>Тип</th><th>Ожидаем</th><th>Результат</th><th>Комментарий</th></tr></thead>
+  const yServiceTable = `<table class="cr-table"><thead><tr><th>URL</th><th>Тип</th><th>Ожидаем</th><th>Результат</th><th>Комментарий (необязательно)</th></tr></thead>
     <tbody>${f.yandex.serviceResults
       .map(
         (
@@ -19318,7 +19832,7 @@ function smV130SystemHtml(key, data) {
       ${statusSelect}
       ${yandexFields}
       ${smV130Input("evidence", "Доказательство", data.evidence, `ссылка на ${service}, скрин или отчёт`, sysAttr)}
-      ${guruStatusIsBad(data.status) ? smV130Input("comment", "Комментарий", data.comment, "что именно не так", sysAttr) : ""}
+      ${guruStatusIsBad(data.status) ? smV130Input("comment", "Комментарий (необязательно)", data.comment, "что именно не так", sysAttr) : ""}
     </div>
   </div>`;
 }
@@ -19991,9 +20505,7 @@ pageAuditControlsCompactHtml = function (card, row, pageIndex) {
 /* Override section status: don't require result/proof fields */
 v22SectionStatus = function (row, section) {
   if (v22SectionMode(row, section) === "not_needed") return "ready";
-  const requiredFields = (section.fields || []).filter(
-    (field) => field.required !== false,
-  );
+  const requiredFields = guruRequiredFields(section.fields || []);
   const checks = requiredFields.map((field) =>
     v22IsFilled(v22GetFieldValue(row, field)),
   );
@@ -21003,7 +21515,12 @@ const DEMAND_V130_BANNER_STEPS = [
         p: "группа → тип аудитории → сценарий → условия",
         t: "textarea",
       },
-      { k: "comment", l: "Комментарий", p: "логика разделения" },
+      {
+        k: "comment",
+        l: "Комментарий (необязательно)",
+        p: "логика разделения",
+        required: false,
+      },
     ],
   },
   {
@@ -21096,7 +21613,7 @@ function ensureDemandV130() {
 }
 
 function dv130StepStatus(data, step) {
-  const fields = step.fields || [];
+  const fields = guruRequiredFields(step.fields || []);
   const fieldsFilled = fields.filter((f) =>
     String(data[f.k] || "").trim(),
   ).length;
@@ -21105,11 +21622,13 @@ function dv130StepStatus(data, step) {
   if (step.table) {
     const rows = data[step.tableKey] || [];
     tableFilled = rows.some((r) =>
-      Object.values(r).some((v) => String(v || "").trim()),
+      guruRequiredRecordValues(r).some((v) => String(v || "").trim()),
     );
     tableReady =
       rows.length > 0 &&
-      rows.some((r) => Object.values(r).every((v) => String(v || "").trim()));
+      rows.some((r) =>
+        guruRequiredRecordValues(r).every((v) => String(v || "").trim()),
+      );
   }
   const anyFilled = fieldsFilled > 0 || tableFilled;
   if (!anyFilled) return "not_started";
@@ -21809,7 +22328,7 @@ function painV130StepStatus(data, step) {
     if (hasOffer) return "ready";
     return "in_progress";
   }
-  const fields = step.fields || [];
+  const fields = guruRequiredFields(step.fields || []);
   const fieldsFilled = fields.filter((f) =>
     String(data[f.k] || "").trim(),
   ).length;
@@ -21818,11 +22337,13 @@ function painV130StepStatus(data, step) {
   if (step.table) {
     const rows = data[step.tableKey] || [];
     tableFilled = rows.some((r) =>
-      Object.values(r).some((v) => String(v || "").trim()),
+      guruRequiredRecordValues(r).some((v) => String(v || "").trim()),
     );
     tableReady =
       rows.length > 0 &&
-      rows.some((r) => Object.values(r).every((v) => String(v || "").trim()));
+      rows.some((r) =>
+        guruRequiredRecordValues(r).every((v) => String(v || "").trim()),
+      );
   }
   const anyFilled = fieldsFilled > 0 || tableFilled;
   if (!anyFilled) return "not_started";
@@ -22977,11 +23498,12 @@ function ensureUnitV130() {
 }
 
 function uv130StepStatus(data, step) {
-  const filled = step.fields.filter((f) =>
+  const requiredFields = guruRequiredFields(step.fields || []);
+  const filled = requiredFields.filter((f) =>
     String(data[f.k] || "").trim(),
   ).length;
   if (!filled) return "not_started";
-  if (filled === step.fields.length) return "ready";
+  if (filled === requiredFields.length) return "ready";
   return "in_progress";
 }
 
@@ -23316,10 +23838,9 @@ function g2EnsureFields(card) {
 function g2CardStatus(card) {
   const f = g2EnsureFields(card);
   const check = f.g2Check || "";
-  const notes = String(card.notes || "").trim();
   if (guruStatusIsOk(check)) return "ready";
   if (guruStatusIsBad(check)) return "problem";
-  if (check || notes) return "in_progress";
+  if (check) return "in_progress";
   return "not_started";
 }
 
@@ -23414,7 +23935,6 @@ function g2CardHtml(card) {
   const status = g2CardStatus(card);
   const f = g2EnsureFields(card);
   const noteVal = card.notes || "";
-  const noteCls = String(noteVal).trim() ? "is-filled" : "is-empty";
   const checkVal = f.g2Check || "";
 
   return `<article class="g2-check-row" data-card="${escapeAttr(card.id)}">
@@ -23427,8 +23947,8 @@ function g2CardHtml(card) {
       <select class="g1-input is-filled" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="check">${guruStatusOptionsHtml(checkVal)}</select>
     </label>
     <label class="g2-check-notes">
-      <span>Заметки</span>
-      <textarea class="g1-input ${noteCls}" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="notes" rows="1" placeholder="что сделано, результат">${escapeHtml(noteVal)}</textarea>
+      <span>Заметки (необязательно)</span>
+      <textarea class="g1-input is-optional" data-guru-optional="true" aria-required="false" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="notes" rows="1" placeholder="что сделано, результат">${escapeHtml(noteVal)}</textarea>
     </label>
   </article>`;
 }
@@ -23525,9 +24045,12 @@ function updateGate2Field(target) {
     if (!Array.isArray(f.g2ExtraNotes)) f.g2ExtraNotes = [];
     f.g2ExtraNotes[Number(target.dataset.g2Extra) || 0] = target.value;
   }
-  if (target.tagName !== "SELECT") {
-    const cls = String(target.value || "").trim() ? "is-filled" : "is-empty";
+  if (target.tagName !== "SELECT" && (field === "notes" || field === "extra")) {
     target.classList.remove("is-filled", "is-empty");
+    target.classList.add("is-optional");
+  } else if (target.tagName !== "SELECT") {
+    const cls = String(target.value || "").trim() ? "is-filled" : "is-empty";
+    target.classList.remove("is-filled", "is-empty", "is-optional");
     target.classList.add(cls);
   }
   recalculateStatusForCard(card);
@@ -23711,8 +24234,15 @@ function ensureGate3_5A() {
 
 function g3_5aStepStatus(d, step) {
   const fields = d.fields || {};
-  const hasAny = Object.values(fields).some((arr) =>
-    (arr || []).some((v) => String(v || "").trim()),
+  const requiredKeys = new Set(
+    guruRequiredFields(step?.fields || []).map((field) =>
+      Array.isArray(field) ? field[0] : field.k || field.key,
+    ),
+  );
+  const hasAny = Object.entries(fields).some(
+    ([key, arr]) =>
+      (!step || requiredKeys.has(key)) &&
+      (arr || []).some((v) => String(v || "").trim()),
   );
   const hasTools =
     step &&
@@ -26698,6 +27228,18 @@ function g4EnsureLaunchCampaigns() {
         creative: current.creative || "",
         launchStatus: current.launchStatus || "",
         notes: current.notes || "",
+        audienceSegmentId: current.audienceSegmentId || "",
+        channelTargeting: {
+          geography: current.channelTargeting?.geography || "",
+          age: current.channelTargeting?.age || "",
+          gender: current.channelTargeting?.gender || "",
+          searchQueries: current.channelTargeting?.searchQueries || "",
+          interests: current.channelTargeting?.interests || "",
+          communities: current.channelTargeting?.communities || "",
+          customerBases: current.channelTargeting?.customerBases || "",
+          siteVisitors: current.channelTargeting?.siteVisitors || "",
+          lookalikes: current.channelTargeting?.lookalikes || "",
+        },
       };
     });
   });
@@ -26716,7 +27258,6 @@ function g4CampaignStatus(campaign) {
     campaign.utm,
     campaign.creative,
     campaign.launchStatus,
-    campaign.notes,
   ];
   if (!operational.some((value) => String(value || "").trim())) return "not_started";
   const required = [
@@ -26765,10 +27306,15 @@ function g4CampaignProductOptions(value) {
 function g4CampaignInput(channelKey, field, label, value, placeholder, multiline = false) {
   const filled = String(value || "").trim();
   const attrs = `data-g4camp-key="${escapeAttr(channelKey)}" data-g4camp-field="${escapeAttr(field)}"`;
+  const fieldClass = guruOptionalFieldName(field)
+    ? "is-optional"
+    : filled
+      ? "is-filled"
+      : "is-empty";
   if (multiline) {
-    return `<label class="g4-campaign-field"><span>${escapeHtml(label)}</span><textarea class="g1-input ${filled ? "is-filled" : "is-empty"}" ${attrs} rows="1" placeholder="${escapeAttr(placeholder || "")}">${escapeHtml(value || "")}</textarea></label>`;
+    return `<label class="g4-campaign-field"><span>${escapeHtml(label)}</span><textarea class="g1-input ${fieldClass}" ${attrs} rows="1" placeholder="${escapeAttr(placeholder || "")}">${escapeHtml(value || "")}</textarea></label>`;
   }
-  return `<label class="g4-campaign-field"><span>${escapeHtml(label)}</span><input class="g1-input ${filled ? "is-filled" : "is-empty"}" ${attrs} value="${escapeAttr(value || "")}" placeholder="${escapeAttr(placeholder || "")}" /></label>`;
+  return `<label class="g4-campaign-field"><span>${escapeHtml(label)}</span><input class="g1-input ${fieldClass}" ${attrs} value="${escapeAttr(value || "")}" placeholder="${escapeAttr(placeholder || "")}" /></label>`;
 }
 
 function g4CampaignContextHtml(ctx) {
@@ -26797,7 +27343,6 @@ function g4CampaignRowHtml(channel, campaign, index, product) {
     campaign.utm,
     campaign.creative,
     campaign.launchStatus,
-    campaign.notes,
   ].some((value) => String(value || "").trim());
   const isOpen =
     launchOpen.rows[stateKey] === undefined ? hasWork : Boolean(launchOpen.rows[stateKey]);
@@ -27944,6 +28489,109 @@ document.addEventListener('change', (e) => {
   renderGate();
 });
 
+// Необязательность — самостоятельное состояние поля, а не разновидность
+// «незаполнено». Старые и новые экраны используют разные data-атрибуты,
+// поэтому нормализуем комментарии и заметки после любой перерисовки DOM.
+function guruNormalizeOptionalFieldPresentation(root = document) {
+  const controlSelector =
+    'input, textarea, select, [contenteditable="true"]';
+  const controls = [];
+  if (root?.matches?.(controlSelector)) controls.push(root);
+  root?.querySelectorAll?.(controlSelector).forEach((control) =>
+    controls.push(control),
+  );
+
+  // В старых табличных экранах необязательность задавалась только заголовком
+  // столбца. Помечаем весь столбец, чтобы его поля не наследовали красное
+  // состояние обязательных незаполненных данных.
+  const tables = [];
+  if (root?.matches?.("table")) tables.push(root);
+  root?.querySelectorAll?.("table").forEach((table) => tables.push(table));
+  const parentTable = root?.closest?.("table");
+  if (parentTable && !tables.includes(parentTable)) tables.push(parentTable);
+
+  tables.forEach((table) => {
+    const headerCells = Array.from(
+      table.querySelectorAll("thead tr:first-child th"),
+    );
+    const optionalIndexes = headerCells
+      .map((cell, index) =>
+        guruOptionalFieldName(cell.textContent || "") ? index : -1,
+      )
+      .filter((index) => index >= 0);
+
+    if (!optionalIndexes.length) return;
+    table.querySelectorAll("tr").forEach((row) => {
+      const cells = Array.from(row.children).filter((cell) =>
+        cell.matches("th, td"),
+      );
+      optionalIndexes.forEach((index) => {
+        const cell = cells[index];
+        if (!cell) return;
+        cell.classList.add("guru-optional-column");
+        cell.querySelectorAll(controlSelector).forEach((control) => {
+          control.classList.add("is-optional");
+          control.dataset.guruOptional = "true";
+          control.setAttribute("aria-required", "false");
+        });
+      });
+    });
+  });
+
+  controls.forEach((control) => {
+    const datasetHint = Object.entries(control.dataset || {})
+      .map(([key, value]) => `${key} ${value}`)
+      .join(" ");
+    const labelHint = control.closest("label")?.textContent || "";
+    const hint = [
+      control.name,
+      control.id,
+      control.placeholder,
+      control.getAttribute("aria-label"),
+      control.getAttribute("title"),
+      datasetHint,
+      labelHint,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    if (
+      control.dataset.guruOptional !== "true" &&
+      !control.classList.contains("is-optional") &&
+      !guruOptionalFieldName(hint)
+    ) {
+      return;
+    }
+
+    control.classList.add("is-optional");
+    control.dataset.guruOptional = "true";
+    control.setAttribute("aria-required", "false");
+  });
+}
+
+function guruStartOptionalFieldPresentation() {
+  guruNormalizeOptionalFieldPresentation(document);
+  if (!document.body || typeof MutationObserver === "undefined") return;
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === 1) guruNormalizeOptionalFieldPresentation(node);
+      });
+    });
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    guruStartOptionalFieldPresentation,
+    { once: true },
+  );
+} else {
+  guruStartOptionalFieldPresentation();
+}
+
 function g4sbV138UpdateBankPhrase(product, draft, phrase, field, value) {
   if (!["vol", "forecast", "forecastClicks", "forecastBudget"].includes(field)) return;
   const key = g4sbV128PhraseKey(phrase);
@@ -28505,7 +29153,6 @@ g2CardHtml = function (card) {
   const f = g2EnsureFields(card);
   if (!Array.isArray(f.g2ExtraNotes)) f.g2ExtraNotes = [];
   const noteVal = card.notes || "";
-  const noteCls = String(noteVal).trim() ? "is-filled" : "is-empty";
   const checkVal = f.g2Check || "";
 
   return `<article class="g2-check-row" data-card="${escapeAttr(card.id)}">
@@ -28519,9 +29166,9 @@ g2CardHtml = function (card) {
       <select class="g1-input is-filled" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="check">${guruStatusOptionsHtml(checkVal)}</select>
     </label>
     <div class="g2-check-notes">
-      <span>Заметки</span>
-      <textarea class="g1-input ${noteCls}" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="notes" rows="1" placeholder="что сделано, результат">${escapeHtml(noteVal)}</textarea>
-      ${f.g2ExtraNotes.map((val, i) => `<div class="g2-note-row"><textarea class="g1-input ${String(val || "").trim() ? "is-filled" : "is-empty"}" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="extra" data-g2-extra="${i}" rows="1" placeholder="дополнительная заметка">${escapeHtml(val || "")}</textarea><button type="button" class="small-btn danger-mini" data-g2-remove-note="${escapeAttr(card.id)}" data-g2-note-idx="${i}" title="Удалить заметку">×</button></div>`).join("")}
+      <span>Заметки (необязательно)</span>
+      <textarea class="g1-input is-optional" data-guru-optional="true" aria-required="false" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="notes" rows="1" placeholder="что сделано, результат">${escapeHtml(noteVal)}</textarea>
+      ${f.g2ExtraNotes.map((val, i) => `<div class="g2-note-row"><textarea class="g1-input is-optional" data-guru-optional="true" aria-required="false" data-g2-card-id="${escapeAttr(card.id)}" data-g2-field="extra" data-g2-extra="${i}" rows="1" placeholder="дополнительная заметка (необязательно)">${escapeHtml(val || "")}</textarea><button type="button" class="small-btn danger-mini" data-g2-remove-note="${escapeAttr(card.id)}" data-g2-note-idx="${i}" title="Удалить заметку">×</button></div>`).join("")}
       <button type="button" class="small-btn add-inline-btn" data-g2-add-note="${escapeAttr(card.id)}" title="Добавить заметку">+</button>
     </div>
   </article>`;
@@ -28706,7 +29353,11 @@ function g4v191SectionStatus(filtered, campaigns, product) {
 
 function g4v191Field(channelKey, field, label, value, placeholder, multiline) {
   const attrs = `data-g4camp-key="${escapeAttr(channelKey)}" data-g4camp-field="${escapeAttr(field)}"`;
-  const cls = String(value || "").trim() ? "is-filled" : "is-empty";
+  const cls = guruOptionalFieldName(field)
+    ? "is-optional"
+    : String(value || "").trim()
+      ? "is-filled"
+      : "is-empty";
   if (multiline) {
     return `<label class="g1-field"><span>${escapeHtml(label)}</span><textarea class="g1-input ${cls}" ${attrs} rows="${multiline}" placeholder="${escapeAttr(placeholder || "")}">${escapeHtml(value || "")}</textarea></label>`;
   }
@@ -28731,7 +29382,6 @@ g4CampaignRowHtml = function (channel, campaign, index, product) {
     campaign.utm,
     campaign.creative,
     campaign.launchStatus,
-    campaign.notes,
   ].some((value) => String(value || "").trim());
   const isOpen =
     launchOpen.rows[stateKey] === undefined ? hasWork : Boolean(launchOpen.rows[stateKey]);
@@ -28979,7 +29629,11 @@ g4CampaignLaunchCenterHtml = function () {
 
 function g4v192Field(product, channelKey, field, label, value, placeholder, multiline) {
   const attrs = `data-g4c2-product="${escapeAttr(product)}" data-g4c2-key="${escapeAttr(channelKey)}" data-g4c2-field="${escapeAttr(field)}"`;
-  const cls = String(value || "").trim() ? "is-filled" : "is-empty";
+  const cls = guruOptionalFieldName(field)
+    ? "is-optional"
+    : String(value || "").trim()
+      ? "is-filled"
+      : "is-empty";
   if (multiline) {
     return `<label class="g1-field"><span>${escapeHtml(label)}</span><textarea class="g1-input ${cls}" ${attrs} rows="${multiline}" placeholder="${escapeAttr(placeholder || "")}">${escapeHtml(value || "")}</textarea></label>`;
   }
@@ -29047,10 +29701,15 @@ document.addEventListener("input", (e) => {
   if (!e.target?.dataset?.g4c2Field || e.target.tagName === "SELECT") return;
   const row = g4v192FindRow(e.target);
   if (!row) return;
-  row[e.target.dataset.g4c2Field] = e.target.value;
+  const field = e.target.dataset.g4c2Field;
+  row[field] = e.target.value;
   flashSaving();
-  const cls = e.target.value.trim() ? "is-filled" : "is-empty";
-  e.target.classList.remove("is-filled", "is-empty");
+  const cls = guruOptionalFieldName(field)
+    ? "is-optional"
+    : e.target.value.trim()
+      ? "is-filled"
+      : "is-empty";
+  e.target.classList.remove("is-filled", "is-empty", "is-optional");
   e.target.classList.add(cls);
   renderGateNav();
 });
@@ -30958,7 +31617,7 @@ renderGate = function () {
 
 // При раскрытии любого сворачиваемого блока — пересчитать ячейки внутри него
 document.addEventListener('click', (e) => {
-  const toggle = e.target.closest('[data-g1-collapse], summary, [data-pv130-toggle], [data-gate1-toggle-card], [data-gate1-toggle-section], [data-unit-toggle-section]');
+  const toggle = e.target.closest('[data-g1-collapse], summary, [data-pv130-toggle], [data-gate1-toggle-card], [data-gate1-toggle-section], [data-unit-toggle-section], [data-project-comparison-toggle], [data-target-audience-toggle], [data-target-audience-card-toggle]');
   if (!toggle) return;
   setTimeout(() => {
     const scope = toggle.closest('.g1-card-collapsible, details, .g1-card, .demand-step')
@@ -34783,6 +35442,7 @@ g4sbResetDraft = function (d) {
   d.clusterDraft.desiredCpaScenario = "base";
   d.clusterDraft.forecastCpc = "";
   d.clusterDraft.ads = [{ ad0: "", ad1: "", ad2: "" }];
+  d.clusterDraft.callouts = ["", "", "", ""];
   d.clusterDraft.forecastBaselineRows = [];
   d.clusterDraft.phraseConflictMessage = "";
 };
@@ -35599,6 +36259,9 @@ g4sbSaveClusterDraft = function (product, d) {
     budgetType: draft.budgetType === "weekly" ? "weekly" : "period",
     desiredLeads: String(draft.desiredLeads || ""),
     desiredCpaScenario: ["cautious", "base", "optimistic"].includes(draft.desiredCpaScenario) ? draft.desiredCpaScenario : "base",
+    callouts: (Array.isArray(draft.callouts) ? draft.callouts : [])
+      .map((value) => String(value || "").trim())
+      .filter(Boolean),
   });
   delete group.forecastConversions;
   delete group.accent;
@@ -35645,6 +36308,7 @@ g4sbDuplicateCluster = function (product, d, groupId) {
     if (fixedJtbd?.text) copiedGroup.col0 = fixedJtbd.text;
     delete copiedGroup.accent;
     copiedGroup.demandRows = (sourceGroup.demandRows || []).map(g4sbKeywordRow);
+    copiedGroup.callouts = (sourceGroup.callouts || []).map((value) => String(value || ""));
   }
   return copy;
 };
@@ -35663,6 +36327,372 @@ g4sbSearchChannelCardHtml = function () {
     .replace(/<div class="g1-empty" style="margin-top:12px">Групп объявлений пока нет[^<]*<\/div>/, "")
     .replace('<div class="g1-fields-grid" style="margin-top:12px"></div>', "");
 };
+
+/* ================================================================
+   v1.75.0 — Gate 1: универсальное сравнение проектов
+   ================================================================ */
+
+const PROJECT_COMPARISON_OWN_ID = "our-project";
+const PROJECT_COMPARISON_CORE_CRITERIA = [
+  { key: "product", name: "Продукт", description: "Что предлагает проект", aliases: ["продукт"] },
+  { key: "audience", name: "Целевая аудитория", description: "Для кого предназначен", aliases: ["аудитория", "целевая аудитория"] },
+  { key: "jtbd", name: "Потребность (JTBD)", description: "Какую задачу решает", aliases: ["потребность jtbd", "потребность", "jtbd"] },
+  { key: "positioning", name: "Позиционирование", description: "Как проект себя представляет", aliases: ["позиционирование"] },
+  { key: "value", name: "Ценность (УТП)", description: "Почему выбирают именно его", aliases: ["ценность утп", "ценность", "утп", "главное предложение"] },
+  { key: "assortment", name: "Ассортимент", description: "Какие продукты или услуги есть", aliases: ["ассортимент"] },
+  { key: "price", name: "Цена", description: "Стоимость и ценовой уровень", aliases: ["цена"] },
+  { key: "sales_channels", name: "Каналы продаж", description: "Где можно купить", aliases: ["каналы продаж"] },
+  { key: "promotion", name: "Продвижение", description: "Как привлекает клиентов", aliases: ["продвижение", "каналы продвижения"] },
+  { key: "service", name: "Сервис", description: "Как взаимодействует с клиентом", aliases: ["сервис"] },
+  { key: "strengths", name: "Сильные стороны", description: "Преимущества", aliases: ["сильные стороны"] },
+  { key: "weaknesses", name: "Слабые стороны", description: "Недостатки", aliases: ["слабые стороны"] },
+];
+
+function projectComparisonEmptyCell() {
+  return { text: "" };
+}
+
+function projectComparisonCriterionKey(value) {
+  return normalizeAspectKey(value || "").replace(/_/g, " ").trim();
+}
+
+function projectComparisonCoreDefinition(criterion) {
+  if (criterion?.coreKey) {
+    const byKey = PROJECT_COMPARISON_CORE_CRITERIA.find((item) => item.key === criterion.coreKey);
+    if (byKey) return byKey;
+  }
+  const normalized = projectComparisonCriterionKey(criterion?.name);
+  return PROJECT_COMPARISON_CORE_CRITERIA.find((item) =>
+    item.aliases.some((alias) => projectComparisonCriterionKey(alias) === normalized),
+  ) || null;
+}
+
+function ensureProjectComparison() {
+  if (!state) return null;
+  if (!state.projectComparison || typeof state.projectComparison !== "object") {
+    state.projectComparison = {
+      version: 2,
+      open: true,
+      competitors: Array.from({ length: 3 }, (_, index) => ({
+        id: makeId("comparison-competitor"),
+        name: `Конкурент ${index + 1}`,
+        url: "",
+      })),
+      criteria: PROJECT_COMPARISON_CORE_CRITERIA.map((definition) => ({
+        id: makeId("comparison-criterion"),
+        coreKey: definition.key,
+        name: definition.name,
+        description: definition.description,
+        cells: {},
+        leaderId: "",
+      })),
+      summary: {
+        marketStronger: "",
+        ourStronger: "",
+        same: "",
+        differentiate: "",
+      },
+    };
+  }
+  const model = state.projectComparison;
+  model.version = 2;
+  if (typeof model.open !== "boolean") model.open = true;
+  if (!Array.isArray(model.competitors)) model.competitors = [];
+  if (!Array.isArray(model.criteria)) model.criteria = [];
+  model.summary = model.summary && typeof model.summary === "object" ? model.summary : {};
+  ["marketStronger", "ourStronger", "same", "differentiate"].forEach((key) => {
+    if (typeof model.summary[key] !== "string") model.summary[key] = "";
+  });
+  model.competitors.forEach((competitor, index) => {
+    competitor.id = competitor.id || makeId("comparison-competitor");
+    competitor.name = typeof competitor.name === "string" ? competitor.name : `Конкурент ${index + 1}`;
+    delete competitor.url;
+  });
+  const normalizedCriteria = model.criteria.map((criterion) => {
+    criterion.id = criterion.id || makeId("comparison-criterion");
+    criterion.name = typeof criterion.name === "string" ? criterion.name : "Новый критерий";
+    criterion.cells = criterion.cells && typeof criterion.cells === "object" ? criterion.cells : {};
+    Object.keys(criterion.cells).forEach((ownerId) => {
+      const cell = criterion.cells[ownerId];
+      if (cell && typeof cell === "object") delete cell.url;
+    });
+    criterion.leaderId = typeof criterion.leaderId === "string" ? criterion.leaderId : "";
+    return criterion;
+  });
+  const used = new Set();
+  const coreCriteria = PROJECT_COMPARISON_CORE_CRITERIA.map((definition) => {
+    const existing = normalizedCriteria.find((criterion) => {
+      if (used.has(criterion)) return false;
+      return projectComparisonCoreDefinition(criterion)?.key === definition.key;
+    });
+    const criterion = existing || {
+      id: makeId("comparison-criterion"),
+      cells: {},
+      leaderId: "",
+    };
+    if (existing) used.add(existing);
+    criterion.coreKey = definition.key;
+    criterion.name = definition.name;
+    criterion.description = definition.description;
+    return criterion;
+  });
+  const customCriteria = normalizedCriteria.filter((criterion) => !used.has(criterion)).map((criterion) => ({
+    ...criterion,
+    coreKey: "",
+    description: typeof criterion.description === "string" ? criterion.description : "",
+  }));
+  model.criteria = [...coreCriteria, ...customCriteria];
+  return model;
+}
+
+function projectComparisonOffersText() {
+  const offers = state?.project?.offersV2?.productOffers || {};
+  return Object.entries(offers)
+    .map(([product, data]) => {
+      const offer = String(data?.offer || "").trim();
+      return offer ? `${product}: ${offer}` : "";
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+function projectComparisonTextList(...values) {
+  const result = [];
+  const append = (value) => {
+    if (Array.isArray(value)) return value.forEach(append);
+    if (value && typeof value === "object") return;
+    String(value || "").split(/\n+/).map((item) => item.trim()).filter(Boolean).forEach((item) => {
+      if (!result.some((stored) => stored.toLocaleLowerCase("ru-RU") === item.toLocaleLowerCase("ru-RU"))) result.push(item);
+    });
+  };
+  values.forEach(append);
+  return result.join("\n");
+}
+
+function projectComparisonJtbdText() {
+  const values = [state?.project?.clientResult, state?.project?.clientResultExtra];
+  const visited = new WeakSet();
+  const collect = (value, depth = 0) => {
+    if (!value || typeof value !== "object" || depth > 8 || visited.has(value)) return;
+    visited.add(value);
+    if (value.semL4Model && typeof value.semL4Model === "object") {
+      values.push(value.semL4Model.mainJtbd, value.semL4Model.additionalJtbds);
+    }
+    Object.values(value).forEach((nested) => collect(nested, depth + 1));
+  };
+  collect(state);
+  return projectComparisonTextList(...values) || readGate0Value("client_result");
+}
+
+function projectComparisonAutoValue(criterion) {
+  const key = criterion?.coreKey || projectComparisonCoreDefinition(criterion)?.key || "";
+  const project = state?.project || {};
+  const products = typeof v121OffersProducts === "function" ? v121OffersProducts(state) : [];
+  const direct = (...keys) => {
+    for (const name of keys) {
+      const value = project[name];
+      if (Array.isArray(value)) {
+        const text = value.map((item) => String(item || "").trim()).filter(Boolean).join("\n");
+        if (text) return text;
+      } else if (String(value || "").trim()) return String(value).trim();
+    }
+    return "";
+  };
+  const averageCheck = state?.unitEconomicsRoute?.sections?.revenue_aov?.aov;
+  if (key === "product") return projectComparisonTextList(project.whatSell, project.whatSellExtra, products) || readGate0Value("product");
+  if (key === "audience") return projectComparisonTextList(project.targetSegment, project.targetSegmentExtra) || readGate0Value("audience");
+  if (key === "jtbd") return projectComparisonJtbdText();
+  if (key === "positioning") return projectComparisonTextList(project.positioningStartFormula, project.positioningStatement) || readGate0Value("positioning");
+  if (key === "value") return projectComparisonTextList(project.usp, projectComparisonOffersText(), project.currentOffers, project.offer);
+  if (key === "assortment") return projectComparisonTextList(products, project.whatSell, project.whatSellExtra) || readGate0Value("product");
+  if (key === "price") return projectComparisonTextList(direct("price", "pricing", "averageCheck"), averageCheck ? `Средний чек: ${averageCheck} ₽` : "");
+  if (key === "sales_channels") return projectComparisonTextList(direct("salesChannels", "salesChannel", "purchaseChannels"), project.website ? "Сайт" : "", project.primaryTargetAction, project.currentCtas);
+  if (key === "promotion") return projectComparisonTextList(direct("promotionChannels", "marketingChannels", "channels"), project.searchPriorityClusters, project.searchMainKeywords);
+  if (key === "service") return projectComparisonTextList(direct("service", "servicePromise", "delivery", "deliveryTerms"), project.currentCtas, project.mainCta);
+  if (key === "strengths") return projectComparisonTextList(direct("strengths", "advantages"), project.usp, project.offerRationalCoverage, project.positioningProof);
+  if (key === "weaknesses") return projectComparisonTextList(direct("weaknesses", "disadvantages", "risks"));
+  return "";
+}
+
+function projectComparisonCell(criterion, ownerId) {
+  const stored = criterion.cells?.[ownerId];
+  if (stored && typeof stored === "object") {
+    return {
+      text: typeof stored.text === "string" ? stored.text : "",
+    };
+  }
+  if (typeof stored === "string") return { text: stored };
+  return projectComparisonEmptyCell();
+}
+
+function projectComparisonDisplayCell(criterion, ownerId) {
+  const cell = projectComparisonCell(criterion, ownerId);
+  if (ownerId === PROJECT_COMPARISON_OWN_ID) {
+    return { text: projectComparisonAutoValue(criterion), automatic: true };
+  }
+  return { ...cell, automatic: false };
+}
+
+function projectComparisonCellHtml(criterion, ownerId, stickyClass = "") {
+  const cell = projectComparisonDisplayCell(criterion, ownerId);
+  const isOwn = ownerId === PROJECT_COMPARISON_OWN_ID;
+  const isLeader = criterion.leaderId === ownerId;
+  return `<td class="project-comparison-cell ${stickyClass} ${isLeader ? "is-leader" : ""}">
+    <textarea rows="2" ${isOwn ? "readonly" : `data-project-comparison-cell="${escapeAttr(criterion.id)}" data-project-comparison-owner="${escapeAttr(ownerId)}" data-project-comparison-field="text"`} placeholder="${isOwn ? "Данные пока не заполнены в проекте" : "Введите данные"}">${escapeHtml(cell.text)}</textarea>
+    <div class="project-comparison-cell-tools">
+      <button type="button" class="project-comparison-leader ${isLeader ? "is-active" : ""}" data-project-comparison-leader="${escapeAttr(criterion.id)}" data-project-comparison-owner="${escapeAttr(ownerId)}" aria-pressed="${isLeader}" title="${isLeader ? "Снять отметку преимущества" : "Отметить преимущество"}">★<span>${isLeader ? "Преимущество" : "Отметить"}</span></button>
+    </div>
+    ${cell.automatic ? `<small class="project-comparison-auto">${cell.text ? "Автоматически из данных проекта" : "Заполните связанные данные в Gate 0–1"}</small>` : ""}
+  </td>`;
+}
+
+function projectComparisonHtml() {
+  const model = ensureProjectComparison();
+  if (!model) return "";
+  const projectName = String(state?.project?.name || projects.find((item) => item.id === activeProjectId)?.name || "Наш проект").trim();
+  const summaryFields = [
+    ["marketStronger", "В чём рынок сильнее нас"],
+    ["ourStronger", "В чём мы сильнее рынка"],
+    ["same", "Что у всех одинаково"],
+    ["differentiate", "Чем мы должны отличаться"],
+  ];
+  const coreCount = model.criteria.filter((criterion) => projectComparisonCoreDefinition(criterion)).length;
+  const customCount = model.criteria.length - coreCount;
+  return `<section class="project-comparison g1-section ${model.open ? "is-open" : ""}">
+    <button type="button" class="project-comparison-heading" data-project-comparison-toggle>
+      <span><b>Сравнение проектов</b><small>Универсальная карта рынка и конкурентных преимуществ</small></span>
+      <span>${model.competitors.length} ${model.competitors.length === 1 ? "конкурент" : "конкурента"} · ${coreCount} основных${customCount ? ` + ${customCount}` : ""}</span>
+      <i>${model.open ? "Свернуть ↑" : "Развернуть ↓"}</i>
+    </button>
+    ${model.open ? `<div class="project-comparison-body">
+      <div class="project-comparison-toolbar">
+        <p>12 основных категорий закреплены. Данные нашего проекта подтягиваются автоматически; данные конкурентов редактируются прямо в таблице.</p>
+        <button type="button" class="small-btn add-inline-btn" data-project-comparison-add-competitor>+ Добавить конкурента</button>
+      </div>
+      <div class="project-comparison-scroll" tabindex="0" aria-label="Таблица сравнения проектов">
+        <table style="--comparison-columns:${model.competitors.length}">
+          <thead><tr>
+            <th class="project-comparison-criterion-sticky">Категория</th>
+            <th class="project-comparison-own-sticky"><span class="project-comparison-own-label">Наш проект</span><strong>${escapeHtml(projectName || "Наш проект")}</strong></th>
+            ${model.competitors.map((competitor) => `<th>
+              <input value="${escapeAttr(competitor.name)}" data-project-comparison-competitor="${escapeAttr(competitor.id)}" data-project-comparison-competitor-field="name" aria-label="Название конкурента" />
+              <div class="project-comparison-competitor-tools">
+                <button type="button" data-project-comparison-remove-competitor="${escapeAttr(competitor.id)}" title="Удалить конкурента">Удалить</button>
+              </div>
+            </th>`).join("")}
+          </tr></thead>
+          <tbody>${model.criteria.map((criterion, index) => {
+            const core = projectComparisonCoreDefinition(criterion);
+            const customIndex = index - coreCount;
+            const customTotal = model.criteria.length - coreCount;
+            return `<tr class="${core ? "is-core-criterion" : "is-custom-criterion"}">
+            <th class="project-comparison-criterion-sticky">
+              <div class="project-comparison-criterion-head">
+                ${core ? `<span class="project-comparison-core-name"><b>${escapeHtml(core.name)}</b><small>${escapeHtml(core.description)}</small></span>` : `
+                  <span class="project-comparison-order">
+                    <button type="button" data-project-comparison-move="${escapeAttr(criterion.id)}" data-project-comparison-direction="up" ${customIndex <= 0 ? "disabled" : ""} title="Поднять критерий">↑</button>
+                    <button type="button" data-project-comparison-move="${escapeAttr(criterion.id)}" data-project-comparison-direction="down" ${customIndex >= customTotal - 1 ? "disabled" : ""} title="Опустить критерий">↓</button>
+                  </span>
+                  <textarea rows="2" data-project-comparison-criterion="${escapeAttr(criterion.id)}" aria-label="Название критерия">${escapeHtml(criterion.name)}</textarea>
+                  <button type="button" class="project-comparison-remove" data-project-comparison-remove-criterion="${escapeAttr(criterion.id)}" title="Удалить дополнительный критерий">×</button>`}
+              </div>
+            </th>
+            ${projectComparisonCellHtml(criterion, PROJECT_COMPARISON_OWN_ID, "project-comparison-own-sticky")}
+            ${model.competitors.map((competitor) => projectComparisonCellHtml(criterion, competitor.id)).join("")}
+          </tr>`;
+          }).join("")}</tbody>
+        </table>
+      </div>
+      <button type="button" class="small-btn add-inline-btn project-comparison-add-criterion" data-project-comparison-add-criterion>+ Добавить дополнительную категорию</button>
+      <div class="project-comparison-summary">
+        ${summaryFields.map(([key, label]) => `<label><span>${escapeHtml(label)}</span><textarea rows="3" data-project-comparison-summary="${escapeAttr(key)}" placeholder="Зафиксируйте вывод">${escapeHtml(model.summary[key] || "")}</textarea></label>`).join("")}
+      </div>
+    </div>` : ""}
+  </section>`;
+}
+
+function updateProjectComparisonInput(target) {
+  const model = ensureProjectComparison();
+  if (!model) return false;
+  if (target.dataset.projectComparisonCompetitor) {
+    const competitor = model.competitors.find((item) => item.id === target.dataset.projectComparisonCompetitor);
+    const field = target.dataset.projectComparisonCompetitorField;
+    if (competitor && field === "name") competitor[field] = target.value;
+    else return false;
+  } else if (target.dataset.projectComparisonCriterion) {
+    const criterion = model.criteria.find((item) => item.id === target.dataset.projectComparisonCriterion);
+    if (!criterion || projectComparisonCoreDefinition(criterion)) return false;
+    criterion.name = target.value;
+  } else if (target.dataset.projectComparisonCell) {
+    const criterion = model.criteria.find((item) => item.id === target.dataset.projectComparisonCell);
+    const ownerId = target.dataset.projectComparisonOwner;
+    const field = target.dataset.projectComparisonField;
+    if (!criterion || !ownerId || ownerId === PROJECT_COMPARISON_OWN_ID || field !== "text") return false;
+    criterion.cells[ownerId] = projectComparisonCell(criterion, ownerId);
+    criterion.cells[ownerId][field] = target.value;
+  } else if (target.dataset.projectComparisonSummary) {
+    if (!(target.dataset.projectComparisonSummary in model.summary)) return false;
+    model.summary[target.dataset.projectComparisonSummary] = target.value;
+  } else return false;
+  flashSaving();
+  return true;
+}
+
+document.addEventListener("input", (event) => updateProjectComparisonInput(event.target));
+document.addEventListener("change", (event) => updateProjectComparisonInput(event.target));
+
+document.addEventListener("click", (event) => {
+  const target = event.target.closest(
+    "[data-project-comparison-toggle], [data-project-comparison-add-competitor], [data-project-comparison-remove-competitor], [data-project-comparison-add-criterion], [data-project-comparison-remove-criterion], [data-project-comparison-move], [data-project-comparison-leader]",
+  );
+  if (!target) return;
+  const model = ensureProjectComparison();
+  if (!model) return;
+  if (target.dataset.projectComparisonToggle !== undefined) {
+    model.open = !model.open;
+  } else if (target.dataset.projectComparisonAddCompetitor !== undefined) {
+    model.competitors.push({
+      id: makeId("comparison-competitor"),
+      name: `Конкурент ${model.competitors.length + 1}`,
+    });
+  } else if (target.dataset.projectComparisonRemoveCompetitor) {
+    const ownerId = target.dataset.projectComparisonRemoveCompetitor;
+    model.competitors = model.competitors.filter((item) => item.id !== ownerId);
+    model.criteria.forEach((criterion) => {
+      delete criterion.cells[ownerId];
+      if (criterion.leaderId === ownerId) criterion.leaderId = "";
+    });
+  } else if (target.dataset.projectComparisonAddCriterion !== undefined) {
+    model.criteria.push({
+      id: makeId("comparison-criterion"),
+      coreKey: "",
+      name: "Новый критерий",
+      description: "",
+      cells: {},
+      leaderId: "",
+    });
+  } else if (target.dataset.projectComparisonRemoveCriterion) {
+    const criterion = model.criteria.find((item) => item.id === target.dataset.projectComparisonRemoveCriterion);
+    if (criterion && !projectComparisonCoreDefinition(criterion)) {
+      model.criteria = model.criteria.filter((item) => item.id !== criterion.id);
+    }
+  } else if (target.dataset.projectComparisonMove) {
+    const index = model.criteria.findIndex((item) => item.id === target.dataset.projectComparisonMove);
+    const next = target.dataset.projectComparisonDirection === "up" ? index - 1 : index + 1;
+    if (index >= PROJECT_COMPARISON_CORE_CRITERIA.length && next >= PROJECT_COMPARISON_CORE_CRITERIA.length && next < model.criteria.length) {
+      const [criterion] = model.criteria.splice(index, 1);
+      model.criteria.splice(next, 0, criterion);
+    }
+  } else if (target.dataset.projectComparisonLeader) {
+    const criterion = model.criteria.find((item) => item.id === target.dataset.projectComparisonLeader);
+    if (criterion) {
+      const ownerId = target.dataset.projectComparisonOwner || "";
+      criterion.leaderId = criterion.leaderId === ownerId ? "" : ownerId;
+    }
+  }
+  saveState();
+  renderGate();
+});
 
 document.addEventListener("click", (event) => {
   const target = event.target;
@@ -35714,6 +36744,7 @@ document.addEventListener("click", (event) => {
         ad1: String(ad.ad1 || ""),
         ad2: String(ad.ad2 || ""),
       })),
+      callouts: (Array.isArray(group.callouts) ? group.callouts : []).map((value) => String(value || "")),
       forecastBaselineRows: (group.demandRows || []).map(g4sbKeywordRow),
       phraseConflictMessage: "",
     };
@@ -36676,6 +37707,9 @@ const GURU_STABLE_TOGGLE_SELECTOR = [
   '[data-gate5-open]',
   '[data-g6-open]',
   '[data-g6-open-quarter]',
+  '[data-project-comparison-toggle]',
+  '[data-target-audience-toggle]',
+  '[data-target-audience-card-toggle]',
 ].join(',');
 
 const GURU_STABLE_TOGGLE_KEYS = [
@@ -36703,6 +37737,9 @@ const GURU_STABLE_TOGGLE_KEYS = [
   'gate5Open',
   'g6Open',
   'g6OpenQuarter',
+  'projectComparisonToggle',
+  'targetAudienceToggle',
+  'targetAudienceCardToggle',
 ];
 
 function guruStableToggleLocator(toggle) {
@@ -37194,3 +38231,524 @@ g4sbSearchChannelCardHtml = function () {
     )
     .replace(/<button class="small-btn add-inline-btn"[^>]*data-g4sb-draft-open[^>]*>[^<]*<\/button>/, "");
 };
+
+/* ================================================================
+   v1.78.0 — Целевая аудитория хранится как самостоятельная сущность
+   аналитики. Кампания ссылается на сегмент и содержит только настройки
+   поиска этой аудитории в конкретном рекламном канале.
+   ================================================================ */
+
+const TARGET_AUDIENCE_FIELDS = [
+  ["name", "Название сегмента", "Короткое рабочее название", 1],
+  ["who", "Кто это", "Опишите человека или компанию", 1],
+  ["need", "Потребность", "Что человеку необходимо", 1],
+  ["jtbd", "JTBD", "Какой результат человек хочет получить и зачем", 2],
+  ["problem", "Проблема", "Что мешает получить результат сейчас", 1],
+  ["criteria", "Критерии выбора", "По каким признакам выбирает решение", 1],
+  ["objections", "Возражения", "Что останавливает от покупки", 1],
+  ["value", "Главная ценность", "Что для этого сегмента важнее всего", 1],
+];
+
+const TARGET_AUDIENCE_GROUPS = [
+  ["01", "Идентификация", ["name", "who"]],
+  ["02", "Мотивация", ["need", "jtbd", "problem"]],
+  ["03", "Выбор решения", ["criteria", "objections", "value"]],
+];
+
+const CAMPAIGN_TARGETING_FIELDS = [
+  ["geography", "География", "Города, регионы или радиус показа"],
+  ["age", "Возраст", "Возрастные диапазоны канала"],
+  ["gender", "Пол", "Все / мужчины / женщины"],
+  ["searchQueries", "Поисковые запросы", "Как аудитория формулирует спрос"],
+  ["interests", "Интересы", "Интересы и поведенческие признаки"],
+  ["communities", "Сообщества", "Группы, каналы и сообщества"],
+  ["customerBases", "Клиентские базы", "Списки CRM и собственные базы"],
+  ["siteVisitors", "Посетители сайта", "Сегменты аналитики и ретаргетинг"],
+  ["lookalikes", "Похожие аудитории", "Источник и параметры look-alike"],
+];
+
+function targetAudienceBlankSegment(seed = {}) {
+  return {
+    id: seed.id || makeId("audience-segment"),
+    open: seed.open !== false,
+    name: String(seed.name || ""),
+    who: String(seed.who || ""),
+    need: String(seed.need || ""),
+    jtbd: String(seed.jtbd || ""),
+    problem: String(seed.problem || ""),
+    criteria: String(seed.criteria || ""),
+    objections: String(seed.objections || ""),
+    value: String(seed.value || ""),
+    autoProject: seed.autoProject === true,
+    manualFields: seed.manualFields && typeof seed.manualFields === "object"
+      ? { ...seed.manualFields }
+      : {},
+  };
+}
+
+function targetAudienceDirectProjectValue(...keys) {
+  const project = state?.project || {};
+  for (const key of keys) {
+    const value = project[key];
+    if (Array.isArray(value)) {
+      const text = projectComparisonTextList(value);
+      if (text) return text;
+    } else if (String(value || "").trim()) {
+      return String(value).trim();
+    }
+  }
+  return "";
+}
+
+function targetAudienceAutoValues() {
+  const audience = projectComparisonAutoValue({ coreKey: "audience" });
+  const result = projectComparisonTextList(
+    readGate0Value("client_result"),
+    state?.project?.clientResultExtra,
+  );
+  const pains = state?.painV130?.steps?.pains_reasons || {};
+  return {
+    name: String(audience || "").split(/\n+/).map((value) => value.trim()).find(Boolean) || "",
+    who: audience,
+    need: result,
+    jtbd: projectComparisonJtbdText(),
+    problem: projectComparisonTextList(
+      pains.mainPain,
+      pains.explicitPains,
+      state?.project?.offerIrrationalDriver,
+    ),
+    criteria: projectComparisonTextList(
+      state?.project?.offerRationalCoverage,
+      state?.project?.positioningProof,
+    ),
+    objections: targetAudienceDirectProjectValue(
+      "objections",
+      "customerObjections",
+      "barriers",
+      "purchaseBarriers",
+    ),
+    value: projectComparisonTextList(
+      state?.project?.usp,
+      state?.project?.currentOffers,
+      state?.project?.offer,
+      state?.project?.positioningStatement,
+    ),
+  };
+}
+
+function targetAudienceAutoSource(field) {
+  return ({
+    name: "Gate 0 · Кому продаём",
+    who: "Gate 0 · Кому продаём",
+    need: "Gate 0 · Ради какого результата",
+    jtbd: "Gate 0/1 · JTBD",
+    problem: "Аналитика · боли и мотивы",
+    criteria: "Gate 0 · доказательства ценности",
+    objections: "Данные проекта",
+    value: "Gate 0 · УТП и оффер",
+  })[field] || "Данные проекта";
+}
+
+function targetAudienceResolvedValue(segment, field) {
+  if (segment?.manualFields?.[field]) return String(segment[field] || "");
+  if (segment?.autoProject) {
+    const automatic = String(targetAudienceAutoValues()[field] || "").trim();
+    if (automatic) return automatic;
+  }
+  return String(segment?.[field] || "");
+}
+
+function targetAudienceResolvedSegment(segment) {
+  return TARGET_AUDIENCE_FIELDS.reduce((result, [field]) => {
+    result[field] = targetAudienceResolvedValue(segment, field);
+    return result;
+  }, { ...segment });
+}
+
+function ensureTargetAudience() {
+  if (!state) return null;
+  if (!state.targetAudience || typeof state.targetAudience !== "object") {
+    state.targetAudience = {
+      version: 2,
+      open: true,
+      autoSeedDismissed: false,
+      segments: targetAudienceAutoValues().who
+        ? [targetAudienceBlankSegment({ autoProject: true })]
+        : [],
+    };
+  }
+  const model = state.targetAudience;
+  const previousVersion = Number(model.version || 1);
+  model.open = model.open !== false;
+  model.autoSeedDismissed = model.autoSeedDismissed === true;
+  model.segments = Array.isArray(model.segments)
+    ? model.segments.map((segment) => targetAudienceBlankSegment(segment))
+    : [];
+  if (previousVersion < 2 && model.segments[0]) {
+    const segment = model.segments[0];
+    const autoValues = targetAudienceAutoValues();
+    segment.autoProject = true;
+    TARGET_AUDIENCE_FIELDS.forEach(([field]) => {
+      const stored = String(segment[field] || "").trim();
+      const automatic = String(autoValues[field] || "").trim();
+      segment.manualFields[field] = Boolean(stored && stored !== automatic);
+    });
+  }
+  const automaticValues = targetAudienceAutoValues();
+  const hasAutomaticData = Object.values(automaticValues).some((value) => String(value || "").trim());
+  if (!model.segments.length && hasAutomaticData && !model.autoSeedDismissed) {
+    model.segments.push(targetAudienceBlankSegment({ autoProject: true }));
+  }
+  model.version = 2;
+  return model;
+}
+
+function targetAudienceSegmentProgress(segment) {
+  return TARGET_AUDIENCE_FIELDS.filter(([key]) => targetAudienceResolvedValue(segment, key).trim()).length;
+}
+
+function targetAudienceFieldHtml(segment, fieldKey) {
+  const definition = TARGET_AUDIENCE_FIELDS.find(([key]) => key === fieldKey);
+  if (!definition) return "";
+  const [, label, placeholder, rows] = definition;
+  const value = targetAudienceResolvedValue(segment, fieldKey);
+  const isAutomatic = Boolean(
+    segment.autoProject &&
+    !segment.manualFields?.[fieldKey] &&
+    String(targetAudienceAutoValues()[fieldKey] || "").trim(),
+  );
+  return `<label class="target-audience-field ${isAutomatic ? "is-automatic" : ""}">
+    <span class="target-audience-field-label"><b>${escapeHtml(label)}</b>${isAutomatic ? `<small>${escapeHtml(targetAudienceAutoSource(fieldKey))}</small>` : ""}</span>
+    <span class="target-audience-field-control"><textarea rows="${rows}" data-target-audience-segment="${escapeAttr(segment.id)}" data-target-audience-field="${escapeAttr(fieldKey)}" placeholder="${escapeAttr(placeholder)}">${escapeHtml(value)}</textarea></span>
+  </label>`;
+}
+
+function targetAudienceCardHtml(segment, index) {
+  const progress = targetAudienceSegmentProgress(segment);
+  const resolvedName = targetAudienceResolvedValue(segment, "name");
+  return `<article class="target-audience-card ${segment.open ? "is-open" : ""}">
+    <header class="target-audience-card-head">
+      <button type="button" class="target-audience-card-title" data-target-audience-card-toggle="${escapeAttr(segment.id)}"><small>Сегмент ${String(index + 1).padStart(2, "0")}</small><strong>${escapeHtml(resolvedName || "Новый сегмент аудитории")}</strong></button>
+      <div class="target-audience-card-tools">
+        <span class="target-audience-progress">${progress}/${TARGET_AUDIENCE_FIELDS.length}</span>
+        <button type="button" class="target-audience-tool" data-target-audience-duplicate="${escapeAttr(segment.id)}">Дублировать</button>
+        <button type="button" class="target-audience-tool is-danger" data-target-audience-delete="${escapeAttr(segment.id)}">Удалить</button>
+        <button type="button" class="target-audience-tool is-toggle" data-target-audience-card-toggle="${escapeAttr(segment.id)}">${segment.open ? "Свернуть ↑" : "Раскрыть ↓"}</button>
+      </div>
+    </header>
+    ${segment.open ? `<div class="target-audience-card-body">
+      ${segment.autoProject ? '<div class="target-audience-sync-note"><span>Автозаполнение включено</span><small>Связанные значения обновляются из Gate 0/1. Ручная правка переопределяет только конкретное поле.</small></div>' : ""}
+      <div class="target-audience-fields">${TARGET_AUDIENCE_GROUPS.map(([number, title, fields]) => `<section class="target-audience-field-group"><header><span>${number}</span><strong>${escapeHtml(title)}</strong></header><div>${fields.map((field) => targetAudienceFieldHtml(segment, field)).join("")}</div></section>`).join("")}</div>
+    </div>` : ""}
+  </article>`;
+}
+
+function targetAudienceHtml() {
+  const model = ensureTargetAudience();
+  if (!model) return "";
+  return `<section class="target-audience g1-section ${model.open ? "is-open" : ""}">
+    <button type="button" class="target-audience-heading" data-target-audience-toggle>
+      <span><strong>Целевая аудитория</strong><small>Кого мы хотим привлечь и почему этот человек покупает</small></span>
+      <span>${model.segments.length} ${model.segments.length === 1 ? "сегмент" : "сегментов"} · ${model.open ? "свернуть ↑" : "раскрыть ↓"}</span>
+    </button>
+    ${model.open ? `<div class="target-audience-body">
+      <p class="target-audience-intro">Здесь хранится логика аудитории. География, возраст, пол и способы таргетинга задаются отдельно внутри конкретной рекламной кампании.</p>
+      <div class="target-audience-list">${model.segments.map(targetAudienceCardHtml).join("") || '<div class="g1-empty">Сегментов пока нет. Добавьте первый, чтобы использовать его в рекламных кампаниях.</div>'}</div>
+      <button type="button" class="small-btn add-inline-btn target-audience-add" data-target-audience-add>+ Добавить сегмент</button>
+    </div>` : ""}
+  </section>`;
+}
+
+function targetAudienceUpdateInput(target) {
+  const segmentId = target.dataset.targetAudienceSegment;
+  const field = target.dataset.targetAudienceField;
+  if (!segmentId || !TARGET_AUDIENCE_FIELDS.some(([key]) => key === field)) return false;
+  const segment = ensureTargetAudience()?.segments.find((item) => item.id === segmentId);
+  if (!segment) return false;
+  segment[field] = target.value;
+  segment.manualFields = segment.manualFields || {};
+  segment.manualFields[field] = true;
+  flashSaving();
+  return true;
+}
+
+document.addEventListener("input", (event) => targetAudienceUpdateInput(event.target));
+document.addEventListener("change", (event) => targetAudienceUpdateInput(event.target));
+
+document.addEventListener("click", (event) => {
+  const target = event.target.closest?.("[data-target-audience-toggle], [data-target-audience-add], [data-target-audience-card-toggle], [data-target-audience-duplicate], [data-target-audience-delete]");
+  if (!target) return;
+  const model = ensureTargetAudience();
+  if (!model) return;
+  if (target.dataset.targetAudienceToggle !== undefined) {
+    model.open = !model.open;
+  } else if (target.dataset.targetAudienceAdd !== undefined) {
+    model.segments.push(targetAudienceBlankSegment());
+  } else if (target.dataset.targetAudienceCardToggle) {
+    const segment = model.segments.find((item) => item.id === target.dataset.targetAudienceCardToggle);
+    if (segment) segment.open = !segment.open;
+  } else if (target.dataset.targetAudienceDuplicate) {
+    const index = model.segments.findIndex((item) => item.id === target.dataset.targetAudienceDuplicate);
+    if (index >= 0) {
+      const source = model.segments[index];
+      const resolved = targetAudienceResolvedSegment(source);
+      const manualFields = Object.fromEntries(TARGET_AUDIENCE_FIELDS.map(([field]) => [field, true]));
+      model.segments.splice(index + 1, 0, targetAudienceBlankSegment({ ...resolved, id: "", name: `${resolved.name || "Сегмент"} — копия`, open: true, autoProject: false, manualFields }));
+    }
+  } else if (target.dataset.targetAudienceDelete) {
+    const segmentId = target.dataset.targetAudienceDelete;
+    const removedSegment = model.segments.find((item) => item.id === segmentId);
+    if (removedSegment?.autoProject) model.autoSeedDismissed = true;
+    model.segments = model.segments.filter((item) => item.id !== segmentId);
+    const campaigns = g4EnsureLaunchCampaigns();
+    Object.values(campaigns).forEach((campaign) => {
+      if (campaign.audienceSegmentId === segmentId) campaign.audienceSegmentId = "";
+    });
+  }
+  saveState();
+  renderGate();
+});
+
+/* ================================================================
+   v1.79.0 — стабильная визуальная точка для действий с коллекциями.
+
+   Сворачивание уже удерживается общим механизмом выше. Добавление,
+   дублирование, удаление и перестановка тоже могут полностью
+   перерисовать Gate и изменить высоту содержимого над курсором.
+   Поэтому до действия запоминаем смысловой соседний элемент, а после
+   всех render/rAF/autosize возвращаем его в ту же точку экрана.
+   ================================================================ */
+const GURU_STABLE_COLLECTION_ACTION_SELECTOR = [
+  "[data-target-audience-add]",
+  "[data-target-audience-duplicate]",
+  "[data-target-audience-delete]",
+  "[data-project-comparison-add-competitor]",
+  "[data-project-comparison-remove-competitor]",
+  "[data-project-comparison-add-criterion]",
+  "[data-project-comparison-remove-criterion]",
+  "[data-project-comparison-move]",
+  "[data-project-comparison-leader]",
+].join(",");
+
+function guruStableCollectionAnchor(action) {
+  if (action.dataset.targetAudienceDelete) {
+    const card = action.closest(".target-audience-card");
+    const cards = Array.from(card?.parentElement?.querySelectorAll(":scope > .target-audience-card") || []);
+    const index = cards.indexOf(card);
+    return cards[index + 1]?.querySelector("[data-target-audience-card-toggle]")
+      || cards[index - 1]?.querySelector("[data-target-audience-card-toggle]")
+      || document.querySelector("[data-target-audience-toggle]");
+  }
+  if (action.dataset.targetAudienceDuplicate) {
+    return action.closest(".target-audience-card")?.querySelector("[data-target-audience-card-toggle]") || action;
+  }
+  if (action.matches("[data-project-comparison-remove-competitor], [data-project-comparison-remove-criterion]")) {
+    return document.querySelector("[data-project-comparison-toggle]") || action;
+  }
+  return action;
+}
+
+function guruStableCollectionLocator(anchor) {
+  const keys = [
+    "targetAudienceAdd",
+    "targetAudienceCardToggle",
+    "projectComparisonToggle",
+    "projectComparisonAddCompetitor",
+    "projectComparisonAddCriterion",
+    "projectComparisonMove",
+    "projectComparisonLeader",
+  ];
+  for (const key of keys) {
+    if (anchor?.dataset?.[key] === undefined) continue;
+    const value = anchor.dataset[key];
+    const attribute = key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+    return () => document.querySelector(`[data-${attribute}="${CSS.escape(value)}"]`);
+  }
+  return () => (anchor?.isConnected ? anchor : null);
+}
+
+document.addEventListener("click", (event) => {
+  const action = event.target?.closest?.(GURU_STABLE_COLLECTION_ACTION_SELECTOR);
+  if (!action) return;
+  const anchor = guruStableCollectionAnchor(action);
+  if (!anchor) return;
+  const snapshot = {
+    locate: guruStableCollectionLocator(anchor),
+    scroller: guruStableScrollContainer(anchor),
+    viewportTop: anchor.getBoundingClientRect().top,
+  };
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => guruRestoreToggleAnchor(snapshot));
+  });
+}, true);
+
+function g4CampaignAudienceHtml(product, channel, campaign) {
+  const segments = ensureTargetAudience()?.segments || [];
+  const selectedSource = segments.find((segment) => segment.id === campaign.audienceSegmentId);
+  const selected = selectedSource ? targetAudienceResolvedSegment(selectedSource) : null;
+  const stateKey = g4CampaignStateKey(product, channel.key);
+  const targeting = campaign.channelTargeting || {};
+  return `<section class="campaign-audience-settings" data-campaign-audience-panel="${escapeAttr(stateKey)}">
+    <div class="campaign-audience-title"><div><strong>Аудитория и настройки канала</strong><small>Сегмент отвечает на вопрос «кого и почему», настройки ниже — как найти его в этом канале.</small></div></div>
+    <label class="campaign-audience-select"><span>Сегмент аудитории</span><select data-campaign-audience-product="${escapeAttr(product)}" data-campaign-audience-channel="${escapeAttr(channel.key)}"><option value="">— выбрать сегмент из Этапа 01 —</option>${segments.map((segment) => `<option value="${escapeAttr(segment.id)}" ${segment.id === campaign.audienceSegmentId ? "selected" : ""}>${escapeHtml(targetAudienceResolvedValue(segment, "name") || "Сегмент без названия")}</option>`).join("")}</select></label>
+    ${selected ? `<div class="campaign-audience-summary"><div><span>Кто это</span><b>${escapeHtml(selected.who || "—")}</b></div><div><span>Потребность</span><b>${escapeHtml(selected.need || "—")}</b></div><div><span>JTBD</span><b>${escapeHtml(selected.jtbd || "—")}</b></div><div><span>Главная ценность</span><b>${escapeHtml(selected.value || "—")}</b></div></div>` : `<p class="campaign-audience-empty">Сначала создайте сегмент в «Целевой аудитории» Этапа 01, затем выберите его здесь.</p>`}
+    <details class="campaign-targeting" open><summary>Настройки поиска аудитории в канале</summary><div class="campaign-targeting-grid">${CAMPAIGN_TARGETING_FIELDS.map(([key, label, placeholder]) => `<label><span>${escapeHtml(label)}</span><textarea rows="2" data-campaign-targeting-product="${escapeAttr(product)}" data-campaign-targeting-channel="${escapeAttr(channel.key)}" data-campaign-targeting-field="${escapeAttr(key)}" placeholder="${escapeAttr(placeholder)}">${escapeHtml(targeting[key] || "")}</textarea></label>`).join("")}</div></details>
+  </section>`;
+}
+
+function campaignAudienceRow(target) {
+  return g4EnsureLaunchCampaigns()[g4CampaignStateKey(target.dataset.campaignAudienceProduct || target.dataset.campaignTargetingProduct, target.dataset.campaignAudienceChannel || target.dataset.campaignTargetingChannel)];
+}
+
+document.addEventListener("change", (event) => {
+  const target = event.target;
+  if (target?.dataset?.campaignAudienceProduct === undefined) return;
+  const campaign = campaignAudienceRow(target);
+  if (!campaign) return;
+  campaign.audienceSegmentId = target.value;
+  flashSaving();
+  renderGate();
+});
+
+document.addEventListener("input", (event) => {
+  const target = event.target;
+  const field = target?.dataset?.campaignTargetingField;
+  if (!field || !CAMPAIGN_TARGETING_FIELDS.some(([key]) => key === field)) return;
+  const campaign = campaignAudienceRow(target);
+  if (!campaign) return;
+  campaign.channelTargeting = campaign.channelTargeting || {};
+  campaign.channelTargeting[field] = target.value;
+  flashSaving();
+});
+
+const __g4V177SearchChannelHtml = g4sbSearchChannelCardHtml;
+g4sbSearchChannelCardHtml = function (channel, campaign, index, product) {
+  const html = __g4V177SearchChannelHtml.apply(this, arguments);
+  if (!html.includes('<div class="g1-card-body">') || html.includes("campaign-audience-settings")) return html;
+  return html.replace(/(<div class="g1-card-body">\s*<p class="g1-task">[\s\S]*?<\/p>)/, `$1${g4CampaignAudienceHtml(product, channel, campaign)}`);
+};
+
+const __g4V177CampaignRowHtml = g4CampaignRowHtml;
+g4CampaignRowHtml = function (channel, campaign, index, product) {
+  const html = __g4V177CampaignRowHtml.apply(this, arguments);
+  if (g4IsYandexSearchChannel(channel) || !html.includes('<div class="g1-card-body">') || html.includes("campaign-audience-settings")) return html;
+  const panel = g4CampaignAudienceHtml(product, channel, campaign);
+  const marker = '<p class="g1-task" style="font-style:italic';
+  return html.includes(marker) ? html.replace(marker, `${panel}${marker}`) : html;
+};
+
+/* ================================================================
+   v1.80.0 — уточнения Яндекс Директа на уровне группы объявлений.
+
+   Лимит одного уточнения — 25 символов. Минимум четыре заполненных
+   уточнения является правилом готовности ГУРУ для этой формы.
+   ================================================================ */
+const G4_GROUP_CALLOUT_MIN = 4;
+const G4_GROUP_CALLOUT_MAX = 50;
+const G4_GROUP_CALLOUT_LENGTH = 25;
+
+function g4GroupCalloutRows(value, pad = true) {
+  const rows = (Array.isArray(value) ? value : [])
+    .slice(0, G4_GROUP_CALLOUT_MAX)
+    .map((item) => String(item || ""));
+  if (pad) {
+    while (rows.length < G4_GROUP_CALLOUT_MIN) rows.push("");
+  }
+  return rows;
+}
+
+function g4GroupCalloutsHtml(product, draft) {
+  const rows = g4GroupCalloutRows(draft.callouts);
+  draft.callouts = rows;
+  const filled = rows.filter((value) => value.trim()).length;
+  const p = `data-g4sb-product="${escapeAttr(product)}"`;
+  return `<section class="g4-v180-callouts" data-g4sb-callouts>
+    <div class="g4-v180-callouts-head">
+      <div>
+        <div class="g4-upstream-title">7. Уточнения группы</div>
+        <small>Короткие доказательства, которые усиливают именно это объявление.</small>
+      </div>
+      <span class="g4-v180-callouts-progress" data-g4sb-callouts-progress>${filled} из ${G4_GROUP_CALLOUT_MIN} минимум</span>
+    </div>
+    <p class="g4-v180-callouts-rule">Минимум 4 уточнения · до 25 символов каждое. Например: «Ручная работа», «На заказ», «Для подарка».</p>
+    <div class="g4-v180-callouts-list">${rows.map((value, index) => `<label class="g4-v180-callout-row">
+      <span class="g4-v180-callout-number">${index + 1}</span>
+      <input type="text" value="${escapeAttr(value)}" maxlength="${G4_GROUP_CALLOUT_LENGTH}" autocomplete="off" ${p} data-g4sb-callout-index="${index}" placeholder="Уточнение ${index + 1}">
+      <small data-g4sb-callout-counter>${value.length}/${G4_GROUP_CALLOUT_LENGTH}</small>
+      ${rows.length > G4_GROUP_CALLOUT_MIN ? `<button type="button" class="g4-v180-callout-remove" ${p} data-g4sb-callout-remove="${index}" aria-label="Удалить уточнение ${index + 1}">Удалить</button>` : ""}
+    </label>`).join("")}</div>
+    <div class="g4-v180-callouts-actions">
+      <button type="button" class="small-btn add-inline-btn" ${p} data-g4sb-callout-add ${rows.length >= G4_GROUP_CALLOUT_MAX ? "disabled" : ""}>+ Добавить уточнение</button>
+      <small>Яндекс может менять порядок показа в зависимости от места размещения.</small>
+    </div>
+  </section>`;
+}
+
+const __g4V180EditorHtml = g4sbV166EditorHtml;
+g4sbV166EditorHtml = function (product, d) {
+  const html = __g4V180EditorHtml(product, d);
+  if (!d.clusterDraft?.open || !html || html.includes("data-g4sb-callouts")) return html;
+  const marker = '<div class="g4-v126-actions">';
+  const index = html.lastIndexOf(marker);
+  if (index < 0) return html;
+  return `${html.slice(0, index)}${g4GroupCalloutsHtml(product, d.clusterDraft)}${html.slice(index)}`;
+};
+
+const __g4V180SaveClusterDraft = g4sbSaveClusterDraft;
+g4sbSaveClusterDraft = function (product, d) {
+  const draft = d.clusterDraft;
+  const rows = g4GroupCalloutRows(draft.callouts);
+  const tooLong = rows.find((value) => value.length > G4_GROUP_CALLOUT_LENGTH);
+  const filled = rows.map((value) => value.trim()).filter(Boolean);
+  if (tooLong) {
+    draft.validationError = `Одно уточнение может содержать не более ${G4_GROUP_CALLOUT_LENGTH} символов с пробелами.`;
+    return null;
+  }
+  if (filled.length < G4_GROUP_CALLOUT_MIN) {
+    draft.validationError = `Добавьте минимум ${G4_GROUP_CALLOUT_MIN} уточнения для этой группы.`;
+    return null;
+  }
+  draft.callouts = filled;
+  return __g4V180SaveClusterDraft(product, d);
+};
+
+document.addEventListener("input", (event) => {
+  const target = event.target;
+  if (target?.dataset?.g4sbCalloutIndex === undefined) return;
+  const d = ensureGate4SearchBuild(target.dataset.g4sbProduct);
+  if (!d.clusterDraft?.open) return;
+  const index = Number(target.dataset.g4sbCalloutIndex);
+  if (!Number.isInteger(index) || index < 0 || index >= G4_GROUP_CALLOUT_MAX) return;
+  d.clusterDraft.callouts = g4GroupCalloutRows(d.clusterDraft.callouts);
+  d.clusterDraft.callouts[index] = target.value.slice(0, G4_GROUP_CALLOUT_LENGTH);
+  const row = target.closest(".g4-v180-callout-row");
+  const counter = row?.querySelector("[data-g4sb-callout-counter]");
+  if (counter) counter.textContent = `${target.value.length}/${G4_GROUP_CALLOUT_LENGTH}`;
+  const progress = target.closest("[data-g4sb-callouts]")?.querySelector("[data-g4sb-callouts-progress]");
+  if (progress) {
+    const count = d.clusterDraft.callouts.filter((value) => value.trim()).length;
+    progress.textContent = `${count} из ${G4_GROUP_CALLOUT_MIN} минимум`;
+  }
+  d.clusterDraft.validationError = "";
+  flashSaving();
+});
+
+document.addEventListener("click", (event) => {
+  const target = event.target?.closest?.("[data-g4sb-callout-add], [data-g4sb-callout-remove]");
+  if (!target) return;
+  const d = ensureGate4SearchBuild(target.dataset.g4sbProduct);
+  if (!d.clusterDraft?.open) return;
+  const rows = g4GroupCalloutRows(d.clusterDraft.callouts);
+  if (target.dataset.g4sbCalloutAdd !== undefined) {
+    if (rows.length >= G4_GROUP_CALLOUT_MAX) return;
+    rows.push("");
+  } else {
+    const index = Number(target.dataset.g4sbCalloutRemove);
+    if (rows.length <= G4_GROUP_CALLOUT_MIN || !Number.isInteger(index) || index < 0 || index >= rows.length) return;
+    rows.splice(index, 1);
+  }
+  d.clusterDraft.callouts = rows;
+  d.clusterDraft.validationError = "";
+  flashSaving();
+  renderGate();
+});

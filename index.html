@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>УНИВЕРСАЛ / ГУРУ — платформа v1.2.0</title>
-    <link rel="stylesheet" href="styles.css?v=1.74.0" />
+    <link rel="stylesheet" href="styles.css?v=1.82.5" />
   </head>
   <body class="access-locked">
     <section
@@ -217,6 +217,17 @@
           ← Выбор проекта
         </button>
         <button class="side-action" id="projectBtn">Паспорт проекта</button>
+        <button class="side-action quick-task-action" id="quickTaskBtn" type="button">
+          + Новая задача
+        </button>
+        <div class="quick-task-composer" id="quickTaskComposer" hidden>
+          <label for="quickTaskInput">Новая задача</label>
+          <textarea id="quickTaskInput" rows="3" placeholder="Что нужно сделать?"></textarea>
+          <div class="quick-task-composer-actions">
+            <button class="quick-task-save" id="quickTaskSaveBtn" type="button">Сохранить</button>
+            <button class="quick-task-close" id="quickTaskCloseBtn" type="button">Закрыть</button>
+          </div>
+        </div>
 
         <div class="side-section-title">Gate</div>
         <nav id="gateNav" class="gate-nav"></nav>
@@ -378,7 +389,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="seed-data.js?v=1.1.11"></script>
-    <script src="app.js?v=1.74.0"></script>
+    <script src="app.js?v=1.82.5"></script>
     <script src="supabase-test.js?v=1.1.11"></script>
   </body>
 </html>
