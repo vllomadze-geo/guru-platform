@@ -5590,6 +5590,9 @@ document.getElementById("quickTaskSaveBtn")?.addEventListener("click", () => {
   g7.ui.openSections.new = true;
   saveState();
   closeQuickTaskComposer();
+  if (activeView === "gate" && activeGateId === "gate-7") {
+    gate7Rerender();
+  }
 });
 document
   .getElementById("importGateBtn")
@@ -14148,7 +14151,14 @@ function gate7TaskStatus(task) {
 
 function gate7VisibleTasks(sectionId) {
   return ensureGate7State()
-    .tasks.filter((task) => task.sectionId === sectionId)
+    .tasks.filter(
+      (task) =>
+        task.sectionId === sectionId &&
+        // Следующий экземпляр регулярной задачи показываем только в день,
+        // на который он назначен. После выполнения сегодня он не дублируется
+        // в списке до следующего дня.
+        (sectionId !== "regular" || !task.date || task.date <= gate7Today()),
+    )
     .sort(
       (a, b) =>
         Number(a.order || 0) - Number(b.order || 0) ||
