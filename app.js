@@ -5315,6 +5315,56 @@ function exportCsv() {
   downloadText("guru-export.csv", toCsv(rows));
 }
 
+function exportStagesAndTasksCsv() {
+  syncEvidenceTexts();
+  const rows = [
+    [
+      "Тип",
+      "Этап",
+      "Раздел",
+      "Задача / блок",
+      "Статус",
+      "Срок",
+      "Дата завершения",
+      "Результат / доказательство",
+      "Комментарий",
+    ],
+  ];
+
+  state.gates.forEach((gate) => {
+    gate.cards.forEach((card) => {
+      rows.push([
+        "Этап",
+        gate.title || "",
+        "",
+        card.title || "",
+        STATUS_LABELS[card.status] || card.status || "",
+        "",
+        "",
+        formatStructuredEvidencePlain(card, state),
+        card.notes || "",
+      ]);
+    });
+  });
+
+  const gate7Title = state.gates.find((gate) => gate.id === "gate-7")?.title || "Gate 7";
+  ensureGate7State().tasks.forEach((task) => {
+    rows.push([
+      "Задача",
+      gate7Title,
+      gate7SectionTitle(task.sectionId || "new"),
+      task.task || "",
+      gate7StatusLabel(gate7TaskStatus(task)),
+      task.date || "",
+      task.completedAt || "",
+      task.result || "",
+      task.where || "",
+    ]);
+  });
+
+  downloadText("guru-stages-and-tasks.csv", toCsv(rows));
+}
+
 function toCsv(rows) {
   return rows
     .map((row) =>
@@ -5620,6 +5670,9 @@ document
 document
   .getElementById("exportProjectBtn")
   .addEventListener("click", exportCsv);
+document
+  .getElementById("exportStagesTasksBtn")
+  ?.addEventListener("click", exportStagesAndTasksCsv);
 document
   .getElementById("exportPdfGateBtn")
   .addEventListener("click", exportPdfReport);
