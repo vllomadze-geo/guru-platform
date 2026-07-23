@@ -14150,7 +14150,7 @@ function gate7TaskStatus(task) {
 }
 
 function gate7VisibleTasks(sectionId) {
-  return ensureGate7State()
+  const tasks = ensureGate7State()
     .tasks.filter(
       (task) =>
         task.sectionId === sectionId &&
@@ -14158,12 +14158,37 @@ function gate7VisibleTasks(sectionId) {
         // на который он назначен. После выполнения сегодня он не дублируется
         // в списке до следующего дня.
         (sectionId !== "regular" || !task.date || task.date <= gate7Today()),
-    )
-    .sort(
-      (a, b) =>
-        Number(a.order || 0) - Number(b.order || 0) ||
-        String(a.createdAt || "").localeCompare(String(b.createdAt || "")),
     );
+  const manualOrder = (a, b) =>
+    Number(a.order || 0) - Number(b.order || 0) ||
+    String(a.createdAt || "").localeCompare(String(b.createdAt || ""));
+
+  if (sectionId === "done") {
+    const completedTime = (task) => {
+      const completed = Date.parse(task.completedAt || "");
+      if (Number.isFinite(completed)) return completed;
+      const dueDate = Date.parse(`${task.date || ""}T12:00:00`);
+      if (Number.isFinite(dueDate)) return dueDate;
+      const created = Date.parse(task.createdAt || "");
+      return Number.isFinite(created) ? created : 0;
+    };
+    return tasks.sort(
+      (a, b) =>
+        completedTime(b) - completedTime(a) ||
+        String(b.createdAt || "").localeCompare(String(a.createdAt || "")) ||
+        manualOrder(a, b),
+    );
+  }
+
+  if (sectionId !== "work") return tasks.sort(manualOrder);
+
+  return tasks.sort((a, b) => {
+    const aHasDate = /^\d{4}-\d{2}-\d{2}$/.test(a.date || "");
+    const bHasDate = /^\d{4}-\d{2}-\d{2}$/.test(b.date || "");
+    if (aHasDate && bHasDate && a.date !== b.date) return a.date.localeCompare(b.date);
+    if (aHasDate !== bHasDate) return aHasDate ? -1 : 1;
+    return manualOrder(a, b);
+  });
 }
 
 function gate7NextOrder(sectionId) {
@@ -14217,7 +14242,7 @@ function gate7CompleteRecurringTask(template) {
       status: "ready",
       order: gate7NextOrder("done"),
       date: occurrenceDate,
-      completedAt: gate7Today(),
+      completedAt: new Date().toISOString(),
       recurringTemplateId: template.id,
       recurringDate: occurrenceDate,
       createdAt: new Date().toISOString(),
@@ -14359,7 +14384,7 @@ function gate7MoveTaskToStatus(task, status) {
   task.status = status;
   task.sectionId =
     status === "ready" ? "done" : status === "in_progress" ? "work" : "new";
-  if (status === "ready") task.completedAt = task.completedAt || gate7Today();
+  if (status === "ready") task.completedAt = task.completedAt || new Date().toISOString();
   task.order = gate7NextOrder(task.sectionId);
 }
 
@@ -14516,7 +14541,12 @@ function bindGate7Journal() {
         }
         persist();
       });
-      input.addEventListener("change", persist);
+      input.addEventListener("change", () => {
+        persist();
+        if (input.dataset.g7TaskField === "date" && getTask()?.sectionId === "work") {
+          gate7Rerender();
+        }
+      });
       input.addEventListener("blur", persist);
     });
 
