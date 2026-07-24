@@ -18248,6 +18248,49 @@ document.addEventListener("click", (e) => {
   if (!e.target.closest("[data-project-menu], .project-menu-panel"))
     closeProjectMenus();
 });
+
+/* Gate 5: explicit destructive reset, available only beside diagnostics. */
+function g5ResetAllData() {
+  if (activeGateId !== "gate-5") return;
+  const accepted = window.confirm(
+    "Удалить все данные Gate 5: кампании, импорты, отчёты, снимки периодов, связи, журнал, сравнения и решения? Это действие нельзя отменить.",
+  );
+  if (!accepted) return;
+  if (!window.confirm("Подтвердите удаление всех данных Gate 5.")) return;
+  state.gate5 = gate5BlankState();
+  const gate = state.gates?.find((item) => item.id === "gate-5");
+  (gate?.cards || []).forEach((card) => {
+    card.status = "not_started";
+    card.userFields = {};
+  });
+  saveState();
+  render();
+  alert("Все данные Gate 5 удалены.");
+}
+function g5EnsureResetToolbarButton() {
+  const bar = document.getElementById("workspaceToolbar");
+  if (!bar) return;
+  let button = bar.querySelector("[data-g5-reset-all]");
+  if (activeGateId !== "gate-5") {
+    button?.remove();
+    return;
+  }
+  if (!button) {
+    button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn secondary debug-export-btn";
+    button.dataset.g5ResetAll = "1";
+    button.textContent = "Удалить данные Gate 5";
+    const diagnostic = bar.querySelector("[data-debug-export-gate]");
+    diagnostic?.insertAdjacentElement("afterend", button) || bar.appendChild(button);
+  }
+  button.onclick = g5ResetAllData;
+}
+const __guruRenderGate5ResetButton = render;
+render = function () {
+  __guruRenderGate5ResetButton();
+  setTimeout(g5EnsureResetToolbarButton, 0);
+};
 document.querySelectorAll("[data-project-filter]").forEach((btn) => {
   btn.addEventListener("click", () => {
     launcherProjectFilter = btn.dataset.projectFilter || "active";
