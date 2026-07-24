@@ -5339,6 +5339,7 @@ function appendGate5ExportRows(rows) {
   };
 
   add("Настройка отчётности", "проект", { projectName: g5.setup.projectName || "" });
+  g5.campaignRegistry.forEach((record) => add("Реестр кампаний", "кампания", record, { campaignId: record.cabinetId || record.id }));
   Object.values(g5.setup.campaigns).forEach((record) => add("Настройка отчётности", "кампания", record));
   Object.values(g5.setup.groups).forEach((record) => add("Настройка отчётности", "группа", record));
   Object.values(g5.setup.ads).forEach((record) => add("Настройка отчётности", "объявление", record));
@@ -5349,9 +5350,13 @@ function appendGate5ExportRows(rows) {
     add("Ввод данных", `метаданные импорта: ${importType}`, record),
   );
   g5.goals.forEach((record) => add("Ввод данных", "цель", record));
+  g5.periodSnapshots.forEach((record) => add("Ввод данных", "снимок периода", record));
+  g5.assessments.forEach((record) => add("Рекламная оценка", "оценка", record));
   g5.links.forEach((record) => add("Связка с бизнесом", "связка лидов и заказов", record));
   add("Финансовая оценка", "расчётные показатели", g5Finance());
   g5.iterations.forEach((record) => add("Журнал итераций", "итерация", record));
+  g5.comparisons.forEach((record) => add("Сравнение до / после", "сравнение", record));
+  g5.finalDecisions.forEach((record) => add("Финальное решение", "решение по кампании", record));
 
   rows.push([]);
   rows.push(["GATE5_FULL_DATA"]);
@@ -11432,13 +11437,18 @@ const GATE5_REPORTS = {
 
 function gate5BlankState() {
   return {
-    ui: { openBlocks: { setup: true } },
+    ui: { openBlocks: { registry: true } },
     setup: { projectName: "", campaigns: {}, groups: {}, ads: {} },
     reports: { perf: [], query: [], placement: [] },
     imports: {},
+    campaignRegistry: [],
+    periodSnapshots: [],
+    assessments: [],
     goals: [],
     links: [],
     iterations: [],
+    comparisons: [],
+    finalDecisions: [],
     iterationCounter: 0,
   };
 }
@@ -11449,7 +11459,7 @@ function ensureGate5State() {
   if (!state.gate5.ui.openBlocks) {
     state.gate5.ui.openBlocks = state.gate5.ui.openBlock
       ? { [state.gate5.ui.openBlock]: true }
-      : { setup: true };
+      : { registry: true };
     delete state.gate5.ui.openBlock;
   }
   state.gate5.setup = state.gate5.setup || {
@@ -11476,14 +11486,65 @@ function ensureGate5State() {
     ? state.gate5.reports.placement
     : [];
   state.gate5.imports = state.gate5.imports || {};
+  state.gate5.campaignRegistry = Array.isArray(state.gate5.campaignRegistry)
+    ? state.gate5.campaignRegistry
+    : [];
+  state.gate5.periodSnapshots = Array.isArray(state.gate5.periodSnapshots)
+    ? state.gate5.periodSnapshots
+    : [];
+  state.gate5.assessments = Array.isArray(state.gate5.assessments)
+    ? state.gate5.assessments
+    : [];
   state.gate5.goals = Array.isArray(state.gate5.goals) ? state.gate5.goals : [];
   state.gate5.links = Array.isArray(state.gate5.links) ? state.gate5.links : [];
   state.gate5.iterations = Array.isArray(state.gate5.iterations)
     ? state.gate5.iterations
     : [];
+  state.gate5.comparisons = Array.isArray(state.gate5.comparisons)
+    ? state.gate5.comparisons
+    : [];
+  state.gate5.finalDecisions = Array.isArray(state.gate5.finalDecisions)
+    ? state.gate5.finalDecisions
+    : [];
   state.gate5.iterationCounter = state.gate5.iterationCounter || 0;
+  Object.values(state.gate5.setup.campaigns).forEach((campaign) => {
+    const exists = state.gate5.campaignRegistry.some(
+      (item) => item.cabinetId === campaign.id || item.name === campaign.name,
+    );
+    if (!exists) {
+      state.gate5.campaignRegistry.push({
+        id: makeId("g5-campaign"),
+        guruId: `GURU-${campaign.id}`,
+        cabinetId: campaign.id,
+        name: campaign.name || campaign.id,
+        platform: "Другое",
+        type: "Другое",
+        objective: "Лид",
+        landing: "",
+        status: "Активна",
+        launchDate: "",
+        stopDate: "",
+        parentId: "",
+        reason: "Импортировано из существующей структуры",
+        comment: "",
+        createdAt: new Date().toISOString(),
+      });
+    }
+  });
   return state.gate5;
 }
+
+const G5_CAMPAIGN_STATUSES = ["Активна", "Остановлена", "Архив", "Тест", "Замена", "Масштабировать", "Откатить"];
+const G5_PLATFORM_OPTIONS = ["Яндекс", "Google", "VK", "Другое"];
+const G5_TYPE_OPTIONS = ["Поиск", "РСЯ", "ЕПК", "Медийная", "Ретаргетинг", "PMax", "Другое"];
+const G5_OBJECTIVE_OPTIONS = ["Лид", "Звонок", "Заявка", "Покупка"];
+const G5_PERIOD_STATUSES = ["Активна", "Остановлена", "Работала частично"];
+const G5_AD_DECISIONS = ["Оставить", "Минусовать", "Проверить", "Отключить", "Усилить"];
+const G5_CHANGE_LEVELS = ["Кампания", "Группа", "Объявление", "Ключ", "Площадка", "Ставка", "Бюджет", "Стратегия", "Посадочная", "Оффер"];
+const G5_CHANGE_STATUSES = ["Запланировано", "Внесено", "Проверяется", "Сработало", "Не сработало", "Откатить"];
+const G5_TARGET_METRICS = ["CPA", "CPL", "CTR", "CR", "Лиды", "Расход", "ROAS"];
+const G5_COMPARISON_DECISIONS = ["Оставить", "Откатить", "Доработать", "Масштабировать", "Остановить"];
+const G5_FINAL_DECISIONS = ["Продолжить", "Остановить", "Заменить", "Масштабировать", "Откатить", "Пересобрать"];
 
 function g5Esc(value) {
   return escapeHtml(value == null ? "" : value);
@@ -12072,52 +12133,37 @@ function g5Finance() {
   };
 }
 function getGate5Status() {
-  const g5 = ensureGate5State();
-  const hasReports = Object.values(g5.reports).some(
-    (arr) => Array.isArray(arr) && arr.length,
-  );
-  const hasStructure =
-    Object.keys(g5.setup.campaigns).length ||
-    Object.keys(g5.setup.groups).length ||
-    Object.keys(g5.setup.ads).length;
-  const goal = g5ActiveGoal();
-  const link = g5LatestLink();
-  const f = g5Finance();
-  if (!hasReports && !hasStructure) return "not_started";
-  if (hasStructure && !goal) return "in_progress";
-  if (hasReports && goal && !link) return "in_progress";
-  if (
-    goal &&
-    ((goal.cpa && f.cpa > goal.cpa) ||
-      (goal.cac && f.cac > goal.cac) ||
-      (goal.drr && f.drr > goal.drr / 100))
-  )
-    return "problem";
-  if (hasReports && goal && link && f.revenue) return "ready";
-  return "in_progress";
+  const keys = ["registry", "setup", "input", "ad", "bridge", "finance", "journal", "compare", "decision"];
+  const statuses = keys.map(getGate5BlockStatus);
+  if (statuses.every((status) => status === "not_started")) return "not_started";
+  if (statuses.includes("problem")) return "problem";
+  return statuses.every((status) => status === "ready") ? "ready" : "in_progress";
 }
 function getGate5BlockStatus(key) {
   const g5 = ensureGate5State();
   const f = g5Finance();
   const goal = g5ActiveGoal();
+  if (key === "registry")
+    return g5.campaignRegistry.length ? "ready" : "not_started";
   if (key === "setup")
     return Object.keys(g5.setup.campaigns).length ||
       Object.keys(g5.setup.groups).length ||
       Object.keys(g5.setup.ads).length
       ? "ready"
       : "not_started";
-  if (key === "input")
-    return Object.values(g5.reports).some((x) => x.length)
-      ? goal
-        ? "ready"
-        : "in_progress"
-      : "not_started";
+  if (key === "input") {
+    const hasReports = Object.values(g5.reports).some((x) => x.length);
+    if (!hasReports) return "not_started";
+    return g5.periodSnapshots.some((snapshot) => snapshot.campaignId)
+      ? "ready"
+      : "in_progress";
+  }
   if (key === "ad")
-    return g5.reports.perf.length
-      ? f.cpa && goal?.cpa && f.cpa > goal.cpa
-        ? "problem"
-        : "ready"
-      : "not_started";
+    return g5.assessments.length
+      ? "ready"
+      : g5.reports.query.length || g5.reports.placement.length
+        ? "in_progress"
+        : "not_started";
   if (key === "bridge")
     return g5LatestLink() ? "ready" : f.leads ? "in_progress" : "not_started";
   if (key === "finance")
@@ -12130,20 +12176,28 @@ function getGate5BlockStatus(key) {
         : "ready"
       : "not_started";
   if (key === "journal") {
-    const iters = ensureGate5State().iterations;
+    const iters = g5.iterations;
     if (!iters.length) return "not_started";
-    const last = iters[iters.length - 1];
-    if (last.result && last.result.verdict)
-      return last.result.verdict === "next" ? "in_progress" : "ready";
-    return "in_progress";
+    return iters.every((item) => item.changeStatus || item.result?.verdict)
+      ? "ready"
+      : "in_progress";
   }
+  if (key === "compare") {
+    if (!g5.iterations.length) return "not_started";
+    return g5.iterations.every((item) =>
+      g5.comparisons.some((comparison) => comparison.iterationId === item.id),
+    )
+      ? "ready"
+      : "in_progress";
+  }
+  if (key === "decision") return g5.finalDecisions.length ? "ready" : "not_started";
   return "not_started";
 }
 function getGate5Progress() {
-  const ready = ["setup", "input", "ad", "bridge", "finance", "journal"].filter(
+  const ready = ["registry", "setup", "input", "ad", "bridge", "finance", "journal", "compare", "decision"].filter(
     (key) => getGate5BlockStatus(key) === "ready",
   ).length;
-  return Math.round((ready / 6) * 100);
+  return Math.round((ready / 9) * 100);
 }
 
 function renderGate5Integrated(gate) {
@@ -12157,11 +12211,11 @@ function renderGate5Integrated(gate) {
         <div>
           <div class="analytics-path">Gate 5 → Оценка и оптимизация</div>
           <h2>Оценка и оптимизация, постоянная петля</h2>
-          <p class="muted">Рабочий цикл оптимизации: загрузите отчёты, задайте цели, свяжите лиды с заказами, оцените финансы и фиксируйте каждую итерацию изменений в журнале.</p>
+          <p class="muted">Рабочий цикл: кампания → период → метрики → изменение → сравнение → решение. История кампаний и изменений не перезаписывается.</p>
         </div>
         <span class="status-pill status-${status}">${g5Esc(STATUS_LABELS[status] || status)}</span>
       </div>
-      <div class="gate5-formula"><span>данные</span><span>цель</span><span>реклама</span><span>лиды</span><span>заказы</span><span>финансы</span><span>решение</span><span>следующая оптимизация</span></div>
+      <div class="gate5-formula"><span>кампания</span><span>период</span><span>метрики</span><span>изменение</span><span>сравнение</span><span>решение</span></div>
       <div class="gate5-kpis">
         <div class="gate5-kpi"><span>Расход</span><strong>${g5Rub(m.spend)}</strong><small>из отчёта рекламы</small></div>
         <div class="gate5-kpi"><span>Лиды</span><strong>${g5Int(m.conversions)}</strong><small>конверсии / цели</small></div>
@@ -12170,12 +12224,15 @@ function renderGate5Integrated(gate) {
         <div class="gate5-kpi"><span>ROI</span><strong>${f.spend ? g5Pct(f.roi) : "—"}</strong><small>финансовый итог</small></div>
       </div>
     </section>
-    ${g5AccordionBlock("setup", "1. Настройка отчётности", "Структура кампаний распознана: кампании, группы, объявления и ключи связки.", renderGate5Setup())}
-    ${g5AccordionBlock("input", "2. Ввод данных", "Отчёты и цели загружены, период анализа зафиксирован.", renderGate5Input())}
-    ${g5AccordionBlock("ad", "3. Рекламная оценка", "Понятно, что работает, а что сливает бюджет.", renderGate5Ad())}
+    ${g5AccordionBlock("registry", "0. Реестр кампаний", "Паспорт кампании и связь между её версиями: старая → замена.", renderGate5Registry())}
+    ${g5AccordionBlock("setup", "1. Настройка отчётности", "Структура рекламного кабинета: кампании, группы, объявления и ключи связки.", renderGate5Setup())}
+    ${g5AccordionBlock("input", "2. Ввод данных и снимки периодов", "Каждая загрузка фиксируется как отдельный снимок кампании за период.", renderGate5Input())}
+    ${g5AccordionBlock("ad", "3. Рекламная оценка", "Оценка запроса, условия или площадки в контексте кампании и периода.", renderGate5Ad())}
     ${g5AccordionBlock("bridge", "4. Связка с бизнесом", "Лиды связаны с заказами, выручкой и конверсией лид → заказ.", renderGate5Bridge())}
-    ${g5AccordionBlock("finance", "5. Финансовая оценка", "Понятно, окупается реклама или нет: CPA, CAC, ROAS, DRR, ROI и решение.", renderGate5Finance())}
-    ${g5AccordionBlock("journal", "6. Журнал итераций", "Живой протокол: обнаружил → решил → зафиксировал → проверяю.", renderGate5Journal())}
+    ${g5AccordionBlock("finance", "5. Финансовая оценка", "CPA, CAC, ROAS, DRR, ROI и финансовый вывод.", renderGate5Finance())}
+    ${g5AccordionBlock("journal", "6. Журнал изменений", "Что было → что стало → гипотеза → дата проверки → итог.", renderGate5Journal())}
+    ${g5AccordionBlock("compare", "7. Сравнение до / после", "Проверка эффекта каждого изменения по периодам и метрикам.", renderGate5Comparison())}
+    ${g5AccordionBlock("decision", "8. Финальное решение", "Управленческое решение по кампании и дата следующей проверки.", renderGate5FinalDecision())}
   </div>`;
   bindGate5Events();
 }
@@ -12191,6 +12248,33 @@ function g5AccordionBlock(key, title, desc, body) {
     </button>
     ${open ? `<div class="gate5-block-body">${body}</div>` : ""}
   </section>`;
+}
+function g5Options(options, selected = "", emptyLabel = "—") {
+  return `<option value="">${g5Esc(emptyLabel)}</option>${options.map((option) => `<option value="${g5Attr(option)}" ${option === selected ? "selected" : ""}>${g5Esc(option)}</option>`).join("")}`;
+}
+function g5CampaignOptions(selected = "", emptyLabel = "Выберите кампанию") {
+  const campaigns = ensureGate5State().campaignRegistry;
+  return `<option value="">${g5Esc(emptyLabel)}</option>${campaigns.map((campaign) => `<option value="${g5Attr(campaign.id)}" ${campaign.id === selected ? "selected" : ""}>${g5Esc(campaign.name)} · ${g5Esc(campaign.cabinetId || campaign.guruId)}</option>`).join("")}`;
+}
+function g5CampaignById(id) {
+  return ensureGate5State().campaignRegistry.find((campaign) => campaign.id === id) || null;
+}
+function g5CampaignForCabinetId(cabinetId, name = "") {
+  const registry = ensureGate5State().campaignRegistry;
+  return registry.find((campaign) => campaign.cabinetId === cabinetId) || registry.find((campaign) => campaign.name === name) || null;
+}
+function renderGate5Registry() {
+  const g5 = ensureGate5State();
+  const rows = g5.campaignRegistry.slice().reverse().map((campaign) => {
+    const parent = g5CampaignById(campaign.parentId);
+    return `<tr><td><b>${g5Esc(campaign.name)}</b><br><span class="gate5-muted">GURU: ${g5Esc(campaign.guruId || "—")} · кабинет: ${g5Esc(campaign.cabinetId || "—")}</span></td><td>${g5Esc(campaign.platform)}</td><td>${g5Esc(campaign.type)}</td><td>${g5Esc(campaign.objective)}</td><td>${g5Esc(campaign.status)}</td><td>${g5Esc(campaign.launchDate || "—")}<br>${campaign.stopDate ? "до " + g5Esc(campaign.stopDate) : ""}</td><td>${parent ? g5Esc(parent.name) : "—"}</td><td>${g5Esc(campaign.reason || "—")}<br><span class="gate5-muted">${g5Esc(campaign.comment || "")}</span></td></tr>`;
+  }).join("");
+  return `<div class="gate5-card"><h4>Новая кампания или версия кампании</h4><p class="gate5-muted">Кампании не удаляются. Для новой версии укажите родительскую кампанию и статус «Замена».</p>
+    <div class="gate5-grid-4"><label class="gate5-field">Внутренний ID в GURU<input data-g5campaign="guruId" placeholder="GURU-CAMP-001"></label><label class="gate5-field">ID в рекламном кабинете<input data-g5campaign="cabinetId"></label><label class="gate5-field">Название кампании<input data-g5campaign="name"></label><label class="gate5-field">Платформа<select data-g5campaign="platform">${g5Options(G5_PLATFORM_OPTIONS, "Яндекс")}</select></label></div>
+    <div class="gate5-grid-4" style="margin-top:10px"><label class="gate5-field">Тип кампании<select data-g5campaign="type">${g5Options(G5_TYPE_OPTIONS, "Поиск")}</select></label><label class="gate5-field">Цель<select data-g5campaign="objective">${g5Options(G5_OBJECTIVE_OPTIONS, "Лид")}</select></label><label class="gate5-field">Посадочная страница<input data-g5campaign="landing"></label><label class="gate5-field">Статус<select data-g5campaign="status">${g5Options(G5_CAMPAIGN_STATUSES, "Активна")}</select></label></div>
+    <div class="gate5-grid-4" style="margin-top:10px"><label class="gate5-field">Дата запуска<input type="date" data-g5campaign="launchDate"></label><label class="gate5-field">Дата остановки<input type="date" data-g5campaign="stopDate"></label><label class="gate5-field">Родительская кампания<select data-g5campaign="parentId">${g5CampaignOptions()}</select></label><label class="gate5-field">Причина запуска / остановки<input data-g5campaign="reason"></label></div>
+    <label class="gate5-field" style="margin-top:10px">Комментарий<input data-g5campaign="comment"></label><div class="gate5-actions"><button class="btn primary" data-g5-save-campaign>Сохранить кампанию</button></div></div>
+    <div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Кампания / ID</th><th>Платформа</th><th>Тип</th><th>Цель</th><th>Статус</th><th>Даты</th><th>Родительская</th><th>Причина / комментарий</th></tr></thead><tbody>${rows || '<tr><td colspan="8">Реестр пуст. Добавьте первую кампанию или импортируйте структуру рекламного кабинета.</td></tr>'}</tbody></table></div>`;
 }
 function renderGate5Setup() {
   const g5 = ensureGate5State();
@@ -12241,7 +12325,20 @@ function renderGate5Input() {
       const meta = g5.imports[key];
       return `<div class="gate5-report-card"><h4>${g5Esc(rep.title)}</h4><small>${g5Esc(rep.desc)}</small>${g5UploadStatusHtml(meta, g5.reports[key]?.length)}<div class="gate5-fileline"><label class="gate5-field">${meta ? "Догрузить файл (данные суммируются)" : "Файл"}<input type="file" data-gate5-import="${g5Attr(key)}" accept=".xlsx,.xls,.csv,.tsv,.txt"></label><button class="btn secondary" data-gate5-clear="${g5Attr(key)}">Очистить</button></div></div>`;
     })
-    .join("")}</div>${g5GoalFormAndHistory()}`;
+    .join("")}</div>${renderGate5Snapshots()}${g5GoalFormAndHistory()}`;
+}
+function renderGate5Snapshots() {
+  const g5 = ensureGate5State();
+  const rows = g5.periodSnapshots.slice().reverse().map((snapshot) => {
+    const campaign = g5CampaignById(snapshot.campaignId);
+    return `<tr><td>${g5Esc(snapshot.periodStart)} — ${g5Esc(snapshot.periodEnd)}</td><td>${g5Esc(campaign?.name || "Кампания не найдена")}</td><td>${g5Esc(snapshot.status)}</td><td>${g5Rub(snapshot.spend)}</td><td>${g5Int(snapshot.impressions)}</td><td>${g5Int(snapshot.clicks)}</td><td>${g5Pct(g5Num(snapshot.ctr) / 100)}</td><td>${g5Int(snapshot.leads)}</td><td>${g5Rub(snapshot.cpa || snapshot.cpl)}</td><td>${g5Esc(snapshot.source || "—")}</td></tr>`;
+  }).join("");
+  return `<div class="gate5-card" style="margin-top:12px"><h4>Снимок периода</h4><p class="gate5-muted">Один снимок = показатели одной кампании за один зафиксированный период. История не перезаписывается.</p>
+    <div class="gate5-grid-4"><label class="gate5-field">Дата начала<input type="date" data-g5snapshot="periodStart"></label><label class="gate5-field">Дата конца<input type="date" data-g5snapshot="periodEnd"></label><label class="gate5-field">Кампания<select data-g5snapshot="campaignId">${g5CampaignOptions()}</select></label><label class="gate5-field">Статус в периоде<select data-g5snapshot="status">${g5Options(G5_PERIOD_STATUSES, "Активна")}</select></label></div>
+    <div class="gate5-grid-4" style="margin-top:10px"><label class="gate5-field">Расход ₽<input data-g5snapshot="spend" inputmode="decimal"></label><label class="gate5-field">Показы<input data-g5snapshot="impressions" inputmode="numeric"></label><label class="gate5-field">Клики<input data-g5snapshot="clicks" inputmode="numeric"></label><label class="gate5-field">CTR %<input data-g5snapshot="ctr" inputmode="decimal"></label></div>
+    <div class="gate5-grid-4" style="margin-top:10px"><label class="gate5-field">Лиды<input data-g5snapshot="leads" inputmode="numeric"></label><label class="gate5-field">CR %<input data-g5snapshot="cr" inputmode="decimal"></label><label class="gate5-field">CPA / CPL ₽<input data-g5snapshot="cpa" inputmode="decimal"></label><label class="gate5-field">Конверсии<input data-g5snapshot="conversions" inputmode="numeric"></label></div>
+    <div class="gate5-grid-2" style="margin-top:10px"><label class="gate5-field">Источник / ссылка / скрин / отчёт<input data-g5snapshot="source" placeholder="URL, имя файла или ссылка на скрин"></label><label class="gate5-field">Комментарий<input data-g5snapshot="comment"></label></div><div class="gate5-actions"><button class="btn primary" data-g5-save-snapshot>Сохранить снимок периода</button></div></div>
+    <div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Период</th><th>Кампания</th><th>Статус</th><th>Расход</th><th>Показы</th><th>Клики</th><th>CTR</th><th>Лиды</th><th>CPA / CPL</th><th>Источник</th></tr></thead><tbody>${rows || '<tr><td colspan="10">Снимков периода пока нет.</td></tr>'}</tbody></table></div>`;
 }
 function g5GoalFormAndHistory() {
   const goal = g5ActiveGoal();
@@ -12286,7 +12383,15 @@ function g5AdRowStatus(row) {
   return "in_progress";
 }
 function g5ProblemsTable(rows) {
-  return `<div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Запрос / условие</th><th>Кампания</th><th>Расход</th><th>Клики</th><th>Лиды</th><th>Решение</th></tr></thead><tbody>${rows.map((q) => `<tr><td>${g5Esc(q.query || q.conditionName || "—")}</td><td>${g5Esc(q.campaignName || q.campaignId || "—")}</td><td>${g5Rub(q.spend)}</td><td>${g5Int(q.clicks)}</td><td>${g5Int(q.conversions)}</td><td><span class="status-pill status-needs_review">Проверить / минусовать</span></td></tr>`).join("") || '<tr><td colspan="6">Проблемные запросы появятся после загрузки отчёта поисковых запросов.</td></tr>'}</tbody></table></div>`;
+  const g5 = ensureGate5State();
+  const keyFor = (row) => [row.date, row.campaignId, row.query || row.conditionName || "", row.conditionType || ""].join("|");
+  const body = rows.map((q) => {
+    const key = keyFor(q);
+    const saved = g5.assessments.find((assessment) => assessment.key === key);
+    const campaign = g5CampaignForCabinetId(q.campaignId, q.campaignName);
+    return `<tr><td>${g5Esc(campaign?.name || q.campaignName || q.campaignId || "—")}</td><td>${g5Esc(campaign?.type || "Не указан")}</td><td>${g5Esc(q.date || "—")}</td><td>${g5Esc(q.query || q.conditionName || q.conditionType || "—")}</td><td>${g5Rub(q.spend)}</td><td>${g5Int(q.clicks)}</td><td>${g5Int(q.conversions)}</td><td>${q.conversions ? g5Rub(g5Div(q.spend, q.conversions)) : "—"}</td><td><select data-g5-assessment="${g5Attr(key)}" data-g5-campaign-id="${g5Attr(campaign?.id || "")}" data-g5-period="${g5Attr(q.date || "")}" data-g5-condition="${g5Attr(q.query || q.conditionName || q.conditionType || "")}" data-g5-spend="${g5Attr(q.spend)}" data-g5-clicks="${g5Attr(q.clicks)}" data-g5-leads="${g5Attr(q.conversions)}">${g5Options(G5_AD_DECISIONS, saved?.decision || "Проверить")}</select></td></tr>`;
+  }).join("");
+  return `<div class="gate5-note">Выберите решение — оно сохранится в истории рекламной оценки для кампании и периода.</div><div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Кампания</th><th>Тип</th><th>Период</th><th>Запрос / условие / площадка</th><th>Расход</th><th>Клики</th><th>Лиды</th><th>CPA</th><th>Решение</th></tr></thead><tbody>${body || '<tr><td colspan="9">Проблемные запросы появятся после загрузки отчёта поисковых запросов.</td></tr>'}</tbody></table></div>`;
 }
 function renderGate5Bridge() {
   const f = g5Finance();
@@ -12334,7 +12439,7 @@ function g5FinanceChecks() {
     checks.push(["ready", "Критичных финансовых проблем не найдено."]);
   return `<div class="gate5-checks">${checks.map(([st, text]) => `<div class="gate5-check"><span class="status-pill status-${st}">${g5Esc(STATUS_LABELS[st] || st)}</span> ${g5Esc(text)}</div>`).join("")}</div>`;
 }
-function renderGate5Journal() {
+function renderGate5LegacyJournal() {
   const g5 = ensureGate5State();
   const iters = g5.iterations.slice().reverse();
   const GATE4_BLOCKS = ["Посадочная", "Креатив", "Параметры кампании", "Оффер"];
@@ -12411,6 +12516,49 @@ function renderGate5Journal() {
     .join("");
   return `${form}${iters.length ? `<h4 style="margin-top:8px">История итераций (${iters.length})</h4>${rows}` : '<div class="gate5-note">Итераций пока нет. Создайте первую после цикла трафика.</div>'}`;
 }
+function renderGate5Journal() {
+  const g5 = ensureGate5State();
+  const changes = g5.iterations.slice().reverse();
+  const nextNumber = (g5.iterationCounter || 0) + 1;
+  const rows = changes.map((item) => {
+    const campaign = g5CampaignById(item.campaignId);
+    const legacy = item.trigger || {};
+    const change = item.change || {};
+    const check = item.check || {};
+    const status = item.changeStatus || (item.result?.verdict === "worked" ? "Сработало" : item.result?.verdict === "not_worked" ? "Не сработало" : "Проверяется");
+    return `<tr><td>${g5Esc(item.changeDate || change.date || legacy.date || "—")}</td><td>${g5Esc(campaign?.name || item.campaignName || "Не указана")}</td><td>${g5Esc(item.campaignType || campaign?.type || change.type || "—")}</td><td>${g5Esc(item.level || "—")}</td><td>${g5Esc(item.before || check.before || "—")}</td><td>${g5Esc(item.after || change.desc || "—")}</td><td>${g5Esc(item.reason || legacy.problem || "—")}</td><td>${g5Esc(item.hypothesis || "—")}</td><td>${g5Esc(item.targetMetric || check.metric || "—")}</td><td>${g5Esc(item.checkDate || check.deadline || "—")}</td><td>${g5Esc(status)}</td><td>${g5Esc(item.outcome || item.result?.actual || "—")}</td></tr>`;
+  }).join("");
+  return `<div class="gate5-card"><h4>Зафиксировать изменение #${nextNumber}</h4><p class="gate5-muted">Изменение считается управляемым только после фиксации причины, гипотезы, метрики и даты проверки.</p>
+    <div class="gate5-grid-4"><label class="gate5-field">Дата изменения<input type="date" data-g5change="changeDate" value="${new Date().toISOString().slice(0, 10)}"></label><label class="gate5-field">Кампания<select data-g5change="campaignId">${g5CampaignOptions()}</select></label><label class="gate5-field">Тип кампании<select data-g5change="campaignType">${g5Options(G5_TYPE_OPTIONS)}</select></label><label class="gate5-field">Уровень изменения<select data-g5change="level">${g5Options(G5_CHANGE_LEVELS)}</select></label></div>
+    <div class="gate5-grid-2" style="margin-top:10px"><label class="gate5-field">Что было<input data-g5change="before"></label><label class="gate5-field">Что стало<input data-g5change="after"></label></div>
+    <div class="gate5-grid-2" style="margin-top:10px"><label class="gate5-field">Почему изменили<input data-g5change="reason"></label><label class="gate5-field">Гипотеза<input data-g5change="hypothesis"></label></div>
+    <div class="gate5-grid-4" style="margin-top:10px"><label class="gate5-field">Целевая метрика<select data-g5change="targetMetric">${g5Options(G5_TARGET_METRICS)}</select></label><label class="gate5-field">Дата проверки<input type="date" data-g5change="checkDate"></label><label class="gate5-field">Статус изменения<select data-g5change="changeStatus">${g5Options(G5_CHANGE_STATUSES, "Запланировано")}</select></label><label class="gate5-field">Итог<input data-g5change="outcome"></label></div>
+    <div class="gate5-actions"><button class="btn primary" data-g5-save-change>Сохранить изменение</button></div></div>
+    <div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Дата</th><th>Кампания</th><th>Тип</th><th>Уровень</th><th>Было</th><th>Стало</th><th>Почему</th><th>Гипотеза</th><th>Метрика</th><th>Проверка</th><th>Статус</th><th>Итог</th></tr></thead><tbody>${rows || '<tr><td colspan="12">Изменений пока нет.</td></tr>'}</tbody></table></div>`;
+}
+function renderGate5Comparison() {
+  const g5 = ensureGate5State();
+  const iterations = g5.iterations;
+  const iterationOptions = `<option value="">Выберите изменение</option>${iterations.map((item) => `<option value="${g5Attr(item.id)}">#${g5Esc(item.number || "—")} · ${g5Esc(item.after || item.change?.desc || item.reason || "Изменение")}</option>`).join("")}`;
+  const rows = g5.comparisons.slice().reverse().map((comparison) => {
+    const campaign = g5CampaignById(comparison.campaignId);
+    return `<tr><td>${g5Esc(campaign?.name || "—")}</td><td>${g5Esc(comparison.beforePeriod || "—")}</td><td>${g5Esc(comparison.afterPeriod || "—")}</td><td>${g5Rub(comparison.spendBefore)} / ${g5Rub(comparison.spendAfter)}</td><td>${g5Int(comparison.clicksBefore)} / ${g5Int(comparison.clicksAfter)}</td><td>${g5Int(comparison.leadsBefore)} / ${g5Int(comparison.leadsAfter)}</td><td>${g5Rub(comparison.cpaBefore)} / ${g5Rub(comparison.cpaAfter)}</td><td>${g5Pct(g5Num(comparison.ctrBefore) / 100)} / ${g5Pct(g5Num(comparison.ctrAfter) / 100)}</td><td>${g5Pct(g5Num(comparison.crBefore) / 100)} / ${g5Pct(g5Num(comparison.crAfter) / 100)}</td><td>${g5Esc(comparison.decision)}</td></tr>`;
+  }).join("");
+  return `<div class="gate5-card"><h4>Добавить сравнение до / после</h4><div class="gate5-grid-4"><label class="gate5-field">Кампания<select data-g5comparison="campaignId">${g5CampaignOptions()}</select></label><label class="gate5-field">Изменение из журнала<select data-g5comparison="iterationId">${iterationOptions}</select></label><label class="gate5-field">Период до<input data-g5comparison="beforePeriod" placeholder="01.07–07.07.2026"></label><label class="gate5-field">Период после<input data-g5comparison="afterPeriod" placeholder="08.07–14.07.2026"></label></div>
+    <div class="gate5-grid-4" style="margin-top:10px"><label class="gate5-field">Расход до<input data-g5comparison="spendBefore"></label><label class="gate5-field">Расход после<input data-g5comparison="spendAfter"></label><label class="gate5-field">Клики до<input data-g5comparison="clicksBefore"></label><label class="gate5-field">Клики после<input data-g5comparison="clicksAfter"></label></div>
+    <div class="gate5-grid-4" style="margin-top:10px"><label class="gate5-field">Лиды до<input data-g5comparison="leadsBefore"></label><label class="gate5-field">Лиды после<input data-g5comparison="leadsAfter"></label><label class="gate5-field">CPA до<input data-g5comparison="cpaBefore"></label><label class="gate5-field">CPA после<input data-g5comparison="cpaAfter"></label></div>
+    <div class="gate5-grid-4" style="margin-top:10px"><label class="gate5-field">CTR до %<input data-g5comparison="ctrBefore"></label><label class="gate5-field">CTR после %<input data-g5comparison="ctrAfter"></label><label class="gate5-field">CR до %<input data-g5comparison="crBefore"></label><label class="gate5-field">CR после %<input data-g5comparison="crAfter"></label></div>
+    <label class="gate5-field" style="margin-top:10px">Решение<select data-g5comparison="decision">${g5Options(G5_COMPARISON_DECISIONS)}</select></label><div class="gate5-actions"><button class="btn primary" data-g5-save-comparison>Сохранить сравнение</button></div></div>
+    <div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Кампания</th><th>До</th><th>После</th><th>Расход</th><th>Клики</th><th>Лиды</th><th>CPA</th><th>CTR</th><th>CR</th><th>Решение</th></tr></thead><tbody>${rows || '<tr><td colspan="10">Сравнений пока нет.</td></tr>'}</tbody></table></div>`;
+}
+function renderGate5FinalDecision() {
+  const g5 = ensureGate5State();
+  const rows = g5.finalDecisions.slice().reverse().map((item) => {
+    const campaign = g5CampaignById(item.campaignId);
+    return `<tr><td>${g5Esc(campaign?.name || "—")}</td><td>${g5Esc(item.period || "—")}</td><td>${g5Esc(item.assessment || "—")}</td><td>${g5Esc(item.decision)}</td><td>${g5Esc(item.nextStep || "—")}</td><td>${g5Esc(item.nextReview || "—")}</td></tr>`;
+  }).join("");
+  return `<div class="gate5-card"><h4>Финальное решение по кампании</h4><div class="gate5-grid-4"><label class="gate5-field">Кампания<select data-g5final="campaignId">${g5CampaignOptions()}</select></label><label class="gate5-field">Период оценки<input data-g5final="period" placeholder="Июль 2026"></label><label class="gate5-field">Итоговая оценка<input data-g5final="assessment"></label><label class="gate5-field">Решение<select data-g5final="decision">${g5Options(G5_FINAL_DECISIONS)}</select></label></div><div class="gate5-grid-2" style="margin-top:10px"><label class="gate5-field">Что сделать следующим шагом<input data-g5final="nextStep"></label><label class="gate5-field">Дата следующей проверки<input type="date" data-g5final="nextReview"></label></div><div class="gate5-actions"><button class="btn primary" data-g5-save-final>Сохранить финальное решение</button></div></div><div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Кампания</th><th>Период</th><th>Оценка</th><th>Решение</th><th>Следующий шаг</th><th>Проверка</th></tr></thead><tbody>${rows || '<tr><td colspan="6">Финальных решений пока нет.</td></tr>'}</tbody></table></div>`;
+}
 function bindGate5Events() {
   document.querySelectorAll("[data-gate5-open]").forEach((btn) =>
     btn.addEventListener("click", () => {
@@ -12480,6 +12628,38 @@ function bindGate5Events() {
       renderGate();
     }),
   );
+  document.querySelector("[data-g5-save-campaign]")?.addEventListener("click", () => {
+    const value = (key) => document.querySelector(`[data-g5campaign="${key}"]`)?.value.trim() || "";
+    if (!value("name")) return alert("Укажите название кампании");
+    const g5 = ensureGate5State();
+    g5.campaignRegistry.push({
+      id: makeId("g5-campaign"), createdAt: new Date().toISOString(),
+      guruId: value("guruId") || `GURU-${g5Slug(value("name"))}`,
+      cabinetId: value("cabinetId"), name: value("name"), platform: value("platform"), type: value("type"),
+      objective: value("objective"), landing: value("landing"), status: value("status"), launchDate: value("launchDate"),
+      stopDate: value("stopDate"), parentId: value("parentId"), reason: value("reason"), comment: value("comment"),
+    });
+    saveState(); renderGate();
+  });
+  document.querySelector("[data-g5-save-snapshot]")?.addEventListener("click", () => {
+    const value = (key) => document.querySelector(`[data-g5snapshot="${key}"]`)?.value.trim() || "";
+    if (!value("campaignId") || !value("periodStart") || !value("periodEnd")) return alert("Укажите кампанию и границы периода");
+    const snapshot = { id: makeId("g5-snapshot"), createdAt: new Date().toISOString() };
+    ["periodStart", "periodEnd", "campaignId", "status", "source", "comment"].forEach((key) => snapshot[key] = value(key));
+    ["spend", "impressions", "clicks", "ctr", "leads", "cr", "cpa", "conversions"].forEach((key) => snapshot[key] = g5Num(value(key)));
+    snapshot.cpl = snapshot.cpa;
+    ensureGate5State().periodSnapshots.push(snapshot);
+    saveState(); renderGate();
+  });
+  document.querySelectorAll("[data-g5-assessment]").forEach((select) => select.addEventListener("change", () => {
+    const g5 = ensureGate5State();
+    const key = select.dataset.g5Assessment;
+    const next = { id: makeId("g5-assessment"), key, createdAt: new Date().toISOString(), campaignId: select.dataset.g5CampaignId || "", period: select.dataset.g5Period || "", condition: select.dataset.g5Condition || "", spend: g5Num(select.dataset.g5Spend), clicks: g5Num(select.dataset.g5Clicks), leads: g5Num(select.dataset.g5Leads), decision: select.value };
+    const index = g5.assessments.findIndex((item) => item.key === key);
+    if (index >= 0) g5.assessments[index] = { ...g5.assessments[index], ...next };
+    else g5.assessments.push(next);
+    saveState();
+  }));
   document
     .querySelector("[data-gate5-save-goal]")
     ?.addEventListener("click", () => {
@@ -12516,6 +12696,37 @@ function bindGate5Events() {
       saveState();
       renderGate();
     });
+  document.querySelector("[data-g5-save-change]")?.addEventListener("click", () => {
+    const value = (key) => document.querySelector(`[data-g5change="${key}"]`)?.value.trim() || "";
+    if (!value("campaignId") || !value("after") || !value("reason")) return alert("Укажите кампанию, что стало и причину изменения");
+    const g5 = ensureGate5State();
+    const campaign = g5CampaignById(value("campaignId"));
+    g5.iterationCounter = (g5.iterationCounter || 0) + 1;
+    g5.iterations.push({
+      id: makeId("g5-change"), number: g5.iterationCounter, createdAt: new Date().toISOString(),
+      changeDate: value("changeDate"), campaignId: value("campaignId"), campaignName: campaign?.name || "", campaignType: value("campaignType") || campaign?.type || "",
+      level: value("level"), before: value("before"), after: value("after"), reason: value("reason"), hypothesis: value("hypothesis"),
+      targetMetric: value("targetMetric"), checkDate: value("checkDate"), changeStatus: value("changeStatus"), outcome: value("outcome"),
+    });
+    saveState(); renderGate();
+  });
+  document.querySelector("[data-g5-save-comparison]")?.addEventListener("click", () => {
+    const value = (key) => document.querySelector(`[data-g5comparison="${key}"]`)?.value.trim() || "";
+    if (!value("campaignId") || !value("iterationId") || !value("beforePeriod") || !value("afterPeriod") || !value("decision")) return alert("Укажите кампанию, изменение, периоды и решение");
+    const comparison = { id: makeId("g5-comparison"), createdAt: new Date().toISOString() };
+    ["campaignId", "iterationId", "beforePeriod", "afterPeriod", "decision"].forEach((key) => comparison[key] = value(key));
+    ["spendBefore", "spendAfter", "clicksBefore", "clicksAfter", "leadsBefore", "leadsAfter", "cpaBefore", "cpaAfter", "ctrBefore", "ctrAfter", "crBefore", "crAfter"].forEach((key) => comparison[key] = g5Num(value(key)));
+    ensureGate5State().comparisons.push(comparison);
+    saveState(); renderGate();
+  });
+  document.querySelector("[data-g5-save-final]")?.addEventListener("click", () => {
+    const value = (key) => document.querySelector(`[data-g5final="${key}"]`)?.value.trim() || "";
+    if (!value("campaignId") || !value("decision")) return alert("Укажите кампанию и финальное решение");
+    const item = { id: makeId("g5-final"), createdAt: new Date().toISOString() };
+    ["campaignId", "period", "assessment", "decision", "nextStep", "nextReview"].forEach((key) => item[key] = value(key));
+    ensureGate5State().finalDecisions.push(item);
+    saveState(); renderGate();
+  });
   document
     .querySelector("[data-g5iter-save]")
     ?.addEventListener("click", () => {
