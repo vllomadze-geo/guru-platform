@@ -11534,6 +11534,10 @@ function ensureGate5State() {
     ? state.gate5.yandexDirect.imports
     : [];
   state.gate5.iterationCounter = state.gate5.iterationCounter || 0;
+  const importedStatisticCampaignId = state.gate5.reports.placement.find(
+    (record) => record.reportType === "search_placement" && /^\d{6,}$/.test(String(record.campaignId || "")),
+  )?.campaignId;
+  if (importedStatisticCampaignId) g5RepairYandexCampaignIdentity(state.gate5, importedStatisticCampaignId);
   Object.values(state.gate5.setup.campaigns).forEach((campaign) => {
     const exists = state.gate5.campaignRegistry.some(
       (item) => item.cabinetId === campaign.id || item.name === campaign.name,
@@ -11938,11 +11942,12 @@ function g5ParseYandexStructure(fileName, sheets) {
     creative: g5YandexColumn(headers, ["креатив"]),
     moderationStatus: g5YandexColumn(headers, ["статус модерации"]),
   };
-  const campaignId = g5Cell(textRows[7], 4) || g5YandexMetaValue(textRows, ["id кампании", "номер кампании", "№ кампании"]);
-  if (!campaignId) throw new Error("Не найден ID кампании (ожидалась ячейка E8).");
-  const campaignType = g5Cell(textRows[6], 4) || g5YandexMetaValue(textRows, ["тип кампании"]);
-  const currency = g5Cell(textRows[7], 7) || g5YandexMetaValue(textRows, ["валюта"]);
-  const campaignNegatives = (textRows[8] || []).filter(Boolean).join(" · ");
+  const campaignId = g5YandexMetaValue(textRows, ["id кампании", "номер кампании", "№ кампании", "№ заказа", "номер заказа"]);
+  if (!campaignId) throw new Error("Не найден реальный ID кампании в метаданных файла («№ заказа» / «№ кампании»).");
+  if (/^\d{1,5}$/.test(campaignId)) throw new Error("Не найден реальный ID кампании: техническое значение «" + campaignId + "» не может быть ID кампании Яндекс Директа.");
+  const campaignType = g5YandexMetaValue(textRows, ["тип кампании"]);
+  const currency = g5YandexMetaValue(textRows, ["валюта"]);
+  const campaignNegatives = g5YandexMetaValue(textRows, ["минус-фразы на кампанию"]);
   const campaignName = g5Cell(textRows[headerIndex + 1], col.campaignName) || g5YandexMetaValue(textRows, ["название кампании"]) || `Кампания ${campaignId}`;
   const records = [];
   for (let index = headerIndex + 1; index < textRows.length; index += 1) {
@@ -12190,9 +12195,47 @@ function g5YandexDiff(previous, current) {
   });
   return diffs;
 }
+function g5RepairYandexCampaignIdentity(g5, actualCabinetId) {
+  const incorrect = g5.campaignRegistry.find((campaign) => String(campaign.cabinetId) === "1" && /яндекс/i.test(campaign.platform || ""));
+  if (!incorrect) return false;
+  const target = g5.campaignRegistry.find((campaign) => String(campaign.cabinetId) === String(actualCabinetId));
+  const replaceInternalId = (collection) => (collection || []).forEach((item) => {
+    if (item.campaignId === incorrect.id && target) item.campaignId = target.id;
+  });
+  if (target) {
+    replaceInternalId(g5.periodSnapshots);
+    replaceInternalId(g5.links);
+    replaceInternalId(g5.iterations);
+    replaceInternalId(g5.comparisons);
+    replaceInternalId(g5.finalDecisions);
+    g5.campaignRegistry = g5.campaignRegistry.filter((campaign) => campaign !== incorrect);
+  } else {
+    incorrect.cabinetId = String(actualCabinetId);
+    incorrect.guruId = `GURU-${actualCabinetId}`;
+    incorrect.name = incorrect.name === "Кампания 1" ? `Кампания ${actualCabinetId}` : incorrect.name;
+  }
+  const reassignExternal = (record) => {
+    if (String(record?.campaignId) === "1") record.campaignId = String(actualCabinetId);
+  };
+  Object.values(g5.reports).forEach((records) => records.forEach(reassignExternal));
+  Object.values(g5.setup.groups).forEach(reassignExternal);
+  Object.values(g5.setup.ads).forEach(reassignExternal);
+  Object.values(g5.setup.phrases || {}).forEach(reassignExternal);
+  Object.values(g5.yandexDirect.groups).forEach(reassignExternal);
+  Object.values(g5.yandexDirect.ads).forEach(reassignExternal);
+  Object.values(g5.yandexDirect.phrases).forEach(reassignExternal);
+  g5.yandexDirect.structureSnapshots.forEach(reassignExternal);
+  if (g5.setup.campaigns["1"]) {
+    const legacy = g5.setup.campaigns["1"];
+    g5.setup.campaigns[String(actualCabinetId)] = { ...legacy, id: String(actualCabinetId) };
+    delete g5.setup.campaigns["1"];
+  }
+  return true;
+}
 function g5ImportYandexStructure(payload) {
   const g5 = ensureGate5State();
   const yd = g5.yandexDirect;
+  g5RepairYandexCampaignIdentity(g5, payload.campaign.id);
   const existing = g5.campaignRegistry.find((campaign) => campaign.cabinetId === payload.campaign.id);
   const now = new Date().toISOString();
   const campaign = existing || { id: makeId("g5-campaign"), guruId: `GURU-${payload.campaign.id}`, cabinetId: payload.campaign.id, createdAt: now };
@@ -12263,6 +12306,7 @@ function g5PlacementDuplicateSnapshots(payload) {
 }
 function g5ImportYandexSearchPlacement(payload, duplicateMode = "skip") {
   const g5 = ensureGate5State();
+  (payload.campaignIds || []).forEach((cabinetId) => g5RepairYandexCampaignIdentity(g5, cabinetId));
   const duplicates = g5PlacementDuplicateSnapshots(payload);
   if (duplicates.length && duplicateMode === "skip") return { skipped: true, changes: 0 };
   const now = new Date().toISOString();
