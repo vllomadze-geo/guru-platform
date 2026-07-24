@@ -5166,6 +5166,7 @@ function exportGateCsv() {
       c.sourceRow || "",
     ]),
   );
+  if (currentGate.id === "gate-5") appendGate5ExportRows(rows);
   const projectName = state.project?.name || "project";
   downloadText(`guru-gate-${projectName}.csv`, toCsv(rows));
 }
@@ -5235,6 +5236,7 @@ function exportCsv() {
       ]),
     );
   });
+  appendGate5ExportRows(rows);
   const catalog = getEvidenceCatalog();
   if (catalog.length) {
     rows.push([]);
@@ -5313,6 +5315,57 @@ function exportCsv() {
     });
   }
   downloadText("guru-export.csv", toCsv(rows));
+}
+
+function appendGate5ExportRows(rows) {
+  const g5 = ensureGate5State();
+  const toJson = (value) => {
+    try {
+      return JSON.stringify(value ?? {});
+    } catch (_) {
+      return String(value ?? "");
+    }
+  };
+  const recordRows = [];
+  const add = (section, type, record, extra = {}) => {
+    recordRows.push([
+      section,
+      type,
+      record?.id || extra.id || "",
+      record?.campaignId || extra.campaignId || "",
+      record?.groupId || extra.groupId || "",
+      record?.adId || extra.adId || "",
+      toJson(record),
+    ]);
+  };
+
+  add("Настройка отчётности", "проект", { projectName: g5.setup.projectName || "" });
+  Object.values(g5.setup.campaigns).forEach((record) => add("Настройка отчётности", "кампания", record));
+  Object.values(g5.setup.groups).forEach((record) => add("Настройка отчётности", "группа", record));
+  Object.values(g5.setup.ads).forEach((record) => add("Настройка отчётности", "объявление", record));
+  Object.entries(g5.reports).forEach(([reportType, records]) =>
+    records.forEach((record) => add("Ввод данных", `отчёт: ${reportType}`, record)),
+  );
+  Object.entries(g5.imports).forEach(([importType, record]) =>
+    add("Ввод данных", `метаданные импорта: ${importType}`, record),
+  );
+  g5.goals.forEach((record) => add("Ввод данных", "цель", record));
+  g5.links.forEach((record) => add("Связка с бизнесом", "связка лидов и заказов", record));
+  add("Финансовая оценка", "расчётные показатели", g5Finance());
+  g5.iterations.forEach((record) => add("Журнал итераций", "итерация", record));
+
+  rows.push([]);
+  rows.push(["GATE5_FULL_DATA"]);
+  rows.push([
+    "раздел Gate 5",
+    "тип записи",
+    "id записи",
+    "id кампании",
+    "id группы",
+    "id объявления",
+    "полные данные JSON",
+  ]);
+  rows.push(...recordRows);
 }
 
 function exportStagesAndTasksCsv() {
