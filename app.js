@@ -11735,8 +11735,8 @@ function g5MapColumns(headers) {
     ),
     conditionName: g5Col(
       headers,
-      ["Условие показа", "Ключевая фраза", "Фраза", "Keyword", "Condition"],
-      ["условие показа", "ключевая фраза", "keyword", "condition"],
+      ["Условие показа", "Ключевая фраза", "Фраза", "Площадка", "Место размещения", "Keyword", "Condition"],
+      ["условие показа", "ключевая фраза", "площадка", "место размещения", "keyword", "condition"],
     ),
     impressions: g5Col(
       headers,
@@ -11976,7 +11976,8 @@ function g5DetectYandexImport(fileName, sheets) {
   if (type === "unknown") throw new Error("Формат файла не распознан.");
   const extracted = g5ExtractRows(rows, type);
   if (!extracted.records.length) throw new Error("В файле не найдены строки отчёта.");
-  return { type, typeLabel: GATE5_REPORTS[type].title, fileName, records: extracted.records, meta: extracted.meta, counts: { campaigns: new Set(extracted.records.map((record) => record.campaignId).filter(Boolean)).size, groups: new Set(extracted.records.map((record) => record.groupId).filter(Boolean)).size, ads: new Set(extracted.records.map((record) => record.adId).filter(Boolean)).size, phrases: type === "query" ? extracted.records.length : 0, landings: new Set(extracted.records.map((record) => record.landing).filter(Boolean)).size, regions: 0, rows: extracted.records.length } };
+  const typeLabel = type === "placement" && /площадк|рся/.test(normalized) ? "Площадки РСЯ" : type === "placement" ? "Размещение в Поиске" : GATE5_REPORTS[type].title;
+  return { type, typeLabel, fileName, records: extracted.records, meta: extracted.meta, counts: { campaigns: new Set(extracted.records.map((record) => record.campaignId).filter(Boolean)).size, groups: new Set(extracted.records.map((record) => record.groupId).filter(Boolean)).size, ads: new Set(extracted.records.map((record) => record.adId).filter(Boolean)).size, phrases: type === "query" ? extracted.records.length : 0, landings: new Set(extracted.records.map((record) => record.landing).filter(Boolean)).size, regions: 0, rows: extracted.records.length } };
 }
 function g5BestHeaderRow(rows, kind = "report") {
   let best = 0,
@@ -12219,7 +12220,7 @@ function g5ImportYandexReport(payload) {
     campaign.lastImportAt = new Date().toISOString();
   });
   g5.imports[key] = { type: key, uploadedAt: new Date().toISOString(), fileName: payload.fileName, rows: g5.reports[key].length };
-  g5.yandexDirect.imports.push({ id: makeId("g5-yd-import"), importedAt: new Date().toISOString(), fileName: payload.fileName, type: key, status: "Импортирован", counts: payload.counts });
+  g5.yandexDirect.imports.push({ id: makeId("g5-yd-import"), importedAt: new Date().toISOString(), fileName: payload.fileName, type: key, typeLabel: payload.typeLabel, status: "Импортирован", counts: payload.counts });
 }
 function g5AddM(dst, src) {
   dst.impressions = (dst.impressions || 0) + g5Num(src.impressions);
@@ -12586,20 +12587,15 @@ function renderGate5Setup() {
   const c = Object.values(g5.setup.campaigns),
     gr = Object.values(g5.setup.groups),
     a = Object.values(g5.setup.ads);
-  return `${renderGate5YandexImport()}<div class="gate5-grid-2">
-    <div class="gate5-card"><h4>Импорт структуры</h4><p>Загрузите XLSX / CSV со столбцами: № кампании, название кампании, № группы, название группы, № объявления, заголовок.</p>
-      ${g5UploadStatusHtml(ensureGate5State().imports.structure)}
-      <div class="gate5-fileline"><label class="gate5-field">Файл структуры<input type="file" data-gate5-import="structure" accept=".xlsx,.xls,.csv,.tsv,.txt"></label><button class="btn secondary" data-gate5-clear="structure">Очистить структуру</button></div>
-    </div>
-    <div class="gate5-card"><h4>Что распознано</h4><p>Кампаний: <b>${c.length}</b>. Групп: <b>${gr.length}</b>. Объявлений: <b>${a.length}</b>.</p><div class="gate5-note">Ключ связки: № кампании → № группы → № объявления.</div></div>
-  </div>${g5StructureTable()}`;
+  const phrases = Object.keys(g5.setup.phrases || {}).length;
+  return `${renderGate5YandexImport()}<div class="gate5-card"><h4>Распознанная структура</h4><p>Кампаний: <b>${c.length}</b>. Групп: <b>${gr.length}</b>. Объявлений: <b>${a.length}</b>. Фраз: <b>${phrases}</b>.</p><div class="gate5-note">Ключ связки: ID кампании → ID группы → ID объявления → ID фразы. Данные появляются после подтверждения в едином импорте Яндекс Директ.</div></div>${g5StructureTable()}`;
 }
 function renderGate5YandexImport() {
   const yd = ensureGate5State().yandexDirect;
   const pending = g5YandexPendingImport;
-  const history = yd.imports.slice().reverse().slice(0, 12).map((item) => `<tr><td>${g5DateTime(item.importedAt)}</td><td>${g5Esc(item.fileName)}</td><td>${g5Esc(item.type === "yandex_structure" ? "Структура кампании" : GATE5_REPORTS[item.type]?.title || item.type)}</td><td>${g5Esc(item.status)}</td><td>${g5Esc(item.campaignId || "—")}</td><td>${g5Int(item.counts?.groups || 0)} / ${g5Int(item.counts?.ads || 0)} / ${g5Int(item.counts?.phrases || 0)}</td></tr>`).join("");
+  const history = yd.imports.slice().reverse().slice(0, 12).map((item) => `<tr><td>${g5DateTime(item.importedAt)}</td><td>${g5Esc(item.fileName)}</td><td>${g5Esc(item.typeLabel || (item.type === "yandex_structure" ? "Структура кампании" : GATE5_REPORTS[item.type]?.title || item.type))}</td><td>${g5Esc(item.status)}</td><td>${g5Esc(item.campaignId || "—")}</td><td>${g5Int(item.counts?.groups || 0)} / ${g5Int(item.counts?.ads || 0)} / ${g5Int(item.counts?.phrases || 0)}</td></tr>`).join("");
   const preview = pending ? `<div class="gate5-note gate5-good" style="margin-top:12px"><b>Файл распознан:</b> ${g5Esc(pending.typeLabel)}<br>${pending.campaign ? `Кампания: <b>${g5Esc(pending.campaign.id)}</b> · ${g5Esc(pending.campaign.name)} · ${g5Esc(pending.campaign.type)}<br>` : ""}Групп: <b>${g5Int(pending.counts.groups || 0)}</b> · объявлений: <b>${g5Int(pending.counts.ads || 0)}</b> · фраз: <b>${g5Int(pending.counts.phrases || 0)}</b> · посадочных: <b>${g5Int(pending.counts.landings || 0)}</b> · регионов: <b>${g5Int(pending.counts.regions || 0)}</b>${pending.regionDictionary ? `<br><span class="gate5-muted">Справочник регионов: ${g5Esc(pending.regionDictionary)} · словарь значений: ${g5Esc(pending.valueDictionary)}</span>` : ""}</div><div class="gate5-actions"><button class="btn primary" data-g5-yandex-confirm>Импортировать</button><button class="btn secondary" data-g5-yandex-cancel>Отменить</button></div>` : '<div class="gate5-note">Не загружен. Выберите XLSX / CSV из Яндекс Директа — тип будет определён автоматически, затем появится предпросмотр.</div>';
-  return `<div class="gate5-card" style="margin-bottom:16px"><h4>Импорт Яндекс Директ</h4><p class="gate5-muted">Файл проходит путь: распознавание → предпросмотр → подтверждённый импорт. Структура не используется для расчёта CPA, CAC, ROAS и ROI.</p><div class="gate5-fileline"><label class="gate5-field">Загрузить XLSX / CSV<input type="file" data-g5-yandex-file accept=".xlsx,.xls,.csv,.tsv,.txt"></label><span class="status-pill status-${pending ? "in_progress" : "not_started"}">${pending ? "Файл распознан" : "Не загружен"}</span></div>${preview}<div class="gate5-table-wrap" style="margin-top:12px"><table class="gate5-table"><thead><tr><th>Дата</th><th>Файл</th><th>Тип</th><th>Статус</th><th>Кампания</th><th>Группы / объявления / фразы</th></tr></thead><tbody>${history || '<tr><td colspan="6">Истории импортов пока нет.</td></tr>'}</tbody></table></div></div>`;
+  return `<div class="gate5-card" style="margin-bottom:16px"><h4>Импорт Яндекс Директ</h4><p class="gate5-muted">Единая точка загрузки: структура кампании, перфоманс-кампании, поисковые запросы, размещение в Поиске и площадки РСЯ. Файл проходит путь: распознавание → предпросмотр → подтверждённый импорт.</p><div class="gate5-fileline"><label class="gate5-field">Загрузить XLSX / CSV<input type="file" data-g5-yandex-file accept=".xlsx,.xls,.csv,.tsv,.txt"></label><span class="status-pill status-${pending ? "in_progress" : "not_started"}">${pending ? "Файл распознан" : "Не загружен"}</span></div>${preview}<div class="gate5-table-wrap" style="margin-top:12px"><table class="gate5-table"><thead><tr><th>Дата</th><th>Файл</th><th>Тип</th><th>Статус</th><th>Кампания</th><th>Группы / объявления / фразы</th></tr></thead><tbody>${history || '<tr><td colspan="6">Истории импортов пока нет.</td></tr>'}</tbody></table></div></div>`;
 }
 function g5StructureTable() {
   const g5 = ensureGate5State();
@@ -12636,7 +12632,7 @@ function renderGate5Input() {
   return `<div class="gate5-note">Типы импорта: структура кампании, перфоманс-кампании, поисковые запросы, размещение в Поиске и площадки.</div><div class="gate5-report-list">${Object.entries(GATE5_REPORTS)
     .map(([key, rep]) => {
       const meta = g5.imports[key];
-      return `<div class="gate5-report-card"><h4>${g5Esc(rep.title)}</h4><small>${g5Esc(rep.desc)}</small>${g5UploadStatusHtml(meta, g5.reports[key]?.length)}<div class="gate5-fileline"><label class="gate5-field">${meta ? "Догрузить файл (данные суммируются)" : "Файл"}<input type="file" data-gate5-import="${g5Attr(key)}" accept=".xlsx,.xls,.csv,.tsv,.txt"></label><button class="btn secondary" data-gate5-clear="${g5Attr(key)}">Очистить</button></div></div>`;
+      return `<div class="gate5-report-card"><h4>${g5Esc(rep.title)}</h4><small>${g5Esc(rep.desc)}</small>${g5UploadStatusHtml(meta, g5.reports[key]?.length)}<div class="gate5-note">Чтобы добавить или обновить данные, используйте единый блок «Импорт Яндекс Директ» в настройке отчётности.</div></div>`;
     })
     .join("")}</div><div class="gate5-card" style="margin-top:12px"><h4>Источник: структура кампании</h4><p class="gate5-muted">Импорт структуры фиксирует дату и источник, но не добавляет расход, клики, лиды или финансовые показатели.</p>${g5UploadStatusHtml(g5.imports.yandexStructure, g5.imports.yandexStructure?.rows)}</div>${renderGate5Snapshots()}${g5GoalFormAndHistory()}`;
 }
