@@ -5357,6 +5357,14 @@ function appendGate5ExportRows(rows) {
   g5.iterations.forEach((record) => add("Журнал итераций", "итерация", record));
   g5.comparisons.forEach((record) => add("Сравнение до / после", "сравнение", record));
   g5.finalDecisions.forEach((record) => add("Финальное решение", "решение по кампании", record));
+  Object.values(g5.yandexDirect?.groups || {}).forEach((record) => add("Яндекс Директ", "группа", record));
+  Object.values(g5.yandexDirect?.ads || {}).forEach((record) => add("Яндекс Директ", "объявление", record));
+  Object.values(g5.yandexDirect?.phrases || {}).forEach((record) => add("Яндекс Директ", "фраза", record));
+  Object.values(g5.yandexDirect?.landings || {}).forEach((record) => add("Яндекс Директ", "посадочная", record));
+  Object.values(g5.yandexDirect?.regions || {}).forEach((record) => add("Яндекс Директ", "регион", record));
+  Object.values(g5.yandexDirect?.negativePhrases || {}).forEach((record) => add("Яндекс Директ", "минус-фразы", record));
+  (g5.yandexDirect?.structureSnapshots || []).forEach((record) => add("Яндекс Директ", "снимок структуры", record));
+  (g5.yandexDirect?.imports || []).forEach((record) => add("Яндекс Директ", "история импорта", record));
 
   rows.push([]);
   rows.push(["GATE5_FULL_DATA"]);
@@ -11438,7 +11446,7 @@ const GATE5_REPORTS = {
 function gate5BlankState() {
   return {
     ui: { openBlocks: { registry: true } },
-    setup: { projectName: "", campaigns: {}, groups: {}, ads: {} },
+    setup: { projectName: "", campaigns: {}, groups: {}, ads: {}, phrases: {} },
     reports: { perf: [], query: [], placement: [] },
     imports: {},
     campaignRegistry: [],
@@ -11449,6 +11457,7 @@ function gate5BlankState() {
     iterations: [],
     comparisons: [],
     finalDecisions: [],
+    yandexDirect: { groups: {}, ads: {}, phrases: {}, landings: {}, regions: {}, negativePhrases: {}, structureSnapshots: [], imports: [] },
     iterationCounter: 0,
   };
 }
@@ -11471,6 +11480,7 @@ function ensureGate5State() {
   state.gate5.setup.campaigns = state.gate5.setup.campaigns || {};
   state.gate5.setup.groups = state.gate5.setup.groups || {};
   state.gate5.setup.ads = state.gate5.setup.ads || {};
+  state.gate5.setup.phrases = state.gate5.setup.phrases || {};
   state.gate5.reports = state.gate5.reports || {
     perf: [],
     query: [],
@@ -11506,6 +11516,16 @@ function ensureGate5State() {
   state.gate5.finalDecisions = Array.isArray(state.gate5.finalDecisions)
     ? state.gate5.finalDecisions
     : [];
+  state.gate5.yandexDirect = state.gate5.yandexDirect || {};
+  ["groups", "ads", "phrases", "landings", "regions", "negativePhrases"].forEach((key) => {
+    state.gate5.yandexDirect[key] = state.gate5.yandexDirect[key] || {};
+  });
+  state.gate5.yandexDirect.structureSnapshots = Array.isArray(state.gate5.yandexDirect.structureSnapshots)
+    ? state.gate5.yandexDirect.structureSnapshots
+    : [];
+  state.gate5.yandexDirect.imports = Array.isArray(state.gate5.yandexDirect.imports)
+    ? state.gate5.yandexDirect.imports
+    : [];
   state.gate5.iterationCounter = state.gate5.iterationCounter || 0;
   Object.values(state.gate5.setup.campaigns).forEach((campaign) => {
     const exists = state.gate5.campaignRegistry.some(
@@ -11534,14 +11554,14 @@ function ensureGate5State() {
   return state.gate5;
 }
 
-const G5_CAMPAIGN_STATUSES = ["Активна", "Остановлена", "Архив", "Тест", "Замена", "Масштабировать", "Откатить"];
+const G5_CAMPAIGN_STATUSES = ["Импортирована", "Активна", "Остановлена", "Архив", "Тест", "Замена", "Масштабировать", "Откатить"];
 const G5_PLATFORM_OPTIONS = ["Яндекс", "Google", "VK", "Другое"];
 const G5_TYPE_OPTIONS = ["Поиск", "РСЯ", "ЕПК", "Медийная", "Ретаргетинг", "PMax", "Другое"];
 const G5_OBJECTIVE_OPTIONS = ["Лид", "Звонок", "Заявка", "Покупка"];
 const G5_PERIOD_STATUSES = ["Активна", "Остановлена", "Работала частично"];
 const G5_AD_DECISIONS = ["Оставить", "Минусовать", "Проверить", "Отключить", "Усилить"];
 const G5_CHANGE_LEVELS = ["Кампания", "Группа", "Объявление", "Ключ", "Площадка", "Ставка", "Бюджет", "Стратегия", "Посадочная", "Оффер"];
-const G5_CHANGE_STATUSES = ["Запланировано", "Внесено", "Проверяется", "Сработало", "Не сработало", "Откатить"];
+const G5_CHANGE_STATUSES = ["Запланировано", "Внесено", "Проверяется", "Сработало", "Не сработало", "Откатить", "Зафиксировано"];
 const G5_TARGET_METRICS = ["CPA", "CPL", "CTR", "CR", "Лиды", "Расход", "ROAS"];
 const G5_COMPARISON_DECISIONS = ["Оставить", "Откатить", "Доработать", "Масштабировать", "Остановить"];
 const G5_FINAL_DECISIONS = ["Продолжить", "Остановить", "Заменить", "Масштабировать", "Откатить", "Пересобрать"];
@@ -11822,6 +11842,135 @@ async function g5ReadTableFile(file) {
     );
   return g5ParseCSV(text);
 }
+let g5YandexPendingImport = null;
+
+async function g5ReadYandexFile(file) {
+  const name = (file.name || "").toLowerCase();
+  const buf = await file.arrayBuffer();
+  if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
+    if (!window.XLSX) throw new Error("XLSX-библиотека не загрузилась. Повторите попытку или сохраните файл как CSV.");
+    const wb = XLSX.read(buf, { type: "array", cellDates: false });
+    const sheets = {};
+    wb.SheetNames.forEach((sheetName) => {
+      sheets[sheetName] = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: "", raw: false });
+    });
+    return { sheets, sheetNames: wb.SheetNames };
+  }
+  return { sheets: { CSV: await g5ReadTableFile(file) }, sheetNames: ["CSV"] };
+}
+function g5YandexSheet(sheets, wanted) {
+  const key = Object.keys(sheets).find((name) => g5NormHeader(name) === g5NormHeader(wanted));
+  return key ? sheets[key] : null;
+}
+function g5YandexColumn(headers, aliases) {
+  return g5FindCol(headers, aliases, true);
+}
+function g5YandexHash(value) {
+  let hash = 2166136261;
+  const text = String(value || "");
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `yd-${(hash >>> 0).toString(16)}`;
+}
+function g5YandexMetaValue(rows, labels) {
+  for (let r = 0; r < Math.min(rows.length, 10); r += 1) {
+    for (let c = 0; c < (rows[r] || []).length; c += 1) {
+      if (labels.some((label) => g5NormHeader(rows[r][c]).includes(g5NormHeader(label)))) {
+        return g5Cell(rows[r], c + 1) || g5Cell(rows[r], c + 2);
+      }
+    }
+  }
+  return "";
+}
+function g5YandexRegionDictionary(rows) {
+  const dictionary = {};
+  if (!rows) return dictionary;
+  rows.forEach((row) => {
+    const values = (row || []).map((value) => String(value || "").trim()).filter(Boolean);
+    const id = values.find((value) => /^\d+$/.test(value));
+    const name = values.find((value) => !/^\d+$/.test(value) && !/^(id|код|регион)$/i.test(value));
+    if (id && name) dictionary[id] = name;
+  });
+  return dictionary;
+}
+function g5ParseYandexStructure(fileName, sheets) {
+  const textRows = g5YandexSheet(sheets, "Тексты");
+  if (!textRows) throw new Error("Не найден лист «Тексты».");
+  let headerIndex = 9;
+  const expected = ["id группы", "название группы", "id объявления", "фраза"];
+  if (!expected.some((value) => g5NormHeader(textRows[headerIndex]?.join(" ")).includes(value))) {
+    headerIndex = textRows.findIndex((row, index) => index < 30 && expected.filter((value) => g5NormHeader(row?.join(" ")).includes(value)).length >= 2);
+  }
+  if (headerIndex < 0) throw new Error("Не найдена строка заголовков на листе «Тексты».");
+  const headers = textRows[headerIndex] || [];
+  const regions = g5YandexRegionDictionary(g5YandexSheet(sheets, "Регионы"));
+  const col = {
+    campaignName: g5YandexColumn(headers, ["название кампании", "кампания"]),
+    adType: g5YandexColumn(headers, ["тип объявления"]),
+    groupId: g5YandexColumn(headers, ["id группы", "ид группы"]),
+    groupName: g5YandexColumn(headers, ["название группы"]),
+    groupNumber: g5YandexColumn(headers, ["номер группы", "№ группы"]),
+    phraseId: g5YandexColumn(headers, ["id фразы", "ид фразы"]),
+    phrase: g5YandexColumn(headers, ["фраза с минус", "фраза"]),
+    adId: g5YandexColumn(headers, ["id объявления", "ид объявления"]),
+    title1: g5YandexColumn(headers, ["заголовок 1"]),
+    title2: g5YandexColumn(headers, ["заголовок 2"]),
+    adText: g5YandexColumn(headers, ["текст объявления", "текст"]),
+    landing: g5YandexColumn(headers, ["ссылка", "url"]),
+    displayUrl: g5YandexColumn(headers, ["отображаемая ссылка"]),
+    region: g5YandexColumn(headers, ["регион"]),
+    adStatus: g5YandexColumn(headers, ["статус объявления"]),
+    phraseStatus: g5YandexColumn(headers, ["статус фразы"]),
+    clarifications: g5YandexColumn(headers, ["уточнения"]),
+    groupNegatives: g5YandexColumn(headers, ["минус-фразы на группу"]),
+    age: g5YandexColumn(headers, ["возрастные ограничения"]),
+    fastLinks: g5YandexColumn(headers, ["быстрые ссылки"]),
+    image: g5YandexColumn(headers, ["изображение"]),
+    creative: g5YandexColumn(headers, ["креатив"]),
+    moderationStatus: g5YandexColumn(headers, ["статус модерации"]),
+  };
+  const campaignId = g5Cell(textRows[7], 4) || g5YandexMetaValue(textRows, ["id кампании", "номер кампании", "№ кампании"]);
+  if (!campaignId) throw new Error("Не найден ID кампании (ожидалась ячейка E8).");
+  const campaignType = g5Cell(textRows[6], 4) || g5YandexMetaValue(textRows, ["тип кампании"]);
+  const currency = g5Cell(textRows[7], 7) || g5YandexMetaValue(textRows, ["валюта"]);
+  const campaignNegatives = (textRows[8] || []).filter(Boolean).join(" · ");
+  const campaignName = g5Cell(textRows[headerIndex + 1], col.campaignName) || g5YandexMetaValue(textRows, ["название кампании"]) || `Кампания ${campaignId}`;
+  const records = [];
+  for (let index = headerIndex + 1; index < textRows.length; index += 1) {
+    const row = textRows[index] || [];
+    const value = (key) => g5Cell(row, col[key]);
+    const groupId = value("groupId") || value("groupNumber");
+    const phraseId = value("phraseId");
+    const adId = value("adId");
+    if (!(groupId || phraseId || adId)) continue;
+    records.push({
+      campaignId, campaignName: value("campaignName") || campaignName, campaignType, currency,
+      groupId, groupName: value("groupName"), groupNumber: value("groupNumber"), phraseId, phrase: value("phrase"), adId,
+      adType: value("adType"), title1: value("title1"), title2: value("title2"), adText: value("adText"),
+      landing: value("landing"), displayUrl: value("displayUrl"), fastLinks: value("fastLinks"), clarifications: value("clarifications"),
+      image: value("image"), creative: value("creative"), moderationStatus: value("moderationStatus"), region: regions[value("region")] || value("region"),
+      adStatus: value("adStatus"), phraseStatus: value("phraseStatus"), groupNegatives: value("groupNegatives"), age: value("age"), campaignNegatives,
+    });
+  }
+  if (!records.some((record) => record.groupId)) throw new Error("Не найдены ID групп.");
+  if (!records.some((record) => record.phraseId || record.phrase)) throw new Error("Не найдены фразы.");
+  const unique = (key) => new Set(records.map((record) => record[key]).filter(Boolean)).size;
+  const signature = records.map((record) => [record.groupId, record.adId, record.phraseId || record.phrase, record.title1, record.title2, record.adText, record.landing, record.region, record.adStatus, record.phraseStatus, record.groupNegatives].join("|")).sort().join("\n");
+  return { type: "yandex_structure", typeLabel: "Структура кампании Яндекс Директа", fileName, records, campaign: { id: campaignId, name: campaignName, type: campaignType || "Другое", currency, campaignNegatives }, counts: { groups: unique("groupId"), ads: unique("adId"), phrases: unique("phraseId") || unique("phrase"), landings: unique("landing"), regions: unique("region"), rows: records.length }, hash: g5YandexHash(signature), regionDictionary: g5YandexSheet(sheets, "Регионы") ? "подключён" : "не найден", valueDictionary: g5YandexSheet(sheets, "Словарь значений полей") ? "подключён" : "не найден" };
+}
+function g5DetectYandexImport(fileName, sheets) {
+  if (g5YandexSheet(sheets, "Тексты")) return g5ParseYandexStructure(fileName, sheets);
+  const rows = sheets[Object.keys(sheets)[0]] || [];
+  const header = rows[g5BestHeaderRow(rows, "report")] || [];
+  const normalized = g5NormHeader(header.join(" "));
+  const type = /поисковый запрос|search query/.test(normalized) ? "query" : /площадк|размещен|условие показа/.test(normalized) ? "placement" : /расход|показы|клики|campaign/.test(normalized) ? "perf" : "unknown";
+  if (type === "unknown") throw new Error("Формат файла не распознан.");
+  const extracted = g5ExtractRows(rows, type);
+  if (!extracted.records.length) throw new Error("В файле не найдены строки отчёта.");
+  return { type, typeLabel: GATE5_REPORTS[type].title, fileName, records: extracted.records, meta: extracted.meta, counts: { campaigns: new Set(extracted.records.map((record) => record.campaignId).filter(Boolean)).size, groups: new Set(extracted.records.map((record) => record.groupId).filter(Boolean)).size, ads: new Set(extracted.records.map((record) => record.adId).filter(Boolean)).size, phrases: type === "query" ? extracted.records.length : 0, landings: new Set(extracted.records.map((record) => record.landing).filter(Boolean)).size, regions: 0, rows: extracted.records.length } };
+}
 function g5BestHeaderRow(rows, kind = "report") {
   let best = 0,
     scoreMax = -1;
@@ -11962,6 +12111,108 @@ function g5SyncStructure(records) {
         landing: r.landing || "",
       };
   });
+}
+function g5YandexRegisterChange(g5, campaign, change) {
+  g5.iterationCounter = (g5.iterationCounter || 0) + 1;
+  g5.iterations.push({
+    id: makeId("g5-import-change"), number: g5.iterationCounter, createdAt: new Date().toISOString(),
+    changeDate: new Date().toISOString().slice(0, 10), campaignId: campaign.id, campaignName: campaign.name,
+    campaignType: campaign.type, level: change.level, before: change.before || "—", after: change.after || "—",
+    reason: change.type, hypothesis: "", targetMetric: "", checkDate: "", changeStatus: "Зафиксировано",
+    outcome: "Источник: импорт файла", source: "Импорт файла", groupId: change.groupId || "", element: change.element || "",
+  });
+}
+function g5YandexDiff(previous, current) {
+  if (!previous) return [{ level: "Кампания", type: "Добавлена кампания", after: `Импортирована структура: ${current.counts.groups} групп, ${current.counts.ads} объявлений, ${current.counts.phrases} фраз` }];
+  const oldRows = previous.records || [];
+  const byId = (rows, key) => new Map(rows.filter((row) => row[key]).map((row) => [row[key], row]));
+  const diffs = [];
+  [["groupId", "Группа", "Добавлена группа", "Удалена / отсутствует группа"], ["adId", "Объявление", "Добавлено объявление", "Удалено / отсутствует объявление"], ["phraseId", "Ключ", "Добавлена фраза", "Удалена / отсутствует фраза"]].forEach(([key, level, added, removed]) => {
+    const oldMap = byId(oldRows, key), newMap = byId(current.records, key);
+    newMap.forEach((row, id) => { if (!oldMap.has(id)) diffs.push({ level, type: added, after: id, groupId: row.groupId, element: id }); });
+    oldMap.forEach((row, id) => { if (!newMap.has(id)) diffs.push({ level, type: removed, before: id, groupId: row.groupId, element: id }); });
+  });
+  const oldAds = byId(oldRows, "adId"), newAds = byId(current.records, "adId");
+  newAds.forEach((row, id) => {
+    const old = oldAds.get(id); if (!old) return;
+    [["title1", "Изменён заголовок"], ["adText", "Изменён текст объявления"], ["landing", "Изменена посадочная"], ["region", "Изменён регион"]].forEach(([key, type]) => {
+      if ((old[key] || "") !== (row[key] || "")) diffs.push({ level: "Объявление", type, before: old[key], after: row[key], groupId: row.groupId, element: id });
+    });
+  });
+  const oldPhrases = byId(oldRows, "phraseId"), newPhrases = byId(current.records, "phraseId");
+  newPhrases.forEach((row, id) => {
+    const old = oldPhrases.get(id); if (!old) return;
+    [["phraseStatus", "Изменён статус фразы"], ["groupNegatives", "Изменены минус-фразы"], ["region", "Изменён регион"]].forEach(([key, type]) => {
+      if ((old[key] || "") !== (row[key] || "")) diffs.push({ level: "Ключ", type, before: old[key], after: row[key], groupId: row.groupId, element: id });
+    });
+  });
+  return diffs;
+}
+function g5ImportYandexStructure(payload) {
+  const g5 = ensureGate5State();
+  const yd = g5.yandexDirect;
+  const existing = g5.campaignRegistry.find((campaign) => campaign.cabinetId === payload.campaign.id);
+  const now = new Date().toISOString();
+  const campaign = existing || { id: makeId("g5-campaign"), guruId: `GURU-${payload.campaign.id}`, cabinetId: payload.campaign.id, createdAt: now };
+  const previous = yd.structureSnapshots.filter((snapshot) => snapshot.campaignId === payload.campaign.id).slice(-1)[0];
+  const unchanged = !!previous && previous.hash === payload.hash;
+  Object.assign(campaign, { name: payload.campaign.name, platform: "Яндекс Директ", type: payload.campaign.type, currency: payload.campaign.currency, status: existing?.status || "Импортирована", firstImportAt: existing?.firstImportAt || now, lastImportAt: now, groupCount: payload.counts.groups, adCount: payload.counts.ads, phraseCount: payload.counts.phrases, landingCount: payload.counts.landings, regions: [...new Set(payload.records.map((row) => row.region).filter(Boolean))].join(", "), sourceFile: payload.fileName, campaignNegatives: payload.campaign.campaignNegatives, comment: existing?.comment || "" });
+  if (existing) Object.assign(existing, campaign); else g5.campaignRegistry.push(campaign);
+  g5.setup.campaigns[payload.campaign.id] = { id: payload.campaign.id, name: payload.campaign.name, type: payload.campaign.type, currency: payload.campaign.currency, platform: "Яндекс Директ" };
+  payload.records.forEach((row) => {
+    if (row.groupId) {
+      const group = { id: row.groupId, campaignId: payload.campaign.id, name: row.groupName || row.groupId, number: row.groupNumber, landing: row.landing, region: row.region, negatives: row.groupNegatives, status: row.adStatus || row.phraseStatus || "", importedAt: now };
+      yd.groups[row.groupId] = { ...yd.groups[row.groupId], ...group };
+      g5.setup.groups[row.groupId] = group;
+    }
+    if (row.adId) {
+      const ad = { id: row.adId, campaignId: payload.campaign.id, groupId: row.groupId, type: row.adType, title: row.title1, title2: row.title2, text: row.adText, landing: row.landing, displayUrl: row.displayUrl, fastLinks: row.fastLinks, clarifications: row.clarifications, image: row.image, creative: row.creative, status: row.adStatus, moderationStatus: row.moderationStatus, importedAt: now };
+      yd.ads[row.adId] = { ...yd.ads[row.adId], ...ad };
+      g5.setup.ads[row.adId] = ad;
+    }
+    if (row.phraseId || row.phrase) {
+      const phraseId = row.phraseId || `${row.groupId}:${row.phrase}`;
+      const phrase = { id: phraseId, campaignId: payload.campaign.id, groupId: row.groupId, adId: row.adId, phrase: row.phrase, negatives: row.phrase.match(/(?:-|!)[^\s]+/g)?.join(" ") || "", status: row.phraseStatus, region: row.region, landing: row.landing, importedAt: now };
+      yd.phrases[phraseId] = { ...yd.phrases[phraseId], ...phrase };
+      g5.setup.phrases[phraseId] = phrase;
+    }
+    if (row.landing) yd.landings[row.landing] = { id: row.landing, campaignId: payload.campaign.id, url: row.landing, importedAt: now };
+    if (row.region) yd.regions[`${payload.campaign.id}:${row.region}`] = { id: `${payload.campaign.id}:${row.region}`, campaignId: payload.campaign.id, name: row.region, importedAt: now };
+    if (row.groupNegatives) yd.negativePhrases[`${payload.campaign.id}:${row.groupId}`] = { id: `${payload.campaign.id}:${row.groupId}`, campaignId: payload.campaign.id, groupId: row.groupId, value: row.groupNegatives, importedAt: now };
+  });
+  Object.values(yd.groups).filter((group) => group.campaignId === payload.campaign.id).forEach((group) => {
+    const related = payload.records.filter((row) => row.groupId === group.id);
+    group.phraseCount = new Set(related.map((row) => row.phraseId || row.phrase).filter(Boolean)).size;
+    group.adCount = new Set(related.map((row) => row.adId).filter(Boolean)).size;
+    g5.setup.groups[group.id] = { ...g5.setup.groups[group.id], phraseCount: group.phraseCount, adCount: group.adCount };
+  });
+  const snapshot = { id: makeId("g5-structure"), campaignId: payload.campaign.id, importedAt: now, sourceFile: payload.fileName, counts: payload.counts, activeAds: payload.records.filter((row) => /актив|показывается|on/i.test(row.adStatus || "")).map((row) => row.adId).filter(Boolean).filter((value, index, array) => array.indexOf(value) === index).length, activePhrases: payload.records.filter((row) => /актив|показывается|on/i.test(row.phraseStatus || "")).map((row) => row.phraseId || row.phrase).filter(Boolean).filter((value, index, array) => array.indexOf(value) === index).length, hash: payload.hash, records: payload.records, unchanged };
+  yd.structureSnapshots.push(snapshot);
+  yd.imports.push({ id: makeId("g5-yd-import"), importedAt: now, fileName: payload.fileName, type: payload.type, status: unchanged ? "Импорт выполнен, изменений нет" : "Импортирован", campaignId: payload.campaign.id, counts: payload.counts });
+  g5.imports.yandexStructure = { type: "yandex_structure", uploadedAt: now, fileName: payload.fileName, rows: payload.counts.rows, uploads: yd.imports.filter((item) => item.type === "yandex_structure").map((item) => ({ fileName: item.fileName, uploadedAt: item.importedAt, rows: item.counts.rows })) };
+  if (!unchanged) g5YandexDiff(previous, payload).forEach((change) => g5YandexRegisterChange(g5, campaign, change));
+  return { unchanged, changes: unchanged ? 0 : g5YandexDiff(previous, payload).length };
+}
+function g5ImportYandexReport(payload) {
+  const g5 = ensureGate5State();
+  const key = payload.type;
+  const rowKey = (row) => [row.date, row.campaignId, row.groupId, row.adId, row.query || "", row.conditionType || "", row.conditionName || ""].join("|");
+  const merged = new Map((g5.reports[key] || []).map((row) => [rowKey(row), row]));
+  payload.records.forEach((row) => merged.set(rowKey(row), row));
+  g5.reports[key] = [...merged.values()];
+  g5SyncStructure(payload.records);
+  payload.records.forEach((row) => {
+    if (!row.campaignId) return;
+    let campaign = g5.campaignRegistry.find((item) => item.cabinetId === row.campaignId);
+    if (!campaign) {
+      campaign = { id: makeId("g5-campaign"), guruId: `GURU-${row.campaignId}`, cabinetId: row.campaignId, name: row.campaignName || row.campaignId, platform: "Яндекс Директ", type: "Другое", objective: "Лид", status: "Импортирована", createdAt: new Date().toISOString() };
+      g5.campaignRegistry.push(campaign);
+    }
+    campaign.platform = "Яндекс Директ";
+    campaign.lastImportAt = new Date().toISOString();
+  });
+  g5.imports[key] = { type: key, uploadedAt: new Date().toISOString(), fileName: payload.fileName, rows: g5.reports[key].length };
+  g5.yandexDirect.imports.push({ id: makeId("g5-yd-import"), importedAt: new Date().toISOString(), fileName: payload.fileName, type: key, status: "Импортирован", counts: payload.counts });
 }
 function g5AddM(dst, src) {
   dst.impressions = (dst.impressions || 0) + g5Num(src.impressions);
@@ -12267,21 +12518,21 @@ function renderGate5Registry() {
   const g5 = ensureGate5State();
   const rows = g5.campaignRegistry.slice().reverse().map((campaign) => {
     const parent = g5CampaignById(campaign.parentId);
-    return `<tr><td><b>${g5Esc(campaign.name)}</b><br><span class="gate5-muted">GURU: ${g5Esc(campaign.guruId || "—")} · кабинет: ${g5Esc(campaign.cabinetId || "—")}</span></td><td>${g5Esc(campaign.platform)}</td><td>${g5Esc(campaign.type)}</td><td>${g5Esc(campaign.objective)}</td><td>${g5Esc(campaign.status)}</td><td>${g5Esc(campaign.launchDate || "—")}<br>${campaign.stopDate ? "до " + g5Esc(campaign.stopDate) : ""}</td><td>${parent ? g5Esc(parent.name) : "—"}</td><td>${g5Esc(campaign.reason || "—")}<br><span class="gate5-muted">${g5Esc(campaign.comment || "")}</span></td></tr>`;
+    return `<tr><td><b>${g5Esc(campaign.name)}</b><br><span class="gate5-muted">GURU: ${g5Esc(campaign.guruId || "—")} · кабинет: ${g5Esc(campaign.cabinetId || "—")}</span></td><td>${g5Esc(campaign.platform)}</td><td>${g5Esc(campaign.type)}</td><td>${g5Esc(campaign.objective)}</td><td>${g5Esc(campaign.status)}</td><td>${campaign.groupCount != null ? `${g5Int(campaign.groupCount)} / ${g5Int(campaign.adCount)} / ${g5Int(campaign.phraseCount)} / ${g5Int(campaign.landingCount)}` : "—"}</td><td>${g5Esc(campaign.regions || "—")}</td><td>${g5Esc(campaign.lastImportAt ? g5DateTime(campaign.lastImportAt) : campaign.launchDate || "—")}</td><td>${parent ? g5Esc(parent.name) : "—"}</td><td>${g5Esc(campaign.reason || campaign.sourceFile || "—")}<br><span class="gate5-muted">${g5Esc(campaign.comment || "")}</span></td></tr>`;
   }).join("");
   return `<div class="gate5-card"><h4>Новая кампания или версия кампании</h4><p class="gate5-muted">Кампании не удаляются. Для новой версии укажите родительскую кампанию и статус «Замена».</p>
     <div class="gate5-grid-4"><label class="gate5-field">Внутренний ID в GURU<input data-g5campaign="guruId" placeholder="GURU-CAMP-001"></label><label class="gate5-field">ID в рекламном кабинете<input data-g5campaign="cabinetId"></label><label class="gate5-field">Название кампании<input data-g5campaign="name"></label><label class="gate5-field">Платформа<select data-g5campaign="platform">${g5Options(G5_PLATFORM_OPTIONS, "Яндекс")}</select></label></div>
     <div class="gate5-grid-4" style="margin-top:10px"><label class="gate5-field">Тип кампании<select data-g5campaign="type">${g5Options(G5_TYPE_OPTIONS, "Поиск")}</select></label><label class="gate5-field">Цель<select data-g5campaign="objective">${g5Options(G5_OBJECTIVE_OPTIONS, "Лид")}</select></label><label class="gate5-field">Посадочная страница<input data-g5campaign="landing"></label><label class="gate5-field">Статус<select data-g5campaign="status">${g5Options(G5_CAMPAIGN_STATUSES, "Активна")}</select></label></div>
     <div class="gate5-grid-4" style="margin-top:10px"><label class="gate5-field">Дата запуска<input type="date" data-g5campaign="launchDate"></label><label class="gate5-field">Дата остановки<input type="date" data-g5campaign="stopDate"></label><label class="gate5-field">Родительская кампания<select data-g5campaign="parentId">${g5CampaignOptions()}</select></label><label class="gate5-field">Причина запуска / остановки<input data-g5campaign="reason"></label></div>
     <label class="gate5-field" style="margin-top:10px">Комментарий<input data-g5campaign="comment"></label><div class="gate5-actions"><button class="btn primary" data-g5-save-campaign>Сохранить кампанию</button></div></div>
-    <div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Кампания / ID</th><th>Платформа</th><th>Тип</th><th>Цель</th><th>Статус</th><th>Даты</th><th>Родительская</th><th>Причина / комментарий</th></tr></thead><tbody>${rows || '<tr><td colspan="8">Реестр пуст. Добавьте первую кампанию или импортируйте структуру рекламного кабинета.</td></tr>'}</tbody></table></div>`;
+    <div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Кампания / ID</th><th>Платформа</th><th>Тип</th><th>Цель</th><th>Статус</th><th>Группы / объявления / фразы / посадочные</th><th>Регион</th><th>Последний импорт / запуск</th><th>Родительская</th><th>Источник / комментарий</th></tr></thead><tbody>${rows || '<tr><td colspan="10">Реестр пуст. Добавьте первую кампанию или импортируйте структуру рекламного кабинета.</td></tr>'}</tbody></table></div>`;
 }
 function renderGate5Setup() {
   const g5 = ensureGate5State();
   const c = Object.values(g5.setup.campaigns),
     gr = Object.values(g5.setup.groups),
     a = Object.values(g5.setup.ads);
-  return `<div class="gate5-grid-2">
+  return `${renderGate5YandexImport()}<div class="gate5-grid-2">
     <div class="gate5-card"><h4>Импорт структуры</h4><p>Загрузите XLSX / CSV со столбцами: № кампании, название кампании, № группы, название группы, № объявления, заголовок.</p>
       ${g5UploadStatusHtml(ensureGate5State().imports.structure)}
       <div class="gate5-fileline"><label class="gate5-field">Файл структуры<input type="file" data-gate5-import="structure" accept=".xlsx,.xls,.csv,.tsv,.txt"></label><button class="btn secondary" data-gate5-clear="structure">Очистить структуру</button></div>
@@ -12289,19 +12540,27 @@ function renderGate5Setup() {
     <div class="gate5-card"><h4>Что распознано</h4><p>Кампаний: <b>${c.length}</b>. Групп: <b>${gr.length}</b>. Объявлений: <b>${a.length}</b>.</p><div class="gate5-note">Ключ связки: № кампании → № группы → № объявления.</div></div>
   </div>${g5StructureTable()}`;
 }
+function renderGate5YandexImport() {
+  const yd = ensureGate5State().yandexDirect;
+  const pending = g5YandexPendingImport;
+  const history = yd.imports.slice().reverse().slice(0, 12).map((item) => `<tr><td>${g5DateTime(item.importedAt)}</td><td>${g5Esc(item.fileName)}</td><td>${g5Esc(item.type === "yandex_structure" ? "Структура кампании" : GATE5_REPORTS[item.type]?.title || item.type)}</td><td>${g5Esc(item.status)}</td><td>${g5Esc(item.campaignId || "—")}</td><td>${g5Int(item.counts?.groups || 0)} / ${g5Int(item.counts?.ads || 0)} / ${g5Int(item.counts?.phrases || 0)}</td></tr>`).join("");
+  const preview = pending ? `<div class="gate5-note gate5-good" style="margin-top:12px"><b>Файл распознан:</b> ${g5Esc(pending.typeLabel)}<br>${pending.campaign ? `Кампания: <b>${g5Esc(pending.campaign.id)}</b> · ${g5Esc(pending.campaign.name)} · ${g5Esc(pending.campaign.type)}<br>` : ""}Групп: <b>${g5Int(pending.counts.groups || 0)}</b> · объявлений: <b>${g5Int(pending.counts.ads || 0)}</b> · фраз: <b>${g5Int(pending.counts.phrases || 0)}</b> · посадочных: <b>${g5Int(pending.counts.landings || 0)}</b> · регионов: <b>${g5Int(pending.counts.regions || 0)}</b>${pending.regionDictionary ? `<br><span class="gate5-muted">Справочник регионов: ${g5Esc(pending.regionDictionary)} · словарь значений: ${g5Esc(pending.valueDictionary)}</span>` : ""}</div><div class="gate5-actions"><button class="btn primary" data-g5-yandex-confirm>Импортировать</button><button class="btn secondary" data-g5-yandex-cancel>Отменить</button></div>` : '<div class="gate5-note">Не загружен. Выберите XLSX / CSV из Яндекс Директа — тип будет определён автоматически, затем появится предпросмотр.</div>';
+  return `<div class="gate5-card" style="margin-bottom:16px"><h4>Импорт Яндекс Директ</h4><p class="gate5-muted">Файл проходит путь: распознавание → предпросмотр → подтверждённый импорт. Структура не используется для расчёта CPA, CAC, ROAS и ROI.</p><div class="gate5-fileline"><label class="gate5-field">Загрузить XLSX / CSV<input type="file" data-g5-yandex-file accept=".xlsx,.xls,.csv,.tsv,.txt"></label><span class="status-pill status-${pending ? "in_progress" : "not_started"}">${pending ? "Файл распознан" : "Не загружен"}</span></div>${preview}<div class="gate5-table-wrap" style="margin-top:12px"><table class="gate5-table"><thead><tr><th>Дата</th><th>Файл</th><th>Тип</th><th>Статус</th><th>Кампания</th><th>Группы / объявления / фразы</th></tr></thead><tbody>${history || '<tr><td colspan="6">Истории импортов пока нет.</td></tr>'}</tbody></table></div></div>`;
+}
 function g5StructureTable() {
   const g5 = ensureGate5State();
-  const rows = Object.values(g5.setup.ads)
+  const phrases = Object.values(g5.setup.phrases || {});
+  const rows = (phrases.length ? phrases : Object.values(g5.setup.ads))
     .slice(0, 80)
-    .map(
-      (a) =>
-        `<tr><td>${g5Esc(a.campaignId)}</td><td>${g5Esc(g5.setup.campaigns[a.campaignId]?.name || "—")}</td><td>${g5Esc(a.groupId)}</td><td>${g5Esc(g5.setup.groups[a.groupId]?.name || "—")}</td><td>${g5Esc(a.id)}</td><td>${g5Esc(a.title)}</td></tr>`,
-    )
+    .map((item) => {
+      const ad = item.adId ? g5.setup.ads[item.adId] : item;
+      return `<tr><td>${g5Esc(item.campaignId)}</td><td>${g5Esc(g5.setup.campaigns[item.campaignId]?.name || "—")}</td><td>${g5Esc(item.groupId)}</td><td>${g5Esc(g5.setup.groups[item.groupId]?.name || "—")}</td><td>${g5Esc(ad?.id || item.adId || "—")}</td><td>${g5Esc(ad?.title || "—")}</td><td>${g5Esc(item.phrase || "—")}</td></tr>`;
+    })
     .join("");
   const empty = Object.keys(g5.setup.ads).length
     ? ""
-    : '<tr><td colspan="6">Структура ещё не импортирована.</td></tr>';
-  return `<div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>№ кампании</th><th>Кампания</th><th>№ группы</th><th>Группа</th><th>№ объявления</th><th>Объявление</th></tr></thead><tbody>${rows || empty}</tbody></table></div>`;
+    : '<tr><td colspan="7">Структура ещё не импортирована.</td></tr>';
+  return `<div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>ID кампании</th><th>Кампания</th><th>ID группы</th><th>Группа</th><th>ID объявления</th><th>Объявление</th><th>ID фразы / фраза</th></tr></thead><tbody>${rows || empty}</tbody></table></div>`;
 }
 function g5UploadStatusHtml(meta, totalRows) {
   if (!meta || !meta.uploadedAt) {
@@ -12325,7 +12584,7 @@ function renderGate5Input() {
       const meta = g5.imports[key];
       return `<div class="gate5-report-card"><h4>${g5Esc(rep.title)}</h4><small>${g5Esc(rep.desc)}</small>${g5UploadStatusHtml(meta, g5.reports[key]?.length)}<div class="gate5-fileline"><label class="gate5-field">${meta ? "Догрузить файл (данные суммируются)" : "Файл"}<input type="file" data-gate5-import="${g5Attr(key)}" accept=".xlsx,.xls,.csv,.tsv,.txt"></label><button class="btn secondary" data-gate5-clear="${g5Attr(key)}">Очистить</button></div></div>`;
     })
-    .join("")}</div>${renderGate5Snapshots()}${g5GoalFormAndHistory()}`;
+    .join("")}</div><div class="gate5-card" style="margin-top:12px"><h4>Источник: структура кампании</h4><p class="gate5-muted">Импорт структуры фиксирует дату и источник, но не добавляет расход, клики, лиды или финансовые показатели.</p>${g5UploadStatusHtml(g5.imports.yandexStructure, g5.imports.yandexStructure?.rows)}</div>${renderGate5Snapshots()}${g5GoalFormAndHistory()}`;
 }
 function renderGate5Snapshots() {
   const g5 = ensureGate5State();
@@ -12538,6 +12797,8 @@ function renderGate5Journal() {
 }
 function renderGate5Comparison() {
   const g5 = ensureGate5State();
+  const hasStatistics = Object.values(g5.reports).some((rows) => rows.length);
+  if (!hasStatistics) return '<div class="gate5-note">Сравнение до / после станет доступно после загрузки статистических отчётов с расходом, кликами и лидами. Импорт структуры кампании сам по себе не создаёт метрики эффективности.</div>';
   const iterations = g5.iterations;
   const iterationOptions = `<option value="">Выберите изменение</option>${iterations.map((item) => `<option value="${g5Attr(item.id)}">#${g5Esc(item.number || "—")} · ${g5Esc(item.after || item.change?.desc || item.reason || "Изменение")}</option>`).join("")}`;
   const rows = g5.comparisons.slice().reverse().map((comparison) => {
@@ -12570,6 +12831,38 @@ function bindGate5Events() {
       renderGate();
     }),
   );
+  document.querySelector("[data-g5-yandex-file]")?.addEventListener("change", async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const workbook = await g5ReadYandexFile(file);
+      g5YandexPendingImport = g5DetectYandexImport(file.name || "Файл", workbook.sheets);
+      renderGate();
+    } catch (error) {
+      g5YandexPendingImport = null;
+      ensureGate5State().yandexDirect.imports.push({ id: makeId("g5-yd-import"), importedAt: new Date().toISOString(), fileName: file.name || "Файл", type: "unknown", status: "Ошибка импорта", counts: {} });
+      saveState(); renderGate();
+      alert(error.message || "Ошибка импорта");
+    }
+  });
+  document.querySelector("[data-g5-yandex-cancel]")?.addEventListener("click", () => {
+    g5YandexPendingImport = null;
+    renderGate();
+  });
+  document.querySelector("[data-g5-yandex-confirm]")?.addEventListener("click", () => {
+    if (!g5YandexPendingImport) return;
+    const payload = g5YandexPendingImport;
+    try {
+      const result = payload.type === "yandex_structure" ? g5ImportYandexStructure(payload) : (g5ImportYandexReport(payload), { unchanged: false, changes: 0 });
+      g5YandexPendingImport = null;
+      saveState(); renderGate();
+      alert(result.unchanged ? "Импорт выполнен, изменений нет." : `Импортирован. Зафиксировано изменений структуры: ${result.changes || 0}.`);
+    } catch (error) {
+      ensureGate5State().yandexDirect.imports.push({ id: makeId("g5-yd-import"), importedAt: new Date().toISOString(), fileName: payload.fileName, type: payload.type, status: "Ошибка импорта", counts: payload.counts || {} });
+      saveState(); renderGate();
+      alert(error.message || "Ошибка импорта");
+    }
+  });
   document.querySelectorAll("[data-gate5-import]").forEach((input) =>
     input.addEventListener("change", async (e) => {
       const kind = e.target.dataset.gate5Import;
