@@ -12291,6 +12291,9 @@ function g5ImportYandexSearchPlacement(payload, duplicateMode = "skip") {
     const sameSnapshot = duplicates.find((snapshot) => snapshot.campaignId === campaign.id);
     g5.periodSnapshots.push({ id: makeId("g5-snapshot"), createdAt: now, campaignId: campaign.id, periodStart: payload.periodStart, periodEnd: payload.periodEnd, status: "Активна", reportType: "search_placement", source: payload.fileName, sourceLabel: "Отчёт по размещению в Поиске", spend: total.spend, impressions: total.impressions, clicks: total.clicks, ctr: total.ctr || g5Div(total.clicks, total.impressions) * 100, leads: total.conversions, conversions: total.conversions, cr: total.cr || g5Div(total.conversions, total.clicks) * 100, cpa: total.cpa || g5Div(total.spend, total.conversions), versionOf: duplicateMode === "version" ? sameSnapshot?.id || "" : "", comment: "Импорт статистики Яндекс Директ" });
     g5YandexRegisterChange(g5, campaign, { level: "Кампания", type: "Импорт статистики", after: `Загружен отчёт по размещению в Поиске за период ${payload.periodStart} — ${payload.periodEnd} по кампании ${cabinetId}.` });
+    if (byCampaign.size === 1) {
+      g5.ui.filters = { campaignId: campaign.id, periodFrom: payload.periodStart, periodTo: payload.periodEnd, type: "", platform: "" };
+    }
   });
   const rowKey = (record) => [record.campaignId, record.periodStart, record.periodEnd, record.conditionType, record.query].join("|");
   const merged = new Map(g5.reports.placement.map((record) => [rowKey(record), record]));
@@ -12298,6 +12301,9 @@ function g5ImportYandexSearchPlacement(payload, duplicateMode = "skip") {
   g5.reports.placement = [...merged.values()];
   g5.imports.placement = { type: "placement", uploadedAt: now, fileName: payload.fileName, rows: g5.reports.placement.length, from: payload.periodStart, to: payload.periodEnd };
   g5.yandexDirect.imports.push({ id: makeId("g5-yd-import"), importedAt: now, fileName: payload.fileName, type: "search_placement", typeLabel: payload.typeLabel, status: duplicateMode === "version" ? "Импортирован как новая версия" : "Импортирован", campaignId: payload.campaignIds.join(", "), counts: payload.counts });
+  g5.ui.openBlocks.input = true;
+  g5.ui.openBlocks.ad = true;
+  g5.ui.openBlocks.registry = true;
   return { skipped: false, changes: byCampaign.size };
 }
 function g5AddM(dst, src) {
