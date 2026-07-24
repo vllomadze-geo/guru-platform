@@ -282,7 +282,6 @@ const els = {
   searchInput: document.getElementById("searchInput"),
   statusFilter: document.getElementById("statusFilter"),
   workspaceToolbar: document.getElementById("workspaceToolbar"),
-  csvInput: document.getElementById("csvInput"),
   saveStatus: document.getElementById("saveStatus"),
   autosaveDot: document.getElementById("autosaveDot"),
   brandTitle: document.getElementById("brandTitle"),
@@ -5697,43 +5696,6 @@ document.getElementById("quickTaskSaveBtn")?.addEventListener("click", () => {
     gate7Rerender();
   }
 });
-document
-  .getElementById("importGateBtn")
-  .addEventListener("click", () => els.csvInput.click());
-els.csvInput.addEventListener("change", (e) => {
-  if (e.target.files[0]) {
-    importCsvFile(e.target.files[0]);
-    e.target.value = "";
-  }
-});
-document
-  .getElementById("importProjectBtn")
-  .addEventListener("click", () =>
-    document.getElementById("csvInputProject").click(),
-  );
-document.getElementById("csvInputProject").addEventListener("change", (e) => {
-  if (e.target.files[0]) {
-    importProjectCsvFile(e.target.files[0]);
-    e.target.value = "";
-  }
-});
-document
-  .getElementById("exportGateBtn")
-  .addEventListener("click", exportGateCsv);
-document
-  .getElementById("exportProjectBtn")
-  .addEventListener("click", exportCsv);
-document
-  .getElementById("exportStagesTasksBtn")
-  ?.addEventListener("click", exportStagesAndTasksCsv);
-document
-  .getElementById("exportPdfGateBtn")
-  .addEventListener("click", exportPdfReport);
-document
-  .getElementById("exportPdfProjectBtn")
-  .addEventListener("click", exportPdfProjectReport);
-document.getElementById("resetBtn").addEventListener("click", resetDemo);
-
 els.searchInput.addEventListener("input", renderGate);
 els.statusFilter.addEventListener("change", renderGate);
 document
