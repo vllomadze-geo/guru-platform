@@ -38695,6 +38695,12 @@ v116Status = function (card, workspace = state) {
     ...(Array.isArray(project.targetSegmentExtra)
       ? project.targetSegmentExtra
       : []),
+    // В проектах, созданных до единого паспорта, сегмент мог быть
+    // зафиксирован в общем доказательстве или в контексте календаря.
+    // Это те же данные проекта, поэтому они должны участвовать
+    // в расчёте готовности, а не оставлять заполненный блок «В работе».
+    workspace?.sharedEvidence?.кому_продаем,
+    workspace?.gate6Calendar?.context?.audience,
   ]
     .map((value) => String(value || '').trim())
     .filter(Boolean);
