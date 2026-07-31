@@ -18525,6 +18525,7 @@ renderGateTable = function (gate, cards) {
     });
     bindCardInputs();
     bindGate0StatusJump();
+    bindGate0DiagnosticStages();
     renderGateNav();
     return;
   }
@@ -18591,6 +18592,7 @@ function gate0RefreshStatuses() {
       const body = section.querySelector(".gate0-card-body");
       if (body)
         body.innerHTML = `<div class="field-row">${gate0SummaryHtml()}</div>`;
+      bindGate0DiagnosticStages();
     }
   });
   bindGate0StatusJump();
@@ -18887,15 +18889,39 @@ function diag5AItemsHtml(items = []) {
     .join("");
 }
 
+function gate0DiagnosticOpenStages() {
+  if (!state) return {};
+  state.ui = state.ui || {};
+  state.ui.gate0Diagnostics = state.ui.gate0Diagnostics || { openStages: {} };
+  state.ui.gate0Diagnostics.openStages =
+    state.ui.gate0Diagnostics.openStages || {};
+  return state.ui.gate0Diagnostics.openStages;
+}
+
+function bindGate0DiagnosticStages() {
+  document.querySelectorAll("[data-gate0-diagnostic-stage]").forEach((stage) => {
+    if (stage.dataset.gate0DiagnosticBound) return;
+    stage.dataset.gate0DiagnosticBound = "true";
+    stage.addEventListener("toggle", () => {
+      gate0DiagnosticOpenStages()[stage.dataset.gate0DiagnosticStage] = stage.open;
+      saveState();
+    });
+  });
+}
+
 function gate0SummaryHtml() {
   const stages = diag5AStages();
+  const openStages = gate0DiagnosticOpenStages();
 
   const stagesHtml = stages
     .map((s) => {
       const light = diag5ALight(s.pct);
       const isRed = s.pct < 40;
       const tone = s.pct >= 80 ? "green" : s.pct >= 40 ? "yellow" : "red";
-      return `<details class="diag-stage diag-stage-${tone}" ${isRed ? "open" : ""}>
+      const isOpen = Object.prototype.hasOwnProperty.call(openStages, s.name)
+        ? openStages[s.name]
+        : isRed;
+      return `<details class="diag-stage diag-stage-${tone}" data-gate0-diagnostic-stage="${escapeAttr(s.name)}" ${isOpen ? "open" : ""}>
       <summary class="diag-stage-head">
         <span class="diag-light">${light}</span>
         <div class="diag-stage-info">
