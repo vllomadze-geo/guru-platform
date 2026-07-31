@@ -36024,6 +36024,12 @@ function guruProjectReadiness() {
 // Левое меню: число рабочих блоков и процент — из единого механизма.
 renderGateNav = function () {
   if (!state || !state.gates) return;
+  const projectButton = document.getElementById("projectBtn");
+  if (projectButton) {
+    const isProjectActive = activeView === "project";
+    projectButton.classList.toggle("active", isProjectActive);
+    projectButton.setAttribute("aria-current", isProjectActive ? "page" : "false");
+  }
   els.gateNav.innerHTML = state.gates
     .map((g) => {
       const r = guruGateReadiness(g);

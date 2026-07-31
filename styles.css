@@ -466,9 +466,10 @@ button, input, select, textarea { font-family: inherit; }
 .side-action, .gate-btn {
   width: 100%; text-align: left; border: 1px solid rgba(255,255,255,.1);
   background: rgba(255,255,255,.04); color: #fff; border-radius: 12px; padding: 12px;
-  cursor: pointer;
+  cursor: pointer; transition: transform .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
 }
-.side-action:hover, .gate-btn:hover { background: rgba(255,255,255,.08); }
+.side-action:hover, .gate-btn:hover { background: rgba(255,255,255,.08); transform: translateX(3px); }
+.side-action:active, .gate-btn:active { transform: translateX(1px) scale(.985); }
 .quick-task-action { background: #fff; border-color: #fff; color: #171411; font-weight: 800; }
 .quick-task-action:hover { background: #ece7df; }
 .quick-task-composer { display: grid; gap: 8px; padding: 12px; border: 1px solid rgba(255,255,255,.16); border-radius: 12px; background: rgba(255,255,255,.08); }
@@ -480,7 +481,7 @@ button, input, select, textarea { font-family: inherit; }
 .quick-task-save { background: #fff; color: #171411; }
 .quick-task-close { background: transparent; color: #e4ddd4; }
 .quick-task-close:hover { background: rgba(255,255,255,.1); }
-.gate-btn.active { background: #fff; color: #171411; }
+.gate-btn.active, .side-action.active { background: #fff; border-color: #fff; color: #171411; box-shadow: 0 4px 14px rgba(0,0,0,.16); }
 .gate-btn .small { display: block; opacity: .7; font-size: 12px; margin-top: 4px; }
 .side-section-title { color: #b9b2aa; text-transform: uppercase; font-size: 12px; letter-spacing: .08em; margin-top: 12px; }
 .gate-nav {
