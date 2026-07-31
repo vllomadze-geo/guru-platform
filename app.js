@@ -18509,7 +18509,7 @@ renderGateTable = function (gate, cards) {
         return `<details class="gate0-card" data-card-row="${c.id}" ${isOpen ? "open" : ""}>
         <summary class="gate0-card-head">
           <div class="gate0-card-title">${escapeHtml(c.title)}</div>
-          <span class="gate0-card-status status-${c.status}">${STATUS_LABELS[c.status] || c.status}</span>
+          <span class="gate0-card-status status-${c.status}" data-gate0-jump-missing="${escapeAttr(c.id)}" role="button" tabindex="0" title="Перейти к незаполненному полю">${STATUS_LABELS[c.status] || c.status}</span>
         </summary>
         ${instructionToggleHtml(c)}
         <div class="gate0-card-body">${cardUserFieldsHtml(c)}</div>
@@ -18524,11 +18524,56 @@ renderGateTable = function (gate, cards) {
       });
     });
     bindCardInputs();
+    bindGate0StatusJump();
     renderGateNav();
     return;
   }
   __guruPrevRenderGateTableV120(gate, cards);
 };
+
+function gate0FirstEmptyField(section) {
+  const selector = [
+    "[data-v116-key]",
+    "[data-v116-multi]",
+    "[data-guru-product-jtbd]",
+    "input:not([type=hidden]):not([type=checkbox]):not([type=radio])",
+    "textarea",
+    "select",
+  ].join(",");
+  return [...section.querySelectorAll(selector)].find((field) => {
+    if (field.disabled || field.readOnly || field.closest("[hidden]")) return false;
+    return !String(field.value || "").trim();
+  });
+}
+
+function gate0JumpToMissingField(cardId) {
+  const escapedId = typeof CSS?.escape === "function" ? CSS.escape(cardId) : cardId;
+  const section = document.querySelector(`.gate0-card[data-card-row="${escapedId}"]`);
+  if (!section) return;
+  section.open = true;
+  state._gate0Open = state._gate0Open || {};
+  state._gate0Open[cardId] = true;
+  const field = gate0FirstEmptyField(section);
+  const target = field || section.querySelector(".gate0-card-body") || section;
+  target.scrollIntoView({ behavior: "smooth", block: "center" });
+  if (field) setTimeout(() => field.focus({ preventScroll: true }), 350);
+}
+
+function bindGate0StatusJump() {
+  document.querySelectorAll("[data-gate0-jump-missing]").forEach((badge) => {
+    if (badge.dataset.gate0JumpBound) return;
+    badge.dataset.gate0JumpBound = "true";
+    const jump = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      gate0JumpToMissingField(badge.dataset.gate0JumpMissing);
+    };
+    badge.addEventListener("click", jump);
+    badge.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") jump(event);
+    });
+  });
+}
 
 function gate0RefreshStatuses() {
   const gate = state?.gates?.find((g) => g.id === "gate-0");
@@ -18540,6 +18585,7 @@ function gate0RefreshStatuses() {
     if (badge) {
       badge.className = "gate0-card-status status-" + card.status;
       badge.textContent = STATUS_LABELS[card.status] || card.status;
+      badge.dataset.gate0JumpMissing = card.id;
     }
     if (isStartupSummaryCard(card)) {
       const body = section.querySelector(".gate0-card-body");
@@ -18547,6 +18593,7 @@ function gate0RefreshStatuses() {
         body.innerHTML = `<div class="field-row">${gate0SummaryHtml()}</div>`;
     }
   });
+  bindGate0StatusJump();
   renderGateNav();
 }
 
