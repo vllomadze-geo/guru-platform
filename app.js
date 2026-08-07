@@ -278,7 +278,6 @@ const els = {
   pageTitle: document.getElementById("pageTitle"),
   gateNav: document.getElementById("gateNav"),
   contentArea: document.getElementById("contentArea"),
-  summaryGrid: document.getElementById("summaryGrid"),
   searchInput: document.getElementById("searchInput"),
   statusFilter: document.getElementById("statusFilter"),
   workspaceToolbar: document.getElementById("workspaceToolbar"),
@@ -2754,32 +2753,11 @@ function getProgress(cards = allCards()) {
 
 function render() {
   updateProjectChrome();
-  renderSummary();
   renderGateNav();
   if (activeView === "project") renderProject();
   if (activeView === "metrics") renderMetrics();
   if (activeView === "scheme") renderScheme();
   if (activeView === "gate") renderGate();
-}
-
-function renderSummary() {
-  if (activeView !== "project") {
-    els.summaryGrid.hidden = true;
-    els.summaryGrid.innerHTML = "";
-    return;
-  }
-  els.summaryGrid.hidden = false;
-  const cards = allCards();
-  const counts = countByStatus(cards);
-  const gatesCount = state.gates.length;
-  const metricsCount = state.metrics?.length || 0;
-  const progress = getProgress(cards);
-  els.summaryGrid.innerHTML = `
-    <div class="summary-card"><div class="summary-label">Gate</div><div class="summary-value">${gatesCount}</div><div class="summary-help">крупных этапов</div></div>
-    <div class="summary-card"><div class="summary-label">Блоки</div><div class="summary-value">${cards.length}</div><div class="summary-help">карточек из CSV</div></div>
-    <div class="summary-card"><div class="summary-label">Готово</div><div class="summary-value">${progress}%</div><div class="summary-help">${counts.ready || 0} блоков закрыто</div></div>
-    <div class="summary-card"><div class="summary-label">Метрики</div><div class="summary-value">${metricsCount}</div><div class="summary-help">строк данных</div></div>
-  `;
 }
 
 function renderGateNav() {
@@ -2800,6 +2778,96 @@ function renderGateNav() {
   });
 }
 
+function projectPassportOverviewFields() {
+  const project = state?.project || {};
+  const comparison = state?.projectComparison;
+  const firstValue = (...values) =>
+    values.find((value) => String(value || "").trim()) || "";
+  const textList = (...values) => {
+    const entries = [];
+    const add = (value) => {
+      if (Array.isArray(value)) return value.forEach(add);
+      const text = String(value || "").trim();
+      if (
+        text &&
+        !entries.some(
+          (entry) => entry.toLocaleLowerCase("ru-RU") === text.toLocaleLowerCase("ru-RU"),
+        )
+      )
+        entries.push(text);
+    };
+    values.forEach(add);
+    return entries.join("\n");
+  };
+  const products = typeof v121OffersProducts === "function"
+    ? v121OffersProducts(state)
+    : [];
+  const painCompetitors = state?.painV130?.steps?.competitors?.competitorRows || [];
+  const comparisonCompetitors = Array.isArray(comparison?.competitors)
+    ? comparison.competitors
+        .map((item) => item?.name || "")
+        .filter((name) => !/^конкурент\s+\d+$/i.test(String(name).trim()))
+    : [];
+  const economics = typeof uv130EconomicsSnapshot === "function"
+    ? uv130EconomicsSnapshot()
+    : {};
+  const demand = state?.demandRoute || {};
+  const cards = allCards();
+  const ready = cards.filter((card) => card.status === "ready").length;
+  const progress = cards.length ? Math.round((ready / cards.length) * 100) : 0;
+  const updatedAt = state?.updatedAt
+    ? new Date(state.updatedAt).toLocaleString("ru-RU", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
+
+  return [
+    { key: "name", label: "Название проекта", hint: "Как называется проект.", value: project.name || "", source: "вводится в паспорте" },
+    { label: "Ниша", hint: "Чем занимается проект.", value: project.niche || "", source: "Gate 0 · базовые сведения" },
+    { label: "Сайт", hint: "Основной адрес проекта.", value: project.website || "", source: "Gate 0 · базовые сведения" },
+    { label: "География", hint: "Где работает проект.", value: project.geography || "", source: "Gate 0 · базовые сведения" },
+    { label: "Продукты", hint: "Что продаём.", value: textList(products, project.whatSell, project.whatSellExtra), source: "Gate 0 · продукты" },
+    { label: "Основная ЦА", hint: "Кому продаём.", value: textList(project.targetSegment, project.targetSegmentExtra), source: "Gate 0 · целевая аудитория" },
+    { label: "Основной JTBD", hint: "Какой результат хочет получить клиент.", value: firstValue(project.clientResult, projectComparisonJtbdText?.()), source: "Gate 0 / Gate 1 · JTBD" },
+    { label: "Позиционирование", hint: "Чем отличаемся от конкурентов.", value: textList(project.positioningStatement, project.positioningStartFormula), source: "Gate 0 · позиционирование" },
+    { label: "УТП", hint: "Почему выбирают именно нас.", value: project.usp || "", source: "Gate 0 · позиционирование" },
+    { label: "Оффер", hint: "Что предлагаем клиенту.", value: textList(projectComparisonOffersText?.(), project.currentOffers, project.offer), source: "Gate 0 / Gate 1 · офферы" },
+    { label: "Главный CTA", hint: "Какое действие должен сделать клиент.", value: textList(project.primaryTargetAction, project.currentCtas, project.mainCta), source: "Gate 0 · CTA" },
+    { label: "Основные конкуренты", hint: "С кем конкурируем.", value: textList(painCompetitors.map((row) => row?.col0), comparisonCompetitors), source: "Gate 1 · конкуренты" },
+    { label: "Основное отличие", hint: "В чём наше главное преимущество.", value: firstValue(comparison?.summary?.differentiate, project.competitiveDifference, project.mainDifference, project.positioningProof), source: "Gate 1 · сравнение проектов" },
+    { label: "Средний чек", hint: "Средняя стоимость заказа.", value: firstValue(economics.aov, project.averageCheck), source: "Gate 1 · юнит-экономика" },
+    { label: "Целевой CPA", hint: "Сколько можно заплатить за одного клиента.", value: firstValue(economics.allowedCpa, demand.targetCpa, project.targetCpa), source: "Gate 1 · юнит-экономика" },
+    { label: "Каналы привлечения", hint: "Откуда приходят клиенты.", value: textList(project.promotionChannels, project.marketingChannels, project.channels), source: "Gate 0 / Gate 4 · каналы" },
+    { label: "Готовность проекта", hint: "Насколько проект готов.", value: `${progress}% · ${ready} из ${cards.length} блоков готовы`, source: "автоматический расчёт по всем Gate" },
+    { label: "Последнее обновление", hint: "Когда данные обновлялись последний раз.", value: updatedAt, source: "автосохранение" },
+  ];
+}
+
+function projectPassportOverviewHtml() {
+  const fields = projectPassportOverviewFields();
+  return `<div class="project-overview panel">
+    <div class="project-overview-head">
+      <div><h2>Паспорт проекта</h2><p class="muted">Сводка автоматически собирается из всех Gate. Вручную можно изменить только название проекта.</p></div>
+      <span class="project-overview-auto">Автоматическая сводка</span>
+    </div>
+    <div class="project-overview-grid">${fields.map((field) => {
+      const value = String(field.value || "").trim();
+      const nameField = field.key === "name";
+      return `<article class="project-overview-field ${value ? "is-filled" : "is-empty"}">
+        <div class="project-overview-field-head"><div><h3>${escapeHtml(field.label)}</h3><p>${escapeHtml(field.hint)}</p></div><span>${value ? "Заполнено" : "Не заполнено"}</span></div>
+        ${nameField
+          ? `<input data-project="name" value="${escapeAttr(value)}" aria-label="Название проекта" />`
+          : `<div class="project-overview-value">${value ? escapeHtml(value).replace(/\n/g, "<br>") : "Пока нет данных"}</div>`}
+        <small>Источник: ${escapeHtml(field.source)}</small>
+      </article>`;
+    }).join("")}</div>
+  </div>`;
+}
+
 function setToolbarVisible(visible) {
   els.workspaceToolbar.style.display = visible ? "flex" : "none";
 }
@@ -2813,6 +2881,8 @@ function renderProject() {
     .content.cloneNode(true);
   els.contentArea.innerHTML = "";
   els.contentArea.appendChild(tpl);
+  const overview = els.contentArea.querySelector("[data-project-overview]");
+  if (overview) overview.outerHTML = projectPassportOverviewHtml();
   document.querySelectorAll("[data-project]").forEach((input) => {
     const key = input.dataset.project;
     input.value = state.project[key] || "";
@@ -8164,6 +8234,598 @@ document.addEventListener("click", (event) => {
   openAuditPageCard(btn.dataset.openAuditPage);
 });
 
+/* ================================================================
+   v1.83.0 — Gate 8: прогноз и моделирование
+   Исходные показатели всегда читаются из Gate 0–7. В Gate 8 хранятся
+   только настройки временного сценария, история расчётов и связи.
+   ================================================================ */
+const GATE8_MODEL_VERSION = "gate8-monte-carlo-v2.1";
+const GATE8_MONTE_CARLO_RUNS = 2000;
+const GATE8_FORECAST_CORE_MIGRATION = "gate8-monte-carlo-core-v2";
+const GATE8_UNCERTAINTY_CALIBRATION_MIGRATION = "gate8-uncertainty-calibration-v1";
+const GATE8_FUNNEL_BENCHMARK = {
+  name: "Системный отраслевой ориентир: ручное производство / e-commerce",
+  cpc: 60,
+  ctr: 2,
+  siteConversion: 2,
+  saleConversion: 20,
+  uncertainty: 0.35,
+};
+const GATE8_MISSING_NAVIGATOR_MIGRATION = "gate8-missing-data-navigator-v1";
+const GATE8_HARD_GATE_PRIORITY_MIGRATION = "gate8-missing-priority-hard-gates-v1";
+const GATE8_HARD_GATE_KEYS = new Set(["goalResult"]);
+const GATE8_MISSING_DATA_IMPACT = {
+  goalResult: ["выбор результата", "состав обязательных данных", "сценарии", "сравнение с целью", "вероятность"],
+  budget: ["клики", "заявки", "продажи", "выручка", "прибыль", "ROI"],
+  trafficRoute: ["заявки", "продажи", "выручка", "прибыль", "CPA", "ROI"],
+  saleConversion: ["продажи", "выручка", "прибыль", "CPA", "ROI"],
+  goalTarget: ["выполнение цели", "сценарии", "вероятность", "риск недостижения"],
+  averageCheck: ["выручка", "прибыль", "ROI"],
+  goalDeadline: ["проверка срока", "сравнение прогноза с фактом"],
+  resultCost: ["проверка допустимой стоимости", "риск превышения стоимости"],
+  margin: ["валовая прибыль", "ROI"],
+};
+const GATE8_MISSING_DATA_ORDER = [
+  "goalResult",
+  "budget",
+  "trafficRoute",
+  "saleConversion",
+  "goalTarget",
+  "averageCheck",
+  "goalDeadline",
+  "resultCost",
+  "margin",
+];
+const GATE8_RESULTS = [
+  ["goal", "Главный результат цели"],
+  ["leads", "Заявки"],
+  ["sales", "Продажи"],
+  ["revenue", "Выручка"],
+  ["profit", "Прибыль после рекламы"],
+  ["cpl", "CPL"],
+  ["cpa", "CPA"],
+  ["roi", "Окупаемость рекламы"],
+];
+const GATE8_MANUAL_FIELDS = [
+  ["budget", "Бюджет, ₽"],
+  ["demandChange", "Изменение спроса, %"],
+  ["cpc", "CPC, ₽"],
+  ["ctr", "CTR, %"],
+  ["siteConversion", "Конверсия сайта, %"],
+  ["cpl", "CPL, ₽"],
+  ["saleConversion", "Конверсия заявки в продажу, %"],
+  ["averageCheck", "Средний чек, ₽"],
+  ["margin", "Маржинальность, %"],
+  ["termDays", "Срок, дней"],
+  ["taskReadiness", "Готовность задач, %"],
+];
+
+function g8BlankState() {
+  return {
+    resultMetric: "goal",
+    manual: Object.fromEntries(GATE8_MANUAL_FIELDS.map(([key]) => [key, ""])),
+    history: [],
+    linkedTasks: [],
+    calendarActions: [],
+    openSections: {},
+    migrationLog: [],
+    message: "",
+    lastInputSignature: "",
+    modelVersion: GATE8_MODEL_VERSION,
+  };
+}
+
+function ensureGate8Workspace(workspace = state) {
+  if (!workspace) return null;
+  workspace.gates = Array.isArray(workspace.gates) ? workspace.gates : [];
+  let gate = workspace.gates.find((item) => item?.id === "gate-8");
+  if (!gate) {
+    gate = { id: "gate-8", title: "8. Прогноз и моделирование", cards: [] };
+    workspace.gates.push(gate);
+  }
+  gate.title = "8. Прогноз и моделирование";
+  gate.cards = Array.isArray(gate.cards) ? gate.cards : [];
+  const blank = g8BlankState();
+  const current = workspace.gate8Forecast || {};
+  current.manual = { ...blank.manual, ...(current.manual || {}) };
+  current.history = Array.isArray(current.history) ? current.history : [];
+  current.linkedTasks = Array.isArray(current.linkedTasks) ? current.linkedTasks : [];
+  current.calendarActions = Array.isArray(current.calendarActions) ? current.calendarActions : [];
+  current.openSections = current.openSections && typeof current.openSections === "object" && !Array.isArray(current.openSections)
+    ? current.openSections
+    : {};
+  current.migrationLog = Array.isArray(current.migrationLog) ? current.migrationLog : [];
+  if (!current.migrationLog.some((entry) => entry?.id === GATE8_MISSING_NAVIGATOR_MIGRATION)) {
+    const entry = {
+      id: GATE8_MISSING_NAVIGATOR_MIGRATION,
+      appliedAt: new Date().toISOString(),
+      description: "Единый приоритетный источник недостающих данных подключён к верхнему навигатору, блоку 3 и блоку 17.",
+    };
+    current.migrationLog.push(entry);
+    console.info(`[GURU migration] ${entry.id}: ${entry.description}`);
+  }
+  if (!current.migrationLog.some((entry) => entry?.id === GATE8_HARD_GATE_PRIORITY_MIGRATION)) {
+    const entry = {
+      id: GATE8_HARD_GATE_PRIORITY_MIGRATION,
+      appliedAt: new Date().toISOString(),
+      description: "Приоритет недостающих данных разделён на жёсткие ворота и остальные поля цепочки.",
+    };
+    current.migrationLog.push(entry);
+    console.info(`[GURU migration] ${entry.id}: ${entry.description}`);
+  }
+  if (!current.migrationLog.some((entry) => entry?.id === GATE8_FORECAST_CORE_MIGRATION)) {
+    const entry = {
+      id: GATE8_FORECAST_CORE_MIGRATION,
+      appliedAt: new Date().toISOString(),
+      description: "Блоки 6–11 и 13 подключены к единому диапазонному ядру Monte Carlo; блок 12 сохранён без изменений.",
+    };
+    current.migrationLog.push(entry);
+    console.info(`[GURU migration] ${entry.id}: ${entry.description}`);
+  }
+  if (!current.migrationLog.some((entry) => entry?.id === GATE8_UNCERTAINTY_CALIBRATION_MIGRATION)) {
+    const entry = {
+      id: GATE8_UNCERTAINTY_CALIBRATION_MIGRATION,
+      appliedAt: new Date().toISOString(),
+      description: "Неопределённость фактических периодов калибруется по 1/√n; при 2/3/4 периодах действует порог 20%/16,3%/15%.",
+    };
+    current.migrationLog.push(entry);
+    console.info(`[GURU migration] ${entry.id}: ${entry.description}`);
+  }
+  current.resultMetric = GATE8_RESULTS.some(([key]) => key === current.resultMetric)
+    ? current.resultMetric
+    : "goal";
+  current.message = String(current.message || "");
+  current.lastInputSignature = String(current.lastInputSignature || "");
+  current.modelVersion = GATE8_MODEL_VERSION;
+  workspace.gate8Forecast = current;
+  return current;
+}
+
+function g8Number(value) {
+  if (typeof value === "number") return Number.isFinite(value) ? Math.max(0, value) : 0;
+  const normalized = String(value ?? "")
+    .replace(/\s+/g, "")
+    .replace(/[^\d,.-]/g, "")
+    .replace(",", ".");
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+}
+
+function g8SignedNumber(value) {
+  const normalized = String(value ?? "")
+    .replace(/\s+/g, "")
+    .replace(/[^\d,.-]/g, "")
+    .replace(",", ".");
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function g8Text(value) {
+  return String(value ?? "").trim();
+}
+
+function g8First(...values) {
+  return values.find((value) => g8Text(value)) ?? "";
+}
+
+function g8LatestDate(...values) {
+  return values
+    .flat()
+    .map((value) => g8Text(value))
+    .filter(Boolean)
+    .sort()
+    .at(-1) || "";
+}
+
+function g8DateLabel(value) {
+  const date = new Date(value || "");
+  if (!Number.isFinite(date.getTime())) return "Дата не зафиксирована";
+  return date.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function g8Money(value) {
+  return Number.isFinite(value)
+    ? value.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ₽"
+    : "Недостаточно данных";
+}
+
+function g8NumberLabel(value, digits = 2) {
+  return Number.isFinite(value)
+    ? value.toLocaleString("ru-RU", { maximumFractionDigits: digits })
+    : "Недостаточно данных";
+}
+
+function g8Percent(value) {
+  return Number.isFinite(value)
+    ? value.toLocaleString("ru-RU", { maximumFractionDigits: 1 }) + "%"
+    : "Недостаточно данных";
+}
+
+function g8MetricLabel(metric) {
+  return GATE8_RESULTS.find(([key]) => key === metric)?.[1] || "Результат";
+}
+
+function g8MetricFromText(value) {
+  const text = g8Text(value).toLocaleLowerCase("ru-RU");
+  if (/\bcpl\b|цена\s*(заявк|лид)|стоимост.*(заявк|лид)/i.test(text)) return "cpl";
+  if (/\bcpa\b|стоимост.*(продаж|клиент|заказ)/i.test(text)) return "cpa";
+  if (/окуп|\broi\b/i.test(text)) return "roi";
+  if (/прибыл/i.test(text)) return "profit";
+  if (/выруч/i.test(text)) return "revenue";
+  if (/продаж|заказ|покуп/i.test(text)) return "sales";
+  if (/заяв|лид|обращен|звон/i.test(text)) return "leads";
+  return "";
+}
+
+function g8GoalCandidate() {
+  const project = state?.project || {};
+  const g5Goals = Array.isArray(state?.gate5?.goals) ? state.gate5.goals : [];
+  const structuredProjectGoal = g8Text(project.goalDescription || project.goalText)
+    ? {
+        description: project.goalDescription || project.goalText,
+        metric: project.goalMetric,
+        targetValue: project.goalTargetValue,
+        deadline: project.goalDeadline,
+        budget: project.goalBudget,
+        allowedCost: project.goalAllowedCost,
+        updatedAt: project.goalUpdatedAt || state?.updatedAt || "",
+      }
+    : null;
+  const candidates = [
+    structuredProjectGoal,
+    project.goal,
+    project.projectGoal,
+    project.targetGoal,
+    project.marketingGoal,
+    g5Goals.slice().sort((a, b) => String(b?.updatedAt || b?.createdAt || "").localeCompare(String(a?.updatedAt || a?.createdAt || "")))[0],
+  ];
+  const object = candidates.find((value) => value && typeof value === "object");
+  if (object) return { raw: object, source: g5Goals.includes(object) ? "Gate 5 → Цель периода" : "Gate 0 → Цель проекта" };
+  const text = g8First(
+    candidates.find((value) => typeof value === "string"),
+    project.goalText,
+    state?.demandRoute?.goal,
+    state?.gate4?.launchParams?.campaignGoals,
+  );
+  return text
+    ? { raw: { description: text }, source: state?.demandRoute?.goal === text ? "Gate 1 → Цель спроса" : "Gate 0 → Цель проекта" }
+    : { raw: null, source: "Gate 0 → Цель проекта" };
+}
+
+function g8ObjectValue(object, keys) {
+  for (const key of keys) {
+    const value = object?.[key];
+    if (value !== undefined && value !== null && g8Text(value)) return value;
+  }
+  return "";
+}
+
+function g8Goal(facts = {}) {
+  const candidate = g8GoalCandidate();
+  const raw = candidate.raw || {};
+  const description = g8First(
+    g8ObjectValue(raw, ["description", "title", "name", "goal", "result", "objective", "targetResult"]),
+  );
+  const explicitMetric = g8Text(g8ObjectValue(raw, ["metric", "resultMetric", "type", "kpi"])).toLowerCase();
+  const metricAliases = { заявки: "leads", лиды: "leads", продажи: "sales", выручка: "revenue", прибыль: "profit", окупаемость: "roi" };
+  const metric = GATE8_RESULTS.some(([key]) => key === explicitMetric)
+    ? explicitMetric
+    : metricAliases[explicitMetric] || g8MetricFromText(description);
+  const targetRaw = g8ObjectValue(raw, ["targetValue", "target", "value", "quantity", "amount", "targetAmount"]);
+  const target = g8Number(targetRaw || description);
+  const deadline = g8Text(g8ObjectValue(raw, ["deadline", "dueDate", "dateTo", "endDate", "term", "targetDate"]));
+  const budget = g8Number(g8ObjectValue(raw, ["budget", "maxBudget", "allowedBudget", "adBudget"])) || g8Number(facts.budget?.value);
+  const goalCost = g8Number(g8ObjectValue(raw, ["maxCost", "allowedCost", "targetCpl", "cpl", "targetCpa", "cpa"]));
+  const allowedCost = goalCost || (metric === "sales" ? g8Number(facts.allowedCpa?.value) : g8Number(facts.allowedCpl?.value) || g8Number(facts.allowedCpa?.value));
+  const present = Boolean(candidate.raw);
+  const missing = [];
+  if (!description) missing.push("какой результат нужно получить");
+  if (!metric) missing.push("измеримый показатель цели");
+  if (!target) missing.push("целевое значение");
+  if (!deadline) missing.push("срок цели");
+  if (!budget) missing.push("допустимый бюджет");
+  if (!allowedCost) missing.push("допустимая стоимость результата");
+  return {
+    present,
+    valid: present && !missing.length,
+    description,
+    metric,
+    target,
+    deadline,
+    budget,
+    allowedCost,
+    source: candidate.source,
+    updatedAt: g8ObjectValue(raw, ["updatedAt", "createdAt", "date"]) || state?.updatedAt || "",
+    missing,
+    raw,
+  };
+}
+
+function g8FactRecord(key, label, value, gate, block, type = "предположение", updatedAt = "", extra = {}) {
+  return {
+    key,
+    label,
+    value,
+    gate,
+    block,
+    source: `${gate} → ${block}`,
+    type,
+    updatedAt: updatedAt || state?.updatedAt || "",
+    ...extra,
+  };
+}
+
+function g8LatestGate5Periods() {
+  const g5 = state?.gate5 || { periodSnapshots: [] };
+  return g5CanonicalPeriodSnapshots(g5)
+    .map((row) => {
+      const impressions = g8Number(row.impressions);
+      const clicks = g8Number(row.clicks);
+      const spend = g8Number(row.spend);
+      const leads = g8Number(row.leads || row.conversions);
+      return {
+        campaignId: row.campaignId,
+        reportType: row.reportType,
+        periodStart: row.periodStart || "",
+        periodEnd: row.periodEnd || row.date || "",
+        createdAt: g8LatestDate(row.createdAt, row.updatedAt, row.periodEnd),
+        spend,
+        impressions,
+        clicks,
+        leads,
+        ctr: impressions ? (clicks / impressions) * 100 : 0,
+        cpc: clicks ? spend / clicks : 0,
+        siteConversion: clicks ? (leads / clicks) * 100 : 0,
+        cpl: leads ? spend / leads : 0,
+      };
+    })
+    .sort((a, b) => String(a.periodEnd || a.createdAt).localeCompare(String(b.periodEnd || b.createdAt)));
+}
+
+function g8LatestBusinessLink(period = null) {
+  const links = Array.isArray(state?.gate5?.links) ? state.gate5.links : [];
+  const periodEnd = g8Text(period?.periodEnd).slice(0, 10);
+  const campaignId = g8Text(period?.campaignId);
+  const scopedLinks = campaignId ? links.filter((item) => g8Text(item?.campaignId) === campaignId) : links;
+  const matching = periodEnd
+    ? scopedLinks.filter((item) => g8Text(item?.periodEnd || item?.date).slice(0, 10) === periodEnd)
+    : scopedLinks;
+  if (!matching.length) return null;
+  const targetEnd = periodEnd || matching.map((item) => g8Text(item?.periodEnd || item?.date)).filter(Boolean).sort().at(-1) || "";
+  const samePeriod = targetEnd ? matching.filter((item) => g8Text(item?.periodEnd || item?.date) === targetEnd) : matching;
+  const byCampaign = new Map();
+  samePeriod.forEach((item) => {
+    const key = item?.campaignId || item?.id || "project";
+    const previous = byCampaign.get(key);
+    if (!previous || String(item?.updatedAt || item?.createdAt || "") >= String(previous?.updatedAt || previous?.createdAt || "")) byCampaign.set(key, item);
+  });
+  const selected = [...byCampaign.values()];
+  let leads = 0;
+  let orders = 0;
+  let actualRevenue = 0;
+  let weightedMargin = 0;
+  let marginWeight = 0;
+  selected.forEach((item) => {
+    const itemOrders = g8Number(item?.orders || item?.sales);
+    const revenue = g8Number(item?.actualRevenue) || itemOrders * g8Number(item?.avgCheck || item?.minCheck);
+    leads += g8Number(item?.leads);
+    orders += itemOrders;
+    actualRevenue += revenue;
+    if (g8Number(item?.margin)) {
+      const weight = revenue || 1;
+      weightedMargin += g8Number(item.margin) * weight;
+      marginWeight += weight;
+    }
+  });
+  return {
+    periodStart: period?.periodStart || selected[0]?.periodStart || "",
+    periodEnd: targetEnd,
+    leads,
+    orders,
+    actualRevenue,
+    avgCheck: orders ? actualRevenue / orders : 0,
+    margin: marginWeight ? weightedMargin / marginWeight : 0,
+    updatedAt: g8LatestDate(selected.map((item) => item?.updatedAt || item?.createdAt || item?.periodEnd)),
+    sources: selected,
+  };
+}
+
+function g8CollectFacts() {
+  const facts = {};
+  const add = (record) => { facts[record.key] = record; };
+  const project = state?.project || {};
+  const updated = state?.updatedAt || "";
+  const evidence = state?.sharedEvidence || {};
+  (state?.gates || []).filter((gate) => /^gate-[0-7]$/.test(gate.id)).forEach((gate) => {
+    const readiness = guruGateReadiness(gate);
+    add(g8FactRecord(
+      `gateReadiness${gate.id.slice(-1)}`,
+      `Готовность ${gate.title}`,
+      readiness.percent,
+      `Gate ${gate.id.slice(-1)}`,
+      "Статусы критических блоков",
+      "факт",
+      updated,
+      { ready: readiness.ready, total: readiness.total },
+    ));
+  });
+  add(g8FactRecord("product", "Продукт", g8First(project.whatSell, evidence["что_продаем"]), "Gate 0", "Продукт, сегмент и задача клиента", "предположение", updated));
+  add(g8FactRecord("segment", "Сегмент", g8First(project.targetSegment, evidence["кому_продаем"]), "Gate 0", "Продукт, сегмент и задача клиента", "предположение", updated));
+  add(g8FactRecord("jtbd", "Задача клиента", g8First(project.clientResult, evidence["ради_какого_результата"]), "Gate 0", "Продукт, сегмент и задача клиента", "предположение", updated));
+  add(g8FactRecord("positioning", "Позиционирование", g8First(project.positioningStatement, evidence.positioning_statement), "Gate 0", "Позиционирование и УТП", "предположение", updated));
+  add(g8FactRecord("usp", "УТП", g8First(project.usp, evidence.usp), "Gate 0", "Позиционирование и УТП", "предположение", updated));
+  add(g8FactRecord("offer", "Оффер", g8First(state?.gate4?.offer?.finalOffer, project.offer, project.currentOffers), "Gate 4", "Финальный оффер", "предположение", updated));
+  add(g8FactRecord("cta", "CTA", g8First(project.primaryTargetAction, project.mainCta, project.currentCtas), "Gate 0", "Офферы и CTA", "предположение", updated));
+  add(g8FactRecord("searchFocus", "Поисковый фокус", g8First(state?.demandRoute?.promoted, state?.demandRoute?.goal), "Gate 1", "Спрос и поисковый фокус", "предположение", updated));
+
+  const economics = typeof uv130EconomicsSnapshot === "function" ? uv130EconomicsSnapshot() : {};
+  add(g8FactRecord("averageCheck", "Средний чек", g8Number(economics.aov), "Gate 1", "Юнит-экономика", "предположение", updated));
+  add(g8FactRecord("margin", "Маржинальность", g8Number(economics.marginPercent), "Gate 1", "Юнит-экономика", "предположение", updated));
+  add(g8FactRecord("allowedCpa", "Допустимый CPA", g8Number(economics.allowedCpa), "Gate 1", "Юнит-экономика", "предположение", updated));
+  add(g8FactRecord("allowedCpl", "Допустимый CPL", g8Number(economics.allowedCpl), "Gate 1", "Юнит-экономика", "предположение", updated));
+  add(g8FactRecord("ltv", "LTV", g8Number(economics.ltv), "Gate 1", "Юнит-экономика", "предположение", updated));
+
+  const gate2 = state?.gates?.find((gate) => gate.id === "gate-2");
+  const gate2Ready = gate2 ? guruGateReadiness(gate2) : { total: 0, percent: 0 };
+  add(g8FactRecord("trackingQuality", "Качество отслеживания", gate2Ready.percent, "Gate 2", "Аналитика и источники", "предположение", updated));
+
+  const g4 = state?.gate4 || {};
+  const forecastPlan = g4.forecastAssumptions || {};
+  add(g8FactRecord("budget", "Плановый рекламный бюджет", g8Number(g8First(g4.launchParams?.testBudget, g4.creatives?.budget)), "Gate 4", "Параметры запуска", "предположение", updated));
+  add(g8FactRecord("targetCpl", "Целевой CPL запуска", g8Number(g4.launchParams?.targetCpl), "Gate 4", "Параметры запуска", "предположение", updated));
+  [
+    ["cpc", "Плановый CPC", forecastPlan.cpc],
+    ["ctr", "Плановый CTR", forecastPlan.ctr],
+    ["siteConversion", "Плановая конверсия сайта", forecastPlan.siteConversion],
+    ["saleConversion", "Плановая конверсия в продажу", forecastPlan.saleConversion],
+    ["demandChange", "Плановое изменение спроса", forecastPlan.demandChange],
+  ].forEach(([key, label, value]) => {
+    if (g8Text(value) !== "") add(g8FactRecord(key, label, g8SignedNumber(value), "Gate 4", "Применённые допущения прогноза", "предположение", forecastPlan.updatedAt || updated));
+  });
+
+  const periods = g8LatestGate5Periods();
+  const latest = periods.at(-1) || null;
+  if (latest) {
+    const factDate = latest.createdAt || latest.periodEnd;
+    [
+      ["spend", "Фактический расход", latest.spend],
+      ["impressions", "Показы", latest.impressions],
+      ["clicks", "Клики", latest.clicks],
+      ["ctr", "CTR", latest.ctr],
+      ["cpc", "CPC", latest.cpc],
+      ["leads", "Заявки", latest.leads],
+      ["siteConversion", "Конверсия сайта", latest.siteConversion],
+      ["cpl", "Фактический CPL", latest.cpl],
+    ].forEach(([key, label, value]) => add(g8FactRecord(key, label, value, "Gate 5", "Снимок фактического периода", "факт", factDate, { periodStart: latest.periodStart, periodEnd: latest.periodEnd })));
+  }
+
+  const link = g8LatestBusinessLink(latest);
+  if (link) {
+    const linkDate = g8LatestDate(link.updatedAt, link.createdAt, link.date);
+    const leads = g8Number(link.leads) || g8Number(latest?.leads);
+    const orders = g8Number(link.orders || link.sales);
+    const revenue = g8Number(link.actualRevenue) || orders * g8Number(link.avgCheck || link.minCheck);
+    add(g8FactRecord("sales", "Продажи", orders, "Gate 5", "Связка с бизнесом", "факт", linkDate));
+    add(g8FactRecord("saleConversion", "Конверсия заявки в продажу", leads ? (orders / leads) * 100 : 0, "Gate 5", "Связка с бизнесом", "факт", linkDate));
+    if (revenue) add(g8FactRecord("revenue", "Выручка", revenue, "Gate 5", "Связка с бизнесом", "факт", linkDate));
+    if (g8Number(link.avgCheck || link.minCheck)) add(g8FactRecord("averageCheck", "Средний чек", g8Number(link.avgCheck || link.minCheck), "Gate 5", "Связка с бизнесом", "факт", linkDate));
+    if (g8Number(link.margin)) add(g8FactRecord("margin", "Маржинальность", g8Number(link.margin), "Gate 5", "Связка с бизнесом", "факт", linkDate));
+  }
+
+  const g7 = typeof ensureGate7State === "function" ? ensureGate7State() : { tasks: [] };
+  const tasks = g7.tasks.filter((task) => task.sectionId !== "regular");
+  const readyTasks = tasks.filter((task) => gate7TaskStatus(task) === "ready").length;
+  const overdueTasks = tasks.filter((task) => typeof gate7IsOverdue === "function" && gate7IsOverdue(task)).length;
+  add(g8FactRecord("taskReadiness", "Готовность задач", tasks.length ? (readyTasks / tasks.length) * 100 : 0, "Gate 7", "Журнал задач", "факт", updated, { total: tasks.length, ready: readyTasks }));
+  add(g8FactRecord("overdueTasks", "Просроченные задачи", overdueTasks, "Gate 7", "Журнал задач", "факт", updated));
+
+  const g6Events = Object.values(state?.gate6Calendar?.events || {});
+  const plannedEvents = g6Events.filter((item) => g8Text(item?.decision || item?.relevance || item?.campaign || item?.scenario)).length;
+  const deadlines = g6Events
+    .map((item) => g8First(item?.deadlineDate, typeof gate6ExtractDeadline === "function" ? gate6ExtractDeadline(item?.preparation) : ""))
+    .filter(Boolean)
+    .sort();
+  add(g8FactRecord("calendarEvents", "События и сезонность", plannedEvents, "Gate 6", "Маркетинговый календарь", "факт", updated, { nextDeadline: deadlines.find((date) => date >= new Date().toISOString().slice(0, 10)) || "" }));
+
+  return { facts, periods, latestPeriod: latest, businessLink: link };
+}
+
+function g8Stale(record, days = 90) {
+  if (!record?.updatedAt) return true;
+  const time = new Date(record.updatedAt).getTime();
+  return !Number.isFinite(time) || Date.now() - time > days * 86400000;
+}
+
+function g8ResolvedMetric(metric, goal) {
+  return metric === "goal" ? goal.metric : metric;
+}
+
+function g8RequiredKeys(metric) {
+  const common = ["budget"];
+  const route = ["cpl_or_cpc_conversion"];
+  if (metric === "leads" || metric === "cpl") return [...common, ...route];
+  if (metric === "sales" || metric === "cpa") return [...common, ...route, "saleConversion"];
+  if (metric === "revenue") return [...common, ...route, "saleConversion", "averageCheck"];
+  if (metric === "profit" || metric === "roi") return [...common, ...route, "saleConversion", "averageCheck", "margin"];
+  return [...common, ...route];
+}
+
+function g8BaseInputs(bundle, goal) {
+  const f = bundle.facts;
+  return {
+    budget: goal.budget || g8Number(f.budget?.value) || g8Number(f.spend?.value),
+    cpc: g8Number(f.cpc?.value),
+    ctr: g8Number(f.ctr?.value),
+    impressions: g8Number(f.impressions?.value),
+    siteConversion: g8Number(f.siteConversion?.value),
+    cpl: g8Number(f.cpl?.value) || g8Number(f.targetCpl?.value) || g8Number(f.allowedCpl?.value),
+    saleConversion: g8Number(f.saleConversion?.value),
+    averageCheck: g8Number(f.averageCheck?.value),
+    margin: g8Number(f.margin?.value),
+    demandChange: g8SignedNumber(f.demandChange?.value),
+    termDays: g8Number(state?.gate4?.forecastAssumptions?.termDays),
+    taskReadiness: g8Number(f.taskReadiness?.value),
+  };
+}
+
+function g8Model(inputs) {
+  const budget = g8Number(inputs.budget);
+  const cpc = g8Number(inputs.cpc);
+  const ctr = g8Number(inputs.ctr) / 100;
+  const impressions = g8Number(inputs.impressions);
+  const siteConversion = g8Number(inputs.siteConversion) / 100;
+  const cpl = g8Number(inputs.cpl);
+  const saleConversion = g8Number(inputs.saleConversion) / 100;
+  const averageCheck = g8Number(inputs.averageCheck);
+  const margin = g8Number(inputs.margin) / 100;
+  const demandFactor = Math.max(0, 1 + g8SignedNumber(inputs.demandChange) / 100);
+  const clicksByBudget = budget && cpc ? (budget / cpc) * demandFactor : NaN;
+  const clicksByCtr = impressions && ctr ? impressions * demandFactor * ctr : NaN;
+  const clicks = inputs.preferCtrRoute && Number.isFinite(clicksByCtr)
+    ? clicksByCtr
+    : clicksByBudget;
+  const leadsByCpc = Number.isFinite(clicks) && siteConversion ? clicks * siteConversion : NaN;
+  const leadsByCpl = budget && cpl ? (budget / cpl) * demandFactor : NaN;
+  const leads = Number.isFinite(leadsByCpl) ? leadsByCpl : leadsByCpc;
+  const sales = Number.isFinite(leads) && saleConversion ? leads * saleConversion : NaN;
+  const revenue = Number.isFinite(sales) && averageCheck ? sales * averageCheck : NaN;
+  const grossProfit = Number.isFinite(revenue) && margin ? revenue * margin : NaN;
+  const profit = Number.isFinite(grossProfit) ? grossProfit - budget : NaN;
+  const actualCpl = Number.isFinite(leads) && leads ? budget / leads : NaN;
+  const cpa = Number.isFinite(sales) && sales ? budget / sales : NaN;
+  const roi = budget && Number.isFinite(profit) ? (profit / budget) * 100 : NaN;
+  const contradictions = [];
+  if (Number.isFinite(leadsByCpl) && Number.isFinite(leadsByCpc) && Math.abs(leadsByCpl - leadsByCpc) > 0.5) {
+    contradictions.push(`По CPL получается ${g8NumberLabel(leadsByCpl)} заявок, а по CPC и конверсии — ${g8NumberLabel(leadsByCpc)}.`);
+  }
+  return { budget, clicks, clicksByBudget, clicksByCtr, leadsByCpc, leadsByCpl, leads, sales, revenue, grossProfit, profit, cpl: actualCpl, cpa, roi, contradictions };
+}
+
+function g8MetricValue(model, metric) {
+  return Number(model?.[metric]);
+}
+
+function g8MetricValueLabel(metric, value) {
+  if (["revenue", "profit", "cpl", "cpa"].includes(metric)) return g8Money(value);
+  if (metric === "roi") return g8Percent(value);
+  return Number.isFinite(value) ? g8NumberLabel(value) : "Недостаточно данных";
+}
+
+function g8TargetForMetric(goal, metric) {
+  if (!goal) return NaN;
+  if (metric === goal.metric) return g8Number(goal.target) || NaN;
+  if (["cpl", "cpa"].includes(metric)) return g8Number(goal.allowedCost) || NaN;
+  return NaN;
+}
+
+function g8GoalFulfillment(value, goal, metric) {
+  const target = g8TargetForMetric(goal, metric);
+  if (!Number.isFinite(value) || !Number.isFinite(target)) return NaN;
+  return ["cpl", "cpa"].includes(metric)
+    ? (target / Math.max(value, 0.000001)) * 100
+    : (value / target) * 100;
+}
+
 /* v0.21 — Page cards as GURU route: ориентир → действие → стандарт → доказательство → статус */
 function pageRouteOrientir(card, row) {
   const context = pageTemplateContext(card);
@@ -10181,11 +10843,6 @@ function v22FinalCtaSection(card, row, pageIndex, open = false) {
   return `<details class="route-section v22-route-section status-${status}" ${open ? "open" : ""}>
     <summary><span class="v22-section-title">Финальный CTA</span><span class="v22-section-status status-pill status-${status}">${row.ctaMode === "not_needed" ? "Не нужен" : STATUS_LABELS[status] || status}</span></summary>
     <div class="route-section-body v22-section-body">
-      <div class="v22-section-guidance">
-        <div><strong>Задача</strong><p>Последний шанс захватить тех, кто дошёл до конца страницы.</p></div>
-        <div><strong>Чек-пункты</strong><ul><li>Повтор главного оффера</li><li>Основная кнопка</li><li>Альтернативное действие, если нужно</li></ul></div>
-        <div><strong>Стандарт готовности</strong><p>Пользователь понимает, что делать дальше.</p></div>
-      </div>
       ${finalCtaRouteHtml(card, row, pageIndex)}
     </div>
   </details>`;
@@ -11442,6 +12099,11 @@ const GATE5_REPORTS = {
     desc: "таргетинги, фразы, автотаргетинг и причины показа",
   },
 };
+const GATE5_SNAPSHOT_INTEGRITY_MIGRATION = "gate5-snapshot-integrity-v1";
+const GATE5_CAMPAIGN_SCOPE_MIGRATION = "gate5-campaign-scope-v1";
+const GATE5_CAMPAIGN_SCOPE_MIGRATION_V2 = "gate5-campaign-scope-v2";
+const GATE5_SNAPSHOT_PERIOD_SELECTOR_MIGRATION = "gate5-snapshot-period-selector-v1";
+const GATE5_KNOWN_SYNTHETIC_SNAPSHOT_DATES = new Set(["2026-08-06"]);
 
 function gate5BlankState() {
   return {
@@ -11458,8 +12120,265 @@ function gate5BlankState() {
     comparisons: [],
     finalDecisions: [],
     yandexDirect: { groups: {}, ads: {}, phrases: {}, landings: {}, regions: {}, negativePhrases: {}, structureSnapshots: [], imports: [] },
+    migrationLog: [],
     iterationCounter: 0,
   };
+}
+
+function g5SnapshotCampaignKey(g5, snapshot) {
+  const campaign = (g5.campaignRegistry || []).find((item) => item?.id === snapshot?.campaignId);
+  return String(campaign?.cabinetId || snapshot?.campaignId || "").trim();
+}
+
+function g5SnapshotUniqueKey(g5, snapshot) {
+  return [
+    String(snapshot?.reportType || "").trim(),
+    g5SnapshotCampaignKey(g5, snapshot),
+    String(snapshot?.periodStart || "").slice(0, 10),
+    String(snapshot?.periodEnd || snapshot?.date || "").slice(0, 10),
+  ].join("|");
+}
+
+const GATE5_SNAPSHOT_REPORT_PRIORITY = Object.freeze({ perf: 4, search_placement: 3, placement: 2, query: 1 });
+
+function g5CanonicalPeriodSnapshots(g5, campaignId = "", source = null) {
+  const latestByCampaignPeriod = new Map();
+  (source || g5?.periodSnapshots || []).forEach((snapshot) => {
+    if (!snapshot?.campaignId || (campaignId && snapshot.campaignId !== campaignId)) return;
+    const start = String(snapshot.periodStart || "").slice(0, 10);
+    const end = String(snapshot.periodEnd || snapshot.date || "").slice(0, 10);
+    if (!start || !end || start > end) return;
+    const key = `${snapshot.campaignId}|${start}|${end}`;
+    const previous = latestByCampaignPeriod.get(key);
+    const priority = GATE5_SNAPSHOT_REPORT_PRIORITY[snapshot.reportType] || 0;
+    const previousPriority = GATE5_SNAPSHOT_REPORT_PRIORITY[previous?.reportType] || 0;
+    const changedAt = String(snapshot.updatedAt || snapshot.createdAt || "");
+    const previousChangedAt = String(previous?.updatedAt || previous?.createdAt || "");
+    if (!previous || priority > previousPriority || (priority === previousPriority && changedAt >= previousChangedAt)) latestByCampaignPeriod.set(key, snapshot);
+  });
+  return [...latestByCampaignPeriod.values()].sort((a, b) => String(a.periodStart).localeCompare(String(b.periodStart)) || String(a.periodEnd || a.date).localeCompare(String(b.periodEnd || b.date)));
+}
+
+function g5SnapshotDays(snapshot) {
+  const start = Date.parse(String(snapshot?.periodStart || ""));
+  const end = Date.parse(String(snapshot?.periodEnd || snapshot?.date || ""));
+  return Number.isFinite(start) && Number.isFinite(end) && end >= start ? Math.floor((end - start) / 86400000) + 1 : Infinity;
+}
+
+function g5SnapshotGranularity(snapshot) {
+  const days = g5SnapshotDays(snapshot);
+  if (days === 1) return { key: "day", label: "день", rank: 1 };
+  if (days <= 7) return { key: "week", label: "неделя", rank: 7 };
+  if (days <= 31) return { key: "month", label: "месяц", rank: 31 };
+  return { key: "period", label: "период", rank: days };
+}
+
+function g5ComparableSnapshotsForCampaign(g5, campaignId) {
+  const latestByStream = new Map();
+  (g5?.periodSnapshots || []).forEach((snapshot) => {
+    if (snapshot?.campaignId !== campaignId || !g5MatchesSnapshotPeriod(snapshot)) return;
+    const start = String(snapshot.periodStart || "").slice(0, 10);
+    const end = String(snapshot.periodEnd || snapshot.date || "").slice(0, 10);
+    if (!start || !end || start > end) return;
+    const key = `${snapshot.reportType || "unknown"}|${start}|${end}`;
+    const previous = latestByStream.get(key);
+    if (!previous || String(snapshot.updatedAt || snapshot.createdAt || "") >= String(previous.updatedAt || previous.createdAt || "")) latestByStream.set(key, snapshot);
+  });
+  const buckets = new Map();
+  [...latestByStream.values()].forEach((snapshot) => {
+    const granularity = g5SnapshotGranularity(snapshot);
+    const key = `${snapshot.reportType || "unknown"}|${granularity.key}`;
+    if (!buckets.has(key)) buckets.set(key, { reportType: snapshot.reportType || "unknown", granularity, snapshots: [] });
+    buckets.get(key).snapshots.push(snapshot);
+  });
+  const candidates = [...buckets.values()].map((bucket) => {
+    const selected = bucket.snapshots.sort((a, b) => String(a.periodStart).localeCompare(String(b.periodStart))).reduce((items, snapshot) => {
+      const previous = items.at(-1);
+      if (!previous || String(snapshot.periodStart) > String(previous.periodEnd || previous.date)) items.push(snapshot);
+      return items;
+    }, []);
+    return { ...bucket, snapshots: selected };
+  }).filter((bucket) => bucket.snapshots.length >= 2)
+    .sort((a, b) => a.granularity.rank - b.granularity.rank || b.snapshots.length - a.snapshots.length || String(b.snapshots.at(-1)?.periodEnd || "").localeCompare(String(a.snapshots.at(-1)?.periodEnd || "")));
+  return candidates[0] || null;
+}
+
+function g5DecisionForCampaign(g5, campaign) {
+  const snapshots = g5CanonicalPeriodSnapshots(g5, campaign.id).filter(g5MatchesSnapshotPeriod);
+  const latest = snapshots.at(-1) || null;
+  if (!latest) return { campaign, latest: null, spend: 0, leads: 0, cpa: 0, recommendation: "Недостаточно данных" };
+  const link = g5.links.filter((item) => item.campaignId === campaign.id && (!latest.periodEnd || !item.periodEnd || item.periodEnd === latest.periodEnd)).slice().sort((a, b) => String(b.updatedAt || b.createdAt || "").localeCompare(String(a.updatedAt || a.createdAt || "")))[0] || null;
+  const spend = g5Num(latest.spend);
+  const leads = g5Num(latest.leads || latest.conversions);
+  const orders = g5Num(link?.orders || link?.sales);
+  const revenue = g5Num(link?.actualRevenue) || orders * g5Num(link?.avgCheck || link?.minCheck);
+  const marginRate = g5Num(link?.margin) / 100;
+  const roi = orders && revenue && spend ? g5Div((marginRate ? revenue * marginRate : revenue) - spend, spend) : null;
+  const weak = g5.reports.query.filter((row) => g5CampaignForCabinetId(row.campaignId, row.campaignName)?.id === campaign.id && g5MatchesPeriod(row.date || "", latest.periodStart, latest.periodEnd) && g5Num(row.spend) > 0 && !g5Num(row.conversions)).length;
+  let recommendation = "Продолжить";
+  if (!spend || !leads) recommendation = "Проверить";
+  else if (weak) recommendation = "Минусовать слабые запросы";
+  else if (roi !== null && roi > 0) recommendation = "Масштабировать";
+  else if (roi !== null && roi < 0) recommendation = "Остановить / проверить";
+  return { campaign, latest, spend, leads, cpa: g5Num(latest.cpa) || g5Div(spend, leads), recommendation };
+}
+
+function g5MigrateCampaignScope(g5) {
+  g5.migrationLog = Array.isArray(g5.migrationLog) ? g5.migrationLog : [];
+  if (g5.migrationLog.some((entry) => entry?.id === GATE5_CAMPAIGN_SCOPE_MIGRATION)) return null;
+  const valid = (g5.periodSnapshots || []).filter((snapshot) => snapshot?.campaignId && snapshot?.periodStart && (snapshot?.periodEnd || snapshot?.date));
+  const canonical = g5CanonicalPeriodSnapshots(g5, "", valid);
+  const duplicateReportViews = Math.max(0, valid.length - canonical.length);
+  const before = String(g5.ui?.comparisonBeforeId || "");
+  const after = String(g5.ui?.comparisonAfterId || "");
+  const beforeSnapshot = (g5.periodSnapshots || []).find((snapshot) => snapshot.id === before);
+  const afterSnapshot = (g5.periodSnapshots || []).find((snapshot) => snapshot.id === after);
+  let campaignId = String(g5.ui?.comparisonCampaignId || "");
+  if (!campaignId && beforeSnapshot && afterSnapshot && beforeSnapshot.campaignId === afterSnapshot.campaignId) campaignId = beforeSnapshot.campaignId;
+  g5.ui.comparisonCampaignId = campaignId;
+  const comparisonIds = new Set(g5CanonicalPeriodSnapshots(g5, campaignId).map((snapshot) => snapshot.id));
+  if (!comparisonIds.has(before)) g5.ui.comparisonBeforeId = "";
+  if (!comparisonIds.has(after)) g5.ui.comparisonAfterId = "";
+  const gate8 = state?.gate8Forecast;
+  const invalidatedForecasts = Array.isArray(gate8?.history) ? gate8.history.length : 0;
+  if (gate8) {
+    gate8.history = [];
+    gate8.lastInputSignature = "";
+  }
+  const entry = {
+    id: GATE5_CAMPAIGN_SCOPE_MIGRATION,
+    appliedAt: new Date().toISOString(),
+    duplicateReportViews,
+    invalidatedForecasts,
+    description: `Сравнение и решение ограничены одной кампанией; ${duplicateReportViews} повторных представлений отчёта не считаются отдельными фактами Gate 8.`,
+  };
+  g5.migrationLog.push(entry);
+  console.info(`[GURU migration] ${entry.id}: ${entry.description}`, { campaignId, validSnapshots: valid.length, canonicalSnapshots: canonical.length });
+  return entry;
+}
+
+function g5MigrateCampaignScopeV2(g5) {
+  g5.migrationLog = Array.isArray(g5.migrationLog) ? g5.migrationLog : [];
+  if (g5.migrationLog.some((entry) => entry?.id === GATE5_CAMPAIGN_SCOPE_MIGRATION_V2)) return null;
+  const clearedSelections = Boolean(g5.ui?.comparisonCampaignId || g5.ui?.comparisonBeforeId || g5.ui?.comparisonAfterId);
+  g5.ui.comparisonCampaignId = "";
+  g5.ui.comparisonBeforeId = "";
+  g5.ui.comparisonAfterId = "";
+  const entry = {
+    id: GATE5_CAMPAIGN_SCOPE_MIGRATION_V2,
+    appliedAt: new Date().toISOString(),
+    clearedSelections,
+    description: "Блоки 7 и 8 переведены в обзор по всем кампаниям; фильтр кампании стал необязательным сужением таблиц.",
+  };
+  g5.migrationLog.push(entry);
+  console.info(`[GURU migration] ${entry.id}: ${entry.description}`, { campaigns: g5.campaignRegistry.length, snapshots: g5.periodSnapshots.length });
+  return entry;
+}
+
+function g5MigrateSnapshotIntegrity(g5) {
+  g5.migrationLog = Array.isArray(g5.migrationLog) ? g5.migrationLog : [];
+  if (g5.migrationLog.some((entry) => entry?.id === GATE5_SNAPSHOT_INTEGRITY_MIGRATION)) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  const removed = [];
+  const valid = [];
+  const syntheticSingleDayStreams = new Set();
+  const originalSnapshots = (g5.periodSnapshots || []).slice();
+  originalSnapshots.forEach((snapshot) => {
+    const start = String(snapshot?.periodStart || "").slice(0, 10);
+    const end = String(snapshot?.periodEnd || snapshot?.date || "").slice(0, 10);
+    if (!start || !end || start > end) {
+      removed.push({ id: snapshot?.id || "", key: g5SnapshotUniqueKey(g5, snapshot), reason: "Некорректный или отсутствующий период" });
+      return;
+    }
+    if (start === end && (end === today || GATE5_KNOWN_SYNTHETIC_SNAPSHOT_DATES.has(end))) {
+      syntheticSingleDayStreams.add(`${String(snapshot?.reportType || "")}|${g5SnapshotCampaignKey(g5, snapshot)}|${end}`);
+      removed.push({ id: snapshot?.id || "", key: g5SnapshotUniqueKey(g5, snapshot), reason: "Ложный снимок «сегодня» из агрегированного отчёта" });
+      return;
+    }
+    valid.push(snapshot);
+  });
+  const newestByKey = new Map();
+  valid.forEach((snapshot) => {
+    const key = g5SnapshotUniqueKey(g5, snapshot);
+    const previous = newestByKey.get(key);
+    const currentDate = String(snapshot?.updatedAt || snapshot?.createdAt || "");
+    const previousDate = String(previous?.updatedAt || previous?.createdAt || "");
+    if (!previous || currentDate >= previousDate) {
+      if (previous) removed.push({ id: previous?.id || "", key, reason: "Повтор типа отчёта, кампании и периода" });
+      newestByKey.set(key, snapshot);
+    } else {
+      removed.push({ id: snapshot?.id || "", key, reason: "Повтор типа отчёта, кампании и периода" });
+    }
+  });
+  g5.periodSnapshots = [...newestByKey.values()];
+  const removedIds = new Set(removed.map((item) => item.id).filter(Boolean));
+  if (removedIds.has(g5.ui?.comparisonBeforeId)) g5.ui.comparisonBeforeId = "";
+  if (removedIds.has(g5.ui?.comparisonAfterId)) g5.ui.comparisonAfterId = "";
+  let normalizedReportRows = 0;
+  Object.entries(g5.reports || {}).forEach(([reportType, rows]) => {
+    (rows || []).forEach((row) => {
+      const effectiveType = row?.reportType === "search_placement" ? "search_placement" : reportType;
+      const rowDate = String(row?.date || "").slice(0, 10);
+      if (!rowDate || row?.periodStart || row?.periodEnd) return;
+      if (!syntheticSingleDayStreams.has(`${effectiveType}|${String(row?.campaignId || "").trim()}|${rowDate}`)) return;
+      row.date = "";
+      normalizedReportRows += 1;
+    });
+  });
+  const removedSourceTimes = new Set(originalSnapshots.filter((item) => removedIds.has(item?.id)).map((item) => item?.createdAt).filter(Boolean));
+  let removedForecasts = 0;
+  let clearedComparisons = 0;
+  const gate8 = state?.gate8Forecast;
+  if (gate8 && Array.isArray(gate8.history) && removed.length) {
+    const removedDates = new Set(removed.map((item) => item.key.split("|").at(-1)).filter(Boolean));
+    const before = gate8.history.length;
+    gate8.history = gate8.history.filter((record) => !removedSourceTimes.has(record?.sourceUpdatedAt));
+    removedForecasts = before - gate8.history.length;
+    gate8.history.forEach((record) => {
+      if (!removedDates.has(String(record?.actualAt || "").slice(0, 10))) return;
+      delete record.actualValue;
+      delete record.actualAt;
+      delete record.deviation;
+      clearedComparisons += 1;
+    });
+    gate8.lastInputSignature = "";
+  }
+  const entry = {
+    id: GATE5_SNAPSHOT_INTEGRITY_MIGRATION,
+    appliedAt: new Date().toISOString(),
+    removedCount: removed.length,
+    removedForecasts,
+    clearedComparisons,
+    normalizedReportRows,
+    removed,
+    description: `Удалены ложные снимки «сегодня» и повторы по ключу тип отчёта + кампания + период: ${removed.length}.`,
+  };
+  g5.migrationLog.push(entry);
+  console.info(`[GURU migration] ${entry.id}: ${entry.description}`, removed);
+  return entry;
+}
+
+function g5MigrateSnapshotPeriodSelector(g5) {
+  g5.migrationLog = Array.isArray(g5.migrationLog) ? g5.migrationLog : [];
+  if (g5.migrationLog.some((entry) => entry?.id === GATE5_SNAPSHOT_PERIOD_SELECTOR_MIGRATION)) return null;
+  g5.ui = g5.ui || {};
+  g5.ui.filters = g5.ui.filters || {};
+  const filters = g5.ui.filters;
+  const legacyStart = String(filters.periodFrom || "").slice(0, 10);
+  const legacyEnd = String(filters.periodTo || legacyStart).slice(0, 10);
+  const migratedLegacySelection = !filters.periodRange && Boolean(legacyStart || legacyEnd);
+  filters.periodRange = String(filters.periodRange || (migratedLegacySelection ? `${legacyStart}|${legacyEnd}` : ""));
+  filters.periodFrom = legacyStart;
+  filters.periodTo = legacyEnd;
+  const entry = {
+    id: GATE5_SNAPSHOT_PERIOD_SELECTOR_MIGRATION,
+    appliedAt: new Date().toISOString(),
+    migratedLegacySelection,
+    description: "Свободный календарный фильтр заменён выбором только из фактически загруженных периодов снимков.",
+  };
+  g5.migrationLog.push(entry);
+  console.info(`[GURU migration] ${entry.id}: ${entry.description}`, { migratedLegacySelection });
+  return entry;
 }
 
 function ensureGate5State() {
@@ -11467,6 +12386,7 @@ function ensureGate5State() {
   state.gate5.ui = state.gate5.ui || {};
   state.gate5.ui.filters = state.gate5.ui.filters || {
     campaignId: "",
+    periodRange: "",
     periodFrom: "",
     periodTo: "",
     type: "",
@@ -11533,6 +12453,7 @@ function ensureGate5State() {
   state.gate5.yandexDirect.imports = Array.isArray(state.gate5.yandexDirect.imports)
     ? state.gate5.yandexDirect.imports
     : [];
+  state.gate5.migrationLog = Array.isArray(state.gate5.migrationLog) ? state.gate5.migrationLog : [];
   state.gate5.iterationCounter = state.gate5.iterationCounter || 0;
   const importedStatisticCampaignId = state.gate5.reports.placement.find(
     (record) => record.reportType === "search_placement" && /^\d{6,}$/.test(String(record.campaignId || "")),
@@ -11562,6 +12483,16 @@ function ensureGate5State() {
       });
     }
   });
+  const snapshotMigration = g5MigrateSnapshotIntegrity(state.gate5);
+  const campaignScopeMigration = g5MigrateCampaignScope(state.gate5);
+  const campaignScopeMigrationV2 = g5MigrateCampaignScopeV2(state.gate5);
+  const snapshotPeriodSelectorMigration = g5MigrateSnapshotPeriodSelector(state.gate5);
+  if (snapshotMigration || campaignScopeMigration || campaignScopeMigrationV2 || snapshotPeriodSelectorMigration) {
+    const migratedGate5 = state.gate5;
+    queueMicrotask(() => {
+      if (state?.gate5 === migratedGate5 && typeof saveState === "function") saveState();
+    });
+  }
   return state.gate5;
 }
 
@@ -11998,7 +12929,7 @@ function g5ParseBusinessReport(fileName, rows, headerIndex) {
     const row = rows[index] || [];
     const campaignId = g5Cell(row, col.campaignId);
     if (!/^\d{6,}$/.test(campaignId)) continue;
-    records.push({ campaignId, campaignName: g5Cell(row, col.campaignName), date: g5ParseDate(g5Cell(row, col.date)) || new Date().toISOString().slice(0, 10), leads: g5Num(g5Cell(row, col.leads)), orders: g5Num(g5Cell(row, col.orders)), actualRevenue: g5Num(g5Cell(row, col.revenue)), margin: g5Num(g5Cell(row, col.margin)), source: g5Cell(row, col.source), sourceFile: fileName });
+    records.push({ campaignId, campaignName: g5Cell(row, col.campaignName), date: g5ParseDate(g5Cell(row, col.date)), leads: g5Num(g5Cell(row, col.leads)), orders: g5Num(g5Cell(row, col.orders)), actualRevenue: g5Num(g5Cell(row, col.revenue)), margin: g5Num(g5Cell(row, col.margin)), source: g5Cell(row, col.source), sourceFile: fileName });
   }
   if (!records.length) throw new Error("В бизнес-файле не найдены строки с ID кампании Яндекс Директа.");
   return { type: "business", typeLabel: "Бизнес-данные / CRM / AGBIS", fileName, records, counts: { campaigns: new Set(records.map((row) => row.campaignId)).size, rows: records.length, groups: 0, ads: 0, phrases: 0, landings: 0, regions: 0 } };
@@ -12109,7 +13040,6 @@ function g5ExtractRows(rows, kind = "report") {
       rec.groupId = g5RecordId("", `${rec.campaignId}_${rec.groupName}`, "grp");
     if (!rec.adId && rec.adTitle)
       rec.adId = g5RecordId("", `${rec.groupId}_${rec.adTitle}`, "ad");
-    if (!rec.date) rec.date = new Date().toISOString().slice(0, 10);
     if (
       kind === "structure" &&
       !(
@@ -12296,11 +13226,51 @@ function g5ImportYandexStructure(payload) {
   g5YandexRegisterChange(g5, campaign, { level: "Кампания", type: "Импортирован файл структуры", after: `Импортирована структура кампании из файла ${payload.fileName}.` });
   return { unchanged, changes: unchanged ? 0 : g5YandexDiff(previous, payload).length };
 }
-function g5ImportYandexReport(payload) {
+
+function g5PayloadSnapshotDescriptors(payload) {
+  if (!payload || !payload.type) return [];
+  const dates = (payload.records || []).map((row) => String(row?.date || "").slice(0, 10)).filter(Boolean).sort();
+  const periodStart = String(payload.periodStart || payload.meta?.from || dates[0] || "").slice(0, 10);
+  const periodEnd = String(payload.periodEnd || payload.meta?.to || dates.at(-1) || "").slice(0, 10);
+  if (!periodStart || !periodEnd) return [];
+  const campaignIds = payload.campaignIds?.length
+    ? payload.campaignIds
+    : [...new Set((payload.records || []).map((row) => String(row?.campaignId || "").trim()).filter(Boolean))];
+  return campaignIds.map((campaignId) => ({
+    reportType: payload.type === "search_placement" ? "search_placement" : payload.type,
+    campaignId: String(campaignId),
+    periodStart,
+    periodEnd,
+  }));
+}
+
+function g5DuplicateSnapshots(payload) {
+  const g5 = ensureGate5State();
+  const descriptors = g5PayloadSnapshotDescriptors(payload);
+  if (!descriptors.length) return [];
+  return g5.periodSnapshots.filter((snapshot) => descriptors.some((descriptor) =>
+    String(snapshot?.reportType || "") === descriptor.reportType
+    && g5SnapshotCampaignKey(g5, snapshot) === descriptor.campaignId
+    && String(snapshot?.periodStart || "").slice(0, 10) === descriptor.periodStart
+    && String(snapshot?.periodEnd || snapshot?.date || "").slice(0, 10) === descriptor.periodEnd));
+}
+
+function g5ImportYandexReport(payload, duplicateMode = "skip") {
   const g5 = ensureGate5State();
   const key = payload.type;
   const campaignIds = [...new Set(payload.records.map((row) => String(row.campaignId || "")).filter((id) => /^\d{6,}$/.test(id)))];
   if (!campaignIds.length) throw new Error("ID кампании не найден. Импорт невозможен без ID кампании Яндекс Директа.");
+  const duplicates = g5DuplicateSnapshots(payload);
+  if (duplicates.length && duplicateMode !== "update") return { skipped: true, changes: 0 };
+  if (duplicates.length) {
+    const duplicateIds = new Set(duplicates.map((snapshot) => snapshot.id));
+    g5.periodSnapshots = g5.periodSnapshots.filter((snapshot) => !duplicateIds.has(snapshot.id));
+    const descriptors = g5PayloadSnapshotDescriptors(payload);
+    g5.reports[key] = (g5.reports[key] || []).filter((record) => !descriptors.some((descriptor) =>
+      String(record?.campaignId || "") === descriptor.campaignId
+      && String(record?.date || "").slice(0, 10) >= descriptor.periodStart
+      && String(record?.date || "").slice(0, 10) <= descriptor.periodEnd));
+  }
   const rowKey = (row) => [row.date, row.campaignId, row.groupId, row.adId, row.query || "", row.conditionType || "", row.conditionName || ""].join("|");
   const merged = new Map((g5.reports[key] || []).map((row) => [rowKey(row), row]));
   payload.records.forEach((row) => merged.set(rowKey(row), row));
@@ -12318,15 +13288,18 @@ function g5ImportYandexReport(payload) {
     const total = campaignRows.reduce((sum, row) => ({ spend: sum.spend + g5Num(row.spend), impressions: sum.impressions + g5Num(row.impressions), clicks: sum.clicks + g5Num(row.clicks), conversions: sum.conversions + g5Num(row.conversions) }), { spend: 0, impressions: 0, clicks: 0, conversions: 0 });
     const periodStart = payload.meta?.from || sample.date;
     const periodEnd = payload.meta?.to || sample.date;
-    const duplicate = g5.periodSnapshots.find((snapshot) => snapshot.campaignId === campaign.id && snapshot.reportType === key && snapshot.periodStart === periodStart && snapshot.periodEnd === periodEnd && snapshot.source === payload.fileName);
-    if (!duplicate) {
+    if (periodStart && periodEnd) {
       g5.periodSnapshots.push({ id: makeId("g5-snapshot"), createdAt: now, campaignId: campaign.id, periodStart, periodEnd, status: "Активна", reportType: key, source: payload.fileName, sourceLabel: payload.typeLabel, spend: total.spend, impressions: total.impressions, clicks: total.clicks, ctr: g5Div(total.clicks, total.impressions) * 100, leads: total.conversions, conversions: total.conversions, cr: g5Div(total.conversions, total.clicks) * 100, cpa: g5Div(total.spend, total.conversions), comment: "Создан автоматически" });
       g5YandexRegisterChange(g5, campaign, { level: "Кампания", type: "Создан новый снимок периода", after: `${periodStart} — ${periodEnd}; источник ${payload.fileName}` });
+    } else {
+      g5YandexRegisterChange(g5, campaign, { level: "Кампания", type: "Импорт без снимка периода", after: `Файл ${payload.fileName} импортирован, но снимок не создан: в отчёте нет отдельной даты или периода.` });
     }
-    g5YandexRegisterChange(g5, campaign, { level: "Кампания", type: "Импорт статистики", after: `Импортирован отчёт «${payload.typeLabel}» за период ${periodStart} — ${periodEnd}. Источник: ${payload.fileName}` });
+    g5YandexRegisterChange(g5, campaign, { level: "Кампания", type: "Импорт статистики", after: periodStart && periodEnd ? `Импортирован отчёт «${payload.typeLabel}» за период ${periodStart} — ${periodEnd}. Источник: ${payload.fileName}` : `Импортирован отчёт «${payload.typeLabel}» без создания факт-периода. Источник: ${payload.fileName}` });
   });
   g5.imports[key] = { type: key, uploadedAt: now, fileName: payload.fileName, rows: g5.reports[key].length };
-  g5.yandexDirect.imports.push({ id: makeId("g5-yd-import"), importedAt: now, fileName: payload.fileName, type: key, typeLabel: payload.typeLabel, status: "Импортирован", counts: payload.counts });
+  const hasPeriod = g5PayloadSnapshotDescriptors(payload).length > 0;
+  g5.yandexDirect.imports.push({ id: makeId("g5-yd-import"), importedAt: now, fileName: payload.fileName, type: key, typeLabel: payload.typeLabel, status: hasPeriod ? (duplicates.length ? "Обновлён" : "Импортирован") : "Импортирован без снимка: нет периода", counts: payload.counts });
+  return { skipped: false, changes: campaignIds.length, withoutSnapshot: !hasPeriod };
 }
 function g5ImportBusinessReport(payload) {
   const g5 = ensureGate5State();
@@ -12336,7 +13309,7 @@ function g5ImportBusinessReport(payload) {
     const total = byCampaign.get(row.campaignId) || { leads: 0, orders: 0, actualRevenue: 0, margin: 0, dates: [] };
     total.leads += row.leads; total.orders += row.orders; total.actualRevenue += row.actualRevenue;
     if (row.margin) total.margin = row.margin;
-    total.dates.push(row.date);
+    if (row.date) total.dates.push(row.date);
     byCampaign.set(row.campaignId, total);
   });
   byCampaign.forEach((total, cabinetId) => {
@@ -12353,22 +13326,17 @@ function g5ImportBusinessReport(payload) {
   g5.yandexDirect.imports.push({ id: makeId("g5-yd-import"), importedAt: now, fileName: payload.fileName, type: "business", typeLabel: payload.typeLabel, status: "Импортирован", counts: payload.counts });
   return { changes: byCampaign.size };
 }
-function g5PlacementDuplicateSnapshots(payload) {
-  const g5 = ensureGate5State();
-  const campaignIds = new Set(payload.campaignIds || []);
-  return g5.periodSnapshots.filter((snapshot) => campaignIds.has(g5CampaignById(snapshot.campaignId)?.cabinetId) && snapshot.reportType === "search_placement" && snapshot.periodStart === payload.periodStart && snapshot.periodEnd === payload.periodEnd && snapshot.source === payload.fileName);
-}
 function g5ImportYandexSearchPlacement(payload, duplicateMode = "skip") {
   const g5 = ensureGate5State();
   (payload.campaignIds || []).forEach((cabinetId) => g5RepairYandexCampaignIdentity(g5, cabinetId));
-  const duplicates = g5PlacementDuplicateSnapshots(payload);
-  if (duplicates.length && duplicateMode === "skip") return { skipped: true, changes: 0 };
+  const duplicates = g5DuplicateSnapshots(payload);
+  if (duplicates.length && duplicateMode !== "update") return { skipped: true, changes: 0 };
   const now = new Date().toISOString();
-  if (duplicates.length && duplicateMode === "replace") {
+  if (duplicates.length && duplicateMode === "update") {
     const duplicateIds = new Set(duplicates.map((snapshot) => snapshot.id));
     g5.periodSnapshots = g5.periodSnapshots.filter((snapshot) => !duplicateIds.has(snapshot.id));
     const campaignIds = new Set(payload.campaignIds || []);
-    g5.reports.placement = g5.reports.placement.filter((record) => !(record.reportType === "search_placement" && record.sourceFile === payload.fileName && campaignIds.has(record.campaignId) && record.periodStart === payload.periodStart && record.periodEnd === payload.periodEnd));
+    g5.reports.placement = g5.reports.placement.filter((record) => !(record.reportType === "search_placement" && campaignIds.has(record.campaignId) && record.periodStart === payload.periodStart && record.periodEnd === payload.periodEnd));
   }
   const byCampaign = new Map();
   payload.records.forEach((record) => {
@@ -12386,12 +13354,11 @@ function g5ImportYandexSearchPlacement(payload, duplicateMode = "skip") {
     }
     Object.assign(campaign, { name: sample?.campaignName || campaign.name, platform: "Яндекс Директ", type: campaign.type === "Другое" ? "Поиск" : campaign.type || "Поиск", status: campaign.status || "Импортирована", lastImportAt: now, sourceFile: "Отчёт по размещению в Поиске" });
     const total = payload.total && byCampaign.size === 1 ? payload.total : metrics;
-    const sameSnapshot = duplicates.find((snapshot) => snapshot.campaignId === campaign.id);
-    g5.periodSnapshots.push({ id: makeId("g5-snapshot"), createdAt: now, campaignId: campaign.id, periodStart: payload.periodStart, periodEnd: payload.periodEnd, status: "Активна", reportType: "search_placement", source: payload.fileName, sourceLabel: "Отчёт по размещению в Поиске", spend: total.spend, impressions: total.impressions, clicks: total.clicks, ctr: total.ctr || g5Div(total.clicks, total.impressions) * 100, leads: total.conversions, conversions: total.conversions, cr: total.cr || g5Div(total.conversions, total.clicks) * 100, cpa: total.cpa || g5Div(total.spend, total.conversions), versionOf: duplicateMode === "version" ? sameSnapshot?.id || "" : "", comment: "Импорт статистики Яндекс Директ" });
+    g5.periodSnapshots.push({ id: makeId("g5-snapshot"), createdAt: now, campaignId: campaign.id, periodStart: payload.periodStart, periodEnd: payload.periodEnd, status: "Активна", reportType: "search_placement", source: payload.fileName, sourceLabel: "Отчёт по размещению в Поиске", spend: total.spend, impressions: total.impressions, clicks: total.clicks, ctr: total.ctr || g5Div(total.clicks, total.impressions) * 100, leads: total.conversions, conversions: total.conversions, cr: total.cr || g5Div(total.conversions, total.clicks) * 100, cpa: total.cpa || g5Div(total.spend, total.conversions), comment: "Импорт статистики Яндекс Директ" });
     g5YandexRegisterChange(g5, campaign, { level: "Кампания", type: "Импорт статистики", after: `Загружен отчёт по размещению в Поиске за период ${payload.periodStart} — ${payload.periodEnd} по кампании ${cabinetId}.` });
     g5YandexRegisterChange(g5, campaign, { level: "Кампания", type: "Создан новый снимок периода", after: `${payload.periodStart} — ${payload.periodEnd}; источник ${payload.fileName}` });
     if (byCampaign.size === 1) {
-      g5.ui.filters = { campaignId: campaign.id, periodFrom: payload.periodStart, periodTo: payload.periodEnd, type: "", platform: "" };
+      g5.ui.filters = { campaignId: campaign.id, periodRange: `${payload.periodStart}|${payload.periodEnd}`, periodFrom: payload.periodStart, periodTo: payload.periodEnd, type: "", platform: "" };
     }
   });
   const rowKey = (record) => [record.campaignId, record.periodStart, record.periodEnd, record.conditionType, record.query].join("|");
@@ -12399,7 +13366,7 @@ function g5ImportYandexSearchPlacement(payload, duplicateMode = "skip") {
   payload.records.forEach((record) => merged.set(rowKey(record), record));
   g5.reports.placement = [...merged.values()];
   g5.imports.placement = { type: "placement", uploadedAt: now, fileName: payload.fileName, rows: g5.reports.placement.length, from: payload.periodStart, to: payload.periodEnd };
-  g5.yandexDirect.imports.push({ id: makeId("g5-yd-import"), importedAt: now, fileName: payload.fileName, type: "search_placement", typeLabel: payload.typeLabel, status: duplicateMode === "version" ? "Импортирован как новая версия" : "Импортирован", campaignId: payload.campaignIds.join(", "), counts: payload.counts });
+  g5.yandexDirect.imports.push({ id: makeId("g5-yd-import"), importedAt: now, fileName: payload.fileName, type: "search_placement", typeLabel: payload.typeLabel, status: duplicates.length ? "Обновлён" : "Импортирован", campaignId: payload.campaignIds.join(", "), counts: payload.counts });
   g5.ui.openBlocks.input = true;
   g5.ui.openBlocks.ad = true;
   g5.ui.openBlocks.registry = true;
@@ -12629,9 +13596,11 @@ function getGate5BlockStatus(key) {
     return iters.length ? "ready" : "not_started";
   }
   if (key === "compare") {
-    return g5.periodSnapshots.length >= 2 ? "ready" : "not_started";
+    return g5.campaignRegistry.filter(g5MatchesCampaign).some((campaign) => g5ComparableSnapshotsForCampaign(g5, campaign.id)) ? "ready" : "not_started";
   }
-  if (key === "decision") return Object.values(g5.reports).some((rows) => rows.length) ? "ready" : "not_started";
+  if (key === "decision") {
+    return g5.campaignRegistry.filter(g5MatchesCampaign).some((campaign) => g5DecisionForCampaign(g5, campaign).spend) ? "ready" : "not_started";
+  }
   return "not_started";
 }
 function getGate5Progress() {
@@ -12717,12 +13686,46 @@ function g5MatchesCampaign(campaign) {
   if (filters.platform && campaign.platform !== filters.platform) return false;
   return true;
 }
+
+function g5AvailableSnapshotPeriods(g5 = ensureGate5State()) {
+  const periods = new Map();
+  (g5.periodSnapshots || []).forEach((snapshot) => {
+    const campaign = g5CampaignById(snapshot?.campaignId);
+    if (!g5MatchesCampaign(campaign)) return;
+    const start = String(snapshot?.periodStart || "").slice(0, 10);
+    const end = String(snapshot?.periodEnd || snapshot?.date || "").slice(0, 10);
+    if (!start || !end || start > end) return;
+    const value = `${start}|${end}`;
+    if (!periods.has(value)) periods.set(value, { value, start, end, label: `${start} — ${end}` });
+  });
+  return [...periods.values()].sort((a, b) => b.start.localeCompare(a.start) || b.end.localeCompare(a.end));
+}
+
+function g5SelectedSnapshotPeriod(g5 = ensureGate5State()) {
+  const filters = g5Filters();
+  const legacyStart = String(filters.periodFrom || "").slice(0, 10);
+  const legacyEnd = String(filters.periodTo || legacyStart).slice(0, 10);
+  const value = String(filters.periodRange || (legacyStart || legacyEnd ? `${legacyStart}|${legacyEnd}` : ""));
+  const periods = g5AvailableSnapshotPeriods(g5);
+  const selected = periods.find((period) => period.value === value) || null;
+  return { value, periods, selected, valid: !value || Boolean(selected) };
+}
+
 function g5MatchesPeriod(date, periodStart = "", periodEnd = "") {
-  const { periodFrom, periodTo } = g5Filters();
-  if (!periodFrom && !periodTo) return true;
+  const selection = g5SelectedSnapshotPeriod();
+  if (!selection.value) return true;
+  if (!selection.valid) return false;
   const start = periodStart || date || "";
   const end = periodEnd || date || start;
-  return (!periodFrom || end >= periodFrom) && (!periodTo || start <= periodTo);
+  return end >= selection.selected.start && start <= selection.selected.end;
+}
+function g5MatchesSnapshotPeriod(snapshot) {
+  const selection = g5SelectedSnapshotPeriod();
+  if (!selection.value) return true;
+  if (!selection.valid) return false;
+  const start = String(snapshot?.periodStart || "").slice(0, 10);
+  const end = String(snapshot?.periodEnd || snapshot?.date || "").slice(0, 10);
+  return start === selection.selected.start && end === selection.selected.end;
 }
 function g5MatchesRecord(record) {
   const campaign = g5CampaignForCabinetId(record.campaignId, record.campaignName);
@@ -12735,7 +13738,7 @@ function g5FilterRecords(records) {
   return (records || []).filter(g5MatchesRecord);
 }
 function g5FilterSnapshots(snapshots) {
-  return (snapshots || []).filter((snapshot) => g5MatchesCampaign(g5CampaignById(snapshot.campaignId)) && g5MatchesPeriod("", snapshot.periodStart, snapshot.periodEnd));
+  return (snapshots || []).filter((snapshot) => g5MatchesCampaign(g5CampaignById(snapshot.campaignId)) && g5MatchesSnapshotPeriod(snapshot));
 }
 function renderGate5Filters() {
   const g5 = ensureGate5State();
@@ -12743,7 +13746,16 @@ function renderGate5Filters() {
   const filteredCampaigns = g5.campaignRegistry;
   const types = [...new Set(filteredCampaigns.map((campaign) => campaign.type).filter(Boolean))];
   const platforms = [...new Set(filteredCampaigns.map((campaign) => campaign.platform).filter(Boolean))];
-  return `<section class="gate5-card" style="margin-bottom:16px"><div class="gate5-grid-4"><label class="gate5-field">Кампания<select data-g5-filter="campaignId">${g5CampaignOptions(filters.campaignId, "Все кампании")}</select></label><label class="gate5-field">Период: с<input type="date" data-g5-filter="periodFrom" value="${g5Attr(filters.periodFrom)}"></label><label class="gate5-field">Период: по<input type="date" data-g5-filter="periodTo" value="${g5Attr(filters.periodTo)}"></label><label class="gate5-field">Тип кампании<select data-g5-filter="type">${g5Options(types, filters.type, "Все типы")}</select></label></div><div class="gate5-grid-2" style="margin-top:10px"><label class="gate5-field">Платформа<select data-g5-filter="platform">${g5Options(platforms, filters.platform, "Все платформы")}</select></label><div class="gate5-field" style="display:flex;align-items:flex-end"><button class="btn secondary" data-g5-clear-filters>Сбросить фильтры</button></div></div></section>`;
+  const selection = g5SelectedSnapshotPeriod(g5);
+  const missingOption = selection.value && !selection.valid
+    ? `<option value="${g5Attr(selection.value)}" selected>Выбранный период отсутствует</option>`
+    : "";
+  const periodOptions = `<option value="">Все периоды</option>${missingOption}${selection.periods.map((period) => `<option value="${g5Attr(period.value)}" ${period.value === selection.value ? "selected" : ""}>${g5Esc(period.label)}</option>`).join("")}`;
+  const available = selection.periods.map((period) => period.label).join(", ") || "периодов пока нет";
+  const warning = selection.value && !selection.valid
+    ? `<div class="gate5-note gate5-warning">Такого периода нет в загруженных данных, доступны: ${g5Esc(available)}.</div>`
+    : "";
+  return `<section class="gate5-card" style="margin-bottom:16px"><div class="gate5-grid-4"><label class="gate5-field">Кампания<select data-g5-filter="campaignId">${g5CampaignOptions(filters.campaignId, "Все кампании")}</select></label><label class="gate5-field">Период<select data-g5-filter="periodRange">${periodOptions}</select></label><label class="gate5-field">Тип кампании<select data-g5-filter="type">${g5Options(types, filters.type, "Все типы")}</select></label><label class="gate5-field">Платформа<select data-g5-filter="platform">${g5Options(platforms, filters.platform, "Все платформы")}</select></label></div>${warning}<div class="gate5-field" style="display:flex;align-items:flex-end;margin-top:10px"><button class="btn secondary" data-g5-clear-filters>Сбросить фильтры</button></div></section>`;
 }
 function renderGate5Registry() {
   const g5 = ensureGate5State();
@@ -12765,8 +13777,9 @@ function renderGate5YandexImport() {
   const yd = ensureGate5State().yandexDirect;
   const pending = g5YandexPendingImport;
   const history = yd.imports.slice().reverse().slice(0, 12).map((item) => `<tr><td>${g5DateTime(item.importedAt)}</td><td>${g5Esc(item.fileName)}</td><td>${g5Esc(item.typeLabel || (item.type === "yandex_structure" ? "Структура кампании" : GATE5_REPORTS[item.type]?.title || item.type))}</td><td>${g5Esc(item.status)}</td><td>${g5Esc(item.campaignId || "—")}</td><td>${g5Int(item.counts?.groups || 0)} / ${g5Int(item.counts?.ads || 0)} / ${g5Int(item.counts?.phrases || 0)}</td></tr>`).join("");
-  const duplicates = pending?.type === "search_placement" ? g5PlacementDuplicateSnapshots(pending) : [];
-  const preview = pending ? `<div class="gate5-note gate5-good" style="margin-top:12px"><b>Файл распознан:</b> ${g5Esc(pending.typeLabel)}<br>${pending.campaign ? `Кампания: <b>${g5Esc(pending.campaign.id)}</b> · ${g5Esc(pending.campaign.name)} · ${g5Esc(pending.campaign.type)}<br>` : ""}${pending.periodStart ? `Период: <b>${g5Esc(pending.periodStart)} — ${g5Esc(pending.periodEnd)}</b><br>` : ""}Кампаний: <b>${g5Int(pending.counts.campaigns || (pending.campaign ? 1 : 0))}</b> · групп: <b>${g5Int(pending.counts.groups || 0)}</b> · объявлений: <b>${g5Int(pending.counts.ads || 0)}</b> · фраз / строк: <b>${g5Int(pending.counts.phrases || pending.counts.rows || 0)}</b> · посадочных: <b>${g5Int(pending.counts.landings || 0)}</b>${pending.regionDictionary ? `<br><span class="gate5-muted">Справочник регионов: ${g5Esc(pending.regionDictionary)} · словарь значений: ${g5Esc(pending.valueDictionary)}</span>` : ""}</div>${duplicates.length ? `<div class="gate5-note gate5-warning"><b>Такой снимок уже есть.</b> Выберите действие: <select data-g5-placement-duplicate><option value="skip">Пропустить</option><option value="replace">Заменить данные</option><option value="version">Импортировать как новую версию</option></select></div>` : ""}<div class="gate5-actions"><button class="btn primary" data-g5-yandex-confirm>Импортировать</button><button class="btn secondary" data-g5-yandex-cancel>Отменить</button></div>` : '<div class="gate5-note">Не загружен. Выберите XLSX / CSV из Яндекс Директа — тип будет определён автоматически, затем появится предпросмотр.</div>';
+  const duplicates = pending && pending.type !== "yandex_structure" && pending.type !== "business" ? g5DuplicateSnapshots(pending) : [];
+  const pendingPeriod = g5PayloadSnapshotDescriptors(pending)[0];
+  const preview = pending ? `<div class="gate5-note gate5-good" style="margin-top:12px"><b>Файл распознан:</b> ${g5Esc(pending.typeLabel)}<br>${pending.campaign ? `Кампания: <b>${g5Esc(pending.campaign.id)}</b> · ${g5Esc(pending.campaign.name)} · ${g5Esc(pending.campaign.type)}<br>` : ""}${pendingPeriod ? `Период: <b>${g5Esc(pendingPeriod.periodStart)} — ${g5Esc(pendingPeriod.periodEnd)}</b><br>` : `<span class="gate5-muted">В файле нет отдельной даты или периода: данные можно импортировать, но факт-снимок создан не будет.</span><br>`}Кампаний: <b>${g5Int(pending.counts.campaigns || (pending.campaign ? 1 : 0))}</b> · групп: <b>${g5Int(pending.counts.groups || 0)}</b> · объявлений: <b>${g5Int(pending.counts.ads || 0)}</b> · фраз / строк: <b>${g5Int(pending.counts.phrases || pending.counts.rows || 0)}</b> · посадочных: <b>${g5Int(pending.counts.landings || 0)}</b>${pending.regionDictionary ? `<br><span class="gate5-muted">Справочник регионов: ${g5Esc(pending.regionDictionary)} · словарь значений: ${g5Esc(pending.valueDictionary)}</span>` : ""}</div>${duplicates.length ? `<div class="gate5-note gate5-warning"><b>Уже импортировано, обновить?</b><select data-g5-duplicate-mode><option value="skip">Нет, оставить существующий снимок</option><option value="update">Да, обновить данные периода</option></select></div>` : ""}<div class="gate5-actions"><button class="btn primary" data-g5-yandex-confirm>${duplicates.length ? "Продолжить" : "Импортировать"}</button><button class="btn secondary" data-g5-yandex-cancel>Отменить</button></div>` : '<div class="gate5-note">Не загружен. Выберите XLSX / CSV из Яндекс Директа — тип будет определён автоматически, затем появится предпросмотр.</div>';
   return `<div class="gate5-card" style="margin-bottom:16px"><h4>Импорт Яндекс Директ</h4><p class="gate5-muted">Единая точка загрузки: структура кампании, перфоманс-кампании, поисковые запросы, размещение в Поиске, площадки РСЯ и бизнес-данные CRM / AGBIS. Файл проходит путь: распознавание → предпросмотр → подтверждённый импорт.</p><div class="gate5-fileline"><label class="gate5-field">Загрузить XLSX / CSV<input type="file" data-g5-yandex-file accept=".xlsx,.xls,.csv,.tsv,.txt"></label><span class="status-pill status-${pending ? "in_progress" : "not_started"}">${pending ? "Файл распознан" : "Не загружен"}</span></div>${preview}<div class="gate5-table-wrap" style="margin-top:12px"><table class="gate5-table"><thead><tr><th>Дата</th><th>Файл</th><th>Тип</th><th>Статус</th><th>Кампания</th><th>Группы / объявления / фразы</th></tr></thead><tbody>${history || '<tr><td colspan="6">Истории импортов пока нет.</td></tr>'}</tbody></table></div></div>`;
 }
 function g5StructureTable() {
@@ -12985,50 +13998,61 @@ function renderGate5Journal() {
 }
 function renderGate5Comparison() {
   const g5 = ensureGate5State();
-  const snapshots = g5FilterSnapshots(g5.periodSnapshots).slice().sort((a, b) => String(a.periodStart).localeCompare(String(b.periodStart)));
-  if (snapshots.length < 2) return '<div class="gate5-note">Недостаточно данных: для автоматического сравнения нужны минимум два импортированных периода одной кампании.</div>';
-  const option = (snapshot, selected) => `<option value="${g5Attr(snapshot.id)}" ${snapshot.id === selected ? "selected" : ""}>${g5Esc(snapshot.periodStart)} — ${g5Esc(snapshot.periodEnd)} · ${g5Esc(snapshot.sourceLabel || snapshot.source)}</option>`;
-  const beforeId = g5.ui.comparisonBeforeId || snapshots[0].id;
-  const afterId = g5.ui.comparisonAfterId || snapshots[snapshots.length - 1].id;
-  const before = snapshots.find((item) => item.id === beforeId) || snapshots[0];
-  const after = snapshots.find((item) => item.id === afterId) || snapshots[snapshots.length - 1];
-  const delta = (a, b) => a ? `${b >= a ? "+" : ""}${(((b - a) / a) * 100).toFixed(1).replace(".", ",")}%` : "Недостаточно данных";
-  const cpaBefore = g5Num(before.cpa), cpaAfter = g5Num(after.cpa);
-  const conclusion = !cpaBefore || !cpaAfter ? "Недостаточно данных" : cpaAfter < cpaBefore ? "Лучше" : cpaAfter > cpaBefore ? "Хуже" : "Без изменений";
-  return `<div class="gate5-card"><h4>Автоматическое сравнение периодов</h4><div class="gate5-grid-2"><label class="gate5-field">Период до<select data-g5-comparison-filter="before">${snapshots.map((item) => option(item, before.id)).join("")}</select></label><label class="gate5-field">Период после<select data-g5-comparison-filter="after">${snapshots.map((item) => option(item, after.id)).join("")}</select></label></div></div><div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Метрика</th><th>До</th><th>После</th><th>Изменение</th></tr></thead><tbody><tr><td>Расход</td><td>${g5Rub(before.spend)}</td><td>${g5Rub(after.spend)}</td><td>${delta(before.spend, after.spend)}</td></tr><tr><td>Показы</td><td>${g5Int(before.impressions)}</td><td>${g5Int(after.impressions)}</td><td>${delta(before.impressions, after.impressions)}</td></tr><tr><td>Клики</td><td>${g5Int(before.clicks)}</td><td>${g5Int(after.clicks)}</td><td>${delta(before.clicks, after.clicks)}</td></tr><tr><td>Лиды</td><td>${g5Int(before.leads || before.conversions)}</td><td>${g5Int(after.leads || after.conversions)}</td><td>${delta(before.leads || before.conversions, after.leads || after.conversions)}</td></tr><tr><td>CPA</td><td>${g5Rub(cpaBefore)}</td><td>${g5Rub(cpaAfter)}</td><td>${delta(cpaBefore, cpaAfter)}</td></tr><tr><td>CTR</td><td>${g5Pct(g5Num(before.ctr) / 100)}</td><td>${g5Pct(g5Num(after.ctr) / 100)}</td><td>${delta(before.ctr, after.ctr)}</td></tr><tr><td>CR</td><td>${g5Pct(g5Num(before.cr) / 100)}</td><td>${g5Pct(g5Num(after.cr) / 100)}</td><td>${delta(before.cr, after.cr)}</td></tr></tbody></table></div><div class="gate5-decision ${conclusion === "Лучше" ? "gate5-good" : conclusion === "Хуже" ? "gate5-problem" : "gate5-warning"}"><strong>Автоматический вывод: ${g5Esc(conclusion)}</strong></div>`;
+  const rows = g5.campaignRegistry.filter(g5MatchesCampaign).map((campaign) => {
+    const comparison = g5ComparableSnapshotsForCampaign(g5, campaign.id);
+    if (!comparison) return `<tr><td><b>${g5Esc(campaign.name)}</b></td><td colspan="6">Недостаточно данных для сравнения</td></tr>`;
+    const before = comparison.snapshots.at(-2), after = comparison.snapshots.at(-1);
+    const beforeLeads = g5Num(before.leads || before.conversions), afterLeads = g5Num(after.leads || after.conversions);
+    const beforeCpa = g5Num(before.cpa) || g5Div(g5Num(before.spend), beforeLeads), afterCpa = g5Num(after.cpa) || g5Div(g5Num(after.spend), afterLeads);
+    const change = beforeCpa && afterCpa ? `${afterCpa < beforeCpa ? "CPA ниже" : afterCpa > beforeCpa ? "CPA выше" : "CPA без изменений"} · ${g5Pct(Math.abs(g5Div(afterCpa - beforeCpa, beforeCpa)))}` : "Недостаточно данных";
+    const conclusion = !beforeCpa || !afterCpa ? "Недостаточно данных" : afterCpa < beforeCpa ? "Лучше" : afterCpa > beforeCpa ? "Хуже" : "Без изменений";
+    return `<tr><td><b>${g5Esc(campaign.name)}</b><br><span class="gate5-muted">${g5Esc(comparison.reportType)} · ${g5Esc(comparison.granularity.label)}</span></td><td>${g5Esc(before.periodStart)} — ${g5Esc(before.periodEnd)}</td><td>${g5Esc(after.periodStart)} — ${g5Esc(after.periodEnd)}</td><td>${g5Rub(before.spend)} / ${g5Int(beforeLeads)} / ${beforeCpa ? g5Rub(beforeCpa) : "—"}</td><td>${g5Rub(after.spend)} / ${g5Int(afterLeads)} / ${afterCpa ? g5Rub(afterCpa) : "—"}</td><td>${g5Esc(change)}</td><td><span class="status-pill status-${conclusion === "Лучше" ? "ready" : conclusion === "Хуже" ? "problem" : "in_progress"}">${g5Esc(conclusion)}</span></td></tr>`;
+  }).join("");
+  return `<div class="gate5-card"><h4>Автоматическое сравнение по кампаниям</h4><div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Кампания</th><th>Период до</th><th>Период после</th><th>До: расход / лиды / CPA</th><th>После: расход / лиды / CPA</th><th>Изменение</th><th>Автовывод</th></tr></thead><tbody>${rows || '<tr><td colspan="7">Кампаний по текущему фильтру нет.</td></tr>'}</tbody></table></div></div>`;
 }
 function renderGate5FinalDecision() {
-  const f = g5Finance();
-  const campaign = g5CampaignById(g5Filters().campaignId) || ensureGate5State().campaignRegistry.find(g5MatchesCampaign);
-  const snapshots = g5FilterSnapshots(ensureGate5State().periodSnapshots);
-  if (!campaign || !snapshots.length || !f.spend) return '<div class="gate5-note">Недостаточно данных для решения.</div>';
-  const weak = g5FilterRecords(ensureGate5State().reports.query).filter((row) => row.spend > 0 && !row.conversions).length;
-  let recommendation = "Продолжить";
-  if (!f.leads) recommendation = "Проверить";
-  else if (weak) recommendation = "Минусовать слабые запросы";
-  else if (f.financialReady && f.roi > 0) recommendation = "Масштабировать";
-  else if (f.financialReady && f.roi < 0) recommendation = "Остановить / проверить";
-  const last = snapshots.slice().sort((a, b) => String(b.periodEnd).localeCompare(String(a.periodEnd)))[0];
-  return `<div class="gate5-card"><h4>${g5Esc(campaign.name)} · ${g5Esc(campaign.cabinetId)}</h4><div class="gate5-grid-4"><div class="gate5-kpi"><span>Период оценки</span><strong>${g5Esc(last.periodStart)} — ${g5Esc(last.periodEnd)}</strong></div><div class="gate5-kpi"><span>Расход</span><strong>${g5Rub(f.spend)}</strong></div><div class="gate5-kpi"><span>CPA</span><strong>${f.cpa ? g5Rub(f.cpa) : "Недостаточно данных"}</strong></div><div class="gate5-kpi"><span>Автоматический вывод</span><strong>${g5Esc(recommendation)}</strong></div></div><div class="gate5-decision ${recommendation === "Масштабировать" ? "gate5-good" : /Остановить/.test(recommendation) ? "gate5-problem" : "gate5-warning"}"><strong>Рекомендуемое действие: ${g5Esc(recommendation)}</strong><p class="gate5-muted">Решение сформировано автоматически по импортированным данным.</p></div></div>`;
+  const g5 = ensureGate5State();
+  const rows = g5.campaignRegistry.filter(g5MatchesCampaign).map((campaign) => {
+    const decision = g5DecisionForCampaign(g5, campaign);
+    if (!decision.latest) return `<tr><td><b>${g5Esc(campaign.name)}</b></td><td colspan="4">Недостаточно данных</td></tr>`;
+    return `<tr><td><b>${g5Esc(campaign.name)}</b></td><td>${g5Esc(decision.latest.periodStart)} — ${g5Esc(decision.latest.periodEnd)}</td><td>${g5Rub(decision.spend)}</td><td>${decision.cpa ? g5Rub(decision.cpa) : "Недостаточно данных"}</td><td>${g5Esc(decision.recommendation)}</td></tr>`;
+  }).join("");
+  return `<div class="gate5-card"><h4>Решение по каждой кампании</h4><div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Кампания</th><th>Период оценки</th><th>Расход</th><th>CPA</th><th>Рекомендуемое действие</th></tr></thead><tbody>${rows || '<tr><td colspan="5">Кампаний по текущему фильтру нет.</td></tr>'}</tbody></table></div></div>`;
 }
 function bindGate5Events() {
   document.querySelectorAll("[data-g5-comparison-filter]").forEach((select) =>
     select.addEventListener("change", () => {
-      if (select.dataset.g5ComparisonFilter === "before") ensureGate5State().ui.comparisonBeforeId = select.value;
-      else ensureGate5State().ui.comparisonAfterId = select.value;
+      const g5 = ensureGate5State();
+      g5.ui.comparisonCampaignId = g5Filters().campaignId || "";
+      if (select.dataset.g5ComparisonFilter === "before") g5.ui.comparisonBeforeId = select.value;
+      else g5.ui.comparisonAfterId = select.value;
       saveState();
       renderGate();
     }),
   );
   document.querySelectorAll("[data-g5-filter]").forEach((input) =>
     input.addEventListener("change", () => {
-      ensureGate5State().ui.filters[input.dataset.g5Filter] = input.value;
+      const g5 = ensureGate5State();
+      const key = input.dataset.g5Filter;
+      if (key === "campaignId" && g5.ui.filters.campaignId !== input.value) {
+        g5.ui.comparisonCampaignId = input.value || "";
+        g5.ui.comparisonBeforeId = "";
+        g5.ui.comparisonAfterId = "";
+      }
+      if (key === "periodRange") {
+        const [periodFrom = "", periodTo = ""] = String(input.value || "").split("|");
+        g5.ui.filters.periodRange = input.value;
+        g5.ui.filters.periodFrom = periodFrom;
+        g5.ui.filters.periodTo = periodTo;
+      } else {
+        g5.ui.filters[key] = input.value;
+      }
       saveState();
       renderGate();
     }),
   );
   document.querySelector("[data-g5-clear-filters]")?.addEventListener("click", () => {
-    ensureGate5State().ui.filters = { campaignId: "", periodFrom: "", periodTo: "", type: "", platform: "" };
+    ensureGate5State().ui.filters = { campaignId: "", periodRange: "", periodFrom: "", periodTo: "", type: "", platform: "" };
     saveState();
     renderGate();
   });
@@ -13064,17 +14088,17 @@ function bindGate5Events() {
     if (!g5YandexPendingImport) return;
     const payload = g5YandexPendingImport;
     try {
-      const duplicateMode = document.querySelector("[data-g5-placement-duplicate]")?.value || "skip";
+      const duplicateMode = document.querySelector("[data-g5-duplicate-mode]")?.value || "skip";
       const result = payload.type === "yandex_structure"
         ? g5ImportYandexStructure(payload)
         : payload.type === "business"
           ? g5ImportBusinessReport(payload)
         : payload.type === "search_placement"
           ? g5ImportYandexSearchPlacement(payload, duplicateMode)
-          : (g5ImportYandexReport(payload), { unchanged: false, changes: 0 });
+          : g5ImportYandexReport(payload, duplicateMode);
       g5YandexPendingImport = null;
       saveState(); renderGate();
-      alert(result.skipped ? "Импорт пропущен: такой файл уже был загружен." : result.unchanged ? "Импорт выполнен, изменений нет." : `Импортирован. Обновлено кампаний: ${result.changes || 0}.`);
+      alert(result.skipped ? "Уже импортировано. Существующий снимок оставлен без изменений." : result.withoutSnapshot ? "Данные импортированы, но факт-снимок не создан: в файле нет отдельной даты или периода." : result.unchanged ? "Импорт выполнен, изменений нет." : `Импортирован. Обновлено кампаний: ${result.changes || 0}.`);
     } catch (error) {
       ensureGate5State().yandexDirect.imports.push({ id: makeId("g5-yd-import"), importedAt: new Date().toISOString(), fileName: payload.fileName, type: payload.type, status: "Ошибка импорта", counts: payload.counts || {} });
       saveState(); renderGate();
@@ -15286,9 +16310,7 @@ renderGateNav = function () {
     .join("");
   document.querySelectorAll("[data-gate-id]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      activeView = "gate";
-      activeGateId = btn.dataset.gateId;
-      render();
+      guruNavigateToGate(btn.dataset.gateId);
     });
   });
 };
@@ -18670,15 +19692,9 @@ function diagChannelTitle(c) {
   return [c.platform, c.type].filter(Boolean).join(" / ");
 }
 
-function diagPct(ready, total, blockers = 0) {
-  const safeTotal = total || 1;
-  const raw = Math.round((ready / safeTotal) * 100);
-  if (!blockers) return raw;
-  if (blockers >= safeTotal) return Math.min(raw, 20);
-  return Math.min(raw, 35);
-}
-
-// Позиция диагностики: name + статус элемента → { tone: ok|warn|bad, text }
+// Позиция диагностики: name + статус элемента → единый статус, тон и текст.
+// Процент и статус этапа всегда выводятся из этих же элементов: нельзя
+// получить «100%» для пункта, который отмечен как «Отсутствует».
 function diag5AItem(name, status) {
   const canon = guruCanonStatus(status);
   const tone =
@@ -18688,7 +19704,33 @@ function diag5AItem(name, status) {
         ? "warn"
         : "bad";
   const label = canon ? guruStatusLabel(canon) : "статус не указан";
-  return { tone, text: `${name} — ${label}` };
+  return { status: canon, tone, text: `${name} — ${label}` };
+}
+
+function diagStageMetrics(items = []) {
+  const total = items.length || 1;
+  const score = items.reduce((sum, item) => {
+    if (item.status === "works" || item.status === "not_needed") return sum + 1;
+    if (item.status === "needs_improvement") return sum + 0.5;
+    return sum;
+  }, 0);
+  const statuses = items.map((item) => item.status).filter(Boolean);
+  const hasStartedWork = statuses.some(
+    (value) =>
+      value === "works" ||
+      value === "not_needed" ||
+      value === "needs_improvement" ||
+      value === "broken",
+  );
+  let status = "not_started";
+  if (statuses.length && statuses.every((value) => value === "works" || value === "not_needed")) {
+    status = "ready";
+  } else if (hasStartedWork && statuses.includes("broken")) {
+    status = "problem";
+  } else if (hasStartedWork) {
+    status = "in_progress";
+  }
+  return { pct: Math.round((score / total) * 100), status };
 }
 
 function diag5AStages() {
@@ -18711,16 +19753,10 @@ function diag5AStages() {
     coverageChannels.forEach((c) => {
       items.push(diag5AItem(diagChannelTitle(c), c.status));
     });
-    const active = coverageChannels.filter((c) => guruStatusIsOk(c.status));
-    const total = coverageChannels.length || 1;
-    const blockers = coverageChannels.filter(
-      (c) => !guruStatusIsSet(c.status) || guruStatusIsBad(c.status),
-    ).length;
     return {
       name: "Aware",
       label: "Узнал",
       desc: "Охватные каналы для привлечения трафика",
-      pct: diagPct(active.length, total, blockers),
       items,
     };
   }
@@ -18732,44 +19768,26 @@ function diag5AStages() {
     items.push(
       trust
         ? diag5AItem("Блоки доверия", trust.status)
-        : { tone: "bad", text: "Блоки доверия — элемент отсутствует в диагностике" },
+        : diag5AItem("Блоки доверия", "missing"),
     );
     const contacts = fund.find((r) => r.name.includes("Контакты"));
     items.push(
       contacts
         ? diag5AItem("Контакты", contacts.status)
-        : { tone: "bad", text: "Контакты — элемент отсутствует в диагностике" },
+        : diag5AItem("Контакты", "missing"),
     );
-    let landingOk = 0;
-    let landingBlockers = 0;
     products.forEach((p) => {
       const d = (pv2.landings || {})[p] || {};
       items.push(diag5AItem(`Посадочная под продукт «${p}»`, d.status));
-      if (guruStatusIsOk(d.status)) landingOk++;
-      else if (!guruStatusIsSet(d.status) || guruStatusIsBad(d.status))
-        landingBlockers++;
     });
     const extraPages = pv2.extra || [];
     extraPages.forEach((r) => {
       if (String(r.name || "").trim()) items.push(diag5AItem(r.name, r.status));
     });
-    const total = 2 + products.length + extraPages.length || 1;
-    const ok =
-      (guruStatusIsOk(trust?.status) ? 1 : 0) +
-      (guruStatusIsOk(contacts?.status) ? 1 : 0) +
-      landingOk +
-      extraPages.filter((r) => guruStatusIsOk(r.status)).length;
-    const blockers =
-      (!guruStatusIsSet(trust?.status) || guruStatusIsBad(trust?.status) ? 1 : 0) +
-      (!guruStatusIsSet(contacts?.status) || guruStatusIsBad(contacts?.status)
-        ? 1
-        : 0) +
-      landingBlockers;
     return {
       name: "Appeal",
       label: "Понравился",
       desc: "Посадочные, доверие, контент",
-      pct: diagPct(ok, total, blockers),
       items,
     };
   }
@@ -18783,15 +19801,10 @@ function diag5AStages() {
     askItems.forEach((r) => {
       items.push(diag5AItem(r.name, r.status));
     });
-    const ok = askItems.filter((r) => guruStatusIsOk(r.status)).length;
-    const blockers = askItems.filter(
-      (r) => !guruStatusIsSet(r.status) || guruStatusIsBad(r.status),
-    ).length;
     return {
       name: "Ask",
       label: "Изучает",
       desc: "Аналитика, цели, CRM, UTM",
-      pct: diagPct(ok, askItems.length, blockers),
       items,
     };
   }
@@ -18803,28 +19816,23 @@ function diag5AStages() {
     items.push(
       forms
         ? diag5AItem("Форма заявки / корзина", forms.status)
-        : { tone: "bad", text: "Форма заявки / корзина — элемент отсутствует в диагностике" },
+        : diag5AItem("Форма заявки / корзина", "missing"),
     );
     products.forEach((p) => {
       const d = (offers.productOffers || {})[p] || {};
       const ready = v121ProductOfferReady(d);
       const partial = !ready && (v121HasText(d.offer) || v121HasText(d.cta));
-      items.push({
-        tone: ready ? "ok" : partial ? "warn" : "bad",
-        text: `Оффер и CTA «${p}» — ${ready ? "заполнены" : partial ? "заполнены частично" : "не заполнены"}`,
-      });
+      items.push(
+        diag5AItem(
+          `Оффер и CTA «${p}»`,
+          ready ? "works" : partial ? "needs_improvement" : "missing",
+        ),
+      );
     });
-    const formsOk = guruStatusIsOk(forms?.status) ? 1 : 0;
-    const offersOk = products.filter(
-      (p) => v121ProductOfferReady(offers.productOffers?.[p] || {}),
-    ).length;
-    const total = 1 + products.length || 1;
-    const criticalBlocker = forms?.status !== "implemented";
     return {
       name: "Act",
       label: "Покупает",
       desc: "Формы, CTA, офферы",
-      pct: criticalBlocker ? 0 : diagPct(formsOk + offersOk, total, 0),
       items,
     };
   }
@@ -18837,30 +19845,22 @@ function diag5AStages() {
     const results = mega2?.currentResults || [];
     const meta = mega2?.currentResultsMeta || {};
     const hasPeriod = !!String(meta.period || "").trim();
-    items.push({
-      tone: hasPeriod ? "ok" : "bad",
-      text: `Период фиксации результатов — ${hasPeriod ? "указан" : "не указан"}`,
-    });
+    items.push(diag5AItem("Период фиксации результатов", hasPeriod ? "works" : "missing"));
     results.forEach((r) => {
       const filled = !!String(r.value || "").trim();
-      items.push({
-        tone: filled ? "ok" : "bad",
-        text: `${r.label || r.key} — ${filled ? "зафиксировано" : "не заполнено"}`,
-      });
+      items.push(diag5AItem(r.label || r.key, filled ? "works" : "missing"));
     });
-    const filled = results.filter((r) => String(r.value || "").trim());
-    const blockers = (!hasPeriod ? 1 : 0) + (!filled.length ? 1 : 0);
-    const criticalBlocker = !hasPeriod || !filled.length;
     return {
       name: "Advocate",
       label: "Рекомендует",
       desc: "Результаты, повторные покупки",
-      pct: criticalBlocker ? 0 : diagPct(filled.length, results.length || 1, blockers),
       items,
     };
   }
 
-  return [stageAware(), stageAppeal(), stageAsk(), stageAct(), stageAdvocate()];
+  return [stageAware(), stageAppeal(), stageAsk(), stageAct(), stageAdvocate()].map(
+    (stage) => ({ ...stage, ...diagStageMetrics(stage.items) }),
+  );
 }
 
 function diag5ALight(pct) {
@@ -18929,6 +19929,7 @@ function gate0SummaryHtml() {
           <div class="diag-stage-desc">${escapeHtml(s.desc)}</div>
         </div>
         <div class="diag-stage-bar-wrap">
+          <span class="status-pill status-${escapeAttr(s.status)}">${escapeHtml(STATUS_LABELS[s.status] || s.status)}</span>
           <div class="gate0-summary-bar"><div class="gate0-summary-fill" style="width:${s.pct}%"></div></div>
           <span class="gate0-summary-pct">${s.pct}%</span>
         </div>
@@ -18951,30 +19952,17 @@ cardUserFieldsHtml = function (c) {
 const __guruPrevRecalcStatusV120Summary = recalculateStatusForCard;
 recalculateStatusForCard = function (card, workspace = state) {
   if (isStartupSummaryCard(card)) {
-    const gate = workspace?.gates?.find((g) => g.id === "gate-0");
-    if (!gate) {
+    const stages = diag5AStages();
+    const statuses = stages.map((stage) => stage.status);
+    if (!statuses.length || statuses.every((status) => status === "not_started")) {
       card.status = "not_started";
-      return;
-    }
-    const others = gate.cards.filter((c) => !isStartupSummaryCard(c));
-    const ready = others.filter((c) => c.status === "ready").length;
-    const started = others.filter((c) => c.status !== "not_started").length;
-    if (!started) {
-      card.status = "not_started";
-      return;
-    }
-    if (ready === others.length) {
+    } else if (statuses.every((status) => status === "ready")) {
       card.status = "ready";
-      return;
+    } else if (statuses.includes("problem")) {
+      card.status = "problem";
+    } else {
+      card.status = "in_progress";
     }
-    const needsReview = others.some(
-      (c) => c.status === "needs_review" || c.status === "problem",
-    );
-    if (needsReview) {
-      card.status = "needs_review";
-      return;
-    }
-    card.status = "in_progress";
     return;
   }
   __guruPrevRecalcStatusV120Summary(card, workspace);
@@ -19401,7 +20389,7 @@ function megaPlatformSectionHtml(cardId, pv2) {
       <td><select data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="fundamental" data-mega-idx="${i}" data-mega-field="status">
         ${guruStatusOptionsHtml(r.status)}
       </select></td>
-      <td><input data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="fundamental" data-mega-idx="${i}" data-mega-field="url" value="${escapeAttr(r.url || "")}" placeholder="—" /></td>
+      <td><input data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="fundamental" data-mega-idx="${i}" data-mega-field="url" value="${escapeAttr(r.url || "")}" placeholder="—" ${guruStatusIsSet(r.status) ? "data-guru-field-neutral" : ""} /></td>
       <td><input data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="fundamental" data-mega-idx="${i}" data-mega-field="comment" value="${escapeAttr(r.comment || "")}" placeholder="—" /></td>
     </tr>`,
       )
@@ -19418,7 +20406,7 @@ function megaPlatformSectionHtml(cardId, pv2) {
         const warn = guruStatusIsOk(d.status) && !String(d.url || "").trim();
         return `<tr class="${guruStatusIsBad(d.status) ? "mega-row-bad" : ""}">
         <td class="cr-label">${escapeHtml(p)}</td>
-        <td><input data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="landing" data-mega-product="${escapeAttr(p)}" data-mega-field="url" value="${escapeAttr(d.url || "")}" placeholder="${warn ? "Укажи URL посадочной" : "—"}" class="${warn ? "mega-warn-input" : ""}" /></td>
+        <td><input data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="landing" data-mega-product="${escapeAttr(p)}" data-mega-field="url" value="${escapeAttr(d.url || "")}" placeholder="${warn ? "Укажи URL посадочной" : "—"}" class="${warn ? "mega-warn-input" : ""}" ${guruStatusIsSet(d.status) ? "data-guru-field-neutral" : ""} /></td>
         <td><select data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="landing" data-mega-product="${escapeAttr(p)}" data-mega-field="status">
           ${guruStatusOptionsHtml(d.status)}
         </select></td>
@@ -19444,7 +20432,7 @@ function megaPlatformSectionHtml(cardId, pv2) {
       <td><select data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="extra" data-mega-idx="${i}" data-mega-field="status">
         ${guruStatusOptionsHtml(r.status)}
       </select></td>
-      <td><input data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="extra" data-mega-idx="${i}" data-mega-field="url" value="${escapeAttr(r.url || "")}" placeholder="—" /></td>
+      <td><input data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="extra" data-mega-idx="${i}" data-mega-field="url" value="${escapeAttr(r.url || "")}" placeholder="—" ${guruStatusIsSet(r.status) ? "data-guru-field-neutral" : ""} /></td>
       <td><input data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="extra" data-mega-idx="${i}" data-mega-field="comment" value="${escapeAttr(r.comment || "")}" placeholder="—" /></td>
       <td><button class="v116-multi-remove" data-mega-card="${escapeAttr(cardId)}" data-mega-pv2-remove="${i}" title="Удалить">×</button></td>
     </tr>`,
@@ -19516,6 +20504,21 @@ function updateMegaMarketing(target) {
     m[section][idx][field] = target.value;
   }
   recalculateStatusForCard(card);
+  if (field === "status") {
+    const url = target
+      .closest("tr")
+      ?.querySelector('input[data-mega-field="url"]');
+    if (url) {
+      url.toggleAttribute("data-guru-field-neutral", Boolean(target.value));
+      url.classList.remove(
+        "guru-field-empty",
+        "guru-field-filled",
+        "guru-field-warning",
+        "guru-field-selected",
+      );
+      if (!target.value) guruApplyFieldStates(document);
+    }
+  }
   flashSaving();
 }
 
@@ -21197,7 +22200,7 @@ pageStructureCardHtml = function (card, row, pageIndex, repeatable) {
   const template = v22TemplateForCard(card);
   const nameValue = row.name || card.title || template.type || "Страница";
 
-  const needSelect = `<select class="g1-input is-filled" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="pageNeeded" style="max-width:200px;">
+  const needSelect = `<select class="g1-input is-filled" aria-label="Использование страницы в проекте" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="pageNeeded" style="max-width:200px;">
     <option value="needed" ${needed === "needed" ? "selected" : ""}>Нужна</option>
     <option value="not_needed" ${needed === "not_needed" ? "selected" : ""}>Не нужна</option>
     <option value="undecided" ${needed === "undecided" ? "selected" : ""}>Под вопросом</option>
@@ -21210,10 +22213,8 @@ pageStructureCardHtml = function (card, row, pageIndex, repeatable) {
           <input class="page-name-input route-page-name" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="name" value="${escapeAttr(nameValue)}" placeholder="Название страницы" ${row.fixed ? "readonly" : ""} />
         </div>
         <span class="status-pill status-not_required">Не требуется</span>
+        ${needSelect}
         ${repeatable ? `<button class="small-btn danger-mini" data-remove-gate1-page="${escapeAttr(card.id)}" data-index="${pageIndex}" ${rowsSafeLength(card.pageRows) <= 1 ? "disabled" : ""}>×</button>` : ""}
-      </div>
-      <div style="padding:0 20px 16px;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:12px;font-weight:700;color:var(--muted);">Использовать в проекте:</span>${needSelect}
       </div>
     </section>`;
   }
@@ -21225,11 +22226,8 @@ pageStructureCardHtml = function (card, row, pageIndex, repeatable) {
           <input class="page-name-input route-page-name" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="name" value="${escapeAttr(nameValue)}" placeholder="Название страницы" ${row.fixed ? "readonly" : ""} />
         </div>
         <span class="status-pill status-undecided" style="background:#fff3d6;color:#8a5a00;">Под вопросом</span>
+        ${needSelect}
         ${repeatable ? `<button class="small-btn danger-mini" data-remove-gate1-page="${escapeAttr(card.id)}" data-index="${pageIndex}" ${rowsSafeLength(card.pageRows) <= 1 ? "disabled" : ""}>×</button>` : ""}
-      </div>
-      <div style="padding:0 20px 16px;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:12px;font-weight:700;color:var(--muted);">Использовать в проекте:</span>${needSelect}
-        <span style="font-size:11px;color:#8a5a00;">Нужно принять решение</span>
       </div>
     </section>`;
   }
@@ -21240,13 +22238,11 @@ pageStructureCardHtml = function (card, row, pageIndex, repeatable) {
         <input class="page-name-input route-page-name" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="name" value="${escapeAttr(nameValue)}" placeholder="Название страницы" ${row.fixed ? "readonly" : ""} />
       </div>
       <span class="status-pill status-${pageStatus}">${STATUS_LABELS[pageStatus] || pageStatus}</span>
+      ${needSelect}
       ${repeatable ? `<button class="small-btn danger-mini" data-remove-gate1-page="${escapeAttr(card.id)}" data-index="${pageIndex}" ${rowsSafeLength(card.pageRows) <= 1 ? "disabled" : ""}>×</button>` : ""}
     </div>
-    <div style="padding:0 20px 12px;display:flex;align-items:center;gap:12px;">
-      <span style="font-size:12px;font-weight:700;color:var(--muted);">Использовать в проекте:</span>${needSelect}
-    </div>
     <div class="route-top-grid v22-route-top-grid">
-      <label class="g1-field"><span>URL${g0HintBtnHtml("audit_url")}</span><small style="color:var(--muted);font-size:11px;">Адрес страницы, которую проверяем.</small><input class="g1-input ${String(row.url || "").trim() ? "is-filled" : "is-empty"}" list="projectUrlOptions" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || "")}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
+      <label class="g1-field"><span>URL${g0HintBtnHtml("audit_url")}</span><input class="g1-input ${String(row.url || "").trim() ? "is-filled" : "is-empty"}" list="projectUrlOptions" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || "")}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
     </div>
     <div class="route-sections v22-route-sections">${v22RouteSectionsHtml(card, row, pageIndex)}</div>
   </section>`;
@@ -21306,11 +22302,6 @@ v22RouteSectionHtml = function (card, row, pageIndex, section, open) {
       <span class="v22-section-status status-pill status-${status}">${escapeHtml(v22SectionStatusLabel(row, section))}</span>
     </summary>
     <div class="route-section-body v22-section-body">
-      <div class="v22-section-guidance">
-        <div><strong>Задача</strong><p>${escapeHtml(section.task || "")}</p></div>
-        <div><strong>Чек-пункты</strong><ul>${(section.checklist || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>
-        <div><strong>Стандарт готовности</strong><p>${escapeHtml(section.standard || "")}</p></div>
-      </div>
       <div class="route-section-grid v22-route-fields">
         ${(section.fields || []).map((field) => v22SectionFieldHtml(card, pageIndex, row, field)).join("")}
       </div>
@@ -23575,10 +24566,11 @@ function pv140ProductStrategyHtml() {
   const maps = pv140EnsureProductMaps();
   const baseProducts = pv130ProductsFromGate0();
   return `<div class="pv140-product-strategy">
+    <div class="pv140-list-heading">Направления</div>
     <div class="g1-fields-grid">
       ${maps.map((row, index) => pv140ProductMapHtml(row, index, baseProducts.length)).join("")}
     </div>
-    <button class="small-btn add-inline-btn" data-pv140-map-add>+ Добавить продуктовую карту</button>
+    <button class="small-btn add-inline-btn" data-pv140-map-add>+ Добавить направление</button>
   </div>`;
 }
 
@@ -23887,16 +24879,6 @@ document.addEventListener("click", (e) => {
   if (toggle) {
     const d = ensurePainV130();
     const key = toggle.dataset.pv130Toggle;
-    if (key === "productStrategy") {
-      const shell = toggle.closest(".pv140-strategy-shell");
-      const body = shell?.querySelector(":scope > .g1-card-body");
-      const willOpen = d.openSteps[key] === false;
-      d.openSteps[key] = willOpen;
-      shell?.classList.toggle("is-open", willOpen);
-      if (body) body.hidden = !willOpen;
-      saveState();
-      return;
-    }
     d.openSteps[key] = !d.openSteps[key];
     saveState();
     renderGate();
@@ -24030,18 +25012,8 @@ document.addEventListener("input", (e) => {
 
 /* v1.4.0 — product-first demand/value map */
 g1RenderPainV130 = function () {
-  const status = pv140ProductStrategyStatus();
-  const isOpen = ensurePainV130().openSteps?.productStrategy !== false;
-  return `<div class="g1-route">
-    <div class="g1-card pv140-strategy-shell ${isOpen ? 'is-open' : ''}">
-      <button class="g1-card-header" data-pv130-toggle="productStrategy">
-        <span class="g1-card-title">Продуктовые карты спроса, боли и оффера</span>
-        <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
-      </button>
-      <div class="g1-card-body" ${isOpen ? '' : 'hidden'}>
-        ${pv140ProductStrategyHtml()}
-      </div>
-    </div>
+  return `<div class="g1-route pv140-strategy-direct">
+    ${pv140ProductStrategyHtml()}
   </div>`;
 };
 
@@ -24052,7 +25024,7 @@ getPainOfferStatus = function () {
 getPainOfferProgressText = function () {
   const maps = pv140EnsureProductMaps();
   const ready = maps.filter((row) => pv140ProductMapStatus(row).status === "ready").length;
-  return `${ready} из ${maps.length} продуктовых карт готово`;
+  return `${ready} из ${maps.length} направлений готово`;
 };
 
 document.addEventListener("input", (e) => {
@@ -24229,15 +25201,136 @@ const UNIT_V130_BLANK_ITEM = {
 function uv130BlankItem(product = "") {
   const item = JSON.parse(JSON.stringify(UNIT_V130_BLANK_ITEM));
   if (product) {
-    item.type = "product";
+    item.type = "direction";
     item.name = product;
     item.productKey = product;
+    item.directionKey = product;
+    item.catalogKind = "direction";
   }
   return item;
 }
 
+function uv130ItemHasData(item = {}) {
+  return Object.values(item.steps || {}).some((step) =>
+    Object.values(step || {}).some((value) => String(value || "").trim()),
+  );
+}
+
+// Старый маршрут был общим для проекта, а новый — по направлениям.
+// Переносим только один раз и только в пустую карточку, поэтому уже
+// внесённые по направлениям значения никогда не перезаписываются.
+function uv130MigrateLegacyRoute(items, products) {
+  if (state?.unitV130?.legacyMigrated || !state?.unitEconomicsRoute) return;
+  const legacy = state.unitEconomicsRoute;
+  const sections = legacy.sections || {};
+  const hasData = [legacy.product, legacy.period, legacy.salesModel, ...Object.values(sections).flatMap(Object.values)]
+    .some((value) => String(value || "").trim());
+  if (!hasData) {
+    state.unitV130.legacyMigrated = true;
+    return;
+  }
+  const legacyProduct = String(legacy.product || "").trim();
+  const target = items.find((item) => String(item.productKey || item.name || "").trim() === legacyProduct)
+    || items.find((item) => !uv130ItemHasData(item))
+    || items[0];
+  if (!target || uv130ItemHasData(target)) return;
+  const revenue = sections.revenue_aov || {};
+  const margin = sections.margin || {};
+  const ltv = sections.ltv || {};
+  const drr = sections.drr || {};
+  const cpa = sections.cpa_cpl || {};
+  const limits = sections.economic_limits || {};
+  target.period = target.period || String(legacy.period || "");
+  target.model = target.model || String(legacy.salesModel || "");
+  target.steps = target.steps || {};
+  target.steps.revenue = { ...(target.steps.revenue || {}), avgCheck: revenue.aov || "", source: revenue.source || "" };
+  target.steps.margin = { ...(target.steps.margin || {}), variableCosts: margin.variableCosts || "", marginRub: margin.grossProfit || "", marginPct: margin.marginPercent || "" };
+  target.steps.ltv = { ...(target.steps.ltv || {}), repeatType: ltv.repeatPurchases || "", avgPurchases: ltv.avgPurchaseCount || "", ltv: ltv.ltv || "", source: ltv.assumption || "" };
+  target.steps.adLimits = { ...(target.steps.adLimits || {}), targetDrr: drr.targetDrr || "", allowedCpa: cpa.allowedCpa || "", leadToSale: cpa.leadToSaleConversion || "", allowedCpl: cpa.allowedCpl || "", source: cpa.source || drr.limitReason || "" };
+  target.steps.decision = { ...(target.steps.decision || {}), reason: cpa.decision || "", whatToFix: limits.risk || "", source: limits.minTestBudget || "" };
+  state.unitV130.legacyMigrated = true;
+}
+
+// Единый каталог для направлений и содержимого внутри них.
+// Направления задаются в Gate 0, а товары/услуги — строками карточки товара
+// или страницы услуги, привязанными к направлению. Идентификатор строки —
+// устойчивый ключ: переименование товара или направления не создаёт второй
+// экономический расчёт и не теряет уже заполненные цифры.
+function uv130Catalog() {
+  const directions = pv130ProductsFromGate0();
+  const byDirection = new Map(directions.map((direction) => [direction, []]));
+  const seen = new Set();
+
+  g1pcGroupableCards().forEach((card) => {
+    (card.pageRows || []).forEach((row) => {
+      const direction = String(row?.direction || "").trim();
+      const name = String(row?.name || "").trim();
+      if (!direction || !name || !byDirection.has(direction)) return;
+      const sourceItemId = String(row?.id || "").trim();
+      // Старые строки без id тоже должны быть видны; их ключ привязан к
+      // направлению и названию и будет заменён на id после первого сохранения.
+      const key = sourceItemId
+        ? `item:${direction}:${sourceItemId}`
+        : `item:${direction}:${name}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      byDirection.get(direction).push({
+        key,
+        name,
+        directionKey: direction,
+        sourceItemId,
+        kind: g1pcCardKind(card) === "service" ? "service" : "product",
+      });
+    });
+  });
+
+  return directions.flatMap((direction) => [
+    { key: direction, name: direction, directionKey: direction, kind: "direction" },
+    ...byDirection.get(direction),
+  ]);
+}
+
+function uv130ActiveEntries() {
+  const data = ensureUnitV130();
+  const catalogKeys = new Set(uv130Catalog().map((entry) => entry.key));
+  const directions = new Set(pv130ProductsFromGate0());
+  return data.items
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => {
+      const key = String(item.productKey || "").trim();
+      // Свободно добавленные пользователем единицы не прячем.
+      if (!key) return true;
+      if (catalogKeys.has(key) || directions.has(key)) return true;
+      // Совместимость с данными, созданными до появления ключа товара.
+      return !item.sourceItemId && !item.catalogKind && Boolean(
+        String(item.directionKey || "").trim() &&
+          directions.has(String(item.directionKey).trim()),
+      );
+    });
+}
+
+function uv130EconomicsSnapshot(product = "") {
+  const requestedProduct = String(product || "").trim();
+  const entries = uv130ActiveEntries();
+  const item = entries.find(({ item: row }) => String(row.productKey || row.name || "").trim() === requestedProduct)?.item
+    || entries.find(({ item: row }) => uv130ItemHasData(row))?.item
+    || entries[0]?.item
+    || {};
+  const steps = item.steps || {};
+  return {
+    aov: steps.revenue?.avgCheck || steps.revenue?.unitPrice || "",
+    marginPercent: steps.margin?.marginPct || "",
+    allowedCpa: steps.adLimits?.allowedCpa || "",
+    allowedCpl: steps.adLimits?.allowedCpl || "",
+    targetDrr: steps.adLimits?.targetDrr || "",
+    ltv: steps.ltv?.ltv || "",
+    minTestBudget: steps.decision?.source || "",
+  };
+}
+
 function ensureUnitV130() {
   const products = pv130ProductsFromGate0();
+  const catalog = uv130Catalog();
   state.unitV130 = state.unitV130 || { items: [] };
   if (!state.unitV130.items?.length)
     state.unitV130.items = products.length
@@ -24255,19 +25348,50 @@ function ensureUnitV130() {
     });
   }
 
-  products.forEach((product) => {
-    const existing = state.unitV130.items.find(
-      (item) =>
-        String(item.productKey || item.name || "").trim() === product,
+  catalog.forEach((entry) => {
+    // Для направления productKey исторически равен его названию. Для товара
+    // используем id строки, а не отображаемое имя.
+    const existing = state.unitV130.items.find((item) =>
+      entry.sourceItemId
+        ? String(item.sourceItemId || "").trim() === entry.sourceItemId &&
+          String(item.directionKey || "").trim() === entry.directionKey
+        : String(item.productKey || item.name || "").trim() === entry.key,
     );
     if (existing) {
-      existing.productKey = existing.productKey || product;
-      existing.name = existing.name || product;
-      existing.type = existing.type || "product";
+      existing.productKey = entry.key;
+      existing.name = entry.name;
+      existing.directionKey = entry.directionKey;
+      existing.sourceItemId = entry.sourceItemId || existing.sourceItemId || "";
+      existing.catalogKind = entry.kind;
+      existing.type = entry.kind;
     } else {
-      state.unitV130.items.push(uv130BlankItem(product));
+      const item = uv130BlankItem();
+      item.productKey = entry.key;
+      item.name = entry.name;
+      item.directionKey = entry.directionKey;
+      item.sourceItemId = entry.sourceItemId || "";
+      item.catalogKind = entry.kind;
+      item.type = entry.kind;
+      state.unitV130.items.push(item);
     }
   });
+
+  // Порядок в юнит-экономике повторяет каталог: направление, затем его
+  // товары/услуги. Свободно добавленные и исторические записи не удаляем —
+  // они остаются в состоянии и могут быть восстановлены вручную.
+  const catalogItems = catalog
+    .map((entry) => state.unitV130.items.find((item) =>
+      entry.sourceItemId
+        ? String(item.sourceItemId || "").trim() === entry.sourceItemId &&
+          String(item.directionKey || "").trim() === entry.directionKey
+        : String(item.productKey || item.name || "").trim() === entry.key,
+    ))
+    .filter(Boolean);
+  const catalogItemSet = new Set(catalogItems);
+  state.unitV130.items = [
+    ...catalogItems,
+    ...state.unitV130.items.filter((item) => !catalogItemSet.has(item)),
+  ];
 
   state.unitV130.items.forEach((item) => {
     item.productKey = item.productKey || "";
@@ -24275,6 +25399,7 @@ function ensureUnitV130() {
     item.openSteps = item.openSteps || {};
     item.steps = item.steps || {};
   });
+  uv130MigrateLegacyRoute(state.unitV130.items, products);
   return state.unitV130;
 }
 
@@ -24303,7 +25428,7 @@ function uv130FieldHtml(itemIdx, stepKey, field, value) {
   const cls = filled ? "is-filled" : "is-empty";
   const attr = `data-uv130-item="${itemIdx}" data-uv130-step="${escapeAttr(stepKey)}" data-uv130-field="${escapeAttr(field.k)}"`;
   if (field.sel)
-    return `<label class="g1-field"><span>${escapeHtml(field.l)}</span><select class="g1-input is-filled" ${attr}>${field.sel.map(([v, l]) => `<option value="${escapeAttr(v)}" ${value === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}</select></label>`;
+    return `<label class="g1-field"><span>${escapeHtml(field.l)}</span><select class="g1-input ${cls}" ${attr}>${field.sel.map(([v, l]) => `<option value="${escapeAttr(v)}" ${value === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}</select></label>`;
   return `<label class="g1-field"><span>${escapeHtml(field.l)}</span><textarea class="g1-input ${cls}" ${attr} rows="1" placeholder="${escapeAttr(field.p)}">${escapeHtml(value || "")}</textarea></label>`;
 }
 
@@ -24318,31 +25443,48 @@ function uv130StepHtml(itemIdx, step, data, isOpen) {
   </div>`;
 }
 
+// Для каждой карточки товара/услуги используем свой экземпляр расчёта.
+// Ключ построен на стабильном ID карточки, поэтому значения не смешиваются
+// между товарами и переживают переименование направления или товара.
+function uv130BrownCalculatorHtml(item) {
+  const key = encodeURIComponent(String(item.productKey || item.sourceItemId || item.name || "unit"));
+  const name = encodeURIComponent(String(item.name || "Продукт / услуга"));
+  return `<section class="uv130-brown-calculator">
+    <div class="uv130-brown-head"><strong>Расчёт окончательной цены по Брауну</strong></div>
+    <iframe data-brown-calculator title="Калькулятор цены: ${escapeAttr(item.name || "продукт")}" src="prototip_roi_brown.html?key=${key}&name=${name}&embed=1&v=1.0.22" loading="lazy"></iframe>
+  </section>`;
+}
+
+// Направление не является расчётной единицей. Это только контейнер своих
+// товаров/услуг, поэтому в нём больше нет устаревшего маршрута из 6 шагов.
+function uv130DirectionHtml(item, idx, childrenCount) {
+  const status = uv130ItemStatus(item);
+  return `<article class="g1-card uv130-direction-card" data-uv130-item-toggle="${idx}" style="border:2px solid var(--line);border-radius:16px;padding:0;cursor:pointer;">
+    <div class="g1-card-header-static">
+      <span class="g1-card-title">Направление · ${escapeHtml(item.name || "Без названия")}</span>
+      <span class="uv130-direction-count">${childrenCount} ${childrenCount === 1 ? "продукт / услуга" : "продуктов / услуг"}</span>
+      <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+      <span class="g1-section-toggle">${item.open ? "Свернуть" : "Открыть"}</span>
+    </div>
+  </article>`;
+}
+
 function uv130ItemHtml(item, idx, total, baseProductCount) {
   const status = uv130ItemStatus(item);
   const nameFilled = String(item.name || "").trim();
   const isGate0Product = Boolean(String(item.productKey || "").trim());
+  const kindLabel = item.catalogKind === "direction" ? "Направление" : item.catalogKind === "service" ? "Услуга" : item.catalogKind === "product" ? "Продукт" : "Единица";
+  const parentLabel = item.catalogKind === "product" || item.catalogKind === "service"
+    ? `<small style="display:block;color:var(--muted);font-size:11px;margin-top:3px;">Направление · ${escapeHtml(item.directionKey || "—")}</small>`
+    : "";
+  const isCatalogItem = Boolean(item.catalogKind);
   return `<div class="g1-card ${item.open ? "is-open" : ""}" style="border:2px solid var(--line);border-radius:16px;padding:0;">
     <div class="g1-card-header-static" data-uv130-item-toggle="${idx}" style="cursor:pointer;">
-      <span class="g1-card-title">${escapeHtml(isGate0Product ? "Продукт " + (idx + 1) : "Единица " + (idx + 1))}${nameFilled ? ` · ${escapeHtml(nameFilled)}` : ""}</span>
+      <span class="g1-card-title">${nameFilled ? escapeHtml(nameFilled) : escapeHtml(kindLabel + " без названия")}${parentLabel}</span>
       <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
       ${total > 1 ? `<button class="small-btn danger-mini" data-uv130-remove="${idx}" ${isGate0Product || idx < baseProductCount ? "disabled" : ""}>×</button>` : ""}
     </div>
-    ${
-      item.open
-        ? `
-    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px;">
-      <div class="g1-fields-grid">
-        <label class="g1-field"><span>Тип</span><select class="g1-input is-filled" data-uv130-item="${idx}" data-uv130-meta="type">${UNIT_V130_TYPES.map(([v, l]) => `<option value="${escapeAttr(v)}" ${item.type === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}</select></label>
-        <label class="g1-field"><span>Что продаём</span><input class="g1-input ${nameFilled ? "is-filled" : "is-empty"}" data-uv130-item="${idx}" data-uv130-meta="name" value="${escapeAttr(item.name || "")}" placeholder="продукт / услуга из Gate 0" /></label>
-        <label class="g1-field"><span>Период</span><input class="g1-input ${String(item.period || "").trim() ? "is-filled" : "is-empty"}" data-uv130-item="${idx}" data-uv130-meta="period" value="${escapeAttr(item.period || "")}" placeholder="месяц / квартал / сезон" /></label>
-        <label class="g1-field"><span>Модель продажи</span><select class="g1-input is-filled" data-uv130-item="${idx}" data-uv130-meta="model">${UNIT_V130_MODELS.map(([v, l]) => `<option value="${escapeAttr(v)}" ${item.model === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}</select></label>
-      </div>
-      <div class="g1-route">${UNIT_V130_STEPS.map((s) => uv130StepHtml(idx, s, item.steps[s.key] || {}, !!item.openSteps[s.key])).join("")}</div>
-    </div>
-    `
-        : ""
-    }
+    ${item.open ? `<div style="padding:16px 20px;">${uv130BrownCalculatorHtml(item)}</div>` : ""}
   </div>`;
 }
 
@@ -24364,28 +25506,83 @@ function uv130SummaryHtml(items) {
 }
 
 g1RenderUnitEconomics = function () {
-  const d = ensureUnitV130();
-  const baseProducts = pv130ProductsFromGate0();
+  const entries = uv130ActiveEntries();
+  const directions = entries.filter(({ item }) => item.catalogKind === "direction");
+  const childrenByDirection = new Map(
+    directions.map(({ item }) => [String(item.productKey || item.name || "").trim(), []]),
+  );
+  const ungrouped = [];
+  entries.forEach((entry) => {
+    if (entry.item.catalogKind === "direction") return;
+    const parent = String(entry.item.directionKey || "").trim();
+    if (parent && childrenByDirection.has(parent)) childrenByDirection.get(parent).push(entry);
+    else ungrouped.push(entry);
+  });
+
+  const directionGroups = directions.map((entry) => {
+    const directionKey = String(entry.item.productKey || entry.item.name || "").trim();
+    const children = childrenByDirection.get(directionKey) || [];
+    // Товар не является соседней сущностью: он живёт в теле своего
+    // направления и виден только после раскрытия родительской карточки.
+    return `<section class="unit-direction-group" data-unit-direction="${escapeAttr(directionKey)}">
+      ${uv130DirectionHtml(entry.item, entry.index, children.length)}
+      ${entry.item.open ? `<div class="unit-direction-children">
+        <div class="unit-direction-children-title">Продукты и услуги направления · ${children.length}</div>
+        ${children.length
+          ? children.map(({ item, index }) => uv130ItemHtml(item, index, entries.length, 0)).join("")
+          : '<div class="g1-empty">В направлении пока нет привязанных товаров или услуг.</div>'}
+      </div>` : ""}
+    </section>`;
+  });
+
   return `<div class="g1-route">
-    ${d.items.map((item, i) => uv130ItemHtml(item, i, d.items.length, baseProducts.length)).join("")}
+    ${directionGroups.join("")}
+    ${ungrouped.length ? `<section class="unit-direction-group unit-direction-group-ungrouped">
+      <div class="unit-direction-children-title">Отдельные продукты / услуги</div>
+      <div class="unit-direction-children">${ungrouped.map(({ item, index }) => uv130ItemHtml(item, index, entries.length, 0)).join("")}</div>
+    </section>` : ""}
     <button class="small-btn add-inline-btn" data-uv130-add>+ Добавить продукт / услугу</button>
-    ${uv130SummaryHtml(d.items)}
+    ${uv130SummaryHtml(entries.map(({ item }) => item))}
   </div>`;
 };
 
 getUnitEconomicsStatus = function () {
-  const d = ensureUnitV130();
-  const statuses = d.items.map(uv130ItemStatus);
+  const entries = uv130ActiveEntries();
+  const statuses = entries.map(({ item }) => uv130ItemStatus(item));
+  if (!statuses.length) return "not_started";
   if (statuses.every((s) => s === "not_started")) return "not_started";
   if (statuses.every((s) => s === "ready")) return "ready";
   return "in_progress";
 };
 
 getUnitEconomicsProgressText = function () {
-  const d = ensureUnitV130();
-  const ready = d.items.filter((i) => uv130ItemStatus(i) === "ready").length;
-  return `${ready} из ${d.items.length} продуктов / услуг готово`;
+  const entries = uv130ActiveEntries();
+  const directions = entries.filter(({ item }) => item.catalogKind === "direction");
+  const products = entries.filter(({ item }) =>
+    item.catalogKind === "product" || item.catalogKind === "service",
+  );
+  const readyDirections = directions.filter(({ item }) => uv130ItemStatus(item) === "ready").length;
+  const readyProducts = products.filter(({ item }) => uv130ItemStatus(item) === "ready").length;
+  if (directions.length || products.length)
+    return `${readyDirections} из ${directions.length} направлений · ${readyProducts} из ${products.length} продуктов / услуг готово`;
+  const ready = entries.filter(({ item }) => uv130ItemStatus(item) === "ready").length;
+  return `${ready} из ${entries.length} продуктов / услуг готово`;
 };
+
+// Калькулятор цены живёт в изолированном документе, но не должен создавать
+// второй скролл или обрезать собственные блоки. Дочерний документ сообщает
+// свою фактическую высоту, а оболочка продукта подстраивается под неё.
+window.addEventListener("message", (event) => {
+  if (event.origin !== window.location.origin) return;
+  const payload = event.data;
+  if (payload?.type !== "guru-brown-calculator-height") return;
+  const height = Number(payload.height);
+  if (!Number.isFinite(height) || height < 300) return;
+  document.querySelectorAll("iframe[data-brown-calculator]").forEach((frame) => {
+    if (frame.contentWindow !== event.source) return;
+    frame.style.height = `${Math.ceil(height)}px`;
+  });
+});
 
 function updateUnitV130(target) {
   const d = ensureUnitV130();
@@ -26028,23 +27225,11 @@ function g4ReadGate1Positioning() {
   };
 }
 
-function g4ReadUnitEconomics() {
-  const route = ensureUnitEconomicsState();
-  const computed = unitEconomicsComputed();
-  const sec = route.sections || {};
-  return {
-    aov: sec.revenue_aov?.aov || "",
-    marginPercent: sec.margin?.marginPercent || "",
-    allowedCpa: computed.allowedCpa
-      ? formatUnitMoney(computed.allowedCpa)
-      : sec.cpa_cpl?.allowedCpa || "",
-    allowedCpl: computed.allowedCpl
-      ? formatUnitMoney(computed.allowedCpl)
-      : sec.cpa_cpl?.allowedCpl || "",
-    targetDrr: sec.drr?.targetDrr || "",
-    ltv: sec.ltv?.ltv || "",
-    minTestBudget: sec.economic_limits?.minTestBudget || "",
-  };
+function g4ReadUnitEconomics(product = "") {
+  // Gate 4 читает ту же построчную экономику, которую пользователь видит
+  // в Gate 1. Старый общий маршрут больше не является источником витринных
+  // значений — именно он создавал расхождение между экранами.
+  return uv130EconomicsSnapshot(product || state?.gate4Production?.launchProduct || "");
 }
 
 function g4ReadGate2Status() {
@@ -27652,13 +28837,22 @@ document.addEventListener("click", (e) => {
 });
 
 /* v1.3.0 — сохранять позицию скролла и состояние collapsed при renderGate() */
+// Состояние интерфейса допустимо восстанавливать только внутри того же Gate.
+// При переходе между Gate старая прокрутка и фокус не должны попадать в новый экран.
+let guruGateNavigationInProgress = false;
+let guruGateRenderEpoch = 0;
+let guruFastGateNavigation = false;
 const __g1PrevRenderGateScroll = renderGate;
 renderGate = function () {
+  const preserveView = !guruGateNavigationInProgress;
+  const renderEpoch = ++guruGateRenderEpoch;
   const scrollY = window.scrollY;
   const main = document.querySelector("main");
   const mainScroll = main ? main.scrollTop : 0;
   __g1PrevRenderGateScroll();
+  if (!preserveView) return;
   requestAnimationFrame(() => {
+    if (renderEpoch !== guruGateRenderEpoch || guruGateNavigationInProgress) return;
     window.scrollTo(0, scrollY);
     if (main) main.scrollTop = mainScroll;
     const collapsed = g1CollapsedSet();
@@ -28861,33 +30055,16 @@ document.addEventListener("click", (e) => {
 });
 
 /* Global field state: one visual rule for every Gate */
-const GURU_FIELD_NEGATIVE_VALUES = new Set([
-  "",
-  "no",
-  "not_implemented",
-  "inactive",
-  "disabled",
-  "missing",
-  "failed",
-  "error",
-  "problem",
-  "blocked",
-]);
-const GURU_FIELD_WARNING_VALUES = new Set([
-  "in_progress",
-  "planned",
-  "pending",
-  "review",
-  "needs_review",
-]);
-
 function guruFieldState(el) {
   if (!el || el.disabled) return "";
   if (el.tagName === "SELECT") {
     const value = String(el.value || "").trim();
-    if (GURU_FIELD_NEGATIVE_VALUES.has(value)) return "empty";
-    if (GURU_FIELD_WARNING_VALUES.has(value)) return "warning";
-    return "filled";
+    // Красный — это призыв заполнить обязательное поле, а не оценка выбора.
+    // «Работает» — позитивный результат, «Требует улучшения» — действие,
+    // остальные выбранные значения фиксируют решение нейтральным цветом.
+    if (!value) return "empty";
+    if (value === "needs_improvement") return "empty";
+    return value === "works" ? "filled" : "selected";
   }
   const value = String(el.value || "").trim();
   return value ? "filled" : "empty";
@@ -28904,6 +30081,7 @@ function guruApplyFieldStates(root = document) {
         "guru-field-empty",
         "guru-field-filled",
         "guru-field-warning",
+        "guru-field-selected",
       );
       const stateName = guruFieldState(el);
       if (stateName) el.classList.add("guru-field-" + stateName);
@@ -29194,42 +30372,83 @@ document.addEventListener('click', (e) => {
    v1.7.2 — Статус у каждой ячейки Аудита сайта.
    v1.10.0 — переведено на единый словарь статусов (5 вариантов).
    Работает / Не требуется → ничего не фиксируем сверху.
-   Требует улучшения / Не работает / Отсутствует → появляется поле
-   уточнения (что именно не так и что с этим делать).
+   Требует улучшения / Не работает / Отсутствует → существующее поле
+   превращается в поле уточнения. Новая ячейка не создаётся.
    Техподблоки (Robots, Sitemap, SSL и т.д.) не затронуты —
    у них свои рендеры.
    ================================================================ */
-const G1_FLAG_NOTE_LABEL = {
-  needs_improvement: 'Что конкретно улучшить',
-  broken: 'Что нужно исправить',
-  missing: 'Что нужно реализовать с нуля',
-};
+const G1_FLAG_CONTEXT_STATUSES = new Set([
+  'needs_improvement',
+  'broken',
+  'missing',
+]);
 const G1_FLAG_NOTE_COLOR = {
   needs_improvement: ['#d9b023', '#fffbe8'],
   broken: ['#d66', '#fff5f5'],
   missing: ['#d66', '#fff5f5'],
 };
 
-function g1FlagButtonsHtml(card, pageIndex, key, flag) {
+function g1FlagButtonsHtml(card, pageIndex, key, flag, note = '') {
   const attrBase = `data-g1-flag-card="${escapeAttr(card.id)}" data-g1-flag-index="${pageIndex}" data-g1-flag-key="${escapeAttr(key)}"`;
-  return `<select style="font-size:11px;font-weight:700;margin:4px 0 4px;border-radius:8px;border:1px solid var(--line);padding:4px 8px;" ${attrBase} data-g1-flag-select>${guruStatusOptionsHtml(flag)}</select>`;
+  const visualStatus = g1FlagVisualStatus(flag, note);
+  return `<select class="g1-flag-status g1-flag-status-${escapeAttr(visualStatus)}" aria-label="Статус элемента" ${attrBase} data-g1-flag-select>${guruStatusOptionsHtml(flag)}</select>`;
 }
 
-function g1FlagNoteHtml(card, pageIndex, key, flag, note) {
+function g1FlagVisualStatus(flag, note = '') {
+  const status = guruCanonStatus(flag) || 'unselected';
+  return G1_FLAG_CONTEXT_STATUSES.has(status) && String(note).trim()
+    ? 'documented'
+    : status;
+}
+
+function g1FlagInlineFieldHtml(html, card, pageIndex, key, flag, note) {
   const canon = guruCanonStatus(flag);
-  const noteLabel = G1_FLAG_NOTE_LABEL[canon];
-  if (!noteLabel) return '';
-  const noteCls = String(note).trim() ? 'is-filled' : 'is-empty';
-  const [border, bg] = G1_FLAG_NOTE_COLOR[canon];
-  return `<label class="g1-field" style="margin-top:8px;padding:12px 12px;border-left:3px solid ${border};background:${bg};border-radius:0 8px 8px 0;"><span style="font-size:12px;font-weight:800;">${escapeHtml(noteLabel)}</span><textarea class="g1-input ${noteCls}" data-page-context-card-id="${escapeAttr(card.id)}" data-page-context-index="${pageIndex}" data-page-context-key="${escapeAttr(key)}__flagNote" rows="1" placeholder="${escapeAttr(noteLabel)}">${escapeHtml(note)}</textarea></label>`;
+  if (!G1_FLAG_CONTEXT_STATUSES.has(canon)) return html;
+  const noteFilled = Boolean(String(note).trim());
+  const noteCls = noteFilled ? 'is-filled' : 'is-empty';
+  const noteField = `<textarea class="g1-input ${noteCls}" data-page-context-card-id="${escapeAttr(card.id)}" data-page-context-index="${pageIndex}" data-page-context-key="${escapeAttr(key)}__flagNote" rows="1" placeholder="Опишите улучшенную версию">${escapeHtml(note)}</textarea>`;
+
+  // «Требует улучшения» отличается от «Отсутствует»: текущая версия уже
+  // существует, поэтому её не подменяем. Ниже добавляем отдельную ячейку
+  // для варианта улучшения, сохраняя обе версии рядом по смыслу.
+  if (canon === 'needs_improvement') {
+    return `${html}<label class="g1-field g1-improvement-variant ${noteFilled ? 'is-filled' : 'is-empty'}"><span>Вариант улучшения</span>${noteField}</label>`;
+  }
+
+  // Цвет фиксирует полноту описания, а не только состояние элемента:
+  // «Отсутствует» + заполненный план — зелёная, документированная ячейка.
+  const [border, bg] = noteFilled
+    ? ['#63ab73', '#eef7ee']
+    : G1_FLAG_NOTE_COLOR[canon];
+  // Поле остаётся тем же элементом интерфейса и сохраняет исходное название.
+  // Меняется только хранилище текста: для проблемного статуса он хранится
+  // отдельно, чтобы при возврате к нормальному статусу не потерять исходные данные.
+  const compactNoteField = noteField.replace(' placeholder="Опишите улучшенную версию"', '');
+  return html
+    .replace(
+      '<label class="g1-field"',
+      `<label class="g1-field g1-flag-inline" style="border-left:3px solid ${border};background:${bg};padding:10px 12px;border-radius:0 8px 8px 0;"`,
+    )
+    .replace(/<textarea\b[^>]*>[\s\S]*?<\/textarea>/, compactNoteField);
 }
 
-// Единая вставка: заголовок → описание → кнопки → ячейка → (заметка)
+function g1FlagNotRequiredFieldHtml(html, flag) {
+  if (guruCanonStatus(flag) !== 'not_needed') return html;
+  // «Не требуется» — осознанно исключённый элемент, а не пустое поле.
+  // Нейтральный класс не даёт ему наследовать красный цвет обязательного ввода.
+  return html.replace(
+    /class="g1-input\s+(?:is-filled|is-empty)"/,
+    'class="g1-input is-optional" data-guru-optional="true"',
+  );
+}
+
+// Единая вставка: заголовок → описание → статус → существующая ячейка.
+// При проблемном статусе эта же ячейка используется для плана исправления.
 function g1InjectFlagUi(html, card, pageIndex, row, key) {
   row.contextFields = row.contextFields || {};
   const flag = row.contextFields[key + '__flag'] || '';
   const note = row.contextFields[key + '__flagNote'] || '';
-  const buttons = g1FlagButtonsHtml(card, pageIndex, key, flag);
+  const buttons = g1FlagButtonsHtml(card, pageIndex, key, flag, note);
   // Кнопки под описанием (после первого </small>), перед самой ячейкой
   const idx = html.indexOf('</small>');
   if (idx !== -1) {
@@ -29239,7 +30458,8 @@ function g1InjectFlagUi(html, card, pageIndex, row, key) {
     const si = html.indexOf('</span>');
     if (si !== -1) html = html.slice(0, si + 7) + buttons + html.slice(si + 7);
   }
-  return html + g1FlagNoteHtml(card, pageIndex, key, flag, note);
+  html = g1FlagNotRequiredFieldHtml(html, flag);
+  return g1FlagInlineFieldHtml(html, card, pageIndex, key, flag, note);
 }
 
 const __g1PrevContextInputFlag = contextInputField;
@@ -29254,6 +30474,48 @@ rowInputField = function (card, pageIndex, row, field, label, standard, type, ex
   return g1InjectFlagUi(html, card, pageIndex, row, 'row_' + field);
 };
 
+function g1FlagUsesInlineValue(status) {
+  const canon = guruCanonStatus(status);
+  return canon === 'missing' || canon === 'broken';
+}
+
+function g1FlagReadSourceValue(row, key) {
+  if (key.startsWith('row_')) return String(row[key.slice(4)] || '');
+  return String(row.contextFields?.[key] || '');
+}
+
+function g1FlagWriteSourceValue(row, key, value) {
+  if (key.startsWith('row_')) {
+    row[key.slice(4)] = value;
+    return;
+  }
+  row.contextFields = row.contextFields || {};
+  row.contextFields[key] = value;
+}
+
+function g1PreserveFlagTextOnStatusChange(row, key, previousFlag, nextFlag) {
+  row.contextFields = row.contextFields || {};
+  const noteKey = key + '__flagNote';
+  let source = g1FlagReadSourceValue(row, key);
+  let note = String(row.contextFields[noteKey] || '');
+  const wasInline = g1FlagUsesInlineValue(previousFlag);
+  const becomesInline = g1FlagUsesInlineValue(nextFlag);
+
+  // Уходим из «Отсутствует / Не работает»: последнее видимое значение
+  // становится основным, поэтому после смены статуса оно не исчезает.
+  if (wasInline && note.trim()) {
+    source = note;
+    g1FlagWriteSourceValue(row, key, source);
+  }
+
+  // Входим в статус с одной ячейкой: переносим текущий текст в то поле,
+  // которое будет отображаться внутри этой ячейки.
+  if (becomesInline && !note.trim() && source.trim()) {
+    note = source;
+    row.contextFields[noteKey] = note;
+  }
+}
+
 document.addEventListener('change', (e) => {
   const sel = e.target.closest('[data-g1-flag-select]');
   if (!sel || sel.dataset.g1FlagKey === undefined) return;
@@ -29265,9 +30527,54 @@ document.addEventListener('change', (e) => {
   const row = card?.pageRows?.[idx];
   if (!row) return;
   row.contextFields = row.contextFields || {};
+  const previousFlag = row.contextFields[key + '__flag'] || '';
+  g1PreserveFlagTextOnStatusChange(row, key, previousFlag, sel.value);
   row.contextFields[key + '__flag'] = sel.value;
   flashSaving();
   renderGate();
+});
+
+// Цвет статуса и ячейки должен меняться в тот же момент, когда пользователь
+// вводит или удаляет текст. Раньше это происходило лишь после перерисовки,
+// поэтому экран временно показывал старое состояние.
+function g1SyncFlagVisualState(target) {
+  const key = String(target?.dataset?.pageContextKey || '');
+  if (!key.endsWith('__flagNote')) return;
+  const cardId = target.dataset.pageContextCardId;
+  const pageIndex = String(target.dataset.pageContextIndex);
+  const flagKey = key.slice(0, -'__flagNote'.length);
+  const select = Array.from(document.querySelectorAll('[data-g1-flag-select]')).find(
+    (control) =>
+      control.dataset.g1FlagCard === cardId &&
+      String(control.dataset.g1FlagIndex) === pageIndex &&
+      control.dataset.g1FlagKey === flagKey,
+  );
+  if (!select) return;
+
+  const filled = Boolean(String(target.value || '').trim());
+  const flag = guruCanonStatus(select.value);
+  target.classList.toggle('is-filled', filled);
+  target.classList.toggle('is-empty', !filled);
+  select.className = `g1-flag-status g1-flag-status-${g1FlagVisualStatus(flag, target.value)}`;
+
+  const inline = target.closest('.g1-flag-inline');
+  if (inline) {
+    const [border, background] = filled
+      ? ['#63ab73', '#eef7ee']
+      : G1_FLAG_NOTE_COLOR[flag] || ['#d66', '#fff5f5'];
+    inline.style.borderLeftColor = border;
+    inline.style.background = background;
+  }
+
+  const improvement = target.closest('.g1-improvement-variant');
+  if (improvement) {
+    improvement.classList.toggle('is-filled', filled);
+    improvement.classList.toggle('is-empty', !filled);
+  }
+}
+
+document.addEventListener('input', (event) => {
+  g1SyncFlagVisualState(event.target);
 });
 
 // Необязательность — самостоятельное состояние поля, а не разновидность
@@ -30872,13 +32179,18 @@ function uiKeeperRestore(snap) {
 const __uiKeeperPrevRenderGate = renderGate;
 renderGate = function () {
   let snap = null;
-  try {
-    snap = uiKeeperCapture();
-  } catch (err) {}
+  const preserveUi = !guruGateNavigationInProgress;
+  if (preserveUi) {
+    try {
+      snap = uiKeeperCapture();
+    } catch (err) {}
+  }
   __uiKeeperPrevRenderGate.apply(this, arguments);
-  try {
-    uiKeeperRestore(snap);
-  } catch (err) {}
+  if (preserveUi) {
+    try {
+      uiKeeperRestore(snap);
+    } catch (err) {}
+  }
 };
 
 /* ================================================================
@@ -32012,10 +33324,9 @@ function pv181ItemHtml(mapIndex, item, row) {
 
   const demandG0 = ` <button type="button" class="g0-hint-btn" data-pv181-demand-hint data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(item.id)}">G0</button>`;
 
-  return `<div class="g1-card g1-card-collapsible${isCollapsed ? ' is-collapsed' : ''}" style="border-radius:14px;padding:0;margin-top:10px;border:1px solid var(--line);">
-    <div class="g1-card-collapse-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;" data-g1-collapse data-g1-collapse-key="${escapeAttr(collapseKey)}">
+  return `<div class="g1-card g1-card-collapsible pv181-item-card${isCollapsed ? ' is-collapsed' : ''}">
+    <div class="g1-card-collapse-header" data-g1-collapse data-g1-collapse-key="${escapeAttr(collapseKey)}">
       <span><span style="font-weight:800;font-size:13px;">${escapeHtml(item.name)}</span></span>
-      <span class="status-pill status-${anyFilled ? 'in_progress' : 'not_started'}">${anyFilled ? 'В работе' : 'Не начато'}</span>
     </div>
     <div class="g1-card-collapse-body" style="padding:0 16px 14px;">
       ${item.url ? `<div class="g1-field" style="margin-bottom:10px;"><span>Посадочная товара</span><small style="color:var(--muted);font-size:11px;">Из Gate 1 «Аудит сайта», только чтение</small><div class="g1-input is-filled" style="cursor:default;background:#eef5ee;word-break:break-all;">${escapeHtml(item.url)}</div></div>` : ''}
@@ -32040,6 +33351,25 @@ function pv181ItemHtml(mapIndex, item, row) {
 }
 
 const __pv181PrevProductMapHtml = pv140ProductMapHtml;
+function pv140MapCollapseKey(index, product) {
+  return `pv140-map-${index}-${String(product || '').trim()}`;
+}
+
+// Карты направлений — это список, а не длинная форма. Новая карта всегда
+// свёрнута; выбор пользователя сохраняется общим механизмом сворачивания.
+function pv140MapIsCollapsedByDefault(key) {
+  if (!state) return true;
+  state.pv140KnownMapKeys = state.pv140KnownMapKeys || [];
+  const collapsed = g1CollapsedSet();
+  if (!state.pv140KnownMapKeys.includes(key)) {
+    state.pv140KnownMapKeys.push(key);
+    collapsed.add(key);
+    state.g1Collapsed = [...collapsed];
+    return true;
+  }
+  return collapsed.has(key);
+}
+
 pv140ProductMapHtml = function (row, index, totalBaseProducts) {
   pv180Ensure(row);
   const product = String(row.product || '').trim();
@@ -32048,20 +33378,23 @@ pv140ProductMapHtml = function (row, index, totalBaseProducts) {
   const mapStatus = pv140ProductMapStatus(row);
   const statusLabel = STATUS_LABELS[mapStatus.status] || mapStatus.status;
   const items = product ? pv181ProductItems(product) : [];
+  const collapseKey = pv140MapCollapseKey(index, product);
+  const isCollapsed = pv140MapIsCollapsedByDefault(collapseKey);
 
-  const landingCell = `<div class="g1-field"><span>Посадочная — URL</span><small style="color:var(--muted);font-size:11px;">Автоподтяжка из Gate 0 «Посадочные под продукты», только чтение</small><div class="g1-input ${landingUrl ? 'is-filled' : 'is-empty'}" style="cursor:default;${landingUrl ? 'background:#eef5ee;' : ''}word-break:break-all;">${escapeHtml(landingUrl || 'В Gate 0 посадочная не указана')}</div></div>`;
+  const landingCell = `<div class="g1-field pv140-landing"><span>Посадочная направления</span><div class="g1-input ${landingUrl ? 'is-filled' : 'is-empty'}" data-guru-field-neutral style="cursor:default;word-break:break-all;">${escapeHtml(landingUrl || 'Посадочная не указана')}</div></div>`;
 
   const brandLevel = PV180_SEM_LEVELS[0];
 
-  return `<div class="g1-card g1-card-collapsible pv140-product-card" style="border-radius:14px;padding:0;">
-    <div class="g1-card-collapse-header pv140-product-head" data-g1-collapse>
+  return `<div class="g1-card g1-card-collapsible pv140-product-card${isCollapsed ? ' is-collapsed' : ''}" style="border-radius:14px;padding:0;">
+    <div class="g1-card-collapse-header pv140-product-head" data-g1-collapse data-g1-collapse-key="${escapeAttr(collapseKey)}">
       <span class="pv140-product-title">
-        <span class="pv140-product-index">продукт / услуга / направление ${index + 1}</span>
+        <span class="pv140-product-kind">Направление</span>
         <span class="pv140-product-name">${escapeHtml(product || 'Что продаём')}</span>
       </span>
       <span class="pv140-product-progress">${mapStatus.filled}/${mapStatus.total}</span>
       <span class="status-pill status-${mapStatus.status}">${escapeHtml(statusLabel)}</span>
-      <button class="small-btn danger-mini" data-pv140-map-remove="${index}" ${isBase ? 'disabled' : ''}>×</button>
+      <span class="pv140-collapse-mark" aria-hidden="true"></span>
+      ${isBase ? '' : `<button class="small-btn danger-mini" data-pv140-map-remove="${index}" aria-label="Удалить карту">×</button>`}
     </div>
     <div class="g1-card-collapse-body pv140-product-body">
       <div class="pv140-product-grid">
@@ -32073,11 +33406,10 @@ pv140ProductMapHtml = function (row, index, totalBaseProducts) {
         </section>
 
         <section class="pv140-section">
-          <div class="pv140-section-title">Товары направления</div>
-          <small style="display:block;color:var(--muted);font-size:11px;margin-bottom:4px;">Автоподтяжка из Gate 1 «Аудит сайта» → КАРТОЧКА ТОВАРА (по полю «Направление»)</small>
+          <div class="pv140-section-title">Товары в направлении <span>${items.length}</span></div>
           ${items.length
-            ? items.map(item => pv181ItemHtml(index, item, row)).join('')
-            : '<div style="color:var(--muted);font-size:12px;padding:8px 0;">Пока нет товаров: привяжите карточки товаров к этому направлению в Gate 1 «Аудит сайта».</div>'}
+            ? `<div class="pv140-products-list">${items.map(item => pv181ItemHtml(index, item, row)).join('')}</div>`
+            : '<div class="pv140-empty">Товары не добавлены</div>'}
         </section>
       </div>
     </div>
@@ -32245,6 +33577,33 @@ function g1pcMoveDirectionRows(product, targetKind) {
 }
 
 const __g1pcV2PrevPageStructureHtml = gate1PageStructureHtml;
+
+// «Карточка товара» — тип страницы, а не название её содержимого.
+// В сводке показываем введённое название, а если осталось системное
+// имя-заглушка — берём H1, затем SEO Title.
+function g1pcContentName(row, card) {
+  const genericNames = new Set(
+    ["", "страница", String(card?.title || ""), defaultPageNameForCard(card)].map(
+      (value) => normalizeGateTitle(String(value || "")),
+    ),
+  );
+  const rowName = String(row?.name || "").trim();
+  if (rowName && !genericNames.has(normalizeGateTitle(rowName))) return rowName;
+
+  const context = row?.contextFields || {};
+  const candidates = [
+    row?.h1,
+    context.productName,
+    context.serviceName,
+    context.itemName,
+    row?.title,
+  ];
+  return (
+    candidates.map((value) => String(value || "").trim()).find(Boolean) ||
+    "Без названия"
+  );
+}
+
 gate1PageStructureHtml = function (card) {
   if (!g1pcIsProductCard(card)) return __g1pcV2PrevPageStructureHtml(card);
   const allProducts = pv130ProductsFromGate0();
@@ -32252,7 +33611,6 @@ gate1PageStructureHtml = function (card) {
   const kind = g1pcCardKind(card);
   const products = allProducts.filter(p => g1pcPlacement(p) === kind);
   const repeatable = isRepeatablePageCard(card);
-  const offers = (v121EnsureOffers(state) || {}).productOffers || {};
 
   // Чистка рудиментов: пустые строки-заглушки без направления не показываем и убираем
   const g1pcRowIsBlank = (row) => {
@@ -32274,69 +33632,45 @@ gate1PageStructureHtml = function (card) {
     (g || other).entries.push({ row, i });
   });
 
-  const dirSelect = (row, i) => `<select class="g1-input is-filled" style="max-width:220px;font-size:11px;padding:4px 8px;" data-g1pc-setdir="${escapeAttr(card.id)}" data-g1pc-index="${i}">
-    <option value="">Без направления</option>
-    ${products.map(p => `<option value="${escapeAttr(p)}" ${String(row.direction || '').trim() === p ? 'selected' : ''}>${escapeHtml(p)}</option>`).join('')}
-  </select>`;
-
-  const pageBlock = (entry, pos, len) => {
-    const rowName = String(entry.row.name || '').trim() || 'Страница';
-    const rowStatus = pageStructureStatus(entry.row);
-    const collapseKey = 'pagecard-' + (entry.row.id || entry.i);
-    const isCollapsed = g1CollapsedSet().has(collapseKey);
-    return `<div class="g1-card g1-card-collapsible${isCollapsed ? ' is-collapsed' : ''}" style="border-radius:14px;padding:0;margin-top:10px;border:1px solid var(--line);">
-    <div class="g1-card-collapse-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;" data-g1-collapse data-g1-collapse-key="${escapeAttr(collapseKey)}">
-      <span><span style="font-weight:800;font-size:13px;">${escapeHtml(rowName)}</span></span>
-      <span class="status-pill status-${rowStatus}">${escapeHtml(STATUS_LABELS[rowStatus] || rowStatus)}</span>
-    </div>
-    <div class="g1-card-collapse-body" style="padding:0 12px 12px;">
-      <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end;margin:4px 0;">
-        <span style="font-size:11px;color:var(--muted);font-weight:700;">Направление:</span>${dirSelect(entry.row, entry.i)}
-        <button class="small-btn" data-g1pc-move="-1" data-g1pc-card="${escapeAttr(card.id)}" data-g1pc-index="${entry.i}" ${pos === 0 ? 'disabled' : ''}>↑</button>
-        <button class="small-btn" data-g1pc-move="1" data-g1pc-card="${escapeAttr(card.id)}" data-g1pc-index="${entry.i}" ${pos === len - 1 ? 'disabled' : ''}>↓</button>
-      </div>
+  const pageBlock = (entry) => {
+    return `<div class="g1pc-child-card g1-card">
       ${pageStructureCardHtml(card, entry.row, entry.i, repeatable)}
-    </div>
   </div>`;
   };
 
-  const placementSelect = (product) => `<span style="display:inline-flex;gap:6px;align-items:center;">
-    <span style="font-size:11px;color:var(--muted);font-weight:700;">Размещение:</span>
-    <select class="g1-input is-filled" style="max-width:200px;font-size:11px;padding:4px 8px;" data-g1pc-place="${escapeAttr(product)}">
+  const placementSelect = (product) => `<select class="g1-input is-filled" aria-label="Тип страницы" style="max-width:200px;font-size:11px;padding:4px 8px;" data-g1pc-place="${escapeAttr(product)}">
       <option value="product" ${g1pcPlacement(product) === 'product' ? 'selected' : ''}>Карточка товара</option>
       <option value="service" ${g1pcPlacement(product) === 'service' ? 'selected' : ''}>Страница услуги</option>
-    </select>
-  </span>`;
+    </select>`;
 
   const groupHtml = (g) => {
-    const off = offers[g.product] || {};
-    const offer = String(off.offer || '').trim();
-    const cta = String(off.cta || '').trim();
     const groupCollapseKey = `page-direction-${g.product}`;
     const groupIsCollapsed = g1CollapsedSet().has(groupCollapseKey);
+    const entryStatuses = g.entries.map((entry) => pageStructureStatus(entry.row));
+    const groupStatus = !entryStatuses.length
+      ? "not_started"
+      : entryStatuses.every((status) => status === "ready")
+        ? "ready"
+        : entryStatuses.some((status) => status !== "not_started")
+          ? "in_progress"
+          : "not_started";
+    const contentNames = g.entries.map((entry) => g1pcContentName(entry.row, card));
     return `<section class="g1pc-page-system g1-card-collapsible${groupIsCollapsed ? ' is-collapsed' : ''}">
       <header class="g1pc-primary-page g1-card-collapse-header" data-g1-collapse data-g1-collapse-key="${escapeAttr(groupCollapseKey)}">
-        <div class="g1pc-kicker"><span class="g1pc-index">01</span><span>Основная страница</span></div>
-        <h3 class="g1pc-primary-title">${escapeHtml(g.product)}</h3>
+        <div class="g1pc-primary-summary">
+          <h3 class="g1pc-primary-title">${escapeHtml(g.product)}</h3>
+          <div class="g1pc-content-preview">${contentNames.length ? `Содержимое: ${escapeHtml(contentNames.join(" · "))}` : "Содержимое пока не добавлено"}</div>
+        </div>
         <div class="g1pc-primary-actions">
+          <span class="status-pill status-${groupStatus}">${escapeHtml(STATUS_LABELS[groupStatus] || groupStatus)}</span>
           ${placementSelect(g.product)}
           <span class="g1pc-collapse-label"><span class="when-open">Свернуть ↑</span><span class="when-closed">Развернуть ↓</span></span>
         </div>
       </header>
       <div class="g1-card-collapse-body g1pc-page-body">
-        <div class="g1pc-message-grid">
-          <div class="g1pc-message-label">Оффер</div>
-          <div class="g1pc-message-value ${offer ? 'is-filled' : 'is-empty'}">${escapeHtml(offer || 'Оффер не заполнен в Gate 0')}</div>
-          <div class="g1pc-message-label">CTA</div>
-          <div class="g1pc-message-value ${cta ? 'is-filled' : 'is-empty'}">${escapeHtml(cta || 'CTA не заполнен в Gate 0')}</div>
-        </div>
         <div class="g1pc-content-level">
-          <div class="g1pc-content-head">
-            <div class="g1pc-kicker"><span class="g1pc-index">02</span><span>Содержимое страницы</span></div>
-            <span class="g1pc-content-count">${g.entries.length} ${g.entries.length === 1 ? 'элемент' : 'элементов'}</span>
-          </div>
           <div class="g1pc-child-list">
-            ${g.entries.length ? g.entries.map((entry, pos) => pageBlock(entry, pos, g.entries.length)).join('') : '<div class="g1pc-empty">На странице пока нет содержимого.</div>'}
+            ${g.entries.length ? g.entries.map((entry) => pageBlock(entry)).join('') : '<div class="g1pc-empty">На странице пока нет содержимого.</div>'}
           </div>
           <button class="small-btn add-inline-btn g1pc-add-child" data-g1pc-add="${escapeAttr(card.id)}" data-g1pc-dir="${escapeAttr(g.product)}">+ Добавить содержимое</button>
         </div>
@@ -32353,7 +33687,7 @@ gate1PageStructureHtml = function (card) {
       <div style="font-weight:900;font-size:15px;color:var(--muted);">Без направления</div>
       <small style="color:var(--muted);font-size:11px;">Выберите направление у страницы, чтобы перенести её в группу</small>
     </div>
-    ${other.entries.map((entry, pos) => pageBlock(entry, pos, other.entries.length)).join('')}
+    ${other.entries.map((entry) => pageBlock(entry)).join('')}
   </div>` : '';
 
   return `<div class="typed-block pages-block contextual-pages">
@@ -32389,11 +33723,38 @@ function guruAutosizeVisible(root) {
   });
 }
 
+let guruAutosizeJob = 0;
+function guruAutosizeProgressively(root) {
+  const job = ++guruAutosizeJob;
+  const scope = root || document;
+  const fields = [...scope.querySelectorAll("textarea")];
+  let index = 0;
+  const process = () => {
+    if (job !== guruAutosizeJob || !scope.isConnected) return;
+    const startedAt = performance.now();
+    while (index < fields.length && performance.now() - startedAt < 8) {
+      const field = fields[index++];
+      if (!field.offsetParent) continue;
+      field.style.height = "auto";
+      field.style.height = `${field.scrollHeight}px`;
+    }
+    if (index < fields.length) requestAnimationFrame(process);
+  };
+  requestAnimationFrame(process);
+}
+
 // После каждой перерисовки Gate (setTimeout, а не rAF — работает и в фоновой вкладке)
 const __autosizePrevRenderGate = renderGate;
 renderGate = function () {
   __autosizePrevRenderGate.apply(this, arguments);
-  setTimeout(() => guruAutosizeVisible(document.getElementById('contentArea')), 0);
+  const root = document.getElementById("contentArea");
+  if (guruGateNavigationInProgress) {
+    // При смене большого Gate не блокируем первый кадр синхронным обходом
+    // сотен полей: высоты уточняются небольшими порциями после показа экрана.
+    guruAutosizeProgressively(root);
+  } else {
+    setTimeout(() => guruAutosizeVisible(root), 0);
+  }
 };
 
 // При раскрытии любого сворачиваемого блока — пересчитать ячейки внутри него
@@ -35857,7 +37218,7 @@ document.addEventListener("click", (e) => {
    v1.23.0 — Единый механизм готовности Gate 0–7
    ------------------------------------------------------------
    Одна формула на все Gate:
-       готовность = (Готово + Не требуется) / рабочие_блоки × 100
+       прогресс = (Готово + Не требуется + 0,5 × В работе) / рабочие_блоки × 100
    Блоки собираются по-разному (данные Gate неоднородны), но сама
    формула и обновление интерфейса — общие. Проценты нигде не
    задаются вручную: всегда вычисляются из реального состояния.
@@ -35881,8 +37242,10 @@ function guruNormBlockStatus(value) {
   return "not_started";
 }
 
-// Единая свёртка массива статусов рабочих блоков → готовность Gate.
-// Это ЕДИНСТВЕННАЯ формула готовности; для Gate 0–7 она одна и та же.
+// Единая свёртка массива статусов рабочих блоков → прогресс Gate.
+// «Готово» — это 100% блока; заполненный, но ещё не завершённый блок
+// даёт 50%. Иначе навигация показывала 0% даже для реально заполненной
+// работы, потому что в числитель попадал только окончательный ready.
 function guruReadinessFromStatuses(rawStatuses) {
   const statuses = (rawStatuses || []).map(guruNormBlockStatus);
   const total = statuses.length;
@@ -35892,6 +37255,8 @@ function guruReadinessFromStatuses(rawStatuses) {
   const problem = statuses.filter((s) => s === "problem").length;
   const notStarted = statuses.filter((s) => s === "not_started").length;
   const done = ready + notRequired;
+  const started = inProgress + problem;
+  const progressUnits = done + started * 0.5;
   return {
     total,
     done,
@@ -35900,7 +37265,7 @@ function guruReadinessFromStatuses(rawStatuses) {
     inProgress,
     problem,
     notStarted,
-    percent: total ? Math.round((done / total) * 100) : 0,
+    percent: total ? Math.round((progressUnits / total) * 100) : 0,
   };
 }
 
@@ -35946,6 +37311,13 @@ function guruGateBlockStatuses(gate) {
       out.push(safe(() => getDemandRouteStatus(), "not_started"));
     if (typeof getUnitEconomicsStatus === "function")
       out.push(safe(() => getUnitEconomicsStatus(), "not_started"));
+    // Эти два блока живут рядом с аудитом сайта, а не в массиве карточек.
+    // Без явного включения их реальный статус не попадал ни в Gate, ни в
+    // общий прогресс проекта.
+    if (typeof projectComparisonStatus === "function")
+      out.push(safe(() => projectComparisonStatus().status, "not_started"));
+    if (typeof ensureTargetAudience === "function" && typeof targetAudienceStatus === "function")
+      out.push(safe(() => targetAudienceStatus(ensureTargetAudience()).status, "not_started"));
     cards
       .filter((c) => typeof isTechCard === "function" && isTechCard(c))
       .forEach((c) => out.push(c.status));
@@ -36022,8 +37394,18 @@ function guruProjectReadiness() {
 }
 
 // Левое меню: число рабочих блоков и процент — из единого механизма.
+let guruGateReadinessCache = new Map();
+
 renderGateNav = function () {
   if (!state || !state.gates) return;
+  // При первой загрузке и после смены проекта меню также получает свежие
+  // статусы, а не значения, сохранённые до последнего изменения полей.
+  if (!guruFastGateNavigation) {
+    try {
+      recalculateAllStatuses(state);
+    } catch (e) {}
+    guruGateReadinessCache = new Map();
+  }
   const projectButton = document.getElementById("projectBtn");
   if (projectButton) {
     const isProjectActive = activeView === "project";
@@ -36032,53 +37414,47 @@ renderGateNav = function () {
   }
   els.gateNav.innerHTML = state.gates
     .map((g) => {
-      const r = guruGateReadiness(g);
+      let r = guruGateReadinessCache.get(g.id);
+      if (!r) {
+        r = guruGateReadiness(g);
+        guruGateReadinessCache.set(g.id, r);
+      }
       const cls =
         activeView === "gate" && activeGateId === g.id ? "active" : "";
-      return `<button class="gate-btn ${cls}" data-gate-id="${escapeAttr(g.id)}">${escapeHtml(g.title)}<span class="small">${r.total} блоков, готово ${r.percent}%</span></button>`;
+      return `<button class="gate-btn ${cls}" data-gate-id="${escapeAttr(g.id)}">${escapeHtml(g.title)}<span class="small">${r.total} блоков, прогресс ${r.percent}%</span></button>`;
     })
     .join("");
   document.querySelectorAll("[data-gate-id]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      activeView = "gate";
-      activeGateId = btn.dataset.gateId;
-      render();
+      guruNavigateToGate(btn.dataset.gateId);
     });
   });
 };
 
-// Сводка проекта: общий процент и число рабочих блоков — тот же механизм.
-renderSummary = function () {
-  if (activeView !== "project") {
-    els.summaryGrid.hidden = true;
-    els.summaryGrid.innerHTML = "";
-    return;
-  }
-  els.summaryGrid.hidden = false;
-  const r = guruProjectReadiness();
-  const gatesCount = state.gates.length;
-  const metricsCount = state.metrics?.length || 0;
-  els.summaryGrid.innerHTML = `
-    <div class="summary-card"><div class="summary-label">Gate</div><div class="summary-value">${gatesCount}</div><div class="summary-help">крупных этапов</div></div>
-    <div class="summary-card"><div class="summary-label">Блоки</div><div class="summary-value">${r.total}</div><div class="summary-help">рабочих блоков</div></div>
-    <div class="summary-card"><div class="summary-label">Готово</div><div class="summary-value">${r.percent}%</div><div class="summary-help">${r.done} из ${r.total}, вкл. «не требуется»</div></div>
-    <div class="summary-card"><div class="summary-label">Метрики</div><div class="summary-value">${metricsCount}</div><div class="summary-help">строк данных</div></div>
-  `;
-};
-
-// Реалтайм: после любого сохранения статуса пересчитываем меню и сводку.
+// Реалтайм: после любого сохранения статуса пересчитываем меню.
 // Контент-область НЕ трогаем — фокус и ввод пользователя не теряются.
 function guruRefreshReadiness() {
   if (!state || !state.gates) return;
   try {
+    recalculateAllStatuses(state);
+    guruGateReadinessCache = new Map();
     renderGateNav();
-  } catch (e) {}
-  try {
-    renderSummary();
+    if (typeof guruRefreshDynamicBlockStatusUi === "function")
+      guruRefreshDynamicBlockStatusUi();
   } catch (e) {}
 }
 const __guruPrevSaveStateReadiness = saveState;
 saveState = function () {
+  // Сначала синхронизируем статусы с фактически введёнными данными, и только
+  // потом сохраняем и обновляем меню. Это покрывает все типы полей, включая
+  // новые динамические формы, которым не нужно вручную помнить о статусе.
+  try {
+    recalculateAllStatuses(state);
+  } catch (e) {}
+  // Некоторые старые инициализаторы сохраняют нормализованные данные прямо
+  // во время рендера. Это не пользовательское изменение и не должно ломать
+  // кэш экранов во время перехода.
+  if (!guruGateNavigationInProgress) guruInvalidateGateViewCache();
   const result = __guruPrevSaveStateReadiness.apply(this, arguments);
   guruRefreshReadiness();
   return result;
@@ -37285,7 +38661,9 @@ function projectComparisonAutoValue(criterion) {
     }
     return "";
   };
-  const averageCheck = state?.unitEconomicsRoute?.sections?.revenue_aov?.aov;
+  const averageCheck = typeof uv130EconomicsSnapshot === "function"
+    ? uv130EconomicsSnapshot().aov
+    : "";
   if (key === "product") return projectComparisonTextList(project.whatSell, project.whatSellExtra, products) || readGate0Value("product");
   if (key === "audience") return projectComparisonTextList(project.targetSegment, project.targetSegmentExtra) || readGate0Value("audience");
   if (key === "jtbd") return projectComparisonJtbdText();
@@ -37333,9 +38711,39 @@ function projectComparisonCellHtml(criterion, ownerId, stickyClass = "") {
   </td>`;
 }
 
+// Сравнение проектов — самостоятельный рабочий блок, а не декоративная
+// таблица. Его статус считается по тем же правилам, что и остальные блоки:
+// нет данных → «Не начато», часть данных → «В работе», всё заполнено →
+// «Готово». Автоподтянутые данные своего проекта не подменяют анализ рынка.
+function projectComparisonStatus(model = ensureProjectComparison()) {
+  if (!model) return { status: "not_started", filled: 0, total: 0 };
+  const competitors = Array.isArray(model.competitors) ? model.competitors : [];
+  const criteria = Array.isArray(model.criteria) ? model.criteria : [];
+  const summaryKeys = ["marketStronger", "ourStronger", "same", "differentiate"];
+  const cells = competitors.flatMap((competitor) =>
+    criteria.map((criterion) => projectComparisonCell(criterion, competitor.id).text),
+  );
+  const values = [
+    ...competitors.map((competitor) =>
+      /^конкурент\s+\d+$/i.test(String(competitor.name || "").trim())
+        ? ""
+        : competitor.name,
+    ),
+    ...cells,
+    ...summaryKeys.map((key) => model.summary?.[key]),
+  ];
+  const total = values.length;
+  const filled = values.filter((value) => String(value || "").trim()).length;
+  if (!filled) return { status: "not_started", filled, total };
+  if (filled === total) return { status: "ready", filled, total };
+  return { status: "in_progress", filled, total };
+}
+
 function projectComparisonHtml() {
   const model = ensureProjectComparison();
   if (!model) return "";
+  const comparisonStatus = projectComparisonStatus(model);
+  const statusLabel = STATUS_LABELS[comparisonStatus.status] || comparisonStatus.status;
   const projectName = String(state?.project?.name || projects.find((item) => item.id === activeProjectId)?.name || "Наш проект").trim();
   const summaryFields = [
     ["marketStronger", "В чём рынок сильнее нас"],
@@ -37348,7 +38756,7 @@ function projectComparisonHtml() {
   return `<section class="project-comparison g1-section ${model.open ? "is-open" : ""}">
     <button type="button" class="project-comparison-heading" data-project-comparison-toggle>
       <span><b>Сравнение проектов</b><small>Универсальная карта рынка и конкурентных преимуществ</small></span>
-      <span>${model.competitors.length} ${model.competitors.length === 1 ? "конкурент" : "конкурента"} · ${coreCount} основных${customCount ? ` + ${customCount}` : ""}</span>
+      <span class="project-comparison-heading-meta"><span class="status-pill status-${comparisonStatus.status}" data-status-block="project-comparison">${escapeHtml(statusLabel)}</span><span data-status-block-meta="project-comparison">${comparisonStatus.filled}/${comparisonStatus.total} · ${model.competitors.length} ${model.competitors.length === 1 ? "конкурент" : "конкурента"} · ${coreCount} основных${customCount ? ` + ${customCount}` : ""}</span></span>
       <i>${model.open ? "Свернуть ↑" : "Развернуть ↓"}</i>
     </button>
     ${model.open ? `<div class="project-comparison-body">
@@ -39224,6 +40632,35 @@ function targetAudienceSegmentProgress(segment) {
   return TARGET_AUDIENCE_FIELDS.filter(([key]) => targetAudienceResolvedValue(segment, key).trim()).length;
 }
 
+function targetAudienceStatus(model) {
+  const total = model.segments.length * TARGET_AUDIENCE_FIELDS.length;
+  const filled = model.segments.reduce(
+    (sum, segment) => sum + targetAudienceSegmentProgress(segment),
+    0,
+  );
+  if (!filled) return { status: "not_started", filled, total };
+  if (filled === total) return { status: "ready", filled, total };
+  return { status: "in_progress", filled, total };
+}
+
+// Особые блоки Gate 1 не являются обычными card. Обновляем их бейджи тем же
+// источником статуса, что и прогресс Gate, не дожидаясь полной перерисовки.
+function guruRefreshDynamicBlockStatusUi() {
+  const update = (key, data) => {
+    document.querySelectorAll(`[data-status-block="${key}"]`).forEach((pill) => {
+      pill.className = `status-pill status-${data.status}`;
+      pill.textContent = STATUS_LABELS[data.status] || data.status;
+    });
+    document.querySelectorAll(`[data-status-block-meta="${key}"]`).forEach((meta) => {
+      meta.textContent = `${data.filled}/${data.total}`;
+    });
+  };
+  if (typeof projectComparisonStatus === "function")
+    update("project-comparison", projectComparisonStatus());
+  const audience = ensureTargetAudience?.();
+  if (audience) update("target-audience", targetAudienceStatus(audience));
+}
+
 function targetAudienceFieldHtml(segment, fieldKey) {
   const definition = TARGET_AUDIENCE_FIELDS.find(([key]) => key === fieldKey);
   if (!definition) return "";
@@ -39234,7 +40671,8 @@ function targetAudienceFieldHtml(segment, fieldKey) {
     !segment.manualFields?.[fieldKey] &&
     String(targetAudienceAutoValues()[fieldKey] || "").trim(),
   );
-  return `<label class="target-audience-field ${isAutomatic ? "is-automatic" : ""}">
+  const fieldState = String(value || "").trim() ? "is-filled" : "is-empty";
+  return `<label class="target-audience-field ${isAutomatic ? "is-automatic" : ""} ${fieldState}">
     <span class="target-audience-field-label"><b>${escapeHtml(label)}</b>${isAutomatic ? `<small>${escapeHtml(targetAudienceAutoSource(fieldKey))}</small>` : ""}</span>
     <span class="target-audience-field-control"><textarea rows="${rows}" data-target-audience-segment="${escapeAttr(segment.id)}" data-target-audience-field="${escapeAttr(fieldKey)}" placeholder="${escapeAttr(placeholder)}">${escapeHtml(value)}</textarea></span>
   </label>`;
@@ -39242,11 +40680,17 @@ function targetAudienceFieldHtml(segment, fieldKey) {
 
 function targetAudienceCardHtml(segment, index) {
   const progress = targetAudienceSegmentProgress(segment);
+  const status = !progress
+    ? "not_started"
+    : progress === TARGET_AUDIENCE_FIELDS.length
+      ? "ready"
+      : "in_progress";
   const resolvedName = targetAudienceResolvedValue(segment, "name");
   return `<article class="target-audience-card ${segment.open ? "is-open" : ""}">
     <header class="target-audience-card-head">
       <button type="button" class="target-audience-card-title" data-target-audience-card-toggle="${escapeAttr(segment.id)}"><small>Сегмент ${String(index + 1).padStart(2, "0")}</small><strong>${escapeHtml(resolvedName || "Новый сегмент аудитории")}</strong></button>
       <div class="target-audience-card-tools">
+        <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
         <span class="target-audience-progress">${progress}/${TARGET_AUDIENCE_FIELDS.length}</span>
         <button type="button" class="target-audience-tool" data-target-audience-duplicate="${escapeAttr(segment.id)}">Дублировать</button>
         <button type="button" class="target-audience-tool is-danger" data-target-audience-delete="${escapeAttr(segment.id)}">Удалить</button>
@@ -39263,10 +40707,12 @@ function targetAudienceCardHtml(segment, index) {
 function targetAudienceHtml() {
   const model = ensureTargetAudience();
   if (!model) return "";
+  const audienceStatus = targetAudienceStatus(model);
+  const statusLabel = STATUS_LABELS[audienceStatus.status] || audienceStatus.status;
   return `<section class="target-audience g1-section ${model.open ? "is-open" : ""}">
     <button type="button" class="target-audience-heading" data-target-audience-toggle>
       <span><strong>Целевая аудитория</strong><small>Кого мы хотим привлечь и почему этот человек покупает</small></span>
-      <span>${model.segments.length} ${model.segments.length === 1 ? "сегмент" : "сегментов"} · ${model.open ? "свернуть ↑" : "раскрыть ↓"}</span>
+      <span class="target-audience-heading-meta"><span class="status-pill status-${audienceStatus.status}" data-status-block="target-audience">${escapeHtml(statusLabel)}</span><span data-status-block-meta="target-audience">${audienceStatus.filled}/${audienceStatus.total} · ${model.open ? "свернуть ↑" : "раскрыть ↓"}</span></span>
     </button>
     ${model.open ? `<div class="target-audience-body">
       <p class="target-audience-intro">Здесь хранится логика аудитории. География, возраст, пол и способы таргетинга задаются отдельно внутри конкретной рекламной кампании.</p>
@@ -39569,3 +41015,1309 @@ document.addEventListener("click", (event) => {
   flashSaving();
   renderGate();
 });
+
+function g8ObservedInputs(bundle, baseInputs) {
+  return bundle.periods.map((period) => {
+    const link = g8LatestBusinessLink(period);
+    const leads = g8Number(link?.leads) || period.leads;
+    const orders = g8Number(link?.orders || link?.sales);
+    return {
+      periodStart: period.periodStart,
+      periodEnd: period.periodEnd,
+      updatedAt: period.createdAt || period.periodEnd,
+      budget: period.spend,
+      impressions: period.impressions,
+      cpc: period.cpc,
+      ctr: period.ctr,
+      siteConversion: period.siteConversion,
+      cpl: period.cpl,
+      saleConversion: leads && orders ? (orders / leads) * 100 : 0,
+      averageCheck: g8Number(link?.avgCheck || link?.minCheck),
+      margin: g8Number(link?.margin),
+      demandChange: 0,
+      taskReadiness: baseInputs.taskReadiness,
+      factual: true,
+    };
+  });
+}
+
+const GATE8_CHAIN_FIELDS = [
+  ["traffic", "Трафик", "number"],
+  ["clicks", "Клики", "number"],
+  ["leads", "Заявки", "number"],
+  ["sales", "Продажи", "number"],
+  ["revenue", "Выручка", "money"],
+  ["cost", "Себестоимость", "money"],
+  ["profit", "Прибыль", "money"],
+  ["roi", "Окупаемость", "percent"],
+];
+
+function g8Clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function g8Median(values) {
+  const sorted = values.filter(Number.isFinite).slice().sort((a, b) => a - b);
+  if (!sorted.length) return NaN;
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+function g8Percentile(values, percentile) {
+  const sorted = values.filter(Number.isFinite).slice().sort((a, b) => a - b);
+  if (!sorted.length) return NaN;
+  const position = g8Clamp(percentile, 0, 1) * (sorted.length - 1);
+  const lower = Math.floor(position);
+  const upper = Math.ceil(position);
+  if (lower === upper) return sorted[lower];
+  return sorted[lower] + (sorted[upper] - sorted[lower]) * (position - lower);
+}
+
+function g8FactDistribution(key, label, values, source) {
+  const clean = values.map(g8Number).filter((value) => value > 0);
+  if (!clean.length) return null;
+  const center = g8Median(clean);
+  const mean = clean.reduce((sum, value) => sum + value, 0) / clean.length;
+  const variance = clean.length > 1
+    ? clean.reduce((sum, value) => sum + ((value - mean) ** 2), 0) / (clean.length - 1)
+    : 0;
+  const relativeSpread = mean ? Math.sqrt(variance) / mean : 0;
+  const samplingUncertainty = 0.2 * Math.sqrt(2 / clean.length);
+  const observedUncertainty = (relativeSpread * 1.28) / Math.sqrt(clean.length);
+  const sparseDataFloor = clean.length < 5 ? 0.15 : 0.05;
+  const uncertainty = g8Clamp(
+    Math.max(samplingUncertainty, observedUncertainty, sparseDataFloor),
+    0.05,
+    0.35,
+  );
+  return {
+    key,
+    label,
+    center,
+    min: Math.max(0, center * (1 - uncertainty)),
+    max: center * (1 + uncertainty),
+    sourceType: "fact",
+    source: `${source} · ${clean.length} ${clean.length === 1 ? "период" : "периода"}`,
+    count: clean.length,
+    uncertainty,
+  };
+}
+
+function g8AssumptionDistribution(key, label, center, source, uncertainty = GATE8_FUNNEL_BENCHMARK.uncertainty) {
+  const value = g8Number(center);
+  if (!value) return null;
+  return {
+    key,
+    label,
+    center: value,
+    min: Math.max(0, value * (1 - uncertainty)),
+    max: value * (1 + uncertainty),
+    sourceType: "assumption",
+    source,
+    count: 0,
+    uncertainty,
+  };
+}
+
+function g8ForecastRequiredLinks(metric) {
+  const required = ["budget", "traffic", "ctr", "siteConversion"];
+  if (["sales", "cpa", "revenue", "profit", "roi"].includes(metric)) required.push("saleConversion");
+  if (["revenue", "profit", "roi"].includes(metric)) required.push("averageCheck");
+  if (["profit", "roi"].includes(metric)) required.push("margin");
+  return required;
+}
+
+function g8ForecastDistributions(bundle, goal, base, observations, metric) {
+  const budget = g8Number(goal.budget || base.budget);
+  const benchmarkSource = `${GATE8_FUNNEL_BENCHMARK.name} · предположение`;
+  const projectSource = "Gate 1 / Gate 4 · проектное предположение";
+  const values = (key) => observations.map((item) => g8Number(item[key])).filter((value) => value > 0);
+  const trafficValues = observations
+    .map((item) => {
+      const spend = g8Number(item.budget);
+      const impressions = g8Number(item.impressions);
+      return spend && impressions && budget ? (impressions / spend) * budget : 0;
+    })
+    .filter((value) => value > 0);
+  const benchmarkCpc = g8Number(base.cpc) || GATE8_FUNNEL_BENCHMARK.cpc;
+  const benchmarkCtr = g8Number(base.ctr) || GATE8_FUNNEL_BENCHMARK.ctr;
+  const benchmarkTraffic = budget && benchmarkCpc && benchmarkCtr
+    ? budget / benchmarkCpc / (benchmarkCtr / 100)
+    : 0;
+  const inferredSiteConversion = g8Number(base.cpc) && g8Number(base.cpl)
+    ? (g8Number(base.cpc) / g8Number(base.cpl)) * 100
+    : 0;
+  const distributions = {
+    budget: budget ? { key: "budget", label: "Бюджет", center: budget, min: budget, max: budget, sourceType: "project", source: goal.source || "Gate 0 → Цель проекта", count: 1, uncertainty: 0 } : null,
+    traffic: g8FactDistribution("traffic", "Трафик", trafficValues, "Gate 5 → показы, нормированные на текущий бюджет")
+      || g8AssumptionDistribution("traffic", "Трафик", benchmarkTraffic, benchmarkSource),
+    ctr: g8FactDistribution("ctr", "CTR", values("ctr"), "Gate 5 → CTR")
+      || g8AssumptionDistribution("ctr", "CTR", g8Number(base.ctr) || GATE8_FUNNEL_BENCHMARK.ctr, g8Number(base.ctr) ? projectSource : benchmarkSource),
+    siteConversion: g8FactDistribution("siteConversion", "CVR сайта", values("siteConversion"), "Gate 5 → конверсия сайта")
+      || g8AssumptionDistribution("siteConversion", "CVR сайта", g8Number(base.siteConversion) || inferredSiteConversion || GATE8_FUNNEL_BENCHMARK.siteConversion, (g8Number(base.siteConversion) || inferredSiteConversion) ? projectSource : benchmarkSource),
+    saleConversion: g8FactDistribution("saleConversion", "CVR продаж", values("saleConversion"), "Gate 5 → связка заявок и продаж")
+      || g8AssumptionDistribution("saleConversion", "CVR продаж", g8Number(base.saleConversion) || GATE8_FUNNEL_BENCHMARK.saleConversion, g8Number(base.saleConversion) ? projectSource : benchmarkSource),
+    averageCheck: g8FactDistribution("averageCheck", "Средний чек", values("averageCheck"), "Gate 5 → связка с бизнесом")
+      || g8AssumptionDistribution("averageCheck", "Средний чек", base.averageCheck, "Gate 1 → Юнит-экономика · предположение", 0.25),
+    margin: g8FactDistribution("margin", "Маржинальность", values("margin"), "Gate 5 → связка с бизнесом")
+      || g8AssumptionDistribution("margin", "Маржинальность", base.margin, "Gate 1 → Юнит-экономика · предположение", 0.2),
+  };
+  const required = g8ForecastRequiredLinks(metric);
+  const missing = required.filter((key) => !distributions[key]);
+  return { distributions, required, missing, benchmarkSource };
+}
+
+function g8SeedFromText(text) {
+  let hash = 2166136261;
+  const source = String(text || "gate-8");
+  for (let index = 0; index < source.length; index += 1) {
+    hash ^= source.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function g8Random(seed) {
+  let value = seed >>> 0;
+  return () => {
+    value += 0x6d2b79f5;
+    let result = value;
+    result = Math.imul(result ^ (result >>> 15), result | 1);
+    result ^= result + Math.imul(result ^ (result >>> 7), result | 61);
+    return ((result ^ (result >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function g8SampleDistribution(distribution, quantile, factor = 1) {
+  if (!distribution) return NaN;
+  const q = g8Clamp(quantile, 0, 1);
+  const sampled = q <= 0.5
+    ? distribution.min + (distribution.center - distribution.min) * q * 2
+    : distribution.center + (distribution.max - distribution.center) * (q - 0.5) * 2;
+  const value = sampled * factor;
+  return ["ctr", "siteConversion", "saleConversion", "margin"].includes(distribution.key)
+    ? g8Clamp(value, 0, 95)
+    : Math.max(0, value);
+}
+
+function g8ForecastChainModel(inputs) {
+  const traffic = Number(inputs.traffic);
+  const ctr = Number(inputs.ctr);
+  const siteConversion = Number(inputs.siteConversion);
+  const saleConversion = Number(inputs.saleConversion);
+  const averageCheck = Number(inputs.averageCheck);
+  const margin = Number(inputs.margin);
+  const clicks = Number.isFinite(traffic) && Number.isFinite(ctr) ? traffic * (ctr / 100) : NaN;
+  const leads = Number.isFinite(clicks) && Number.isFinite(siteConversion) ? clicks * (siteConversion / 100) : NaN;
+  const sales = Number.isFinite(leads) && Number.isFinite(saleConversion) ? leads * (saleConversion / 100) : NaN;
+  const revenue = Number.isFinite(sales) && Number.isFinite(averageCheck) ? sales * averageCheck : NaN;
+  const cost = Number.isFinite(revenue) && Number.isFinite(margin) ? revenue * (1 - margin / 100) : NaN;
+  const budget = g8Number(inputs.budget);
+  const profit = Number.isFinite(revenue) && Number.isFinite(cost) ? revenue - budget - cost : NaN;
+  const cpl = Number.isFinite(leads) && leads ? budget / leads : NaN;
+  const cpa = Number.isFinite(sales) && sales ? budget / sales : NaN;
+  const roi = budget && Number.isFinite(profit) ? (profit / budget) * 100 : NaN;
+  return { ...inputs, traffic, clicks, leads, sales, revenue, cost, grossProfit: revenue - cost, profit, cpl, cpa, roi };
+}
+
+function g8RunMonteCarlo(distributions, goal, metric, seed, adjustments = {}) {
+  const random = g8Random(seed);
+  const models = [];
+  for (let index = 0; index < GATE8_MONTE_CARLO_RUNS; index += 1) {
+    const quality = random();
+    const budgetFactor = adjustments.budget || 1;
+    const inputs = {
+      budget: g8SampleDistribution(distributions.budget, random(), budgetFactor),
+      traffic: g8SampleDistribution(distributions.traffic, random(), (adjustments.traffic || 1) * budgetFactor),
+      ctr: g8SampleDistribution(distributions.ctr, quality, adjustments.ctr || 1),
+      siteConversion: g8SampleDistribution(distributions.siteConversion, quality, adjustments.siteConversion || 1),
+      saleConversion: g8SampleDistribution(distributions.saleConversion, quality, adjustments.saleConversion || 1),
+      averageCheck: g8SampleDistribution(distributions.averageCheck, random(), adjustments.averageCheck || 1),
+      margin: g8SampleDistribution(distributions.margin, random(), adjustments.margin || 1),
+    };
+    models.push(g8ForecastChainModel(inputs));
+  }
+  const target = g8TargetForMetric(goal, metric);
+  const finiteModels = models.filter((model) => Number.isFinite(g8MetricValue(model, metric)));
+  const successful = Number.isFinite(target)
+    ? finiteModels.filter((model) => ["cpl", "cpa"].includes(metric)
+      ? g8MetricValue(model, metric) <= target
+      : g8MetricValue(model, metric) >= target).length
+    : 0;
+  return {
+    models: finiteModels,
+    probability: Number.isFinite(target) && finiteModels.length
+      ? (successful / finiteModels.length) * 100
+      : NaN,
+  };
+}
+
+function g8ModelAtOutcomePercentile(models, metric, percentile) {
+  const sorted = models
+    .filter((model) => Number.isFinite(g8MetricValue(model, metric)))
+    .slice()
+    .sort((a, b) => g8MetricValue(a, metric) - g8MetricValue(b, metric));
+  if (!sorted.length) return null;
+  const position = Math.round(g8Clamp(percentile, 0, 1) * (sorted.length - 1));
+  return sorted[position];
+}
+
+function g8ForecastRange(models, key) {
+  const values = models.map((model) => Number(model?.[key])).filter(Number.isFinite);
+  return values.length
+    ? { min: g8Percentile(values, 0.1), median: g8Percentile(values, 0.5), max: g8Percentile(values, 0.9) }
+    : null;
+}
+
+function g8MonteCarloCore(bundle, goal, base, observations, metric) {
+  if (!goal.valid) return { available: false, reason: "Прогноз не рассчитывается, пока цель проекта не заполнена полностью.", runs: 0, distributions: {}, missing: [] };
+  const setup = g8ForecastDistributions(bundle, goal, base, observations, metric);
+  if (setup.missing.length) {
+    const labels = setup.missing.map((key) => setup.distributions[key]?.label || ({ averageCheck: "Средний чек", margin: "Маржинальность" }[key] || key));
+    return { available: false, reason: `Нет факта или бенчмарка: ${labels.join(", ")}.`, runs: 0, ...setup };
+  }
+  const seedText = JSON.stringify({ project: activeProjectId, goal: [goal.metric, goal.target, goal.deadline, goal.budget], metric, distributions: Object.values(setup.distributions).map((item) => item && [item.key, item.center, item.min, item.max, item.count]) });
+  const seed = g8SeedFromText(seedText);
+  const baseline = g8RunMonteCarlo(setup.distributions, goal, metric, seed);
+  if (!baseline.models.length) return { available: false, reason: "Цепочка не дала конечного результата.", runs: 0, ...setup };
+  const percentiles = { base: 0.5, positive: 0.8, negative: 0.2, stress: 0.05 };
+  const scenarios = Object.fromEntries(Object.entries(percentiles).map(([kind, percentile]) => [kind, {
+    available: true,
+    percentile: kind === "base" ? 50 : kind === "positive" ? 80 : kind === "negative" ? 20 : 5,
+    model: g8ModelAtOutcomePercentile(baseline.models, metric, percentile),
+    changes: [`Точка единого распределения Monte Carlo: ${kind === "base" ? "медиана" : `${kind === "positive" ? 80 : kind === "negative" ? 20 : 5}-й перцентиль`}.`],
+  }]));
+  const ranges = Object.fromEntries(GATE8_CHAIN_FIELDS.map(([key]) => [key, g8ForecastRange(baseline.models, key)]));
+  ranges.cpl = g8ForecastRange(baseline.models, "cpl");
+  ranges.cpa = g8ForecastRange(baseline.models, "cpa");
+  const sensitivityKeys = ["traffic", "ctr", "siteConversion", "saleConversion", "averageCheck", "margin", "budget"]
+    .filter((key) => setup.distributions[key]);
+  const sensitivity = sensitivityKeys.map((key) => {
+    const adjusted = g8RunMonteCarlo(setup.distributions, goal, metric, seed, { [key]: 1.1 });
+    const probability = adjusted.probability;
+    const delta = Number.isFinite(probability) && Number.isFinite(baseline.probability)
+      ? probability - baseline.probability
+      : NaN;
+    const distribution = setup.distributions[key];
+    return {
+      key,
+      label: distribution.label,
+      source: distribution.source,
+      baseProbability: baseline.probability,
+      probability,
+      delta,
+      impact: Number.isFinite(delta) ? Math.abs(delta) : -1,
+    };
+  }).sort((a, b) => b.impact - a.impact);
+  return {
+    available: true,
+    runs: baseline.models.length,
+    distributions: setup.distributions,
+    missing: [],
+    probability: { available: Number.isFinite(baseline.probability), percent: baseline.probability, min: ranges[metric]?.min, max: ranges[metric]?.max, count: baseline.models.length, source: observations.length ? "Gate 5 → фактические периоды" : setup.benchmarkSource },
+    ranges,
+    scenarios,
+    sensitivity,
+    baseModel: scenarios.base.model,
+    benchmarkUsed: Object.values(setup.distributions).some((item) => item?.sourceType === "assumption"),
+  };
+}
+
+function g8CustomInputs(base, data) {
+  const inputs = { ...base };
+  Object.entries(data.manual || {}).forEach(([key, raw]) => {
+    if (g8Text(raw) === "") return;
+    inputs[key] = key === "demandChange" ? g8SignedNumber(raw) : g8Number(raw);
+  });
+  if (g8Text(data.manual?.ctr) !== "" && inputs.impressions) inputs.preferCtrRoute = true;
+  return inputs;
+}
+
+function g8ReadinessChecks(bundle, goal) {
+  const f = bundle.facts;
+  const gate = (id) => state?.gates?.find((item) => item.id === id);
+  const gateReady = (id) => {
+    const selected = gate(id);
+    return selected ? guruGateReadiness(selected).percent === 100 : false;
+  };
+  const g4 = state?.gate4 || {};
+  const landingReady = Boolean(g8Text(g4.landing?.framework) && g8Text(g4.landing?.offerLink));
+  const adsReady = gateReady("gate-4") || Boolean((g4.implementations || []).some((item) => ["ready", "works"].includes(String(item.status))));
+  const economicsReady = Boolean(g8Number(f.averageCheck?.value) && g8Number(f.margin?.value) && (g8Number(f.allowedCpl?.value) || g8Number(f.allowedCpa?.value)));
+  const checks = [
+    ["Цель определена", goal.valid, goal.source, "gate-0"],
+    ["Сегмент определён", Boolean(g8Text(f.segment?.value)), f.segment?.source, "gate-0"],
+    ["Задача клиента понятна", Boolean(g8Text(f.jtbd?.value)), f.jtbd?.source, "gate-0"],
+    ["Оффер соответствует проекту", Boolean(g8Text(f.offer?.value)), f.offer?.source, "gate-4"],
+    ["CTA определён", Boolean(g8Text(f.cta?.value)), f.cta?.source, "gate-0"],
+    ["Посадочная страница готова", landingReady, "Gate 4 → Посадочная страница", "gate-4"],
+    ["Аналитика работает", gateReady("gate-2"), "Gate 2 → Аналитика", "gate-2"],
+    ["Бюджет рассчитан", Boolean(goal.budget || g8Number(f.budget?.value)), f.budget?.source || goal.source, "gate-4"],
+    ["Экономика сходится", economicsReady, "Gate 1 → Юнит-экономика", "gate-1"],
+    ["Реклама готова", adsReady, "Gate 4 → Готовность запуска", "gate-4"],
+    ["Нет просроченных задач", g8Number(f.overdueTasks?.value) === 0, f.overdueTasks?.source, "gate-7"],
+  ].map(([label, passed, source, gateId]) => ({ label, passed: Boolean(passed), source: source || "Источник не найден", gateId }));
+  return { checks, ready: checks.filter((item) => item.passed).length, total: checks.length, percent: Math.round((checks.filter((item) => item.passed).length / checks.length) * 100) };
+}
+
+function g8Completeness(bundle, goal, metric, base) {
+  const required = [
+    { key: "goalResult", label: "Результат цели", filled: Boolean(goal.metric), gateId: "gate-0", source: goal.source },
+    { key: "goalTarget", label: "Целевое значение", filled: Boolean(goal.target), gateId: "gate-0", source: goal.source },
+    { key: "goalDeadline", label: "Срок цели", filled: Boolean(goal.deadline), gateId: "gate-0", source: goal.source },
+    { key: "budget", label: "Бюджет", filled: Boolean(base.budget), gateId: "gate-4", source: bundle.facts.budget?.source || goal.source },
+    { key: "resultCost", label: "Допустимая стоимость результата", filled: Boolean(goal.allowedCost), gateId: "gate-1", source: bundle.facts.allowedCpl?.source || bundle.facts.allowedCpa?.source },
+    { key: "trafficRoute", label: "CPL или связка CPC + конверсия", filled: Boolean(base.cpl || (base.cpc && base.siteConversion)), gateId: base.cpl ? "gate-5" : "gate-5", source: base.cpl ? bundle.facts.cpl?.source || bundle.facts.targetCpl?.source : "Gate 5 → CPC и конверсия" },
+  ];
+  if (["sales", "cpa", "revenue", "profit", "roi"].includes(metric)) required.push({ key: "saleConversion", label: "Конверсия заявки в продажу", filled: Boolean(base.saleConversion), gateId: "gate-5", source: bundle.facts.saleConversion?.source });
+  if (["revenue", "profit", "roi"].includes(metric)) required.push({ key: "averageCheck", label: "Средний чек", filled: Boolean(base.averageCheck), gateId: "gate-1", source: bundle.facts.averageCheck?.source });
+  if (["profit", "roi"].includes(metric)) required.push({ key: "margin", label: "Маржинальность", filled: Boolean(base.margin), gateId: "gate-1", source: bundle.facts.margin?.source });
+  const filled = required.filter((item) => item.filled).length;
+  const missing = g8MissingDataSource(required);
+  return { required, filled, total: required.length, percent: required.length ? Math.round((filled / required.length) * 100) : 0, missing };
+}
+
+function g8MissingDataSource(required) {
+  return required
+    .filter((item) => !item.filled)
+    .map((item) => ({
+      ...item,
+      hardGate: GATE8_HARD_GATE_KEYS.has(item.key),
+      unlocks: GATE8_MISSING_DATA_IMPACT[item.key] || [],
+      impact: (GATE8_MISSING_DATA_IMPACT[item.key] || []).length,
+    }))
+    .sort((a, b) => {
+      if (a.hardGate !== b.hardGate) return a.hardGate ? -1 : 1;
+      if (b.impact !== a.impact) return b.impact - a.impact;
+      const aOrder = GATE8_MISSING_DATA_ORDER.indexOf(a.key);
+      const bOrder = GATE8_MISSING_DATA_ORDER.indexOf(b.key);
+      return (aOrder < 0 ? Number.MAX_SAFE_INTEGER : aOrder) - (bOrder < 0 ? Number.MAX_SAFE_INTEGER : bOrder);
+    });
+}
+
+function g8Contradictions(bundle, model) {
+  const list = [...(model?.contradictions || [])];
+  const f = bundle.facts;
+  if (g8Number(f.targetCpl?.value) && g8Number(f.allowedCpl?.value) && Math.abs(g8Number(f.targetCpl.value) - g8Number(f.allowedCpl.value)) > 0.01) {
+    list.push(`Целевой CPL запуска ${g8Money(g8Number(f.targetCpl.value))}, а в юнит-экономике ${g8Money(g8Number(f.allowedCpl.value))}.`);
+  }
+  return list;
+}
+
+function g8Reliability(bundle, completeness, contradictions, history) {
+  const sourceRecords = Object.values(bundle.facts).filter((record) => record.value !== "" && record.value !== 0);
+  const factual = sourceRecords.filter((record) => record.type === "факт").length;
+  const stale = sourceRecords.filter((record) => g8Stale(record)).length;
+  const periods = bundle.periods.length;
+  const compared = history.filter((item) => Number.isFinite(item.actualValue)).length;
+  let level = "низкая";
+  let mode = "Предварительная оценка";
+  if (periods >= 2 && completeness.percent >= 70 && factual >= 4 && contradictions.length === 0) {
+    level = "средняя";
+    mode = "Расчётный прогноз";
+  }
+  if (periods >= 4 && completeness.percent === 100 && factual >= 6 && stale === 0 && contradictions.length === 0 && compared >= 2) {
+    level = "высокая";
+    mode = "Проверенный прогноз";
+  }
+  return { level, mode, factual, sources: sourceRecords.length, stale, periods, compared };
+}
+
+function g8Risks(bundle, goal, base, model, completeness, contradictions, readiness) {
+  const f = bundle.facts;
+  const risks = [];
+  const push = (severity, title, consequence, signal, action, source, gateId) => risks.push({ severity, title, consequence, signal, action, source, gateId });
+  const actualCpl = g8Number(f.cpl?.value);
+  const allowedCpl = goal.metric === "sales" ? 0 : goal.allowedCost || g8Number(f.allowedCpl?.value);
+  if (actualCpl && allowedCpl && actualCpl > allowedCpl) push(5, `Фактический CPL выше допустимого на ${g8Percent(((actualCpl / allowedCpl) - 1) * 100)}`, "При текущем бюджете цель по заявкам может быть не выполнена.", `CPL остаётся выше ${g8Money(allowedCpl)}.`, "Проверить рекламные группы и посадочную страницу.", f.cpl?.source || "Gate 5", "gate-5");
+  const metric = g8ResolvedMetric(ensureGate8Workspace().resultMetric, goal);
+  const forecast = g8MetricValue(model, metric);
+  const completion = g8GoalFulfillment(forecast, goal, metric);
+  if (Number.isFinite(completion) && completion < 100) push(5, `Текущая модель покрывает ${g8Percent(completion)} цели`, "Целевое значение не достигается при текущих входных данных.", `${g8MetricLabel(metric)} остаётся ниже цели.`, "Изменить показатель с максимальным влиянием на результат.", "Gate 8 → Базовый сценарий", "gate-8");
+  contradictions.forEach((text) => push(4, "Источники дают разные результаты", text, "Расчёты по двум маршрутам расходятся.", "Проверить CPL, CPC и конверсию за один и тот же период.", "Gate 5 → Снимки периода", "gate-5"));
+  if (g8Number(f.overdueTasks?.value)) push(4, `Просрочено задач: ${g8NumberLabel(g8Number(f.overdueTasks.value), 0)}`, "Запуск или исправление критической проблемы может задержаться.", "Срок задачи прошёл, статус не «Готово».", "Закрыть просроченную задачу с наибольшим влиянием.", f.overdueTasks.source, "gate-7");
+  if (!readiness.checks.find((item) => item.label === "Аналитика работает")?.passed) push(5, "Аналитика не подтверждена", "Фактический результат и точность прогноза нельзя надёжно проверить.", "Gate 2 готов менее чем на 100%.", "Завершить настройку целей, событий и передачи данных.", "Gate 2 → Аналитика", "gate-2");
+  completeness.missing.forEach((item) => push(3, `Не хватает показателя: ${item.label}`, "Прогноз остаётся предварительным или не рассчитывается.", "Источник не содержит значения.", `Заполнить «${item.label}» в исходном Gate.`, item.source || `Gate ${item.gateId}`, item.gateId));
+  Object.values(f).filter((record) => record.type === "факт" && record.value && g8Stale(record)).forEach((record) => push(3, `Устарели данные: ${record.label}`, "Прогноз использует неактуальный факт.", `Последнее обновление: ${g8DateLabel(record.updatedAt)}.`, "Загрузить свежий фактический период.", record.source, record.gate.toLowerCase().replace(" ", "-")));
+  return risks.sort((a, b) => b.severity - a.severity);
+}
+
+function g8MainAction(sensitivity, risks, missingData, base, metric) {
+  const missing = missingData[0];
+  if (missing) return { title: `Заполнить показатель «${missing.label}»`, where: missing.source || "Исходный Gate", gateId: missing.gateId, result: `Появится расчёт для показателя «${g8MetricLabel(metric)}».`, impact: "Прогноз можно будет пересчитать без предположения.", criterion: `В источнике указано проверяемое значение «${missing.label}».` };
+  const factor = sensitivity[0];
+  if (factor && Number.isFinite(factor.delta)) return { title: `Улучшить показатель «${factor.label}»`, where: factor.source || "Gate 5 → Фактические показатели", gateId: "gate-5", result: g8MetricLabel(metric), impact: `При росте показателя на 10% вероятность меняется на ${factor.delta >= 0 ? "+" : ""}${g8NumberLabel(factor.delta, 1)} п.п.`, criterion: `${factor.label} вырос на 10%, а остальные исходные данные не изменились.` };
+  const risk = risks[0];
+  if (risk) return { title: risk.action, where: risk.source, gateId: risk.gateId, result: g8MetricLabel(metric), impact: risk.consequence, criterion: risk.signal };
+  return { title: "Зафиксировать следующий фактический период", where: "Gate 5 → Импорт данных", gateId: "gate-5", result: "Надёжность прогноза", impact: "Появится история для сценариев и проверки точности.", criterion: "В Gate 5 сохранён новый период с расходом, кликами и заявками." };
+}
+
+function g8Analysis() {
+  const data = ensureGate8Workspace();
+  const bundle = g8CollectFacts();
+  const goal = g8Goal(bundle.facts);
+  const metric = g8ResolvedMetric(data.resultMetric, goal);
+  const baseInputs = g8BaseInputs(bundle, goal);
+  const observations = g8ObservedInputs(bundle, baseInputs);
+  const completeness = g8Completeness(bundle, goal, metric, baseInputs);
+  const forecastCore = g8MonteCarloCore(bundle, goal, baseInputs, observations, metric);
+  const baseModel = forecastCore.available ? forecastCore.baseModel : null;
+  const contradictions = g8Contradictions(bundle, goal.valid ? g8Model(baseInputs) : null);
+  const readiness = g8ReadinessChecks(bundle, goal);
+  g8UpdateHistoryComparisons(data, observations);
+  const reliability = g8Reliability(bundle, completeness, contradictions, data.history);
+  const probability = forecastCore.available ? forecastCore.probability : { available: false, text: forecastCore.reason || "Недостаточно данных для расчёта вероятности" };
+  const scenarios = forecastCore.available
+    ? { ...forecastCore.scenarios }
+    : Object.fromEntries(["base", "positive", "negative", "stress"].map((kind) => [kind, { available: false, model: null, changes: [forecastCore.reason || "Недостаточно данных."] }]));
+  scenarios.custom = { available: true, inputs: g8CustomInputs(baseInputs, data), changes: [] };
+  scenarios.custom.model = goal.valid ? g8Model(scenarios.custom.inputs) : null;
+  const sensitivity = forecastCore.available ? forecastCore.sensitivity : [];
+  const risks = g8Risks(bundle, goal, baseInputs, baseModel, completeness, contradictions, readiness);
+  const missingData = completeness.missing;
+  const action = g8MainAction(sensitivity, risks, missingData, baseInputs, metric);
+  return { data, bundle, goal, metric, baseInputs, baseModel, forecastCore, observations, completeness, missingData, contradictions, readiness, reliability, probability, scenarios, sensitivity, risks, action };
+}
+
+function g8HistoryActualValue(observation, metric) {
+  return g8MetricValue(g8Model(observation), metric);
+}
+
+function g8UpdateHistoryComparisons(data, observations) {
+  if (!observations.length) return;
+  const latest = observations.at(-1);
+  data.history.forEach((record) => {
+    if (Number.isFinite(record.actualValue)) return;
+    const deadline = g8Text(record.goal?.deadline).slice(0, 10);
+    if (!deadline || !latest.periodEnd || latest.periodEnd < deadline) return;
+    const value = g8HistoryActualValue(latest, record.metric);
+    if (!Number.isFinite(value)) return;
+    record.actualValue = value;
+    record.actualAt = latest.periodEnd;
+    record.deviation = record.forecastValue ? ((value - record.forecastValue) / Math.abs(record.forecastValue)) * 100 : NaN;
+  });
+}
+
+function g8CalculationSignature(analysis) {
+  return JSON.stringify({
+    goal: [analysis.goal.description, analysis.goal.metric, analysis.goal.target, analysis.goal.deadline, analysis.goal.budget, analysis.goal.allowedCost],
+    metric: analysis.metric,
+    inputs: analysis.baseInputs,
+    manual: analysis.data.manual,
+    sourceUpdatedAt: analysis.bundle.latestPeriod?.createdAt || analysis.bundle.latestPeriod?.periodEnd || state?.updatedAt || "",
+    modelVersion: GATE8_MODEL_VERSION,
+  });
+}
+
+function g8PersistDirect() {
+  if (!state || !activeProjectId) return;
+  ensureGate8Workspace().updatedAt = new Date().toISOString();
+  safeStorageSet(WORKSPACE_STORAGE_PREFIX + activeProjectId, JSON.stringify(state), { silent: true });
+  scheduleCloudSync();
+}
+
+function g8MaybeRecord(analysis) {
+  if (!analysis.goal.valid || !analysis.baseModel) return;
+  const manualUsed = Object.values(analysis.data.manual || {}).some((value) => g8Text(value) !== "");
+  if (manualUsed) return;
+  const value = g8MetricValue(analysis.baseModel, analysis.metric);
+  if (!Number.isFinite(value)) return;
+  const signature = g8CalculationSignature(analysis);
+  if (analysis.data.lastInputSignature === signature) return;
+  const range = analysis.probability.available ? [analysis.probability.min, analysis.probability.max] : [];
+  analysis.data.history.push({
+    id: makeId("g8-forecast"),
+    createdAt: new Date().toISOString(),
+    goal: { description: analysis.goal.description, metric: analysis.goal.metric, target: analysis.goal.target, deadline: analysis.goal.deadline },
+    metric: analysis.metric,
+    scenario: "base",
+    inputs: structuredClone(analysis.baseInputs),
+    forecastValue: value,
+    range,
+    reliability: analysis.reliability.level,
+    sourceUpdatedAt: analysis.bundle.latestPeriod?.createdAt || analysis.bundle.latestPeriod?.periodEnd || "",
+    modelVersion: GATE8_MODEL_VERSION,
+  });
+  analysis.data.history = analysis.data.history.slice(-60);
+  analysis.data.lastInputSignature = signature;
+  g8PersistDirect();
+}
+
+function g8StatusLabel(status) {
+  return STATUS_LABELS[status] || (status === "needs_attention" ? "Требует внимания" : status);
+}
+
+function g8Pill(status) {
+  return `<span class="status-pill status-${escapeAttr(status)}">${escapeHtml(g8StatusLabel(status))}</span>`;
+}
+
+function g8SectionIsOpen(number, data = ensureGate8Workspace()) {
+  return data?.openSections?.[String(number)] !== false;
+}
+
+function g8Section(number, title, status, body, extra = "") {
+  const open = g8SectionIsOpen(number);
+  const bodyId = `g8-section-body-${number}`;
+  return `<section class="g8-section ${open ? "is-open" : "is-collapsed"} ${escapeAttr(extra)}">
+    <button type="button" class="g8-section-head" data-g8-toggle-section="${number}" aria-expanded="${open}" aria-controls="${bodyId}">
+      <span class="g8-section-title" role="heading" aria-level="3"><span>${number}.</span> ${escapeHtml(title)}</span>
+      <span class="g8-section-head-meta">${g8Pill(status)}<span class="g8-section-toggle" aria-hidden="true">${open ? "Свернуть ↑" : "Развернуть ↓"}</span></span>
+    </button>
+    <div class="g8-section-body" id="${bodyId}" ${open ? "" : "hidden"}>${body}</div>
+  </section>`;
+}
+
+function g8JumpButton(gateId, label = "Перейти к источнику") {
+  if (!gateId || gateId === "gate-8") return "";
+  return `<button type="button" class="g8-link" data-g8-jump="${escapeAttr(gateId)}">${escapeHtml(label)} →</button>`;
+}
+
+function g8GoalHtml(analysis) {
+  const goal = analysis.goal;
+  if (!goal.present) return `<div class="g8-empty"><strong>Для расчёта прогноза сначала укажите цель проекта.</strong>${g8JumpButton("gate-0", "Открыть Gate 0")}</div>`;
+  const rows = [
+    ["Результат", goal.description || "Не указан"],
+    ["Целевое значение", goal.target ? `${g8NumberLabel(goal.target)} · ${g8MetricLabel(goal.metric)}` : "Не указано"],
+    ["Срок", goal.deadline || "Не указан"],
+    ["Допустимый бюджет", goal.budget ? g8Money(goal.budget) : "Не указан"],
+    ["Допустимая стоимость результата", goal.allowedCost ? g8Money(goal.allowedCost) : "Не указана"],
+  ];
+  return `<div class="g8-values">${rows.map(([label, value]) => `<div class="g8-value"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("")}</div>
+    <div class="g8-source-line"><span>Источник: ${escapeHtml(goal.source)}</span><span>Обновлено: ${escapeHtml(g8DateLabel(goal.updatedAt))}</span>${g8JumpButton(goal.source.includes("Gate 5") ? "gate-5" : "gate-0")}</div>
+    ${goal.missing.length ? `<div class="g8-warning"><strong>Цель заполнена не полностью.</strong><ul>${goal.missing.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>` : ""}`;
+}
+
+function g8ResultSelectorHtml(analysis) {
+  return `<label class="g8-field"><span>Основной результат</span><select data-g8-field="resultMetric">${GATE8_RESULTS.map(([key, label]) => `<option value="${escapeAttr(key)}" ${analysis.data.resultMetric === key ? "selected" : ""}>${escapeHtml(label)}</option>`).join("")}</select></label>
+    <div class="g8-source-line"><span>По умолчанию: ${escapeHtml(g8MetricLabel(analysis.goal.metric) || "результат цели")}</span></div>`;
+}
+
+function g8MissingNavigatorHtml(analysis) {
+  const missing = analysis.missingData;
+  if (!missing.length) {
+    return `<aside class="g8-data-navigator is-complete" aria-label="Навигатор недостающих данных">
+      <div class="g8-data-navigator-head"><div><span>Данные для прогноза</span><strong>Все обязательные показатели заполнены</strong></div>${g8Pill("ready")}</div>
+    </aside>`;
+  }
+  const visible = missing.slice(0, 3);
+  const remaining = Math.max(0, missing.length - visible.length);
+  return `<aside class="g8-data-navigator" aria-label="Навигатор недостающих данных">
+    <div class="g8-data-navigator-head"><div><span>Что заполнить сейчас</span><strong>Заполните это, чтобы прогноз появился</strong></div><span class="g8-data-navigator-count">${missing.length} ${missing.length === 1 ? "поле" : missing.length < 5 ? "поля" : "полей"}</span></div>
+    <div class="g8-data-navigator-list">${visible.map((item, index) => `<div class="g8-data-navigator-row">
+      <span class="g8-data-navigator-rank">${index + 1}</span>
+      <div><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.source || `Источник: ${item.gateId}`)}</span><small>${item.hardGate ? "Без этого расчёт не запускается" : `Разблокирует расчёты: ${escapeHtml(item.unlocks.join(", ") || "прогноз")}`}</small></div>
+      ${g8JumpButton(item.gateId)}
+    </div>`).join("")}</div>
+    ${remaining ? `<div class="g8-data-navigator-more">И ещё ${remaining} — полный список находится в блоке 3 «Полнота данных».</div>` : ""}
+  </aside>`;
+}
+
+function g8CompletenessHtml(analysis) {
+  const c = analysis.completeness;
+  const sourceRows = Object.values(analysis.bundle.facts)
+    .filter((record) => record.value !== "" && record.value !== 0)
+    .slice(0, 24);
+  return `<div class="g8-big-result"><strong>${c.percent}%</strong><span>${c.filled} из ${c.total} обязательных показателей</span></div>
+    ${c.missing.length ? `<div class="g8-warning"><strong>Прогноз недостаточно надёжен. Не хватает:</strong>${c.missing.map((item) => `<div class="g8-missing"><span>${escapeHtml(item.label)}</span>${g8JumpButton(item.gateId)}</div>`).join("")}</div>` : '<div class="g8-ok">Обязательные показатели найдены в исходных Gate.</div>'}
+    <div class="g8-source-list">${sourceRows.map((record) => `<div class="g8-source-row"><div><strong>${escapeHtml(record.label)}</strong><span>${escapeHtml(record.source)}</span></div><div><b>${typeof record.value === "number" ? escapeHtml(g8NumberLabel(record.value)) : escapeHtml(String(record.value))}</b><span>${escapeHtml(record.type)} · ${escapeHtml(g8DateLabel(record.updatedAt))}${g8Stale(record) ? " · устарело" : ""}</span></div>${g8JumpButton(String(record.gate).toLowerCase().replace(" ", "-"), "Открыть")}</div>`).join("")}</div>`;
+}
+
+function g8ReadinessHtml(analysis) {
+  const r = analysis.readiness;
+  return `<div class="g8-big-result"><strong>${r.percent}%</strong><span>${r.ready} из ${r.total} критических проверок</span></div>
+    <div class="g8-checks">${r.checks.map((item) => `<div class="g8-check ${item.passed ? "is-ready" : "is-missing"}"><span>${item.passed ? "✓" : "—"}</span><div><strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(item.source)}</small></div>${item.passed ? "" : g8JumpButton(item.gateId)}</div>`).join("")}</div>`;
+}
+
+function g8ReliabilityHtml(analysis) {
+  const r = analysis.reliability;
+  return `<div class="g8-big-result"><strong>${escapeHtml(r.level)}</strong><span>${escapeHtml(r.mode)}</span></div>
+    <div class="g8-values">
+      <div class="g8-value"><span>Фактические источники</span><strong>${r.factual} из ${r.sources}</strong></div>
+      <div class="g8-value"><span>Фактическая история</span><strong>${r.periods} периодов</strong></div>
+      <div class="g8-value"><span>Устаревшие источники</span><strong>${r.stale}</strong></div>
+      <div class="g8-value"><span>Проверено прогнозов</span><strong>${r.compared}</strong></div>
+    </div>`;
+}
+
+function g8LatestChangeHtml(analysis) {
+  const rows = analysis.data.history.filter((item) => item.scenario === "base");
+  if (rows.length < 2) return `<div class="g8-source-line"><span>Изменения прогноза появятся после следующего изменения исходных данных.</span></div>`;
+  const before = rows.at(-2);
+  const after = rows.at(-1);
+  const labels = Object.fromEntries(GATE8_MANUAL_FIELDS);
+  const changed = Object.keys(after.inputs || {}).filter((key) => {
+    if (["preferCtrRoute", "impressions"].includes(key)) return false;
+    return Math.abs(g8SignedNumber(after.inputs?.[key]) - g8SignedNumber(before.inputs?.[key])) > 0.000001;
+  });
+  const delta = after.forecastValue - before.forecastValue;
+  return `<div class="g8-value"><span>Что изменилось с прошлого расчёта</span><strong>${changed.length ? escapeHtml(changed.map((key) => labels[key] || key).join(", ")) : "Исходные показатели не изменились"}</strong><small>Прогноз: ${escapeHtml(g8MetricValueLabel(analysis.metric, before.forecastValue))} → ${escapeHtml(g8MetricValueLabel(analysis.metric, after.forecastValue))}${Number.isFinite(delta) ? ` · изменение ${escapeHtml(g8MetricValueLabel(analysis.metric, Math.abs(delta)))}` : ""}</small></div>`;
+}
+
+function g8CoreValueLabel(key, value) {
+  if (["revenue", "cost", "profit", "cpl", "cpa", "budget", "averageCheck"].includes(key)) return g8Money(value);
+  if (["roi", "ctr", "siteConversion", "saleConversion", "margin"].includes(key)) return g8Percent(value);
+  return Number.isFinite(value) ? g8NumberLabel(value) : "Нет данных";
+}
+
+function g8CoreRangeLabel(key, range) {
+  if (!range) return "Нет данных";
+  return `${g8CoreValueLabel(key, range.min)} — ${g8CoreValueLabel(key, range.max)}`;
+}
+
+function g8ForecastHtml(analysis) {
+  const core = analysis.forecastCore;
+  if (!core.available) return `<div class="g8-empty"><strong>${escapeHtml(core.reason || "Недостаточно данных для расчёта.")}</strong><span>Числовой результат не выводится, пока для каждого обязательного звена нет факта или явно обозначенного бенчмарка.</span></div>`;
+  const range = core.ranges[analysis.metric];
+  const value = range?.median;
+  const fulfillment = g8GoalFulfillment(value, analysis.goal, analysis.metric);
+  const formulas = {
+    traffic: "доступный трафик за бюджет",
+    clicks: "трафик × CTR",
+    leads: "клики × CVR сайта",
+    sales: "заявки × CVR продаж",
+    revenue: "продажи × средний чек",
+    cost: "выручка × (1 − маржинальность)",
+    profit: "выручка − бюджет − себестоимость",
+    roi: "прибыль ÷ бюджет",
+  };
+  const sources = Object.values(core.distributions).filter(Boolean);
+  return `<div class="g8-forecast-main"><span>Медианный прогноз</span><strong>${escapeHtml(g8MetricValueLabel(analysis.metric, value))}</strong><small>Диапазон 10–90%: ${escapeHtml(g8MetricValueLabel(analysis.metric, range?.min))} — ${escapeHtml(g8MetricValueLabel(analysis.metric, range?.max))} · выполнение цели по медиане: ${escapeHtml(g8Percent(fulfillment))}</small></div>
+    <div class="g8-formulas">
+      ${GATE8_CHAIN_FIELDS.map(([key, label]) => `<div><span>${escapeHtml(label)}</span><b>${escapeHtml(g8CoreRangeLabel(key, core.ranges[key]))}</b><small>${escapeHtml(formulas[key])}</small></div>`).join("")}
+    </div>
+    <div class="g8-core-sources">${sources.map((item) => `<div><div><strong>${escapeHtml(item.label)}</strong><span class="g8-core-source-type ${item.sourceType === "assumption" ? "is-assumption" : "is-fact"}">${item.sourceType === "assumption" ? "предположение" : item.sourceType === "fact" ? "факт" : "данные проекта"}</span></div><b>${escapeHtml(g8CoreRangeLabel(item.key, item))}</b><small>${escapeHtml(item.source)}${item.uncertainty ? ` · неопределённость ±${escapeHtml(g8NumberLabel(item.uncertainty * 100, 1))}%` : ""}</small></div>`).join("")}</div>
+    <div class="g8-source-line"><span>${core.runs} прогонов Monte Carlo. CTR, CVR сайта и CVR продаж используют общий модификатор качества аудитории и оффера.</span></div>
+    ${g8LatestChangeHtml(analysis)}
+    ${analysis.contradictions.length ? `<div class="g8-warning"><strong>Данные требуют проверки:</strong><ul>${analysis.contradictions.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>${g8JumpButton("gate-5")}</div>` : ""}`;
+}
+
+function g8ProbabilityHtml(analysis) {
+  const p = analysis.probability;
+  if (!p.available) return `<div class="g8-empty"><strong>${escapeHtml(p.text || "Недостаточно данных для расчёта вероятности.")}</strong><span>Значение 0% не подставляется вместо отсутствующих данных.</span></div>`;
+  return `<div class="g8-big-result"><strong>${escapeHtml(g8NumberLabel(p.percent, 1))}%</strong><span>доля прогонов, в которых достигнута цель</span></div>
+    <div class="g8-value"><span>Диапазон результата 10–90%</span><strong>${escapeHtml(g8MetricValueLabel(analysis.metric, p.min))} — ${escapeHtml(g8MetricValueLabel(analysis.metric, p.max))}</strong><small>${p.count} прогонов Monte Carlo · ${escapeHtml(p.source || "источники Gate 0–5")}</small></div>`;
+}
+
+function g8ScenarioHtml(analysis, kind, title) {
+  const scenario = analysis.scenarios[kind];
+  if (!scenario.available || !scenario.model) return `<div class="g8-empty"><strong>${escapeHtml(scenario.changes.join(" ") || "Недостаточно данных для сценария.")}</strong><span>Сценарий не показывает число, пока расчётная цепочка не собрана.</span></div>`;
+  const value = g8MetricValue(scenario.model, analysis.metric);
+  const fulfillment = g8GoalFulfillment(value, analysis.goal, analysis.metric);
+  const risk = kind === "positive" ? "Улучшение может не повториться в следующем периоде." : kind === "base" ? (analysis.risks[0]?.title || "Критический риск не выявлен.") : analysis.risks[0]?.title || "Ухудшение ключевого показателя.";
+  const action = kind === "positive" ? "Зафиксировать условия лучшего фактического периода." : analysis.action.title;
+  return `<div class="g8-scenario-result"><span>${escapeHtml(title)} · ${scenario.percentile}-й перцентиль</span><strong>${escapeHtml(g8MetricValueLabel(analysis.metric, value))}</strong><small>Выполнение цели: ${escapeHtml(g8Percent(fulfillment))} · ${analysis.forecastCore.runs} общих прогонов</small></div>
+    <div class="g8-scenario-chain"><span>Трафик <b>${escapeHtml(g8NumberLabel(scenario.model.traffic))}</b></span><span>Клики <b>${escapeHtml(g8NumberLabel(scenario.model.clicks))}</b></span><span>Заявки <b>${escapeHtml(g8NumberLabel(scenario.model.leads))}</b></span><span>Продажи <b>${escapeHtml(g8NumberLabel(scenario.model.sales))}</b></span><span>Выручка <b>${escapeHtml(g8Money(scenario.model.revenue))}</b></span><span>Прибыль <b>${escapeHtml(g8Money(scenario.model.profit))}</b></span></div>
+    <div class="g8-scenario-lines"><div><span>Что изменилось</span><ul>${scenario.changes.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div><div><span>Главный риск</span><strong>${escapeHtml(risk)}</strong></div><div><span>Рекомендуемое действие</span><strong>${escapeHtml(action)}</strong></div></div>`;
+}
+
+function g8CustomHtml(analysis) {
+  const manual = analysis.data.manual;
+  const model = analysis.scenarios.custom.model;
+  const value = model ? g8MetricValue(model, analysis.metric) : NaN;
+  return `<div class="g8-custom-fields">${GATE8_MANUAL_FIELDS.map(([key, label]) => `<label class="g8-field"><span>${escapeHtml(label)}</span><input type="number" step="any" data-g8-manual="${escapeAttr(key)}" value="${escapeAttr(manual[key])}" placeholder="Текущее: ${escapeAttr(g8NumberLabel(analysis.baseInputs[key]))}"></label>`).join("")}</div>
+    <div class="g8-scenario-result"><span>Результат своего сценария</span><strong>${escapeHtml(g8MetricValueLabel(analysis.metric, value))}</strong><small>${Number.isFinite(value) ? `Выполнение цели: ${escapeHtml(g8Percent(g8GoalFulfillment(value, analysis.goal, analysis.metric)))}` : "Недостаточно данных"}</small></div>
+    <div class="g8-actions"><button type="button" class="primary-btn" data-g8-save-scenario>Сохранить свой сценарий</button><button type="button" class="secondary-btn" data-g8-apply>Применить изменения к проекту</button><button type="button" class="secondary-btn" data-g8-reset-manual>Сбросить сценарий</button></div>
+    <p class="g8-note">До нажатия кнопки значения существуют только внутри сценария и не меняют Gate 0–7. CTR влияет на расчёт при наличии фактических показов. Срок и готовность задач меняют контекст риска, но не подменяют финансовую формулу вымышленным коэффициентом.</p>`;
+}
+
+function g8SensitivityHtml(analysis) {
+  if (!analysis.sensitivity.length) return `<div class="g8-empty"><strong>Анализ влияния пока не рассчитывается.</strong><span>Сначала должна собраться расчётная цепочка и вероятность достижения цели.</span></div>`;
+  return `<div class="g8-ranked">${analysis.sensitivity.map((item, index) => `<div class="g8-rank"><span>${index + 1}</span><div><strong>${escapeHtml(item.label)} +10%</strong><small>${escapeHtml(item.source)}</small></div><b>${escapeHtml(g8NumberLabel(item.baseProbability, 1))}% → ${escapeHtml(g8NumberLabel(item.probability, 1))}% · ${item.delta >= 0 ? "+" : ""}${escapeHtml(g8NumberLabel(item.delta, 1))} п.п.</b></div>`).join("")}</div>`;
+}
+
+function g8FactorsHtml(items, emptyText) {
+  if (!items.length) return `<div class="g8-empty">${escapeHtml(emptyText)}</div>`;
+  return `<div class="g8-factor-list">${items.map((item) => `<div><strong>${escapeHtml(item.label || item.title)}</strong><span>${escapeHtml(item.source || item.where || "")}</span>${item.gateId ? g8JumpButton(item.gateId) : ""}</div>`).join("")}</div>`;
+}
+
+function g8RiskHtml(analysis) {
+  const risk = analysis.risks[0];
+  if (!risk) return `<div class="g8-ok">Критический риск по текущим данным не выявлен.</div>`;
+  return `<div class="g8-risk"><strong>${escapeHtml(risk.title)}</strong><div><span>Последствие</span><b>${escapeHtml(risk.consequence)}</b></div><div><span>Ранний сигнал</span><b>${escapeHtml(risk.signal)}</b></div><div><span>Что сделать заранее</span><b>${escapeHtml(risk.action)}</b></div><div><span>Источник</span><b>${escapeHtml(risk.source)}</b></div>${g8JumpButton(risk.gateId)}</div>`;
+}
+
+function g8ActionHtml(analysis) {
+  const action = analysis.action;
+  return `<div class="g8-action"><div><span>Главное действие</span><strong>${escapeHtml(action.title)}</strong></div><div><span>Где сделать</span><strong>${escapeHtml(action.where)}</strong></div><div><span>Для какого результата</span><strong>${escapeHtml(action.result)}</strong></div><div><span>Ожидаемое влияние</span><strong>${escapeHtml(action.impact)}</strong></div><div><span>Как проверить</span><strong>${escapeHtml(action.criterion)}</strong></div>${g8JumpButton(action.gateId)}</div>`;
+}
+
+function g8CreateTaskHtml(analysis) {
+  const signature = `${analysis.action.title}|${analysis.action.where}|${analysis.goal.deadline}`;
+  const linked = analysis.data.linkedTasks.find((item) => item.signature === signature);
+  return `<div class="g8-actions"><button type="button" class="primary-btn" data-g8-create-task ${linked ? "disabled" : ""}>${linked ? "Задача уже создана" : "Создать задачу в Gate 7"}</button>${analysis.goal.deadline ? `<button type="button" class="secondary-btn" data-g8-add-calendar>Добавить в календарь Gate 6</button>` : ""}</div>
+    <div class="g8-source-line"><span>Будут переданы действие, источник, результат, критерий, приоритет, срок и связь с прогнозом.</span></div>`;
+}
+
+function g8HistoryHtml(analysis) {
+  const rows = analysis.data.history.slice().reverse();
+  if (!rows.length) return `<div class="g8-empty">История появится после первого корректного расчёта.</div>`;
+  return `<div class="g8-history">${rows.map((item) => `<div class="g8-history-row"><div><strong>${escapeHtml(g8DateLabel(item.createdAt))}</strong><span>${escapeHtml(item.scenario === "custom" ? "Свой сценарий" : "Базовый сценарий")} · ${escapeHtml(item.modelVersion)}</span></div><div><span>Прогноз</span><b>${escapeHtml(g8MetricValueLabel(item.metric, item.forecastValue))}</b></div><div><span>Надёжность</span><b>${escapeHtml(item.reliability)}</b></div></div>`).join("")}</div>`;
+}
+
+function g8ComparisonHtml(analysis) {
+  const compared = analysis.data.history.filter((item) => Number.isFinite(item.actualValue)).slice().reverse();
+  if (!compared.length) return `<div class="g8-empty"><strong>Факт для сохранённых прогнозов пока не появился.</strong><span>Сравнение выполнится автоматически после загрузки нового фактического периода Gate 5.</span></div>`;
+  const accuracy = compared.map((item) => Math.max(0, 100 - Math.abs(item.deviation))).reduce((sum, value) => sum + value, 0) / compared.length;
+  return `<div class="g8-big-result"><strong>${g8Percent(accuracy)}</strong><span>средняя точность прошлых прогнозов</span></div><div class="g8-history">${compared.map((item) => `<div class="g8-history-row"><div><strong>${escapeHtml(g8DateLabel(item.createdAt))}</strong><span>Факт: ${escapeHtml(g8DateLabel(item.actualAt))}</span></div><div><span>Прогноз</span><b>${escapeHtml(g8MetricValueLabel(item.metric, item.forecastValue))}</b></div><div><span>Факт</span><b>${escapeHtml(g8MetricValueLabel(item.metric, item.actualValue))}</b></div><div><span>Отклонение</span><b>${escapeHtml(g8Percent(item.deviation))}</b></div></div>`).join("")}</div>`;
+}
+
+function getGate8Status(analysis = null) {
+  const a = analysis || g8Analysis();
+  if (!a.goal.present) return "not_started";
+  if (!a.goal.valid) return "in_progress";
+  if (!a.forecastCore.available) return "problem";
+  const value = g8MetricValue(a.forecastCore.baseModel, a.metric);
+  if (!Number.isFinite(value)) return "problem";
+  const fulfillment = g8GoalFulfillment(value, a.goal, a.metric);
+  if (Number.isFinite(fulfillment) && fulfillment < 100) return "problem";
+  if (a.completeness.percent < 100) return "in_progress";
+  if (a.contradictions.length || a.reliability.level === "низкая" || a.reliability.stale) return "needs_attention";
+  return "ready";
+}
+
+function g8BlockStatuses(analysis = null) {
+  const a = analysis || g8Analysis();
+  const forecastReady = a.forecastCore.available && Number.isFinite(g8MetricValue(a.forecastCore.baseModel, a.metric));
+  const helps = a.readiness.checks.filter((item) => item.passed).length;
+  const hinders = a.readiness.checks.filter((item) => !item.passed).length + a.contradictions.length;
+  return [
+    a.goal.valid ? "ready" : a.goal.present ? "in_progress" : "not_started",
+    a.metric ? "ready" : "not_started",
+    a.completeness.percent === 100 ? "ready" : a.completeness.percent ? "in_progress" : "not_started",
+    a.readiness.percent === 100 ? "ready" : a.readiness.percent ? "in_progress" : "not_started",
+    a.reliability.level === "высокая" ? "ready" : a.reliability.level === "средняя" ? "in_progress" : "needs_attention",
+    forecastReady ? "ready" : "not_started",
+    a.probability.available ? "ready" : "not_started",
+    a.scenarios.base.model ? "ready" : "not_started",
+    a.scenarios.positive.model ? "ready" : "not_started",
+    a.scenarios.negative.model ? "ready" : "not_started",
+    a.scenarios.stress.model ? "ready" : "not_started",
+    a.goal.valid ? "in_progress" : "not_started",
+    a.sensitivity.length ? "ready" : "not_started",
+    helps ? "ready" : "not_started",
+    hinders ? "needs_attention" : "ready",
+    a.risks.length ? "needs_attention" : "ready",
+    a.action ? (a.goal.valid ? "ready" : "in_progress") : "not_started",
+    a.data.linkedTasks.length ? "ready" : "in_progress",
+    a.data.history.length ? "ready" : "not_started",
+    a.data.history.some((item) => Number.isFinite(item.actualValue)) ? "ready" : "not_started",
+  ];
+}
+
+function renderGate8Forecast() {
+  setToolbarVisible(false);
+  const analysis = g8Analysis();
+  g8MaybeRecord(analysis);
+  const status = getGate8Status(analysis);
+  const helps = analysis.readiness.checks.filter((item) => item.passed);
+  const hinders = [
+    ...analysis.readiness.checks.filter((item) => !item.passed),
+    ...analysis.contradictions.map((text) => ({ label: text, source: "Gate 5 → Проверка расчётов", gateId: "gate-5" })),
+  ];
+  els.contentArea.innerHTML = `<div class="g8-page">
+    <header class="g8-header"><div><div class="analytics-path">Gate 8 → Прогноз и моделирование</div><h2>Насколько реально достичь цели проекта?</h2><p>Расчёт по данным Gate 0–7. Пустые поля и подсказки не считаются данными.</p></div>${g8Pill(status)}</header>
+    ${g8MissingNavigatorHtml(analysis)}
+    ${g8Section(1, "Цель проекта", analysis.goal.valid ? "ready" : analysis.goal.present ? "in_progress" : "not_started", g8GoalHtml(analysis))}
+    ${g8Section(2, "Что прогнозируем", analysis.metric ? "ready" : "not_started", g8ResultSelectorHtml(analysis))}
+    ${g8Section(3, "Полнота данных", analysis.completeness.percent === 100 ? "ready" : analysis.completeness.percent ? "in_progress" : "not_started", g8CompletenessHtml(analysis))}
+    ${g8Section(4, "Готовность проекта", analysis.readiness.percent === 100 ? "ready" : analysis.readiness.percent ? "in_progress" : "not_started", g8ReadinessHtml(analysis))}
+    ${g8Section(5, "Надёжность прогноза", analysis.reliability.level === "высокая" ? "ready" : analysis.reliability.level === "средняя" ? "in_progress" : "needs_attention", g8ReliabilityHtml(analysis))}
+    ${g8Section(6, "Прогнозируемый результат", analysis.forecastCore.available ? "ready" : "not_started", g8ForecastHtml(analysis))}
+    ${g8Section(7, "Вероятность достижения цели", analysis.probability.available ? "ready" : "not_started", g8ProbabilityHtml(analysis))}
+    ${g8Section(8, "Базовый сценарий", analysis.scenarios.base.model ? "ready" : "not_started", g8ScenarioHtml(analysis, "base", "Медиана распределения"))}
+    ${g8Section(9, "Позитивный сценарий", analysis.scenarios.positive.model ? "ready" : "not_started", g8ScenarioHtml(analysis, "positive", "Позитивная точка распределения"))}
+    ${g8Section(10, "Негативный сценарий", analysis.scenarios.negative.model ? "ready" : "not_started", g8ScenarioHtml(analysis, "negative", "Негативная точка распределения"))}
+    ${g8Section(11, "Стрессовый сценарий", analysis.scenarios.stress.model ? "ready" : "not_started", g8ScenarioHtml(analysis, "stress", "Стрессовая точка с общим фактором качества"))}
+    ${g8Section(12, "Создать свой сценарий", analysis.goal.valid ? "in_progress" : "not_started", g8CustomHtml(analysis))}
+    ${g8Section(13, "Что сильнее всего влияет на результат", analysis.sensitivity.length ? "ready" : "not_started", g8SensitivityHtml(analysis))}
+    ${g8Section(14, "Что помогает", helps.length ? "ready" : "not_started", g8FactorsHtml(helps, "Подтверждённые факторы пока не найдены."))}
+    ${g8Section(15, "Что мешает", hinders.length ? "needs_attention" : "ready", g8FactorsHtml(hinders, "Критические препятствия не выявлены."))}
+    ${g8Section(16, "Главный риск", analysis.risks.length ? "needs_attention" : "ready", g8RiskHtml(analysis))}
+    ${g8Section(17, "Главное действие", "ready", g8ActionHtml(analysis), "g8-action-section")}
+    ${g8Section(18, "Создать задачу", analysis.data.linkedTasks.length ? "ready" : "in_progress", g8CreateTaskHtml(analysis))}
+    ${g8Section(19, "История прогнозов", analysis.data.history.length ? "ready" : "not_started", g8HistoryHtml(analysis))}
+    ${g8Section(20, "Сравнение с фактом", analysis.data.history.some((item) => Number.isFinite(item.actualValue)) ? "ready" : "not_started", g8ComparisonHtml(analysis))}
+    <footer class="g8-footer">Последний расчёт: ${escapeHtml(new Date().toLocaleString("ru-RU"))} · модель ${escapeHtml(GATE8_MODEL_VERSION)}</footer>
+    ${analysis.data.message ? `<div class="g8-toast">${escapeHtml(analysis.data.message)}</div>` : ""}
+  </div>`;
+}
+
+function g8ApplyManualToProject() {
+  const data = ensureGate8Workspace();
+  const manual = data.manual || {};
+  const applied = [];
+  if (g8Text(manual.budget) !== "") {
+    const g4 = typeof ensureGate4State === "function" ? ensureGate4State() : (state.gate4 = state.gate4 || {});
+    g4.launchParams = g4.launchParams || {};
+    g4.launchParams.testBudget = String(manual.budget);
+    applied.push("бюджет → Gate 4");
+  }
+  if (g8Text(manual.cpl) !== "") {
+    const g4 = typeof ensureGate4State === "function" ? ensureGate4State() : (state.gate4 = state.gate4 || {});
+    g4.launchParams = g4.launchParams || {};
+    g4.launchParams.targetCpl = String(manual.cpl);
+    applied.push("CPL → Gate 4");
+  }
+  const assumptionKeys = ["demandChange", "cpc", "ctr", "siteConversion", "saleConversion", "termDays", "taskReadiness"];
+  const assumptionValues = assumptionKeys.filter((key) => g8Text(manual[key]) !== "");
+  if (assumptionValues.length) {
+    const g4 = typeof ensureGate4State === "function" ? ensureGate4State() : (state.gate4 = state.gate4 || {});
+    g4.forecastAssumptions = { ...(g4.forecastAssumptions || {}), updatedAt: new Date().toISOString() };
+    assumptionValues.forEach((key) => { g4.forecastAssumptions[key] = String(manual[key]); });
+    applied.push("плановые допущения → Gate 4");
+  }
+  if (g8Text(manual.averageCheck) !== "" || g8Text(manual.margin) !== "") {
+    const units = typeof ensureUnitV130 === "function" ? ensureUnitV130().items : [];
+    const item = units.find((row) => typeof uv130ItemHasData === "function" && uv130ItemHasData(row)) || units[0];
+    if (item) {
+      item.steps = item.steps || {};
+      item.steps.revenue = item.steps.revenue || {};
+      item.steps.margin = item.steps.margin || {};
+      if (g8Text(manual.averageCheck) !== "") item.steps.revenue.avgCheck = String(manual.averageCheck);
+      if (g8Text(manual.margin) !== "") item.steps.margin.marginPct = String(manual.margin);
+      applied.push("средний чек и маржинальность → Gate 1");
+    }
+  }
+  data.message = applied.length ? `Применено: ${applied.join("; ")}. Фактические данные Gate 5 не изменялись.` : "Нет значений, для которых в исходных Gate есть редактируемое плановое поле.";
+  saveState();
+  renderGate();
+}
+
+function g8SaveCustomScenario() {
+  const analysis = g8Analysis();
+  const value = g8MetricValue(analysis.scenarios.custom.model, analysis.metric);
+  const manualUsed = Object.values(analysis.data.manual || {}).some((item) => g8Text(item) !== "");
+  if (!analysis.goal.valid || !manualUsed || !Number.isFinite(value)) {
+    analysis.data.message = "Сценарий не сохранён: измените хотя бы один показатель и проверьте обязательные данные.";
+    saveState();
+    renderGate();
+    return;
+  }
+  analysis.data.history.push({
+    id: makeId("g8-forecast"),
+    createdAt: new Date().toISOString(),
+    goal: { description: analysis.goal.description, metric: analysis.goal.metric, target: analysis.goal.target, deadline: analysis.goal.deadline },
+    metric: analysis.metric,
+    scenario: "custom",
+    inputs: structuredClone(analysis.scenarios.custom.inputs),
+    manual: structuredClone(analysis.data.manual),
+    forecastValue: value,
+    range: [],
+    reliability: analysis.reliability.level,
+    sourceUpdatedAt: analysis.bundle.latestPeriod?.createdAt || analysis.bundle.latestPeriod?.periodEnd || "",
+    modelVersion: GATE8_MODEL_VERSION,
+  });
+  analysis.data.history = analysis.data.history.slice(-60);
+  analysis.data.message = "Свой сценарий сохранён в истории этого проекта.";
+  saveState();
+  renderGate();
+}
+
+function g8CreateTask() {
+  const analysis = g8Analysis();
+  const g7 = ensureGate7State();
+  const signature = `${analysis.action.title}|${analysis.action.where}|${analysis.goal.deadline}`;
+  if (analysis.data.linkedTasks.some((item) => item.signature === signature)) return;
+  const task = {
+    id: makeId("g7-task"),
+    task: analysis.action.title,
+    where: analysis.action.where,
+    date: /^\d{4}-\d{2}-\d{2}$/.test(analysis.goal.deadline) ? analysis.goal.deadline : "",
+    result: "",
+    status: "not_started",
+    sectionId: "new",
+    order: typeof gate7InsertAtTop === "function" ? gate7InsertAtTop("new") : 0,
+    createdAt: new Date().toISOString(),
+    priority: "Высокий",
+    readinessCriterion: analysis.action.criterion,
+    sourceProblem: analysis.risks[0]?.title || analysis.action.title,
+    forecastLink: { gate: "gate-8", forecastId: analysis.data.history.at(-1)?.id || "", scenario: "base", metric: analysis.metric },
+  };
+  g7.tasks.push(task);
+  analysis.data.linkedTasks.push({ signature, taskId: task.id, createdAt: task.createdAt });
+  analysis.data.message = "Задача создана в Gate 7 и связана с прогнозом.";
+  saveState();
+  renderGate();
+}
+
+function g8AddCalendarAction() {
+  const analysis = g8Analysis();
+  const deadline = g8Text(analysis.goal.deadline);
+  if (!deadline) return;
+  const g6 = typeof ensureGate6State === "function" ? ensureGate6State() : (state.gate6Calendar = state.gate6Calendar || {});
+  g6.forecastActions = Array.isArray(g6.forecastActions) ? g6.forecastActions : [];
+  const exists = g6.forecastActions.some((item) => item.deadline === deadline && item.title === analysis.action.title);
+  if (!exists) g6.forecastActions.push({ id: makeId("g6-forecast"), title: analysis.action.title, deadline, source: "Gate 8", criterion: analysis.action.criterion, createdAt: new Date().toISOString() });
+  analysis.data.message = exists ? "Действие уже добавлено в календарь Gate 6." : "Действие добавлено в календарь Gate 6.";
+  saveState();
+  renderGate();
+}
+
+let g8InputRenderTimer = null;
+function g8ScheduleRender(key, caret = null) {
+  clearTimeout(g8InputRenderTimer);
+  g8InputRenderTimer = setTimeout(() => {
+    if (activeGateId !== "gate-8") return;
+    renderGate();
+    const next = els.contentArea.querySelector(`[data-g8-manual="${CSS.escape(key)}"]`);
+    if (!next) return;
+    next.focus({ preventScroll: true });
+    if (Number.isInteger(caret) && typeof next.setSelectionRange === "function") {
+      const position = Math.min(caret, next.value.length);
+      next.setSelectionRange(position, position);
+    }
+  }, 140);
+}
+
+document.addEventListener("input", (event) => {
+  const key = event.target?.dataset?.g8Manual;
+  if (key === undefined) return;
+  const data = ensureGate8Workspace();
+  data.manual[key] = event.target.value;
+  data.message = "";
+  flashSaving();
+  g8ScheduleRender(key, event.target.selectionStart);
+});
+
+document.addEventListener("change", (event) => {
+  if (event.target?.dataset?.g8Field === "resultMetric") {
+    const data = ensureGate8Workspace();
+    data.resultMetric = event.target.value;
+    data.lastInputSignature = "";
+    saveState();
+    renderGate();
+  }
+});
+
+document.addEventListener("click", (event) => {
+  const toggle = event.target?.closest?.("[data-g8-toggle-section]");
+  if (toggle) {
+    const data = ensureGate8Workspace();
+    const section = String(toggle.dataset.g8ToggleSection);
+    data.openSections[section] = !g8SectionIsOpen(section, data);
+    saveState();
+    renderGate();
+    return;
+  }
+  const jump = event.target?.closest?.("[data-g8-jump]");
+  if (jump) {
+    activeView = "gate";
+    activeGateId = jump.dataset.g8Jump;
+    render();
+    return;
+  }
+  if (event.target?.closest?.("[data-g8-reset-manual]")) {
+    ensureGate8Workspace().manual = g8BlankState().manual;
+    ensureGate8Workspace().lastInputSignature = "";
+    saveState();
+    renderGate();
+    return;
+  }
+  if (event.target?.closest?.("[data-g8-apply]")) {
+    g8ApplyManualToProject();
+    return;
+  }
+  if (event.target?.closest?.("[data-g8-save-scenario]")) {
+    g8SaveCustomScenario();
+    return;
+  }
+  if (event.target?.closest?.("[data-g8-create-task]")) {
+    g8CreateTask();
+    return;
+  }
+  if (event.target?.closest?.("[data-g8-add-calendar]")) {
+    g8AddCalendarAction();
+  }
+});
+
+const __guruPrevPrepareSystemCardsV183 = prepareSystemCards;
+prepareSystemCards = function (workspace) {
+  __guruPrevPrepareSystemCardsV183(workspace);
+  ensureGate8Workspace(workspace);
+};
+
+const __guruPrevMigrateWorkspaceV183 = migrateWorkspace;
+migrateWorkspace = function (workspace, projectId) {
+  const migrated = __guruPrevMigrateWorkspaceV183(workspace, projectId);
+  ensureGate8Workspace(migrated);
+  return migrated;
+};
+
+const __guruPrevCreateFreshWorkspaceV183 = createFreshWorkspace;
+createFreshWorkspace = function (meta) {
+  const workspace = __guruPrevCreateFreshWorkspaceV183(meta);
+  ensureGate8Workspace(workspace);
+  return workspace;
+};
+
+const __guruPrevGuruGateBlockStatusesV183 = guruGateBlockStatuses;
+guruGateBlockStatuses = function (gate) {
+  if (gate?.id === "gate-8") return g8BlockStatuses();
+  return __guruPrevGuruGateBlockStatusesV183(gate);
+};
+
+const __guruPrevRenderGateTableV183 = renderGateTable;
+renderGateTable = function (gate, cards) {
+  if (gate?.id === "gate-8") {
+    renderGate8Forecast();
+    return;
+  }
+  __guruPrevRenderGateTableV183(gate, cards);
+  if (gate?.id === "gate-4") {
+    const assumptions = state?.gate4?.forecastAssumptions || {};
+    const rows = GATE8_MANUAL_FIELDS.filter(([key]) => g8Text(assumptions[key]) !== "");
+    if (rows.length) {
+      els.contentArea.insertAdjacentHTML("beforeend", `<section class="g8-section g8-applied-plan"><div class="g8-section-head"><h3>Допущения, применённые из Gate 8</h3>${g8Pill("in_progress")}</div><div class="g8-section-body g8-values">${rows.map(([key, label]) => `<div class="g8-value"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(assumptions[key]))}</strong></div>`).join("")}<div class="g8-source-line">Источник: Gate 8 → Создать свой сценарий · ${escapeHtml(g8DateLabel(assumptions.updatedAt))}</div></div></section>`);
+    }
+  }
+};
+
+const __guruPrevRenderGate6CalendarV183 = renderGate6Calendar;
+renderGate6Calendar = function () {
+  __guruPrevRenderGate6CalendarV183.apply(this, arguments);
+  const actions = Array.isArray(state?.gate6Calendar?.forecastActions) ? state.gate6Calendar.forecastActions : [];
+  if (!actions.length) return;
+  const page = els.contentArea.querySelector(".gate6-calendar");
+  if (!page) return;
+  page.insertAdjacentHTML("beforeend", `<section class="gate6-plan"><div class="gate6-section-head"><div><h3>Действия из Gate 8</h3><p class="muted">Контрольные действия, связанные со сроком прогноза.</p></div><span class="gate6-count">${actions.length}</span></div><div class="g8-history">${actions.map((item) => `<div class="g8-history-row"><div><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.source)}</span></div><div><span>Срок</span><b>${escapeHtml(item.deadline)}</b></div><div><span>Критерий</span><b>${escapeHtml(item.criterion)}</b></div></div>`).join("")}</div></section>`);
+};
+
+if (state) {
+  ensureGate8Workspace(state);
+  g8PersistDirect();
+  if (!els.appShell?.hidden) renderGateNav();
+}
+
+/* Gate 0 is the single source of the structured project goal used by Gate 8. */
+const G8_PROJECT_GOAL_CARD_ID = "gate0-project-goal";
+const G8_PROJECT_GOAL_FIELDS = [
+  ["goalDescription", "Какой результат нужно получить", "text"],
+  ["goalMetric", "Основной показатель", "metric"],
+  ["goalTargetValue", "Целевое значение", "number"],
+  ["goalDeadline", "Срок", "date"],
+  ["goalBudget", "Допустимый бюджет, ₽", "number"],
+  ["goalAllowedCost", "Допустимая стоимость результата, ₽", "number"],
+];
+
+function isG8ProjectGoalCard(card) {
+  return card?.id === G8_PROJECT_GOAL_CARD_ID;
+}
+
+function ensureG8ProjectGoalSource(workspace = state) {
+  if (!workspace) return null;
+  workspace.project = workspace.project || {};
+  const gate0 = (workspace.gates || []).find((gate) => gate.id === "gate-0");
+  if (!gate0) return null;
+  gate0.cards = Array.isArray(gate0.cards) ? gate0.cards : [];
+  let card = gate0.cards.find(isG8ProjectGoalCard);
+  if (!card) {
+    card = {
+      id: G8_PROJECT_GOAL_CARD_ID,
+      title: "Цель проекта и ограничения",
+      instruction: "",
+      status: "not_started",
+      evidence: "",
+      pages: "",
+      notes: "",
+      fields: {},
+      sourceRow: 0,
+    };
+    gate0.cards.splice(1, 0, card);
+  }
+  card.title = "Цель проекта и ограничения";
+  card.instruction = "";
+  card.evidence = G8_PROJECT_GOAL_FIELDS.map(([key, label]) => `${label}:\n${workspace.project[key] || ""}`).join("\n\n");
+  return card;
+}
+
+function g8ProjectGoalStatus(workspace = state) {
+  const values = G8_PROJECT_GOAL_FIELDS.map(([key]) => g8Text(workspace?.project?.[key]));
+  const filled = values.filter(Boolean).length;
+  if (!filled) return "not_started";
+  return filled === values.length ? "ready" : "in_progress";
+}
+
+function g8ProjectGoalSourceHtml() {
+  const project = state.project || {};
+  return `<div class="g8-goal-source">
+    ${G8_PROJECT_GOAL_FIELDS.map(([key, label, type]) => {
+      if (type === "metric") {
+        return `<label><strong>${escapeHtml(label)}</strong><select data-g8-project-goal="${escapeAttr(key)}"><option value="">Выберите показатель</option>${GATE8_RESULTS.filter(([value]) => value !== "goal").map(([value, text]) => `<option value="${escapeAttr(value)}" ${project[key] === value ? "selected" : ""}>${escapeHtml(text)}</option>`).join("")}</select></label>`;
+      }
+      if (type === "text") {
+        return `<label><strong>${escapeHtml(label)}</strong><textarea rows="2" data-g8-project-goal="${escapeAttr(key)}">${escapeHtml(project[key] || "")}</textarea></label>`;
+      }
+      return `<label><strong>${escapeHtml(label)}</strong><input type="${type}" ${type === "number" ? 'min="0" step="any"' : ""} data-g8-project-goal="${escapeAttr(key)}" value="${escapeAttr(project[key] || "")}" /></label>`;
+    }).join("")}
+    <div class="g8-goal-source-link">Единый источник цели для Gate 8. Значения бюджета и стоимости результата также сверяются с Gate 3–5.</div>
+  </div>`;
+}
+
+const __guruPrevPrepareSystemCardsV184 = prepareSystemCards;
+prepareSystemCards = function (workspace) {
+  __guruPrevPrepareSystemCardsV184(workspace);
+  ensureG8ProjectGoalSource(workspace);
+};
+
+const __guruPrevIsSystemSpecialCardV184 = isSystemSpecialCard;
+isSystemSpecialCard = function (card) {
+  return isG8ProjectGoalCard(card) || __guruPrevIsSystemSpecialCardV184(card);
+};
+
+const __guruPrevRecalculateStatusForCardV184 = recalculateStatusForCard;
+recalculateStatusForCard = function (card, workspace = state) {
+  if (isG8ProjectGoalCard(card)) {
+    ensureG8ProjectGoalSource(workspace);
+    card.status = g8ProjectGoalStatus(workspace);
+    return;
+  }
+  __guruPrevRecalculateStatusForCardV184(card, workspace);
+};
+
+const __guruPrevTextValuesForStatusV184 = textValuesForStatus;
+textValuesForStatus = function (card, workspace = state) {
+  if (isG8ProjectGoalCard(card)) return G8_PROJECT_GOAL_FIELDS.map(([key]) => workspace?.project?.[key] || "");
+  return __guruPrevTextValuesForStatusV184(card, workspace);
+};
+
+const __guruPrevFormatStructuredEvidencePlainV184 = formatStructuredEvidencePlain;
+formatStructuredEvidencePlain = function (card, workspace = state) {
+  if (isG8ProjectGoalCard(card)) {
+    ensureG8ProjectGoalSource(workspace);
+    return card.evidence;
+  }
+  return __guruPrevFormatStructuredEvidencePlainV184(card, workspace);
+};
+
+const __guruPrevSyncEvidenceTextsV184 = syncEvidenceTexts;
+syncEvidenceTexts = function (workspace = state) {
+  __guruPrevSyncEvidenceTextsV184(workspace);
+  ensureG8ProjectGoalSource(workspace);
+};
+
+const __guruPrevCardUserFieldsHtmlV184 = cardUserFieldsHtml;
+cardUserFieldsHtml = function (card) {
+  if (isG8ProjectGoalCard(card)) return `<div class="field-row g8-goal-source-row"><span>Цель проекта</span>${g8ProjectGoalSourceHtml()}</div>`;
+  return __guruPrevCardUserFieldsHtmlV184(card);
+};
+
+const __guruPrevBindCardInputsV184 = bindCardInputs;
+bindCardInputs = function () {
+  __guruPrevBindCardInputsV184();
+  document.querySelectorAll("[data-g8-project-goal]").forEach((input) => {
+    const update = () => {
+      const key = input.dataset.g8ProjectGoal;
+      state.project[key] = input.value;
+      state.project.goalUpdatedAt = new Date().toISOString();
+      ensureGate8Workspace().lastInputSignature = "";
+      const card = ensureG8ProjectGoalSource(state);
+      recalculateStatusForCard(card, state);
+      recalculateAllStatuses(state);
+      flashSaving();
+    };
+    input.addEventListener("input", update);
+    input.addEventListener("change", update);
+  });
+};
+
+if (state) {
+  ensureG8ProjectGoalSource(state);
+  recalculateAllStatuses(state);
+  g8PersistDirect();
+  if (!els.appShell?.hidden) renderGateNav();
+}
+
+/* ================================================================
+   Единый жизненный цикл перехода между Gate.
+   Старые обработчики восстанавливали scroll/focus открытых блоков после
+   полной перерисовки DOM. Это полезно при изменении данных в том же Gate,
+   но создаёт гонки при смене экрана. Навигация теперь всегда проходит
+   через этот шлюз: старое UI-состояние не переносится, отложенные кадры
+   предыдущего рендера отменяются по epoch.
+   ================================================================ */
+let guruRenderedGateId = null;
+const GURU_GATE_VIEW_CACHE_LIMIT = 6;
+const guruGateViewCache = new Map();
+
+function guruInvalidateGateViewCache() {
+  guruGateViewCache.clear();
+}
+
+function guruCacheRenderedGateView() {
+  const gateId = guruRenderedGateId;
+  const root = els.contentArea;
+  if (!gateId || !root?.childNodes?.length) return;
+  const fragment = document.createDocumentFragment();
+  while (root.firstChild) fragment.appendChild(root.firstChild);
+  guruGateViewCache.delete(gateId);
+  guruGateViewCache.set(gateId, { projectId: activeProjectId, fragment });
+  while (guruGateViewCache.size > GURU_GATE_VIEW_CACHE_LIMIT) {
+    guruGateViewCache.delete(guruGateViewCache.keys().next().value);
+  }
+}
+
+function guruRestoreCachedGateView(gateId) {
+  const cached = guruGateViewCache.get(gateId);
+  if (!cached || cached.projectId !== activeProjectId) return false;
+  const gate = state?.gates?.find((item) => item.id === gateId);
+  if (!gate || !els.contentArea) return false;
+  els.pageTitle.textContent = gate.title;
+  setToolbarVisible(true);
+  els.contentArea.replaceChildren(cached.fragment);
+  els.contentArea.dataset.guruViewCache = "hit";
+  guruGateViewCache.delete(gateId);
+  return true;
+}
+
+function guruNavigateToGate(gateId) {
+  const nextGateId = String(gateId || "");
+  if (!state?.gates?.some((gate) => gate.id === nextGateId)) return;
+  if (activeView === "gate" && activeGateId === nextGateId && guruRenderedGateId === nextGateId) return;
+  const wasFastNavigation = guruFastGateNavigation;
+  guruGateNavigationInProgress = true;
+  guruFastGateNavigation = true;
+  activeView = "gate";
+  activeGateId = nextGateId;
+  try {
+    render();
+  } finally {
+    guruGateNavigationInProgress = false;
+    guruFastGateNavigation = wasFastNavigation;
+  }
+}
+
+const __guruPrevRenderGateSeamlessNavigation = renderGate;
+renderGate = function () {
+  const renderedGateId = activeGateId;
+  const isGateTransition = Boolean(guruRenderedGateId && guruRenderedGateId !== renderedGateId);
+  const wasNavigating = guruGateNavigationInProgress;
+  guruGateNavigationInProgress = wasNavigating || isGateTransition;
+  try {
+    if (isGateTransition) guruCacheRenderedGateView();
+    const restoredFromCache = isGateTransition && guruRestoreCachedGateView(renderedGateId);
+    if (!restoredFromCache) {
+      __guruPrevRenderGateSeamlessNavigation.apply(this, arguments);
+      if (els.contentArea) els.contentArea.dataset.guruViewCache = "miss";
+    }
+    if (guruGateNavigationInProgress) {
+      // Новый Gate всегда начинается с начала страницы, а не с позиции
+      // длинного предыдущего экрана.
+      window.scrollTo(0, 0);
+      const main = document.querySelector("main");
+      if (main) main.scrollTop = 0;
+      if (els.contentArea) els.contentArea.scrollTop = 0;
+    }
+    guruRenderedGateId = renderedGateId;
+  } finally {
+    guruGateNavigationInProgress = wasNavigating;
+  }
+};
+
+// Любое редактирование делает кэш других экранов потенциально устаревшим.
+// Его очистка лёгкая, зато при возврате никогда не показываются старые данные.
+document.addEventListener("input", (event) => {
+  if (event.target?.closest?.("#contentArea")) guruInvalidateGateViewCache();
+}, true);
+document.addEventListener("change", (event) => {
+  if (event.target?.closest?.("#contentArea")) guruInvalidateGateViewCache();
+}, true);

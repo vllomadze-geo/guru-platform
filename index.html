@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GURU</title>
     <link rel="icon" type="image/png" href="/favicon.png?v=3" />
-    <link rel="stylesheet" href="styles.css?v=1.82.13" />
+    <link rel="stylesheet" href="styles.css?v=1.84.2" />
   </head>
   <body class="access-locked">
     <section
@@ -185,7 +185,7 @@
       </div>
     </div>
 
-    <div class="app-shell" id="appShell" hidden>
+    <div class="app-shell ui-quiet" id="appShell" hidden>
       <button
         type="button"
         class="sidebar-toggle"
@@ -250,8 +250,6 @@
           <h1 id="pageTitle">Платформа</h1>
         </header>
 
-        <section class="summary-grid" id="summaryGrid"></section>
-
         <section class="workspace">
           <div class="workspace-toolbar" id="workspaceToolbar">
             <div class="search-wrap">
@@ -277,44 +275,7 @@
     </div>
 
     <template id="projectTemplate">
-      <div class="panel two-col">
-        <div>
-          <h2>Паспорт проекта</h2>
-          <p class="muted">
-            Главные данные проекта. Эти поля потом используются в оффере, УТП,
-            рекламе и отчётах.
-          </p>
-        </div>
-        <div class="form-grid">
-          <label>Название проекта<input data-project="name" /></label>
-          <label
-            >Ниша<input
-              data-project="niche"
-              placeholder="например: премиальная химчистка"
-          /></label>
-          <label
-            >Сайт<input data-project="website" placeholder="https://"
-          /></label>
-          <label
-            >География<input
-              data-project="geography"
-              placeholder="Москва, Грузия, онлайн"
-          /></label>
-          <label>Главный CTA<input data-project="mainCta" /></label>
-          <label class="full"
-            >УТП<textarea data-project="usp" rows="3"></textarea>
-          </label>
-          <label class="full"
-            >Оффер<textarea data-project="offer" rows="3"></textarea>
-          </label>
-          <label class="full"
-            >Описание проекта<textarea
-              data-project="description"
-              rows="3"
-            ></textarea>
-          </label>
-        </div>
-      </div>
+      <div data-project-overview></div>
     </template>
 
     <template id="metricsTemplate">
@@ -355,8 +316,8 @@
     </template>
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="seed-data.js?v=1.1.11"></script>
-    <script src="app.js?v=1.82.28"></script>
-    <script src="supabase-test.js?v=1.1.11"></script>
+    <script src="seed-data.js?v=1.1.12"></script>
+    <script src="app.js?v=1.84.10"></script>
+    <script src="supabase-test.js?v=1.1.12"></script>
   </body>
 </html>
