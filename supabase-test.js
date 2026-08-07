@@ -18,7 +18,11 @@
       });
 
       if (!response.ok) {
-        setStatus('is-error', `Supabase: ошибка API ${response.status}`);
+        if (response.status === 404) {
+          setStatus('is-error', 'Облако: API синхронизации не запущен');
+          return;
+        }
+        setStatus('is-error', `Облако: ошибка API ${response.status}`);
         return;
       }
 

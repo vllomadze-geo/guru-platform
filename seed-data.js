@@ -2603,6 +2603,11 @@ window.GURU_SEED = {
           "sourceRow": 1128
         }
       ]
+    },
+    {
+      "id": "gate-8",
+      "title": "8. Прогноз и моделирование",
+      "cards": []
     }
   ],
   "metrics": [],

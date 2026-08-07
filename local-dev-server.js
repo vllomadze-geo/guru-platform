@@ -192,7 +192,7 @@ function serveStatic(req, res, url) {
 
 startLiveReloadWatcher();
 
-http.createServer((req, res) => {
+const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://localhost:${port}`);
   if (url.pathname === '/__live-reload') {
     serveLiveReload(req, res);
@@ -203,6 +203,17 @@ http.createServer((req, res) => {
     return;
   }
   serveStatic(req, res, url);
-}).listen(port, () => {
+});
+
+server.on('error', error => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Cannot start GURU on http://localhost:${port}: this port is already in use.`);
+    console.error('Stop the old static server on this port, then run npm run dev again.');
+    return;
+  }
+  console.error(`GURU local dev server failed to start: ${error.message}`);
+});
+
+server.listen(port, '127.0.0.1', () => {
   console.log(`GURU local dev server: http://localhost:${port}`);
 });

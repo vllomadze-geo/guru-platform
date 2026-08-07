@@ -5818,38 +5818,40 @@ async function hydrateProjectsFromCloud() {
 }
 
 async function hydrateAllProjectWorkspacesFromCloud() {
-  for (const project of projects) {
-    const projectId = project.id;
-    const localKey = WORKSPACE_STORAGE_PREFIX + projectId;
-    const localRaw = localStorage.getItem(localKey);
-    let localState = null;
-    try {
-      localState = localRaw ? JSON.parse(localRaw) : null;
-    } catch (_) {}
+  await Promise.all(
+    projects.map(async (project) => {
+      const projectId = project.id;
+      const localKey = WORKSPACE_STORAGE_PREFIX + projectId;
+      const localRaw = localStorage.getItem(localKey);
+      let localState = null;
+      try {
+        localState = localRaw ? JSON.parse(localRaw) : null;
+      } catch (_) {}
 
-    const cloudResult = await loadFromSupabase(projectId);
-    if (!cloudResult?.state) {
-      if (localState) await pushToSupabase(projectId, localState, { silent: true });
-      continue;
-    }
+      const cloudResult = await loadFromSupabase(projectId);
+      if (!cloudResult?.state) {
+        if (localState) await pushToSupabase(projectId, localState, { silent: true });
+        return;
+      }
 
-    _cloudWorkspaceVersions.set(projectId, cloudResult.cloudUpdatedAt || "");
-    const cloudState = cloudResult.state;
+      _cloudWorkspaceVersions.set(projectId, cloudResult.cloudUpdatedAt || "");
+      const cloudState = cloudResult.state;
 
-    // При старте облако — источник истины. Это особенно важно при первой
-    // миграции: недавно созданный пустой локальный seed может иметь более
-    // свежую дату, чем старый, но заполненный workspace в Supabase.
-    // Любую отличающуюся локальную версию сначала сохраняем как backup.
-    if (localRaw && JSON.stringify(localState) !== JSON.stringify(cloudState)) {
-      safeStorageSet(
-        STORAGE_BACKUP_PREFIX + projectId + "-before-cloud-" + Date.now(),
-        localRaw,
-        { silent: true },
-      );
-    }
-    const migrated = migrateWorkspace(cloudState, projectId);
-    safeStorageSet(localKey, JSON.stringify(migrated));
-  }
+      // При старте облако — источник истины. Это особенно важно при первой
+      // миграции: недавно созданный пустой локальный seed может иметь более
+      // свежую дату, чем старый, но заполненный workspace в Supabase.
+      // Любую отличающуюся локальную версию сначала сохраняем как backup.
+      if (localRaw && JSON.stringify(localState) !== JSON.stringify(cloudState)) {
+        safeStorageSet(
+          STORAGE_BACKUP_PREFIX + projectId + "-before-cloud-" + Date.now(),
+          localRaw,
+          { silent: true },
+        );
+      }
+      const migrated = migrateWorkspace(cloudState, projectId);
+      safeStorageSet(localKey, JSON.stringify(migrated));
+    }),
+  );
 }
 
 async function bootstrapApp() {
