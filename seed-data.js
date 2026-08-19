@@ -1,8 +1,8 @@
 window.GURU_SEED = {
   "schemaVersion": "0.1.0",
   "project": {
-    "name": "УНИВЕРСАЛ / ГУРУ",
-    "description": "Маркетинговая операционная система на основе CSV-чеклиста",
+    "name": "",
+    "description": "",
     "niche": "",
     "website": "",
     "geography": "",
@@ -2611,5 +2611,5 @@ window.GURU_SEED = {
     }
   ],
   "metrics": [],
-  "createdFrom": "УНИВЕРСАЛ - ГУРУ - УНИВЕРСАЛ (2).csv"
+  "createdFrom": "Базовый шаблон GURU"
 };

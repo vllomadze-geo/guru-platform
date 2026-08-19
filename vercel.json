@@ -5,5 +5,23 @@
     "api/yandex-callback.js":    { "regions": ["fra1"] },
     "api/yandex-direct.js":      { "regions": ["fra1"] },
     "api/yandex-metrika.js":     { "regions": ["fra1"] }
-  }
+  },
+  "headers": [
+    {
+      "source": "/app.js",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+    },
+    {
+      "source": "/styles.css",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+    },
+    {
+      "source": "/seed-data.js",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+    },
+    {
+      "source": "/build-info.js",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-transform" }]
+    }
+  ]
 }

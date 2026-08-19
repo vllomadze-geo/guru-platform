@@ -21,6 +21,9 @@
   const params=new URLSearchParams(location.search), calculatorKey=params.get('key'), embedded=params.get('embed')==='1';
   if(embedded)document.body.classList.add('embedded');
   function reportEmbedHeight(){if(!embedded)return;const h=Math.ceil(Math.max(document.documentElement.scrollHeight,document.body.scrollHeight));window.parent.postMessage({type:'guru-brown-calculator-height',height:h},location.origin)}
+  // Родитель читает средний чек и маржинальность для сквозного прогноза (Gate 8),
+  // поэтому при каждом пересчёте сообщаем ему актуальную цену и маржу после комиссий.
+  function reportEmbedData(c){if(!embedded)return;const aov=n(state.pricing.actual)||c.recommended,marginPercent=Number.isFinite(c.markupMargin)?c.markupMargin*100:0;window.parent.postMessage({type:'guru-brown-calculator-data',key:calculatorKey||'',aov,marginPercent},location.origin)}
   if(embedded&&window.ResizeObserver)new ResizeObserver(()=>requestAnimationFrame(reportEmbedHeight)).observe(document.documentElement);
   const KEY='brown-roi-calculator-v1'+(calculatorKey?':'+calculatorKey:''), units=['м','м²','кг','г','л','мл','шт.','уп.'];
   const UNIT_META={м:{group:'length',factor:1},'м²':{group:'area',factor:1},кг:{group:'mass',factor:1},г:{group:'mass',factor:.001},л:{group:'volume',factor:1},мл:{group:'volume',factor:.001},'шт.':{group:'piece',factor:1},'уп.':{group:'pack',factor:1}};
@@ -74,6 +77,7 @@
   function budgetCard(x){let i=state.budgets.indexOf(x),per=n(x.amount)/(n(state.business.volume)||Infinity);return `<article class="line-card entity-card"><div class="entity-card-head"><h4>Бюджет периода</h4>${remove('budgets',x.id)}</div><div class="entity-plane-wrap"><div class="entity-plane entity-plane-4">${input(`budgets.${i}.name`,'Наименование','text')}<label class="field"><span>Категория</span><select data-path="budgets.${i}.category">${['Производственные расходы','Реклама и продажи','Управление и администрация','Другие расходы'].map(v=>`<option ${x.category===v?'selected':''}>${v}</option>`).join('')}</select></label>${input(`budgets.${i}.amount`,'Сумма за период, ₽')}${auto('Расход на одну единицу',money(per))}</div></div></article>`}
   function selectField(label,attr,options,value){return `<label class="field"><span>${esc(label)}</span><select ${attr}>${options.map(([v,l])=>`<option value="${esc(v)}" ${v===value?'selected':''}>${esc(l)}</option>`).join('')}</select></label>`}
   function render(){const c=calc(),p=state.product,pr=state.pricing;
+    reportEmbedData(c);
     const warns=[];if(!periodDays())warns.push('Выберите корректные даты: дата окончания должна быть не раньше даты начала.');if(!c.volume)warns.push('Укажите план продаж за период.');
     document.getElementById('calculator').innerHTML=`
     <section class="block"><h2>1. Базовая информация бизнеса</h2>

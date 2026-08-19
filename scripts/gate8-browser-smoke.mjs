@@ -62,7 +62,23 @@ await call("Page.addScriptToEvaluateOnNewDocument", {
 });
 await call("Page.navigate", { url: "http://127.0.0.1:3000/" });
 await wait(1500);
-await evaluate('localStorage.clear(); localStorage.setItem("guru-platform-access-v01", "unlocked"); location.reload(); true');
+await evaluate(`(() => {
+  localStorage.clear();
+  localStorage.setItem("guru-platform-access-v01", "unlocked");
+  localStorage.setItem("guru-platform-projects-v02", JSON.stringify([{
+    id: "smoke-project",
+    name: "Smoke project",
+    description: "",
+    website: "",
+    type: "Тест",
+    icon: "S",
+    lifecycleStatus: "active",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }]));
+  location.reload();
+  return true;
+})()`);
 await wait(1500);
 await evaluate(`(() => {
   const nativeFetch = window.fetch.bind(window);
@@ -227,7 +243,7 @@ await wait(700);
 const linked = await evaluate(`({
   tasks: state.gate7Journal.tasks.filter((item) => item.forecastLink?.gate === "gate-8").length,
   calendar: state.gate6Calendar.forecastActions?.length || 0,
-  workspaceHasGate8: Boolean(JSON.parse(localStorage.getItem("guru-platform-workspace-v02-project-default") || "{}").gate8Forecast),
+  workspaceHasGate8: Boolean(JSON.parse(localStorage.getItem("guru-platform-workspace-v02-smoke-project") || "{}").gate8Forecast),
 })`);
 await evaluate('location.reload(); true');
 await wait(1600);
