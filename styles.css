@@ -282,6 +282,22 @@
   font-size: 12px;
   margin: 12px 0 0;
 }
+.campaign-audience-empty-jump {
+  display: block;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  color: var(--muted);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+.campaign-audience-empty-jump:hover,
+.campaign-audience-empty-jump:focus-visible {
+  color: var(--text);
+}
 
 .campaign-targeting {
   margin-top: 14px;
@@ -3514,6 +3530,40 @@ textarea.passport-v116-input {
   display: grid;
   gap: 24px;
 }
+/* v2.1.5 — визуальные заголовки-разделители «Компания» / «Продукт-Услуга».
+   Это не карточки данных — только группировка существующих блоков. */
+.gate0-section-heading {
+  display: grid;
+  gap: var(--s-1);
+  padding: 0 var(--s-1);
+}
+.gate0-section-heading:not(:first-child) {
+  margin-top: var(--s-2);
+  padding-top: var(--s-6);
+  border-top: 1px solid var(--line);
+}
+.gate0-section-heading-title {
+  font-size: var(--text-2xl);
+  font-weight: var(--w-black);
+  color: var(--text);
+}
+.gate0-section-heading-desc {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.gate0-landing-shared-v215 {
+  display: grid;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+  padding: var(--s-3);
+  border: 1px dashed var(--line);
+  border-radius: var(--r-md);
+  background: rgba(0,0,0,.02);
+}
+.gate0-landing-shared-v215 small {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
 .gate0-card {
   display: grid;
   gap: 12px;
@@ -3657,14 +3707,37 @@ summary.gate0-card-head::-webkit-details-marker { display: none; }
 .gate0-segment-sentence-v194 small { color: #587258; font-size: 11px; font-weight: var(--w-bold); }
 .gate0-segment-sentence-v194 strong { font-size: 15px; line-height: 1.4; }
 .gate0-positioning-value-v194 { gap: 12px; }
-.gate0-positioning-parts-v194 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.gate0-positioning-parts-v194 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .gate0-positioning-parts-v194 label { display: grid; gap: 5px; }
 .gate0-positioning-parts-v194 small { min-height: 32px; color: var(--muted); font-size: 11px; line-height: 1.35; }
 .gate0-positioning-parts-v194 strong { font-size: 13px; line-height: 1.25; }
-.gate0-positioning-parts-v194 select { min-width: 0; border: 1px solid var(--line); border-radius: 9px; padding: 9px 10px; background: var(--panel); color: var(--text); }
 .gate0-positioning-sentence-v194 { display: grid; gap: 5px; padding: 11px 12px; border: 1px solid #b9d7ba; border-radius: 11px; background: #e4f1e3; }
 .gate0-positioning-sentence-v194 small { color: #587258; font-size: 11px; font-weight: var(--w-bold); }
 .gate0-positioning-sentence-v194 strong { font-size: 15px; line-height: 1.4; }
+.gate0-usp-value-v194 { gap: 12px; }
+.gate0-usp-parts-v194 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.gate0-usp-parts-v194 label { display: grid; gap: 5px; }
+.gate0-usp-parts-v194 small { min-height: 46px; color: var(--muted); font-size: 11px; line-height: 1.35; }
+.gate0-usp-parts-v194 strong { font-size: 13px; line-height: 1.25; }
+.gate0-usp-benefit-v194,
+.gate0-usp-sentence-v194 { display: grid; gap: 5px; padding: 11px 12px; border: 1px solid #b9d7ba; border-radius: 11px; background: #e4f1e3; }
+.gate0-usp-benefit-v194 small,
+.gate0-usp-sentence-v194 small { color: #587258; font-size: 11px; font-weight: var(--w-bold); }
+.gate0-usp-benefit-v194 strong,
+.gate0-usp-sentence-v194 strong { font-size: 15px; line-height: 1.4; }
+.gate0-usp-sentence-v194.is-incomplete { border-color: #e2c98b; background: #fff8e8; }
+.gate0-usp-sentence-v194.is-incomplete small { color: #8a6b24; }
+.gate0-offer-value-v194 { gap: 12px; }
+.gate0-offer-parts-v194 { display: grid; gap: 7px; }
+.gate0-offer-parts-v194 label { display: grid; gap: 5px; }
+.gate0-offer-parts-v194 small { color: var(--muted); font-size: 11px; line-height: 1.35; }
+.gate0-offer-parts-v194 strong { font-size: 13px; line-height: 1.25; }
+.gate0-offer-arrow-v194 { justify-self: center; color: #79966e; font-size: 20px; font-style: normal; line-height: 1; }
+.gate0-offer-sentence-v194 { display: grid; gap: 5px; padding: 11px 12px; border: 1px solid #e2c98b; border-radius: 11px; background: #fff8e8; }
+.gate0-offer-sentence-v194 small { color: #8a6b24; font-size: 11px; font-weight: var(--w-bold); }
+.gate0-offer-sentence-v194 strong { font-size: 15px; line-height: 1.4; }
+.gate0-offer-sentence-v194.is-ready { border-color: #b9d7ba; background: #e4f1e3; }
+.gate0-offer-sentence-v194.is-ready small { color: #587258; }
 .gate0-common-meta-v194 { display: grid; gap: 12px; padding: 16px; border: 1px solid #b9c8ae; border-radius: 14px; background: #f4f8f1; }
 .gate0-common-meta-head-v194 { display: grid; gap: 4px; }
 .gate0-common-meta-head-v194 small { color: var(--muted); }
@@ -3683,10 +3756,12 @@ summary.gate0-card-head::-webkit-details-marker { display: none; }
   .gate0-scope-meta-v194,
   .gate0-jtbd-parts-v194,
   .gate0-positioning-parts-v194,
+  .gate0-usp-parts-v194,
   .gate0-common-meta-grid-v194 { grid-template-columns: 1fr; }
   .gate0-jtbd-parts-v194 small,
   .gate0-segment-parts-v194 small,
-  .gate0-positioning-parts-v194 small { min-height: 0; }
+  .gate0-positioning-parts-v194 small,
+  .gate0-usp-parts-v194 small { min-height: 0; }
   .gate0-segment-parts-v194 { grid-template-columns: 1fr; }
   .gate0-inherited-v194 { align-items: stretch; flex-direction: column; }
 }
@@ -5083,6 +5158,133 @@ select.g1-input { cursor: pointer; }
   }
 }
 
+/* Gate 1 · поля аудита как композиция реальной страницы сайта. */
+.g1-redesign .v22-site-layout .v22-site-canvas {
+  align-items: stretch !important;
+  background:
+    linear-gradient(180deg, rgba(245, 247, 242, .92), rgba(255, 255, 255, .98)),
+    repeating-linear-gradient(90deg, transparent 0, transparent calc(8.333% - 1px), rgba(40, 60, 42, .045) calc(8.333% - 1px), rgba(40, 60, 42, .045) 8.333%);
+  border: 1px solid rgba(68, 92, 67, .13);
+  border-radius: 16px;
+  display: grid !important;
+  gap: 12px !important;
+  grid-auto-rows: minmax(min-content, auto);
+  grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+  padding: 12px !important;
+}
+
+.g1-redesign .v22-site-canvas .v22-page-element {
+  background: rgba(255, 255, 255, .9);
+  border: 1px solid rgba(42, 58, 42, .11);
+  border-radius: 14px;
+  box-shadow: 0 7px 20px rgba(32, 45, 32, .045);
+  display: flex;
+  flex-direction: column;
+  grid-column: span 6;
+  min-height: 0;
+  min-width: 0;
+  overflow: visible;
+  padding: 12px;
+}
+
+.g1-redesign .v22-site-canvas .v22-page-element > .g1-field {
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* Одиночное поле может заполнять декоративную ячейку. Если внутри
+   появляются дополнительные элементы (галерея, доказательства и т.п.),
+   оно больше не растягивается на всю высоту и не выталкивает их за границу. */
+.g1-redesign .v22-site-canvas .v22-page-element > .g1-field:only-child {
+  flex: 1 1 auto;
+  height: 100%;
+}
+
+.g1-redesign .v22-site-canvas .v22-page-element-media { grid-column: span 5; grid-row: span 2; }
+.g1-redesign .v22-site-canvas .v22-page-element-heading { grid-column: span 7; }
+.g1-redesign .v22-site-canvas .v22-page-element-content { grid-column: span 8; }
+.g1-redesign .v22-site-canvas .v22-page-element-compact,
+.g1-redesign .v22-site-canvas .v22-page-element-action { grid-column: span 4; }
+
+.g1-redesign .v22-site-canvas .v22-page-element-heading textarea {
+  font-size: clamp(18px, 2vw, 27px) !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  min-height: 74px;
+}
+
+.g1-redesign .v22-site-canvas .v22-page-element-media textarea {
+  background-image: linear-gradient(145deg, rgba(111, 151, 112, .13), rgba(255, 255, 255, .35)) !important;
+  min-height: 220px;
+}
+
+.g1-redesign .v22-site-canvas .v22-page-element-action textarea {
+  font-weight: 800 !important;
+  min-height: 54px;
+  text-align: center;
+}
+
+.g1-redesign .v22-site-canvas .g1-flag-status {
+  align-self: flex-start;
+  border-radius: 999px;
+  max-width: 210px;
+}
+
+.g1-redesign .v22-site-layout-product_first_screen .v22-site-canvas {
+  grid-template-areas:
+    "gallery gallery gallery gallery gallery title title title title title title title"
+    "gallery gallery gallery gallery gallery rating rating rating availability availability availability availability"
+    "gallery gallery gallery gallery gallery description description description description description description description"
+    "gallery gallery gallery gallery gallery price price price buttons buttons buttons buttons"
+    "gallery gallery gallery gallery gallery trust trust trust trust trust trust trust";
+}
+
+.g1-redesign .v22-site-layout-product_first_screen [data-v22-page-element="productGallery"] { grid-area: gallery; }
+.g1-redesign .v22-site-layout-product_first_screen [data-v22-page-element="h1"] { grid-area: title; }
+.g1-redesign .v22-site-layout-product_first_screen [data-v22-page-element="productRating"] { grid-area: rating; }
+.g1-redesign .v22-site-layout-product_first_screen [data-v22-page-element="productShortDescription"] { grid-area: description; }
+.g1-redesign .v22-site-layout-product_first_screen [data-v22-page-element="productPrice"] { grid-area: price; }
+.g1-redesign .v22-site-layout-product_first_screen [data-v22-page-element="productAvailability"] { grid-area: availability; }
+.g1-redesign .v22-site-layout-product_first_screen [data-v22-page-element="productButtons"] { grid-area: buttons; }
+.g1-redesign .v22-site-layout-product_first_screen [data-v22-page-element="productTrustMini"] { grid-area: trust; }
+
+.g1-redesign .v22-site-layout-product_first_screen [data-v22-page-element="productGallery"] > .g1-field textarea { min-height: 72px; }
+.g1-redesign .v22-site-layout-product_first_screen [data-v22-page-element="productPrice"] textarea {
+  font-size: 22px !important;
+  font-weight: 900 !important;
+}
+
+@media (max-width: 1100px) {
+  .g1-redesign .v22-site-layout-product_first_screen .v22-site-canvas {
+    grid-template-areas:
+      "gallery gallery gallery gallery gallery gallery title title title title title title"
+      "gallery gallery gallery gallery gallery gallery rating rating rating availability availability availability"
+      "gallery gallery gallery gallery gallery gallery description description description description description description"
+      "price price price price buttons buttons buttons buttons trust trust trust trust";
+  }
+
+  .g1-redesign .v22-site-layout-product_first_screen [data-v22-page-element="productGallery"] > .g1-field textarea { min-height: 72px; }
+}
+
+@media (max-width: 760px) {
+  .g1-redesign .v22-site-layout .v22-site-canvas,
+  .g1-redesign .v22-site-layout-product_first_screen .v22-site-canvas {
+    grid-template-areas: none;
+    grid-template-columns: 1fr !important;
+  }
+
+  .g1-redesign .v22-site-canvas .v22-page-element,
+  .g1-redesign .v22-site-layout-product_first_screen [data-v22-page-element] {
+    grid-area: auto;
+    grid-column: 1 !important;
+    grid-row: auto;
+  }
+
+  .g1-redesign .v22-site-layout-product_first_screen [data-v22-page-element="productGallery"] > .g1-field textarea { min-height: 72px; }
+}
+
 /* Gate 8 — единый вертикальный экран прогноза и моделирования. */
 .g8-page {
   display: grid;
@@ -5663,6 +5865,25 @@ select.g1-input { cursor: pointer; }
   font-size: 11px;
   color: var(--muted);
   white-space: nowrap;
+}
+.g4-readonly-jump {
+  background: none;
+  border: none;
+  width: 100%;
+  font: inherit;
+  cursor: pointer;
+  border-radius: var(--r-md);
+  transition: background-color .12s ease;
+}
+.g4-readonly-jump:hover,
+.g4-readonly-jump:focus-visible {
+  background: rgba(0,0,0,.045);
+}
+.g4-readonly-jump .g4-readonly-empty,
+.g4-readonly-jump .g4-readonly-source {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
 }
 .g4-search-metrics {
   display: grid;
@@ -9137,4 +9358,302 @@ html body .content-area .guru-optional-column :is(input, textarea, select, [cont
   .gate7-simple-journal .gate7-toolbar-simple button {
     width: 100%;
   }
+}
+
+/* Gate 1 · реальные фотографии в галерее карточки товара. */
+.g1-redesign .v22-product-gallery {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.g1-redesign .v22-product-gallery-toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.g1-redesign .v22-product-gallery-toolbar > span {
+  color: #627063;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.g1-redesign .v22-product-photo-add {
+  align-items: center;
+  background: #1f3023;
+  border-radius: 999px;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 800;
+  min-height: 34px;
+  padding: 0 13px;
+}
+
+.g1-redesign .v22-product-photo-add:hover { background: #2c4932; }
+.g1-redesign .v22-product-photo-add input { height: 1px; opacity: 0; overflow: hidden; position: absolute; width: 1px; }
+
+.g1-redesign .v22-product-photo-limit {
+  color: #79654e;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.g1-redesign .v22-product-photo-stage {
+  align-items: center;
+  background: linear-gradient(145deg, #f7faf7, #e7f2e8);
+  border: 1px dashed rgba(73, 126, 83, .4);
+  border-radius: 16px;
+  display: flex;
+  justify-content: center;
+  min-height: 290px;
+  overflow: hidden;
+}
+
+.g1-redesign .v22-product-photo-stage > img {
+  display: block;
+  height: 100%;
+  max-height: 430px;
+  object-fit: contain;
+  width: 100%;
+}
+
+.g1-redesign .v22-product-photo-empty {
+  align-items: center;
+  color: #6f7d70;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-width: 260px;
+  padding: 28px;
+  text-align: center;
+}
+
+.g1-redesign .v22-product-photo-empty > span { color: #5f9b6b; font-size: 40px; line-height: 1; }
+.g1-redesign .v22-product-photo-empty strong { color: #344638; font-size: 14px; }
+.g1-redesign .v22-product-photo-empty small { font-size: 12px; line-height: 1.45; }
+
+.g1-redesign .v22-product-photo-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.g1-redesign .v22-product-photo-thumb {
+  height: 62px;
+  position: relative;
+  width: 62px;
+}
+
+.g1-redesign .v22-product-photo-select {
+  background: #edf3ed;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+  width: 100%;
+}
+
+.g1-redesign .v22-product-photo-thumb.is-active .v22-product-photo-select { border-color: #4f9a5d; box-shadow: 0 0 0 2px rgba(79, 154, 93, .14); }
+.g1-redesign .v22-product-photo-select img { height: 100%; object-fit: cover; width: 100%; }
+
+.g1-redesign .v22-product-photo-remove {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #e6cdcd;
+  border-radius: 50%;
+  color: #a33131;
+  cursor: pointer;
+  display: flex;
+  font-size: 15px;
+  font-weight: 900;
+  height: 22px;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  position: absolute;
+  right: -7px;
+  top: -7px;
+  width: 22px;
+}
+
+@media (max-width: 760px) {
+  .g1-redesign .v22-product-photo-stage { min-height: 230px; }
+}
+
+/* Gate 3 · продуктовая карта 5A без повторного ввода. */
+.g3-product-journey-body {
+  display: grid !important;
+  gap: 16px !important;
+  padding: 20px 24px 24px !important;
+}
+
+.g3-product-journey-picker {
+  background: #f7f5f1;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
+.g3-product-journey-picker > span {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.g3-product-journey-picker > select {
+  min-height: 46px;
+}
+
+.g3-product-journey-picker > small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.g3-product-journey-empty {
+  align-items: center;
+  background: #faf9f6;
+  border: 1px dashed #cfc9bf;
+  border-radius: 14px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+  min-height: 180px;
+  padding: 28px;
+  text-align: center;
+}
+
+.g3-product-journey-empty strong {
+  color: var(--text);
+  font-size: 18px;
+}
+
+.g3-product-journey-context {
+  align-items: start;
+  background: #edf6ee;
+  border-left: 3px solid #63ab73;
+  border-radius: 0 12px 12px 0;
+  display: grid;
+  gap: 4px;
+  padding: 13px 16px;
+}
+
+.g3-product-journey-context > span,
+.g3-product-journey-context > small {
+  color: #617063;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.g3-product-journey-context > strong {
+  color: #253329;
+  font-size: 16px;
+}
+
+.g3-product-funnel {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  width: 100%;
+}
+
+.g3-product-funnel .g3-funnel-card {
+  max-width: 100%;
+}
+
+.g3-product-journey-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.g3-product-journey-cell {
+  border: 1px solid var(--line);
+  border-left: 3px solid #63ab73;
+  border-radius: 0 10px 10px 0;
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 12px 14px;
+}
+
+.g3-product-journey-cell.is-filled { background: #eef7ee; }
+.g3-product-journey-cell.is-empty {
+  background: #fff5f5;
+  border-left-color: #d66;
+}
+
+.g3-product-journey-cell > span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.g3-product-journey-cell > b {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.g3-product-journey-cell.is-empty > b { color: #9c4b4b; }
+.g3-product-journey-source {
+  align-items: center;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: #6f7c70;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 750;
+  justify-self: start;
+  padding: 2px 0;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+}
+
+.g3-product-journey-source:hover,
+.g3-product-journey-source:focus-visible {
+  color: #2f6f42;
+  outline: none;
+  text-decoration-color: currentColor;
+}
+
+.guru-source-target-v212 {
+  animation: guru-source-target-pulse-v212 1.15s ease-in-out 2;
+  border-color: #2f8f52 !important;
+  box-shadow: 0 0 0 4px rgb(47 143 82 / 20%) !important;
+  outline: 2px solid #2f8f52 !important;
+  outline-offset: 3px;
+}
+
+@keyframes guru-source-target-pulse-v212 {
+  0%, 100% { box-shadow: 0 0 0 4px rgb(47 143 82 / 16%); }
+  50% { box-shadow: 0 0 0 10px rgb(47 143 82 / 8%); }
+}
+
+@media (max-width: 760px) {
+  .g3-product-journey-body { padding: 14px !important; }
+  .g3-product-funnel .g3-funnel-card { min-width: 0; width: 100% !important; }
+  .g3-product-journey-grid { grid-template-columns: 1fr; }
 }

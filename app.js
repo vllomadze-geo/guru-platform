@@ -10161,6 +10161,8 @@ function v22PageTemplates() {
           checklist: [
             "Cross-sell: 3–4 карточки аксессуаров + кнопка добавить",
             "Отзывы / UGC",
+            "Результат клиента из реального отзыва / обратной связи",
+            "Основания рекомендовать со слов покупателей",
             "Доставка и оплата",
             "Вы недавно смотрели",
           ],
@@ -10176,6 +10178,18 @@ function v22PageTemplates() {
               "productUgc",
               "Отзывы / UGC",
               "Рейтинг + фото + список отзывов",
+              "textarea",
+            ),
+            ctxField(
+              "productClientResult",
+              "Результат клиента",
+              "Реальный результат из отзыва / обратной связи",
+              "textarea",
+            ),
+            ctxField(
+              "productRecommendationReasons",
+              "Основания рекомендовать",
+              "Что реально говорят те, кто уже купил",
               "textarea",
             ),
             ctxField(
@@ -10754,19 +10768,59 @@ function v22SectionStatusLabel(row, section) {
   return STATUS_LABELS[status] || status;
 }
 
-function v22SectionFieldHtml(card, pageIndex, row, field) {
-  if (field.kind === "row")
-    return rowInputField(
-      card,
-      pageIndex,
-      row,
-      field.field,
-      field.label,
-      field.standard,
-      field.type,
-      field.type === "textarea" ? "full" : "",
-    );
-  return contextInputField(
+function v22PageElementRole(field) {
+  const key = field.kind === "row" ? field.field : field.key;
+  const semantic = `${key || ""} ${field.label || ""}`.toLocaleLowerCase("ru-RU");
+  if (/gallery|visual|image|photo|video|map|галере|визуал|изображ|фото|видео|карт/.test(semantic)) return "media";
+  if (/\bh1\b|headline|heading|title|заголов/.test(semantic)) return "heading";
+  if (/button|cta|кноп|действ/.test(semantic)) return "action";
+  if (/price|rating|availability|phone|hours|цена|рейтинг|налич|телефон|часы/.test(semantic)) return "compact";
+  if (/description|content|intro|benefit|proof|trust|text|описан|контент|довер|характер|комплект|вкладк/.test(semantic)) return "content";
+  return field.type === "textarea" ? "content" : "standard";
+}
+
+const V22_PRODUCT_GALLERY_MAX_PHOTOS = 4;
+const V22_PRODUCT_GALLERY_MAX_BYTES = 900 * 1024;
+
+function v22ProductGalleryPhotos(row) {
+  const photos = Array.isArray(row?.productGalleryPhotos)
+    ? row.productGalleryPhotos.filter(
+      (photo) =>
+        photo &&
+        typeof photo.id === "string" &&
+        typeof photo.dataUrl === "string" &&
+        photo.dataUrl.startsWith("data:image/"),
+    )
+    : [];
+  if (row) row.productGalleryPhotos = photos;
+  return photos;
+}
+
+function v22ProductGalleryHtml(card, pageIndex, row, field) {
+  const photos = v22ProductGalleryPhotos(row);
+  const mainId = photos.some((photo) => photo.id === row.productGalleryMainPhotoId)
+    ? row.productGalleryMainPhotoId
+    : photos[0]?.id || "";
+  const mainPhoto = photos.find((photo) => photo.id === mainId) || null;
+  const inputAttr = `data-v22-product-photo-input data-v22-product-photo-card-id="${escapeAttr(card.id)}" data-v22-product-photo-index="${pageIndex}"`;
+  const preview = mainPhoto
+    ? `<img src="${escapeAttr(mainPhoto.dataUrl)}" alt="${escapeAttr(mainPhoto.name || "Фотография товара")}" />`
+    : `<div class="v22-product-photo-empty"><span aria-hidden="true">▧</span><strong>Добавьте фотографии товара</strong><small>Основная фотография появится здесь, остальные — в миниатюрах ниже.</small></div>`;
+  const thumbs = photos.length
+    ? `<div class="v22-product-photo-thumbs" aria-label="Фотографии товара">${photos
+      .map(
+        (photo, index) =>
+          `<div class="v22-product-photo-thumb ${photo.id === mainId ? "is-active" : ""}">
+            <button type="button" class="v22-product-photo-select" data-v22-product-photo-select="${escapeAttr(photo.id)}" data-v22-product-photo-card-id="${escapeAttr(card.id)}" data-v22-product-photo-index="${pageIndex}" aria-label="Показать фотографию ${index + 1}" aria-pressed="${photo.id === mainId ? "true" : "false"}"><img src="${escapeAttr(photo.dataUrl)}" alt="" /></button>
+            <button type="button" class="v22-product-photo-remove" data-v22-product-photo-remove="${escapeAttr(photo.id)}" data-v22-product-photo-card-id="${escapeAttr(card.id)}" data-v22-product-photo-index="${pageIndex}" aria-label="Удалить фотографию ${index + 1}">×</button>
+          </div>`,
+      )
+      .join("")}</div>`
+    : "";
+  const addControl = photos.length < V22_PRODUCT_GALLERY_MAX_PHOTOS
+    ? `<label class="v22-product-photo-add"><input type="file" accept="image/jpeg,image/png,image/webp" multiple ${inputAttr} /><span>+ Добавить фото</span></label>`
+    : `<span class="v22-product-photo-limit">Добавлено максимум: ${V22_PRODUCT_GALLERY_MAX_PHOTOS}</span>`;
+  const copy = contextInputField(
     card,
     pageIndex,
     row,
@@ -10776,6 +10830,39 @@ function v22SectionFieldHtml(card, pageIndex, row, field) {
     field.type,
     field.type === "textarea" ? "full" : "",
   );
+  return `${copy}<div class="v22-product-gallery" data-v22-product-gallery>
+    <div class="v22-product-gallery-toolbar"><span>${photos.length ? `Фотографий: ${photos.length} из ${V22_PRODUCT_GALLERY_MAX_PHOTOS}` : "Фотографий пока нет"}</span>${addControl}</div>
+    <div class="v22-product-photo-stage">${preview}</div>
+    ${thumbs}
+  </div>`;
+}
+
+function v22SectionFieldHtml(card, pageIndex, row, field) {
+  const key = field.kind === "row" ? field.field : field.key;
+  const html = key === "productGallery" && pageTemplateContext(card) === "product"
+    ? v22ProductGalleryHtml(card, pageIndex, row, field)
+    : field.kind === "row"
+    ? rowInputField(
+      card,
+      pageIndex,
+      row,
+      field.field,
+      field.label,
+      field.standard,
+      field.type,
+      field.type === "textarea" ? "full" : "",
+    )
+    : contextInputField(
+      card,
+      pageIndex,
+      row,
+      field.key,
+      field.label,
+      field.standard,
+      field.type,
+      field.type === "textarea" ? "full" : "",
+    );
+  return `<div class="v22-page-element v22-page-element-${escapeAttr(v22PageElementRole(field))}" data-v22-page-element="${escapeAttr(key)}">${html}</div>`;
 }
 
 function v22SectionMetaInput(
@@ -19898,26 +19985,64 @@ bindCardInputs = function () {
 
 /* v1.2.0 — Gate 0 vertical layout */
 const __guruPrevRenderGateTableV120 = renderGateTable;
+/* v2.1.5 — визуальная сепарация Gate 0 на два раздела: «Компания» (без
+   селектора продукта) и «Продукт / Услуга» (единый селектор категория →
+   позиция — тот же guruV194Ui, что уже питает блок JTBD). Это ТОЛЬКО
+   группировка существующих карточек в момент рендера: состав полей,
+   статусы, формулы и порядок карточек в gate.cards не меняются, id не
+   меняются, ничего не удаляется. Карточки вне обоих списков (Диагностика
+   точки отсчёта, Контрольная дата фиксации) остаются вне разделов — в
+   своём исходном относительном порядке, как и было. */
+const GATE0_COMPANY_SECTION_TITLES = [
+  "Проект: базовые сведения",
+  "Цель проекта и ограничения",
+  "Текущее состояние маркетинговой системы",
+];
+const GATE0_PRODUCT_SECTION_TITLES = [
+  "Продукт, сегмент и задача клиента",
+  "Текущие результаты",
+];
+function gate0CardHtml(c) {
+  const isOpen = state._gate0Open[c.id] !== false;
+  return `<details class="gate0-card" data-card-row="${c.id}" ${isOpen ? "open" : ""}>
+    <summary class="gate0-card-head">
+      <div class="gate0-card-title">${escapeHtml(c.title)}</div>
+      <span class="gate0-card-status status-${c.status}" data-gate0-jump-missing="${escapeAttr(c.id)}" role="button" tabindex="0" title="Перейти к незаполненному полю">${STATUS_LABELS[c.status] || c.status}</span>
+    </summary>
+    ${instructionToggleHtml(c)}
+    <div class="gate0-card-body">${cardUserFieldsHtml(c)}</div>
+  </details>`;
+}
+function gate0SectionHeadingHtml(title, desc) {
+  return `<div class="gate0-section-heading"><div class="gate0-section-heading-title">${escapeHtml(title)}</div>${desc ? `<div class="gate0-section-heading-desc">${escapeHtml(desc)}</div>` : ""}</div>`;
+}
 renderGateTable = function (gate, cards) {
   if (gate && gate.id === "gate-0") {
     // Для показа Gate 0 нужны статусы только его 13 карточек. Пересчёт всех
     // Gate здесь раньше добавлял сотни миллисекунд к каждому открытию.
     gate.cards.forEach((card) => recalculateStatusForCard(card, state));
     state._gate0Open = state._gate0Open || {};
-    els.contentArea.innerHTML = `<div class="gate0-vertical">${cards
-      .filter((c) => !isOfferPsychCard(c) && !c._merged)
+    const visible = cards.filter((c) => !isOfferPsychCard(c) && !c._merged);
+    const companyCards = visible.filter((c) => GATE0_COMPANY_SECTION_TITLES.includes(c.title));
+    const productCards = visible.filter((c) => GATE0_PRODUCT_SECTION_TITLES.includes(c.title));
+    const restCards = visible.filter(
+      (c) => !GATE0_COMPANY_SECTION_TITLES.includes(c.title) && !GATE0_PRODUCT_SECTION_TITLES.includes(c.title),
+    );
+    const productCardsHtml = productCards
       .map((c) => {
-        const isOpen = state._gate0Open[c.id] !== false;
-        return `<details class="gate0-card" data-card-row="${c.id}" ${isOpen ? "open" : ""}>
-        <summary class="gate0-card-head">
-          <div class="gate0-card-title">${escapeHtml(c.title)}</div>
-          <span class="gate0-card-status status-${c.status}" data-gate0-jump-missing="${escapeAttr(c.id)}" role="button" tabindex="0" title="Перейти к незаполненному полю">${STATUS_LABELS[c.status] || c.status}</span>
-        </summary>
-        ${instructionToggleHtml(c)}
-        <div class="gate0-card-body">${cardUserFieldsHtml(c)}</div>
-      </details>`;
+        const html = gate0CardHtml(c);
+        // «Проверь — посадочная» встаёт сразу после карточки с единым
+        // селектором категория → позиция — они делят один и тот же выбор.
+        return c.title === "Продукт, сегмент и задача клиента" ? html + gate0ProductLandingCheckHtml() : html;
       })
-      .join("")}</div>`;
+      .join("");
+    els.contentArea.innerHTML = `<div class="gate0-vertical">
+      ${companyCards.length ? gate0SectionHeadingHtml("Раздел А — Компания", "Проект целиком: сведения, цель, платформа, инфраструктура, каналы — без привязки к конкретному продукту.") : ""}
+      ${companyCards.map(gate0CardHtml).join("")}
+      ${productCards.length ? gate0SectionHeadingHtml("Раздел Б — Продукт / Услуга", "Один селектор «категория → позиция» ниже управляет всеми блоками этого раздела.") : ""}
+      ${productCardsHtml}
+      ${restCards.map(gate0CardHtml).join("")}
+    </div>`;
     document.querySelectorAll("details.gate0-card").forEach((el) => {
       el._guruRenderedOpen = el.open;
       el.addEventListener("toggle", () => {
@@ -20076,6 +20201,38 @@ function diagChannelTitle(c) {
   return [c.platform, c.type].filter(Boolean).join(" / ");
 }
 
+/* v2.1.5 — Действие 4: источник строки «Оффер и CTA «Категория»» в
+   диагностике. Раньше смотрел только в старый словарь project.offersV2
+   по имени категории (offersV2.productOffers[categoryName]) — он почти
+   всегда пуст, если оффер/CTA заполнены на уровне позиции внутри
+   категории через единый селектор (guruV194). Теперь сначала проверяются
+   реальные данные позиций этой категории (guruV194Resolve по offers —
+   там же лежит и CTA каждой записи), и только если их нет — старый
+   словарь как было. Вид и логика самой диагностики (сколько элементов,
+   как считается %) не меняются — меняется только то, откуда берётся
+   готовность одного конкретного пункта. */
+function gate0DiagnosticOfferCanonStatus(categoryName, legacyItem) {
+  const category = guruV185ProductByName(categoryName, state);
+  if (category) {
+    const items = guruV194Products(state).filter((item) => item.categoryId === category.id);
+    const probes = items.length ? items : [{ id: "", categoryId: category.id }];
+    let hasComplete = false;
+    let hasPartial = false;
+    probes.forEach((probe) => {
+      guruV194Resolve("offers", probe, state).records.forEach((record) => {
+        const parts = guruV194OfferParts(record);
+        if (guruV194OfferIsComplete(parts)) hasComplete = true;
+        else if (guruV194OfferCoreIsComplete(parts) || guruV185Text(parts.cta) || guruV185Text(record.value)) hasPartial = true;
+      });
+    });
+    if (hasComplete) return "works";
+    if (hasPartial) return "needs_improvement";
+  }
+  if (v121ProductOfferReady(legacyItem)) return "works";
+  if (v121HasText(legacyItem.offer) || v121HasText(legacyItem.cta)) return "needs_improvement";
+  return "missing";
+}
+
 // Позиция диагностики: name + статус элемента → единый статус, тон и текст.
 // Процент и статус этапа всегда выводятся из этих же элементов: нельзя
 // получить «100%» для пункта, который отмечен как «Отсутствует».
@@ -20204,14 +20361,7 @@ function diag5AStages() {
     );
     products.forEach((p) => {
       const d = (offers.productOffers || {})[p] || {};
-      const ready = v121ProductOfferReady(d);
-      const partial = !ready && (v121HasText(d.offer) || v121HasText(d.cta));
-      items.push(
-        diag5AItem(
-          `Оффер и CTA «${p}»`,
-          ready ? "works" : partial ? "needs_improvement" : "missing",
-        ),
-      );
+      items.push(diag5AItem(`Оффер и CTA «${p}»`, gate0DiagnosticOfferCanonStatus(p, d)));
     });
     return {
       name: "Act",
@@ -20767,8 +20917,9 @@ function megaPlatformProducts() {
   return [main, ...extra].filter(Boolean);
 }
 
-function megaPlatformSectionHtml(cardId, pv2) {
+function megaPlatformSectionHtml(cardId, pv2, options = {}) {
   const products = megaPlatformProducts();
+  const includeLandings = options.includeLandings !== false;
 
   const fundamentalHtml = `<div class="mega-subsection">
     <div class="mega-subsection-title">Обязательные страницы и элементы для любого сайта</div>
@@ -20790,7 +20941,7 @@ function megaPlatformSectionHtml(cardId, pv2) {
       .join("")}</tbody></table>
   </div>`;
 
-  const landingsHtml = products.length
+  const landingsHtml = includeLandings && products.length
     ? `<div class="mega-subsection">
     <div class="mega-subsection-title">Проверь — у каждого продукта должна быть своя посадочная</div>
     <table class="cr-table"><thead><tr><th>Продукт</th><th>URL посадочной</th><th>Статус</th><th>Комментарий (необязательно)</th></tr></thead>
@@ -22690,13 +22841,15 @@ v22SectionStatus = function (row, section) {
 v22RouteSectionHtml = function (card, row, pageIndex, section, open) {
   row.contextFields = row.contextFields || {};
   const status = v22SectionStatus(row, section);
-  return `<details class="route-section v22-route-section status-${status}" ${open ? "open" : ""}>
+  const pageContext = pageTemplateContext(card);
+  const layoutClass = `v22-site-layout v22-site-layout-${pageContext} v22-site-layout-${section.key}`;
+  return `<details class="route-section v22-route-section status-${status} ${escapeAttr(layoutClass)}" data-v22-site-section="${escapeAttr(section.key)}" ${open ? "open" : ""}>
     <summary>
       <span class="v22-section-title">${escapeHtml(section.title)}</span>
       <span class="v22-section-status status-pill status-${status}">${escapeHtml(v22SectionStatusLabel(row, section))}</span>
     </summary>
     <div class="route-section-body v22-section-body">
-      <div class="route-section-grid v22-route-fields">
+      <div class="route-section-grid v22-route-fields v22-site-canvas">
         ${(section.fields || []).map((field) => v22SectionFieldHtml(card, pageIndex, row, field)).join("")}
       </div>
     </div>
@@ -22716,6 +22869,134 @@ document.addEventListener("change", (e) => {
       renderGate();
     }
   }
+});
+
+function v22ProductGalleryRowFromControl(control) {
+  const card = findCard(control?.dataset?.v22ProductPhotoCardId);
+  const index = Number(control?.dataset?.v22ProductPhotoIndex);
+  if (!card || !Number.isInteger(index) || !card.pageRows?.[index]) return null;
+  ensureGate1TypedData(card);
+  return { card, row: card.pageRows[index], index };
+}
+
+function v22ProductPhotoId() {
+  return globalThis.crypto?.randomUUID?.() || `product-photo-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function v22ReadFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => resolve(String(reader.result || "")), { once: true });
+    reader.addEventListener("error", () => reject(new Error("Не удалось прочитать файл.")), { once: true });
+    reader.readAsDataURL(file);
+  });
+}
+
+function v22LoadProductPhoto(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.addEventListener("load", () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    }, { once: true });
+    image.addEventListener("error", () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Формат изображения не поддерживается браузером."));
+    }, { once: true });
+    image.src = url;
+  });
+}
+
+function v22CanvasToBlob(canvas, quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error("Не удалось подготовить изображение."));
+    }, "image/jpeg", quality);
+  });
+}
+
+async function v22PrepareProductPhoto(file) {
+  if (!file || !/^image\/(jpeg|png|webp)$/i.test(file.type || "")) {
+    throw new Error("Выберите изображение JPG, PNG или WebP.");
+  }
+  if (file.size > 12 * 1024 * 1024) {
+    throw new Error("Одна фотография должна быть не больше 12 МБ.");
+  }
+  const image = await v22LoadProductPhoto(file);
+  const maxSide = 1600;
+  const scale = Math.min(1, maxSide / Math.max(image.naturalWidth || 1, image.naturalHeight || 1));
+  const width = Math.max(1, Math.round((image.naturalWidth || 1) * scale));
+  const height = Math.max(1, Math.round((image.naturalHeight || 1) * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, width, height);
+  context.drawImage(image, 0, 0, width, height);
+  let blob = await v22CanvasToBlob(canvas, 0.84);
+  if (blob.size > V22_PRODUCT_GALLERY_MAX_BYTES) blob = await v22CanvasToBlob(canvas, 0.68);
+  if (blob.size > V22_PRODUCT_GALLERY_MAX_BYTES) {
+    throw new Error("Не удалось сжать фото до допустимого размера. Выберите файл меньшего размера.");
+  }
+  return {
+    id: v22ProductPhotoId(),
+    name: String(file.name || "Фотография товара").slice(0, 160),
+    dataUrl: await v22ReadFileAsDataUrl(blob),
+    createdAt: new Date().toISOString(),
+  };
+}
+
+document.addEventListener("change", async (event) => {
+  const input = event.target?.closest?.("[data-v22-product-photo-input]");
+  if (!input) return;
+  const payload = v22ProductGalleryRowFromControl(input);
+  const files = Array.from(input.files || []);
+  input.value = "";
+  if (!payload || !files.length) return;
+  const photos = v22ProductGalleryPhotos(payload.row);
+  const available = Math.max(0, V22_PRODUCT_GALLERY_MAX_PHOTOS - photos.length);
+  const selected = files.slice(0, available);
+  const failures = [];
+  for (const file of selected) {
+    try {
+      photos.push(await v22PrepareProductPhoto(file));
+    } catch (error) {
+      failures.push(`${file.name}: ${error.message || "не удалось добавить"}`);
+    }
+  }
+  payload.row.productGalleryPhotos = photos;
+  if (!payload.row.productGalleryMainPhotoId && photos[0]) {
+    payload.row.productGalleryMainPhotoId = photos[0].id;
+  }
+  flashSaving();
+  renderGate();
+  if (files.length > available) failures.push(`В карточке можно хранить не более ${V22_PRODUCT_GALLERY_MAX_PHOTOS} фотографий.`);
+  if (failures.length) window.alert(failures.join("\n"));
+});
+
+document.addEventListener("click", (event) => {
+  const remove = event.target?.closest?.("[data-v22-product-photo-remove]");
+  const select = event.target?.closest?.("[data-v22-product-photo-select]");
+  const control = remove || select;
+  if (!control) return;
+  const payload = v22ProductGalleryRowFromControl(control);
+  if (!payload) return;
+  event.preventDefault();
+  const photoId = remove?.dataset?.v22ProductPhotoRemove || select?.dataset?.v22ProductPhotoSelect;
+  const photos = v22ProductGalleryPhotos(payload.row);
+  if (remove) {
+    payload.row.productGalleryPhotos = photos.filter((photo) => photo.id !== photoId);
+    if (payload.row.productGalleryMainPhotoId === photoId) {
+      payload.row.productGalleryMainPhotoId = payload.row.productGalleryPhotos[0]?.id || "";
+    }
+  } else if (photos.some((photo) => photo.id === photoId)) {
+    payload.row.productGalleryMainPhotoId = photoId;
+  }
+  flashSaving();
+  renderGate();
 });
 
 /* v1.3.0 — fix page jump: don't renderGate() on input for text fields */
@@ -41485,7 +41766,7 @@ function g4CampaignAudienceHtml(product, channel, campaign) {
   return `<section class="campaign-audience-settings" data-campaign-audience-panel="${escapeAttr(stateKey)}">
     <div class="campaign-audience-title"><div><strong>Аудитория и настройки канала</strong><small>Сегмент отвечает на вопрос «кого и почему», настройки ниже — как найти его в этом канале.</small></div></div>
     <label class="campaign-audience-select"><span>Сегмент аудитории</span><select data-campaign-audience-product="${escapeAttr(product)}" data-campaign-audience-channel="${escapeAttr(channel.key)}"><option value="">— выбрать сегмент из Этапа 01 —</option>${segments.map((segment) => `<option value="${escapeAttr(segment.id)}" ${segment.id === campaign.audienceSegmentId ? "selected" : ""}>${escapeHtml(targetAudienceResolvedValue(segment, "name") || "Сегмент без названия")}</option>`).join("")}</select></label>
-    ${selected ? `<div class="campaign-audience-summary"><div><span>Кто это</span><b>${escapeHtml(selected.who || "—")}</b></div><div><span>Потребность</span><b>${escapeHtml(selected.need || "—")}</b></div><div><span>JTBD</span><b>${escapeHtml(selected.jtbd || "—")}</b></div><div><span>Главная ценность</span><b>${escapeHtml(selected.value || "—")}</b></div></div>` : `<p class="campaign-audience-empty">Сначала создайте сегмент в «Целевой аудитории» Этапа 01, затем выберите его здесь.</p>`}
+    ${selected ? `<div class="campaign-audience-summary"><div><span>Кто это</span><b>${escapeHtml(selected.who || "—")}</b></div><div><span>Потребность</span><b>${escapeHtml(selected.need || "—")}</b></div><div><span>JTBD</span><b>${escapeHtml(selected.jtbd || "—")}</b></div><div><span>Главная ценность</span><b>${escapeHtml(selected.value || "—")}</b></div></div>` : `<button type="button" class="campaign-audience-empty campaign-audience-empty-jump" data-g4-jump-target="${escapeAttr(JSON.stringify({ gateId: "gate-1", kind: "gate1-target-audience" }))}">Сначала создайте сегмент в «Целевой аудитории» Этапа 01, затем выберите его здесь →</button>`}
     <details class="campaign-targeting" open><summary>Настройки поиска аудитории в канале</summary><div class="campaign-targeting-grid">${CAMPAIGN_TARGETING_FIELDS.map(([key, label, placeholder]) => `<label><span>${escapeHtml(label)}</span><textarea rows="2" data-campaign-targeting-product="${escapeAttr(product)}" data-campaign-targeting-channel="${escapeAttr(channel.key)}" data-campaign-targeting-field="${escapeAttr(key)}" placeholder="${escapeAttr(placeholder)}">${escapeHtml(targeting[key] || "")}</textarea></label>`).join("")}</div></details>
   </section>`;
 }
@@ -44121,7 +44402,7 @@ document.addEventListener("input", (event) => {
 
 // Одна посадочная: platformV2.landings является только зеркалом binding.landing.
 const __guruV185PrevMegaPlatformSectionHtml = megaPlatformSectionHtml;
-megaPlatformSectionHtml = function (cardId, pv2) {
+megaPlatformSectionHtml = function (cardId, pv2, options) {
   guruV185EnsureProductBindings(state);
   const registry = guruV185Registry(state);
   // Экран «Платформа» читает посадочные непосредственно из связки
@@ -44131,7 +44412,7 @@ megaPlatformSectionHtml = function (cardId, pv2) {
     product.name,
     { ...guruV185Binding(product.id, state).landing, productId: product.id },
   ]));
-  let html = __guruV185PrevMegaPlatformSectionHtml(cardId, { ...pv2, landings: landingProjection });
+  let html = __guruV185PrevMegaPlatformSectionHtml(cardId, { ...pv2, landings: landingProjection }, options);
   registry.forEach((product) => {
     html = html.replaceAll(
       `data-mega-product="${escapeAttr(product.name)}"`,
@@ -44160,16 +44441,50 @@ document.addEventListener("change", (event) => {
 
 // Текущие результаты всегда подписаны: продукт либо явный, либо видно,
 // что назначение ещё требуется. Неподписанный «общий итог» больше не маскируется.
+/* v2.1.6 — «Продукт результатов» переведён с уровня категории (v185
+   registry, meta.productId) на уровень позиции (v194 каталог,
+   meta.positionId) и следует единому селектору guruV194Ui. Старое поле
+   meta.productId и его миграция guruV185MigrateCurrentResults не
+   трогаются и не удаляются — они остаются источником для одноразового
+   переноса: если категория содержала ровно одну фактическую позицию,
+   назначение переносится на неё автоматически; если позиций несколько —
+   назначение однозначно не восстановить, это отмечается пометкой, без
+   потери исходных данных результатов (сами цифры result-строк от
+   productId/positionId не зависят). */
+function gate0CurrentResultsMigrateToPosition(card, workspace = state) {
+  const meta = card.currentResultsMeta;
+  if (!meta || (meta.positionId && guruV194Product(meta.positionId, workspace))) return;
+  if (!meta.productId) return;
+  const category = guruV185ProductById(meta.productId, workspace);
+  if (!category) return;
+  const items = guruV194Products(workspace).filter((item) => item.categoryId === category.id);
+  if (items.length === 1) meta.positionId = items[0].id;
+}
+
+function gate0CurrentResultsLegacyNoteHtml(meta, workspace = state) {
+  if (!meta.productId) return "";
+  const category = guruV185ProductById(meta.productId, workspace);
+  if (!category) return "";
+  const items = guruV194Products(workspace).filter((item) => item.categoryId === category.id);
+  if (items.length <= 1) return "";
+  return `<div class="gate5-note" style="margin-bottom:12px;">Требует ручной разбивки: раньше результаты были привязаны к категории «${escapeHtml(category.name)}» (${items.length} позиций). Сейчас привязка следует общему выбору продукта в блоке «Продукт, сегмент и задача клиента» — сами данные результатов не менялись.</div>`;
+}
+
 const __guruV185PrevCurrentResultsHtml = currentResultsHtml;
 currentResultsHtml = function (card) {
   guruV185MigrateCurrentResults(card, state);
   const meta = card.currentResultsMeta || (card.currentResultsMeta = { period: "", sources: "", productId: "" });
-  const registry = guruV185EnsureProductBindings(state);
-  const selected = guruV185ProductById(meta.productId, state);
-  const scope = `<label class="cr-meta-field"><span class="cr-meta-label">Продукт результатов</span><select data-cr-meta-card-id="${escapeAttr(card.id)}" data-cr-meta-field="productId"><option value="">Не назначено — не считать общим итогом</option>${registry.map((product) => `<option value="${escapeAttr(product.id)}" ${product.id === meta.productId ? "selected" : ""}>${escapeHtml(product.name)}</option>`).join("")}</select></label>`;
+  gate0CurrentResultsMigrateToPosition(card, state);
+  const sharedProduct = guruV194SelectedProduct(state);
+  if (sharedProduct) meta.positionId = sharedProduct.id;
+  const selected = guruV194Product(meta.positionId, state);
+  const positions = guruV194Products(state);
+  const scope = `<label class="cr-meta-field"><span class="cr-meta-label">Продукт результатов</span><select disabled title="Продукт определяется общим селектором раздела «Продукт / услуга»" data-cr-meta-card-id="${escapeAttr(card.id)}" data-cr-meta-field="positionId"><option value="">Не назначено — не считать общим итогом</option>${positions.map((product) => `<option value="${escapeAttr(product.id)}" ${product.id === meta.positionId ? "selected" : ""}>${escapeHtml(product.name)}</option>`).join("")}</select></label>`;
   let html = __guruV185PrevCurrentResultsHtml(card);
   html = html.replace('<div class="cr-meta">', `<div class="cr-meta">${scope}`);
-  if (!selected) html = `<div class="gate5-note" style="margin-bottom:12px;">Результаты не назначены продукту и не используются как общий итог проекта. Выберите продукт после сверки с кампанией.</div>${html}`;
+  const legacyNote = gate0CurrentResultsLegacyNoteHtml(meta, state);
+  if (legacyNote) html = `${legacyNote}${html}`;
+  else if (!selected) html = `<div class="gate5-note" style="margin-bottom:12px;">Результаты не назначены продукту и не используются как общий итог проекта. Выберите продукт в блоке «Продукт, сегмент и задача клиента».</div>${html}`;
   return html;
 };
 
@@ -44178,8 +44493,9 @@ recalculateStatusForCard = function (card, workspace = state) {
   if (isCurrentResultsCard(card)) {
     const rows = ensureCurrentResults(card);
     guruV185MigrateCurrentResults(card, workspace);
+    gate0CurrentResultsMigrateToPosition(card, workspace);
     const filled = rows.filter((row) => guruV185Text(row.value)).length;
-    const assigned = Boolean(guruV185ProductById(card.currentResultsMeta?.productId, workspace));
+    const assigned = Boolean(guruV194Product(card.currentResultsMeta?.positionId, workspace));
     card.status = !filled ? "not_started" : assigned ? "ready" : "in_progress";
     return;
   }
@@ -44679,13 +44995,14 @@ recalculateAllStatuses = function () {
    удаляются: ниже они поддерживаются как совместимая проекция для Gate 1–8.
    ================================================================ */
 const GURU_GATE0_PRODUCT_SCOPE_MIGRATION_V194 = "gate0-product-scope-v194";
+const GURU_GATE0_OFFER_CTA_MIGRATION_V197 = "gate0-offer-cta-v197";
 const GURU_GATE0_SCOPE_FIELDS_V194 = [
   ["jtbd", "JTBD", "Когда…, я хочу…, чтобы…"],
   ["segments", "Сегменты", "Один сегмент в одной записи"],
   ["positioning", "Позиционирование", "Категория + отличие от конкурентов"],
   ["usp", "УТП", "Главное обещание выбора"],
-  ["offers", "Офферы", "Одно предложение в одной записи"],
-  ["cta", "CTA", "Одно целевое действие в одной записи"],
+  ["offers", "Оффер", "Один оффер с собственным CTA в одной записи"],
+  ["cta", "CTA", "Архив самостоятельных CTA прежней структуры"],
 ];
 const GURU_GATE0_SCOPES_V194 = [
   ["product", "Только этот продукт"],
@@ -44844,6 +45161,63 @@ function guruV194Migrate(workspace = state) {
   });
 }
 
+function guruV194MigrateOfferCtas(workspace = state) {
+  if (!workspace?.project) return;
+  const project = workspace.project;
+  const log = (project._gate0ProductIdMigrationLog = Array.isArray(project._gate0ProductIdMigrationLog)
+    ? project._gate0ProductIdMigrationLog
+    : []);
+  if (log.some((entry) => entry.id === GURU_GATE0_OFFER_CTA_MIGRATION_V197)) return;
+
+  const records = guruV194Records(workspace);
+  const locationKey = (record) => [record.scope, record.category_id, record.product_id].join("|");
+  const offersByLocation = new Map();
+  records.filter((record) => record.field === "offers").forEach((record) => {
+    const key = locationKey(record);
+    const group = offersByLocation.get(key) || [];
+    group.push(record);
+    offersByLocation.set(key, group);
+  });
+
+  records.filter((record) => record.field === "cta" && guruV185Text(record.value)).forEach((ctaRecord) => {
+    const key = locationKey(ctaRecord);
+    const candidates = offersByLocation.get(key) || [];
+    const target = candidates.find((offerRecord) => !guruV194OfferParts(offerRecord).cta);
+    if (target) {
+      const parts = guruV194OfferParts(target);
+      if (!target.offer && !parts.legacy_value && guruV185Text(target.value)) parts.legacy_value = target.value;
+      parts.cta = guruV185Text(ctaRecord.value);
+      target.offer = parts;
+      target.value = guruV194OfferStoredValue(parts);
+      target.updated_at = new Date().toISOString();
+      return;
+    }
+    const offerRecord = {
+      id: makeId("gate0-value"),
+      project_id: ctaRecord.project_id,
+      category_id: ctaRecord.category_id,
+      product_id: ctaRecord.product_id,
+      scope: ctaRecord.scope,
+      field: "offers",
+      value: guruV185Text(ctaRecord.value),
+      offer: { rational: "", irrational: "", social: "", cta: guruV185Text(ctaRecord.value), legacy_value: "" },
+      source: { ...(ctaRecord.source || {}), migrated_from_id: ctaRecord.id },
+      confirmation_status: ctaRecord.confirmation_status,
+      created_at: ctaRecord.created_at,
+      updated_at: new Date().toISOString(),
+    };
+    records.push(offerRecord);
+    candidates.push(offerRecord);
+    offersByLocation.set(key, candidates);
+  });
+  log.push({
+    id: GURU_GATE0_OFFER_CTA_MIGRATION_V197,
+    at: new Date().toISOString(),
+    status: "completed_preserved_legacy_ctas",
+    note: "Самостоятельные CTA сохранены и добавлены в карточки офферов без удаления прежних записей.",
+  });
+}
+
 function guruV194Values(field, product, workspace = state) {
   return guruV194Resolve(field, product, workspace).records
     .map((record) => guruV185Text(record.value))
@@ -44866,17 +45240,22 @@ function guruV194SyncLegacy(workspace = state) {
     // Старый binding адресует всю категорию и не умеет выразить продуктовые
     // варианты. Поэтому в него проецируем только category → project, а
     // индивидуальные overrides оставляем в productScopedOverridesV194.
-    const value = (field) => {
+    const scopedRecords = (field) => {
       const exact = guruV194ExactRecords(field, "category", categoryRef, workspace);
-      const records = exact.length
+      return exact.length
         ? exact
         : guruV194ExactRecords(field, "project", null, workspace);
-      return records.map((record) => guruV185Text(record.value)).filter(Boolean);
     };
+    const value = (field) => scopedRecords(field)
+      .map((record) => guruV185Text(record.value)).filter(Boolean);
+    const uniqueValues = (values) => [...new Set(values.filter(Boolean))];
     const jtbds = value("jtbd");
     const segments = value("segments");
     const categoryOffers = value("offers");
-    const ctas = value("cta");
+    const ctas = uniqueValues([
+      ...scopedRecords("offers").map((record) => guruV194OfferParts(record).cta),
+      ...value("cta"),
+    ]);
     binding.jtbd = jtbds[0] || "";
     binding.audiences = segments.map((text) => ({ text, shared: true, source: "gate0ScopedValuesV194" }));
     binding.offer = categoryOffers.join("\n");
@@ -44907,12 +45286,16 @@ function guruV194SyncLegacy(workspace = state) {
     );
   });
 
-  const projectValue = (field) => guruV194ExactRecords(field, "project", null, workspace)
+  const projectRecords = (field) => guruV194ExactRecords(field, "project", null, workspace);
+  const projectValue = (field) => projectRecords(field)
     .map((record) => guruV185Text(record.value)).filter(Boolean);
   const positioning = projectValue("positioning");
   const usp = projectValue("usp");
   const projectOffers = projectValue("offers");
-  const projectCtas = projectValue("cta");
+  const projectCtas = [...new Set([
+    ...projectRecords("offers").map((record) => guruV194OfferParts(record).cta),
+    ...projectValue("cta"),
+  ].filter(Boolean))];
   project.positioningStatement = positioning.join("\n");
   project.usp = usp.join("\n");
   project.currentOffers = projectOffers.join("\n");
@@ -44930,11 +45313,29 @@ function guruV194Ensure(workspace = state) {
   if (!workspace?.project) return [];
   guruV189EnsureCatalog(workspace);
   guruV194Migrate(workspace);
+  guruV194MigrateOfferCtas(workspace);
   guruV194Records(workspace);
   guruV194SyncLegacy(workspace);
   return guruV194Products(workspace);
 }
 
+/* ================================================================
+   ПРАВИЛО (v2.1.6, после трёх независимых рассинхронов — Gate 3
+   «Маршрут 5A», Gate 4 «Стратегическая основа», Gate 0 «Посадочная» и
+   «Продукт результатов»): guruV194Ui — ЕДИНСТВЕННЫЙ выбор текущего
+   продукта/услуги на весь проект (selectedCategoryId/selectedProductId,
+   уровень ПОЗИЦИИ — конкретный item из guruV194Products, а не категория
+   из guruV185Registry).
+
+   Любой новый экран, которому нужно «для какого продукта показываем
+   данные» — ОБЯЗАН читать guruV194SelectedProduct(state) / писать через
+   guruV194Ui(state). Заводить для этого свой собственный
+   selectedProductId (как раньше делали gate3ProductJourneyV210 и
+   gate4ProductPickV210) — запрещено: это и есть причина всех трёх
+   рассинхронов выше. Привязка к категории (guruV185Binding/registry)
+   допустима только как ЯВНОЕ осознанное исключение с комментарием,
+   объясняющим, почему для этого конкретного случая позиция не подходит
+   (а не как случайное следствие использования более старого API). */
 function guruV194Ui(workspace = state) {
   const project = workspace.project;
   project.gate0ScopeUiV194 = project.gate0ScopeUiV194 && typeof project.gate0ScopeUiV194 === "object"
@@ -45111,51 +45512,28 @@ function guruV194PositioningParts(record = {}) {
   };
 }
 
-function guruV194PositioningSegments(record, product, workspace = state) {
-  if (!record || record.scope === "product") return guruV194Resolve("segments", product, workspace).records;
-  if (record.scope === "category") {
-    const categoryRecords = guruV194ExactRecords("segments", "category", product, workspace);
-    return categoryRecords.length
-      ? categoryRecords
-      : guruV194ExactRecords("segments", "project", product, workspace);
-  }
-  return guruV194ExactRecords("segments", "project", product, workspace);
-}
-
-function guruV194PositioningSegmentText(parts = {}, product, workspace = state) {
-  const segmentId = guruV185Text(parts.segment_record_id);
-  if (!segmentId) return "";
-  // Не вызываем guruV194Records здесь: она нормализует массив заменой объектов,
-  // а эта функция используется внутри редактирования текущей записи.
-  const records = Array.isArray(workspace?.project?.gate0ScopedValuesV194)
-    ? workspace.project.gate0ScopedValuesV194
-    : guruV194Records(workspace);
-  return guruV185Text(records.find((record) => record.id === segmentId)?.value);
-}
-
-function guruV194PositioningSentence(parts = {}, product, options = {}) {
+function guruV194PositioningSentence(parts = {}, options = {}) {
   const { placeholders = false } = options;
-  const segment = guruV194PositioningSegmentText(parts, product) || (placeholders ? "…" : "");
   const category = guruV185Text(parts.category) || (placeholders ? "…" : "");
   const difference = guruV185Text(parts.key_difference) || (placeholders ? "…" : "");
   const basis = guruV185Text(parts.basis) || (placeholders ? "…" : "");
-  if (!placeholders && !segment && !category && !difference && !basis) return "";
-  return `Для ${segment} мы являемся ${category}, отличаемся ${difference}, потому что ${basis}.`;
+  if (!placeholders && !category && !difference && !basis) return "";
+  return `Мы являемся ${category}, отличаемся ${difference}, потому что ${basis}.`;
 }
 
 function guruV194PositioningRecordHtml(record, product) {
   const parts = guruV194PositioningParts(record);
-  const hasParts = Boolean(parts.category || parts.segment_record_id || parts.key_difference || parts.basis);
+  const hasStructuredParts = Boolean(record.positioning && typeof record.positioning === "object");
+  const hasParts = Boolean(parts.category || parts.key_difference || parts.basis);
   const sentence = hasParts
-    ? guruV194PositioningSentence(parts, product, { placeholders: true })
-    : guruV185Text(record.value) || guruV194PositioningSentence(parts, product, { placeholders: true });
-  const segments = guruV194PositioningSegments(record, product);
-  const selectedSegmentAvailable = segments.some((segment) => segment.id === parts.segment_record_id);
+    ? guruV194PositioningSentence(parts, { placeholders: true })
+    : hasStructuredParts
+      ? guruV194PositioningSentence(parts, { placeholders: true })
+      : guruV185Text(record.value) || guruV194PositioningSentence(parts, { placeholders: true });
   return `<article class="gate0-scope-value-v194 gate0-positioning-value-v194" data-gate0-scope-record-row="${escapeAttr(record.id)}">
     <button type="button" class="small-btn danger-mini gate0-scope-value-remove-v194" data-gate0-scope-record-remove="${escapeAttr(record.id)}" title="Удалить позиционирование">×</button>
     <div class="gate0-positioning-parts-v194">
       <label><small>С чем клиент сравнивает продукт.</small><strong>Категория</strong><textarea class="passport-v116-input passport-v116-autosize ${parts.category ? "is-filled" : "is-empty"}" data-gate0-scope-record="${escapeAttr(record.id)}" data-gate0-scope-record-field="positioning_category" rows="2" placeholder="Например: авторская одежда и подарки">${escapeHtml(parts.category)}</textarea></label>
-      <label><small>Для кого это предложение.</small><strong>Целевой сегмент</strong><select class="passport-v116-input ${parts.segment_record_id ? "is-filled" : "is-empty"}" data-gate0-scope-record="${escapeAttr(record.id)}" data-gate0-scope-record-field="positioning_segment_record_id"><option value="">${segments.length ? "Выберите созданный сегмент" : "Сначала добавьте сегмент"}</option>${parts.segment_record_id && !selectedSegmentAvailable ? `<option value="${escapeAttr(parts.segment_record_id)}" selected>Выбранный сегмент недоступен</option>` : ""}${segments.map((segment) => `<option value="${escapeAttr(segment.id)}" ${parts.segment_record_id === segment.id ? "selected" : ""}>${escapeHtml(segment.value)}</option>`).join("")}</select></label>
       <label><small>Чем продукт отличается от конкурентов или альтернатив.</small><strong>Ключевое отличие</strong><textarea class="passport-v116-input passport-v116-autosize ${parts.key_difference ? "is-filled" : "is-empty"}" data-gate0-scope-record="${escapeAttr(record.id)}" data-gate0-scope-record-field="positioning_key_difference" rows="2" placeholder="Например: превращаем винтажные материалы в уникальные вещи">${escapeHtml(parts.key_difference)}</textarea></label>
       <label><small>Какой факт подтверждает это отличие.</small><strong>Основание</strong><textarea class="passport-v116-input passport-v116-autosize ${parts.basis ? "is-filled" : "is-empty"}" data-gate0-scope-record="${escapeAttr(record.id)}" data-gate0-scope-record-field="positioning_basis" rows="2" placeholder="Например: каждую вещь создаёт мастер вручную">${escapeHtml(parts.basis)}</textarea></label>
     </div>
@@ -45163,35 +45541,164 @@ function guruV194PositioningRecordHtml(record, product) {
   </article>`;
 }
 
-function guruV194UpdatePositioningPart(record, field, value, product) {
+function guruV194UpdatePositioningPart(record, field, value) {
   const hadStructuredParts = Boolean(record.positioning && typeof record.positioning === "object");
   const parts = guruV194PositioningParts(record);
   if (!hadStructuredParts && !parts.legacy_value && guruV185Text(record.value)) parts.legacy_value = record.value;
   const partKey = field.replace("positioning_", "");
   parts[partKey] = value;
   record.positioning = parts;
-  record.value = guruV194PositioningSentence(parts, product);
+  record.value = guruV194PositioningSentence(parts);
   const sentence = document.querySelector(`[data-gate0-positioning-sentence="${CSS.escape(record.id)}"]`);
-  if (sentence) sentence.textContent = guruV194PositioningSentence(parts, product, { placeholders: true });
+  if (sentence) sentence.textContent = guruV194PositioningSentence(parts, { placeholders: true });
 }
 
-function guruV194RefreshPositioningReferences(segmentRecordId, workspace = state) {
-  if (!segmentRecordId) return;
-  guruV194Records(workspace).forEach((record) => {
-    if (record.field !== "positioning") return;
-    const parts = guruV194PositioningParts(record);
-    if (parts.segment_record_id !== segmentRecordId) return;
-    record.value = guruV194PositioningSentence(parts, null);
-    record.updated_at = new Date().toISOString();
-    const sentence = document.querySelector(`[data-gate0-positioning-sentence="${CSS.escape(record.id)}"]`);
-    if (sentence) sentence.textContent = guruV194PositioningSentence(parts, null, { placeholders: true });
-  });
+function guruV194OfferParts(record = {}) {
+  const raw = record.offer && typeof record.offer === "object" ? record.offer : {};
+  return {
+    rational: guruV185Text(raw.rational),
+    irrational: guruV185Text(raw.irrational),
+    social: guruV185Text(raw.social),
+    cta: guruV185Text(raw.cta),
+    legacy_value: guruV185Text(raw.legacy_value),
+  };
+}
+
+function guruV194OfferCoreIsComplete(parts = {}) {
+  return Boolean(guruV185Text(parts.rational) && guruV185Text(parts.irrational) && guruV185Text(parts.social));
+}
+
+function guruV194OfferIsComplete(parts = {}) {
+  return guruV194OfferCoreIsComplete(parts) && Boolean(guruV185Text(parts.cta));
+}
+
+function guruV194OfferStatus(parts = {}) {
+  if (!guruV194OfferCoreIsComplete(parts)) return "Оффер не сформирован полностью";
+  if (!guruV185Text(parts.cta)) return "CTA не определён";
+  return "Оффер готов";
+}
+
+function guruV194OfferSentence(parts = {}) {
+  if (!guruV194OfferIsComplete(parts)) return "";
+  return `${guruV185Text(parts.rational)} + ${guruV185Text(parts.irrational)} + ${guruV185Text(parts.social)} → ${guruV185Text(parts.cta)}`;
+}
+
+function guruV194OfferStoredValue(parts = {}) {
+  const values = [parts.rational, parts.irrational, parts.social]
+    .map((value) => guruV185Text(value)).filter(Boolean);
+  if (guruV185Text(parts.cta)) return values.length ? `${values.join(" + ")} → ${guruV185Text(parts.cta)}` : guruV185Text(parts.cta);
+  return values.join(" + ");
+}
+
+function guruV194OfferRecordHtml(record, product) {
+  const parts = guruV194OfferParts(record);
+  const hasParts = Boolean(parts.rational || parts.irrational || parts.social || parts.cta);
+  const status = guruV194OfferStatus(parts);
+  const sentence = guruV194OfferSentence(parts);
+  const fields = [
+    ["rational", "Рациональное", "Что объективно получает клиент: выгода, цена, качество, скорость, удобство, гарантия, экономия, функциональность.", "Например: бесплатная доставка и гарантия на 12 месяцев"],
+    ["irrational", "Иррациональное", "Какой внутренний мотив затрагивается: желание, страх, статус, безопасность, контроль, признание, принадлежность, самовыражение и т. д.", "Например: уверенность, что подарок действительно запомнится"],
+    ["social", "Социальное", "Какой социальный фактор усиливает выбор: мнение группы, авторитет, экспертность, репутация, социальная норма, статусная среда, подтверждение другими.", "Например: выбор подтверждён отзывами покупателей"],
+    ["cta", "CTA", "Какое конкретное действие должен совершить человек после оффера.", "Например: Смотреть подарок"],
+  ];
+  return `<article class="gate0-scope-value-v194 gate0-offer-value-v194" data-gate0-scope-record-row="${escapeAttr(record.id)}">
+    <button type="button" class="small-btn danger-mini gate0-scope-value-remove-v194" data-gate0-scope-record-remove="${escapeAttr(record.id)}" title="Удалить оффер">×</button>
+    <div class="gate0-offer-parts-v194">${fields.map(([key, title, hint, placeholder], index) => `<label><small>${escapeHtml(hint)}</small><strong>${escapeHtml(title)}</strong><textarea class="passport-v116-input passport-v116-autosize ${parts[key] ? "is-filled" : "is-empty"}" data-gate0-scope-record="${escapeAttr(record.id)}" data-gate0-scope-record-field="offer_${key}" rows="3" placeholder="${escapeAttr(placeholder)}">${escapeHtml(parts[key])}</textarea>${index < fields.length - 1 ? '<i class="gate0-offer-arrow-v194" aria-hidden="true">↓</i>' : ""}</label>`).join("")}</div>
+    <div class="gate0-offer-sentence-v194 ${guruV194OfferIsComplete(parts) ? "is-ready" : ""}"><small>Единый оффер</small><strong data-gate0-offer-sentence="${escapeAttr(record.id)}">${escapeHtml(sentence || (hasParts || !guruV185Text(record.value) ? status : record.value))}</strong></div>
+  </article>`;
+}
+
+function guruV194UpdateOfferPart(record, field, value) {
+  const hadStructuredParts = Boolean(record.offer && typeof record.offer === "object");
+  const parts = guruV194OfferParts(record);
+  if (!hadStructuredParts && !parts.legacy_value && guruV185Text(record.value)) parts.legacy_value = record.value;
+  parts[field.replace("offer_", "")] = value;
+  record.offer = parts;
+  record.value = guruV194OfferStoredValue(parts);
+  const status = guruV194OfferStatus(parts);
+  const isReady = guruV194OfferIsComplete(parts);
+  const sentence = document.querySelector(`[data-gate0-offer-sentence="${CSS.escape(record.id)}"]`);
+  if (sentence) sentence.textContent = guruV194OfferSentence(parts) || status;
+  const sentenceBox = sentence?.closest(".gate0-offer-sentence-v194");
+  if (sentenceBox) sentenceBox.classList.toggle("is-ready", isReady);
+}
+
+function guruV194UspParts(record = {}) {
+  const raw = record.usp && typeof record.usp === "object" ? record.usp : {};
+  return {
+    client_gets: guruV185Text(raw.client_gets),
+    client_change: guruV185Text(raw.client_change),
+    uniqueness: guruV185Text(raw.uniqueness),
+    strength: guruV185Text(raw.strength),
+    legacy_value: guruV185Text(raw.legacy_value),
+  };
+}
+
+function guruV194UspConcreteBenefit(parts = {}) {
+  const clientGets = guruV185Text(parts.client_gets);
+  const clientChange = guruV185Text(parts.client_change);
+  return clientGets && clientChange ? `${clientGets} → ${clientChange}` : "";
+}
+
+function guruV194UspIsComplete(parts = {}) {
+  return Boolean(
+    guruV194UspConcreteBenefit(parts)
+    && guruV185Text(parts.uniqueness)
+    && guruV185Text(parts.strength),
+  );
+}
+
+function guruV194UspSentence(parts = {}) {
+  const benefit = guruV194UspConcreteBenefit(parts);
+  if (!guruV194UspIsComplete(parts)) return "";
+  return `${benefit}. Уникальность: ${guruV185Text(parts.uniqueness)}. Сила предложения: ${guruV185Text(parts.strength)}.`;
+}
+
+function guruV194UspStoredValue(parts = {}) {
+  return guruV194UspSentence(parts) || guruV194UspConcreteBenefit(parts);
+}
+
+function guruV194UspRecordHtml(record, product) {
+  const parts = guruV194UspParts(record);
+  const hasParts = Boolean(parts.client_gets || parts.client_change || parts.uniqueness || parts.strength);
+  const benefit = guruV194UspConcreteBenefit(parts);
+  const isComplete = guruV194UspIsComplete(parts);
+  const sentence = isComplete ? guruV194UspSentence(parts) : "Полноценное УТП не сформировано";
+  const fields = [
+    ["client_gets", "Что получает клиент", "Какой продукт, возможность или конкретное преимущество он получает.", "Например: уникальную вещь, созданную вручную"],
+    ["client_change", "Что меняется для клиента", "Что становится лучше, проще, выгоднее, безопаснее или значимее после покупки.", "Например: может выразить свою индивидуальность без массового дизайна"],
+    ["uniqueness", "Уникальность", "Чем эта выгода отличается от предложений конкурентов или альтернатив.", "Например: каждая вещь существует в единственном экземпляре"],
+    ["strength", "Сила предложения", "Почему эта выгода достаточно важна, чтобы повлиять на выбор клиента.", "Например: позволяет подарить вещь с личной историей"],
+  ];
+  return `<article class="gate0-scope-value-v194 gate0-usp-value-v194" data-gate0-scope-record-row="${escapeAttr(record.id)}">
+    <button type="button" class="small-btn danger-mini gate0-scope-value-remove-v194" data-gate0-scope-record-remove="${escapeAttr(record.id)}" title="Удалить УТП">×</button>
+    <div class="gate0-usp-parts-v194">${fields.map(([key, title, hint, placeholder]) => `<label><small>${escapeHtml(hint)}</small><strong>${escapeHtml(title)}</strong><textarea class="passport-v116-input passport-v116-autosize ${parts[key] ? "is-filled" : "is-empty"}" data-gate0-scope-record="${escapeAttr(record.id)}" data-gate0-scope-record-field="usp_${key}" rows="3" placeholder="${escapeAttr(placeholder)}">${escapeHtml(parts[key])}</textarea></label>`).join("")}</div>
+    <div class="gate0-usp-benefit-v194"><small>Конкретная выгода</small><strong data-gate0-usp-benefit="${escapeAttr(record.id)}">${escapeHtml(benefit || "Заполните первые две ячейки, чтобы сформировать конкретную выгоду.")}</strong></div>
+    <div class="gate0-usp-sentence-v194 ${!isComplete ? "is-incomplete" : ""}"><small>Единая формулировка УТП</small><strong data-gate0-usp-sentence="${escapeAttr(record.id)}">${escapeHtml(hasParts || !guruV185Text(record.value) ? sentence : record.value)}</strong></div>
+  </article>`;
+}
+
+function guruV194UpdateUspPart(record, field, value) {
+  const hadStructuredParts = Boolean(record.usp && typeof record.usp === "object");
+  const parts = guruV194UspParts(record);
+  if (!hadStructuredParts && !parts.legacy_value && guruV185Text(record.value)) parts.legacy_value = record.value;
+  parts[field.replace("usp_", "")] = value;
+  record.usp = parts;
+  record.value = guruV194UspStoredValue(parts);
+  const benefit = document.querySelector(`[data-gate0-usp-benefit="${CSS.escape(record.id)}"]`);
+  if (benefit) benefit.textContent = guruV194UspConcreteBenefit(parts) || "Заполните первые две ячейки, чтобы сформировать конкретную выгоду.";
+  const sentence = document.querySelector(`[data-gate0-usp-sentence="${CSS.escape(record.id)}"]`);
+  if (sentence) sentence.textContent = guruV194UspIsComplete(parts) ? guruV194UspSentence(parts) : "Полноценное УТП не сформировано";
+  const sentenceBox = sentence?.closest(".gate0-usp-sentence-v194");
+  if (sentenceBox) sentenceBox.classList.toggle("is-incomplete", !guruV194UspIsComplete(parts));
 }
 
 function guruV194RecordHtml(record, product) {
   if (record.field === "jtbd") return guruV194JtbdRecordHtml(record, product);
   if (record.field === "segments") return guruV194SegmentRecordHtml(record, product);
   if (record.field === "positioning") return guruV194PositioningRecordHtml(record, product);
+  if (record.field === "usp") return guruV194UspRecordHtml(record, product);
+  if (record.field === "offers") return guruV194OfferRecordHtml(record, product);
   return `<article class="gate0-scope-value-v194" data-gate0-scope-record-row="${escapeAttr(record.id)}">
     <button type="button" class="small-btn danger-mini gate0-scope-value-remove-v194" data-gate0-scope-record-remove="${escapeAttr(record.id)}" title="Удалить значение">×</button>
     <textarea class="passport-v116-input passport-v116-autosize ${guruV185Text(record.value) ? "is-filled" : "is-empty"}" data-gate0-scope-record="${escapeAttr(record.id)}" data-gate0-scope-record-field="value" rows="1" placeholder="Введите значение">${escapeHtml(record.value)}</textarea>
@@ -45301,10 +45808,10 @@ const __guruV194PrevCardUserFieldsHtml = cardUserFieldsHtml;
 cardUserFieldsHtml = function (card) {
   const def = v116PassportDef(card);
   if (def?.key === "product_segment_client_task") {
-    return `<div class="field-row passport-v116-row gate0-product-central-v194"><div class="passport-v116"><div class="passport-v116-grid">${guruV187ProductCardsHtml()}</div>${guruV194FieldsHtml(["jtbd", "segments", "positioning", "usp", "offers", "cta"], def.key)}</div></div>`;
+    return `<div class="field-row passport-v116-row gate0-product-central-v194"><div class="passport-v116"><div class="passport-v116-grid">${guruV187ProductCardsHtml()}</div>${guruV194FieldsHtml(["jtbd", "segments", "positioning", "usp", "offers"], def.key)}</div></div>`;
   }
   if (def?.key === "positioning_utp_offers_cta") {
-    return `<div class="field-row passport-v116-row gate0-product-central-v194"><div class="passport-v116">${guruV194FieldsHtml(["positioning", "usp", "offers", "cta"], def.key)}</div></div>`;
+    return `<div class="field-row passport-v116-row gate0-product-central-v194"><div class="passport-v116">${guruV194FieldsHtml(["positioning", "usp", "offers"], def.key)}</div></div>`;
   }
   return __guruV194PrevCardUserFieldsHtml(card);
 };
@@ -45313,9 +45820,9 @@ const __guruV194PrevV116Status = v116Status;
 v116Status = function (card, workspace = state) {
   const def = v116PassportDef(card);
   const fields = def?.key === "product_segment_client_task"
-    ? ["jtbd", "segments", "positioning", "usp", "offers", "cta"]
+    ? ["jtbd", "segments", "positioning", "usp", "offers"]
     : def?.key === "positioning_utp_offers_cta"
-      ? ["positioning", "usp", "offers", "cta"]
+      ? ["positioning", "usp", "offers"]
       : null;
   if (!fields) return __guruV194PrevV116Status(card, workspace);
   const products = guruV194Ensure(workspace);
@@ -45375,10 +45882,6 @@ document.addEventListener("change", (event) => {
       record.confirmation_status = recordInput.value;
       record.updated_at = new Date().toISOString();
     }
-    if (record && field === "positioning_segment_record_id") {
-      guruV194UpdatePositioningPart(record, field, recordInput.value, product);
-      record.updated_at = new Date().toISOString();
-    }
   }
   guruV194SyncLegacy(state);
   flashSaving();
@@ -45430,12 +45933,17 @@ document.addEventListener("input", (event) => {
     parts[partKey] = input.value;
     record.segment = parts;
     record.value = guruV194SegmentSentence(parts);
-    guruV194RefreshPositioningReferences(record.id);
     const sentence = document.querySelector(`[data-gate0-segment-sentence="${CSS.escape(record.id)}"]`);
     if (sentence) sentence.textContent = record.value || "Заполните ячейки, чтобы получить формулировку сегмента.";
   }
   if (["positioning_category", "positioning_key_difference", "positioning_basis"].includes(field)) {
-    guruV194UpdatePositioningPart(record, field, input.value, product);
+    guruV194UpdatePositioningPart(record, field, input.value);
+  }
+  if (["usp_client_gets", "usp_client_change", "usp_uniqueness", "usp_strength"].includes(field)) {
+    guruV194UpdateUspPart(record, field, input.value);
+  }
+  if (["offer_rational", "offer_irrational", "offer_social", "offer_cta"].includes(field)) {
+    guruV194UpdateOfferPart(record, field, input.value);
   }
   if (field === "source") record.source = { ...(record.source || {}), type: record.source?.type || "manual", label: input.value };
   record.updated_at = new Date().toISOString();
@@ -45489,6 +45997,8 @@ document.addEventListener("click", (event) => {
       ...(sourceRecord.jtbd && typeof sourceRecord.jtbd === "object" ? { jtbd: { ...sourceRecord.jtbd } } : {}),
       ...(sourceRecord.segment && typeof sourceRecord.segment === "object" ? { segment: { ...sourceRecord.segment } } : {}),
       ...(sourceRecord.positioning && typeof sourceRecord.positioning === "object" ? { positioning: { ...sourceRecord.positioning } } : {}),
+      ...(sourceRecord.usp && typeof sourceRecord.usp === "object" ? { usp: { ...sourceRecord.usp } } : {}),
+      ...(sourceRecord.offer && typeof sourceRecord.offer === "object" ? { offer: { ...sourceRecord.offer } } : {}),
       source: {
         type: "inheritance_override",
         label: commonMeta.source,
@@ -45507,3 +46017,1252 @@ document.addEventListener("click", (event) => {
   guruV194RefreshFieldHtml(changedField, product);
   if (add) setTimeout(() => document.querySelector(`[data-gate0-scope-field-row="${CSS.escape(add.dataset.gate0ScopeAdd)}"] .gate0-scope-value-v194:last-child textarea`)?.focus(), 0);
 }, true);
+
+/* ================================================================
+   v2.1.2 — Gate 3 / 5A: карта пути конкретного продукта.
+
+   Экран больше не хранит собственные формулировки воронки. Он выбирает
+   product_id и показывает только данные из карточки позиции и связанных
+   Gate. Прежнее общепроектное state.gate3_5a остаётся в сохранённом
+   проекте для обратной совместимости, но не рендерится и не влияет на 5A.
+   ================================================================ */
+const G3_PRODUCT_JOURNEY_VERSION = "gate3-product-journey-v212";
+
+/* v2.1.6 — единый селектор продукта на весь проект: Gate 3 больше не
+   хранит свой selectedProductId (gate3ProductJourneyV210 раньше держал
+   его отдельно от Gate 0, из-за чего карта 5A могла показывать другую
+   позицию, чем выбрана в JTBD-блоке). Источник выбора теперь всегда один
+   — guruV194Ui/guruV194SelectedProduct (тот же, что в Gate 0 и Gate 4).
+   Здесь остаётся только openStepsByProduct — какие этапы раскрыты для
+   какой позиции; это чисто UI-состояние экрана Gate 3, ему не обязательно
+   быть общим. */
+function g3ProductJourneyState(workspace = state) {
+  if (!workspace) return { openStepsByProduct: {} };
+  workspace.gate3ProductJourneyV210 = workspace.gate3ProductJourneyV210 && typeof workspace.gate3ProductJourneyV210 === "object"
+    ? workspace.gate3ProductJourneyV210
+    : {};
+  const data = workspace.gate3ProductJourneyV210;
+  data.version = G3_PRODUCT_JOURNEY_VERSION;
+  data.openStepsByProduct = data.openStepsByProduct && typeof data.openStepsByProduct === "object"
+    ? data.openStepsByProduct
+    : {};
+  return data;
+}
+
+function g3ProductJourneyProducts(workspace = state) {
+  if (!workspace) return [];
+  // Каталог и миграции подготавливаются централизованно в prepareSystemCards.
+  // Повторный ensure из read-only Gate 3 способен рекурсивно пересчитывать
+  // статусы Gate 0; здесь нужен только готовый единый реестр.
+  return guruV194Products(workspace);
+}
+
+function g3ProductJourneySelected(workspace = state) {
+  return guruV194SelectedProduct(workspace);
+}
+
+function g3ProductJourneyText(value) {
+  const text = guruV185Text(value);
+  if (!text) return "";
+  const cleaned = text
+    .replace(/\uFFFD+\??/g, "")
+    .replace(/\?{3,}/g, "")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/[ \t]*\n[ \t]*/g, "\n")
+    .trim();
+  return cleaned && !/^[?\s]+$/.test(cleaned) ? cleaned : "";
+}
+
+function g3ProductJourneyUnique(parts) {
+  const seen = new Set();
+  return (parts || [])
+    .map((value) => g3ProductJourneyText(value))
+    .filter((value) => {
+      const key = value.toLocaleLowerCase("ru-RU");
+      if (!value || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+function g3ProductJourneyJoin(parts, separator = "\n") {
+  return g3ProductJourneyUnique(parts).join(separator);
+}
+
+function g3ProductJourneyNorm(value) {
+  return guruV185Text(value).toLocaleLowerCase("ru-RU");
+}
+
+function g3ProductJourneyScopeLabel(scope) {
+  return scope === "product"
+    ? "продукт"
+    : scope === "category"
+      ? "категория"
+      : "проект";
+}
+
+function g3ProductJourneyScoped(field, product) {
+  const resolved = guruV194Resolve(field, product, state);
+  return {
+    field,
+    scope: resolved.scope,
+    records: resolved.records,
+    value: g3ProductJourneyJoin(resolved.records.map((record) => record.value)),
+    source: `Gate 0 · ${g3ProductJourneyScopeLabel(resolved.scope)}`,
+  };
+}
+
+function g3ProductJourneyPageSource(product) {
+  const cards = (state?.gates || []).flatMap((gate) => gate.cards || []);
+  const source = product?.source || {};
+  const sourceCard = source.cardId ? cards.find((card) => card.id === source.cardId) : null;
+  const rowFromCard = (card) => {
+    if (!card) return null;
+    const rows = card.pageRows || [];
+    if (source.rowId) {
+      const byId = rows.find((row) => guruV185Text(row.id) === guruV185Text(source.rowId));
+      if (byId) return byId;
+    }
+    if (Number.isInteger(Number(source.rowIndex)) && rows[Number(source.rowIndex)]) return rows[Number(source.rowIndex)];
+    return rows.find((row) => guruV185Text(row.catalogItemIdV189) === product.id) || null;
+  };
+  const directRow = rowFromCard(sourceCard);
+  if (directRow) return { card: sourceCard, row: directRow };
+  for (const card of cards) {
+    const row = (card.pageRows || []).find((item) => guruV185Text(item.catalogItemIdV189) === product.id);
+    if (row) return { card, row };
+  }
+  return { card: null, row: null };
+}
+
+function g3ProductJourneyLegacyKeys(product) {
+  const category = guruV185ProductById(product?.categoryId, state);
+  return {
+    category,
+    names: g3ProductJourneyUnique([product?.name, category?.name]),
+  };
+}
+
+function g3ProductJourneyLegacyContext(product) {
+  const { category, names } = g3ProductJourneyLegacyKeys(product);
+  const norm = (value) => guruV185Text(value).toLocaleLowerCase("ru-RU");
+  const nameSet = new Set(names.map(norm));
+  const map = pv140EnsureProductMaps().find((row) => nameSet.has(norm(row.product))) || {};
+  const unit = (ensureUnitV130().items || []).find((row) =>
+    nameSet.has(norm(row.productKey || row.name))) || {};
+  const launch = g2ProductContextRows().find((row) => nameSet.has(norm(row.product))) || {};
+  return { category, names, map, unit, launch };
+}
+
+function g3ProductJourneyCampaigns(product, legacy) {
+  const rows = [];
+  const seen = new Set();
+  const campaigns = state?.gate4Production?.campaigns || {};
+  // Расширенный g4LaunchChannels сам читает Gate 3. Для продуктовой 5A
+  // используем его базовый источник Gate 0, иначе получится цикл
+  // Gate 3 → Gate 4 → Gate 3.
+  const channels = typeof __g4V190PrevLaunchChannels === "function"
+    ? __g4V190PrevLaunchChannels()
+    : (g3Gate0Marketing().channels || []).map((row, index) => ({
+      ...row,
+      key: g4LaunchChannelKey(row, index),
+      launchType: g4LaunchChannelType(row),
+    }));
+  const add = (name, status, source, landing = "", route = {}) => {
+    const text = guruV185Text(name);
+    const key = text.toLocaleLowerCase("ru-RU");
+    if (!text || seen.has(key)) return;
+    seen.add(key);
+    rows.push({ name: text, status: status || "not_started", source, landing: guruV185Text(landing), ...route });
+  };
+  channels.forEach((channel) => {
+    legacy.names.forEach((productName) => {
+      const campaign = campaigns[g4CampaignStateKey(productName, channel.key)];
+      if (!campaign) return;
+      const touched = [campaign.decision, campaign.campaignName, campaign.objective, campaign.landing, campaign.launchStatus]
+        .some((value) => guruV185Text(value));
+      if (!touched) return;
+      add(
+        g3AutoJoin([g4LaunchChannelLabel(channel), campaign.campaignName], " · "),
+        g4CampaignStatus(campaign),
+        "Gate 4",
+        campaign.landing,
+        { channelKey: channel.key, launchType: channel.launchType, productName },
+      );
+    });
+  });
+  Object.values(campaigns).forEach((campaign) => {
+    if (!campaign || !legacy.names.some((name) => g3ProductJourneyNorm(name) === g3ProductJourneyNorm(campaign.product))) return;
+    const touched = [campaign.decision, campaign.campaignName, campaign.objective, campaign.landing, campaign.launchStatus]
+      .some((value) => guruV185Text(value));
+    if (touched) add(campaign.campaignName || "Кампания продукта", g4CampaignStatus(campaign), "Gate 4", campaign.landing);
+  });
+  if (!rows.length) {
+    (g3Gate0Marketing().channels || [])
+      .forEach((channel, index) => {
+        if (!guruStatusIsSet(channel.status)) return;
+        add(
+          g3AutoJoin([channel.channel, channel.platform, channel.type], " · "),
+          guruStatusIsOk(channel.status) ? "ready" : guruStatusIsBad(channel.status) ? "problem" : "in_progress",
+          "Gate 0 · проект",
+          "",
+          { channelIndex: index },
+        );
+      });
+  }
+  return rows;
+}
+
+function g3ProductJourneySnapshot(product) {
+  const page = g3ProductJourneyPageSource(product);
+  const row = page.row || {};
+  const context = row.contextFields || {};
+  const legacy = g3ProductJourneyLegacyContext(product);
+  const scoped = Object.fromEntries(
+    ["segments", "jtbd", "positioning", "usp", "offers", "cta"].map((field) => [field, g3ProductJourneyScoped(field, product)]),
+  );
+  const offerCtas = scoped.offers.records.map((record) => guruV194OfferParts(record).cta);
+  const cta = g3ProductJourneyJoin([...offerCtas, scoped.cta.value, legacy.launch.cta]);
+  const offer = scoped.offers.value || guruV185Text(legacy.launch.offer || legacy.map.finalOffer || legacy.map.initialOffer);
+  const categoryLanding = product.categoryId ? guruV185Binding(product.categoryId, state).landing : {};
+  const campaigns = g3ProductJourneyCampaigns(product, legacy);
+  const landing = g3ProductJourneyJoin([
+    row.url,
+    categoryLanding?.url,
+    legacy.launch.landingUrl,
+    ...campaigns.map((campaign) => campaign.landing),
+  ]);
+  const channelText = campaigns.map((campaign) => {
+    const status = STATUS_LABELS[campaign.status] || campaign.status;
+    return g3AutoJoin([campaign.name, status], " — ");
+  }).join("\n");
+  const cardSummary = g3ProductJourneyJoin([
+    row.h1,
+    context.productShortDescription,
+    context.productGallery,
+    Array.isArray(row.productGalleryPhotos) && row.productGalleryPhotos.length
+      ? `Фотографии товара: ${row.productGalleryPhotos.length}`
+      : "",
+  ]);
+  const trust = g3ProductJourneyJoin([context.productRating, context.productTrustMini]);
+  const purchase = g3ProductJourneyJoin([
+    context.productPrice,
+    context.productAvailability,
+    context.productButtons,
+  ]);
+  return {
+    product,
+    page,
+    legacy,
+    scoped,
+    offer,
+    cta,
+    landing,
+    campaigns,
+    channelText,
+    cardSummary,
+    trust,
+    purchase,
+    clientResult: g3ProductJourneyText(context.productClientResult),
+    recommendationReasons: g3ProductJourneyText(context.productRecommendationReasons),
+    positioning: scoped.positioning.value,
+    usp: scoped.usp.value,
+    segment: scoped.segments.value || guruV185Text(legacy.map.demandSegments || legacy.launch.segment),
+    jtbd: scoped.jtbd.value || guruV185Text(legacy.map.jtbd || legacy.launch.jtbd),
+    queries: g3ProductJourneyJoin([legacy.map.mainQueries, legacy.map.keywords, legacy.launch.queries]),
+    barriers: g3ProductJourneyJoin([
+      legacy.map.clientLanguage,
+      legacy.map.explicitProblem,
+      legacy.map.deepProblem,
+      legacy.map.choiceBarrier,
+    ]),
+    repeat: g3ProductJourneyJoin([
+      legacy.unit.steps?.ltv?.repeatType,
+      legacy.unit.steps?.ltv?.avgPurchases,
+      legacy.unit.steps?.ltv?.repeatPeriod,
+      legacy.unit.steps?.ltv?.ltv && `LTV ${legacy.unit.steps.ltv.ltv}`,
+    ]),
+  };
+}
+
+function g3ProductJourneyScopedTarget(snapshot, field) {
+  const resolved = snapshot.scoped[field];
+  const record = resolved?.records?.[0] || null;
+  return {
+    gateId: "gate-0",
+    kind: "gate0-scoped",
+    productId: snapshot.product.id,
+    field,
+    scope: record?.scope || "product",
+    recordId: record?.id || "",
+  };
+}
+
+function g3ProductJourneyPageTarget(snapshot, options = {}) {
+  const fallbackCard = state?.gates?.find((gate) => gate.id === "gate-1")?.cards?.find((card) => g1pcIsProductCard(card)) || null;
+  const card = snapshot.page.card || fallbackCard;
+  const rowIndex = card && snapshot.page.row ? card.pageRows.indexOf(snapshot.page.row) : 0;
+  return {
+    gateId: "gate-1",
+    kind: "gate1-page",
+    cardId: card?.id || "",
+    rowIndex: rowIndex >= 0 ? rowIndex : 0,
+    rowId: snapshot.page.row?.id || "",
+    contextKey: options.contextKey || "",
+    rowField: options.rowField || "",
+    sectionKey: options.sectionKey || "",
+  };
+}
+
+function g3ProductJourneyAnalysisTarget(snapshot) {
+  const maps = pv140EnsureProductMaps();
+  const mapIndex = maps.indexOf(snapshot.legacy.map);
+  return {
+    gateId: "gate-1",
+    kind: "gate1-analysis",
+    mapIndex: mapIndex >= 0 ? mapIndex : 0,
+    itemId: snapshot.page.row?.id || snapshot.product.id,
+  };
+}
+
+function g3ProductJourneyLandingTarget(snapshot) {
+  if (snapshot.page.row) return g3ProductJourneyPageTarget(snapshot, { rowField: "url" });
+  const campaign = snapshot.campaigns.find((item) => item.landing && item.channelKey);
+  if (campaign) {
+    return {
+      gateId: "gate-4",
+      kind: "gate4-campaign",
+      productName: campaign.productName || snapshot.product.name,
+      channelKey: campaign.channelKey,
+      launchType: campaign.launchType,
+      field: "landing",
+    };
+  }
+  const mega = state?.gates?.find((gate) => gate.id === "gate-0")?.cards?.find(isMegaMarketingCard);
+  return {
+    gateId: "gate-0",
+    kind: "gate0-landing",
+    cardId: mega?.id || "",
+    productId: snapshot.product.categoryId || snapshot.product.id,
+    field: "url",
+  };
+}
+
+function g3ProductJourneyChannelTarget(snapshot) {
+  const campaign = snapshot.campaigns.find((item) => item.source === "Gate 4" && item.channelKey);
+  if (campaign) {
+    return {
+      gateId: "gate-4",
+      kind: "gate4-campaign",
+      productName: campaign.productName || snapshot.product.name,
+      channelKey: campaign.channelKey,
+      launchType: campaign.launchType,
+      field: "campaignName",
+    };
+  }
+  const mega = state?.gates?.find((gate) => gate.id === "gate-0")?.cards?.find(isMegaMarketingCard);
+  return {
+    gateId: "gate-0",
+    kind: "gate0-channel",
+    cardId: mega?.id || "",
+    channelIndex: snapshot.campaigns.find((item) => Number.isInteger(item.channelIndex))?.channelIndex || 0,
+  };
+}
+
+function g3ProductJourneyUnitTarget(snapshot, step = "ltv") {
+  const itemIndex = (ensureUnitV130().items || []).indexOf(snapshot.legacy.unit);
+  return {
+    gateId: "gate-1",
+    kind: "gate1-unit",
+    itemIndex: itemIndex >= 0 ? itemIndex : 0,
+    step,
+  };
+}
+
+function g3ProductJourneyCell(label, value, source, target = null) {
+  return {
+    label: g3ProductJourneyText(label),
+    value: g3ProductJourneyText(value),
+    source: g3ProductJourneyText(source),
+    target,
+  };
+}
+
+function g3ProductJourneyStages(snapshot) {
+  const cardSource = snapshot.page.row ? "Gate 1 · карточка продукта" : "Gate 1 · карточка продукта не найдена";
+  const mapSource = snapshot.legacy.map.product ? "Gate 1 · аналитика продукта/категории" : "Gate 1 · аналитика не заполнена";
+  const landingSource = snapshot.page.row
+    ? "Gate 1 · карточка продукта"
+    : snapshot.campaigns.some((item) => item.landing && item.channelKey)
+      ? "Gate 4"
+      : "Gate 0 · посадочная продукта";
+  const channelSource = snapshot.campaigns.some((item) => item.source === "Gate 4") ? "Gate 4" : "Gate 0 · проект";
+  const landingTarget = g3ProductJourneyLandingTarget(snapshot);
+  const analysisTarget = g3ProductJourneyAnalysisTarget(snapshot);
+  return [
+    {
+      key: "aware",
+      title: "Aware / узнал",
+      subtitle: "Клиент встречает конкретный продукт в релевантном канале.",
+      cells: [
+        g3ProductJourneyCell("Сегмент", snapshot.segment, snapshot.scoped.segments.source, g3ProductJourneyScopedTarget(snapshot, "segments")),
+        g3ProductJourneyCell("JTBD / задача", snapshot.jtbd, snapshot.scoped.jtbd.source, g3ProductJourneyScopedTarget(snapshot, "jtbd")),
+        g3ProductJourneyCell("Каналы привлечения", snapshot.channelText, channelSource, g3ProductJourneyChannelTarget(snapshot)),
+      ],
+    },
+    {
+      key: "appeal",
+      title: "Appeal / понравился",
+      subtitle: "Позиционирование и предложение делают продукт привлекательным.",
+      cells: [
+        g3ProductJourneyCell("Позиционирование", snapshot.positioning, snapshot.scoped.positioning.source, g3ProductJourneyScopedTarget(snapshot, "positioning")),
+        g3ProductJourneyCell("УТП", snapshot.usp, snapshot.scoped.usp.source, g3ProductJourneyScopedTarget(snapshot, "usp")),
+        g3ProductJourneyCell("Оффер", snapshot.offer, snapshot.scoped.offers.source, g3ProductJourneyScopedTarget(snapshot, "offers")),
+        g3ProductJourneyCell("Карточка продукта", snapshot.cardSummary, cardSource, g3ProductJourneyPageTarget(snapshot, { contextKey: "productShortDescription", sectionKey: "product_first_screen" })),
+      ],
+    },
+    {
+      key: "ask",
+      title: "Ask / изучает",
+      subtitle: "Клиент изучает посадочную, запросы и доказательства выбора.",
+      cells: [
+        g3ProductJourneyCell("Посадочная", snapshot.landing, landingSource, landingTarget),
+        g3ProductJourneyCell("Запросы и язык клиента", g3ProductJourneyJoin([snapshot.queries, snapshot.barriers]), mapSource, analysisTarget),
+        g3ProductJourneyCell("Доверие / доказательства", snapshot.trust, cardSource, g3ProductJourneyPageTarget(snapshot, { contextKey: "productTrustMini", sectionKey: "product_first_screen" })),
+      ],
+    },
+    {
+      key: "act",
+      title: "Act / покупает",
+      subtitle: "Оффер, CTA и карточка переводят выбор в покупку или заявку.",
+      cells: [
+        g3ProductJourneyCell("Оффер", snapshot.offer, snapshot.scoped.offers.source, g3ProductJourneyScopedTarget(snapshot, "offers")),
+        g3ProductJourneyCell("CTA", snapshot.cta, snapshot.scoped.offers.source, g3ProductJourneyScopedTarget(snapshot, "offers")),
+        g3ProductJourneyCell("Цена / наличие / действие", snapshot.purchase, cardSource, g3ProductJourneyPageTarget(snapshot, { contextKey: "productPrice", sectionKey: "product_first_screen" })),
+        g3ProductJourneyCell("Точка конверсии", snapshot.landing, landingSource, landingTarget),
+      ],
+    },
+    {
+      key: "advocate",
+      title: "Advocate / рекомендует",
+      subtitle: "Результат использования становится основанием для повтора и рекомендации.",
+      cells: [
+        g3ProductJourneyCell("Результат клиента", snapshot.clientResult, cardSource, g3ProductJourneyPageTarget(snapshot, { contextKey: "productClientResult", sectionKey: "product_tail" })),
+        g3ProductJourneyCell("Повтор / LTV", snapshot.repeat, "Gate 1 · юнит-экономика", g3ProductJourneyUnitTarget(snapshot)),
+        g3ProductJourneyCell("Основания рекомендовать", snapshot.recommendationReasons, cardSource, g3ProductJourneyPageTarget(snapshot, { contextKey: "productRecommendationReasons", sectionKey: "product_tail" })),
+      ],
+    },
+  ];
+}
+
+function g3ProductJourneyStageStatus(stage) {
+  const filled = stage.cells.filter((cell) => guruV185Text(cell.value)).length;
+  if (filled === stage.cells.length) return "ready";
+  if (filled) return "in_progress";
+  return "problem";
+}
+
+function g3ProductJourneyOverallStatus(stages) {
+  const statuses = stages.map(g3ProductJourneyStageStatus);
+  if (statuses.every((status) => status === "ready")) return "ready";
+  if (statuses.some((status) => status === "problem")) return "problem";
+  return "in_progress";
+}
+
+function g3ProductJourneyOptions(products, selectedId) {
+  const categories = guruV185Registry(state);
+  const rendered = new Set();
+  const groups = categories.map((category) => {
+    const items = products.filter((product) => product.categoryId === category.id);
+    if (!items.length) return "";
+    items.forEach((item) => rendered.add(item.id));
+    return `<optgroup label="${escapeAttr(g3ProductJourneyText(category.name))}">${items.map((product) => `<option value="${escapeAttr(product.id)}" ${product.id === selectedId ? "selected" : ""}>${escapeHtml(g3ProductJourneyText(product.name))}</option>`).join("")}</optgroup>`;
+  }).join("");
+  const uncategorized = products.filter((product) => !rendered.has(product.id));
+  return groups + (uncategorized.length
+    ? `<optgroup label="Без категории">${uncategorized.map((product) => `<option value="${escapeAttr(product.id)}" ${product.id === selectedId ? "selected" : ""}>${escapeHtml(g3ProductJourneyText(product.name))}</option>`).join("")}</optgroup>`
+    : "");
+}
+
+function g3ProductJourneyCellHtml(cell, cellIndex, stage) {
+  const filled = Boolean(guruV185Text(cell.value));
+  return `<div class="g3-product-journey-cell ${filled ? "is-filled" : "is-empty"}">
+    <span>${escapeHtml(cell.label)}</span>
+    <b>${filled ? escapeHtml(cell.value) : "Не заполнено в источнике"}</b>
+    <button type="button" class="g3-product-journey-source" data-g3-product-source-stage="${escapeAttr(stage.key)}" data-g3-product-source-cell="${cellIndex}" title="Открыть поле-источник">← ${escapeHtml(cell.source)}</button>
+  </div>`;
+}
+
+renderGate3Redesign = function (gate, cards) {
+  const ui = g3ProductJourneyState(state);
+  const products = g3ProductJourneyProducts(state);
+  const product = g3ProductJourneySelected(state);
+  const snapshot = product ? g3ProductJourneySnapshot(product) : null;
+  const stages = snapshot ? g3ProductJourneyStages(snapshot) : [];
+  const status = product ? g3ProductJourneyOverallStatus(stages) : "not_started";
+  const ready = stages.filter((stage) => g3ProductJourneyStageStatus(stage) === "ready").length;
+  const progress = product ? `${ready} из ${stages.length} этапов собрано автоматически` : "Продукт не выбран";
+  const category = product ? guruV185ProductById(product.categoryId, state) : null;
+  const openSteps = product
+    ? (ui.openStepsByProduct[product.id] = ui.openStepsByProduct[product.id] || {})
+    : {};
+
+  els.contentArea.innerHTML = `<div class="g1-redesign g3-product-journey">
+    <section class="g1-section is-open">
+      <div class="g1-card-header-static">
+        <span class="g1-section-left">
+          <span class="g1-section-title">5А — карта клиентского пути (Котлер, Marketing 4.0)</span>
+          <span class="g1-section-progress">${escapeHtml(progress)}</span>
+        </span>
+        <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+      </div>
+      <div class="g1-section-body g3-product-journey-body">
+        <label class="g3-product-journey-picker">
+          <span>Для какого продукта / услуги строим карту?</span>
+          <select class="g1-input ${product ? "is-filled" : "is-empty"}" data-g3-product-journey-select>
+            <option value="">Выберите продукт / услугу</option>
+            ${g3ProductJourneyOptions(products, product?.id || "")}
+          </select>
+          <small>Список берётся из единого каталога Gate 0. Поля ниже доступны только для чтения.</small>
+        </label>
+        ${!products.length ? '<div class="g3-product-journey-empty"><strong>Нет продуктов или услуг</strong><span>Сначала добавьте позицию в Gate 0.</span></div>' : !product ? '<div class="g3-product-journey-empty"><strong>Продукт не выбран</strong></div>' : `
+          <div class="g3-product-journey-context"><span>${category ? `Категория · ${escapeHtml(g3ProductJourneyText(category.name))}` : "Без категории"}</span><strong>${escapeHtml(g3ProductJourneyText(product.name))}</strong><small>Данные собраны из связанных Gate без повторного ввода</small></div>
+          <div class="g3-funnel g3-product-funnel">
+            ${stages.map((stage, index) => {
+              const stageStatus = g3ProductJourneyStageStatus(stage);
+              const isOpen = Boolean(openSteps[stage.key]);
+              const width = 100 - (index / Math.max(1, stages.length - 1)) * 50;
+              return `<article class="g1-card g3-funnel-card ${isOpen ? "is-open" : ""}" data-g3-product-stage="${escapeAttr(stage.key)}" style="width:${width}%">
+                <button type="button" class="g1-card-header" data-g3-product-stage-toggle="${escapeAttr(stage.key)}">
+                  <span class="g1-card-title">${escapeHtml(stage.title)}</span>
+                  <span class="status-pill status-${stageStatus}">${escapeHtml(STATUS_LABELS[stageStatus] || stageStatus)}</span>
+                  <span class="g1-section-toggle">${isOpen ? "Свернуть" : "Раскрыть"}</span>
+                </button>
+                ${isOpen ? `<div class="g1-card-body"><p class="g1-task">${escapeHtml(stage.subtitle)}</p><div class="g3-product-journey-grid">${stage.cells.map((cell, cellIndex) => g3ProductJourneyCellHtml(cell, cellIndex, stage)).join("")}</div></div>` : ""}
+              </article>`;
+            }).join("")}
+          </div>`}
+      </div>
+    </section>
+  </div>`;
+  renderGateNav();
+};
+
+document.addEventListener("change", (event) => {
+  const select = event.target?.closest?.("[data-g3-product-journey-select]");
+  if (!select) return;
+  const ui = guruV194Ui(state);
+  const product = guruV194Product(select.value, state);
+  ui.selectedProductId = product?.id || "";
+  if (product) ui.selectedCategoryId = guruV185Text(product.categoryId) || "__uncategorized__";
+  flashSaving();
+  renderGate();
+}, true);
+
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-g3-product-stage-toggle]");
+  if (!button) return;
+  const product = g3ProductJourneySelected(state);
+  if (!product) return;
+  const ui = g3ProductJourneyState(state);
+  const openSteps = (ui.openStepsByProduct[product.id] = ui.openStepsByProduct[product.id] || {});
+  openSteps[button.dataset.g3ProductStageToggle] = !openSteps[button.dataset.g3ProductStageToggle];
+  flashSaving();
+  renderGate();
+}, true);
+
+function g3ProductJourneyPrepareSource(target) {
+  if (!target) return;
+  if (els.searchInput) els.searchInput.value = "";
+  if (els.statusFilter) els.statusFilter.value = "all";
+
+  if (target.kind === "gate0-scoped") {
+    const product = guruV194Product(target.productId, state);
+    if (!product) return;
+    const ui = guruV194Ui(state);
+    ui.selectedCategoryId = product.categoryId || "__uncategorized__";
+    ui.selectedProductId = product.id;
+    const meta = guruV194CommonMeta(product, state);
+    meta.scope = GURU_GATE0_SCOPES_V194.some(([scope]) => scope === target.scope)
+      ? target.scope
+      : "product";
+    const centralCard = state.gates.find((gate) => gate.id === "gate-0")?.cards
+      ?.find((card) => v116PassportDef(card)?.key === "product_segment_client_task");
+    state._gate0Open = state._gate0Open || {};
+    if (centralCard) state._gate0Open[centralCard.id] = true;
+  }
+
+  if (target.kind === "gate0-landing" || target.kind === "gate0-channel") {
+    state._gate0Open = state._gate0Open || {};
+    if (target.cardId) state._gate0Open[target.cardId] = true;
+  }
+
+  if (target.kind === "gate1-page" || target.kind === "gate1-analysis" || target.kind === "gate1-unit") {
+    const gate1 = state.gates.find((gate) => gate.id === "gate-1");
+    const acc = getGate1AccordionState();
+    if (target.kind === "gate1-page") {
+      const sourceSection = getGate1Sections(gate1, gate1.cards)
+        .find((section) => section.allInnerCards.some((card) => card.id === target.cardId));
+      acc.subblocks[sourceSection?.key || "site_audit"] = true;
+      if (target.cardId) acc.cards[target.cardId] = true;
+    }
+    if (target.kind === "gate1-analysis") {
+      acc.subblocks.pain_jtbd_offer = true;
+      const maps = pv140EnsureProductMaps();
+      const map = maps[target.mapIndex];
+      const collapsed = g1CollapsedSet();
+      collapsed.delete(pv140MapCollapseKey(target.mapIndex, map?.product));
+      collapsed.delete(`pv181-item-${target.itemId}`);
+      state.g1Collapsed = [...collapsed];
+    }
+    if (target.kind === "gate1-unit") {
+      acc.subblocks.unit_economics = true;
+      const items = ensureUnitV130().items || [];
+      const item = items[target.itemIndex];
+      if (item) {
+        item.open = true;
+        item.openSteps = item.openSteps || {};
+        item.openSteps[target.step || "ltv"] = true;
+        const direction = items.find((candidate) =>
+          candidate.catalogKind === "direction" &&
+          guruV185Text(candidate.productKey || candidate.name) === guruV185Text(item.directionKey));
+        if (direction) direction.open = true;
+      }
+    }
+  }
+
+  if (target.kind === "gate1-target-audience") {
+    const acc = getGate1AccordionState();
+    acc.subblocks.site_audit = true;
+  }
+
+  if (target.kind === "gate3-journey") {
+    const ui = guruV194Ui(state);
+    const product = guruV194Product(target.productId, state);
+    if (product) {
+      ui.selectedProductId = product.id;
+      ui.selectedCategoryId = guruV185Text(product.categoryId) || "__uncategorized__";
+    }
+  }
+
+  if (target.kind === "gate4-campaign") {
+    const g4 = ensureGate4Production();
+    g4.launchProduct = target.productName || g4.launchProduct || "";
+    const open = g4EnsureLaunchUiState();
+    if (target.launchType) open[target.launchType] = true;
+    if (target.channelKey) open.rows[g4CampaignStateKey(g4.launchProduct, target.channelKey)] = true;
+  }
+}
+
+function g3ProductJourneyFindSource(target) {
+  const esc = (value) => CSS.escape(String(value ?? ""));
+  const first = (...selectors) => selectors
+    .filter(Boolean)
+    .map((selector) => document.querySelector(selector))
+    .find(Boolean) || null;
+  if (target.kind === "gate0-scoped") {
+    return first(
+      target.recordId && `[data-gate0-scope-record="${esc(target.recordId)}"]`,
+      `[data-gate0-scope-add="${esc(target.field)}"]`,
+      `[data-gate0-scope-field-row="${esc(target.field)}"]`,
+    );
+  }
+  if (target.kind === "gate0-landing") {
+    return first(
+      `[data-mega-pv2="landing"][data-mega-product-id="${esc(target.productId)}"][data-mega-field="${esc(target.field || "url")}"]`,
+      target.cardId && `[data-card-row="${esc(target.cardId)}"]`,
+    );
+  }
+  if (target.kind === "gate0-channel") {
+    return first(
+      `[data-mega-section="channels"][data-mega-idx="${esc(target.channelIndex || 0)}"][data-mega-field="status"]`,
+      target.cardId && `[data-card-row="${esc(target.cardId)}"]`,
+    );
+  }
+  if (target.kind === "gate1-page") {
+    return first(
+      target.contextKey && `[data-page-context-card-id="${esc(target.cardId)}"][data-page-context-index="${esc(target.rowIndex)}"][data-page-context-key="${esc(target.contextKey)}"]`,
+      target.rowField && `[data-gate1-page-card-id="${esc(target.cardId)}"][data-gate1-page-index="${esc(target.rowIndex)}"][data-gate1-page-field="${esc(target.rowField)}"]`,
+      target.sectionKey && `[data-page-source-card="${esc(target.cardId)}"] [data-v22-site-section="${esc(target.sectionKey)}"]`,
+      target.cardId && `[data-card="${esc(target.cardId)}"]`,
+    );
+  }
+  if (target.kind === "gate1-analysis") {
+    return first(
+      `[data-pv181-map="${esc(target.mapIndex)}"][data-pv181-item="${esc(target.itemId)}"][data-pv181-main-query]`,
+      `[data-pv181-map="${esc(target.mapIndex)}"][data-pv181-item="${esc(target.itemId)}"]`,
+      `.pv140-product-card:nth-of-type(${Number(target.mapIndex) + 1})`,
+    );
+  }
+  if (target.kind === "gate1-unit") {
+    return first(`[data-uv130-item-toggle="${esc(target.itemIndex)}"]`);
+  }
+  if (target.kind === "gate1-target-audience") {
+    return first(`[data-target-audience-toggle]`, `.target-audience-heading`);
+  }
+  if (target.kind === "gate3-journey") {
+    return first(`[data-g3-product-journey-select]`, `.g3-product-funnel`, `.g3-product-journey-body`);
+  }
+  if (target.kind === "gate4-campaign") {
+    const stateKey = g4CampaignStateKey(target.productName, target.channelKey);
+    return first(
+      target.field && `[data-g4camp-key="${esc(target.channelKey)}"][data-g4camp-field="${esc(target.field)}"]`,
+      `[data-g4camp-toggle="${esc(stateKey)}"]`,
+      `[data-g4launch-product]`,
+    );
+  }
+  if (target.kind === "gate2-card") {
+    return first(
+      target.cardId && `[data-g2-card-id="${esc(target.cardId)}"][data-g2-field="${esc(target.field || "notes")}"]`,
+      target.cardId && `[data-card="${esc(target.cardId)}"]`,
+    );
+  }
+  return null;
+}
+
+function g3ProductJourneyRevealSource(node) {
+  if (!node) return;
+  let ancestor = node.parentElement;
+  while (ancestor && ancestor !== document.body) {
+    if (ancestor.matches("details")) ancestor.open = true;
+    if (ancestor.classList.contains("is-collapsed")) ancestor.classList.remove("is-collapsed");
+    ancestor = ancestor.parentElement;
+  }
+  const highlight = node.closest([
+    ".v22-page-element",
+    ".gate0-scope-value-v194",
+    ".gate0-scope-field-v194",
+    ".g4-campaign-shell",
+    ".g2-check-row",
+    ".g1-field",
+    "tr",
+    ".g1-card",
+  ].join(",")) || node;
+  highlight.classList.add("guru-source-target-v212");
+  node.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+  const focusable = node.matches("input, textarea, select, button, [tabindex]")
+    ? node
+    : node.querySelector("input, textarea, select, button, [tabindex]");
+  if (focusable && !focusable.disabled) {
+    setTimeout(() => focusable.focus({ preventScroll: true }), 280);
+  }
+  setTimeout(() => highlight.classList.remove("guru-source-target-v212"), 4200);
+}
+
+function g3ProductJourneyFocusSource(target, attempt = 0) {
+  if (activeGateId !== target.gateId) return;
+  const node = g3ProductJourneyFindSource(target);
+  if (node) {
+    g3ProductJourneyRevealSource(node);
+    return;
+  }
+  if (attempt < 30) setTimeout(() => g3ProductJourneyFocusSource(target, attempt + 1), 50);
+}
+
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-g3-product-source-stage]");
+  if (!button) return;
+  const product = g3ProductJourneySelected(state);
+  if (!product) return;
+  const stage = g3ProductJourneyStages(g3ProductJourneySnapshot(product))
+    .find((item) => item.key === button.dataset.g3ProductSourceStage);
+  const cell = stage?.cells?.[Number(button.dataset.g3ProductSourceCell)];
+  if (!cell?.target?.gateId) return;
+  event.preventDefault();
+  event.stopPropagation();
+  g3ProductJourneyPrepareSource(cell.target);
+  guruInvalidateGateViewCache();
+  guruNavigateToGate(cell.target.gateId);
+  g3ProductJourneyFocusSource(cell.target);
+}, true);
+
+/* Gate 4 читает тот же выбранный продуктовый срез, а не старые ручные
+   ответы общепроектной 5A. */
+g4ReadGate3Channels = function () {
+  const product = g3ProductJourneySelected(state);
+  if (!product) return [];
+  return g3ProductJourneySnapshot(product).campaigns.map((channel) => ({
+    name: channel.name,
+    stage: "5A · продукт",
+    status: channel.status,
+  }));
+};
+
+g4ReadGate3Appeal = function () {
+  const product = g3ProductJourneySelected(state);
+  if (!product) return { hook: "", image: "", emotion: "", promise: "" };
+  const snapshot = g3ProductJourneySnapshot(product);
+  return {
+    hook: snapshot.positioning,
+    image: snapshot.cardSummary,
+    emotion: snapshot.usp,
+    promise: snapshot.offer,
+  };
+};
+
+/* ================================================================
+   v2.1.3 — Gate 4: выбор конкретной позиции из единого каталога Gate 0
+   (та же механика, что в Gate 3 — 5A): выпадающий список сверху,
+   пока позиция не выбрана — ничего не отображается, кроме подсказки.
+
+   Вся структура ниже (поисковые/медийные кампании, JTBD → группы →
+   фразы → прогноз → объявления → уточнения → быстрые ссылки) не
+   меняется по логике и полям — она по-прежнему хранится по строковому
+   ключу "product" (gate4SearchBuild / gate4Rsya / campaigns), как и
+   раньше. Меняется только то, откуда этот ключ берётся:
+   — если в категории всего одна фактическая позиция, ключ — это
+     название категории, т.е. позиция напрямую получает уже введённые
+     данные без переноса;
+   — если позиций несколько, у каждой свой ключ по названию позиции;
+     прежние данные категории никуда не удаляются и остаются доступны
+     как общие для направления, с ручным копированием в конкретный
+     товар при необходимости.
+   ================================================================ */
+/* v2.1.6 — единый селектор на весь проект: Gate 4 больше не хранит свой
+   selectedProductId (gate4ProductPickV210 раньше был независим и от
+   Gate 0, и от Gate 3 — «Стратегическая основа» могла показывать одну
+   позицию, а карта 5A в Gate 3 — другую). Источник выбора теперь всегда
+   guruV194Ui/guruV194SelectedProduct. gate4ProductPickV210 как поле в
+   старых сохранённых проектах не трогаем — он просто больше не читается. */
+function g4ProductPickProducts(workspace = state) {
+  return guruV194Products(workspace);
+}
+
+function g4ProductPickSelected(workspace = state) {
+  return guruV194SelectedProduct(workspace);
+}
+
+function g4ProductPickCategory(product, workspace = state) {
+  return product ? guruV185ProductById(product.categoryId, workspace) : null;
+}
+
+function g4ProductPickSiblings(product, workspace = state) {
+  if (!product) return [];
+  return guruV194Products(workspace).filter((item) => item.categoryId === product.categoryId);
+}
+
+/* Строка-ключ для прежних хранилищ Gate 4 — см. пояснение блока выше. */
+function g4ProductPickKey(product, workspace = state) {
+  if (!product) return "";
+  const category = g4ProductPickCategory(product, workspace);
+  const categoryName = guruV185Text(category?.name) || guruV185Text(product.name);
+  const siblings = g4ProductPickSiblings(product, workspace);
+  if (siblings.length <= 1) return categoryName;
+  return guruV185Text(product.name) || categoryName;
+}
+
+function g4ProductPickAllKeys(workspace = state) {
+  const keys = [];
+  const seen = new Set();
+  g4ProductPickProducts(workspace).forEach((item) => {
+    const key = g4ProductPickKey(item, workspace).trim();
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    keys.push(key);
+  });
+  return keys;
+}
+
+/* Гарантируем строку campaigns[product×channel] и для новых
+   ключей-позиций, иначе ввод в поля молча не сохранялся бы —
+   g4v192FindRow/campaignAudienceRow читают campaigns[key] напрямую,
+   без запасного {}. */
+const __g4ProductPickPrevEnsureLaunchCampaigns = g4EnsureLaunchCampaigns;
+g4EnsureLaunchCampaigns = function () {
+  const campaigns = __g4ProductPickPrevEnsureLaunchCampaigns();
+  g4LaunchChannels().forEach((channel) => {
+    g4ProductPickAllKeys().forEach((product) => {
+      const stateKey = g4CampaignStateKey(product, channel.key);
+      if (campaigns[stateKey]) return;
+      campaigns[stateKey] = {
+        decision: "",
+        product,
+        campaignName: "",
+        objective: "",
+        landing: "",
+        budget: "",
+        utm: "",
+        creative: "",
+        launchStatus: "",
+        notes: "",
+        audienceSegmentId: "",
+        channelTargeting: {
+          geography: "",
+          age: "",
+          gender: "",
+          searchQueries: "",
+          interests: "",
+          communities: "",
+          customerBases: "",
+          siteVisitors: "",
+          lookalikes: "",
+        },
+      };
+    });
+  });
+  return campaigns;
+};
+
+/* Данные, оставшиеся на уровне категории («общие для направления»),
+   когда в ней несколько фактических позиций и выбранная позиция
+   ещё не завела собственную сборку. */
+function g4ProductPickCategorySummary(product, workspace = state) {
+  if (!product) return null;
+  const siblings = g4ProductPickSiblings(product, workspace);
+  if (siblings.length <= 1) return null;
+  const category = g4ProductPickCategory(product, workspace);
+  if (!category) return null;
+  const categoryKey = normalizeAspectKey(category.name);
+  const itemKey = g4ProductPickKey(product, workspace);
+  if (normalizeAspectKey(itemKey) === categoryKey) return null;
+  const sb = workspace.gate4SearchBuild?.[categoryKey];
+  const rsya = workspace.gate4Rsya?.[categoryKey];
+  const searchGroups = (sb?.groupRows || []).filter((row) => g4SearchBuildValueHasData(row)).length;
+  const rsyaGroups = (rsya?.groups || []).filter((row) => g4SearchBuildValueHasData(row)).length;
+  const campaigns = g4EnsureLaunchCampaigns();
+  const campaignCount = g4LaunchChannels().filter((channel) =>
+    g4CampaignStatus(campaigns[g4CampaignStateKey(category.name, channel.key)] || {}) !== "not_started",
+  ).length;
+  if (!searchGroups && !rsyaGroups && !campaignCount) return null;
+  return { category, categoryKey, itemKey, searchGroups, rsyaGroups, campaignCount };
+}
+
+function g4ProductPickCopySharedData(product) {
+  const summary = g4ProductPickCategorySummary(product);
+  if (!summary) return false;
+  const itemKey = summary.itemKey;
+  const srcSb = state.gate4SearchBuild?.[summary.categoryKey];
+  if (srcSb) g4MergeSearchBuildData(ensureGate4SearchBuild(itemKey), srcSb);
+  const srcRsya = state.gate4Rsya?.[summary.categoryKey];
+  if (srcRsya) g4MergeSearchBuildData(ensureGate4Rsya(itemKey), srcRsya);
+  const campaigns = g4EnsureLaunchCampaigns();
+  g4LaunchChannels().forEach((channel) => {
+    const src = campaigns[g4CampaignStateKey(summary.category.name, channel.key)];
+    const dst = campaigns[g4CampaignStateKey(itemKey, channel.key)];
+    if (src && dst && g4CampaignStatus(src) !== "not_started") {
+      g4MergeSearchBuildData(dst, src);
+      if (!guruV185Text(dst.product)) dst.product = itemKey;
+    }
+  });
+  return true;
+}
+
+/* Клик по строке-заглушке ведёт точно в поле-источник — тот же приём,
+   что и «← источник» в карте 5A Gate 3 (g3ProductJourneyPrepareSource /
+   g3ProductJourneyFindSource / g3ProductJourneyFocusSource). Target
+   кодируется в data-атрибут; сама механика построения кампании не
+   участвует — это только слой связей вокруг неё. */
+function g4ReadonlyRowLinked(label, value, sourceLabel, target) {
+  if (!target) return g4ReadonlyRow(label, value, sourceLabel);
+  const v = String(value || "").trim();
+  const body = !v
+    ? `<span class="g4-readonly-label">${escapeHtml(label)}</span><span class="g4-readonly-empty">не заполнено в ${escapeHtml(sourceLabel)}</span>`
+    : `<span class="g4-readonly-label">${escapeHtml(label)}</span><span class="g4-readonly-value">${escapeHtml(v)}</span><span class="g4-readonly-source">← ${escapeHtml(sourceLabel)}</span>`;
+  return `<button type="button" class="g4-readonly g4-readonly-jump" title="Открыть поле-источник" data-g4-jump-target="${escapeAttr(JSON.stringify(target))}">${body}</button>`;
+}
+
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-g4-jump-target]");
+  if (!button) return;
+  let target = null;
+  try {
+    target = JSON.parse(button.dataset.g4JumpTarget);
+  } catch (err) {
+    target = null;
+  }
+  if (!target?.gateId) return;
+  event.preventDefault();
+  g3ProductJourneyPrepareSource(target);
+  guruInvalidateGateViewCache();
+  guruNavigateToGate(target.gateId);
+  g3ProductJourneyFocusSource(target);
+}, true);
+
+/* «Стратегическая основа» для конкретной позиции: оффер/CTA/посадочная —
+   из точной по id карты Gate 3 (g3ProductJourneySnapshot); маршрут 5A —
+   статус тех же пяти стадий, что показывает сама карта Gate 3
+   (g3ProductJourneyStages), а не отдельная строка legacy-карты, которая
+   почти всегда пуста для конкретной позиции каталога — это и вызывало
+   «не заполнено» при реально заполненной карте 5A. Допустимый CPL —
+   из юнит-экономики Gate 1 по имени (как и раньше). */
+function g4ProductPickStrategicContext(product) {
+  const key = g4ProductPickKey(product);
+  const legacy = g4CampaignContext(key);
+  const ue = g4ReadUnitEconomics(key);
+  const snapshot = g3ProductJourneySnapshot(product);
+  const stages = g3ProductJourneyStages(snapshot);
+  const route = stages
+    .map((stage) => `${stage.title.split(" / ")[0]}: ${STATUS_LABELS[g3ProductJourneyStageStatus(stage)] || ""}`)
+    .join(" · ");
+  const offerTarget = g3ProductJourneyScopedTarget(snapshot, "offers");
+  const jtbdTarget = g3ProductJourneyScopedTarget(snapshot, "jtbd");
+  return {
+    offer: snapshot.offer || legacy.offer,
+    jtbd: snapshot.jtbd || legacy.jtbd,
+    segment: snapshot.segment || legacy.segment,
+    cta: snapshot.cta || legacy.cta,
+    landingUrl: snapshot.landing || legacy.landingUrl,
+    landingStatus: legacy.landingStatus,
+    cpl: ue.allowedCpl,
+    cpa: ue.allowedCpa,
+    route,
+    targets: {
+      landing: g3ProductJourneyLandingTarget(snapshot),
+      offer: offerTarget,
+      cta: offerTarget,
+      jtbd: jtbdTarget,
+      cpl: g3ProductJourneyUnitTarget(snapshot, "adLimits"),
+      route: { gateId: "gate-3", kind: "gate3-journey", productId: product.id },
+    },
+  };
+}
+
+function g4ProductPickContextHtml(product, key) {
+  const category = g4ProductPickCategory(product);
+  const ctx = g4ProductPickStrategicContext(product);
+  const summary = g4ProductPickCategorySummary(product);
+  return `<div class="g4-upstream">
+    <div class="g4-upstream-title">Стратегическая основа из Gate 0–3</div>
+    ${g4ReadonlyRow("Продукт / позиция", product.name, "Каталог Gate 0")}
+    ${category ? g4ReadonlyRow("Категория", category.name, "Каталог Gate 0") : ""}
+    ${g4ReadonlyRowLinked("Посадочная страница", ctx.landingUrl || ctx.landingStatus, "Gate 1–2", ctx.targets.landing)}
+    ${g4ReadonlyRowLinked("Оффер", ctx.offer, "Gate 0–1", ctx.targets.offer)}
+    ${g4ReadonlyRowLinked("CTA", ctx.cta, "Gate 0–1", ctx.targets.cta)}
+    ${g4ReadonlyRowLinked("Сегмент / JTBD", ctx.jtbd || ctx.segment, "Gate 0–1", ctx.targets.jtbd)}
+    ${g4ReadonlyRowLinked("Допустимый CPL", ctx.cpl, "Gate 1 «Юнит-экономика»", ctx.targets.cpl)}
+    ${g4ReadonlyRowLinked("Маршрут 5A (Котлер)", ctx.route, "Gate 3", ctx.targets.route)}
+  </div>
+  ${summary ? `<div class="g4-upstream" style="margin-top:12px">
+    <div class="g4-upstream-title">Общие данные направления «${escapeHtml(summary.category.name)}»</div>
+    ${g4ReadonlyRow("Поисковые группы", summary.searchGroups ? summary.searchGroups + " групп" : "", "общее для направления")}
+    ${g4ReadonlyRow("РСЯ группы", summary.rsyaGroups ? summary.rsyaGroups + " групп" : "", "общее для направления")}
+    ${g4ReadonlyRow("Кампании", summary.campaignCount ? summary.campaignCount + " начато" : "", "общее для направления")}
+    <div style="margin-top:8px"><button type="button" class="small-btn add-inline-btn" data-g4-copy-shared="${escapeAttr(product.id)}">Скопировать в «${escapeHtml(product.name)}»</button></div>
+  </div>` : ""}`;
+}
+
+function g4ProductPickPickerHtml(products, product) {
+  return `<label class="g3-product-journey-picker">
+    <span>Для какой позиции ведём Gate 4?</span>
+    <select class="g1-input ${product ? "is-filled" : "is-empty"}" data-g4-product-pick-select>
+      <option value="">Выберите продукт / услугу</option>
+      ${g3ProductJourneyOptions(products, product?.id || "")}
+    </select>
+    <small>Список берётся из единого каталога Gate 0 — та же позиция, что и в карте 5A Gate 3.</small>
+  </label>`;
+}
+
+g4CampaignLaunchCenterHtml = function () {
+  const products = g4ProductPickProducts();
+  const product = g4ProductPickSelected();
+  const picker = g4ProductPickPickerHtml(products, product);
+  if (!products.length) {
+    return `${picker}<div class="g3-product-journey-empty"><strong>Нет продуктов или услуг</strong><span>Сначала добавьте позицию в Gate 0.</span></div>`;
+  }
+  if (!product) {
+    return `${picker}<div class="g3-product-journey-empty"><strong>Продукт не выбран</strong></div>`;
+  }
+  const channels = g4LaunchChannels();
+  if (!channels.length) {
+    return `${picker}<div class="g1-empty">Заполните каналы в Gate 0 или карту 5A в Gate 3, чтобы здесь появились площадки для реализации.</div>`;
+  }
+  const key = g4ProductPickKey(product);
+  const campaigns = g4EnsureLaunchCampaigns();
+  return `<div class="g1-route">
+    ${picker}
+    ${g4ProductPickContextHtml(product, key)}
+    ${g4v192TypeGroupHtml("search", "Поисковые кампании", channels, campaigns, key)}
+    ${g4v192TypeGroupHtml("media", "Медийные кампании", channels, campaigns, key)}
+    ${g4v192TypeGroupHtml("smm", "SMM и соцсети", channels, campaigns, key)}
+    ${g4v192TypeGroupHtml("other", "Другие каналы из Gate 0–3", channels, campaigns, key)}
+  </div>`;
+};
+
+document.addEventListener("change", (event) => {
+  const select = event.target?.closest?.("[data-g4-product-pick-select]");
+  if (!select) return;
+  const ui = guruV194Ui(state);
+  const product = guruV194Product(select.value, state);
+  ui.selectedProductId = product?.id || "";
+  if (product) ui.selectedCategoryId = guruV185Text(product.categoryId) || "__uncategorized__";
+  flashSaving();
+  renderGate();
+}, true);
+
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-g4-copy-shared]");
+  if (!button) return;
+  const product = guruV194Product(button.dataset.g4CopyShared, state);
+  if (!product) return;
+  event.preventDefault();
+  if (g4ProductPickCopySharedData(product)) {
+    flashSaving();
+    renderGate();
+  }
+}, true);
+
+/* ================================================================
+   v2.1.5 — Gate 0: два раздела («Компания» / «Продукт-Услуга»), без
+   изменения содержимого блоков. См. GATE0_COMPANY_SECTION_TITLES /
+   GATE0_PRODUCT_SECTION_TITLES выше (v1.2.0).
+
+   «Проверь — у каждого продукта должна быть своя посадочная» физически
+   жил внутри мега-карточки «Платформа» (раздел «Компания») как таблица
+   по ВСЕМ категориям сразу. Теперь эта таблица там не рендерится
+   (includeLandings: false ниже, данные и обработчики те же самые —
+   guruV185Binding по id категории), а вместо неё в разделе «Продукт /
+   Услуга» показывается одна строка — для категории, к которой относится
+   позиция, выбранная тем же единым селектором guruV194Ui, что уже
+   управляет карточкой «Продукт, сегмент и задача клиента». Ничего не
+   удалено: и старые данные посадочных, и старая функция-источник строки
+   (megaPlatformSectionHtml) остались как есть. */
+const __gate0SectionsPrevMegaPlatformSectionHtml = megaPlatformSectionHtml;
+megaPlatformSectionHtml = function (cardId, pv2, options) {
+  return __gate0SectionsPrevMegaPlatformSectionHtml(cardId, pv2, { ...options, includeLandings: false });
+};
+
+/* v2.1.6 — посадочная привязывается к позиции, не к категории. Если в
+   категории всего одна фактическая позиция, она напрямую использует уже
+   существующие данные категории (ключ привязки совпадает — ничего не
+   переносится и не теряется). Если позиций несколько, у выбранной
+   позиции своя отдельная привязка (изначально пустая), а данные,
+   ранее введённые на уровне категории, никуда не удаляются и остаются
+   доступны рядом с пометкой «требует ручной разбивки» + кнопкой копирования. */
+function gate0PositionBindingKey(product, workspace = state) {
+  if (!product) return "";
+  const siblings = guruV194Products(workspace).filter((item) => item.categoryId === product.categoryId);
+  if (siblings.length <= 1) return product.categoryId || product.id;
+  return product.id;
+}
+
+function gate0LandingSharedSummary(product, workspace = state) {
+  if (!product) return null;
+  const ownKey = gate0PositionBindingKey(product, workspace);
+  const category = guruV185ProductById(product.categoryId, workspace);
+  if (!category || ownKey === category.id) return null;
+  const categoryLanding = guruV185Binding(category.id, workspace).landing || {};
+  const hasCategoryData = Boolean(
+    guruV185Text(categoryLanding.url) || guruV185Text(categoryLanding.comment) || guruStatusIsSet(categoryLanding.status),
+  );
+  if (!hasCategoryData) return null;
+  return { category, categoryLanding, ownKey };
+}
+
+function gate0CopyLandingFromCategory(product) {
+  const summary = gate0LandingSharedSummary(product, state);
+  if (!summary) return false;
+  const ownLanding = guruV185Binding(summary.ownKey, state).landing;
+  if (!guruV185Text(ownLanding.url)) ownLanding.url = summary.categoryLanding.url || "";
+  if (!guruStatusIsSet(ownLanding.status)) ownLanding.status = summary.categoryLanding.status || "";
+  if (!guruV185Text(ownLanding.comment)) ownLanding.comment = summary.categoryLanding.comment || "";
+  return true;
+}
+
+function gate0ProductLandingCheckHtml() {
+  const product = guruV194SelectedProduct(state);
+  const isOpen = state._gate0Open["gate0-landing-check-v215"] !== false;
+  const body = (() => {
+    if (!product) {
+      return `<div class="g3-product-journey-empty"><strong>Продукт не выбран</strong><span>Выберите категорию и позицию выше, в блоке «Продукт, сегмент и задача клиента».</span></div>`;
+    }
+    const mega = state?.gates?.find((g) => g.id === "gate-0")?.cards?.find(isMegaMarketingCard);
+    const cardId = mega?.id || "";
+    const bindingId = gate0PositionBindingKey(product, state);
+    const d = guruV185Binding(bindingId, state).landing || {};
+    const warn = guruStatusIsOk(d.status) && !String(d.url || "").trim();
+    const shared = gate0LandingSharedSummary(product, state);
+    return `<table class="cr-table"><thead><tr><th>Продукт</th><th>URL посадочной</th><th>Статус</th><th>Комментарий (необязательно)</th></tr></thead>
+      <tbody><tr class="${guruStatusIsBad(d.status) ? "mega-row-bad" : ""}">
+        <td class="cr-label">${escapeHtml(product.name)}</td>
+        <td><input data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="landing" data-mega-product-id="${escapeAttr(bindingId)}" data-mega-field="url" value="${escapeAttr(d.url || "")}" placeholder="${warn ? "Укажи URL посадочной" : "—"}" class="${warn ? "mega-warn-input" : ""}" ${guruStatusIsSet(d.status) ? "data-guru-field-neutral" : ""} /></td>
+        <td><select data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="landing" data-mega-product-id="${escapeAttr(bindingId)}" data-mega-field="status">${guruStatusOptionsHtml(d.status)}</select></td>
+        <td><input data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="landing" data-mega-product-id="${escapeAttr(bindingId)}" data-mega-field="comment" value="${escapeAttr(d.comment || "")}" placeholder="—" /></td>
+      </tr></tbody></table>
+      ${shared ? `<div class="gate0-landing-shared-v215">
+        <small>Требует ручной разбивки: в категории «${escapeHtml(shared.category.name)}» уже есть данные посадочной (${escapeHtml(shared.categoryLanding.url || "статус без URL")}), введённые до разделения по позициям. Они не удалены и видны здесь.</small>
+        <button type="button" class="small-btn add-inline-btn" data-gate0-copy-landing="${escapeAttr(product.id)}">Скопировать в «${escapeHtml(product.name)}»</button>
+      </div>` : ""}`;
+  })();
+  return `<details class="gate0-card gate0-landing-check-v215" data-card-row="gate0-landing-check-v215" ${isOpen ? "open" : ""}>
+    <summary class="gate0-card-head">
+      <div class="gate0-card-title">Проверь — у каждого продукта должна быть своя посадочная</div>
+    </summary>
+    <div class="gate0-card-body"><div class="mega-subsection">${body}</div></div>
+  </details>`;
+}
+
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-gate0-copy-landing]");
+  if (!button) return;
+  const product = guruV194Product(button.dataset.gate0CopyLanding, state);
+  if (!product) return;
+  event.preventDefault();
+  if (gate0CopyLandingFromCategory(product)) {
+    flashSaving();
+    renderGate();
+  }
+}, true);
+
+/* Лог миграции: визуальная реструктуризация Gate 0 (v2.1.5) не переносит,
+   не удаляет и не переименовывает никакие данные — фиксируем это одной
+   записью на проект, той же схемой, что и GURU_CATALOG_ITEMS_MIGRATION_V189. */
+const GATE0_SECTIONS_MIGRATION_V215 = "gate0-sections-v215";
+function gate0EnsureSectionsMigrationLog(workspace) {
+  if (!workspace?.project) return;
+  const project = workspace.project;
+  const log = (project._gate0SectionsMigrationLog = Array.isArray(project._gate0SectionsMigrationLog)
+    ? project._gate0SectionsMigrationLog
+    : []);
+  if (log.some((entry) => entry.id === GATE0_SECTIONS_MIGRATION_V215)) return;
+  log.push({
+    id: GATE0_SECTIONS_MIGRATION_V215,
+    at: new Date().toISOString(),
+    status: "completed",
+    note: "Gate 0 разделён на визуальные разделы «Компания» и «Продукт / Услуга» — только группировка карточек при рендере, состав полей, статусы, id и порядок карточек не менялись, ничего не удалено. «Проверь — у каждого продукта должна быть своя посадочная» и дропдаун «Продукт результатов» подключены к единому селектору категория → позиция (тому же, что у блока «Продукт, сегмент и задача клиента»). Диагностика точки отсчёта: строка «Оффер и CTA «Категория»» теперь в приоритете читает данные позиций внутри категории, легаси-словарь offersV2 остался как резерв.",
+  });
+}
+
+/* v2.1.6 — унификация селектора продукта. Аудит нашёл три независимых
+   selectedProductId (Gate 0, Gate 3, Gate 4) и два места хранения на
+   уровне категории вместо позиции (посадочная, продукт результатов).
+   Ничего не удалено: старые поля (gate3ProductJourneyV210,
+   gate4ProductPickV210, currentResultsMeta.productId) остаются в данных
+   проекта как есть, просто больше не являются источником истины. */
+const GATE0_SELECTOR_UNIFICATION_V216 = "gate0-selector-unification-v216";
+function gate0EnsureSelectorUnificationLog(workspace) {
+  if (!workspace?.project) return;
+  const project = workspace.project;
+  const log = (project._gate0SectionsMigrationLog = Array.isArray(project._gate0SectionsMigrationLog)
+    ? project._gate0SectionsMigrationLog
+    : []);
+  if (log.some((entry) => entry.id === GATE0_SELECTOR_UNIFICATION_V216)) return;
+  log.push({
+    id: GATE0_SELECTOR_UNIFICATION_V216,
+    at: new Date().toISOString(),
+    status: "completed",
+    note: "Унифицирован выбор продукта на весь проект: Gate 3 «Маршрут 5A» и Gate 4 «Стратегическая основа» больше не хранят собственный selectedProductId (gate3ProductJourneyV210 / gate4ProductPickV210 остались в данных, но больше не читаются) — все три экрана теперь читают/пишут один общий guruV194Ui, как блок JTBD в Gate 0. «Проверь — посадочная» и «Продукт результатов» переведены с привязки к категории на привязку к позиции: при единственной фактической позиции в категории — данные унаследованы автоматически по тому же ключу; при нескольких позициях — старые данные категории сохранены и видны с пометкой «требует ручной разбивки», ничего не удалено.",
+  });
+}
+
+const __gate0SectionsPrevPrepareSystemCards = prepareSystemCards;
+prepareSystemCards = function (workspace) {
+  __gate0SectionsPrevPrepareSystemCards(workspace);
+  gate0EnsureSectionsMigrationLog(workspace);
+  gate0EnsureSelectorUnificationLog(workspace);
+};
+
+const __gate0SectionsPrevMigrateWorkspace = migrateWorkspace;
+migrateWorkspace = function (workspace, projectId) {
+  const migrated = __gate0SectionsPrevMigrateWorkspace(workspace, projectId);
+  gate0EnsureSectionsMigrationLog(migrated);
+  gate0EnsureSelectorUnificationLog(migrated);
+  return migrated;
+};
+
+const __gate0SectionsPrevCreateFreshWorkspace = createFreshWorkspace;
+createFreshWorkspace = function (meta) {
+  const workspace = __gate0SectionsPrevCreateFreshWorkspace(meta);
+  gate0EnsureSectionsMigrationLog(workspace);
+  gate0EnsureSelectorUnificationLog(workspace);
+  return workspace;
+};
