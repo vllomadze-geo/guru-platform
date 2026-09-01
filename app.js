@@ -47533,29 +47533,58 @@ gate1PageStructureHtml = function (card) {
       ${uncategorizedEntries.map((entry) => pageBlock(entry.row, entry.i)).join("")}
     </div>`
     : "";
-  const addButtonHtml = `<button class="small-btn add-inline-btn" style="margin-top:14px;" data-g1pc-add="${escapeAttr(card.id)}" data-g1pc-dir="">+ Добавить содержимое</button>`;
+  const genericAddButtonHtml = `<button class="small-btn add-inline-btn" style="margin-top:14px;" data-g1pc-add="${escapeAttr(card.id)}" data-g1pc-dir="">+ Добавить содержимое</button>`;
 
   const selected = guruV194SelectedProduct(state);
   if (!selected) {
     return `<div class="typed-block pages-block contextual-pages">
       <div class="g1pc-scope-empty" style="color:var(--muted);font-size:13px;padding:8px 0 18px;">Выберите категорию и продукт / услугу в селекторе наверху раздела «Продукт / Услуга», чтобы увидеть содержимое здесь.</div>
       ${uncategorizedHtml}
-      ${addButtonHtml}
+      ${genericAddButtonHtml}
     </div>`;
   }
 
   const matchIndex = rows.findIndex((row) => row.catalogItemIdV189 === selected.id);
-  const selectedHtml =
-    matchIndex === -1
-      ? `<div class="g1pc-scope-empty" style="color:var(--muted);font-size:13px;padding:8px 0 18px;">У позиции «${escapeHtml(selected.name)}» пока нет содержимого в блоке «${escapeHtml(card.title)}».</div>`
-      : pageBlock(rows[matchIndex], matchIndex);
+  if (matchIndex === -1) {
+    // Кнопка без категории/каталожного id тут же теряла бы новую строку —
+    // g1pcRowIsBlank выше сработал бы на следующем же рендере (тот же клик).
+    // Поэтому для уже выбранной позиции строка создаётся сразу привязанной
+    // к её категории и с готовым catalogItemIdV189 — ровно тем, что покажет
+    // общий селектор, без отдельного шага «назначить категорию».
+    const scopedAddButtonHtml = `<button class="small-btn add-inline-btn" style="margin-top:14px;" data-g1pc-scoped-add="${escapeAttr(card.id)}" data-g1pc-scoped-category="${escapeAttr(selected.categoryId || "")}">+ Добавить содержимое</button>`;
+    return `<div class="typed-block pages-block contextual-pages">
+      <div class="g1pc-scope-empty" style="color:var(--muted);font-size:13px;padding:8px 0 18px;">У позиции «${escapeHtml(selected.name)}» пока нет содержимого в блоке «${escapeHtml(card.title)}».</div>
+      ${scopedAddButtonHtml}
+      ${uncategorizedHtml}
+    </div>`;
+  }
 
   return `<div class="typed-block pages-block contextual-pages">
-    ${selectedHtml}
+    ${pageBlock(rows[matchIndex], matchIndex)}
     ${uncategorizedHtml}
-    ${addButtonHtml}
+    ${genericAddButtonHtml}
   </div>`;
 };
+
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-g1pc-scoped-add]");
+  if (!button) return;
+  const card = g1pcFindCard(button.dataset.g1pcScopedAdd);
+  if (!card) return;
+  card.pageRows = card.pageRows || [];
+  const row = createPageStructureRow(defaultPageNameForCard(card), false);
+  const categoryId = button.dataset.g1pcScopedCategory || "";
+  if (categoryId) {
+    row.categoryId = categoryId;
+    row.catalogItemIdV189 = makeId("catalog-item");
+    const ui = guruV194Ui(state);
+    ui.selectedCategoryId = categoryId;
+    ui.selectedProductId = row.catalogItemIdV189;
+  }
+  card.pageRows.push(row);
+  flashSaving();
+  renderGate();
+});
 
 const __g1ScopePrevRenderGate1Accordion = renderGate1Accordion;
 renderGate1Accordion = function (gate, cards) {
