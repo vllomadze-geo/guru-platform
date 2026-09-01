@@ -47471,3 +47471,213 @@ createFreshWorkspace = function (meta) {
   gate1EnsureSectionsMigrationLog(workspace);
   return workspace;
 };
+
+/* ================================================================
+   v2.1.8 — «Карточка товара» / «Страница услуги» подключены к единому
+   селектору guruV194Ui (тот же, что в Gate 0/3/4). «Список / категория»
+   селектор НЕ получает — у неё нет привязки row.categoryId вообще
+   (g1pcIsProductCard её не матчит), это осознанно отложено.
+
+   Раньше эти два блока показывали ВСЕ направления параллельным списком
+   (группировка по строке row.direction). Теперь наверху раздела
+   «Продукт / Услуга» стоит один общий селектор «категория → продукт»
+   (guruV194ProductSelectHtml), и обе карточки показывают только ту
+   ОДНУ позицию (row), чей row.catalogItemIdV189 совпадает с выбранным
+   продуктом — id и категория у позиций уже существовали (их проставляет
+   guruV189EnsureCatalog из дропдауна «Категория» внутри строки, который
+   был и раньше), просто раньше ничего не читало эту связь для группировки
+   и фильтрации.
+
+   Ничего не удалено: сам ряд рендерится тем же pageStructureCardHtml,
+   что и раньше (то же содержимое, те же поля, статусы). Позиции без
+   category­Id (ещё не привязанные к категории через дропдаун «Категория»)
+   остаются полностью видимыми в отдельном блоке «Без категории» —
+   выбор продукта наверху на них не влияет, чтобы ничего не пропадало
+   из вида. Кнопка «+ Добавить содержимое» создаёт новую непривязанную
+   позицию тем же обработчиком data-g1pc-add, что и раньше (она появится
+   в «Без категории», пока ей не назначат категорию).
+
+   Осознанно НЕ перенесено (см. лог v2.1.7): «Список / категория»,
+   «Направления» (pv140) и «Юнит-экономика» (uv130) — другая модель
+   данных, отдельная миграция вне текущей задачи. */
+const __g1ScopePrevPageStructureHtml = gate1PageStructureHtml;
+gate1PageStructureHtml = function (card) {
+  if (!g1pcIsProductCard(card)) return __g1ScopePrevPageStructureHtml(card);
+  const repeatable = isRepeatablePageCard(card);
+
+  const g1pcRowIsBlank = (row) => {
+    const textFields = ["url", "h1", "title", "description", "body", "offer", "finalCta", "comment"];
+    if (textFields.some((f) => String(row[f] || "").trim())) return false;
+    const ctx = row.contextFields || {};
+    if (Object.values(ctx).some((v) => String(v || "").trim())) return false;
+    const name = String(row.name || "").trim();
+    if (name && name !== defaultPageNameForCard(card) && name.toUpperCase() !== String(card.title || "").toUpperCase()) return false;
+    return true;
+  };
+  card.pageRows = (card.pageRows || []).filter(
+    (row) => String(row.direction || "").trim() || row.categoryId || !g1pcRowIsBlank(row),
+  );
+  const rows = card.pageRows;
+
+  const pageBlock = (row, i) => `<div class="g1pc-child-card g1-card">${pageStructureCardHtml(card, row, i, repeatable)}</div>`;
+
+  const uncategorizedEntries = rows
+    .map((row, i) => ({ row, i }))
+    .filter((entry) => !entry.row.categoryId);
+  const uncategorizedHtml = uncategorizedEntries.length
+    ? `<div class="g1pc-uncategorized-v218" style="margin-top:22px;">
+      <div style="padding:12px 0 8px;border-bottom:2px solid var(--line);margin-bottom:10px;">
+        <div style="font-weight:900;font-size:15px;color:var(--muted);">Без категории</div>
+        <small style="color:var(--muted);font-size:11px;">Выберите категорию у позиции ниже, чтобы её можно было находить через общий селектор наверху</small>
+      </div>
+      ${uncategorizedEntries.map((entry) => pageBlock(entry.row, entry.i)).join("")}
+    </div>`
+    : "";
+  const addButtonHtml = `<button class="small-btn add-inline-btn" style="margin-top:14px;" data-g1pc-add="${escapeAttr(card.id)}" data-g1pc-dir="">+ Добавить содержимое</button>`;
+
+  const selected = guruV194SelectedProduct(state);
+  if (!selected) {
+    return `<div class="typed-block pages-block contextual-pages">
+      <div class="g1pc-scope-empty" style="color:var(--muted);font-size:13px;padding:8px 0 18px;">Выберите категорию и продукт / услугу в селекторе наверху раздела «Продукт / Услуга», чтобы увидеть содержимое здесь.</div>
+      ${uncategorizedHtml}
+      ${addButtonHtml}
+    </div>`;
+  }
+
+  const matchIndex = rows.findIndex((row) => row.catalogItemIdV189 === selected.id);
+  const selectedHtml =
+    matchIndex === -1
+      ? `<div class="g1pc-scope-empty" style="color:var(--muted);font-size:13px;padding:8px 0 18px;">У позиции «${escapeHtml(selected.name)}» пока нет содержимого в блоке «${escapeHtml(card.title)}».</div>`
+      : pageBlock(rows[matchIndex], matchIndex);
+
+  return `<div class="typed-block pages-block contextual-pages">
+    ${selectedHtml}
+    ${uncategorizedHtml}
+    ${addButtonHtml}
+  </div>`;
+};
+
+const __g1ScopePrevRenderGate1Accordion = renderGate1Accordion;
+renderGate1Accordion = function (gate, cards) {
+  const sections = getGate1Sections(gate, cards);
+  const accState = getGate1AccordionState();
+  const queryActive =
+    els.searchInput.value.trim() || els.statusFilter.value !== "all";
+  els.contentArea.innerHTML = `<div class="g1-redesign">
+    ${sections
+      .filter((s) => !s.hidden)
+      .map((section) => {
+        if (section.type === "divider") {
+          return gate0SectionHeadingHtml(section.title);
+        }
+        if (section.bare) {
+          const displayCards = queryActive
+            ? section.filteredInnerCards
+            : section.allInnerCards;
+          const scopeSelectorHtml =
+            section.key === "__g1_product_pages"
+              ? guruV194ProductSelectHtml("gate1-product-pages")
+              : "";
+          return scopeSelectorHtml + displayCards.map((card) => g1CardHtml(card)).join("");
+        }
+        const sectionOpen = Boolean(accState.subblocks[section.key]);
+        const status =
+          section.key === "demand_semantics"
+            ? getDemandRouteStatus()
+            : section.key === "pain_jtbd_offer"
+              ? getPainOfferStatus()
+              : section.key === "unit_economics"
+                ? getUnitEconomicsStatus()
+                : getSectionStatus(section.allInnerCards);
+        const progressText =
+          section.key === "demand_semantics"
+            ? getDemandProgressText()
+            : section.key === "pain_jtbd_offer"
+              ? getPainOfferProgressText()
+              : section.key === "unit_economics"
+                ? getUnitEconomicsProgressText()
+                : getSectionProgressText(section.allInnerCards);
+        const displayCards = queryActive
+          ? section.filteredInnerCards
+          : section.allInnerCards;
+        const sectionHtml = `<section class="g1-section ${sectionOpen ? "is-open" : ""}">
+        <button class="g1-section-header" data-gate1-toggle-section="${escapeAttr(section.key)}">
+          <span class="g1-section-left">
+            <span class="g1-section-title">${escapeHtml(section.title)}</span>
+            <span class="g1-section-progress">${escapeHtml(progressText)}</span>
+          </span>
+          <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+          <span class="g1-section-toggle">${sectionOpen ? "Закрыть" : "Открыть"}</span>
+        </button>
+        ${
+          sectionOpen
+            ? `<div class="g1-section-body">
+          ${
+            section.key === "demand_semantics"
+              ? ""
+              : section.key === "pain_jtbd_offer"
+                ? g1RenderPainOffer()
+                : section.key === "unit_economics"
+                  ? g1RenderUnitEconomics()
+                  : displayCards.length
+                    ? displayCards.map((card) => g1CardHtml(card)).join("")
+                    : '<div class="g1-empty">По текущему фильтру ничего не найдено.</div>'
+          }
+        </div>`
+            : ""
+        }
+      </section>`;
+        return `${sectionHtml}${section.key === "site_audit" ? `${projectComparisonHtml()}${targetAudienceHtml()}` : ""}`;
+      })
+      .join("")}
+  </div>`;
+  bindGate1Accordion();
+  bindDemandRouteEvents();
+  bindPainOfferRouteEvents();
+  bindUnitEconomicsRouteEvents();
+  bindCardInputs();
+  gate.cards.forEach((card) => recalculateStatusForCard(card, state));
+  renderGateNav();
+};
+
+/* Лог миграции: подключение «Карточка товара»/«Страница услуги» к
+   единому селектору guruV194 (v2.1.8) — не переносит и не удаляет
+   данные позиций, меняет только способ группировки/отображения при
+   рендере. */
+const GATE1_PRODUCT_SELECTOR_MIGRATION_V218 = "gate1-product-selector-v218";
+function gate1EnsureProductSelectorMigrationLog(workspace) {
+  if (!workspace?.project) return;
+  const project = workspace.project;
+  const log = (project._gate1SectionsMigrationLog = Array.isArray(
+    project._gate1SectionsMigrationLog,
+  )
+    ? project._gate1SectionsMigrationLog
+    : []);
+  if (log.some((entry) => entry.id === GATE1_PRODUCT_SELECTOR_MIGRATION_V218)) return;
+  log.push({
+    id: GATE1_PRODUCT_SELECTOR_MIGRATION_V218,
+    at: new Date().toISOString(),
+    status: "completed",
+    note: "«Карточка товара» и «Страница услуги» подключены к единому селектору guruV194Ui (тот же «категория → продукт», что в Gate 0/3/4) — по явному запросу, как исключение из правила «только позиция» для этой правки. Раньше обе карточки показывали все направления параллельным списком (группировка по строке row.direction); теперь наверху раздела «Продукт / Услуга» один общий селектор, и обе карточки показывают только позицию, чей row.catalogItemIdV189 совпадает с выбранным продуктом (id и категория у позиций уже существовали через дропдаун «Категория» — читать эту связь для фильтрации раньше было некому). Позиции без категории остаются видимыми отдельным блоком «Без категории», ничего не скрыто и не удалено. «Список / категория» этот селектор сознательно не получил — у неё нет row.categoryId вообще (g1pcIsProductCard её не матчит), это отдельная доработка. «Направления» (pv140) и «Юнит-экономика» (uv130) тоже сознательно не тронуты — другая модель данных (см. GATE1_SECTIONS_MIGRATION_V217).",
+  });
+}
+
+const __gate1ScopePrevPrepareSystemCards2 = prepareSystemCards;
+prepareSystemCards = function (workspace) {
+  __gate1ScopePrevPrepareSystemCards2(workspace);
+  gate1EnsureProductSelectorMigrationLog(workspace);
+};
+
+const __gate1ScopePrevMigrateWorkspace2 = migrateWorkspace;
+migrateWorkspace = function (workspace, projectId) {
+  const migrated = __gate1ScopePrevMigrateWorkspace2(workspace, projectId);
+  gate1EnsureProductSelectorMigrationLog(migrated);
+  return migrated;
+};
+
+const __gate1ScopePrevCreateFreshWorkspace2 = createFreshWorkspace;
+createFreshWorkspace = function (meta) {
+  const workspace = __gate1ScopePrevCreateFreshWorkspace2(meta);
+  gate1EnsureProductSelectorMigrationLog(workspace);
+  return workspace;
+};
