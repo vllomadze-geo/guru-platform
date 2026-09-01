@@ -48011,3 +48011,170 @@ createFreshWorkspace = function (meta) {
   gate1LinkUv130ProductIds(workspace);
   return workspace;
 };
+
+/* ================================================================
+   v2.2.1 — «Спрос, ценность, позиционирование» и «Юнит-экономика»
+   фильтруются по общему селектору guruV194 (product_id/directionKey,
+   проставленные в v2.2.0). Только отображение: ничего не удаляется,
+   не пересчитывается и не резолвится заново. При включённом
+   переключателе «Показать все направления» оба блока рендерятся
+   ТЕМИ ЖЕ, ни на строчку не изменёнными функциями, что и раньше.
+
+   Технически фильтр не трогает pv140ProductStrategyHtml/
+   g1RenderUnitEconomics напрямую (для uv130 — реализация слишком
+   большая, чтобы копировать целиком), а на время ОДНОГО вызова
+   подменяет внутренний хелпер, который эти функции вызывают сами:
+   pv181ProductItems (список товаров направления, читает ещё и Gate 4
+   — g4ProductSemantics, поэтому подмена обязана быть временной, а не
+   глобальной) и uv130ActiveEntries (её же использует статус/прогресс
+   секции в шапке аккордеона — если бы подмена была постоянной, шапка
+   вместо «0 из 6 направлений» показывала бы «0 из 1», хотя реально
+   заполнено 0 из 6). Подмена ставится и снимается синхронно внутри
+   одного вызова — JS однопоточный, никакой другой код в этот момент
+   вклиниться не может. */
+function gate1FilterUiState(workspace = state) {
+  ensureUiState(workspace);
+  if (workspace.ui.gate1FilterShowAllV221 === undefined) workspace.ui.gate1FilterShowAllV221 = false;
+  return workspace.ui;
+}
+
+function gate1FilterShowAll(workspace = state) {
+  return Boolean(gate1FilterUiState(workspace).gate1FilterShowAllV221);
+}
+
+function gate1FilterContext(workspace = state) {
+  if (gate1FilterShowAll(workspace)) return { active: false };
+  const ui = guruV194Ui(workspace);
+  const categoryId = guruV185Text(ui.selectedCategoryId);
+  if (!categoryId || categoryId === "__uncategorized__") return { active: false };
+  const selected = guruV194SelectedProduct(workspace);
+  return {
+    active: true,
+    categoryId,
+    productId: selected ? selected.id : "",
+    sourceRowId: selected?.source?.kind === "gate1" ? guruV185Text(selected.source.rowId) : "",
+  };
+}
+
+function gate1FilterToggleHtml(scopeAttr) {
+  const showAll = gate1FilterShowAll();
+  return `<label class="gate1-filter-toggle" style="display:flex;align-items:center;gap:8px;font-size:var(--text-sm);color:var(--muted);margin-bottom:var(--s-3);cursor:pointer;">
+    <input type="checkbox" data-gate1-filter-toggle="${escapeAttr(scopeAttr)}" ${showAll ? "checked" : ""} />
+    Показать все направления (без фильтра по выбранному продукту)
+  </label>`;
+}
+
+document.addEventListener("change", (event) => {
+  const toggle = event.target?.closest?.("[data-gate1-filter-toggle]");
+  if (!toggle) return;
+  gate1FilterUiState(state).gate1FilterShowAllV221 = toggle.checked;
+  flashSaving();
+  renderGate();
+});
+
+const __gate1FilterPrevPv140ProductStrategyHtml = pv140ProductStrategyHtml;
+pv140ProductStrategyHtml = function () {
+  const filter = gate1FilterContext(state);
+  const toggleHtml = gate1FilterToggleHtml("pv140");
+  const maps = pv140EnsureProductMaps();
+  const baseProducts = pv130ProductsFromGate0();
+
+  let entries = maps.map((row, index) => ({ row, index }));
+  if (filter.active) {
+    entries = entries.filter(({ row }) => {
+      const pid = guruV185Text(row.product_id);
+      return !pid || pid === filter.categoryId;
+    });
+    const matched = entries.find(({ row }) => guruV185Text(row.product_id) === filter.categoryId);
+    if (matched) {
+      // Направление под фильтром должно быть видно сразу, без лишнего
+      // клика — снимаем его со списка свёрнутых, если оно там было.
+      const key = pv140MapCollapseKey(matched.index, String(matched.row.product || "").trim());
+      const collapsed = g1CollapsedSet();
+      if (collapsed.has(key)) {
+        collapsed.delete(key);
+        state.g1Collapsed = [...collapsed];
+      }
+    }
+  }
+
+  const __gate1FilterInnerPrevPv181ProductItems = pv181ProductItems;
+  if (filter.active && filter.sourceRowId) {
+    pv181ProductItems = function (product) {
+      return __gate1FilterInnerPrevPv181ProductItems(product).filter(
+        (item) => item.id === filter.sourceRowId,
+      );
+    };
+  }
+  let bodyHtml;
+  try {
+    bodyHtml = entries
+      .map(({ row, index }) => pv140ProductMapHtml(row, index, baseProducts.length))
+      .join("");
+  } finally {
+    pv181ProductItems = __gate1FilterInnerPrevPv181ProductItems;
+  }
+
+  return `<div class="pv140-product-strategy">
+    <div class="pv140-list-heading">Направления</div>
+    ${toggleHtml}
+    <div class="g1-fields-grid">
+      ${bodyHtml || '<div class="pv181-keyword-empty">По выбранному продукту здесь пока ничего нет.</div>'}
+    </div>
+    <button class="small-btn add-inline-btn" data-pv140-map-add>+ Добавить направление</button>
+  </div>`;
+};
+
+function gate1FilterUv130Entries(entries, filter) {
+  if (!filter.active) return entries;
+  const directions = entries.filter(({ item }) => item.catalogKind === "direction");
+  const matchedDirection = directions.find(
+    ({ item }) => guruV185Text(item.product_id) === filter.categoryId,
+  );
+  const unresolvedDirections = directions.filter(({ item }) => !guruV185Text(item.product_id));
+  const matchedDirectionKey = matchedDirection
+    ? String(matchedDirection.item.productKey || matchedDirection.item.name || "").trim()
+    : null;
+
+  const result = [];
+  if (matchedDirection) result.push({ item: { ...matchedDirection.item, open: true }, index: matchedDirection.index });
+  unresolvedDirections.forEach((entry) => result.push(entry));
+
+  entries.forEach((entry) => {
+    if (entry.item.catalogKind === "direction") return;
+    if (!guruV185Text(entry.item.product_id)) {
+      result.push(entry); // нерезолвленный товар/услуга — всегда показываем как есть
+      return;
+    }
+    const parent = String(entry.item.directionKey || "").trim();
+    if (parent !== matchedDirectionKey) return; // товар другого направления — скрыт
+    if (!filter.sourceRowId) {
+      result.push(entry); // конкретная позиция не выбрана — показываем все товары направления
+      return;
+    }
+    if (String(entry.item.sourceItemId || "").trim() === filter.sourceRowId) {
+      result.push({ item: { ...entry.item, open: true }, index: entry.index });
+    }
+  });
+
+  return result;
+}
+
+const __gate1FilterPrevG1RenderUnitEconomics = g1RenderUnitEconomics;
+g1RenderUnitEconomics = function () {
+  const filter = gate1FilterContext(state);
+  const toggleHtml = gate1FilterToggleHtml("uv130");
+  if (!filter.active) return toggleHtml + __gate1FilterPrevG1RenderUnitEconomics();
+
+  const __gate1FilterInnerPrevUv130ActiveEntries = uv130ActiveEntries;
+  uv130ActiveEntries = function () {
+    return gate1FilterUv130Entries(__gate1FilterInnerPrevUv130ActiveEntries(), filter);
+  };
+  let html;
+  try {
+    html = __gate1FilterPrevG1RenderUnitEconomics();
+  } finally {
+    uv130ActiveEntries = __gate1FilterInnerPrevUv130ActiveEntries;
+  }
+  return toggleHtml + html;
+};

@@ -4,6 +4,6 @@
  * интерфейс обновятся вместе после загрузки app.js.
  */
 window.GURU_BUILD_INFO = Object.freeze({
-  version: "2.2.0",
+  version: "2.2.1",
   productLabel: "Рабочая версия MVP"
 });
