@@ -47266,3 +47266,208 @@ createFreshWorkspace = function (meta) {
   gate0EnsureSelectorUnificationLog(workspace);
   return workspace;
 };
+
+/* ================================================================
+   v2.1.7 — Gate 1 «Аналитика»: визуальная сепарация на два раздела
+   («Компания» / «Продукт / Услуга»), тот же приём, что и v2.1.5 для
+   Gate 0 (GATE0_COMPANY_SECTION_TITLES / gate0SectionHeadingHtml) —
+   ТОЛЬКО группировка карточек при рендере. Состав полей, формулы,
+   статусы, id и порядок карточек в gate.cards не меняются, ничего
+   не удаляется.
+
+   «Аудит сайта» остаётся тем же аккордеоном (тот же статус/прогресс,
+   тот же внутренний порядок), просто выводится под заголовком
+   «Компания» — кроме трёх карточек «Список / категория», «Страница
+   услуги», «Карточка товара»: они физически переносятся под заголовок
+   «Продукт / Услуга» и рендерятся теми же bare-карточками (g1CardHtml
+   без изменений), как productCards в Gate 0. «Сравнение проектов» и
+   «Целевая аудитория» уже были жёстко привязаны к секции site_audit
+   (рендерятся сразу за ней) — их код не трогаем, они естественно
+   остаются под «Компания». «Спрос, ценность, позиционирование» (JTBD +
+   Семантика) и «Юнит-экономика» (расчёт цены по Брауну) переносятся
+   под «Продукт / Услуга» целиком, как единые неделимые блоки — их
+   внутренний рендер (g1RenderPainOffer / g1RenderUnitEconomics) не
+   меняется.
+
+   Сознательно НЕ сделано (см. лог миграции ниже): подключение этих
+   трёх карточек и «Направлений» к единому селектору guruV194Ui (как у
+   Gate 0/3/4) — у Gate 1 сейчас другая модель данных для направлений
+   (строки pv130ProductsFromGate0 из Gate 0 «Что продаём», читается ещё
+   в ~14 местах: Юнит-экономика, Спрос/JTBD, кампании Gate 4). Это
+   отдельная миграция вне текущей задачи. */
+const GATE1_PRODUCT_SECTION_CARD_TITLES = [
+  "список / категория",
+  "страница услуги",
+  "карточка товара",
+];
+
+const __guruPrevGetGate1SectionsRestructureV217 = getGate1Sections;
+getGate1Sections = function (gate, visibleCards) {
+  const base = __guruPrevGetGate1SectionsRestructureV217(gate, visibleCards);
+  const siteAudit = base.find((section) => section.key === "site_audit");
+  const relocatedAll = [];
+  const relocatedFiltered = [];
+  if (siteAudit) {
+    const isRelocated = (card) =>
+      GATE1_PRODUCT_SECTION_CARD_TITLES.includes(
+        normalizeGateTitle(card?.title),
+      );
+    relocatedAll.push(...siteAudit.allInnerCards.filter(isRelocated));
+    relocatedFiltered.push(...siteAudit.filteredInnerCards.filter(isRelocated));
+    siteAudit.allInnerCards = siteAudit.allInnerCards.filter(
+      (c) => !isRelocated(c),
+    );
+    siteAudit.filteredInnerCards = siteAudit.filteredInnerCards.filter(
+      (c) => !isRelocated(c),
+    );
+  }
+  const result = [
+    {
+      key: "__g1_divider_company",
+      type: "divider",
+      title: "Компания",
+      allInnerCards: [],
+      filteredInnerCards: [],
+    },
+  ];
+  if (siteAudit) result.push(siteAudit);
+  result.push(
+    {
+      key: "__g1_divider_product",
+      type: "divider",
+      title: "Продукт / Услуга",
+      allInnerCards: [],
+      filteredInnerCards: [],
+    },
+    {
+      key: "__g1_product_pages",
+      bare: true,
+      allInnerCards: relocatedAll,
+      filteredInnerCards: relocatedFiltered,
+    },
+  );
+  base.forEach((section) => {
+    if (section.key !== "site_audit") result.push(section);
+  });
+  return result;
+};
+
+const __guruPrevRenderGate1AccordionRestructureV217 = renderGate1Accordion;
+renderGate1Accordion = function (gate, cards) {
+  const sections = getGate1Sections(gate, cards);
+  const accState = getGate1AccordionState();
+  const queryActive =
+    els.searchInput.value.trim() || els.statusFilter.value !== "all";
+  els.contentArea.innerHTML = `<div class="g1-redesign">
+    ${sections
+      .filter((s) => !s.hidden)
+      .map((section) => {
+        if (section.type === "divider") {
+          return gate0SectionHeadingHtml(section.title);
+        }
+        if (section.bare) {
+          const displayCards = queryActive
+            ? section.filteredInnerCards
+            : section.allInnerCards;
+          return displayCards.map((card) => g1CardHtml(card)).join("");
+        }
+        const sectionOpen = Boolean(accState.subblocks[section.key]);
+        const status =
+          section.key === "demand_semantics"
+            ? getDemandRouteStatus()
+            : section.key === "pain_jtbd_offer"
+              ? getPainOfferStatus()
+              : section.key === "unit_economics"
+                ? getUnitEconomicsStatus()
+                : getSectionStatus(section.allInnerCards);
+        const progressText =
+          section.key === "demand_semantics"
+            ? getDemandProgressText()
+            : section.key === "pain_jtbd_offer"
+              ? getPainOfferProgressText()
+              : section.key === "unit_economics"
+                ? getUnitEconomicsProgressText()
+                : getSectionProgressText(section.allInnerCards);
+        const displayCards = queryActive
+          ? section.filteredInnerCards
+          : section.allInnerCards;
+        const sectionHtml = `<section class="g1-section ${sectionOpen ? "is-open" : ""}">
+        <button class="g1-section-header" data-gate1-toggle-section="${escapeAttr(section.key)}">
+          <span class="g1-section-left">
+            <span class="g1-section-title">${escapeHtml(section.title)}</span>
+            <span class="g1-section-progress">${escapeHtml(progressText)}</span>
+          </span>
+          <span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+          <span class="g1-section-toggle">${sectionOpen ? "Закрыть" : "Открыть"}</span>
+        </button>
+        ${
+          sectionOpen
+            ? `<div class="g1-section-body">
+          ${
+            section.key === "demand_semantics"
+              ? ""
+              : section.key === "pain_jtbd_offer"
+                ? g1RenderPainOffer()
+                : section.key === "unit_economics"
+                  ? g1RenderUnitEconomics()
+                  : displayCards.length
+                    ? displayCards.map((card) => g1CardHtml(card)).join("")
+                    : '<div class="g1-empty">По текущему фильтру ничего не найдено.</div>'
+          }
+        </div>`
+            : ""
+        }
+      </section>`;
+        return `${sectionHtml}${section.key === "site_audit" ? `${projectComparisonHtml()}${targetAudienceHtml()}` : ""}`;
+      })
+      .join("")}
+  </div>`;
+  bindGate1Accordion();
+  bindDemandRouteEvents();
+  bindPainOfferRouteEvents();
+  bindUnitEconomicsRouteEvents();
+  bindCardInputs();
+  gate.cards.forEach((card) => recalculateStatusForCard(card, state));
+  renderGateNav();
+};
+
+/* Лог миграции: визуальная реструктуризация Gate 1 (v2.1.7) не переносит,
+   не удаляет и не переименовывает никакие данные — фиксируем это одной
+   записью на проект, той же схемой, что и GATE0_SECTIONS_MIGRATION_V215. */
+const GATE1_SECTIONS_MIGRATION_V217 = "gate1-sections-v217";
+function gate1EnsureSectionsMigrationLog(workspace) {
+  if (!workspace?.project) return;
+  const project = workspace.project;
+  const log = (project._gate1SectionsMigrationLog = Array.isArray(
+    project._gate1SectionsMigrationLog,
+  )
+    ? project._gate1SectionsMigrationLog
+    : []);
+  if (log.some((entry) => entry.id === GATE1_SECTIONS_MIGRATION_V217)) return;
+  log.push({
+    id: GATE1_SECTIONS_MIGRATION_V217,
+    at: new Date().toISOString(),
+    status: "completed",
+    note: "Gate 1 «Аналитика» разделён на визуальные разделы «Компания» и «Продукт / Услуга» — только группировка карточек при рендере (getGate1Sections/renderGate1Accordion), состав полей, формулы, статусы, id и порядок карточек в gate.cards не менялись, ничего не удалено. Под «Компания»: «Аудит сайта» (без трёх карточек ниже), «Сравнение проектов», «Целевая аудитория». Под «Продукт / Услуга»: карточки «Список / категория», «Страница услуги», «Карточка товара» (физически перенесены из «Аудита сайта», рендерятся теми же карточками без изменений), целиком секции «Спрос, ценность, позиционирование» (JTBD + Семантика) и «Юнит-экономика» (расчёт цены по Брауну). Подключение этих трёх карточек и виджета «Направления» к единому селектору guruV194 (как у Gate 0/3/4) сознательно НЕ выполнено — у Gate 1 сейчас другая модель данных для направлений (строки из Gate 0 «Что продаём», ~14 мест чтения), это отдельная миграция вне текущей задачи.",
+  });
+}
+
+const __gate1SectionsPrevPrepareSystemCards = prepareSystemCards;
+prepareSystemCards = function (workspace) {
+  __gate1SectionsPrevPrepareSystemCards(workspace);
+  gate1EnsureSectionsMigrationLog(workspace);
+};
+
+const __gate1SectionsPrevMigrateWorkspace = migrateWorkspace;
+migrateWorkspace = function (workspace, projectId) {
+  const migrated = __gate1SectionsPrevMigrateWorkspace(workspace, projectId);
+  gate1EnsureSectionsMigrationLog(migrated);
+  return migrated;
+};
+
+const __gate1SectionsPrevCreateFreshWorkspace = createFreshWorkspace;
+createFreshWorkspace = function (meta) {
+  const workspace = __gate1SectionsPrevCreateFreshWorkspace(meta);
+  gate1EnsureSectionsMigrationLog(workspace);
+  return workspace;
+};
