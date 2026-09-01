@@ -47681,3 +47681,99 @@ createFreshWorkspace = function (meta) {
   gate1EnsureProductSelectorMigrationLog(workspace);
   return workspace;
 };
+
+/* ================================================================
+   v2.1.9 — фикс отображения старых значений JTBD/сегментов/
+   позиционирования/УТП/оффера в разделе «Продукт, сегмент и задача
+   клиента» (Gate 0).
+
+   Диагноз (не гипотеза — воспроизведено на «Символ 2027 года «Коза»»,
+   проект «Коричное яблоко»): сохранение уже работает правильно —
+   guruV194Records пишет record.value немедленно при вводе, ключ
+   record.product_id верный (id позиции из catalogItemsV189, тот же,
+   что и в guruV194SelectedProduct), у каждой позиции есть запись в
+   реестре. Данные НЕ терялись и НЕ терпутся при переключении продукта.
+
+   Реальная причина другая: guruV194Migrate (v1.94.0) при первом
+   переносе старых текстовых JTBD/сегментов/позиционирования/УТП/оффера
+   писал только плоское record.value — никогда не создавал структуру
+   record.jtbd / .segment / .positioning / .usp / .offer, введённую
+   позже. Рендер (guruV194JtbdRecordHtml и 4 соседних функции,
+   ~app.js:45441-45694) читает ТОЛЬКО из этой структуры — так что для
+   каждой мигрированной записи все текстовые поля на экране показывались
+   пустыми, хотя запись цела. Тот же провал наследуют override-записи
+   (кнопка «Переопределить для продукта»), если их источник — тоже
+   старая плоская запись: копируются те же пустые части.
+
+   Один надёжный способ проверить, что это не потеря данных: сводка
+   паспорта проекта («Основной JTBD» и т.д.) читает не структуру, а тот
+   же самый record.value через guruV194SyncLegacy → project.productMainJtbds
+   — и там текст всегда был на месте, только в самой карточке Gate 0
+   человек видел пустые поля рядом с ним.
+
+   Хуже того: тронуть любое ОДНО из пустых на вид полей означало
+   реальную потерю — обработчик ввода пересобирает record.value из
+   частей (guruV194JtbdSentence и аналоги), а старый текст сохраняется
+   только в parts.legacy_value, который нигде не отображается и не
+   читается обратно.
+
+   Исправление (по явному решению — не перестройка интерфейса, разовая
+   доливка данных в уже существующие поля): для каждой записи без
+   структуры, но с непустым record.value, первое поле структуры
+   (situation / geography / category / client_gets / rational)
+   заполняется полным текстом старого значения. record.value не
+   трогается — он остаётся тем же самым источником для
+   guruV194SyncLegacy, ничего не удалено и не переформулировано. */
+const GATE0_LEGACY_STRUCTURED_SEED_V219 = "gate0-legacy-structured-seed-v219b";
+const GATE0_STRUCTURED_FIELD_MAP_V219 = {
+  jtbd: { subKey: "jtbd", firstKey: "situation" },
+  segments: { subKey: "segment", firstKey: "geography" },
+  positioning: { subKey: "positioning", firstKey: "category" },
+  usp: { subKey: "usp", firstKey: "client_gets" },
+  offers: { subKey: "offer", firstKey: "rational" },
+};
+
+function gate0SeedLegacyStructuredValues(workspace) {
+  if (!workspace?.project) return;
+  const project = workspace.project;
+  const log = (project._gate0ProductIdMigrationLog = Array.isArray(
+    project._gate0ProductIdMigrationLog,
+  )
+    ? project._gate0ProductIdMigrationLog
+    : []);
+  if (log.some((entry) => entry.id === GATE0_LEGACY_STRUCTURED_SEED_V219)) return;
+  const records = guruV194Records(workspace);
+  const seeded = [];
+  records.forEach((record) => {
+    const map = GATE0_STRUCTURED_FIELD_MAP_V219[record.field];
+    if (!map) return;
+    const struct = record[map.subKey] && typeof record[map.subKey] === "object" ? record[map.subKey] : null;
+    // «Есть структура» не значит «есть содержимое»: override-записи,
+    // скопированные с ещё не структурированного источника, уже приходят
+    // с объектом .segment/.positioning/... в котором все реальные поля
+    // пустые, а исходный текст лежит только в скрытом legacy_value.
+    const structHasRealContent = struct
+      ? Object.keys(struct).some((key) => key !== "legacy_value" && guruV185Text(struct[key]))
+      : false;
+    if (structHasRealContent) return;
+    const legacyText = guruV185Text(struct?.legacy_value) || guruV185Text(record.value);
+    if (!legacyText) return;
+    record[map.subKey] = { ...(struct || {}), [map.firstKey]: legacyText, legacy_value: legacyText };
+    seeded.push({ id: record.id, field: record.field, product_id: record.product_id, category_id: record.category_id, scope: record.scope });
+  });
+  log.push({
+    id: GATE0_LEGACY_STRUCTURED_SEED_V219,
+    at: new Date().toISOString(),
+    status: "completed",
+    count: seeded.length,
+    records: seeded,
+    note: "Старые мигрированные значения JTBD/сегментов/позиционирования/УТП/оффера показывали пустые структурированные поля в карточке «Продукт, сегмент и задача клиента» — структура (record.jtbd/.segment/.positioning/.usp/.offer) не создавалась при переносе v1.94.0, хотя текст был цел в record.value. Ничего не терялось при сохранении или переключении продукта — сама запись и её product_id всегда были верны, дело было только в отображении. Разово заполнено первое поле структуры каждой такой записи полным текстом старого значения (situation/geography/category/client_gets/rational); record.value не менялся, ничего не удалено и не переформулировано.",
+  });
+}
+
+const __gate0V219PrevEnsure = guruV194Ensure;
+guruV194Ensure = function (workspace = state) {
+  const result = __gate0V219PrevEnsure(workspace);
+  gate0SeedLegacyStructuredValues(workspace);
+  return result;
+};
