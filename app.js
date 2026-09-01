@@ -47806,3 +47806,208 @@ guruV194Ensure = function (workspace = state) {
   gate0SeedLegacyStructuredValues(workspace);
   return result;
 };
+
+/* ================================================================
+   v2.2.0 — связующий слой product_id для «Спрос, ценность,
+   позиционирование» (painV130.productMaps[]) и «Юнит-экономика»
+   (unitV130.items[]).
+
+   Единственное изменение — добавление скрытого поля product_id к уже
+   существующим записям. Ни одно видимое поле, лейбл, порядок или
+   формула не меняются; ничего не удаляется; group/render-функции этих
+   двух блоков (pv140ProductStrategyHtml, g1RenderUnitEconomics и все,
+   что их обслуживает) не тронуты вообще — они продолжают работать по
+   старой модели (имя направления), как и раньше. product_id — это
+   задел на будущее, читать его сегодня никто не обязан.
+
+   Сопоставление — по точному имени с productRegistryV185
+   (guruV185ProductByName: точное имя ИЛИ legacyNames, та же функция,
+   что уже используется по всему файлу для этой же задачи — никакой
+   новой логики сопоставления не изобреталось).
+
+   painV130.productMaps[] — один ряд = одно направление, сопоставляется
+   по row.product напрямую.
+
+   unitV130.items[] — два вида записей (item.catalogKind /
+   item.type): "direction" — само направление, сопоставляется по
+   собственному имени; "product"/"service" — конкретный товар/услуга
+   ВНУТРИ направления (пришедший из Gate 1). У таких записей в реестре
+   productRegistryV185 нет и не может быть отдельной строки (реестр
+   хранит только направления) — поэтому им присваивается product_id
+   РОДИТЕЛЬСКОГО направления через уже существующее поле
+   item.directionKey. Это не догадка и не решение расхождения —
+   directionKey и раньше однозначно указывал, какому направлению
+   принадлежит товар/услуга, product_id лишь проецирует эту же связь
+   в идентификатор реестра.
+
+   Уже проставленный product_id никогда не перезаписывается (проверка
+   guruV185Text(row.product_id) перед обработкой) — это гарантирует
+   «ничего не менять у того, что уже связано», и делает функцию
+   безопасной для повторного запуска на каждом рендере: новые записи
+   (новое направление или товар, добавленные позже) получат product_id
+   автоматически, старые — не тронутся повторно. */
+function gate1ProductIdMatch(name, workspace) {
+  const value = guruV185Text(name);
+  if (!value) return "";
+  const match = guruV185ProductByName(value, workspace);
+  return match ? match.id : "";
+}
+
+function gate1LinkPv140ProductIds(workspace) {
+  const productMaps = Array.isArray(workspace?.painV130?.productMaps)
+    ? workspace.painV130.productMaps
+    : [];
+  productMaps.forEach((row) => {
+    if (!row || guruV185Text(row.product_id)) return;
+    const name = guruV185Text(row.product);
+    if (!name) return;
+    const id = gate1ProductIdMatch(name, workspace);
+    if (id) row.product_id = id;
+  });
+}
+
+function gate1LinkUv130ProductIds(workspace) {
+  const unitItems = Array.isArray(workspace?.unitV130?.items)
+    ? workspace.unitV130.items
+    : [];
+  unitItems.forEach((item) => {
+    if (!item || guruV185Text(item.product_id)) return;
+    const isDirection = item.catalogKind === "direction" || item.type === "direction";
+    const nameForMatch = isDirection
+      ? guruV185Text(item.name) || guruV185Text(item.productKey)
+      : guruV185Text(item.directionKey) || guruV185Text(item.name) || guruV185Text(item.productKey);
+    if (!nameForMatch) return;
+    const id = gate1ProductIdMatch(nameForMatch, workspace);
+    if (id) item.product_id = id;
+  });
+}
+
+/* Лог — не событие, а СНИМОК текущего состояния painV130/unitV130,
+   пересчитываемый заново при каждом вызове и просто перезаписываемый
+   в лог (без накопления). Так безопаснее: pv140EnsureProductMaps()/
+   ensureUnitV130() могут в первый раз за сессию отработать на ещё не
+   до конца развёрнутом списке (см. комментарий ниже про v220c) — на
+   самой линковке это не сказывается (недостающее подхватывается
+   следующим вызовом, ничего не форсируем), а снимок при каждом
+   пересчёте просто отражает то, что есть в массиве ПРЯМО СЕЙЧАС —
+   без риска задвоить счётчик, как было бы при накоплении «событий
+   линковки» через несколько вызовов. */
+function gate1SnapshotPv140(workspace) {
+  const rows = Array.isArray(workspace?.painV130?.productMaps) ? workspace.painV130.productMaps : [];
+  const linked = [];
+  const mismatched = [];
+  rows.forEach((row, index) => {
+    const name = guruV185Text(row?.product);
+    if (!name) return;
+    const id = guruV185Text(row.product_id);
+    if (id) linked.push({ block: "pv140_demand_positioning", index, name, product_id: id });
+    else mismatched.push({ block: "pv140_demand_positioning", index, name });
+  });
+  return { linked, mismatched };
+}
+
+function gate1SnapshotUv130(workspace) {
+  const items = Array.isArray(workspace?.unitV130?.items) ? workspace.unitV130.items : [];
+  const linked = [];
+  const mismatched = [];
+  items.forEach((item, index) => {
+    if (!item) return;
+    const isDirection = item.catalogKind === "direction" || item.type === "direction";
+    const nameForMatch = isDirection
+      ? guruV185Text(item.name) || guruV185Text(item.productKey)
+      : guruV185Text(item.directionKey) || guruV185Text(item.name) || guruV185Text(item.productKey);
+    if (!nameForMatch) return;
+    const entry = { block: "uv130_unit_economics", index, name: nameForMatch, kind: isDirection ? "direction" : "product", ownName: guruV185Text(item.name) };
+    const id = guruV185Text(item.product_id);
+    if (id) linked.push({ ...entry, product_id: id });
+    else mismatched.push(entry);
+  });
+  return { linked, mismatched };
+}
+
+const GATE1_LINK_LOG_NOTE = "Добавлено скрытое поле product_id (значение id из productRegistryV185, сопоставление по точному имени через guruV185ProductByName). Видимые поля, лейблы, порядок карточек и формулы статусов не менялись, ничего не удалено — это только добавление одного скрытого поля. Для товаров/услуг внутри направления (Юнит-экономика) product_id взят по имени родительского направления (item.directionKey), так как реестр хранит только направления, не отдельные позиции. Записи без точного совпадения имени в реестре остаются без product_id и перечислены в mismatched — требуют ручного резолва.";
+
+function gate1WriteLinkLogSnapshot(workspace, logId, snapshot) {
+  if (!workspace?.project) return;
+  if (!snapshot.linked.length && !snapshot.mismatched.length) return;
+  const project = workspace.project;
+  const log = (project._gate1ProductIdLinkLog = Array.isArray(project._gate1ProductIdLinkLog)
+    ? project._gate1ProductIdLinkLog
+    : []);
+  let entry = log.find((item) => item.id === logId);
+  if (!entry) {
+    entry = { id: logId, at: new Date().toISOString(), note: GATE1_LINK_LOG_NOTE };
+    log.push(entry);
+  }
+  entry.updated_at = new Date().toISOString();
+  entry.linkedCount = snapshot.linked.length;
+  entry.linked = snapshot.linked;
+  entry.mismatchedCount = snapshot.mismatched.length;
+  entry.mismatched = snapshot.mismatched;
+  entry.status = snapshot.mismatched.length ? "completed_with_mismatches" : "completed";
+}
+
+const GATE1_PV140_PRODUCT_ID_LOG_V220 = "gate1-pv140-product-id-link-v220c";
+const GATE1_UV130_PRODUCT_ID_LOG_V220 = "gate1-uv130-product-id-link-v220c";
+
+/* v220c — важно: pv140EnsureProductMaps()/ensureUnitV130() жёстко
+   используют глобальный state и НЕ рассчитаны на вызов чаще, чем их
+   собственные существующие точки входа (рендер открытой секции
+   аккордеона). Более ранняя версия этой правки вызывала их
+   дополнительно из prepareSystemCards() для гарантии «полного»
+   списка перед линковкой — и это провоцировало гонку в их
+   внутренней логике сопоставления «направление ⇄ товары»: направления
+   с дочерними товарами на миг «терялись» из unitV130.items и
+   пересоздавались как новые пустые объекты. Данные не терялись
+   только потому, что у направлений (в отличие от товаров/услуг
+   внутри них) сейчас нет собственных заполняемых полей — но полагаться
+   на это нельзя.
+
+   Правильное и безопасное место для линковки — обёртка НАД самими
+   pv140EnsureProductMaps()/ensureUnitV130(): она не меняет, когда и
+   как часто эти функции вызываются (вызывает их код так же, как и
+   раньше), а просто дочитывает их результат — то есть точно
+   полностью развёрнутый список — сразу после того, как он готов. */
+const __gate1LinkPrevPv140EnsureProductMaps = pv140EnsureProductMaps;
+pv140EnsureProductMaps = function () {
+  const maps = __gate1LinkPrevPv140EnsureProductMaps();
+  gate1LinkPv140ProductIds(state);
+  gate1WriteLinkLogSnapshot(state, GATE1_PV140_PRODUCT_ID_LOG_V220, gate1SnapshotPv140(state));
+  return maps;
+};
+
+const __gate1LinkPrevEnsureUnitV130 = ensureUnitV130;
+ensureUnitV130 = function () {
+  const data = __gate1LinkPrevEnsureUnitV130();
+  gate1LinkUv130ProductIds(state);
+  gate1WriteLinkLogSnapshot(state, GATE1_UV130_PRODUCT_ID_LOG_V220, gate1SnapshotUv130(state));
+  return data;
+};
+
+/* Дополнительный безопасный (без вызова ensure-функций) проход при
+   каждом рендере — просто дочитывает то, что в painV130/unitV130 уже
+   есть на данный момент, ничего не форсируя. Не гарантирует мгновенное
+   покрытие для ещё ни разу не открытого раздела Gate 1, но подхватывает
+   любые записи, ставшие видны раньше через другой путь. */
+const __gate1LinkPrevPrepareSystemCards = prepareSystemCards;
+prepareSystemCards = function (workspace) {
+  __gate1LinkPrevPrepareSystemCards(workspace);
+  gate1LinkPv140ProductIds(workspace);
+  gate1LinkUv130ProductIds(workspace);
+};
+
+const __gate1LinkPrevMigrateWorkspace = migrateWorkspace;
+migrateWorkspace = function (workspace, projectId) {
+  const migrated = __gate1LinkPrevMigrateWorkspace(workspace, projectId);
+  gate1LinkPv140ProductIds(migrated);
+  gate1LinkUv130ProductIds(migrated);
+  return migrated;
+};
+
+const __gate1LinkPrevCreateFreshWorkspace = createFreshWorkspace;
+createFreshWorkspace = function (meta) {
+  const workspace = __gate1LinkPrevCreateFreshWorkspace(meta);
+  gate1LinkPv140ProductIds(workspace);
+  gate1LinkUv130ProductIds(workspace);
+  return workspace;
+};
