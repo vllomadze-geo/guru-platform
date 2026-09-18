@@ -20840,11 +20840,14 @@ const MEGA_TOOL_STATUSES = GURU_STATUS_OPTIONS;
 const MEGA_CHANNEL_STATUSES = GURU_STATUS_OPTIONS;
 
 function isMegaMarketingCard(card) {
-  return card?.title === "Текущее состояние маркетинговой системы";
+  return card?.title === "Текущее состояние маркетинговой системы" ||
+    card?.title === "Текущее состояние маркетинговой системы · Компания";
 }
 
 function ensureMegaMarketing(card, workspace = state) {
   if (!card || !isMegaMarketingCard(card)) return;
+  if (card.title === "Текущее состояние маркетинговой системы · Компания" && card.megaMarketing)
+    return card.megaMarketing;
   if (!card.megaMarketing) {
     card.megaMarketing = { platform: [], infra: [], channels: [] };
     const gate = workspace?.gates?.find((g) => g.id === "gate-0");
@@ -34703,6 +34706,23 @@ g4ProductSemantics = function (product) {
   return sem;
 };
 
+// Existing Gate 4 drafts may use the catalog item ID as their key. Resolve
+// that item through its Gate 1 category and keep the source limited to it.
+const __g4GroupDraftPrevProductSemantics = g4ProductSemantics;
+g4ProductSemantics = function (productKey) {
+  const product = guruV194Product(String(productKey || ""), state);
+  if (!product) return __g4GroupDraftPrevProductSemantics(productKey);
+  const category = guruV185ProductById(product.categoryId, state);
+  const sem = __g4GroupDraftPrevProductSemantics(category?.name || product.name);
+  const itemData = sem.row?.items?.[product.id];
+  return {
+    ...sem,
+    row: { ...sem.row, items: itemData ? { [product.id]: itemData } : {} },
+    clusters: (sem.clusters || []).filter((cluster) => cluster.id === product.id),
+    demandRows: (itemData?.demandRows || []).filter((row) => String(row.kw || "").trim()),
+  };
+};
+
 /* ================================================================
    v1.11.0 — Поисковая сборка по направлениям (по Котлеру, без дублей).
    Цепочка: семантика товаров из Gate 1 «Спрос, ценность,
@@ -36108,6 +36128,30 @@ function g4sbItemJtbdList(product, itemId) {
   const sem = g4ProductSemantics(product);
   const d = sem.row?.items?.[itemId];
   if (!d) return [];
+  const model = d.semL4Model;
+  if (Array.isArray(model?.additionalJtbds)) {
+    const build = state.gate4SearchBuild?.[normalizeAspectKey(product)];
+    const drafts = Object.values(build?.jtbdDraftsV388 || {});
+    const nameFor = (id, index, fallback) =>
+      drafts.find((draft) => draft?.open && draft.itemId === itemId &&
+        String(draft.mainJtbdIndex) === String(index))?.name ||
+      (build?.groupRows || []).find((row) => row.itemId === itemId &&
+        row.jtbdId === id)?.col0 || fallback;
+    const primaryId = `primary:${itemId}`;
+    const main = String(nameFor(primaryId, 0, model.mainJtbd || d.semL4?.[0] || "")).trim();
+    return [
+      ...(main ? [{ index: 0, id: primaryId, text: main }] : []),
+      ...model.additionalJtbds.map((entry, offset) => {
+        const index = offset + 1;
+        const fallback = [entry?.situation, entry?.desired_action, entry?.result]
+          .every((value) => String(value || "").trim())
+          ? `Когда ${entry.situation}, клиент хочет ${entry.desired_action}, чтобы ${entry.result}.`
+          : d.semL4?.[index] || "";
+        return { index, id: String(entry?.id || ""),
+          text: String(nameFor(entry?.id, index, fallback)).trim() };
+      }),
+    ].filter((jtbd) => jtbd.text);
+  }
   return (d.semL4 || [])
     .map((text, index) => ({ index, text: String(text || "").trim() }))
     .filter((j) => j.text);
@@ -41361,6 +41405,23 @@ function g4sbV166GroupJtbdKey(product, row) {
   return g4sbV166JtbdKey(g4sbV126Jtbd(product, row)?.text || row.col0 || row.searchIntent);
 }
 
+function g4sbV166DraftEntry(d, jtbd) {
+  d.jtbdDraftsV388 = d.jtbdDraftsV388 && typeof d.jtbdDraftsV388 === "object"
+    ? d.jtbdDraftsV388 : {};
+  const current = d.clusterDraft;
+  const matches = (draft) => draft?.open && draft.itemId === jtbd.itemId &&
+    String(draft.mainJtbdIndex) === String(jtbd.index);
+  const stored = Object.entries(d.jtbdDraftsV388).find(([, draft]) => matches(draft));
+  // A newly opened group editor takes precedence. Otherwise the saved
+  // per-JTBD draft is authoritative, even if clusterDraft is a stale copy.
+  if (matches(current) && (current.editingClusterId || !stored)) {
+    const key = current.jtbdId || stored?.[0] || `${jtbd.itemId}::${jtbd.index}`;
+    d.jtbdDraftsV388[key] = current;
+    return { key, draft: current };
+  }
+  return stored ? { key: stored[0], draft: stored[1] } : null;
+}
+
 function g4sbV166EditorHtml(product, d) {
   const draft = d.clusterDraft;
   if (!draft?.open) return "";
@@ -41415,6 +41476,7 @@ g4sbGroupClusterSummaryHtml = function (product, row) {
 
 g4sbSegmentCoverageHtml = function (product, d) {
   const jtbds = g4sbV166DirectionJtbds(product);
+  const previousDraft = d.clusterDraft;
   const indexedGroups = d.groupRows.map((row, index) => ({ row, index }));
   const groupsByJtbd = new Map(jtbds.map((jtbd) => [jtbd.key, []]));
   const orphaned = [];
@@ -41429,22 +41491,17 @@ g4sbSegmentCoverageHtml = function (product, d) {
 
   const jtbdHtml = jtbds.map((jtbd) => {
     const groups = groupsByJtbd.get(jtbd.key) || [];
-    const editorIsHere = Boolean(
-      d.clusterDraft?.open &&
-      g4sbV166JtbdKey(
-        g4sbItemJtbdList(product, d.clusterDraft.itemId).find(
-          (item) => String(item.index) === String(d.clusterDraft.mainJtbdIndex),
-        )?.text,
-      ) === jtbd.key,
-    );
+    const draftEntry = g4sbV166DraftEntry(d, jtbd);
+    const editorIsHere = Boolean(draftEntry);
     const seed = escapeAttr(JSON.stringify([jtbd.itemId, G4_V166_JTBD_SCOPE, jtbd.index]));
     const keeperKey = `g4-search-jtbd-v166-${normalizeAspectKey(product)}-${encodeURIComponent(jtbd.key)}`;
+    if (draftEntry) d.clusterDraft = draftEntry.draft;
     const editor = editorIsHere ? g4sbV166EditorHtml(product, d) : "";
     if (editorIsHere) {
       editorRendered = true;
       d._g4V1261EditorRenderedInline = true;
     }
-    return `<details class="g4-v126-jtbd g4-v166-jtbd ${groups.length ? "is-implemented" : "is-empty"}" data-ui-keeper-key="${escapeAttr(keeperKey)}" open>
+    return `<details class="g4-v126-jtbd g4-v166-jtbd ${groups.length ? "is-implemented" : "is-empty"}" data-ui-keeper-key="${escapeAttr(keeperKey)}" data-g4sb-product="${escapeAttr(product)}" ${draftEntry ? `data-g4sb-draft-key="${escapeAttr(draftEntry.key)}"` : ""} open>
       <summary class="g4-v126-jtbd-head g4-v166-jtbd-head">
         <span class="g4-v126-level">JTBD</span>
         <strong>${escapeHtml(jtbd.text)}</strong>
@@ -41460,6 +41517,12 @@ g4sbSegmentCoverageHtml = function (product, d) {
     </details>`;
   }).join("");
 
+  const restored = jtbds.map((jtbd) => g4sbV166DraftEntry(d, jtbd))
+    .find((entry) => entry?.draft === previousDraft ||
+      (entry && previousDraft?.itemId === entry.draft.itemId &&
+        String(previousDraft.mainJtbdIndex) === String(entry.draft.mainJtbdIndex)));
+  d.clusterDraft = restored?.draft || previousDraft;
+
   const orphanedHtml = orphaned.length ? `<details class="g4-v126-jtbd g4-v166-jtbd is-orphaned" open>
     <summary class="g4-v126-jtbd-head g4-v166-jtbd-head"><span class="g4-v126-level">Проверить</span><strong>Группы со старой или удалённой связью JTBD</strong><span>${orphaned.length}</span></summary>
     <div class="g4-v160-jtbd-body"><div class="g4-v126-groups">${orphaned.map(({ row, index }) =>
@@ -41473,6 +41536,19 @@ g4sbSegmentCoverageHtml = function (product, d) {
     <div class="g4-v166-jtbd-list">${jtbdHtml || '<div class="g1-empty">В аналитике направления пока нет JTBD. Сначала заполните основной и дополнительные JTBD в Gate 1.</div>'}${orphanedHtml}</div>
   </div>`;
 };
+
+// Legacy editor handlers read d.clusterDraft. Select the draft belonging to
+// the editor that received the event before those handlers run.
+for (const type of ["click", "input", "change", "keydown", "focusin"]) {
+  document.addEventListener(type, (event) => {
+    const editor = event.target?.closest?.(".g4-v166-jtbd[data-g4sb-draft-key] .g4-v126-editor");
+    const card = editor?.closest(".g4-v166-jtbd[data-g4sb-draft-key]");
+    if (!card) return;
+    const d = ensureGate4SearchBuild(card.dataset.g4sbProduct);
+    const draft = d.jtbdDraftsV388?.[card.dataset.g4sbDraftKey];
+    if (draft?.open) d.clusterDraft = draft;
+  }, true);
+}
 
 g4sbClusterAssemblyHtml = function (product, d) {
   if (d._g4V1261EditorRenderedInline) {
@@ -42003,12 +42079,16 @@ g4sbSaveClusterDraft = function (product, d) {
     draft.validationError = `Одно уточнение может содержать не более ${G4_GROUP_CALLOUT_LENGTH} символов с пробелами.`;
     return null;
   }
-  if (filled.length < G4_GROUP_CALLOUT_MIN) {
-    draft.validationError = `Добавьте минимум ${G4_GROUP_CALLOUT_MIN} уточнения для этой группы.`;
-    return null;
-  }
   draft.callouts = filled;
-  return __g4V180SaveClusterDraft(product, d);
+  const saved = __g4V180SaveClusterDraft(product, d);
+  if (saved && d.jtbdDraftsV388) {
+    Object.entries(d.jtbdDraftsV388).forEach(([key, entry]) => {
+      if (entry === draft) delete d.jtbdDraftsV388[key];
+    });
+    const group = d.groupRows.find((row) => row.clusterId === saved.id);
+    if (group && draft.jtbdId) group.jtbdId = saved.jtbdId = draft.jtbdId;
+  }
+  return saved;
 };
 
 document.addEventListener("input", (event) => {
@@ -46968,6 +47048,9 @@ function g4ProductPickSiblings(product, workspace = state) {
 /* Строка-ключ для прежних хранилищ Gate 4 — см. пояснение блока выше. */
 function g4ProductPickKey(product, workspace = state) {
   if (!product) return "";
+  const itemKey = normalizeAspectKey(product.id);
+  if (workspace.gate4SearchBuild?.[itemKey] || workspace.gate4Rsya?.[itemKey])
+    return product.id;
   const category = g4ProductPickCategory(product, workspace);
   const categoryName = guruV185Text(category?.name) || guruV185Text(product.name);
   const siblings = g4ProductPickSiblings(product, workspace);
