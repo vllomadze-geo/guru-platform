@@ -18,11 +18,7 @@
       });
 
       if (!response.ok) {
-        if (response.status === 404) {
-          setStatus('is-error', 'Облако: API синхронизации не запущен');
-          return;
-        }
-        setStatus('is-error', `Облако: ошибка API ${response.status}`);
+        setStatus('is-warning', 'Облако недоступно, работа локально');
         return;
       }
 
@@ -44,14 +40,9 @@
         return;
       }
 
-      if (data.status === 'missing_env') {
-        setStatus('is-error', 'Supabase: переменные не найдены');
-        return;
-      }
-
-      setStatus('is-error', 'Supabase: ошибка подключения');
+      setStatus('is-warning', 'Облако недоступно, работа локально');
     } catch (error) {
-      setStatus('is-error', 'Supabase: функция недоступна');
+      setStatus('is-warning', 'Облако недоступно, работа локально');
     }
   }
 
