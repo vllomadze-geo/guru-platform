@@ -16,6 +16,9 @@ var _syncTimer = null;
 var _projectRegistrySyncTimer = null;
 const _cloudWorkspaceVersions = new Map();
 let _cloudRegistryUpdatedAt = "";
+var _cloudSessionOffline = false;
+var _cloudSessionFailureReason = "";
+var CLOUD_REQUEST_TIMEOUT_MS = 3500;
 // Дебаунс-таймеры не мешают двум POST быть в полёте одновременно: пока ответ
 // на первый ещё не пришёл, _cloudWorkspaceVersions/_cloudRegistryUpdatedAt не
 // обновлены, и второй запрос уходит с той же устаревшей базовой версией —
@@ -679,16 +682,19 @@ function saveState() {
     JSON.stringify(state),
   );
   syncActiveProjectMeta();
-  // При неудачной записи статус ошибки уже выставлен в reportStorageFailure —
-  // не перекрываем его сообщением об успехе
+  // При неудачной записи статус ошибки уже выставлен в reportStorageFailure.
+  // При недоступном облаке локальное сохранение остаётся рабочим режимом.
   if (saved) {
-    els.saveStatus.textContent =
-      "Сохранено: " +
-      new Date().toLocaleTimeString("ru-RU", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    els.autosaveDot.style.background = "#82d48d";
+    const savedAt = new Date().toLocaleTimeString("ru-RU", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    els.saveStatus.textContent = _cloudSessionOffline
+      ? "Сохранено локально: " + savedAt
+      : "Сохранено: " + savedAt;
+    els.autosaveDot.style.background = _cloudSessionOffline
+      ? "#d4b05f"
+      : "#82d48d";
   }
   scheduleCloudSync();
   return saved;
@@ -753,9 +759,15 @@ function openProject(projectId) {
   els.appShell.hidden = false;
   render();
   guruScheduleDerivedRefresh();
+
+  // Локальная копия открывается сразу. Облако проверяется только в фоне.
   loadFromSupabase(projectId).then((cloudResult) => {
     if (activeProjectId !== projectId) return;
     if (!cloudResult) {
+      if (_cloudSessionOffline) {
+        showCloudLocalMode();
+        return;
+      }
       // Реестр проекта может существовать без workspace. Не отправляем
       // автоматически созданный пустой seed поверх возможных данных.
       if (hadLocalWorkspace) pushToSupabase(projectId, state);
@@ -5832,9 +5844,10 @@ document.getElementById("newProjectName").addEventListener("keydown", (e) => {
 });
 
 async function hydrateProjectsFromCloud() {
+  if (_cloudSessionOffline) return;
   const registryResult = await loadProjectRegistryFromSupabase();
   if (!registryResult) {
-    saveProjects();
+    if (!_cloudSessionOffline) saveProjects();
     await hydrateAllProjectWorkspacesFromCloud();
     return;
   }
@@ -5852,8 +5865,10 @@ async function hydrateProjectsFromCloud() {
 }
 
 async function hydrateAllProjectWorkspacesFromCloud() {
+  if (_cloudSessionOffline) return;
   await Promise.all(
     projects.map(async (project) => {
+      if (_cloudSessionOffline) return;
       const projectId = project.id;
       const localKey = WORKSPACE_STORAGE_PREFIX + projectId;
       const localRaw = localStorage.getItem(localKey);
@@ -5864,40 +5879,55 @@ async function hydrateAllProjectWorkspacesFromCloud() {
 
       const cloudResult = await loadFromSupabase(projectId);
       if (!cloudResult?.state) {
-        if (localState) await pushToSupabase(projectId, localState, { silent: true });
+        if (localState && !_cloudSessionOffline)
+          await pushToSupabase(projectId, localState, { silent: true });
         return;
       }
 
       _cloudWorkspaceVersions.set(projectId, cloudResult.cloudUpdatedAt || "");
       const cloudState = cloudResult.state;
+      const localUpdatedAt = String(localState?.updatedAt || "");
+      const cloudUpdatedAt = String(
+        cloudState?.updatedAt || cloudResult.cloudUpdatedAt || "",
+      );
 
-      // При старте облако — источник истины. Это особенно важно при первой
-      // миграции: недавно созданный пустой локальный seed может иметь более
-      // свежую дату, чем старый, но заполненный workspace в Supabase.
-      // Любую отличающуюся локальную версию сначала сохраняем как backup.
-      if (localRaw && JSON.stringify(localState) !== JSON.stringify(cloudState)) {
-        safeStorageSet(
-          STORAGE_BACKUP_PREFIX + projectId + "-before-cloud-" + Date.now(),
-          localRaw,
-          { silent: true },
-        );
+      // Local-first: более свежая локальная версия никогда не затирается
+      // облаком. Более свежую облачную копию принимаем с backup локальных данных.
+      if (!localState || cloudUpdatedAt > localUpdatedAt) {
+        if (localRaw && JSON.stringify(localState) !== JSON.stringify(cloudState)) {
+          safeStorageSet(
+            STORAGE_BACKUP_PREFIX + projectId + "-before-cloud-" + Date.now(),
+            localRaw,
+            { silent: true },
+          );
+        }
+        const migrated = migrateWorkspace(cloudState, projectId);
+        safeStorageSet(localKey, JSON.stringify(migrated));
+      } else if (localUpdatedAt > cloudUpdatedAt) {
+        await pushToSupabase(projectId, localState, { silent: true });
       }
-      const migrated = migrateWorkspace(cloudState, projectId);
-      safeStorageSet(localKey, JSON.stringify(migrated));
     }),
   );
 }
 
 async function bootstrapApp() {
   showLauncher();
-  await hydrateProjectsFromCloud();
-  if (activeProjectId) return;
+
+  // Интерфейс и локальные данные запускаются без ожидания внешней БД.
   const activeProjects = projects.filter((project) => !project.archived);
   if (activeProjects.length === 1 && projects.length === 1) {
     openProject(activeProjects[0].id);
-  } else {
-    showLauncher();
+    return;
   }
+
+  showLauncher();
+  hydrateProjectsFromCloud()
+    .then(() => {
+      if (!activeProjectId && !els.launcher.hidden) renderProjectLauncher();
+    })
+    .catch((error) => {
+      markCloudOffline(error?.message || "bootstrap_cloud_error");
+    });
 }
 
 initAccessGate();
@@ -16635,18 +16665,64 @@ renderGateNav = function () {
 };
 
 // === Supabase sync ===
+// Облако является дополнительным каналом синхронизации. Если оно недоступно,
+// GURU продолжает читать и сохранять данные в localStorage без блокировки UI.
+function showCloudLocalMode() {
+  if (!els?.saveStatus) return;
+  els.saveStatus.textContent = "Облако недоступно, работа локально";
+  if (els.autosaveDot) els.autosaveDot.style.background = "#d4b05f";
+}
+
+function markCloudOffline(reason = "") {
+  _cloudSessionOffline = true;
+  _cloudSessionFailureReason = String(reason || "");
+  showCloudLocalMode();
+  console.warn(
+    "Cloud sync disabled for this session; localStorage remains active.",
+    _cloudSessionFailureReason,
+  );
+}
+
+async function cloudFetch(input, init = {}) {
+  if (_cloudSessionOffline) throw new Error("cloud_session_offline");
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), CLOUD_REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (error) {
+    markCloudOffline(
+      error?.name === "AbortError"
+        ? "cloud_timeout"
+        : error?.message || "cloud_network_error",
+    );
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function cloudDataFailed(data) {
+  if (!data || data.ok) return false;
+  if (data.error === "not_found" || data.error === "conflict") return false;
+  markCloudOffline(data.error || "cloud_unavailable");
+  return true;
+}
+
 function scheduleCloudSync() {
+  if (_cloudSessionOffline) return;
   if (_syncTimer) clearTimeout(_syncTimer);
   _syncTimer = setTimeout(pushToSupabase, 2000);
 }
 
 function scheduleProjectsCloudSync() {
+  if (_cloudSessionOffline) return;
   if (_projectRegistrySyncTimer) clearTimeout(_projectRegistrySyncTimer);
   _projectRegistrySyncTimer = setTimeout(pushProjectsToSupabase, 800);
 }
 
 function pushToSupabase(projectId = activeProjectId, workspace = state, options = {}) {
-  if (!workspace || !projectId) return Promise.resolve();
+  if (_cloudSessionOffline || !workspace || !projectId)
+    return Promise.resolve({ ok: false, error: "cloud_session_offline" });
   const queued = (_workspaceSyncQueues.get(projectId) || Promise.resolve()).then(
     () => pushToSupabaseOnce(projectId, workspace, options),
   );
@@ -16655,8 +16731,10 @@ function pushToSupabase(projectId = activeProjectId, workspace = state, options 
 }
 
 async function pushToSupabaseOnce(projectId, workspace, options, retried = false) {
+  if (_cloudSessionOffline)
+    return { ok: false, error: "cloud_session_offline" };
   try {
-    const response = await fetch("/api/workspace-sync", {
+    const response = await cloudFetch("/api/workspace-sync", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -16679,12 +16757,10 @@ async function pushToSupabaseOnce(projectId, workspace, options, retried = false
       return data;
     }
     if (data.error === "conflict") {
-      if (data.cloud_updated_at) _cloudWorkspaceVersions.set(projectId, data.cloud_updated_at);
-      // Это тот же браузер/вкладка — конфликт почти всегда самопородённый (два
-      // наших же запроса в полёте одновременно). Наша локальная копия новее,
-      // поэтому один раз ретраим с уже актуальной базовой версией, вместо того
-      // чтобы молча терять правку пользователя.
-      if (!retried) return pushToSupabaseOnce(projectId, workspace, options, true);
+      if (data.cloud_updated_at)
+        _cloudWorkspaceVersions.set(projectId, data.cloud_updated_at);
+      if (!retried)
+        return pushToSupabaseOnce(projectId, workspace, options, true);
       if (data.state) {
         safeStorageSet(
           STORAGE_BACKUP_PREFIX + projectId + "-cloud-conflict-" + Date.now(),
@@ -16692,29 +16768,31 @@ async function pushToSupabaseOnce(projectId, workspace, options, retried = false
           { silent: true },
         );
       }
+      return data;
     }
     console.warn("Supabase sync error:", data.error, data.detail);
-    // missing_env — облако просто не настроено, локальное сохранение прошло:
-    // не пугаем «ошибкой записи», статус «Сохранено» остаётся на месте
-    if (!options.silent && data.error !== "missing_env") {
-      els.saveStatus.textContent = "Облако: ошибка записи";
-      els.autosaveDot.style.background = "#d4605f";
-    }
+    cloudDataFailed(data);
     return data;
   } catch (e) {
-    console.warn("Supabase sync failed, localStorage ok", e);
+    if (!_cloudSessionOffline)
+      markCloudOffline(e?.message || "cloud_write_error");
+    return { ok: false, error: "cloud_unavailable" };
   }
 }
 
 function pushProjectsToSupabase() {
+  if (_cloudSessionOffline)
+    return Promise.resolve({ ok: false, error: "cloud_session_offline" });
   const queued = _registrySyncQueue.then(() => pushProjectsToSupabaseOnce());
   _registrySyncQueue = queued.catch(() => {});
   return queued;
 }
 
 async function pushProjectsToSupabaseOnce(retried = false) {
+  if (_cloudSessionOffline)
+    return { ok: false, error: "cloud_session_offline" };
   try {
-    const response = await fetch("/api/workspace-sync", {
+    const response = await cloudFetch("/api/workspace-sync", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -16731,17 +16809,22 @@ async function pushProjectsToSupabaseOnce(retried = false) {
     if (data.error === "conflict") {
       if (data.cloud_updated_at) _cloudRegistryUpdatedAt = data.cloud_updated_at;
       if (!retried) return pushProjectsToSupabaseOnce(true);
+      return data;
     }
     console.warn("Supabase projects sync error:", data.error, data.detail);
+    cloudDataFailed(data);
     return data;
   } catch (e) {
-    console.warn("Supabase projects sync failed, localStorage ok", e);
+    if (!_cloudSessionOffline)
+      markCloudOffline(e?.message || "cloud_registry_write_error");
+    return { ok: false, error: "cloud_unavailable" };
   }
 }
 
 async function loadFromSupabase(projectId) {
+  if (_cloudSessionOffline) return null;
   try {
-    const response = await fetch(
+    const response = await cloudFetch(
       `/api/workspace-sync?project_id=${encodeURIComponent(projectId)}`,
     );
     const data = await response.json();
@@ -16754,35 +16837,43 @@ async function loadFromSupabase(projectId) {
         cloudUpdatedAt: data.updated_at || "",
       };
     }
+    cloudDataFailed(data);
   } catch (e) {
-    console.warn("Supabase load failed, using localStorage", e);
+    if (!_cloudSessionOffline)
+      markCloudOffline(e?.message || "cloud_read_error");
   }
   return null;
 }
 
 async function loadProjectRegistryFromSupabase() {
+  if (_cloudSessionOffline) return null;
   try {
-    const response = await fetch(
+    const response = await cloudFetch(
       `/api/workspace-sync?project_id=${encodeURIComponent(PROJECT_REGISTRY_CLOUD_ID)}`,
     );
     const data = await response.json();
     if (data.ok && data.state)
       return { state: data.state, cloudUpdatedAt: data.updated_at || "" };
+    cloudDataFailed(data);
   } catch (e) {
-    console.warn("Supabase projects load failed, using localStorage", e);
+    if (!_cloudSessionOffline)
+      markCloudOffline(e?.message || "cloud_registry_read_error");
   }
   return null;
 }
 
 async function deleteWorkspaceFromSupabase(projectId) {
-  if (!projectId) return;
+  if (!projectId || _cloudSessionOffline) return;
   try {
-    await fetch(
+    const response = await cloudFetch(
       `/api/workspace-sync?project_id=${encodeURIComponent(projectId)}`,
       { method: "DELETE" },
     );
+    const data = await response.json();
+    cloudDataFailed(data);
   } catch (e) {
-    console.warn("Supabase delete failed", e);
+    if (!_cloudSessionOffline)
+      markCloudOffline(e?.message || "cloud_delete_error");
   }
 }
 
