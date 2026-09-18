@@ -521,7 +521,15 @@ button, input, select, textarea { font-family: inherit; }
 .gate-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,.22); border-radius: 999px; }
 .gate-nav::-webkit-scrollbar-track { background: transparent; }
 .side-footer { flex: 0 0 auto; margin-top: auto; display: flex; gap: 8px; align-items: center; color: #b9b2aa; font-size: 12px; }
-.autosave-dot { width: 8px; height: 8px; border-radius: 999px; background: #82d48d; }
+.autosave-dot { width: 8px; height: 8px; border-radius: 999px; background: #f59e0b; }
+.side-footer[data-storage-status="connected"] { color: #b9eac5; }
+.side-footer[data-storage-status="connected"] .autosave-dot { background: #22c55e; }
+.side-footer[data-storage-status="local"] { color: #ffd38a; }
+.side-footer[data-storage-status="local"] .autosave-dot { background: #f59e0b; }
+.side-footer[data-storage-status="pending"] { color: #ffd38a; }
+.side-footer[data-storage-status="pending"] .autosave-dot { background: #f59e0b; }
+.side-footer[data-storage-status="error"] { color: #ffb0a8; }
+.side-footer[data-storage-status="error"] .autosave-dot { background: #dc2626; }
 
 /* Единый спокойный интерфейс: рабочие данные важнее инструкций и декора. */
 .ui-quiet .content-area .instruction-toggle,
@@ -2620,7 +2628,7 @@ select:disabled {
 @media(max-width:980px){.gate7-summary{grid-template-columns:repeat(2,1fr)}.gate7-task-row{grid-template-columns:1fr}.gate7-task-head{display:none}.gate7-task-row label span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:700}.gate7-actions{justify-content:space-between;flex-wrap:wrap}.gate7-actions select{flex:1}.gate7-top{display:grid}.gate7-toolbar{display:grid;grid-template-columns:1fr 1fr}.gate7-toolbar button{width:100%}}@media(max-width:620px){.gate7-toolbar,.gate7-summary{grid-template-columns:1fr}.gate7-top{padding:16px}.gate7-top h2{font-size:24px}}
 
 
-/* v1.0 Supabase connection test */
+/* Единый индикатор хранения: облако, локальный режим, ошибка записи. */
 .supabase-status {
   display: inline-flex;
   align-items: center;
@@ -2645,8 +2653,11 @@ select:disabled {
   display: inline-block;
 }
 .supabase-status.is-checking::before { background: #f59e0b; }
+.supabase-status.is-connected { color: #166534; border-color: #bbf7d0; background: #f0fdf4; }
 .supabase-status.is-connected::before { background: #16a34a; }
-.supabase-status.is-warning::before { background: #f59e0b; }
+.supabase-status.is-local { color: #9a5100; border-color: #fed7aa; background: #fff7ed; }
+.supabase-status.is-local::before { background: #f59e0b; }
+.supabase-status.is-error { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
 .supabase-status.is-error::before { background: #dc2626; }
 .supabase-status button {
   border: 0;

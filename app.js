@@ -18,6 +18,9 @@ const _cloudWorkspaceVersions = new Map();
 let _cloudRegistryUpdatedAt = "";
 var _cloudSessionOffline = false;
 var _cloudSessionFailureReason = "";
+var _cloudConnectionVerified = false;
+var _cloudDataSynced = false;
+var _localStorageFailedKey = "";
 var CLOUD_REQUEST_TIMEOUT_MS = 3500;
 // Дебаунс-таймеры не мешают двум POST быть в полёте одновременно: пока ответ
 // на первый ещё не пришёл, _cloudWorkspaceVersions/_cloudRegistryUpdatedAt не
@@ -239,10 +242,8 @@ function collectStorageGarbage(options = {}) {
 
 function reportStorageFailure(key, err) {
   console.error("Хранилище браузера переполнено, запись не удалась:", key, err);
-  const statusEl = document.getElementById("saveStatus");
-  const dotEl = document.getElementById("autosaveDot");
-  if (statusEl) statusEl.textContent = "⚠ Нет места: данные не сохранены";
-  if (dotEl) dotEl.style.background = "#d4605f";
+  _localStorageFailedKey = key;
+  renderStorageStatus();
   if (!_storageWarningShown) {
     _storageWarningShown = true;
     alert(
@@ -259,6 +260,12 @@ function reportStorageFailure(key, err) {
 function safeStorageSet(key, value, options = {}) {
   try {
     localStorage.setItem(key, value);
+    if (!options.silent) {
+      if (_localStorageFailedKey === key) _localStorageFailedKey = "";
+      if (key === PROJECTS_STORAGE_KEY || key.startsWith(WORKSPACE_STORAGE_PREFIX))
+        _cloudDataSynced = false;
+      renderStorageStatus();
+    }
     return true;
   } catch (firstErr) {
     let freed = 0;
@@ -268,6 +275,12 @@ function safeStorageSet(key, value, options = {}) {
     if (freed > 0) {
       try {
         localStorage.setItem(key, value);
+        if (!options.silent) {
+          if (_localStorageFailedKey === key) _localStorageFailedKey = "";
+          if (key === PROJECTS_STORAGE_KEY || key.startsWith(WORKSPACE_STORAGE_PREFIX))
+            _cloudDataSynced = false;
+          renderStorageStatus();
+        }
         return true;
       } catch (retryErr) {}
     }
@@ -305,6 +318,8 @@ const els = {
   brandTitle: document.getElementById("brandTitle"),
   brandMark: document.getElementById("brandMark"),
 };
+
+renderStorageStatus();
 
 function isAccessUnlocked() {
   try {
@@ -682,20 +697,7 @@ function saveState() {
     JSON.stringify(state),
   );
   syncActiveProjectMeta();
-  // При неудачной записи статус ошибки уже выставлен в reportStorageFailure.
-  // При недоступном облаке локальное сохранение остаётся рабочим режимом.
-  if (saved) {
-    const savedAt = new Date().toLocaleTimeString("ru-RU", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    els.saveStatus.textContent = _cloudSessionOffline
-      ? "Сохранено локально: " + savedAt
-      : "Сохранено: " + savedAt;
-    els.autosaveDot.style.background = _cloudSessionOffline
-      ? "#d4b05f"
-      : "#82d48d";
-  }
+  // safeStorageSet обновляет единый индикатор и сохраняет ошибку записи красной.
   scheduleCloudSync();
   return saved;
 }
@@ -725,8 +727,8 @@ function syncActiveProjectMeta() {
 
 function flashSaving() {
   if (!state) return;
-  els.saveStatus.textContent = "Сохраняю...";
-  els.autosaveDot.style.background = "#d4b05f";
+  _cloudDataSynced = false;
+  renderStorageStatus();
   setTimeout(saveState, 120);
 }
 
@@ -771,10 +773,7 @@ function openProject(projectId) {
       // Реестр проекта может существовать без workspace. Не отправляем
       // автоматически созданный пустой seed поверх возможных данных.
       if (hadLocalWorkspace) pushToSupabase(projectId, state);
-      else {
-        els.saveStatus.textContent = "Данных проекта пока нет";
-        els.autosaveDot.style.background = "#d4b05f";
-      }
+      else renderStorageStatus();
       return;
     }
     const cloudState = cloudResult.state;
@@ -797,13 +796,11 @@ function openProject(projectId) {
       syncActiveProjectMeta();
       render();
       guruScheduleDerivedRefresh();
-      els.saveStatus.textContent = "Загружено из облака";
-      els.autosaveDot.style.background = "#4a9eff";
+      markCloudConnected({ synced: true });
     } else if (local > cloud) {
       pushToSupabase(projectId, state);
     } else {
-      els.saveStatus.textContent = "Синхронизировано с облаком";
-      els.autosaveDot.style.background = "#4a9eff";
+      markCloudConnected({ synced: true });
     }
   });
 }
@@ -16665,16 +16662,57 @@ renderGateNav = function () {
 };
 
 // === Supabase sync ===
+// Оба существующих индикатора читают одно состояние: облако, локальная запись.
+function renderStorageStatus() {
+  const top = document.getElementById("supabaseStatus");
+  const bottom = document.getElementById("saveStatus");
+  const footer = document.querySelector(".side-footer");
+  const mode = _localStorageFailedKey
+    ? "error"
+    : _cloudSessionOffline
+      ? "local"
+      : _cloudConnectionVerified
+        ? "connected"
+        : "checking";
+  const labels = {
+    error: ["Данные не сохранены", "Данные не сохранены"],
+    local: ["Локальный режим", "Сохранение локально"],
+    connected: ["Облако подключено", _cloudDataSynced ? "Облако синхронизировано" : "Сохранение локально"],
+    checking: ["Проверка облака", "Сохранение локально"],
+  };
+  const tooltip = mode === "local"
+    ? "Облако временно недоступно. Данные сохраняются в этом браузере."
+    : mode === "error"
+      ? "Последнее изменение не удалось сохранить в этом браузере."
+      : "";
+  if (top) {
+    top.className = "supabase-status is-" + mode;
+    top.textContent = labels[mode][0];
+    top.title = tooltip;
+  }
+  if (bottom) {
+    bottom.textContent = labels[mode][1];
+    bottom.title = tooltip;
+  }
+  if (footer) footer.dataset.storageStatus = mode === "connected" && !_cloudDataSynced ? "pending" : mode;
+}
+
+function markCloudConnected({ synced = false } = {}) {
+  if (_cloudSessionOffline) return;
+  _cloudConnectionVerified = true;
+  if (synced) _cloudDataSynced = true;
+  renderStorageStatus();
+}
+
 // Облако является дополнительным каналом синхронизации. Если оно недоступно,
 // GURU продолжает читать и сохранять данные в localStorage без блокировки UI.
 function showCloudLocalMode() {
-  if (!els?.saveStatus) return;
-  els.saveStatus.textContent = "Облако недоступно, работа локально";
-  if (els.autosaveDot) els.autosaveDot.style.background = "#d4b05f";
+  renderStorageStatus();
 }
 
 function markCloudOffline(reason = "") {
   _cloudSessionOffline = true;
+  _cloudDataSynced = false;
   _cloudSessionFailureReason = String(reason || "");
   showCloudLocalMode();
   console.warn(
@@ -16702,8 +16740,11 @@ async function cloudFetch(input, init = {}) {
 }
 
 function cloudDataFailed(data) {
-  if (!data || data.ok) return false;
-  if (data.error === "not_found" || data.error === "conflict") return false;
+  if (!data) return false;
+  if (data.ok || data.error === "not_found" || data.error === "conflict") {
+    markCloudConnected();
+    return false;
+  }
   markCloudOffline(data.error || "cloud_unavailable");
   return true;
 }
@@ -16746,17 +16787,12 @@ async function pushToSupabaseOnce(projectId, workspace, options, retried = false
     const data = await response.json();
     if (data.ok) {
       if (data.updated_at) _cloudWorkspaceVersions.set(projectId, data.updated_at);
+      markCloudConnected({ synced: projectId === activeProjectId && !options.silent });
       if (options.silent) return data;
-      els.saveStatus.textContent =
-        "Облако ✓ " +
-        new Date().toLocaleTimeString("ru-RU", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-      els.autosaveDot.style.background = "#4a9eff";
       return data;
     }
     if (data.error === "conflict") {
+      markCloudConnected();
       if (data.cloud_updated_at)
         _cloudWorkspaceVersions.set(projectId, data.cloud_updated_at);
       if (!retried)
@@ -16804,9 +16840,11 @@ async function pushProjectsToSupabaseOnce(retried = false) {
     const data = await response.json();
     if (data.ok) {
       if (data.updated_at) _cloudRegistryUpdatedAt = data.updated_at;
+      markCloudConnected({ synced: !activeProjectId });
       return data;
     }
     if (data.error === "conflict") {
+      markCloudConnected();
       if (data.cloud_updated_at) _cloudRegistryUpdatedAt = data.cloud_updated_at;
       if (!retried) return pushProjectsToSupabaseOnce(true);
       return data;
@@ -16829,6 +16867,7 @@ async function loadFromSupabase(projectId) {
     );
     const data = await response.json();
     if (data.ok && data.state) {
+      markCloudConnected();
       return {
         state: {
           ...data.state,
@@ -16852,8 +16891,10 @@ async function loadProjectRegistryFromSupabase() {
       `/api/workspace-sync?project_id=${encodeURIComponent(PROJECT_REGISTRY_CLOUD_ID)}`,
     );
     const data = await response.json();
-    if (data.ok && data.state)
+    if (data.ok && data.state) {
+      markCloudConnected();
       return { state: data.state, cloudUpdatedAt: data.updated_at || "" };
+    }
     cloudDataFailed(data);
   } catch (e) {
     if (!_cloudSessionOffline)
@@ -30588,8 +30629,8 @@ const GURU_AUTOSAVE_DELAY_MS = 450;
 const __guruPrevFlashSavingV121 = flashSaving;
 flashSaving = function () {
   if (!state) return;
-  els.saveStatus.textContent = "Сохраняю...";
-  els.autosaveDot.style.background = "#d4b05f";
+  _cloudDataSynced = false;
+  renderStorageStatus();
   if (_saveTimer) clearTimeout(_saveTimer);
   _saveTimer = setTimeout(() => {
     _saveTimer = null;
@@ -38342,15 +38383,7 @@ function guruPersistStateFast(options = {}) {
     WORKSPACE_STORAGE_PREFIX + activeProjectId,
     JSON.stringify(state),
   );
-  if (saved && options.quiet !== true) {
-    els.saveStatus.textContent =
-      "Сохранено: " +
-      new Date().toLocaleTimeString("ru-RU", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    els.autosaveDot.style.background = "#82d48d";
-  }
+  if (saved && options.quiet !== true) renderStorageStatus();
   if (options.cloud !== false) scheduleCloudSync();
   return saved;
 }
@@ -44734,8 +44767,8 @@ function guruV192SaveContinuumSmooth(itemElement) {
   // Этот путь намеренно не вызывает общий flashSaving(): тот пересчитывает
   // весь Gate 0 и навигацию синхронно с выбором в native-select.
   _guruTabDirty = true;
-  els.saveStatus.textContent = "Сохраняю...";
-  els.autosaveDot.style.background = "#d4b05f";
+  _cloudDataSynced = false;
+  renderStorageStatus();
   if (_saveTimer) clearTimeout(_saveTimer);
   _saveTimer = setTimeout(() => {
     _saveTimer = null;

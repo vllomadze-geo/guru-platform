@@ -233,9 +233,9 @@
         <div class="side-section-title">Gate</div>
         <nav id="gateNav" class="gate-nav"></nav>
 
-        <div class="side-footer">
+        <div class="side-footer" data-storage-status="checking">
           <div class="autosave-dot" id="autosaveDot"></div>
-          <span id="saveStatus">Автосохранение включено</span>
+          <span id="saveStatus">Сохранение локально</span>
         </div>
       </aside>
 
@@ -244,7 +244,7 @@
           <div class="topbar-meta">
             <div class="eyebrow" data-guru-build-label>РАБОЧАЯ ВЕРСИЯ MVP · СБОРКА</div>
             <div id="supabaseStatus" class="supabase-status is-checking">
-              Supabase: проверка подключения
+              Проверка облака
             </div>
           </div>
           <h1 id="pageTitle">Платформа</h1>
@@ -318,6 +318,5 @@
     <script defer src="build-info.js"></script>
     <script defer src="seed-data.js"></script>
     <script defer src="app.js"></script>
-    <script defer src="supabase-test.js"></script>
   </body>
 </html>
