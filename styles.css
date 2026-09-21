@@ -7420,6 +7420,37 @@ textarea:focus-visible, [role="button"]:focus-visible {
 .g4-v128-conflict > div { display: grid; gap: 3px; }
 .g4-v128-conflict strong { color: #9d1f1f; font-size: 11px; }
 .g4-v128-conflict span { color: var(--muted); font-size: 10px; line-height: 1.4; }
+.g4-phrase-conflict-link {
+  appearance: none;
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  background: transparent;
+  color: #9d1f1f;
+  font: inherit;
+  font-weight: 700;
+  line-height: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.g4-phrase-conflict-link:hover,
+.g4-phrase-conflict-link:focus-visible {
+  color: #6f1212;
+  outline: none;
+  border-bottom-width: 2px;
+}
+.g4-phrase-conflict-target {
+  position: relative;
+  animation: g4PhraseConflictTarget 1.25s ease-in-out 2;
+  outline: 3px solid rgba(198, 40, 40, .55);
+  outline-offset: -3px;
+}
+@keyframes g4PhraseConflictTarget {
+  0%, 100% { background: rgba(198, 40, 40, .09); }
+  50% { background: rgba(198, 40, 40, .26); }
+}
 .g4-v128-forecast {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

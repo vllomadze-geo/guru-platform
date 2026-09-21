@@ -38688,7 +38688,7 @@ g4sbResetDraft = function (d) {
   d.clusterDraft.ads = [{ ad0: "", ad1: "", ad2: "" }];
   d.clusterDraft.callouts = ["", "", "", ""];
   d.clusterDraft.forecastBaselineRows = [];
-  d.clusterDraft.phraseConflictMessage = "";
+  g4sbClearPhraseConflict(d.clusterDraft);
 };
 
 g4sbGroupPhrases = function (_product, group) {
@@ -39124,11 +39124,39 @@ function g4sbV128PhraseUsage(product, currentBuild, draft) {
             ? String(product || "Текущая кампания")
             : campaignKey.replace(/_/g, " "),
           group: String(group.col0 || `Группа ${groupIndex + 1}`),
+          groupId,
+          jtbdKey: g4sbV166JtbdKey(group.col0 || group.searchIntent),
         });
       });
     });
   });
   return usage;
+}
+
+function g4sbSetPhraseConflict(draft, occupied, phrase, suffix = "") {
+  const group = occupied?.group || "другая группа";
+  draft.phraseConflictMessage = `Фраза уже используется в группе «${group}».${suffix ? ` ${suffix}` : ""}`;
+  draft.phraseConflictTarget = occupied?.groupId ? {
+    groupId: occupied.groupId,
+    jtbdKey: occupied.jtbdKey || "",
+    group,
+    phrase: String(phrase || "").trim(),
+    suffix,
+  } : null;
+}
+
+function g4sbClearPhraseConflict(draft) {
+  draft.phraseConflictMessage = "";
+  draft.phraseConflictTarget = null;
+}
+
+function g4sbPhraseConflictHtml(product, draft) {
+  const target = draft?.phraseConflictTarget;
+  if (!target?.groupId) return escapeHtml(draft?.phraseConflictMessage || "");
+  const phrase = target.phrase
+    ? `Фраза «${escapeHtml(target.phrase)}» используется в группе `
+    : "Фраза используется в группе ";
+  return `${phrase}<button type="button" class="g4-phrase-conflict-link" data-g4sb-product="${escapeAttr(product)}" data-g4sb-conflict-group="${escapeAttr(target.groupId)}" data-g4sb-conflict-group-name="${escapeAttr(target.group)}" data-g4sb-conflict-jtbd="${escapeAttr(target.jtbdKey)}" data-g4sb-conflict-phrase="${escapeAttr(target.phrase)}">«${escapeHtml(target.group)}»</button>.${target.suffix ? ` ${escapeHtml(target.suffix)}` : ""}`;
 }
 
 const g4sbV148ForecastImports = new Map();
@@ -39327,7 +39355,7 @@ function g4sbV128PhraseSelectorHtml(product, d, draft, p) {
         ? `<button type="button" class="g4-v147-action" ${p} data-g4sb-remove-from-draft="${escapeAttr(row.kw)}">Убрать</button>`
         : `<button type="button" class="g4-v147-action" ${p} data-g4sb-campaign-phrase-exclusion="${escapeAttr(row.kw)}">${isExcluded ? "Вернуть" : "Исключить"}</button>`}
         <button type="button" class="g4-v147-action is-danger" ${p} data-g4sb-delete-bank-phrase="${escapeAttr(row.kw)}">Удалить</button></div>`;
-    return `<tr class="${occupied ? "has-conflict" : isExcluded ? "is-campaign-excluded" : ""}">
+    return `<tr class="${occupied ? "has-conflict" : isExcluded ? "is-campaign-excluded" : ""}" data-g4sb-phrase-row="${escapeAttr(key)}">
       <td><input type="checkbox" ${p} data-g4sb-phrase-select="${escapeAttr(row.kw)}" ${isSelected ? "checked" : ""} ${isExcluded ? "disabled" : ""} ${occupied ? `title="Фраза уже используется в группе «${escapeAttr(sameCampaignRecords[0].group)}»"` : ""}></td>
       <td><strong>${escapeHtml(row.kw)}</strong>${row.source ? `<small>${escapeHtml(row.source)}</small>` : ""}</td>
       <td class="is-number"><input class="g1-input ${g4sbV171PhraseMetricClass(row, "vol")}" type="number" min="0" step="1" value="${escapeAttr(g4sbV171PhraseMetricValue(row, "vol"))}" placeholder="0" ${p} data-g4sb-bank-phrase="${escapeAttr(row.kw)}" data-g4sb-bank-phrase-field="vol" aria-label="Спрос и показы в месяц"></td>
@@ -39353,7 +39381,7 @@ function g4sbV128PhraseSelectorHtml(product, d, draft, p) {
     ? `<div class="g4-v137-hidden-note">Уже распределены в другие группы и скрыты из списка: ${occupiedRows.length}.</div>`
     : "";
   const warning = draft.phraseConflictMessage
-    ? `<div class="g4-v128-conflict" role="alert"><div><strong>Фраза занята другой группой</strong><span>${escapeHtml(draft.phraseConflictMessage)}</span></div></div>`
+    ? `<div class="g4-v128-conflict" role="alert"><div><strong>Фраза занята другой группой</strong><span>${g4sbPhraseConflictHtml(product, draft)}</span></div></div>`
     : "";
   const copyCount = selectedRows.length;
   const importPreview = g4sbV148ImportPreviewHtml(product, d, draft, p);
@@ -39404,7 +39432,7 @@ g4sbClusterAssemblyHtml = function (product, d) {
     </section>
     <div class="g4-v126-keywords"><div class="g4-upstream-title">3. Ключевые фразы группы</div>${g4sbV128PhraseSelectorHtml(product, d, draft, p)}</div>
     ${g4sbV127DraftOperationsHtml(product, draft, filledRows.length)}
-    ${draft.validationError ? `<div class="g4-v126-validation" role="alert">${escapeHtml(draft.validationError)}</div>` : ""}
+    ${draft.validationError ? `<div class="g4-v126-validation" role="alert">${draft.validationErrorKind === "phrase_conflict" ? g4sbPhraseConflictHtml(product, draft) : escapeHtml(draft.validationError)}</div>` : ""}
     <div class="g4-v126-actions">
       <button class="small-btn add-inline-btn" ${p} data-g4sb-draft-save ${saveBlocked ? "disabled" : ""}>${draft.editingClusterId ? "Сохранить группу" : "Создать группу"}</button>
       <button class="small-btn" ${p} data-g4sb-draft-cancel>Отмена</button>
@@ -39415,6 +39443,7 @@ g4sbClusterAssemblyHtml = function (product, d) {
 g4sbSaveClusterDraft = function (product, d) {
   const draft = d.clusterDraft;
   draft.validationError = "";
+  draft.validationErrorKind = "";
   if (!draft.itemId) {
     draft.validationError = "Выберите сегмент.";
     return null;
@@ -39456,7 +39485,9 @@ g4sbSaveClusterDraft = function (product, d) {
   });
   if (occupiedPhrase) {
     const record = (usage.get(g4sbV128PhraseKey(occupiedPhrase.kw)) || []).find((item) => item.sameCampaign);
-    draft.validationError = `Фраза уже используется в группе «${record?.group || "другая группа"}».`;
+    g4sbSetPhraseConflict(draft, record, occupiedPhrase.kw);
+    draft.validationError = draft.phraseConflictMessage;
+    draft.validationErrorKind = "phrase_conflict";
     return null;
   }
   const excluded = new Set((d.excludedCampaignPhrases || []).map(g4sbV128PhraseKey));
@@ -39992,38 +40023,7 @@ document.addEventListener("click", (event) => {
     const d = ensureGate4SearchBuild(target.dataset.g4sbProduct);
     const group = d.groupRows.find((row) => row.groupId === target.dataset.g4sbEditGroup || row.clusterId === target.dataset.g4sbEditGroup);
     if (!group) return;
-    d.clusterDraft = {
-      open: true,
-      editingClusterId: group.groupId,
-      itemId: group.itemId,
-      segmentIndex: group.segmentIndex,
-      mainJtbdIndex: group.mainJtbdIndex,
-      extraJtbdIndexes: [],
-      searchIntent: group.searchIntent || "",
-      keywordRows: (group.demandRows || []).map(g4sbKeywordRow),
-      phraseSelection: [],
-      extraPhrases: [],
-      name: group.col0 || "",
-      phraseFilter: "all",
-      minus: group.minus || "",
-      col2: group.col2 || "",
-      col3: group.col3 || "",
-      col4: group.col4 || "",
-      budgetType: group.budgetType === "weekly" ? "weekly" : "period",
-      desiredLeads: group.desiredLeads || "",
-      desiredCpaScenario: group.desiredCpaScenario || "base",
-      forecastCpc: parseUnitNumber(group.col3) && parseUnitNumber(group.col4)
-        ? String(Math.round(parseUnitNumber(group.col4) / parseUnitNumber(group.col3)))
-        : "",
-      ads: ((d.adsRows || {})[d.groupRows.indexOf(group)] || [{}]).map((ad) => ({
-        ad0: String(ad.ad0 || ""),
-        ad1: String(ad.ad1 || ""),
-        ad2: String(ad.ad2 || ""),
-      })),
-      callouts: (Array.isArray(group.callouts) ? group.callouts : []).map((value) => String(value || "")),
-      forecastBaselineRows: (group.demandRows || []).map(g4sbKeywordRow),
-      phraseConflictMessage: "",
-    };
+    g4sbOpenSavedGroupEditor(target.dataset.g4sbProduct, d, group);
     flashSaving();
     renderGate();
   }
@@ -40371,8 +40371,9 @@ document.addEventListener("change", (event) => {
   const occupied = usage.find((record) => record.sameCampaign);
   if (target.checked && occupied) {
     target.checked = false;
-    draft.phraseConflictMessage = `Фраза уже используется в группе «${occupied.group}».`;
+    g4sbSetPhraseConflict(draft, occupied, phrase);
     draft.validationError = "";
+    draft.validationErrorKind = "";
     flashSaving();
     renderGate();
     return;
@@ -40384,8 +40385,9 @@ document.addEventListener("change", (event) => {
   const index = rows.findIndex((row) => g4sbV128PhraseKey(row.kw) === key);
   if (target.checked && index === -1) rows.push(g4sbKeywordRow(sourceRow));
   if (!target.checked && index !== -1) rows.splice(index, 1);
-  draft.phraseConflictMessage = "";
+  g4sbClearPhraseConflict(draft);
   draft.validationError = "";
+  draft.validationErrorKind = "";
   flashSaving();
   renderGate();
 });
@@ -40409,8 +40411,9 @@ document.addEventListener("click", (event) => {
   if (deletedPosition !== -1) d.deletedBankPhrases.splice(deletedPosition, 1);
   const occupied = (g4sbV128PhraseUsage(product, d, draft).get(key) || []).find((record) => record.sameCampaign);
   if (occupied) {
-    draft.phraseConflictMessage = `Фраза уже используется в группе «${occupied.group}».`;
+    g4sbSetPhraseConflict(draft, occupied, phrase);
     draft.validationError = "";
+    draft.validationErrorKind = "";
     renderGate();
     return;
   }
@@ -40426,8 +40429,9 @@ document.addEventListener("click", (event) => {
   if (!Array.isArray(draft.keywordRows)) draft.keywordRows = [];
   if (!draft.keywordRows.some((row) => g4sbV128PhraseKey(row.kw) === key))
     draft.keywordRows.push(g4sbKeywordRow(sourceRow || { kw: phrase, originStage: "gate4" }));
-  draft.phraseConflictMessage = "";
+  g4sbClearPhraseConflict(draft);
   draft.validationError = "";
+  draft.validationErrorKind = "";
   flashSaving();
   renderGate();
 });
@@ -40473,8 +40477,9 @@ function g4sbV152MovePhraseToCampaignExclusions(product, d, phrase) {
       }
     }
   }
-  draft.phraseConflictMessage = "";
+  g4sbClearPhraseConflict(draft);
   draft.validationError = "";
+  draft.validationErrorKind = "";
 }
 
 document.addEventListener("click", (event) => {
@@ -40488,7 +40493,7 @@ document.addEventListener("click", (event) => {
   const selected = (draft.keywordRows || []).some((row) => g4sbV128PhraseKey(row.kw) === key);
   const occupied = (g4sbV128PhraseUsage(product, d, draft).get(key) || []).find((record) => record.sameCampaign);
   if (occupied) {
-    draft.phraseConflictMessage = `Фраза уже используется в группе «${occupied.group}».`;
+    g4sbSetPhraseConflict(draft, occupied, phrase);
     flashSaving();
     renderGate();
     return;
@@ -40505,8 +40510,9 @@ document.addEventListener("click", (event) => {
   const position = excluded.findIndex((value) => g4sbV128PhraseKey(value) === key);
   if (position === -1) excluded.push(key);
   else excluded.splice(position, 1);
-  draft.phraseConflictMessage = "";
+  g4sbClearPhraseConflict(draft);
   draft.validationError = "";
+  draft.validationErrorKind = "";
   flashSaving();
   renderGate();
 });
@@ -40581,7 +40587,7 @@ document.addEventListener("click", (event) => {
   const occupied = (g4sbV128PhraseUsage(product, d, d.clusterDraft).get(key) || [])
     .find((record) => record.sameCampaign);
   if (occupied) {
-    d.clusterDraft.phraseConflictMessage = `Фраза уже используется в группе «${occupied.group}». Сначала освободите её.`;
+    g4sbSetPhraseConflict(d.clusterDraft, occupied, phrase, "Сначала освободите её.");
     renderGate();
     return;
   }
@@ -40594,8 +40600,9 @@ document.addEventListener("click", (event) => {
     .filter((row) => g4sbV128PhraseKey(row.kw) !== key);
   d.excludedCampaignPhrases = (d.excludedCampaignPhrases || [])
     .filter((value) => g4sbV128PhraseKey(value) !== key);
-  d.clusterDraft.phraseConflictMessage = "";
+  g4sbClearPhraseConflict(d.clusterDraft);
   d.clusterDraft.validationError = "";
+  d.clusterDraft.validationErrorKind = "";
   flashSaving();
   renderGate();
 });
@@ -40759,6 +40766,7 @@ document.addEventListener("click", async (event) => {
     draft.col3 = forecast.count ? String(forecast.clicks) : "";
     draft.col4 = forecast.hasPhraseBudget ? String(forecast.budget) : "";
     draft.validationError = "";
+    g4sbClearPhraseConflict(draft);
     draft.phraseConflictMessage = skipped
       ? `Не импортировано ${skipped} фраз: они заняты другой группой этой кампании.`
       : "";
@@ -40816,6 +40824,7 @@ document.addEventListener("click", async (event) => {
   draft.col3 = forecast.count ? String(forecast.clicks) : "";
   draft.col4 = forecast.hasPhraseBudget ? String(forecast.budget) : "";
   draft.validationError = "";
+  g4sbClearPhraseConflict(draft);
   draft.phraseConflictMessage = skipped
     ? `Не импортировано ${skipped} фраз: они заняты другой группой этой кампании или исключены для кампании.`
     : "";
@@ -41458,6 +41467,70 @@ g4sbSaveClusterDraft = function (product, d) {
   return __g4V166PrevSaveClusterDraft(product, d);
 };
 
+function g4sbResolveConflictJtbd(product, group, requestedKey = "", groupName = "") {
+  const directions = g4sbV166DirectionJtbds(product);
+  const keys = [
+    g4sbV166GroupJtbdKey(product, group || {}),
+    g4sbV166JtbdKey(group?.col0),
+    g4sbV166JtbdKey(group?.searchIntent),
+    g4sbV166JtbdKey(groupName),
+    g4sbV166JtbdKey(requestedKey),
+  ].filter(Boolean);
+  const byKey = directions.find((jtbd) => keys.includes(jtbd.key));
+  if (byKey) return byKey;
+  return directions.find((jtbd) => jtbd.aliases.some((alias) =>
+    alias.itemId === group?.itemId &&
+      String(alias.index) === String(group?.mainJtbdIndex))) || null;
+}
+
+function g4sbOpenSavedGroupEditor(product, d, group, resolvedJtbd = null) {
+  const jtbd = resolvedJtbd || g4sbResolveConflictJtbd(product, group);
+  const groupIndex = d.groupRows.indexOf(group);
+  d.clusterDraft = {
+    open: true,
+    editingClusterId: group.groupId || group.clusterId,
+    itemId: jtbd?.itemId || group.itemId,
+    segmentIndex: group.segmentIndex,
+    mainJtbdIndex: jtbd?.index ?? group.mainJtbdIndex,
+    jtbdId: jtbd?.key || "",
+    extraJtbdIndexes: [],
+    searchIntent: group.searchIntent || jtbd?.text || "",
+    keywordRows: (group.demandRows || []).map(g4sbKeywordRow),
+    phraseSelection: [],
+    extraPhrases: [],
+    name: group.col0 || jtbd?.text || "",
+    phraseFilter: "all",
+    minus: group.minus || "",
+    col2: group.col2 || "",
+    col3: group.col3 || "",
+    col4: group.col4 || "",
+    budgetType: group.budgetType === "weekly" ? "weekly" : "period",
+    desiredLeads: group.desiredLeads || "",
+    desiredCpaScenario: group.desiredCpaScenario || "base",
+    forecastCpc: parseUnitNumber(group.col3) && parseUnitNumber(group.col4)
+      ? String(Math.round(parseUnitNumber(group.col4) / parseUnitNumber(group.col3)))
+      : "",
+    ads: ((d.adsRows || {})[groupIndex] || [{}]).map((ad) => ({
+      ad0: String(ad.ad0 || ""),
+      ad1: String(ad.ad1 || ""),
+      ad2: String(ad.ad2 || ""),
+    })),
+    callouts: (Array.isArray(group.callouts) ? group.callouts : [])
+      .map((value) => String(value || "")),
+    forecastBaselineRows: (group.demandRows || []).map(g4sbKeywordRow),
+    phraseConflictMessage: "",
+    phraseConflictTarget: null,
+    validationError: "",
+    validationErrorKind: "",
+  };
+  if (d.clusterDraft.jtbdId) {
+    d.jtbdDraftsV388 = d.jtbdDraftsV388 && typeof d.jtbdDraftsV388 === "object"
+      ? d.jtbdDraftsV388 : {};
+    d.jtbdDraftsV388[d.clusterDraft.jtbdId] = d.clusterDraft;
+  }
+  return d.clusterDraft;
+}
+
 g4sbGroupClusterSummaryHtml = function (product, row) {
   const jtbd = g4sbV126Jtbd(product, row);
   const phrases = g4sbGroupPhrases(product, row);
@@ -41501,7 +41574,7 @@ g4sbSegmentCoverageHtml = function (product, d) {
       editorRendered = true;
       d._g4V1261EditorRenderedInline = true;
     }
-    return `<details class="g4-v126-jtbd g4-v166-jtbd ${groups.length ? "is-implemented" : "is-empty"}" data-ui-keeper-key="${escapeAttr(keeperKey)}" data-g4sb-product="${escapeAttr(product)}" ${draftEntry ? `data-g4sb-draft-key="${escapeAttr(draftEntry.key)}"` : ""} open>
+    return `<details class="g4-v126-jtbd g4-v166-jtbd ${groups.length ? "is-implemented" : "is-empty"}" data-ui-keeper-key="${escapeAttr(keeperKey)}" data-g4sb-product="${escapeAttr(product)}" data-g4sb-jtbd-id="${escapeAttr(jtbd.key)}" ${draftEntry ? `data-g4sb-draft-key="${escapeAttr(draftEntry.key)}"` : ""} open>
       <summary class="g4-v126-jtbd-head g4-v166-jtbd-head">
         <span class="g4-v126-level">JTBD</span>
         <strong>${escapeHtml(jtbd.text)}</strong>
@@ -41536,6 +41609,77 @@ g4sbSegmentCoverageHtml = function (product, d) {
     <div class="g4-v166-jtbd-list">${jtbdHtml || '<div class="g1-empty">В аналитике направления пока нет JTBD. Сначала заполните основной и дополнительные JTBD в Gate 1.</div>'}${orphanedHtml}</div>
   </div>`;
 };
+
+function g4sbRevealPhraseConflict(product, groupId, requestedJtbdKey, groupName, phrase, sourceDraftKey) {
+  const d = ensureGate4SearchBuild(product);
+  if (d.clusterDraft?.open && sourceDraftKey) {
+    d.jtbdDraftsV388 = d.jtbdDraftsV388 && typeof d.jtbdDraftsV388 === "object"
+      ? d.jtbdDraftsV388 : {};
+    d.jtbdDraftsV388[sourceDraftKey] = d.clusterDraft;
+  }
+  const groupNameKey = g4sbV166JtbdKey(groupName);
+  const group = d.groupRows.find((row) =>
+    row.groupId === groupId || row.clusterId === groupId) ||
+    d.groupRows.find((row) =>
+      groupNameKey && [row.col0, row.searchIntent]
+        .some((value) => g4sbV166JtbdKey(value) === groupNameKey));
+  if (!group) return;
+  const jtbd = g4sbResolveConflictJtbd(product, group, requestedJtbdKey, groupName);
+  if (!jtbd) return;
+  g4sbOpenSavedGroupEditor(product, d, group, jtbd);
+  renderGate();
+
+  const key = g4sbV128PhraseKey(phrase);
+  const revealRow = (attempt = 0) => {
+    const card = [...document.querySelectorAll(".g4-v166-jtbd[data-g4sb-jtbd-id]")]
+      .find((item) => item.dataset.g4sbProduct === product &&
+        item.dataset.g4sbJtbdId === jtbd.key);
+    if (!card) {
+      if (attempt < 30) setTimeout(() => revealRow(attempt + 1), 50);
+      return;
+    }
+    card.open = true;
+    const row = [...card.querySelectorAll("[data-g4sb-phrase-row]")]
+      .find((item) => item.dataset.g4sbPhraseRow === key);
+    if (!row) {
+      if (attempt < 30) setTimeout(() => revealRow(attempt + 1), 50);
+      return;
+    }
+    row.classList.add("g4-phrase-conflict-target");
+    const centerTarget = () => {
+      const currentCard = [...document.querySelectorAll(".g4-v166-jtbd[data-g4sb-jtbd-id]")]
+        .find((item) => item.dataset.g4sbProduct === product &&
+          item.dataset.g4sbJtbdId === jtbd.key);
+      const currentRow = [...(currentCard?.querySelectorAll("[data-g4sb-phrase-row]") || [])]
+        .find((item) => item.dataset.g4sbPhraseRow === key);
+      currentRow?.scrollIntoView({ behavior: "auto", block: "center", inline: "nearest" });
+    };
+    centerTarget();
+    requestAnimationFrame(() => requestAnimationFrame(centerTarget));
+    setTimeout(centerTarget, 320);
+    const focusable = row.querySelector("input, button, [tabindex]");
+    if (focusable && !focusable.disabled)
+      setTimeout(() => focusable.focus({ preventScroll: true }), 280);
+    setTimeout(() => row.classList.remove("g4-phrase-conflict-target"), 4200);
+  };
+  revealRow();
+}
+
+document.addEventListener("click", (event) => {
+  const link = event.target?.closest?.("[data-g4sb-conflict-group]");
+  if (!link) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  const sourceCard = link.closest(".g4-v166-jtbd[data-g4sb-jtbd-id]");
+  g4sbRevealPhraseConflict(
+    link.dataset.g4sbProduct,
+    link.dataset.g4sbConflictGroup,
+    link.dataset.g4sbConflictJtbd,
+    link.dataset.g4sbConflictGroupName,
+    link.dataset.g4sbConflictPhrase,
+    sourceCard?.dataset.g4sbDraftKey || "",
+  );
+}, true);
 
 // Legacy editor handlers read d.clusterDraft. Select the draft belonging to
 // the editor that received the event before those handlers run.
