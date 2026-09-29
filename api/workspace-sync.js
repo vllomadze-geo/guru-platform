@@ -13,6 +13,11 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ ok: false, error: 'missing_env', detail: 'NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set' });
   }
 
+  const authHeaders = {
+    apikey: key,
+    Authorization: `Bearer ${key}`,
+  };
+
   try {
     if (req.method === 'POST') {
       const { project_id, state, base_updated_at = '', force = false } = req.body || {};
@@ -23,33 +28,57 @@ module.exports = async function handler(req, res) {
       const endpoint = `${url}/rest/v1/guru_workspaces?on_conflict=project_id`;
       const updatedAt = new Date().toISOString();
       const commonHeaders = {
-        apikey: key,
-        Authorization: `Bearer ${key}`,
+        ...authHeaders,
         'Content-Type': 'application/json',
         Prefer: 'resolution=merge-duplicates,return=minimal'
       };
       const projectName = state?.project?.name || (project_id === '__guru_project_registry__' ? 'GURU Project Registry' : '');
       const schemaVersion = state?.schemaVersion || state?.schema_version || '';
 
-      const currentEndpoint = `${url}/rest/v1/guru_workspaces?project_id=eq.${encodeURIComponent(project_id)}&select=*&limit=1`;
-      const currentResponse = await fetch(currentEndpoint, {
-        headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' }
+      // Lightweight conflict check. The migration exposes only timestamps, so a
+      // normal save does not download the full workspace before writing it.
+      const metaResponse = await fetch(`${url}/rest/v1/rpc/guru_workspace_sync_meta`, {
+        method: 'POST',
+        headers: {
+          ...authHeaders,
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        body: JSON.stringify({ p_project_id: project_id })
       });
-      if (!currentResponse.ok) {
-        const detail = await currentResponse.text();
-        return res.status(200).json({ ok: false, error: 'supabase_read_before_write_error', status: currentResponse.status, detail });
+      if (!metaResponse.ok) {
+        const detail = await metaResponse.text();
+        return res.status(200).json({
+          ok: false,
+          error: 'supabase_migration_required',
+          status: metaResponse.status,
+          detail
+        });
       }
-      const currentRows = await currentResponse.json();
-      const currentRow = Array.isArray(currentRows) && currentRows.length ? currentRows[0] : null;
-      const currentState = currentRow?.workspace_data || currentRow?.state || null;
-      const currentUpdatedAt = currentRow?.updated_at || '';
-      const incomingStateUpdatedAt = String(state?.updatedAt || state?.updated_at || '');
-      const currentStateUpdatedAt = String(currentState?.updatedAt || currentState?.updated_at || currentUpdatedAt || '');
 
-      if (currentRow && !force) {
+      const metaRows = await metaResponse.json();
+      const currentMeta = Array.isArray(metaRows) ? metaRows[0] : metaRows;
+      const currentUpdatedAt = currentMeta?.updated_at || '';
+      const currentStateUpdatedAt = String(currentMeta?.state_updated_at || currentUpdatedAt || '');
+      const incomingStateUpdatedAt = String(state?.updatedAt || state?.updated_at || '');
+
+      if (currentMeta && !force) {
         const baseChanged = base_updated_at && currentUpdatedAt && base_updated_at !== currentUpdatedAt;
         const incomingIsOlder = !base_updated_at && currentStateUpdatedAt && (!incomingStateUpdatedAt || incomingStateUpdatedAt < currentStateUpdatedAt);
         if (baseChanged || incomingIsOlder) {
+          // Full workspace is fetched only for a real conflict so the caller can
+          // preserve the cloud copy before retrying or resolving it.
+          const conflictEndpoint = `${url}/rest/v1/guru_workspaces?project_id=eq.${encodeURIComponent(project_id)}&select=*&limit=1`;
+          const conflictResponse = await fetch(conflictEndpoint, {
+            headers: { ...authHeaders, Accept: 'application/json' }
+          });
+          if (!conflictResponse.ok) {
+            const detail = await conflictResponse.text();
+            return res.status(200).json({ ok: false, error: 'supabase_conflict_read_error', status: conflictResponse.status, detail });
+          }
+          const conflictRows = await conflictResponse.json();
+          const currentRow = Array.isArray(conflictRows) && conflictRows.length ? conflictRows[0] : null;
+          const currentState = currentRow?.workspace_data || currentRow?.state || null;
           return res.status(200).json({
             ok: false,
             error: 'conflict',
@@ -60,26 +89,8 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      if (currentRow && currentState) {
-        try {
-          await fetch(`${url}/rest/v1/guru_workspace_versions`, {
-            method: 'POST',
-            headers: {
-              apikey: key,
-              Authorization: `Bearer ${key}`,
-              'Content-Type': 'application/json',
-              Prefer: 'return=minimal'
-            },
-            body: JSON.stringify({
-              project_id,
-              workspace_data: currentState,
-              source_updated_at: currentUpdatedAt || null,
-              saved_at: updatedAt,
-            })
-          });
-        } catch (_) { /* version history is best effort */ }
-      }
-
+      // Previous workspace version is archived transactionally by the database
+      // trigger from supabase_workspace_egress_migration.sql.
       const writeAttempts = [
         {
           project_id,
@@ -114,7 +125,7 @@ module.exports = async function handler(req, res) {
       if (!project_id) return res.status(200).json({ ok: false, error: 'missing_project_id' });
       const endpoint = `${url}/rest/v1/guru_workspaces?project_id=eq.${encodeURIComponent(project_id)}&select=*&limit=1`;
       const response = await fetch(endpoint, {
-        headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' }
+        headers: { ...authHeaders, Accept: 'application/json' }
       });
       if (!response.ok) {
         const errText = await response.text();
@@ -135,8 +146,7 @@ module.exports = async function handler(req, res) {
       const response = await fetch(endpoint, {
         method: 'DELETE',
         headers: {
-          apikey: key,
-          Authorization: `Bearer ${key}`,
+          ...authHeaders,
           Prefer: 'return=minimal'
         }
       });
