@@ -12,7 +12,7 @@ const ACCESS_CODE = "1111";
 const ACCESS_STORAGE_KEY = "guru-platform-access-v01";
 const WORKSPACE_STORAGE_PREFIX = "guru-platform-workspace-v02-";
 const PLATFORM_VERSION = "v1.1.11";
-var _syncTimer = null;
+const _syncTimers = new Map();
 var _projectRegistrySyncTimer = null;
 const _cloudWorkspaceVersions = new Map();
 let _cloudRegistryUpdatedAt = "";
@@ -5845,7 +5845,6 @@ async function hydrateProjectsFromCloud() {
   const registryResult = await loadProjectRegistryFromSupabase();
   if (!registryResult) {
     if (!_cloudSessionOffline) saveProjects();
-    await hydrateAllProjectWorkspacesFromCloud();
     return;
   }
   const registry = registryResult.state;
@@ -5858,55 +5857,7 @@ async function hydrateProjectsFromCloud() {
   ) {
     scheduleProjectsCloudSync();
   }
-  await hydrateAllProjectWorkspacesFromCloud();
 }
-
-async function hydrateAllProjectWorkspacesFromCloud() {
-  if (_cloudSessionOffline) return;
-  await Promise.all(
-    projects.map(async (project) => {
-      if (_cloudSessionOffline) return;
-      const projectId = project.id;
-      const localKey = WORKSPACE_STORAGE_PREFIX + projectId;
-      const localRaw = localStorage.getItem(localKey);
-      let localState = null;
-      try {
-        localState = localRaw ? JSON.parse(localRaw) : null;
-      } catch (_) {}
-
-      const cloudResult = await loadFromSupabase(projectId);
-      if (!cloudResult?.state) {
-        if (localState && !_cloudSessionOffline)
-          await pushToSupabase(projectId, localState, { silent: true });
-        return;
-      }
-
-      _cloudWorkspaceVersions.set(projectId, cloudResult.cloudUpdatedAt || "");
-      const cloudState = cloudResult.state;
-      const localUpdatedAt = String(localState?.updatedAt || "");
-      const cloudUpdatedAt = String(
-        cloudState?.updatedAt || cloudResult.cloudUpdatedAt || "",
-      );
-
-      // Local-first: более свежая локальная версия никогда не затирается
-      // облаком. Более свежую облачную копию принимаем с backup локальных данных.
-      if (!localState || cloudUpdatedAt > localUpdatedAt) {
-        if (localRaw && JSON.stringify(localState) !== JSON.stringify(cloudState)) {
-          safeStorageSet(
-            STORAGE_BACKUP_PREFIX + projectId + "-before-cloud-" + Date.now(),
-            localRaw,
-            { silent: true },
-          );
-        }
-        const migrated = migrateWorkspace(cloudState, projectId);
-        safeStorageSet(localKey, JSON.stringify(migrated));
-      } else if (localUpdatedAt > cloudUpdatedAt) {
-        await pushToSupabase(projectId, localState, { silent: true });
-      }
-    }),
-  );
-}
-
 async function bootstrapApp() {
   showLauncher();
 
@@ -16749,12 +16700,26 @@ function cloudDataFailed(data) {
   return true;
 }
 
-function scheduleCloudSync() {
-  if (_cloudSessionOffline) return;
-  if (_syncTimer) clearTimeout(_syncTimer);
-  _syncTimer = setTimeout(pushToSupabase, 2000);
+function scheduleCloudSync(projectId = activeProjectId) {
+  if (_cloudSessionOffline || !projectId) return;
+  const previous = _syncTimers.get(projectId);
+  if (previous) clearTimeout(previous);
+  _syncTimers.set(projectId, setTimeout(() => {
+    _syncTimers.delete(projectId);
+    if (readDeletedProjects()[projectId]) return;
+    let latest = null;
+    try {
+      latest = JSON.parse(
+        localStorage.getItem(WORKSPACE_STORAGE_PREFIX + projectId) || "null",
+      );
+    } catch (_) {}
+    if (latest) {
+      pushToSupabase(projectId, latest, {
+        silent: projectId !== activeProjectId,
+      });
+    }
+  }, 2000));
 }
-
 function scheduleProjectsCloudSync() {
   if (_cloudSessionOffline) return;
   if (_projectRegistrySyncTimer) clearTimeout(_projectRegistrySyncTimer);
