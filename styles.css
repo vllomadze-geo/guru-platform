@@ -12281,6 +12281,18 @@ body {
 .g4-v425-package-empty { background: var(--soft, #f5f3ef); }
 .g4-v425-package-sitelinks { border-style: dashed; }
 
+/* Launch shares the Search layout; RSYA keeps source values neutral. */
+.g4-rsya-launch-v528 .g4-v425-package-empty,
+.g4-rsya-launch-v528 .g4-v425-package-value,
+.g4-rsya-launch-v528 .g4-v440-group-ad-level {
+  background: transparent !important;
+  color: var(--text);
+  border-color: var(--line) !important;
+  box-shadow: none !important;
+}
+.g4-rsya-launch-v528 .g4-v444-launch-group-toggle > .status-pill {
+  flex: 0 0 auto;
+}
 
 @media (max-width: 760px) {
   .g4-v407-utm { grid-template-columns: 1fr; }
