@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node local-dev-server.js",
     "dev:plain": "node local-dev-server.js",
-    "build": "echo 'No build'",
+    "build": "node scripts/stamp-build.mjs && node scripts/verify-build-bundle.mjs",
     "start": "node local-dev-server.js"
   },
   "engines": {

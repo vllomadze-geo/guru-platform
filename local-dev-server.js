@@ -1,12 +1,17 @@
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
+const { currentBuildVersion, renderIndex, renderBuildInfo } = require('./scripts/build-version.cjs');
 
 const root = __dirname;
 const port = Number(process.env.PORT || 3000);
 const liveReloadClients = new Set();
 const liveReloadExtensions = new Set(['.html', '.css', '.js', '.json']);
 const ignoredLiveReloadDirs = new Set(['.git', 'node_modules']);
+
+function currentBuildId() {
+  return currentBuildVersion();
+}
 
 const liveReloadScript = `
 <script>
@@ -182,8 +187,13 @@ function serveStatic(req, res, url) {
     }
     res.setHeader('Content-Type', contentTypes[path.extname(filePath)] || 'application/octet-stream');
     res.setHeader('Cache-Control', 'no-store');
-    if (path.extname(filePath) === '.html' && process.env.LIVE_RELOAD !== '0') {
-      res.end(injectLiveReloadScript(data.toString('utf8')));
+    if (relativePath === '/index.html') {
+      const html = renderIndex(data.toString('utf8'), currentBuildVersion());
+      res.end(process.env.LIVE_RELOAD !== '0' ? injectLiveReloadScript(html) : html);
+      return;
+    }
+    if (relativePath === '/build-info.js') {
+      res.end(renderBuildInfo(data.toString('utf8'), currentBuildVersion()));
       return;
     }
     res.end(data);
@@ -194,6 +204,14 @@ startLiveReloadWatcher();
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://localhost:${port}`);
+  if (url.pathname === '/__build-id') {
+    res.writeHead(200, {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-store'
+    });
+    res.end(currentBuildId());
+    return;
+  }
   if (url.pathname === '/__live-reload') {
     serveLiveReload(req, res);
     return;

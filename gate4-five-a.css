@@ -1,0 +1,25 @@
+/* These rules apply exclusively to the Gate 4 company/product projection. */
+.g4five-map-v523 { display: grid; gap: 18px; margin-top: 18px; }
+.g4five-map-title-v523 { margin: 0; font-size: 20px; font-weight: 800; }
+.g4five-tool-list-v523 { display: grid; gap: 10px; }
+.g4five-service-v523 { display: block; color: var(--muted); font-size: 12px; font-weight: 400; line-height: 1.5; }
+.g4five-note-v523 { display: block; color: var(--muted); font-size: 12px; font-weight: 400; line-height: 1.5; margin: 3px 0 0; }
+.g4five-card-body-v523 { display: grid; gap: 12px; padding: 0 24px 18px; }
+.g4five-card-v523 .g1-card-title { overflow-wrap: anywhere; }
+.g4five-linked-tool-v523 { border-left: 0; padding-left: 0; }
+.g4five-linked-tool-v523 > .g4five-note-v523 { padding: 0 24px 10px; }
+.g4five-stage-v523 > header h3 { text-transform: none; }
+.g4five-preparation-v523 { display: grid; gap: 12px; padding: 18px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel); }
+.g4five-preparation-v523 > header { display: flex; align-items: center; gap: 12px; }
+.g4five-preparation-v523 > header > span { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--text); color: var(--panel); font-size: 12px; font-weight: 800; }
+.g4five-preparation-v523 > header h3 { margin: 0; font-size: 18px; }
+.g4five-card-v523 .g1-input.is-empty,
+.g4five-linked-tool-v523 .g1-input.is-empty,
+.g4five-preparation-v523 .g1-input.is-empty,
+.g4-product-smm-v523 .g1-input.is-empty { background: var(--panel) !important; border-color: var(--line) !important; box-shadow: none !important; }
+.g4five-company-saved-v523 { border-top: 1px solid var(--line); padding-top: 10px; }
+.g4five-company-saved-v523 > summary { color: var(--muted); font-size: 12px; cursor: pointer; margin-bottom: 8px; }
+@media (max-width: 760px) {
+  .g4five-card-body-v523 { padding: 0 16px 14px; }
+  .g4five-preparation-v523 { padding: 12px; }
+}
