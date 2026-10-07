@@ -12699,17 +12699,138 @@ body {
 }
 .g4-rsya-launch-ad-v537 .g4-rsya-launch-subrow-v537 { grid-template-columns: minmax(180px, 28%) minmax(0, 1fr); }
 
-/* РСЯ · порядок полей запуска по форме Директа. */
+/* РСЯ · тот же ритм строк и полей, что в чек-листе запуска Поиска. */
 .g4-rsya-launch-v528 .g4-rsya-action-v541 {
   margin-left: auto;
   color: var(--muted);
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .04em;
+  font-weight: 600;
+  letter-spacing: 0;
   white-space: nowrap;
 }
 .g4-rsya-launch-v528 .g4-rsya-direct-label-v533 .g4-rsya-action-v541 { margin-left: 8px; }
-.g4-rsya-launch-v528 .g4-rsya-launch-group-row-title-v537 { flex-wrap: wrap; }
+.g4-rsya-launch-v528 .g4-rsya-launch-group-row-v537 {
+  display: block;
+  padding: 10px 0;
+}
+.g4-rsya-launch-v528 .g4-rsya-launch-group-row-title-v537 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 13px;
+}
+.g4-rsya-launch-v528 .g4-rsya-launch-group-row-title-v537 strong { font-weight: 600; }
+.g4-rsya-launch-v528 .g4-rsya-launch-group-row-content-v537 {
+  margin: 8px 0 0 26px;
+  gap: 6px;
+  font-size: 13px;
+}
+.g4-rsya-launch-v528 .g4-rsya-launch-group-row-content-v537 > small { line-height: 1.45; }
+.g4-rsya-launch-v528 .g4-rsya-launch-value-v537:has(> .small-btn) { align-items: center; }
+.g4-rsya-launch-v528 .g4-rsya-launch-value-v537:has(> .small-btn) > span {
+  flex: 1 1 auto;
+  min-height: 38px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+}
+.g4-rsya-launch-v528 .g4-rsya-launch-value-v537 > .small-btn { order: -1; }
+.g4-rsya-launch-v528 button[data-g4rsya-v289-copy] {
+  position: relative;
+  display: inline-grid;
+  flex: 0 0 38px;
+  place-items: center;
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  padding: 0;
+  font-size: 0;
+}
+.g4-rsya-launch-v528 button[data-g4rsya-v289-copy]::before,
+.g4-rsya-launch-v528 button[data-g4rsya-v289-copy]::after {
+  position: absolute;
+  width: 10px;
+  height: 11px;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  background: var(--surface, #fff);
+  content: "";
+}
+.g4-rsya-launch-v528 button[data-g4rsya-v289-copy]::before { top: 10px; left: 11px; }
+.g4-rsya-launch-v528 button[data-g4rsya-v289-copy]::after { top: 13px; left: 14px; }
+.g4-rsya-launch-v528 .g4-rsya-direct-panel-v533,
+.g4-rsya-launch-v528 .g4-rsya-direct-detail-v533,
+.g4-rsya-launch-v528 .g4-rsya-direct-fallback-v533,
+.g4-rsya-launch-v528 .g4-rsya-prelaunch-v532 {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.g4-rsya-launch-v528 .g4-rsya-direct-panel-v533 header h5,
+.g4-rsya-launch-v528 .g4-rsya-direct-detail-v533 h5,
+.g4-rsya-launch-v528 .g4-rsya-prelaunch-v532 h5 { font-size: 13px; }
+.g4-rsya-launch-v528 .g4-rsya-direct-detail-v533,
+.g4-rsya-launch-v528 .g4-rsya-prelaunch-v532 {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.g4-rsya-launch-v528 .g4-rsya-direct-row-v533 {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 0;
+}
+.g4-rsya-launch-v528 .g4-rsya-direct-row-v533:first-child { border-top: 0; }
+.g4-rsya-launch-v528 .g4-rsya-direct-row-v533:has(> .small-btn) {
+  grid-template-columns: 38px minmax(0, 1fr);
+}
+.g4-rsya-launch-v528 .g4-rsya-direct-row-v533 .g4-rsya-direct-label-v533 {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+.g4-rsya-launch-v528 .g4-rsya-direct-row-v533 .g4-rsya-direct-value-v533 {
+  grid-column: 1 / -1;
+  font-size: 13px;
+}
+.g4-rsya-launch-v528 .g4-rsya-direct-row-v533:has(> .small-btn) .g4-rsya-direct-value-v533 {
+  grid-column: 2;
+  grid-row: 2;
+  min-height: 38px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+}
+.g4-rsya-launch-v528 .g4-rsya-direct-row-v533 > .small-btn {
+  grid-column: 1;
+  grid-row: 2;
+}
+.g4-rsya-launch-v528 .g4-rsya-direct-goal-row-v534 {
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 0;
+}
+.g4-rsya-launch-v528 .g4-rsya-direct-goal-identity-v534,
+.g4-rsya-launch-v528 .g4-rsya-direct-goal-price-v534 {
+  border-radius: 8px;
+  background: var(--panel-soft);
+}
+.g4-rsya-launch-v528 .g4-rsya-direct-goal-price-v534 {
+  grid-template-columns: minmax(0, 1fr) 38px;
+  align-items: center;
+}
+.g4-rsya-launch-v528 .g4-rsya-direct-goal-price-v534 > span { grid-column: 1 / -1; }
+.g4-rsya-launch-v528 .g4-rsya-direct-goal-price-v534 > .small-btn {
+  grid-column: 2;
+  grid-row: 2;
+}
 .g4-rsya-launch-v528 .g4-rsya-launch-group-row-content-v537 > details,
 .g4-rsya-launch-v528 .g4-rsya-exclusions-v536 > details { min-width: 0; }
 .g4-rsya-launch-v528 details > summary { cursor: pointer; font-size: 12px; }
