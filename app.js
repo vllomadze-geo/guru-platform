@@ -75489,29 +75489,77 @@ function g4RsyaLaunchCampaignItemsV528() {
   ];
 }
 
+function g4RsyaLaunchValueV537(value, options = {}) {
+  const text = g4RsyaTextV289(value);
+  const display = text || options.empty || "не задано";
+  return `<div class="g4-rsya-launch-value-v537"><span>${escapeHtml(display)}</span>${text && options.copy !== false ? `<button type="button" class="small-btn" data-g4rsya-v289-copy="${escapeAttr(text)}">Копировать</button>` : ""}</div>`;
+}
+
+function g4RsyaLaunchGroupRowV537(number, title, body, note = "") {
+  return `<section class="g4-rsya-launch-group-row-v537" data-g4rsya-launch-group-row="${number}">
+    <div class="g4-rsya-launch-group-row-title-v537"><b>${number}.</b><strong>${escapeHtml(title)}</strong></div>
+    <div class="g4-rsya-launch-group-row-content-v537">${body}${note ? `<small>${note}</small>` : ""}</div>
+  </section>`;
+}
+
+function g4RsyaLaunchPromotionTextV537(promotion) {
+  const p = promotion || {};
+  const type = p.type ? G4_RSYA_PROMOTION_TYPES_V457.find(([value]) => value === p.type)?.[1] || p.type : "";
+  return [
+    ["Тип", type], ["Описание", p.description], ["Выгода", p.discountValue],
+    ["Промокод", p.promoCode], ["Дата начала", p.dateFrom], ["Дата окончания", p.dateTo],
+    ["Страница", megaPlatformPageRefUrl(p.pageRefV1) || p.url],
+  ].filter(([, value]) => g4RsyaTextV289(value))
+    .map(([label, value]) => `${label}: ${g4RsyaTextV289(value)}`).join("\n");
+}
+
+function g4RsyaLaunchGroupExtrasV537(group, d) {
+  const ads = group.ads || [];
+  const item = (label, value) => `<div class="g4-rsya-launch-subrow-v537"><b>${escapeHtml(label)}</b>${g4RsyaLaunchValueV537(value)}</div>`;
+  const adRows = ads.map((ad, index) => {
+    const suffix = ads.length > 1 ? ` · объявление ${index + 1}` : "";
+    const sitelinks = (ad.sitelinks || []).filter(g4RsyaSitelinkTouchedV482)
+      .map((row, linkIndex) => `${linkIndex + 1}. ${g4RsyaTextV289(row.title) || "не задано"}\n${g4RsyaTextV289(row.description) || "не задано"}\n${megaPlatformPageRefUrl(row.pageRefV1) || "не задано"}`).join("\n\n");
+    const callouts = (ad.callouts || []).map((row) => g4RsyaTextV289(row.value)).filter(Boolean).join("\n");
+    return `${item(`Быстрые ссылки${suffix}`, sitelinks)}${item(`Уточнения${suffix}`, callouts)}`;
+  }).join("");
+  return `${adRows || `${item("Быстрые ссылки", "")}${item("Уточнения", "")}`}${item("Промоакция", g4RsyaLaunchPromotionTextV537(d.campaign.promotion))}`;
+}
+
+function g4RsyaLaunchGroupHtmlV537(product, campaign, d, group, defaults, fixed, key) {
+  const template = g4RsyaCampaignUtmTemplateV478(campaign);
+  const urlTemplate = template || G4_YANDEX_RECOMMENDED_UTM_V488.rsya;
+  const video = `<a href="${G4_RSYA_VIDEO_V532}" target="_blank" rel="noopener noreferrer">Практика автора видео, не официальный источник</a>`;
+  const item = g4RsyaLaunchGroupRowV537;
+  return `<div class="g4-v436-group-fields g4-rsya-launch-group-v537" data-g4rsya-launch-group-v537="${escapeAttr(group.id)}">
+    <p class="g4-rsya-launch-group-jtbd-v537">JTBD: ${escapeHtml(defaults.name || "не задано")} · ${fixed ? "Зафиксирована" : "В редактировании"}${key ? "" : " · Привязка product_id / jtbdId: не задано"}</p>
+    ${item(1, "География показов", g4RsyaLaunchValueV537(d.campaign.geography), "Из кампании, второй раз не вводится.")}
+    ${item(2, "Сценарий группы", g4RsyaLaunchValueV537("Вся заинтересованная аудитория", { copy: false }), video)}
+    ${item(3, "Автотаргетинг", g4RsyaLaunchValueV537("Включён", { copy: false }), video)}
+    ${item(4, "Тематические слова", `<div class="g4-rsya-launch-subrow-v537"><b>Ключевые фразы</b>${g4RsyaLaunchValueV537(defaults.keywords)}</div><div class="g4-rsya-launch-subrow-v537"><b>Минус-фразы</b>${g4RsyaLaunchValueV537("Не заполнять на старте", { copy: false })}</div>`, `${video}. Яндекс допускает минус-фразы в РСЯ для исключения неподходящих площадок: <a href="https://yandex.ru/support/direct/ru/keywords/negative-keywords" target="_blank" rel="noopener noreferrer">Справка Директа</a>.`)}
+    ${item(5, "Интересы и привычки", g4RsyaLaunchValueV537(group.interests))}
+    ${item(6, "Сегменты аудитории", `${g4RsyaLaunchValueV537(group.retargetingSegments)}<div class="g4-rsya-launch-subrow-v537"><b>Офферный ретаргетинг</b>${g4RsyaLaunchValueV537("не применимо (только товарные объявления)", { copy: false })}</div>`)}
+    ${item(7, "Дополнительные элементы объявлений", g4RsyaLaunchGroupExtrasV537(group, d))}
+    ${item(8, "Параметры URL", g4RsyaLaunchValueV537(urlTemplate), template ? "UTM-шаблон РСЯ из кампании." : "Рекомендуемый шаблон РСЯ · в кампании ещё не сохранён.")}
+    ${item(9, "Корректировки", g4RsyaLaunchValueV537("не на старте", { copy: false }))}
+    ${item(10, "Дополнительные настройки", g4RsyaLaunchValueV537("без изменений", { copy: false }))}
+    ${(group.ads || []).map((ad, adIndex) => g4RsyaLaunchAdHtmlV528(product, campaign, group, ad, adIndex)).join("") || '<p class="g4-v406-launch-notes">Объявление: не задано</p>'}
+  </div>`;
+}
+
 function g4RsyaLaunchAdHtmlV528(product, campaign, group, ad, index) {
   const headings = (ad.headings || []).map((row) => g4RsyaTextV289(row.value)).filter(Boolean);
   const texts = (ad.texts || []).map((row) => g4RsyaTextV289(row.value)).filter(Boolean);
   const images = ad.images || [];
-  const callouts = (ad.callouts || []).map((row) => g4RsyaTextV289(row.value)).filter(Boolean);
-  const sitelinks = (ad.sitelinks || []).filter(g4RsyaSitelinkTouchedV482);
-  const count = (label, size, limit) => `${label} · ${size}/${limit}`;
-  const overLimit = headings.length > G4_RSYA_LIMITS_V289.headings || texts.length > G4_RSYA_LIMITS_V289.texts || images.length > G4_RSYA_LIMITS_V289.images;
-  const [copyState, imagesState, calloutsState, sitelinksState] = g4RsyaLaunchAdStatesV454(group, ad);
-  return `<section class="g4-v440-group-ad-level" data-g4rsya-launch-ad="${escapeAttr(ad.id)}">
+  const filledImages = images.filter((image) => image?.dataUrl || image?.url);
+  const link = g4RsyaFinalUrlValueV478(campaign, product, group, ad) || megaPlatformProductUrl(product, state);
+  return `<section class="g4-v440-group-ad-level g4-rsya-launch-ad-v537" data-g4rsya-launch-ad="${escapeAttr(ad.id)}">
     <h5>Объявление ${index + 1}${ad.name ? ` · ${escapeHtml(ad.name)}` : ""}</h5>
-    ${overLimit ? g4RsyaLaunchBadgeV528("problem", "Превышен лимит 7 / 3 / 5") : ""}
-    <div class="g4-v425-package-ads">
-      ${g4RsyaLaunchReadinessHtmlV528("Заголовки и тексты", copyState.ready && (ad.headings || []).length <= G4_RSYA_LIMITS_V289.headings && (ad.texts || []).length <= G4_RSYA_LIMITS_V289.texts)}
-      ${g4RsyaLaunchFieldV528(count("Заголовки", headings.length, G4_RSYA_LIMITS_V289.headings), headings.join("\n"), "headings")}
-      ${g4RsyaLaunchFieldV528(count("Тексты", texts.length, G4_RSYA_LIMITS_V289.texts), texts.join("\n"), "texts")}
-      ${g4RsyaLaunchReadinessHtmlV528("Изображения", imagesState.ready && images.length <= G4_RSYA_LIMITS_V289.images)}
-      ${g4RsyaLaunchFieldV528(count("Изображения", images.length, G4_RSYA_LIMITS_V289.images), images.map((image, imageIndex) => `${imageIndex + 1}. ${image.name || image.url || "Название: не задано"}`).join("\n"), "images")}
-      ${g4RsyaLaunchReadinessHtmlV528("Уточнения", calloutsState.ready)}
-      ${g4RsyaLaunchFieldV528("Уточнения", callouts.join("\n"), "callouts")}
-      ${g4RsyaLaunchReadinessHtmlV528("Быстрые ссылки", sitelinksState.ready && sitelinks.length <= G4_RSYA_LIMITS_V289.sitelinks)}
-      ${g4RsyaLaunchFieldV528("Быстрые ссылки", sitelinks.map((row, linkIndex) => `${linkIndex + 1}. ${row.title || "не задано"}\n${row.description || "не задано"}\n${megaPlatformPageRefUrl(row.pageRefV1) || "не задано"}`).join("\n\n"), "sitelinks")}
-      ${g4RsyaLaunchUrlHtmlV528(product, campaign, group, ad)}
+    <div class="g4-rsya-launch-ad-fields-v537">
+      <div class="g4-rsya-launch-subrow-v537"><b>Ссылка в объявлении</b>${g4RsyaLaunchValueV537(link)}</div>
+      <div class="g4-rsya-launch-subrow-v537"><b>Заголовки ${headings.length}/${G4_RSYA_LIMITS_V289.headings}</b>${g4RsyaLaunchValueV537(headings.join("\n"))}</div>
+      <div class="g4-rsya-launch-subrow-v537"><b>Тексты ${texts.length}/${G4_RSYA_LIMITS_V289.texts}</b>${g4RsyaLaunchValueV537(texts.join("\n"))}</div>
+      <div class="g4-rsya-launch-subrow-v537"><b>Изображения ${filledImages.length}/${G4_RSYA_LIMITS_V289.images}</b>${g4RsyaLaunchValueV537(filledImages.map((image, imageIndex) => `${imageIndex + 1}. ${image.name || image.url || "Без названия"}`).join("\n"), { copy: false })}</div>
     </div>
   </section>`;
 }
@@ -75530,20 +75578,13 @@ function g4RsyaLaunchBodyV453(product, channel, campaign, d, model) {
   };
   const groupsHtml = model.groups.map(({ group, index, key, fixed, status }) => {
     const defaults = g4RsyaGroupGate1DefaultsV456(product, group);
-    const title = `Уровень группы ${index + 1} · ${defaults.name || "не задано"}`;
+    const title = `Группа ${index + 1} (1 JTBD = 1 группа)`;
     const heading = g4sbV406LaunchLevelHtml(product, {}, "", title, [], [], {}, {
       kind: "rsya", collapsible: Boolean(key), groupId: key,
       isOpen: d.ui?.launchGroupOpenV528?.[key] === true,
       statusHtml: g4RsyaLaunchBadgeV528(status),
     });
-    const body = `<div class="g4-v436-group-fields">
-      <div class="g4-v406-launch-notes">${fixed ? "Зафиксирована" : "В редактировании"}${key ? "" : " · Привязка product_id / jtbdId: не задано"}</div>
-      ${g4RsyaLaunchReadinessHtmlV528("Условия аудитории", g4RsyaGroupCardReadinessV458(product, group).audienceReady)}
-      ${g4RsyaLaunchFieldV528("Условия аудитории · тематические сигналы", defaults.keywords, "audience-keywords")}
-      ${g4RsyaLaunchFieldV528("Интересы и привычки", group.interests, "interests")}
-      ${g4RsyaLaunchFieldV528("Сегменты ретаргетинга", group.retargetingSegments, "audience-segments")}
-      ${(group.ads || []).map((ad, adIndex) => g4RsyaLaunchAdHtmlV528(product, campaign, group, ad, adIndex)).join("") || '<p class="g4-v406-launch-notes">Объявление: не задано</p>'}
-    </div>`;
+    const body = g4RsyaLaunchGroupHtmlV537(product, campaign, d, group, defaults, fixed, key);
     return g4sbV440AppendGroupAdLevel(heading, body);
   }).join("");
   return `<div class="g4-v406-launch g4-rsya-launch-v528" data-g4rsya-v453-panel-body="launch" data-g4rsya-launch-body>

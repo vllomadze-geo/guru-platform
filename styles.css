@@ -12602,6 +12602,70 @@ body {
   flex: 0 0 auto;
 }
 
+.g4-rsya-launch-group-v537 {
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+.g4-rsya-launch-group-jtbd-v537 {
+  margin: 0;
+  padding: 12px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.g4-rsya-launch-group-row-v537 {
+  display: grid;
+  grid-template-columns: minmax(180px, 28%) minmax(0, 1fr);
+  gap: 14px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.g4-rsya-launch-group-row-title-v537 {
+  display: flex;
+  gap: 7px;
+  align-items: baseline;
+  font-size: 13px;
+}
+.g4-rsya-launch-group-row-content-v537,
+.g4-rsya-launch-ad-fields-v537 {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.g4-rsya-launch-group-row-content-v537 > small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.g4-rsya-launch-value-v537 {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+.g4-rsya-launch-value-v537 > span {
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.g4-rsya-launch-value-v537 > .small-btn { flex: 0 0 auto; }
+.g4-rsya-launch-subrow-v537 {
+  display: grid;
+  grid-template-columns: minmax(140px, 25%) minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+.g4-rsya-launch-subrow-v537:first-child { border-top: 0; padding-top: 0; }
+.g4-rsya-launch-ad-v537 {
+  margin: 18px 0 0;
+  background: var(--surface, #fff);
+}
+.g4-rsya-launch-ad-v537 .g4-rsya-launch-subrow-v537 { grid-template-columns: minmax(180px, 28%) minmax(0, 1fr); }
+
 .g4-v406-launch-item > .g4-rsya-exclusions-v536 {
   margin: 14px 0 0 28px;
 }
@@ -12660,6 +12724,10 @@ body {
   .g4-v407-auto-row { flex-wrap: wrap; }
   .g4-v407-auto-row small { margin-left: 28px; }
   .g4-v436-group-fields { margin-left: 0; }
+  .g4-rsya-launch-group-row-v537,
+  .g4-rsya-launch-subrow-v537,
+  .g4-rsya-launch-ad-v537 .g4-rsya-launch-subrow-v537 { grid-template-columns: 1fr; gap: 5px; }
+  .g4-rsya-launch-value-v537 { flex-wrap: wrap; }
   .g4-v406-launch-item > .g4-rsya-exclusions-v536 { margin-left: 0; }
   .g4-rsya-starter-list-v536 { columns: 1; }
 }
