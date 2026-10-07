@@ -276,3 +276,369 @@ document.addEventListener("click", (event) => {
   }
   g1ComparisonSaveV540(true);
 });
+
+/* v543 · Compact Bergen–Peteraf comparison. The v539/v540 records remain intact. */
+const G1_BERGEN_FIELDS_V543 = [
+  "marketSegment", "marketGeography", "businessType", "made", "salesChannels",
+  "similarity", "product", "price", "positioning", "parity", "offerCta",
+  "adsKeywords", "delivery", "trust", "taskClosure", "strengths", "weaknesses",
+  "takeaway", "differentiate", "fixedDate", "evidence",
+];
+
+function g1BergenJtbdsV543(product) {
+  // Category moves can archive the fully populated Gate 1 row while leaving a
+  // small active row. Both still belong to the same product_id.
+  const maps = state.painV130?.productMaps || [];
+  const active = maps.map((map) => map.items?.[product.id]);
+  const archived = maps.flatMap((map) => Object.values(map.legacyPageItemsV237 || {})
+    .filter((archive) => archive?.mapped_product_id === product.id)
+    .map((archive) => archive.data));
+  const records = [...active, ...archived].filter((row) => row && typeof row === "object");
+  const main = String(guruGate1ResolvedMainJtbdV259(product.id).value || "").trim();
+  const additional = [...new Map(records.flatMap((row) =>
+    Array.isArray(row.semL4Model?.additionalJtbds) ? row.semL4Model.additionalJtbds : [])
+    .filter((row) => row?.id).map((row) => [String(row.id), row])).values()];
+  const jtbds = [
+    ...(main ? [{ id: `primary:${product.id}`, text: main }] : []),
+    ...additional.map((row) => ({
+      id: String(row?.id || ""),
+      text: String(guruV194JtbdSentence(row) || guruGate1AdditionalJtbdTextV268(row) || "").trim(),
+    })).filter((row) => row.id && row.text),
+  ];
+  const confirmed = new Set(guruGate1FinalConfirmedV259(product)
+    .map((row) => guruV247KeywordNormalize(row.value)));
+  const frequencyFallback = new Map(g1CompetitorPhrasesV539(product).ranked
+    .map((row) => [row.key, row.frequency]));
+  const rankedRecords = [...records].sort((a, b) => (b.demandRows?.length || 0) - (a.demandRows?.length || 0) ||
+    Object.keys(b.jtbdKeywordAssignmentsV274 || {}).length - Object.keys(a.jtbdKeywordAssignmentsV274 || {}).length);
+  return jtbds.map((jtbd, index) => {
+    const scope = jtbd.id === `primary:${product.id}` ? "primary" : "additional";
+    const entries = rankedRecords.map((itemData) => guruGate1GroupFinalEntriesV279(
+      scope, scope === "primary" ? "" : jtbd.id, product.id, itemData,
+    )).find((rows) => rows.length) || [];
+    const seen = new Set();
+    const phrases = entries.flatMap(({ demandRow }) => {
+      const value = String(demandRow?.kw || "").trim();
+      const key = guruV247KeywordNormalize(value);
+      const frequency = pv181DemandQueryNumberV262(demandRow?.queryCount) ??
+        frequencyFallback.get(key) ?? null;
+      if (!key || seen.has(key) || !confirmed.has(key) || frequency === null) return [];
+      seen.add(key);
+      return [{ key, value, frequency }];
+    }).sort((a, b) => b.frequency - a.frequency || a.value.localeCompare(b.value, "ru"));
+    return { id: jtbd.id, text: jtbd.text, primary: index === 0, phrases, top: phrases.slice(0, 5) };
+  });
+}
+
+function g1BergenMigrateV543(entry, product) {
+  g1ComparisonTableMigrateV540(entry);
+  const jtbds = g1BergenJtbdsV543(product);
+  entry.competitors.forEach((competitor) => {
+    if (competitor.bergenMigratedV543) return;
+    const data = competitor.bergenV543 && typeof competitor.bergenV543 === "object"
+      ? competitor.bergenV543 : {};
+    const steps = competitor.stepsV539 || {};
+    const old = (step, key) => String(steps[step]?.[key] || "").trim();
+    const merge = (...parts) => parts.filter((part) => String(part || "").trim()).join("\n");
+    const line = (label, value) => value ? `${label}: ${value}` : "";
+    const put = (key, value) => {
+      if (!String(data[key] || "").trim() && String(value || "").trim()) data[key] = value;
+    };
+    const oldKeys = new Set(competitor.foundPhraseKeysV539 || []);
+    if (!Array.isArray(data.matchedJtbdIdsV543)) data.matchedJtbdIdsV543 = jtbds
+      .filter((jtbd) => jtbd.phrases.some((phrase) => oldKeys.has(phrase.key)))
+      .map((jtbd) => jtbd.id);
+    put("similarity", competitor.classificationV539?.sameBusiness);
+    put("marketSegment", old(5, "segment"));
+    put("marketGeography", old(10, "regions"));
+    put("product", merge(line("Аналог", old(3, "analogName")), line("URL", old(3, "analogUrl")), old(3, "characteristics")));
+    const price = old(4, "priceAnalog");
+    const parsedPrice = price.replace(/[\s\u00a0₽]/g, "").replace(",", ".");
+    if (parsedPrice && /^\d+(?:\.\d+)?$/.test(parsedPrice)) put("price", parsedPrice);
+    put("positioning", merge(old(6, "positioning"), line("Цитата", old(6, "quote"))));
+    put("parity", old(7, "parity"));
+    put("salesChannels", merge(line("Каналы", old(9, "channels")), line("Источники трафика", old(9, "trafficSources"))));
+    put("offerCta", merge(line("Оффер", old(8, "offers")), line("CTA", old(9, "cta")),
+      line("Как продаёт", old(9, "landingStructure")), line("Оплата", old(9, "payment"))));
+    const visibility = Object.entries(competitor.visibilityByPhraseV540 || {})
+      .filter(([, value]) => value).map(([key, value]) => `${key}: ${value}`).join("\n");
+    const placement = typeof competitor.organicV539 === "boolean" || typeof competitor.adsV539 === "boolean"
+      ? [competitor.organicV539 && "Органика", competitor.adsV539 && "Реклама"].filter(Boolean).join(" и ") || "Не показан"
+      : "";
+    put("adsKeywords", merge(line("Органика", old(8, "organicPhrases")), line("Реклама", old(8, "adPhrases")),
+      old(8, "adTexts"), line("Триггеры", old(8, "triggers")), line("Где показан", placement), visibility));
+    put("delivery", merge(line("Сроки", old(10, "deliveryTime")), line("Стоимость", old(10, "deliveryCost")), line("Самовывоз", old(10, "pickup"))));
+    put("trust", merge(line("Рейтинг", old(11, "rating")), line("Отзывов", old(11, "reviewCount")),
+      line("Хвалят", old(11, "praise")), line("Жалуются", old(11, "complaints"))));
+    put("strengths", merge(...[1, 2, 3].map((n) => old(12, `strength${n}`)),
+      line("Отличия конкурента", old(7, "competitorDifferences")),
+      line("Прежний вывод", old(12, "legacySummary"))));
+    put("weaknesses", merge(...[1, 2, 3].map((n) => old(12, `weakness${n}`))));
+    put("takeaway", old(12, "takeaway"));
+    put("differentiate", old(7, "ourDifferences"));
+    const date = old(12, "fixedDate");
+    const russianDate = date.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    put("fixedDate", russianDate ? `${russianDate[3]}-${russianDate[2]}-${russianDate[1]}` : date);
+    put("evidence", old(12, "evidence"));
+    competitor.bergenV543 = data;
+    competitor.bergenMigratedV543 = true;
+  });
+  return { entry, jtbds };
+}
+
+function g1BergenTypeV543(competitor, jtbds) {
+  const data = competitor.bergenV543 || {};
+  const ids = new Set(data.matchedJtbdIdsV543 || []);
+  const market = jtbds.some((jtbd) => ids.has(jtbd.id));
+  if (!["yes", "no"].includes(data.similarity)) return "unclassified";
+  return market ? data.similarity === "yes" ? "direct" : "substitute"
+    : data.similarity === "yes" ? "potential" : "unrelated";
+}
+
+function g1BergenPhraseStripV543(ctx, jtbds) {
+  const target = { gateId: "gate-1", kind: "gate1-keywords", productId: ctx.product.id };
+  return `<section class="g1bp-phrase-strip-v543" aria-label="Что вставить в Яндекс">
+    <header><strong>Что вставить в Яндекс</strong><span>Регион: ${ctx.geography ? escapeHtml(ctx.geography) : `Не заполнено в Gate 0 ${g1CompetitorSourceLinkV539({ gateId: "gate-0" })}`}</span></header>
+    ${jtbds.length ? jtbds.map((jtbd) => `<div class="g1bp-phrase-jtbd-v543"><b>${jtbd.primary ? "Основной JTBD" : "JTBD"} · ${escapeHtml(jtbd.text)}</b>
+      ${jtbd.top.length ? jtbd.top.map((phrase) => `<div class="g1bp-phrase-v543"><code>${escapeHtml(phrase.value)}</code><small>${Number(phrase.frequency).toLocaleString("ru-RU")} запросов</small><button type="button" class="small-btn" data-g1-competitor-copy-v539="${escapeAttr(phrase.value)}">Копировать</button></div>`).join("") : `<div class="g1ct-missing-v540">Нет финальных фраз с частотностью ${g1CompetitorSourceLinkV539(target)}</div>`}
+    </div>`).join("") : `<div class="g1ct-missing-v540">Не заполнено в источнике ${g1CompetitorSourceLinkV539({ gateId: "gate-0", kind: "gate0-scoped", productId: ctx.product.id, field: "jtbd" })}</div>`}
+  </section>`;
+}
+
+function g1BergenFieldV543(competitor, key, mode = "text") {
+  const value = String(competitor.bergenV543?.[key] || "");
+  const attrs = `data-g1bp-field-v543="${escapeAttr(key)}" data-g1bp-competitor-v543="${escapeAttr(competitor.id)}"`;
+  if (mode === "price") return `<input type="number" min="0" step="0.01" inputmode="decimal" value="${escapeAttr(value)}" ${attrs} aria-label="Цена конкурента, ₽">`;
+  if (mode === "date") return `<input type="${!value || /^\d{4}-\d{2}-\d{2}$/.test(value) ? "date" : "text"}" value="${escapeAttr(value)}" ${attrs} aria-label="Дата фиксации">`;
+  return `<textarea rows="2" ${attrs} aria-label="${escapeAttr(key)}" placeholder="Впишите ответ">${escapeHtml(value)}</textarea>`;
+}
+
+function g1BergenChoicesV543(competitor, key, choices) {
+  const selected = competitor.bergenV543?.[key] || "";
+  return `<div class="g1bp-choices-v543" role="group">${choices.map(([value, label]) => `<label><input type="radio" name="g1bp-${escapeAttr(competitor.id)}-${escapeAttr(key)}" value="${escapeAttr(value)}" data-g1bp-choice-v543="${escapeAttr(key)}" data-g1bp-competitor-v543="${escapeAttr(competitor.id)}" ${selected === value ? "checked" : ""}>${escapeHtml(label)}</label>`).join("")}</div>`;
+}
+
+function g1BergenJtbdChoicesV543(competitor, jtbds) {
+  const selected = new Set(competitor.bergenV543?.matchedJtbdIdsV543 || []);
+  return jtbds.length ? `<div class="g1bp-jtbd-choices-v543">${jtbds.map((jtbd) => `<label><input type="checkbox" data-g1bp-jtbd-v543="${escapeAttr(jtbd.id)}" data-g1bp-competitor-v543="${escapeAttr(competitor.id)}" ${selected.has(jtbd.id) ? "checked" : ""}><span>${jtbd.primary ? "Основной · " : ""}${escapeHtml(jtbd.text)}</span></label>`).join("")}</div>`
+    : '<span class="g1ct-muted-v540">Сначала добавьте JTBD продукта в Gate 0.</span>';
+}
+
+function g1BergenChannelsV543(snapshot) {
+  const excluded = new Set((g3Gate0Marketing().channels || []).flatMap((channel, index) =>
+    ["not_needed", "not_required"].includes(guruCanonStatus(channel.status))
+      ? [g4LaunchChannelKey(channel, index)] : []));
+  return (snapshot.campaigns || []).filter((row) => row.source === "Gate 4" &&
+    !["not_needed", "not_required"].includes(guruCanonStatus(row.status)) &&
+    !excluded.has(row.channelKey)).map((row) => row.name).join("\n");
+}
+
+function g1BergenRowsV543(ctx, jtbds) {
+  const { product, snapshot } = ctx;
+  const page = snapshot.page?.row || {};
+  const context = page.contextFields || {};
+  const gate0 = (field) => ({ gateId: "gate-0", kind: "gate0-scoped", productId: product.id, field });
+  const gate1 = { gateId: "gate-1", kind: "gate1-page", cardId: snapshot.page?.card?.id || "", rowId: page.id || "" };
+  const gate4 = { gateId: "gate-4", productId: product.id };
+  const own = (value, target) => g1ComparisonOwnV540(value, target);
+  const none = '<span class="g1ct-muted-v540">—</span>';
+  const channels = g1BergenChannelsV543(snapshot);
+  const reviews = (Array.isArray(context.productReviewsV514) ? context.productReviewsV514 : [])
+    .map((row) => String(row?.text || "").trim()).filter(Boolean);
+  const trust = [context.productRating && `Рейтинг: ${context.productRating}`,
+    reviews.length && `Отзывы (${reviews.length}): ${reviews.join("; ")}`].filter(Boolean).join("\n");
+  const delivery = [context.productDeliveryGuaranteeV253,
+    ...(Array.isArray(context.productDeliveryCardsV255) ? context.productDeliveryCardsV255
+      .map((row) => [row.title, row.description].filter(Boolean).join(": ")) : [])]
+    .filter(Boolean).join("\n");
+  const match = (c) => {
+    const selected = new Set(c.bergenV543?.matchedJtbdIdsV543 || []);
+    const count = jtbds.filter((jtbd) => selected.has(jtbd.id)).length;
+    return `<strong>${count ? `Да (${count} из ${jtbds.length} JTBD)` : "Нет"}</strong>`;
+  };
+  const row = (label, ownHtml, competitor, key = "") => ({ label, ownHtml, competitor, key });
+  return [
+    { title: "ЭТАП 1. КТО КОНКУРЕНТ", groups: [
+      { title: "Пересечение рынков", rows: [
+        row("Задача (JTBD)", jtbds.length ? `<div class="g1bp-own-list-v543">${jtbds.map((jtbd) => `<div>${jtbd.primary ? "Основной · " : ""}${escapeHtml(jtbd.text)}</div>`).join("")}</div>` : own("", gate0("jtbd")), (c) => g1BergenJtbdChoicesV543(c, jtbds), "matchedJtbdIdsV543"),
+        row("Кому", own(snapshot.segment, gate0("segments")), (c) => g1BergenFieldV543(c, "marketSegment"), "marketSegment"),
+        row("География", own(ctx.geography, { gateId: "gate-0" }), (c) => g1BergenFieldV543(c, "marketGeography"), "marketGeography"),
+        row("→ Совпадает?", none, match),
+      ] },
+      { title: "Сходство ресурсов", rows: [
+        row("Тип бизнеса", own(state.project?.niche || state.project?.type, { gateId: "gate-0" }), (c) => g1BergenFieldV543(c, "businessType"), "businessType"),
+        row("Как сделан продукт", own(context.productCreationV253, gate1), (c) => g1BergenFieldV543(c, "made"), "made"),
+        row("Где продаёт", g1ComparisonOwnPartsV540([["Сайт", snapshot.landing, gate0("landing")], ["Каналы Gate 4", channels, gate4]]), (c) => g1BergenFieldV543(c, "salesChannels"), "salesChannels"),
+        row("→ Похожи?", none, (c) => g1BergenChoicesV543(c, "similarity", [["yes", "Да"], ["no", "Нет"]]), "similarity"),
+        row("Тип конкурента", none, (c) => `<strong>${escapeHtml(G1_COMPETITOR_TYPES_V539[g1BergenTypeV543(c, jtbds)])}</strong>`),
+      ] },
+    ] },
+    { title: "ЭТАП 2. НАСКОЛЬКО ОН СИЛЁН", directOnly: true, groups: [
+      { rows: [
+        row("Продукт", own([product.name, snapshot.cardSummary].filter(Boolean).join("\n"), gate1), (c) => g1BergenFieldV543(c, "product"), "product"),
+        row("Цена", own(ctx.price.raw && `${ctx.price.raw} ₽`, gate1), (c) => g1BergenFieldV543(c, "price", "price"), "price"),
+        row("Позиционирование", own(snapshot.positioning, gate0("positioning")), (c) => g1BergenFieldV543(c, "positioning"), "positioning"),
+        row("Что обязательно для категории (паритет)", none, (c) => g1BergenFieldV543(c, "parity"), "parity"),
+        row("Оффер / CTA", g1ComparisonOwnPartsV540([["Оффер", snapshot.offer, gate0("offers")], ["CTA", snapshot.cta, gate0("cta")]]), (c) => g1BergenFieldV543(c, "offerCta"), "offerCta"),
+        row("Реклама и ключевые слова", own(channels, gate4), (c) => g1BergenFieldV543(c, "adsKeywords"), "adsKeywords"),
+        row("Доставка", own(delivery, gate1), (c) => g1BergenFieldV543(c, "delivery"), "delivery"),
+        row("Доверие", own(trust, gate1), (c) => g1BergenFieldV543(c, "trust"), "trust"),
+        row("Закрывает задачу клиента", none, (c) => g1BergenChoicesV543(c, "taskClosure", [["better", "Лучше"], ["same", "Так же"], ["worse", "Хуже"]]), "taskClosure"),
+        row("Сильные стороны", none, (c) => g1BergenFieldV543(c, "strengths"), "strengths"),
+        row("Слабые стороны", none, (c) => g1BergenFieldV543(c, "weaknesses"), "weaknesses"),
+      ] },
+    ] },
+    { title: "ИТОГ", directOnly: true, groups: [
+      { rows: [
+        row("Что нам взять", none, (c) => g1BergenFieldV543(c, "takeaway"), "takeaway"),
+        row("Чем отличаться", none, (c) => g1BergenFieldV543(c, "differentiate"), "differentiate"),
+        row("Дата и источник", none, (c) => `<div class="g1bp-date-source-v543"><label><span>Дата</span>${g1BergenFieldV543(c, "fixedDate", "date")}</label><label><span>URL / скриншот</span>${g1BergenFieldV543(c, "evidence")}</label></div>`, "fixedDate,evidence"),
+      ] },
+    ] },
+  ];
+}
+
+function g1BergenStatusV543(entry, ctx, jtbds) {
+  const direct = entry.competitors.filter((competitor) => g1BergenTypeV543(competitor, jtbds) === "direct");
+  const total = direct.length * (G1_BERGEN_FIELDS_V543.length + 1);
+  const filled = direct.reduce((sum, competitor) => {
+    const data = competitor.bergenV543 || {};
+    return sum + G1_BERGEN_FIELDS_V543.filter((key) => String(data[key] || "").trim()).length +
+      Number((data.matchedJtbdIdsV543 || []).some((id) => jtbds.some((jtbd) => jtbd.id === id)));
+  }, 0);
+  return { status: !filled ? "not_started" : filled === total ? "ready" : "in_progress", filled, total };
+}
+
+function g1BergenTableHtmlV543(entry, ctx, jtbds) {
+  const sections = g1BergenRowsV543(ctx, jtbds);
+  const columns = entry.competitors.length + 3;
+  const body = sections.map((section) => `<tr class="g1bp-stage-v543"><th colspan="${columns}" scope="colgroup">${section.title}</th></tr>${section.groups.map((group) => `${group.title ? `<tr class="g1bp-group-v543"><th colspan="${columns}" scope="colgroup">${escapeHtml(group.title)}</th></tr>` : ""}${group.rows.map((row) => `<tr data-g1bp-row-v543="${escapeAttr(row.label)}">
+    <th class="g1bp-label-v543" scope="row">${escapeHtml(row.label)}</th>
+    <td class="g1bp-own-v543">${row.ownHtml}</td>
+    ${entry.competitors.map((competitor) => {
+      const inactive = section.directOnly && g1BergenTypeV543(competitor, jtbds) !== "direct";
+      return `<td class="g1bp-competitor-v543 ${inactive ? "g1bp-not-required-v543" : ""}" data-g1bp-cell-v543="${escapeAttr(competitor.id)}:${escapeAttr(row.label)}">${inactive ? '<span>не требуется</span>' : row.competitor(competitor)}</td>`;
+    }).join("")}
+    <td class="g1bp-add-cell-v543"></td>
+  </tr>`).join("")}`).join("")}`).join("");
+  return `<div class="g1bp-scroll-v543" tabindex="0" aria-label="Таблица сравнения продукта"><table class="g1bp-table-v543" style="--comparison-columns:${entry.competitors.length}"><thead><tr>
+    <th class="g1bp-label-v543" scope="col">Критерий</th>
+    <th class="g1bp-own-v543" scope="col"><span class="project-comparison-own-label">Наш продукт (авто)</span><strong>${escapeHtml(ctx.product.name)}</strong></th>
+    ${entry.competitors.map((competitor, index) => `<th class="g1bp-competitor-head-v543" scope="col" data-g1bp-head-v543="${escapeAttr(competitor.id)}">
+      <label><span>Конкурент ${index + 1} · название</span><input value="${escapeAttr(competitor.name || "")}" data-g1bp-name-v543="${escapeAttr(competitor.id)}" aria-label="Название конкурента ${index + 1}"></label>
+      <label><span>Сайт или магазин на площадке</span><input type="text" inputmode="url" value="${escapeAttr(competitor.domain || competitor.siteDomainV538 || "")}" data-g1bp-domain-v543="${escapeAttr(competitor.id)}" aria-label="Сайт или магазин конкурента ${index + 1}"><small aria-live="polite"></small></label>
+      <div><span>Тип: <b>${escapeHtml(G1_COMPETITOR_TYPES_V539[g1BergenTypeV543(competitor, jtbds)])}</b></span><button type="button" data-g1bp-delete-v543="${escapeAttr(competitor.id)}">Удалить</button></div>
+    </th>`).join("")}
+    <th class="g1bp-add-head-v543" scope="col"><button type="button" class="small-btn" data-g1bp-add-v543>+ Конкурент</button></th>
+  </tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+projectComparisonProductStatus = function (entry) {
+  if (!entry?.product_id) return { status: "not_started", filled: 0, total: 0 };
+  const product = guruV194Product(entry.product_id, state);
+  if (!product) return { status: "not_started", filled: 0, total: 0 };
+  const { jtbds } = g1BergenMigrateV543(entry, product);
+  return g1BergenStatusV543(entry, g1CompetitorContextV539(product), jtbds);
+};
+
+projectComparisonProductHtml = function (product = guruV194SelectedProduct(state)) {
+  if (!product?.id) return `<section class="project-comparison project-comparison-product-v309 g1-section"><div class="project-comparison-heading"><b>Сравнение проектов · Продукт/Услуга</b></div><div class="project-comparison-body"><p>Выберите продукт.</p></div></section>`;
+  const entry = ensureProjectComparisonProduct(product.id);
+  const { jtbds } = g1BergenMigrateV543(entry, product);
+  const ctx = g1CompetitorContextV539(product);
+  const status = g1BergenStatusV543(entry, ctx, jtbds);
+  return `<section class="project-comparison project-comparison-product-v309 g1-section g1bp-v543 ${entry.open ? "is-open" : ""}" data-project-comparison-product="${escapeAttr(product.id)}" data-g1bp-product-v543="${escapeAttr(product.id)}">
+    <button type="button" class="project-comparison-heading" data-project-comparison-product-toggle data-project-comparison-product-id="${escapeAttr(product.id)}" aria-expanded="${entry.open ? "true" : "false"}"><span><b>Сравнение проектов · Продукт/Услуга</b><small>${escapeHtml(product.name)}</small></span><span class="project-comparison-heading-meta">${g1CompetitorStatusPillV539(status.status)}<span data-g1bp-status-meta-v543>${status.filled}/${status.total} ответов прямых конкурентов · ${entry.competitors.length} колонок</span></span><i>${entry.open ? "Свернуть ↑" : "Развернуть ↓"}</i></button>
+    <div class="project-comparison-body" ${entry.open ? "" : "hidden"}>${g1BergenPhraseStripV543(ctx, jtbds)}<h3 class="g1bp-title-v543">Сравнение</h3>${g1BergenTableHtmlV543(entry, ctx, jtbds)}</div>
+  </section>`;
+};
+
+function g1BergenFindV543(target) {
+  const section = target.closest?.("[data-g1bp-product-v543]");
+  const productId = section?.dataset.g1bpProductV543;
+  const product = productId ? guruV194Product(productId, state) : null;
+  if (!product) return {};
+  const entry = ensureProjectComparisonProduct(productId);
+  const { jtbds } = g1BergenMigrateV543(entry, product);
+  const id = target.dataset.g1bpCompetitorV543 || target.dataset.g1bpNameV543 ||
+    target.dataset.g1bpDomainV543 || target.dataset.g1bpDeleteV543;
+  return { section, product, entry, jtbds, competitor: entry.competitors.find((row) => row.id === id) };
+}
+
+function g1BergenRefreshStatusV543(section, entry, product, jtbds) {
+  const status = g1BergenStatusV543(entry, g1CompetitorContextV539(product), jtbds);
+  const pill = section.querySelector(".project-comparison-heading .status-pill");
+  if (pill) {
+    pill.className = `status-pill status-${status.status}`;
+    pill.textContent = STATUS_LABELS[status.status] || status.status;
+  }
+  const meta = section.querySelector("[data-g1bp-status-meta-v543]");
+  if (meta) meta.textContent = `${status.filled}/${status.total} ответов прямых конкурентов · ${entry.competitors.length} колонок`;
+}
+
+document.addEventListener("input", (event) => {
+  const target = event.target;
+  if (!target.closest?.("[data-g1bp-product-v543]")) return;
+  const { section, product, entry, jtbds, competitor } = g1BergenFindV543(target);
+  if (!competitor) return;
+  if (target.dataset.g1bpNameV543) competitor.name = target.value;
+  else if (target.dataset.g1bpDomainV543) {
+    competitor.domain = target.value;
+    const domain = projectComparisonProductDomainV538(target.value);
+    if (domain) competitor.siteDomainV538 = domain;
+  } else if (target.dataset.g1bpFieldV543) {
+    competitor.bergenV543[target.dataset.g1bpFieldV543] = target.value;
+  } else return;
+  flashSaving();
+  g1BergenRefreshStatusV543(section, entry, product, jtbds);
+});
+
+document.addEventListener("change", (event) => {
+  const target = event.target;
+  if (!target.closest?.("[data-g1bp-product-v543]")) return;
+  const { competitor, jtbds } = g1BergenFindV543(target);
+  if (!competitor) return;
+  if (target.dataset.g1bpDomainV543) {
+    const raw = target.value.trim();
+    const domain = projectComparisonProductDomainV538(raw);
+    const error = target.closest("label")?.querySelector("small");
+    if (raw && !domain) {
+      if (error) error.textContent = "Введите домен или URL сайта либо магазина.";
+      return;
+    }
+    if (error) error.textContent = "";
+    competitor.domain = raw;
+    competitor.siteDomainV538 = domain;
+  } else if (target.dataset.g1bpJtbdV543) {
+    const valid = new Set(jtbds.map((jtbd) => jtbd.id));
+    if (!valid.has(target.dataset.g1bpJtbdV543)) return;
+    const selected = new Set(competitor.bergenV543.matchedJtbdIdsV543 || []);
+    if (target.checked) selected.add(target.dataset.g1bpJtbdV543);
+    else selected.delete(target.dataset.g1bpJtbdV543);
+    competitor.bergenV543.matchedJtbdIdsV543 = [...selected];
+  } else if (target.dataset.g1bpChoiceV543) {
+    competitor.bergenV543[target.dataset.g1bpChoiceV543] = target.value;
+  } else if (!target.dataset.g1bpFieldV543 && !target.dataset.g1bpNameV543) return;
+  flashSaving();
+  renderGate();
+});
+
+document.addEventListener("click", (event) => {
+  const target = event.target.closest?.("[data-g1bp-add-v543], [data-g1bp-delete-v543]");
+  if (!target) return;
+  const { entry, competitor } = g1BergenFindV543(target);
+  if (!entry) return;
+  if (target.dataset.g1bpAddV543 !== undefined) {
+    entry.competitors.push({ id: makeId("comparison-product-competitor"), name: "", domain: "",
+      siteDomainV538: "", classificationV539: { sameMarket: "", sameBusiness: "" },
+      foundPhraseKeysV539: [], stepsV539: {}, bergenV543: { matchedJtbdIdsV543: [] }, bergenMigratedV543: true });
+  } else {
+    if (!competitor || !window.confirm(`Удалить «${competitor.name || competitor.domain || "конкурента"}» из таблицы? Все его данные сохранятся в архиве.`)) return;
+    entry.archivedCompetitorsV540 = Array.isArray(entry.archivedCompetitorsV540) ? entry.archivedCompetitorsV540 : [];
+    entry.archivedCompetitorsV540.push(competitor);
+    entry.competitors = entry.competitors.filter((row) => row.id !== competitor.id);
+    entry.candidatesV539 = (entry.candidatesV539 || []).filter((row) => row.id !== competitor.id);
+  }
+  flashSaving();
+  renderGate();
+});
