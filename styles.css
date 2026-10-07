@@ -11986,6 +11986,145 @@ body {
   background: var(--surface, #fff);
 }
 
+.g4-rsya-direct-v533 {
+  display: grid;
+  gap: 14px;
+}
+
+.g4-rsya-direct-panel-v533,
+.g4-rsya-direct-detail-v533,
+.g4-rsya-direct-fallback-v533 {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface, #fff);
+}
+
+.g4-rsya-direct-panel-v533 header h5,
+.g4-rsya-direct-detail-v533 h5 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.g4-rsya-direct-panel-v533 header p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.g4-rsya-direct-main-v533 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.g4-rsya-direct-secondary-v533 {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+
+.g4-rsya-direct-row-v533 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.g4-rsya-direct-row-v533.is-prominent {
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+
+.g4-rsya-direct-label-v533 {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.g4-rsya-direct-value-v533 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.g4-rsya-direct-row-v533.is-prominent .g4-rsya-direct-value-v533 {
+  font-size: clamp(21px, 2.4vw, 30px);
+  line-height: 1.2;
+}
+
+.g4-rsya-direct-row-v533 .small-btn {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.g4-rsya-direct-reason-v533 {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.g4-rsya-formula-v533 {
+  display: grid;
+  gap: 3px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.g4-rsya-formulas-v533 {
+  display: grid;
+}
+
+.g4-rsya-formulas-v533[hidden] {
+  display: none !important;
+}
+
+.g4-rsya-direct-unavailable-v533 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.g4-rsya-formula-source-v533,
+.g4-rsya-direct-rounding-v533,
+.g4-rsya-direct-fallback-v533 > small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.g4-rsya-direct-status-v533 {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.g4-rsya-direct-status-v533 p {
+  width: 100%;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.g4-rsya-direct-fallback-v533 .g1-input.is-optional {
+  background: var(--surface, #fff) !important;
+}
+
+.g4-rsya-direct-detail-v533 .g4-rsya-goal-status-v363 {
+  margin: 0;
+}
+
 .g4-rsya-start-method-v532 h5 {
   margin: 0;
   font-size: 14px;
@@ -12054,6 +12193,7 @@ body {
   .g4-rsya-strategy-metrika-v531 > strong,
   .g4-rsya-strategy-metrika-v531 > .g4-rsya-goal-status-v363 { grid-column: auto; }
   .g4-rsya-start-grid-v532 { grid-template-columns: minmax(0, 1fr); }
+  .g4-rsya-direct-main-v533 { grid-template-columns: minmax(0, 1fr); }
 }
 
 .g4-v406-launch-level {
@@ -21614,4 +21754,8 @@ html body .content-area :is(input, textarea, select)[data-guru-optional-mode="em
   color: var(--muted);
   font-size: 10px;
   font-weight: 500;
+}
+
+html body .content-area .g4-rsya-direct-fallback-v533 input.g1-input.is-optional {
+  background: #fff !important;
 }

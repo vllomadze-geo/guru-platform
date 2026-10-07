@@ -72890,12 +72890,10 @@ function g4RsyaCampaignIssuesV289(campaign, d, product = "") {
   if (!g4RsyaTextV289(d.campaign.schedule)) issues.push("Расписание: укажите режим показа");
   const volume = g4RsyaVolumeAssessmentV363(d.campaign);
   if (!volume.complete) issues.push("Стратегия: проверьте объём конверсий за семь завершённых дней");
-  const weeklyBudget = g4RsyaPositiveNumberV363(d.campaign.weeklyBudgetRubV531);
-  const budgetGuide = g4RsyaStartMethodModelV532(d);
-  if (!budgetGuide.complete) issues.push("Недельный бюджет: заполните ожидаемую цену конверсии для расчёта минимума");
-  else if (weeklyBudget === null || weeklyBudget < budgetGuide.requiredBudget)
-    issues.push(`Недельный бюджет: нужно не менее ${g4RsyaMoneyV532(budgetGuide.requiredBudget)} ₽`);
-  if (["max_conversions", "target_cpa", "target_drr"].includes(d.campaign.strategy)) {
+  const direct = g4RsyaDirectPanelModelV533(product, d);
+  if (!direct.hasSearch && direct.expected === null) issues.push(`Search-прогноз: ${direct.missing.join("; ")}`);
+  if (direct.budget === null) issues.push("Бюджет РСЯ: нет данных для расчёта");
+  if (direct.strategy === "Максимум конверсий") {
     if (!g4RsyaTextV289(d.campaign.metrikaCounter)) issues.push("Для выбранной стратегии укажите счётчик Метрики");
     if (!g4RsyaTextV289(d.campaign.metrikaGoal)) issues.push("Для выбранной стратегии укажите цель Метрики");
     if (!["clicks", "conversions"].includes(d.campaign.paymentModel)) issues.push("Модель оплаты РСЯ: выберите за клики или за конверсии");
@@ -72904,11 +72902,8 @@ function g4RsyaCampaignIssuesV289(campaign, d, product = "") {
       if (goal.status !== "ready") issues.push(`Связь с Gate 2: ${goal.message}`);
     }
   }
-  if (g4RsyaTextV289(d.campaign.strategyTarget?.targetCpaRub) &&
-    (g4RsyaPositiveNumberV363(d.campaign.strategyTarget?.targetCpaRub) ?? 0) < 0.9)
+  if (direct.price !== null && direct.price < 0.9)
     issues.push("Целевая цена конверсии для РСЯ: минимум 0,9 ₽");
-  if (d.campaign.strategy === "target_drr" && g4RsyaPositiveNumberV363(d.campaign.strategyTarget?.targetDrrPercent) === null)
-    issues.push("Целевая ДРР для РСЯ: укажите положительный процент");
   (d.campaign.excludedPlacements || []).forEach((row, index) => {
     if (!g4RsyaTextV289(row?.placement)) issues.push(`Исключённая площадка ${index + 1}: укажите площадку или удалите строку`);
   });
@@ -74671,6 +74666,7 @@ function g4RsyaRefreshSitelinkWarningsV478(product, groupId, adId) {
 }
 
 function g4RsyaAdPackageV289(campaign, d, group, ad, product = "") {
+  const direct = g4RsyaDirectPanelModelV533(product, d);
   const foundation = g4RsyaGroupFoundationV455(product, group);
   const defaults = g4RsyaGroupGate1DefaultsV456(product, group);
   const effectiveLanding = megaPlatformProductUrl(product, state);
@@ -74695,11 +74691,10 @@ function g4RsyaAdPackageV289(campaign, d, group, ad, product = "") {
     `ГРУППА: ${defaults.name}`,
     `ГЕОГРАФИЯ: ${g4RsyaTextV289(d.campaign.geography)}`,
     `РАСПИСАНИЕ: ${g4RsyaTextV289(d.campaign.schedule)}`,
-    `СТРАТЕГИЯ: ${g4RsyaVolumeAssessmentV363(d.campaign).complete ? d.campaign.strategy === "max_clicks" ? "Оптимизация кликов" : "Максимум конверсий" : "Определится после проверки объёма"}`,
+    `СТРАТЕГИЯ: ${direct.strategy}`,
     `МОДЕЛЬ ОПЛАТЫ: за клики`,
-    ...(g4RsyaTextV289(d.campaign.strategyTarget?.targetCpaRub) ? [`ЦЕЛЕВАЯ ЦЕНА КОНВЕРСИИ ДЛЯ РСЯ: ${g4RsyaTextV289(d.campaign.strategyTarget.targetCpaRub)} ₽`] : []),
-    ...(g4RsyaTextV289(d.campaign.strategyTarget?.targetDrrPercent) ? [`ЦЕЛЕВАЯ ДРР ДЛЯ РСЯ: ${g4RsyaTextV289(d.campaign.strategyTarget.targetDrrPercent)} %`] : []),
-    `БЮДЖЕТ: ${g4RsyaTextV289(d.campaign.weeklyBudgetRubV531)} ₽ (неделя)`,
+    ...(direct.price !== null ? [`ЦЕЛЕВАЯ ЦЕНА КОНВЕРСИИ ДЛЯ РСЯ: ${g4RsyaMoneyV532(direct.price)} ₽`] : []),
+    `БЮДЖЕТ: ${direct.budget === null ? "не задано" : g4RsyaMoneyV532(direct.budget) + " ₽"} (неделя)`,
     ...(promotionTouched ? [
       `ПРОМОАКЦИЯ · ТИП: ${g4RsyaTextV289(promotion.type)}`,
       `ПРОМОАКЦИЯ · ОПИСАНИЕ: ${g4RsyaTextV289(promotion.description)}`,
@@ -75172,14 +75167,6 @@ function g4RsyaMigrateStartMethodV532(d) {
     if (d.ui.prelaunchChecksV532 !== undefined) d.ui.legacyPrelaunchChecksV532 = d.ui.prelaunchChecksV532;
     d.ui.prelaunchChecksV532 = {};
   }
-  const model = g4RsyaStartMethodModelV532(d);
-  const target = d.campaign.strategyTarget || (d.campaign.strategyTarget = {});
-  if (model.startCpa !== null && !d.ui.targetCpaEditedV532 &&
-    (!g4RsyaTextV289(target.targetCpaRub) ||
-      (d.ui.autoTargetCpaRubV532 && String(target.targetCpaRub) === String(d.ui.autoTargetCpaRubV532)))) {
-    target.targetCpaRub = g4RsyaMoneyV532(model.startCpa);
-    d.ui.autoTargetCpaRubV532 = target.targetCpaRub;
-  }
 }
 
 function g4RsyaStartMethodModelV532(d) {
@@ -75196,6 +75183,52 @@ function g4RsyaStartMethodModelV532(d) {
   const complete = minimumBudget !== null && (!directFloorText || directFloor !== null);
   return { automatic, expected, startCpa, minimumBudget, directFloor, complete,
     requiredBudget: complete ? Math.max(300, minimumBudget, directFloor || 0) : null };
+}
+
+function g4RsyaDirectPanelModelV533(product, d) {
+  // Читаем готовый Search-слепок по товару без ensureGate4SearchBuild: ensure мигрирует Search.
+  const search = state.gate4SearchBuild?.[normalizeAspectKey(product || "no_product")];
+  const entries = search && Array.isArray(search.groupRows) ? g4sbV405SummaryEntries(product, search) : [];
+  const summary = entries.length ? g4sbV405LaunchSummaryData(
+    product, search, g4sbV407SavedDuplicateCount(product, search),
+  ) : null;
+  const missing = [];
+  if (!entries.length) missing.push("нет сохранённых групп Поиска для этого товара");
+  let monthlyBaseLeads = 0;
+  const groupBudgets = [];
+  const groupBaseLeads = [];
+  entries.forEach((entry, index) => {
+    const forecast = g4sbV128Forecast(entry.rows);
+    groupBudgets.push(forecast.budget);
+    const name = `группа ${index + 1}`;
+    if (!forecast.count) missing.push(`${name}: нет ключевых фраз с прогнозом`);
+    if (forecast.coverage.budget < forecast.count)
+      missing.push(`${name}: прогноз бюджета у ${forecast.coverage.budget} из ${forecast.count} фраз`);
+    if (forecast.coverage.clicks < forecast.count)
+      missing.push(`${name}: прогноз кликов у ${forecast.coverage.clicks} из ${forecast.count} фраз`);
+    const base = g4sbV140ConversionScenarios(forecast.clicks, forecast.budget)
+      .find((scenario) => scenario.key === "base");
+    groupBaseLeads.push(base?.conversions ?? null);
+    if (base?.conversions !== null && base?.conversions !== undefined)
+      monthlyBaseLeads += base.conversions;
+  });
+  if (entries.length && !(summary?.budget > 0)) missing.push("сумма прогнозных бюджетов равна нулю");
+  if (entries.length && !(monthlyBaseLeads > 0)) missing.push("заявки базового сценария равны нулю");
+  const hasSearch = missing.length === 0;
+  const manual = g4RsyaPositiveNumberV363(d.campaign.startMethodV532?.expectedCpaManualRub);
+  const expectedRaw = hasSearch ? summary.budget / monthlyBaseLeads : manual;
+  const expected = expectedRaw === null ? null : Number(g4RsyaMoneyV532(expectedRaw));
+  const price = expected === null ? null : Number(g4RsyaMoneyV532(expected * 2));
+  const budget = price === null ? null : Number(g4RsyaMoneyV532(price * 10));
+  const expectedTen = expected === null ? null : Number(g4RsyaMoneyV532(expected * 10));
+  const volume = g4RsyaVolumeAssessmentV363(d.campaign);
+  return {
+    hasSearch, missing, summary, groupCount: entries.length, groupBudgets, groupBaseLeads,
+    jtbdIds: (search?.groupRows || []).map((row) => String(row.jtbdId || "")).filter(Boolean),
+    monthlyBaseLeads: hasSearch ? monthlyBaseLeads : null,
+    expected, price, budget, expectedTen,
+    strategy: volume.complete && volume.count < 10 ? "Оптимизация кликов" : "Максимум конверсий",
+  };
 }
 
 function g4RsyaStrategyFixedFieldV531(label, value, copy = true) {
@@ -75218,10 +75251,9 @@ function g4RsyaStrategySourceV532(text, href, label) {
   return `<small class="g4-rsya-strategy-guide-v531">${escapeHtml(text)} <a href="${escapeAttr(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a></small>`;
 }
 
-function g4RsyaLaunchBudgetV528(campaign, settings) {
-  const amount = g4RsyaTextV289(settings?.weeklyBudgetRubV531);
-  if (!amount) return "не задано";
-  return `${amount}${/[₽р]/i.test(amount) ? "" : " ₽"} · неделя`;
+function g4RsyaLaunchBudgetV528(product, d) {
+  const amount = g4RsyaDirectPanelModelV533(product, d).budget;
+  return amount === null ? "не задано" : `${g4RsyaMoneyV532(amount)} ₽ · неделя`;
 }
 
 function g4RsyaLaunchUrlHtmlV528(product, campaign, group = null, ad = null) {
@@ -75236,93 +75268,95 @@ function g4RsyaLaunchUrlHtmlV528(product, campaign, group = null, ad = null) {
   </div>`;
 }
 
+function g4RsyaDirectCopyRowV533(label, value, display, reason = "", prominent = false) {
+  const available = value !== null && value !== undefined && String(value).trim() !== "";
+  return `<div class="g4-rsya-direct-row-v533${prominent ? " is-prominent" : ""}">
+    <span class="g4-rsya-direct-label-v533">${escapeHtml(label)}</span>
+    <strong class="g4-rsya-direct-value-v533">${available ? escapeHtml(display) : "Нет данных"}</strong>
+    ${available
+      ? `<button type="button" class="small-btn" data-g4rsya-v289-copy="${escapeAttr(value)}">Копировать</button>`
+      : `<small class="g4-rsya-direct-reason-v533">${escapeHtml(reason)}</small>`}
+  </div>`;
+}
+
 function g4RsyaLaunchStrategyHtmlV528(product, channel, campaign, d) {
   const settings = d.campaign || {};
-  const volume = g4RsyaVolumeAssessmentV363(settings);
-  const strategy = volume.complete ? (volume.count >= 10 ? "Максимум конверсий" : "Оптимизация кликов") : "Определится после проверки объёма";
-  const amount = g4RsyaPositiveNumberV363(settings.weeklyBudgetRubV531);
-  const method = settings.startMethodV532 || {};
-  const calc = g4RsyaStartMethodModelV532(d);
-  const budgetStatus = !calc.complete ? "not_started" : amount !== null && amount >= calc.requiredBudget ? "ready" : "problem";
-  const target = settings.strategyTarget || {};
+  const direct = g4RsyaDirectPanelModelV533(product, d);
   const metrikaSource = g4RsyaMetrikaSourceV450(product, state);
   const goal = g4RsyaGoalQualityV363(product, settings);
-  const cpa = g4RsyaPositiveNumberV363(target.targetCpaRub);
   const launchDate = String(campaign.launchDate || "");
   const [launchYear, launchMonth, launchDay] = launchDate.split("-").map(Number);
   const date = /^\d{4}-\d{2}-\d{2}$/.test(launchDate) ? new Date(`${launchDate}T12:00:00`) : null;
   const weekday = date && Number.isFinite(date.getTime()) && date.getFullYear() === launchYear &&
     date.getMonth() + 1 === launchMonth && date.getDate() === launchDay
     ? new Intl.DateTimeFormat("ru-RU", { weekday: "long" }).format(date) : "не задано";
-  const monday = date && weekday === "понедельник";
+  const monday = weekday === "понедельник";
   const checks = d.ui.prelaunchChecksV532 || {};
-  return `<div class="g4-rsya-strategy-v531" data-g4rsya-strategy-v531>
-    ${g4RsyaStrategyFixedFieldV531("1. Стратегия", strategy, volume.complete)}
-    ${g4RsyaStrategyGuideV531("Оптимизация конверсий подходит, если на сайте не менее 10 конверсий в неделю.", "https://yandex.ru/adv/products/optimization/autostrategies")}
-    ${g4RsyaStrategyFixedFieldV531("2. Оплата", "За клики")}
-    <section class="g4-rsya-start-method-v532" aria-label="Расчёт стартовой цены">
-      <h5>Расчёт стартовой цены</h5>
-      <p class="g4-rsya-start-intro-v532">Заполните цену клика и конверсию сайта для расчёта. Если их нет, укажите ожидаемую цену конверсии вручную. · Расчёт GURU</p>
-      <div class="g4-rsya-start-grid-v532">
-        ${g4RsyaFieldV289({ product, channel, store: "startMethodV532", field: "forecastCpcRub", label: "Цена клика, ₽", value: method.forecastCpcRub, type: "number", min: 0.01, step: 0.01, optionalEmpty: true })}
-        ${g4RsyaFieldV289({ product, channel, store: "startMethodV532", field: "siteConversionPercent", label: "Конверсия сайта, %", value: method.siteConversionPercent, type: "number", min: 0.01, max: 100, step: 0.01, optionalEmpty: true })}
+  const money = (value) => value === null ? "нет данных" : `${Number(value).toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`;
+  const number = (value) => value === null ? "нет данных" : g4RsyaMoneyV532(value);
+  const missingReason = direct.hasSearch ? "" : direct.missing.join("; ");
+  const copyReason = "Заполните Search-прогноз: шаг 2, или укажите свою оценку цены заявки ниже.";
+  const sourceSearch = '<span class="g4-rsya-formula-source-v533">Search-прогноз · шаг 2</span>';
+  const sourceVideo = `<a class="g4-rsya-formula-source-v533" href="${G4_RSYA_VIDEO_V532}" target="_blank" rel="noopener noreferrer">Практика автора видео, не официальный источник</a>`;
+  const sourceTen = '<a class="g4-rsya-formula-source-v533" href="https://yandex.ru/adv/products/optimization/autostrategies" target="_blank" rel="noopener noreferrer">Яндекс</a> · <a class="g4-rsya-formula-source-v533" href="https://elama.ru/blog/oplata-za-konversii-v-direkte-chto-eto-takoe-i-kak-s-ney-rabotat/" target="_blank" rel="noopener noreferrer">eLama</a>';
+  const budgetStatus = direct.budget === null ? "in_progress" : direct.budget < 300 || direct.price < 0.9 ? "problem" : "ready";
+  const budgetMessage = direct.budget === null ? "Нужно заполнить Search-прогноз: шаг 2"
+    : budgetStatus === "ready" ? "Бюджета достаточно для обучения" : "Проверьте минимум Директа: 300 ₽ в неделю и 0,9 ₽ за конверсию";
+  return `<div class="g4-rsya-strategy-v531 g4-rsya-direct-v533" data-g4rsya-strategy-v531 data-g4rsya-direct-v533>
+    <section class="g4-rsya-direct-panel-v533" aria-label="Что вставить в Директ">
+      <header><h5>Что вставить в Директ</h5><p>Значения рассчитаны для выбранного товара. В денежных строках копируется число без пробелов и знака ₽.</p></header>
+      <div class="g4-rsya-direct-main-v533">
+        ${g4RsyaDirectCopyRowV533("Бюджет в неделю", direct.budget === null ? null : number(direct.budget), money(direct.budget), copyReason, true)}
+        ${g4RsyaDirectCopyRowV533("Цена конверсии", direct.price === null ? null : number(direct.price), money(direct.price), copyReason, true)}
       </div>
-      ${calc.automatic
-        ? g4RsyaStrategyFixedFieldV531("Ожидаемая цена конверсии, ₽", g4RsyaMoneyV532(calc.expected), false)
-        : g4RsyaFieldV289({ product, channel, store: "startMethodV532", field: "expectedCpaManualRub", label: "Ожидаемая цена конверсии, ₽", value: method.expectedCpaManualRub, type: "number", min: 0.01, step: 0.01, optionalEmpty: true })}
-      ${g4RsyaStrategyCalcV532("Ожидаемая цена = цена клика / (конверсия сайта / 100); без обоих значений используется ручная оценка. Результат округляется вверх до копейки")}
-      ${g4RsyaStrategyFixedFieldV531("Стартовая цена конверсии, ₽", calc.startCpa === null ? "не задано" : g4RsyaMoneyV532(calc.startCpa), calc.startCpa !== null)}
-      ${g4RsyaStrategyCalcV532("Стартовая цена = ожидаемая цена × 2")}
-      ${g4RsyaStrategyPracticeV532("Ставьте цену с запасом: слишком низкая цена даёт мало или дешёвый трафик.")}
-      ${g4RsyaStrategyGuideV531("Недостижимая цена мешает стратегии.", G4_RSYA_YANDEX_CPA_V532)}
-      ${g4RsyaStrategyFixedFieldV531("Минимальный недельный бюджет, ₽", calc.minimumBudget === null ? "не задано" : g4RsyaMoneyV532(calc.minimumBudget), calc.minimumBudget !== null)}
-      ${g4RsyaStrategyCalcV532("Минимальный недельный бюджет = 10 × стартовая цена конверсии")}
-      ${g4RsyaStrategySourceV532("Бюджета должно хватать как минимум на 10 конверсий в неделю.", G4_RSYA_YANDEX_VOLUME_V532, "Источник: Яндекс")}
-      ${g4RsyaStrategySourceV532("Тот же ориентир — 10 конверсий за неделю.", "https://elama.ru/blog/master-kampaniy-v-direkte-chto-eto-i-kak-zapustit-reklamu/", "Источник: eLama")}
+      <div class="g4-rsya-direct-secondary-v533">
+        ${g4RsyaDirectCopyRowV533("Стратегия", direct.strategy, direct.strategy)}
+        ${g4RsyaDirectCopyRowV533("Оплата", "За клики", "За клики")}
+        ${g4RsyaDirectCopyRowV533("Ограничение расхода", "Средняя цена конверсии", "Средняя цена конверсии")}
+      </div>
+      ${g4RsyaStrategyGuideV531("Если подтверждённая проверка объёма покажет меньше 10 конверсий за неделю, стратегия переключится на «Оптимизацию кликов».", "https://yandex.ru/adv/products/optimization/autostrategies")}
     </section>
-    <div class="g4-rsya-strategy-row-v531"><strong>3. Бюджет · В неделю</strong>
-      ${g4RsyaFieldV289({ product, channel, store: "campaign", field: "weeklyBudgetRubV531", label: "Сумма, ₽", value: settings.weeklyBudgetRubV531, type: "number", min: 300, step: 0.01, copy: true, copyDisabled: budgetStatus !== "ready" })}
-      ${g4RsyaFieldV289({ product, channel, store: "startMethodV532", field: "directBudgetFloorRub", label: "Минимум бюджета по факту Директа, ₽", value: method.directBudgetFloorRub, type: "number", min: 0.01, step: 0.01, optionalEmpty: true, hint: "Если Директ показывает свой минимум в ошибке, перенесите его сюда." })}
-      ${g4RsyaStrategyGuideV531("Директ может подсказать ограничение бюджета в интерфейсе.", G4_RSYA_YANDEX_VOLUME_V532)}
-      ${g4RsyaLaunchBadgeV528(budgetStatus, !calc.complete ? "Недостаточно данных" : budgetStatus === "ready" ? "Бюджет проверен" : `Не хватает: нужно ${g4RsyaMoneyV532(calc.requiredBudget)} ₽ в неделю`)}
-      ${g4RsyaStrategyCalcV532("Порог = максимум из 300 ₽, бюджета на 10 конверсий и минимума, указанного Директом")}
-      ${settings.legacyStrategySettingsV531?.budget && settings.legacyStrategySettingsV531.budgetPeriod !== "week" ? `<small class="g4-rsya-strategy-guide-v531">Прежний бюджет ${escapeHtml(settings.legacyStrategySettingsV531.budget)} (${escapeHtml(settings.legacyStrategySettingsV531.budgetPeriod)}) сохранён; в недельный не пересчитан.</small>` : ""}
-      ${g4RsyaStrategyGuideV531("Минимум: 300 ₽ в неделю; для бюджета на период — 50 ₽ в день.", "https://yandex.ru/support/direct/ru/strategies/average-cpa-clicks")}
-    </div>
-    ${g4RsyaStrategyFixedFieldV531("4. Ограничение расхода", "Средняя цена конверсии")}
-    ${g4RsyaStrategyPracticeV532("На старте задайте среднюю цену конверсии с запасом и недельный бюджет на 10 конверсий.")}
-    <div class="g4-rsya-strategy-row-v531"><strong>5. Целевая цена конверсии, ₽</strong>
-      ${g4RsyaFieldV289({ product, channel, store: "campaignCommon", field: "launchDate", label: "Дата запуска", value: campaign.launchDate, type: "date" })}
-      ${g4RsyaFieldV289({ product, channel, store: "strategyTarget", field: "targetCpaRub", label: "Целевая цена конверсии, ₽", value: target.targetCpaRub, type: "number", min: 0.9, step: 0.01, copy: true, copyDisabled: cpa === null || cpa < 0.9 })}
-      ${cpa !== null && cpa < 0.9 ? g4RsyaLaunchBadgeV528("problem", "Ошибка: меньше 0,9 ₽") : ""}
-      ${g4RsyaStrategyGuideV531("Минимум — 0,9 ₽. В первую неделю фактическая цена может отличаться от заданной; недостижимая цена мешает стратегии.", "https://yandex.ru/support/direct/ru/strategies/average-cpa-clicks")}
-      ${g4RsyaStrategyGuideV531("Для новой кампании Директ показывает рекомендацию средней цены конверсии в интерфейсе.", "https://b2b.yandex.ru/adv/news/personalnye-sovety-po-nastroyke-strategiy-uzhe-v-interfeyse-direkta")}
-    </div>
-    <div class="g4-rsya-strategy-row-v531"><strong>6. Целевая ДРР</strong>
-      ${g4RsyaFieldV289({ product, channel, store: "strategyTarget", field: "targetDrrPercent", label: "Целевая ДРР, %", value: target.targetDrrPercent, copy: true })}
-      <small class="g4-rsya-strategy-guide-v531">Использовать только если у цели задана ценность. Для цели без ценности не применяется</small>
-    </div>
-    <div class="g4-rsya-strategy-row-v531 g4-rsya-strategy-metrika-v531"><strong>7. Метрика</strong>
-      ${g4RsyaFieldV289({ product, channel, store: "campaign", field: "metrikaCounter", label: "Счётчик Метрики", value: settings.metrikaCounter, copy: true, readonly: metrikaSource.counterStatus === "connected", hint: metrikaSource.counterStatus === "connected" ? "Источник: metrikaCompanyV374.counterId." : "В Gate 2 нет номера счётчика — поле можно заполнить вручную." })}
-      ${g4RsyaFieldV289({ product, channel, store: "campaign", field: "metrikaGoal", label: "Цель Метрики", value: settings.metrikaGoal, copy: true, readonly: metrikaSource.goalStatus === "connected", hint: metrikaSource.goalStatus === "connected" ? "Источник: metrikaQualityV360.perProduct[].goalId для этого товара." : "Для товара нет goalId в Gate 2 — поле можно заполнить вручную." })}
+    <section class="g4-rsya-direct-detail-v533" aria-label="Как посчитано">
+      <h5>Как посчитано</h5>
+      ${direct.expected === null ? '<p class="g4-rsya-direct-unavailable-v533">Расчёт появится после заполнения Search-прогноза или собственной оценки цены заявки.</p>' : ""}
+      <div class="g4-rsya-formulas-v533" ${direct.expected === null ? "hidden" : ""}>
+      ${direct.hasSearch
+        ? `<div class="g4-rsya-formula-v533"><span>Search · ${direct.groupCount} групп: бюджет ${direct.groupBudgets.map(money).join(" + ")} = ${money(direct.summary?.budget ?? null)} за 30 дней; заявки base ${direct.groupBaseLeads.map((value) => value === null ? "нет данных" : Number(value).toLocaleString("ru-RU", { maximumFractionDigits: 2 })).join(" + ")} = ${Number(direct.monthlyBaseLeads).toLocaleString("ru-RU", { maximumFractionDigits: 2 })} за 30 дней (${Number(direct.summary?.weekly.base).toLocaleString("ru-RU", { maximumFractionDigits: 2 })} в неделю).</span>${sourceSearch}</div>`
+        : `<div class="g4-rsya-formula-v533"><span>Исходные данные: своя оценка цены заявки ${money(direct.expected)}. Search-прогноз можно заполнить в шаге 2.</span><span class="g4-rsya-formula-source-v533">Своя оценка</span></div>`}
+      <div class="g4-rsya-formula-v533"><span>Ожидаемая цена заявки: ${direct.hasSearch ? `${money(direct.summary.budget)} / ${Number(direct.monthlyBaseLeads).toLocaleString("ru-RU", { maximumFractionDigits: 2 })} = ${money(direct.expected)}` : direct.expected === null ? "нет данных" : `своя оценка = ${money(direct.expected)}`}</span>${direct.hasSearch ? sourceSearch : '<span class="g4-rsya-formula-source-v533">Своя оценка</span>'}</div>
+      <div class="g4-rsya-formula-v533"><span>Цена конверсии: ${number(direct.expected)} × 2 = ${money(direct.price)}</span>${sourceVideo}</div>
+      <div class="g4-rsya-formula-v533"><span>Бюджет в неделю: ${number(direct.price)} × 10 = ${money(direct.budget)}</span><span>${sourceTen}</span></div>
+      <div class="g4-rsya-formula-v533"><span>Минимум для 10 конверсий при ожидаемой цене: ${number(direct.expected)} × 10 = ${money(direct.expectedTen)}</span><span>${sourceTen}</span></div>
+      <small class="g4-rsya-direct-rounding-v533">Расчёт GURU: денежные значения округляются вверх до копейки.</small>
+      </div>
+    </section>
+    <div class="g4-rsya-direct-status-v533">${g4RsyaLaunchBadgeV528(budgetStatus, budgetMessage)}${missingReason ? `<p>Не хватает: ${escapeHtml(missingReason)}.</p>` : ""}</div>
+    ${!direct.hasSearch ? `<div class="g4-rsya-direct-fallback-v533">
+      ${g4RsyaFieldV289({ product, channel, store: "startMethodV532", field: "expectedCpaManualRub", label: "Своя оценка цены заявки, ₽", value: settings.startMethodV532?.expectedCpaManualRub, type: "number", min: 0.01, step: 0.01, optionalEmpty: true })}
+      <small>Заполните прогноз в Search → шаг 2 для автоматического расчёта.</small>
+    </div>` : ""}
+    <section class="g4-rsya-direct-detail-v533" aria-label="Метрика">
+      <h5>Метрика</h5>
+      ${g4RsyaDirectCopyRowV533("Счётчик Метрики", g4RsyaTextV289(settings.metrikaCounter) || null, g4RsyaTextV289(settings.metrikaCounter), "Укажите счётчик в Gate 2 или восстановите сохранённое значение РСЯ.")}
+      ${g4RsyaDirectCopyRowV533("Цель Метрики", g4RsyaTextV289(settings.metrikaGoal) || null, g4RsyaTextV289(settings.metrikaGoal), "Укажите цель в Gate 2 или восстановите сохранённое значение РСЯ.")}
       <p class="g4-rsya-goal-status-v363"><span class="status-pill status-${goal.status}">${goal.status === "ready" ? "Gate 2 · цель подтверждена" : "Gate 2 · нужна проверка"}</span> ${escapeHtml(goal.message)}</p>
-    </div>
-    <div class="g4-rsya-strategy-row-v531"><strong>8. Проверка объёма конверсий</strong>
+      <small class="g4-rsya-direct-rounding-v533">Счётчик: ${metrikaSource.counterStatus === "connected" ? "Gate 2" : "сохранённое поле РСЯ"} · цель: ${metrikaSource.goalStatus === "connected" ? "Gate 2" : "сохранённое поле РСЯ"}.</small>
+    </section>
+    <div class="g4-rsya-strategy-row-v531"><strong>Проверка объёма конверсий</strong>
       ${g4RsyaVolumeHtmlV363(product, channel, d, false)}
-      ${g4RsyaStrategyGuideV531("Подсветка целей в Директе: больше 20 конверсий в неделю — зелёный; 10–20 — жёлтый; меньше 10 — красный.", "https://b2b.yandex.ru/adv/news/personalnye-sovety-po-nastroyke-strategiy-uzhe-v-interfeyse-direkta")}
+      ${g4RsyaStrategyGuideV531("Подсветка целей: больше 20 конверсий в неделю — зелёный; 10–20 — жёлтый; меньше 10 — красный.", "https://b2b.yandex.ru/adv/news/personalnye-sovety-po-nastroyke-strategiy-uzhe-v-interfeyse-direkta")}
     </div>
     <section class="g4-rsya-start-method-v532 g4-rsya-prelaunch-v532" aria-label="Проверки перед запуском">
       <h5>Проверки перед запуском</h5>
       <label class="g4-rsya-check-v532"><input type="checkbox" data-g4rsya-prelaunch-v532="goalGreen" data-g4rsya-product="${escapeAttr(product)}" ${checks.goalGreen ? "checked" : ""}><span>Цель в Директе зелёная, не серая</span></label>
-      ${g4RsyaStrategyGuideV531("Серая цель означает отсутствие данных или ключевых целей. Проверьте, что достижение цели видно в Метрике.", G4_RSYA_YANDEX_GOALS_V532)}
-      ${g4RsyaStrategyPracticeV532("Если цель серая, зайдите на сайт и выполните целевое действие.")}
-      <div class="g4-rsya-weekday-v532">День запуска: <strong>${escapeHtml(weekday)}</strong>${launchDate && !monday ? ` ${g4RsyaLaunchBadgeV528("in_progress", "Лучше запустить в понедельник")}` : ""}</div>
-      ${g4RsyaStrategyGuideV531("Недельный бюджет считается за календарную неделю: с понедельника по воскресенье.", "https://yandex.ru/support/direct/ru/strategies/week-budget")}
+      ${g4RsyaStrategyGuideV531("Серая цель требует проверки данных и достижения цели в Метрике.", G4_RSYA_YANDEX_GOALS_V532)}
+      ${g4RsyaFieldV289({ product, channel, store: "campaignCommon", field: "launchDate", label: "Дата запуска", value: campaign.launchDate, type: "date" })}
+      <label class="g4-rsya-check-v532"><input type="checkbox" disabled ${monday ? "checked" : ""}><span>Запуск в понедельник · день по дате: ${escapeHtml(weekday)}</span></label>
+      ${launchDate && !monday ? g4RsyaLaunchBadgeV528("in_progress", "Можно запустить в другой день; понедельник удобнее") : ""}
+      ${g4RsyaStrategyGuideV531("Недельный бюджет распределяется с понедельника по воскресенье.", "https://yandex.ru/support/direct/ru/strategies/week-budget")}
       ${g4RsyaStrategyPracticeV532("Запуск в понедельник удобнее для первой полной недели.")}
       <label class="g4-rsya-check-v532"><input type="checkbox" data-g4rsya-prelaunch-v532="balanceReady" data-g4rsya-product="${escapeAttr(product)}" ${checks.balanceReady ? "checked" : ""}><span>На балансе аккаунта хватает на недельный бюджет</span></label>
-      ${g4RsyaStrategyPracticeV532("Проверьте баланс перед запуском.")}
-      <p class="g4-rsya-start-intro-v532">Одна кампания РСЯ на направление.</p>
-      ${g4RsyaStrategyPracticeV532("Не дробите одно направление на несколько кампаний без необходимости.")}
+      ${g4RsyaStrategyGuideV531("Недостаток средств останавливает кампанию и ухудшает эффективность алгоритмов.", G4_RSYA_YANDEX_VOLUME_V532)}
     </section>
     <section class="g4-rsya-start-method-v532 g4-rsya-afterlaunch-v532" aria-label="Правила после запуска">
       <h5>Правила после запуска</h5>
@@ -75417,7 +75451,7 @@ function g4RsyaLaunchBodyV453(product, channel, campaign, d, model) {
   return `<div class="g4-v406-launch g4-rsya-launch-v528" data-g4rsya-v453-panel-body="launch" data-g4rsya-launch-body>
     ${g4RsyaCampaignSettingsBodyV528(product, channel, campaign, d)}
     <div class="g4-v407-launch-context">
-      <span>Итоговый бюджет: <strong>${escapeHtml(g4RsyaLaunchBudgetV528(campaign, settings))}</strong></span>
+      <span>Итоговый бюджет: <strong>${escapeHtml(g4RsyaLaunchBudgetV528(product, d))}</strong></span>
       <span>Объявления и уточнения: <strong>${model.groupsReady} из ${model.groups.length} групп готовы</strong></span>
     </div>
     ${g4sbV406LaunchLevelHtml(product, model.checks, "campaign", "Уровень кампании", g4RsyaLaunchCampaignItemsV528(), [], extras, { kind: "rsya" })}
