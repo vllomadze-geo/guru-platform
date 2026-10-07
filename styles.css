@@ -11938,23 +11938,26 @@ body {
 }
 
 .g4-rsya-strategy-v531 {
-  display: grid;
-  gap: 12px;
-  margin-top: 14px;
-  max-width: 720px;
+  display: block;
+  width: 100%;
+  margin-top: 8px;
 }
 
 .g4-rsya-strategy-fixed-v531,
 .g4-rsya-strategy-row-v531 {
   display: grid;
   gap: 8px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
 }
 
+.g4-rsya-strategy-v531 > .g4-rsya-strategy-fixed-v531:first-child { border-top: 0; }
 .g4-rsya-strategy-fixed-v531 > strong,
 .g4-rsya-strategy-row-v531 > strong { font-size: 13px; }
 
 .g4-rsya-strategy-guide-v531 {
   display: block;
+  margin: -5px 0 8px;
   color: var(--muted);
   font-size: 11px;
   line-height: 1.5;
@@ -11963,6 +11966,20 @@ body {
 .g4-rsya-strategy-guide-v531 a { color: inherit; text-decoration: underline; }
 .g4-rsya-strategy-manual-v531 { color: var(--muted); font-size: 12px; }
 .g4-rsya-strategy-v531 .g4-rsya-volume-v363 { background: var(--surface, #fff); }
+.g4-rsya-strategy-v531 .g4-rsya-strategy-fixed-v531 .g4-rsya-control-v289,
+.g4-rsya-strategy-v531 .g4-rsya-field-v289,
+.g4-rsya-strategy-v531 .g4-rsya-field-v289 .g4-rsya-control-v289 { width: 100%; }
+.g4-rsya-strategy-v531 .g4-rsya-strategy-fixed-v531 .status-pill,
+.g4-rsya-strategy-v531 .g4-rsya-strategy-row-v531 > .status-pill { justify-self: start; width: fit-content; }
+.g4-rsya-strategy-metrika-v531 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.g4-rsya-strategy-metrika-v531 > strong,
+.g4-rsya-strategy-metrika-v531 > .g4-rsya-goal-status-v363 { grid-column: 1 / -1; }
+
+@media (max-width: 760px) {
+  .g4-rsya-strategy-metrika-v531 { grid-template-columns: minmax(0, 1fr); }
+  .g4-rsya-strategy-metrika-v531 > strong,
+  .g4-rsya-strategy-metrika-v531 > .g4-rsya-goal-status-v363 { grid-column: auto; }
+}
 
 .g4-v406-launch-level {
   padding: 16px;

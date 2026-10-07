@@ -75217,7 +75217,7 @@ function g4RsyaLaunchStrategyHtmlV528(product, channel, campaign, d) {
       ${g4RsyaFieldV289({ product, channel, store: "strategyTarget", field: "targetDrrPercent", label: "Целевая ДРР, %", value: target.targetDrrPercent, copy: true })}
       <small class="g4-rsya-strategy-guide-v531">Использовать только если у цели задана ценность. Для цели без ценности не применяется</small>
     </div>
-    <div class="g4-rsya-strategy-row-v531"><strong>7. Метрика</strong>
+    <div class="g4-rsya-strategy-row-v531 g4-rsya-strategy-metrika-v531"><strong>7. Метрика</strong>
       ${g4RsyaFieldV289({ product, channel, store: "campaign", field: "metrikaCounter", label: "Счётчик Метрики", value: settings.metrikaCounter, copy: true, readonly: metrikaSource.counterStatus === "connected", hint: metrikaSource.counterStatus === "connected" ? "Источник: metrikaCompanyV374.counterId." : "В Gate 2 нет номера счётчика — поле можно заполнить вручную." })}
       ${g4RsyaFieldV289({ product, channel, store: "campaign", field: "metrikaGoal", label: "Цель Метрики", value: settings.metrikaGoal, copy: true, readonly: metrikaSource.goalStatus === "connected", hint: metrikaSource.goalStatus === "connected" ? "Источник: metrikaQualityV360.perProduct[].goalId для этого товара." : "Для товара нет goalId в Gate 2 — поле можно заполнить вручную." })}
       <p class="g4-rsya-goal-status-v363"><span class="status-pill status-${goal.status}">${goal.status === "ready" ? "Gate 2 · цель подтверждена" : "Gate 2 · нужна проверка"}</span> ${escapeHtml(goal.message)}</p>
