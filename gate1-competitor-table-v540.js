@@ -420,7 +420,7 @@ function g1BergenChoicesV543(competitor, key, choices) {
 
 function g1BergenJtbdChoicesV543(competitor, jtbds) {
   const selected = new Set(competitor.bergenV543?.matchedJtbdIdsV543 || []);
-  return jtbds.length ? `<div class="g1bp-jtbd-choices-v543">${jtbds.map((jtbd) => `<label><input type="checkbox" data-g1bp-jtbd-v543="${escapeAttr(jtbd.id)}" data-g1bp-competitor-v543="${escapeAttr(competitor.id)}" ${selected.has(jtbd.id) ? "checked" : ""}><span>${jtbd.primary ? "Основной · " : ""}${escapeHtml(jtbd.text)}</span></label>`).join("")}</div>`
+  return jtbds.length ? `<div class="g1bp-jtbd-choices-v543">${jtbds.map((jtbd, index) => `<label><input type="checkbox" data-g1bp-jtbd-v543="${escapeAttr(jtbd.id)}" data-g1bp-competitor-v543="${escapeAttr(competitor.id)}" ${selected.has(jtbd.id) ? "checked" : ""}><span>№${index + 1}${jtbd.primary ? " · основной" : ""}</span></label>`).join("")}</div>`
     : '<span class="g1ct-muted-v540">Сначала добавьте JTBD продукта в Gate 0.</span>';
 }
 
@@ -460,7 +460,7 @@ function g1BergenRowsV543(ctx, jtbds) {
   return [
     { title: "ЭТАП 1. КТО КОНКУРЕНТ", groups: [
       { title: "Пересечение рынков", rows: [
-        row("Задача (JTBD)", jtbds.length ? `<div class="g1bp-own-list-v543">${jtbds.map((jtbd) => `<div>${jtbd.primary ? "Основной · " : ""}${escapeHtml(jtbd.text)}</div>`).join("")}</div>` : own("", gate0("jtbd")), (c) => g1BergenJtbdChoicesV543(c, jtbds), "matchedJtbdIdsV543"),
+        row("Задача (JTBD)", jtbds.length ? `<div class="g1bp-own-list-v543">${jtbds.map((jtbd, index) => `<div>№${index + 1}${jtbd.primary ? " · основной" : ""} — ${escapeHtml(jtbd.text)}</div>`).join("")}</div>` : own("", gate0("jtbd")), (c) => g1BergenJtbdChoicesV543(c, jtbds), "matchedJtbdIdsV543"),
         row("Кому", own(snapshot.segment, gate0("segments")), (c) => g1BergenFieldV543(c, "marketSegment"), "marketSegment"),
         row("География", own(ctx.geography, { gateId: "gate-0" }), (c) => g1BergenFieldV543(c, "marketGeography"), "marketGeography"),
         row("→ Совпадает?", none, match),
@@ -511,7 +511,7 @@ function g1BergenStatusV543(entry, ctx, jtbds) {
 
 function g1BergenTableHtmlV543(entry, ctx, jtbds) {
   const sections = g1BergenRowsV543(ctx, jtbds);
-  const columns = entry.competitors.length + 3;
+  const columns = entry.competitors.length + 2;
   const body = sections.map((section) => `<tr class="g1bp-stage-v543"><th colspan="${columns}" scope="colgroup">${section.title}</th></tr>${section.groups.map((group) => `${group.title ? `<tr class="g1bp-group-v543"><th colspan="${columns}" scope="colgroup">${escapeHtml(group.title)}</th></tr>` : ""}${group.rows.map((row) => `<tr data-g1bp-row-v543="${escapeAttr(row.label)}">
     <th class="g1bp-label-v543" scope="row">${escapeHtml(row.label)}</th>
     <td class="g1bp-own-v543">${row.ownHtml}</td>
@@ -519,17 +519,15 @@ function g1BergenTableHtmlV543(entry, ctx, jtbds) {
       const inactive = section.directOnly && g1BergenTypeV543(competitor, jtbds) !== "direct";
       return `<td class="g1bp-competitor-v543 ${inactive ? "g1bp-not-required-v543" : ""}" data-g1bp-cell-v543="${escapeAttr(competitor.id)}:${escapeAttr(row.label)}">${inactive ? '<span>не требуется</span>' : row.competitor(competitor)}</td>`;
     }).join("")}
-    <td class="g1bp-add-cell-v543"></td>
   </tr>`).join("")}`).join("")}`).join("");
-  return `<div class="g1bp-scroll-v543" tabindex="0" aria-label="Таблица сравнения продукта"><table class="g1bp-table-v543" style="--comparison-columns:${entry.competitors.length}"><thead><tr>
+  return `<div class="g1bp-scroll-v543" tabindex="0" aria-label="Таблица сравнения продукта"><table class="g1bp-table-v543" style="--comparison-min-width:${180 + (entry.competitors.length + 1) * 340}px;--comparison-mobile-min-width:${150 + (entry.competitors.length + 1) * 280}px;--comparison-data-share:${100 / (entry.competitors.length + 1)}%;--comparison-label-share:${180 / (entry.competitors.length + 1)}px;--comparison-mobile-label-share:${150 / (entry.competitors.length + 1)}px"><colgroup><col class="g1bp-label-col-v543"><col span="${entry.competitors.length + 1}"></colgroup><thead><tr>
     <th class="g1bp-label-v543" scope="col">Критерий</th>
-    <th class="g1bp-own-v543" scope="col"><span class="project-comparison-own-label">Наш продукт (авто)</span><strong>${escapeHtml(ctx.product.name)}</strong></th>
+    <th class="g1bp-own-v543" scope="col"><span class="project-comparison-own-label">Наш продукт (авто)</span><strong>${escapeHtml(ctx.product.name)}</strong>${entry.competitors.length ? "" : '<button type="button" class="small-btn g1bp-add-v543" data-g1bp-add-v543>+ Конкурент</button>'}</th>
     ${entry.competitors.map((competitor, index) => `<th class="g1bp-competitor-head-v543" scope="col" data-g1bp-head-v543="${escapeAttr(competitor.id)}">
       <label><span>Конкурент ${index + 1} · название</span><input value="${escapeAttr(competitor.name || "")}" data-g1bp-name-v543="${escapeAttr(competitor.id)}" aria-label="Название конкурента ${index + 1}"></label>
       <label><span>Сайт или магазин на площадке</span><input type="text" inputmode="url" value="${escapeAttr(competitor.domain || competitor.siteDomainV538 || "")}" data-g1bp-domain-v543="${escapeAttr(competitor.id)}" aria-label="Сайт или магазин конкурента ${index + 1}"><small aria-live="polite"></small></label>
-      <div><span>Тип: <b>${escapeHtml(G1_COMPETITOR_TYPES_V539[g1BergenTypeV543(competitor, jtbds)])}</b></span><button type="button" data-g1bp-delete-v543="${escapeAttr(competitor.id)}">Удалить</button></div>
+      <div class="g1bp-head-actions-v543"><span>Тип: <b>${escapeHtml(G1_COMPETITOR_TYPES_V539[g1BergenTypeV543(competitor, jtbds)])}</b></span><span><button type="button" data-g1bp-delete-v543="${escapeAttr(competitor.id)}">Удалить</button>${index === entry.competitors.length - 1 ? '<button type="button" class="small-btn g1bp-add-v543" data-g1bp-add-v543>+ Конкурент</button>' : ""}</span></div>
     </th>`).join("")}
-    <th class="g1bp-add-head-v543" scope="col"><button type="button" class="small-btn" data-g1bp-add-v543>+ Конкурент</button></th>
   </tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
