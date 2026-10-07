@@ -75279,11 +75279,36 @@ function g4RsyaDirectCopyRowV533(label, value, display, reason = "", prominent =
   </div>`;
 }
 
+function g4RsyaDirectGoalDisplayV534(product, d, metrikaSource) {
+  const settings = d.campaign || {};
+  const raw = g4RsyaTextV289(settings.metrikaGoal);
+  const goalId = raw.match(/^ID\s*(\d+)$/i)?.[1] || raw;
+  const gate2 = (state.gates || []).find((gate) => gate.id === "gate-2");
+  const storedRows = gate2?.cards?.find((card) => card.id === "g2-metrika-goals-primary")
+    ?.fields?.metrikaQualityV360?.perProduct;
+  const rows = Array.isArray(storedRows) ? storedRows : [];
+  const productRow = rows.find((row) => row.product_id === metrikaSource.catalogItemId &&
+    g4RsyaTextV289(row.goalId) === goalId);
+  const companyGoal = typeof g2MetrikaCompanyGoalsV374 === "function"
+    ? g2MetrikaCompanyGoalsV374(state).find((row) => g4RsyaTextV289(row.goalId) === goalId) : null;
+  const name = g4RsyaTextV289(productRow?.goalName || companyGoal?.name);
+  const goalName = name && name !== goalId && name.toLowerCase() !== `id ${goalId}`.toLowerCase() ? name : "";
+  const landing = megaPlatformProductUrl(product, state) || (d.groups || [])
+    .flatMap((group) => group.ads || []).map((ad) => g4RsyaTextV289(ad.landing))
+    .find((value) => g4RsyaAdPreviewDomainV469(value)) || "";
+  return {
+    goalId, goalName,
+    counter: g4RsyaTextV289(settings.metrikaCounter),
+    domain: g4RsyaAdPreviewDomainV469(landing),
+  };
+}
+
 function g4RsyaLaunchStrategyHtmlV528(product, channel, campaign, d) {
   const settings = d.campaign || {};
   const direct = g4RsyaDirectPanelModelV533(product, d);
   const metrikaSource = g4RsyaMetrikaSourceV450(product, state);
   const goal = g4RsyaGoalQualityV363(product, settings);
+  const directGoal = g4RsyaDirectGoalDisplayV534(product, d, metrikaSource);
   const launchDate = String(campaign.launchDate || "");
   const [launchYear, launchMonth, launchDay] = launchDate.split("-").map(Number);
   const date = /^\d{4}-\d{2}-\d{2}$/.test(launchDate) ? new Date(`${launchDate}T12:00:00`) : null;
@@ -75305,14 +75330,30 @@ function g4RsyaLaunchStrategyHtmlV528(product, channel, campaign, d) {
   return `<div class="g4-rsya-strategy-v531 g4-rsya-direct-v533" data-g4rsya-strategy-v531 data-g4rsya-direct-v533>
     <section class="g4-rsya-direct-panel-v533" aria-label="Что вставить в Директ">
       <header><h5>Что вставить в Директ</h5><p>Значения рассчитаны для выбранного товара. В денежных строках копируется число без пробелов и знака ₽.</p></header>
-      <div class="g4-rsya-direct-main-v533">
-        ${g4RsyaDirectCopyRowV533("Бюджет в неделю", direct.budget === null ? null : number(direct.budget), money(direct.budget), copyReason, true)}
-        ${g4RsyaDirectCopyRowV533("Цена конверсии", direct.price === null ? null : number(direct.price), money(direct.price), copyReason, true)}
-      </div>
-      <div class="g4-rsya-direct-secondary-v533">
+      <div class="g4-rsya-direct-form-v534">
+        <div class="g4-rsya-direct-row-v533" data-g4rsya-direct-row-v534="type"><span class="g4-rsya-direct-label-v533">Тип стратегии</span><strong class="g4-rsya-direct-value-v533">Обычная</strong><small>Не «Пакетная»</small></div>
         ${g4RsyaDirectCopyRowV533("Стратегия", direct.strategy, direct.strategy)}
-        ${g4RsyaDirectCopyRowV533("Оплата", "За клики", "За клики")}
+        ${g4RsyaDirectCopyRowV533("С оплатой", "За клики", "За клики")}
+        ${g4RsyaDirectCopyRowV533("Бюджет", direct.budget === null ? null : number(direct.budget), direct.budget === null ? "Нет данных" : `В неделю · ${money(direct.budget)}`, copyReason)}
         ${g4RsyaDirectCopyRowV533("Ограничение расхода", "Средняя цена конверсии", "Средняя цена конверсии")}
+        ${g4RsyaDirectCopyRowV533("Счётчики Яндекс Метрики", directGoal.counter || null, `${directGoal.domain || "Домен не указан"} · ${directGoal.counter}`, "Укажите счётчик в Gate 2 или восстановите сохранённое значение РСЯ.")}
+        <div class="g4-rsya-direct-goal-row-v534" data-g4rsya-direct-row-v534="goal">
+          <strong class="g4-rsya-direct-label-v533">Целевые действия и их цена</strong>
+          <span class="g4-rsya-direct-goal-kind-v534">На вашем сайте</span>
+          <div class="g4-rsya-direct-goal-layout-v534">
+            <div class="g4-rsya-direct-goal-identity-v534">
+              <strong>${escapeHtml(directGoal.goalId ? `${directGoal.goalId}${directGoal.goalName ? ` · ${directGoal.goalName}` : ""}` : "Нет данных")}</strong>
+              <small>${escapeHtml(`${directGoal.domain || "Домен не указан"} · ${directGoal.counter || "счётчик не указан"}`)}</small>
+              ${directGoal.goalId ? `<button type="button" class="small-btn" data-g4rsya-v289-copy="${escapeAttr(directGoal.goalId)}" aria-label="Копировать ID цели">Копировать</button>` : '<small>Укажите цель Метрики в Gate 2 или восстановите сохранённое значение РСЯ.</small>'}
+            </div>
+            <div class="g4-rsya-direct-goal-price-v534">
+              <span>Цена, ₽</span><strong>${escapeHtml(direct.price === null ? "Нет данных" : money(direct.price))}</strong>
+              ${direct.price === null ? `<small>${escapeHtml(copyReason)}</small>` : `<button type="button" class="small-btn" data-g4rsya-v289-copy="${escapeAttr(number(direct.price))}" aria-label="Копировать цену конверсии">Копировать</button>`}
+            </div>
+          </div>
+          <small>В Директе при ограничении 'Бюджет' цена у цели не показывается; мы используем 'Среднюю цену конверсии', поэтому цена вводится справа от цели</small>
+          <p class="g4-rsya-goal-status-v363"><span class="status-pill status-${goal.status}">${goal.status === "ready" ? "Gate 2 · цель подтверждена" : "Gate 2 · нужна проверка"}</span> ${escapeHtml(goal.message)}</p>
+        </div>
       </div>
       ${g4RsyaStrategyGuideV531("Если подтверждённая проверка объёма покажет меньше 10 конверсий за неделю, стратегия переключится на «Оптимизацию кликов».", "https://yandex.ru/adv/products/optimization/autostrategies")}
     </section>
@@ -75321,7 +75362,7 @@ function g4RsyaLaunchStrategyHtmlV528(product, channel, campaign, d) {
       ${direct.expected === null ? '<p class="g4-rsya-direct-unavailable-v533">Расчёт появится после заполнения Search-прогноза или собственной оценки цены заявки.</p>' : ""}
       <div class="g4-rsya-formulas-v533" ${direct.expected === null ? "hidden" : ""}>
       ${direct.hasSearch
-        ? `<div class="g4-rsya-formula-v533"><span>Search · ${direct.groupCount} групп: бюджет ${direct.groupBudgets.map(money).join(" + ")} = ${money(direct.summary?.budget ?? null)} за 30 дней; заявки base ${direct.groupBaseLeads.map((value) => value === null ? "нет данных" : Number(value).toLocaleString("ru-RU", { maximumFractionDigits: 2 })).join(" + ")} = ${Number(direct.monthlyBaseLeads).toLocaleString("ru-RU", { maximumFractionDigits: 2 })} за 30 дней (${Number(direct.summary?.weekly.base).toLocaleString("ru-RU", { maximumFractionDigits: 2 })} в неделю).</span>${sourceSearch}</div>`
+        ? `<div class="g4-rsya-formula-v533"><span>Откуда: Search → «Итоговый бюджет» ${direct.groupBudgets.map(money).join(" + ")} = ${money(direct.summary?.budget ?? null)} за прогнозный месяц (4,33 недели); «Заявки/неделю», базовый сценарий: ${Number(direct.summary?.weekly.base).toLocaleString("ru-RU", { maximumFractionDigits: 2 })}. Всего ${Number(direct.monthlyBaseLeads).toLocaleString("ru-RU", { maximumFractionDigits: 2 })} заявки за тот же период. Недельный бюджет стратегии Search считается отдельно с резервом для осторожного сценария.</span>${sourceSearch}</div>`
         : `<div class="g4-rsya-formula-v533"><span>Исходные данные: своя оценка цены заявки ${money(direct.expected)}. Search-прогноз можно заполнить в шаге 2.</span><span class="g4-rsya-formula-source-v533">Своя оценка</span></div>`}
       <div class="g4-rsya-formula-v533"><span>Ожидаемая цена заявки: ${direct.hasSearch ? `${money(direct.summary.budget)} / ${Number(direct.monthlyBaseLeads).toLocaleString("ru-RU", { maximumFractionDigits: 2 })} = ${money(direct.expected)}` : direct.expected === null ? "нет данных" : `своя оценка = ${money(direct.expected)}`}</span>${direct.hasSearch ? sourceSearch : '<span class="g4-rsya-formula-source-v533">Своя оценка</span>'}</div>
       <div class="g4-rsya-formula-v533"><span>Цена конверсии: ${number(direct.expected)} × 2 = ${money(direct.price)}</span>${sourceVideo}</div>
@@ -75335,13 +75376,6 @@ function g4RsyaLaunchStrategyHtmlV528(product, channel, campaign, d) {
       ${g4RsyaFieldV289({ product, channel, store: "startMethodV532", field: "expectedCpaManualRub", label: "Своя оценка цены заявки, ₽", value: settings.startMethodV532?.expectedCpaManualRub, type: "number", min: 0.01, step: 0.01, optionalEmpty: true })}
       <small>Заполните прогноз в Search → шаг 2 для автоматического расчёта.</small>
     </div>` : ""}
-    <section class="g4-rsya-direct-detail-v533" aria-label="Метрика">
-      <h5>Метрика</h5>
-      ${g4RsyaDirectCopyRowV533("Счётчик Метрики", g4RsyaTextV289(settings.metrikaCounter) || null, g4RsyaTextV289(settings.metrikaCounter), "Укажите счётчик в Gate 2 или восстановите сохранённое значение РСЯ.")}
-      ${g4RsyaDirectCopyRowV533("Цель Метрики", g4RsyaTextV289(settings.metrikaGoal) || null, g4RsyaTextV289(settings.metrikaGoal), "Укажите цель в Gate 2 или восстановите сохранённое значение РСЯ.")}
-      <p class="g4-rsya-goal-status-v363"><span class="status-pill status-${goal.status}">${goal.status === "ready" ? "Gate 2 · цель подтверждена" : "Gate 2 · нужна проверка"}</span> ${escapeHtml(goal.message)}</p>
-      <small class="g4-rsya-direct-rounding-v533">Счётчик: ${metrikaSource.counterStatus === "connected" ? "Gate 2" : "сохранённое поле РСЯ"} · цель: ${metrikaSource.goalStatus === "connected" ? "Gate 2" : "сохранённое поле РСЯ"}.</small>
-    </section>
     <div class="g4-rsya-strategy-row-v531"><strong>Проверка объёма конверсий</strong>
       ${g4RsyaVolumeHtmlV363(product, channel, d, false)}
       ${g4RsyaStrategyGuideV531("Подсветка целей: больше 20 конверсий в неделю — зелёный; 10–20 — жёлтый; меньше 10 — красный.", "https://b2b.yandex.ru/adv/news/personalnye-sovety-po-nastroyke-strategiy-uzhe-v-interfeyse-direkta")}

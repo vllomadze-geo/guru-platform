@@ -12015,16 +12015,9 @@ body {
   line-height: 1.5;
 }
 
-.g4-rsya-direct-main-v533 {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.g4-rsya-direct-secondary-v533 {
+.g4-rsya-direct-form-v534 {
   display: grid;
   gap: 0;
-  border-top: 1px solid var(--line);
 }
 
 .g4-rsya-direct-row-v533 {
@@ -12034,13 +12027,6 @@ body {
   gap: 5px 12px;
   padding: 10px 0;
   border-bottom: 1px solid var(--line);
-}
-
-.g4-rsya-direct-row-v533.is-prominent {
-  grid-template-columns: minmax(0, 1fr) auto;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 9px;
 }
 
 .g4-rsya-direct-label-v533 {
@@ -12056,11 +12042,6 @@ body {
   font-size: 14px;
 }
 
-.g4-rsya-direct-row-v533.is-prominent .g4-rsya-direct-value-v533 {
-  font-size: clamp(21px, 2.4vw, 30px);
-  line-height: 1.2;
-}
-
 .g4-rsya-direct-row-v533 .small-btn {
   grid-column: 2;
   grid-row: 2;
@@ -12071,6 +12052,54 @@ body {
   color: var(--muted);
   font-size: 11px;
 }
+
+.g4-rsya-direct-row-v533[data-g4rsya-direct-row-v534="type"] small {
+  grid-column: 1 / -1;
+  color: var(--muted);
+}
+
+.g4-rsya-direct-goal-row-v534 {
+  display: grid;
+  gap: 8px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.g4-rsya-direct-goal-kind-v534,
+.g4-rsya-direct-goal-row-v534 > small,
+.g4-rsya-direct-goal-identity-v534 small,
+.g4-rsya-direct-goal-price-v534 > span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.g4-rsya-direct-goal-layout-v534 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 230px);
+  gap: 12px;
+  align-items: start;
+}
+
+.g4-rsya-direct-goal-identity-v534,
+.g4-rsya-direct-goal-price-v534 {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface, #fff);
+}
+
+.g4-rsya-direct-goal-identity-v534 strong,
+.g4-rsya-direct-goal-price-v534 strong {
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.g4-rsya-direct-goal-price-v534 strong { font-size: 18px; }
+.g4-rsya-direct-goal-layout-v534 .small-btn { justify-self: start; }
+.g4-rsya-direct-goal-row-v534 .g4-rsya-goal-status-v363 { margin: 0; }
 
 .g4-rsya-formula-v533 {
   display: grid;
@@ -12193,7 +12222,7 @@ body {
   .g4-rsya-strategy-metrika-v531 > strong,
   .g4-rsya-strategy-metrika-v531 > .g4-rsya-goal-status-v363 { grid-column: auto; }
   .g4-rsya-start-grid-v532 { grid-template-columns: minmax(0, 1fr); }
-  .g4-rsya-direct-main-v533 { grid-template-columns: minmax(0, 1fr); }
+  .g4-rsya-direct-goal-layout-v534 { grid-template-columns: minmax(0, 1fr); }
 }
 
 .g4-v406-launch-level {
