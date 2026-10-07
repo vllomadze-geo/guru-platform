@@ -511,17 +511,15 @@ function g1BergenStatusV543(entry, ctx, jtbds) {
 
 function g1BergenTableHtmlV543(entry, ctx, jtbds) {
   const sections = g1BergenRowsV543(ctx, jtbds);
-  const columns = entry.competitors.length + 2;
-  const body = sections.map((section) => `<tr class="g1bp-stage-v543"><th colspan="${columns}" scope="colgroup">${section.title}</th></tr>${section.groups.map((group) => `${group.title ? `<tr class="g1bp-group-v543"><th colspan="${columns}" scope="colgroup">${escapeHtml(group.title)}</th></tr>` : ""}${group.rows.map((row) => `<tr data-g1bp-row-v543="${escapeAttr(row.label)}">
-    <th class="g1bp-label-v543" scope="row">${escapeHtml(row.label)}</th>
-    <td class="g1bp-own-v543">${row.ownHtml}</td>
+  const sectionCells = (title) => `<th class="g1bp-own-v543" scope="row">${escapeHtml(title)}</th>${entry.competitors.map(() => `<td class="g1bp-competitor-v543">${escapeHtml(title)}</td>`).join("")}`;
+  const body = sections.map((section) => `<tr class="g1bp-stage-v543">${sectionCells(section.title)}</tr>${section.groups.map((group) => `${group.title ? `<tr class="g1bp-group-v543">${sectionCells(group.title)}</tr>` : ""}${group.rows.map((row) => `<tr data-g1bp-row-v543="${escapeAttr(row.label)}">
+    <td class="g1bp-own-v543"><small class="g1bp-criterion-v545">${escapeHtml(row.label)}</small>${row.ownHtml}</td>
     ${entry.competitors.map((competitor) => {
       const inactive = section.directOnly && g1BergenTypeV543(competitor, jtbds) !== "direct";
-      return `<td class="g1bp-competitor-v543 ${inactive ? "g1bp-not-required-v543" : ""}" data-g1bp-cell-v543="${escapeAttr(competitor.id)}:${escapeAttr(row.label)}">${inactive ? '<span>не требуется</span>' : row.competitor(competitor)}</td>`;
+      return `<td class="g1bp-competitor-v543 ${inactive ? "g1bp-not-required-v543" : ""}" data-g1bp-cell-v543="${escapeAttr(competitor.id)}:${escapeAttr(row.label)}"><small class="g1bp-criterion-v545">${escapeHtml(row.label)}</small>${inactive ? '<span>не требуется</span>' : row.competitor(competitor)}</td>`;
     }).join("")}
   </tr>`).join("")}`).join("")}`).join("");
-  return `<div class="g1bp-scroll-v543" tabindex="0" aria-label="Таблица сравнения продукта"><table class="g1bp-table-v543" style="--comparison-min-width:${180 + (entry.competitors.length + 1) * 340}px;--comparison-mobile-min-width:${150 + (entry.competitors.length + 1) * 280}px;--comparison-data-share:${100 / (entry.competitors.length + 1)}%;--comparison-label-share:${180 / (entry.competitors.length + 1)}px;--comparison-mobile-label-share:${150 / (entry.competitors.length + 1)}px"><colgroup><col class="g1bp-label-col-v543"><col span="${entry.competitors.length + 1}"></colgroup><thead><tr>
-    <th class="g1bp-label-v543" scope="col">Критерий</th>
+  return `<div class="g1bp-scroll-v543" tabindex="0" aria-label="Таблица сравнения продукта"><table class="g1bp-table-v543" style="--comparison-min-width:${(entry.competitors.length + 1) * 340}px;--comparison-mobile-min-width:${(entry.competitors.length + 1) * 280}px;--comparison-data-share:${100 / (entry.competitors.length + 1)}%"><colgroup><col span="${entry.competitors.length + 1}"></colgroup><thead><tr>
     <th class="g1bp-own-v543" scope="col"><span class="project-comparison-own-label">Наш продукт (авто)</span><strong>${escapeHtml(ctx.product.name)}</strong>${entry.competitors.length ? "" : '<button type="button" class="small-btn g1bp-add-v543" data-g1bp-add-v543>+ Конкурент</button>'}</th>
     ${entry.competitors.map((competitor, index) => `<th class="g1bp-competitor-head-v543" scope="col" data-g1bp-head-v543="${escapeAttr(competitor.id)}">
       <label><span>Конкурент ${index + 1} · название</span><input value="${escapeAttr(competitor.name || "")}" data-g1bp-name-v543="${escapeAttr(competitor.id)}" aria-label="Название конкурента ${index + 1}"></label>
