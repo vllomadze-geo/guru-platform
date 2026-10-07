@@ -43317,6 +43317,7 @@ function projectComparisonProductHtml(product = guruV194SelectedProduct(state)) 
             <th class="project-comparison-own-sticky"><span class="project-comparison-own-label">Наш продукт</span><strong>${escapeHtml(product.name)}</strong></th>
             ${entry.competitors.map((competitor) => `<th>
               <input value="${escapeAttr(competitor.name)}" data-project-comparison-product-competitor="${escapeAttr(competitor.id)}" data-project-comparison-product-id="${escapeAttr(product.id)}" aria-label="Название конкурента продукта" />
+              <label class="project-comparison-product-site-v538"><span>Сайт (домен)</span><input type="text" inputmode="url" autocomplete="url" value="${escapeAttr(competitor.siteDomainV538 || "")}" placeholder="magicmag.net" data-project-comparison-product-competitor-site-v538="${escapeAttr(competitor.id)}" data-project-comparison-product-id="${escapeAttr(product.id)}" aria-label="Сайт конкурента продукта (домен)" /><small aria-live="polite"></small></label>
               <div class="project-comparison-competitor-tools"><button type="button" data-project-comparison-product-remove-competitor="${escapeAttr(competitor.id)}" data-project-comparison-product-id="${escapeAttr(product.id)}">Удалить</button></div>
             </th>`).join("")}
           </tr></thead>
@@ -43378,12 +43379,44 @@ function updateProjectComparisonInput(target) {
 document.addEventListener("input", (event) => updateProjectComparisonInput(event.target));
 document.addEventListener("change", (event) => updateProjectComparisonInput(event.target));
 
-function updateProjectComparisonProductInput(target) {
+function projectComparisonProductDomainV538(value) {
+  const raw = String(value || "").trim();
+  if (!raw || (/^[a-z][\w+.-]*:\/\//i.test(raw) && !/^https?:\/\//i.test(raw))) return "";
+  try {
+    const url = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+    if (!/^https?:$/.test(url.protocol) || url.username || url.password) return "";
+    const hostname = url.hostname.toLowerCase().replace(/\.$/, "").replace(/^www\./, "");
+    return hostname.includes(".") && hostname.split(".").every((part) => /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(part))
+      ? hostname : "";
+  } catch (_error) {
+    return "";
+  }
+}
+
+function updateProjectComparisonProductInput(target, eventType = "change") {
   const productId = String(target?.dataset?.projectComparisonProductId || "").trim();
   if (!productId) return false;
   const entry = ensureProjectComparisonProduct(productId);
   if (!entry) return false;
-  if (target.dataset.projectComparisonProductCompetitor) {
+  if (target.dataset.projectComparisonProductCompetitorSiteV538) {
+    const competitor = entry.competitors.find(
+      (item) => item.id === target.dataset.projectComparisonProductCompetitorSiteV538,
+    );
+    if (!competitor) return false;
+    const domain = projectComparisonProductDomainV538(target.value);
+    const error = target.closest(".project-comparison-product-site-v538")?.querySelector("small");
+    if (eventType === "input") {
+      if (error) error.textContent = "";
+      return false;
+    }
+    if (target.value.trim() && !domain) {
+      if (error) error.textContent = "Введите домен или ссылку на сайт.";
+      return false;
+    }
+    if (error) error.textContent = "";
+    target.value = domain;
+    competitor.siteDomainV538 = domain;
+  } else if (target.dataset.projectComparisonProductCompetitor) {
     const competitor = entry.competitors.find(
       (item) => item.id === target.dataset.projectComparisonProductCompetitor,
     );
@@ -43405,10 +43438,10 @@ function updateProjectComparisonProductInput(target) {
 }
 
 document.addEventListener("input", (event) =>
-  updateProjectComparisonProductInput(event.target),
+  updateProjectComparisonProductInput(event.target, event.type),
 );
 document.addEventListener("change", (event) =>
-  updateProjectComparisonProductInput(event.target),
+  updateProjectComparisonProductInput(event.target, event.type),
 );
 
 document.addEventListener("click", (event) => {
@@ -70951,7 +70984,10 @@ g3ProductJourneyPrepareSource = function (target) {
   }
   if (target.kind === "gate1-project-comparison") {
     getGate1AccordionState().subblocks.site_audit = true;
-    if (state.projectComparison) state.projectComparison.open = true;
+    if (target.productId) {
+      const entry = ensureProjectComparisonProduct(target.productId);
+      if (entry) entry.open = true;
+    } else if (state.projectComparison) state.projectComparison.open = true;
   }
   if (target.kind === "gate2-card") {
     const gate = state?.gates?.find((item) => item.id === "gate-2");
@@ -70989,9 +71025,9 @@ g3ProductJourneyFindSource = function (target) {
       )}"]`,
     );
   if (target.kind === "gate1-project-comparison")
-    return document.querySelector(
-      "[data-project-comparison-toggle], .project-comparison-heading",
-    );
+    return target.productId
+      ? document.querySelector(`[data-project-comparison-product="${esc(target.productId)}"]`)
+      : document.querySelector("[data-project-comparison-toggle], .project-comparison-heading");
   if (target.kind === "gate0-extra") {
     const gate = state?.gates?.find((item) => item.id === "gate-0");
     const card = gate?.cards?.find((item) => item.id === target.cardId);
@@ -75526,6 +75562,31 @@ function g4RsyaLaunchGroupExtrasV537(group, d) {
   return `${adRows || `${item("Быстрые ссылки", "")}${item("Уточнения", "")}`}${item("Промоакция", g4RsyaLaunchPromotionTextV537(d.campaign.promotion))}`;
 }
 
+function g4RsyaCompetitorDomainsV538(productId) {
+  const competitors = state.projectComparison?.productsById?.[String(productId || "").trim()]?.competitors;
+  const seen = new Set();
+  return (Array.isArray(competitors) ? competitors : []).flatMap((competitor) => {
+    const domain = projectComparisonProductDomainV538(competitor.siteDomainV538);
+    if (!domain || seen.has(domain)) return [];
+    seen.add(domain);
+    return [domain];
+  });
+}
+
+function g4RsyaLaunchCompetitorInterestsV538(productId) {
+  const domains = g4RsyaCompetitorDomainsV538(productId);
+  const jump = escapeAttr(JSON.stringify({ gateId: "gate-1", kind: "gate1-project-comparison", productId }));
+  const empty = state.projectComparison?.productsById?.[productId]?.competitors?.length
+    ? "Укажите сайты у ключевых конкурентов в Gate 1, блок Сравнение проектов"
+    : "Добавьте ключевых конкурентов в Gate 1, блок Сравнение проектов";
+  return `<div class="g4-rsya-competitor-interests-v538">
+    <div class="g4-rsya-competitor-count-v538"><strong>${domains.length} из 30</strong><small>Источник: <a href="https://yandex.ru/support/direct/ru/products-text-image-ads/user-profile" target="_blank" rel="noopener noreferrer">Яндекс · максимум 30 условий</a></small></div>
+    ${domains.length ? domains.map((domain) => g4RsyaLaunchValueV537(domain)).join("") : `<button type="button" class="g4-rsya-competitor-empty-v538" data-g4-jump-target="${jump}">${empty} →</button>`}
+    ${domains.length > 30 ? '<small>Для одного профиля в Директе можно выбрать не более 30 условий.</small>' : ""}
+    <small>Вставляйте домен в поле Директа и выбирайте вариант «Посетители сайтов, схожих по тематике с &lt;домен&gt;». На старте достаточно 5–10 сайтов (<a href="https://www.youtube.com/watch?v=XFzBwc0kVGQ" target="_blank" rel="noopener noreferrer">практика автора видео, не официальный источник</a>).</small>
+  </div>`;
+}
+
 function g4RsyaLaunchGroupHtmlV537(product, campaign, d, group, defaults, fixed, key) {
   const template = g4RsyaCampaignUtmTemplateV478(campaign);
   const urlTemplate = template || G4_YANDEX_RECOMMENDED_UTM_V488.rsya;
@@ -75537,7 +75598,7 @@ function g4RsyaLaunchGroupHtmlV537(product, campaign, d, group, defaults, fixed,
     ${item(2, "Сценарий группы", g4RsyaLaunchValueV537("Вся заинтересованная аудитория", { copy: false }), video)}
     ${item(3, "Автотаргетинг", g4RsyaLaunchValueV537("Включён", { copy: false }), video)}
     ${item(4, "Тематические слова", `<div class="g4-rsya-launch-subrow-v537"><b>Ключевые фразы</b>${g4RsyaLaunchValueV537(defaults.keywords)}</div><div class="g4-rsya-launch-subrow-v537"><b>Минус-фразы</b>${g4RsyaLaunchValueV537("Не заполнять на старте", { copy: false })}</div>`, `${video}. Яндекс допускает минус-фразы в РСЯ для исключения неподходящих площадок: <a href="https://yandex.ru/support/direct/ru/keywords/negative-keywords" target="_blank" rel="noopener noreferrer">Справка Директа</a>.`)}
-    ${item(5, "Интересы и привычки", g4RsyaLaunchValueV537(group.interests))}
+    ${item(5, "Интересы и привычки", g4RsyaLaunchCompetitorInterestsV538(product))}
     ${item(6, "Сегменты аудитории", `${g4RsyaLaunchValueV537(group.retargetingSegments)}<div class="g4-rsya-launch-subrow-v537"><b>Офферный ретаргетинг</b>${g4RsyaLaunchValueV537("не применимо (только товарные объявления)", { copy: false })}</div>`)}
     ${item(7, "Дополнительные элементы объявлений", g4RsyaLaunchGroupExtrasV537(group, d))}
     ${item(8, "Параметры URL", g4RsyaLaunchValueV537(urlTemplate), template ? "UTM-шаблон РСЯ из кампании." : "Рекомендуемый шаблон РСЯ · в кампании ещё не сохранён.")}

@@ -12650,6 +12650,39 @@ body {
   line-height: 1.5;
 }
 .g4-rsya-launch-value-v537 > .small-btn { flex: 0 0 auto; }
+.g4-rsya-competitor-interests-v538 {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.g4-rsya-competitor-count-v538 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.g4-rsya-competitor-count-v538 small,
+.g4-rsya-competitor-interests-v538 > small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.g4-rsya-competitor-interests-v538 > .g4-rsya-launch-value-v537 {
+  align-items: center;
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+}
+.g4-rsya-competitor-empty-v538 {
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
 .g4-rsya-launch-subrow-v537 {
   display: grid;
   grid-template-columns: minmax(140px, 25%) minmax(0, 1fr);
@@ -13553,6 +13586,26 @@ body {
 .project-comparison input {
   padding: 6px 7px;
 }
+.project-comparison-product-site-v538 {
+  display: grid;
+  gap: 3px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+.project-comparison thead .project-comparison-product-site-v538 input {
+  border-color: var(--line);
+  background: #fff;
+  font-size: 12px;
+  font-weight: 400;
+}
+.project-comparison-product-site-v538 small {
+  color: var(--text);
+  font-size: 10px;
+  line-height: 1.35;
+}
+.project-comparison-product-site-v538 small:empty { display: none; }
 
 .project-comparison textarea:hover,
 .project-comparison textarea:focus,
