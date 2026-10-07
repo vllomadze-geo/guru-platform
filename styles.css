@@ -11917,6 +11917,53 @@ body {
 
 .g4-v406-launch { display: grid; gap: 16px; }
 
+.g4-rsya-campaign-settings-v530 > h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.g4-rsya-campaign-settings-v530 .g1-input.is-empty {
+  background: var(--surface, #fff) !important;
+  border-color: var(--line) !important;
+}
+
+.g4-rsya-v289 .g1-input.is-empty,
+.g4-rsya-v289 .g1-input.is-filled,
+.g4-rsya-v289 .g1-input.has-error,
+.g4-rsya-v289 .g1-input:disabled,
+.g4-rsya-v289 .g1-input[readonly] {
+  background: var(--surface, #fff) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+
+.g4-rsya-strategy-v531 {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  max-width: 720px;
+}
+
+.g4-rsya-strategy-fixed-v531,
+.g4-rsya-strategy-row-v531 {
+  display: grid;
+  gap: 8px;
+}
+
+.g4-rsya-strategy-fixed-v531 > strong,
+.g4-rsya-strategy-row-v531 > strong { font-size: 13px; }
+
+.g4-rsya-strategy-guide-v531 {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.g4-rsya-strategy-guide-v531 a { color: inherit; text-decoration: underline; }
+.g4-rsya-strategy-manual-v531 { color: var(--muted); font-size: 12px; }
+.g4-rsya-strategy-v531 .g4-rsya-volume-v363 { background: var(--surface, #fff); }
+
 .g4-v406-launch-level {
   padding: 16px;
   border: 1px solid var(--line);

@@ -72888,9 +72888,10 @@ function g4RsyaCampaignIssuesV289(campaign, d, product = "") {
   if (!g4RsyaTextV289(campaign.campaignName)) issues.push("Название кампании: заполните поле");
   if (!g4RsyaTextV289(d.campaign.geography)) issues.push("География: выберите регион в Директе и зафиксируйте его здесь");
   if (!g4RsyaTextV289(d.campaign.schedule)) issues.push("Расписание: укажите режим показа");
-  if (!g4RsyaTextV289(d.campaign.strategy)) issues.push("Стратегия: выберите вариант");
-  if (!g4RsyaTextV289(campaign.budget)) issues.push("Бюджет: укажите сумму без автоматического пересчёта периода");
-  if (!g4RsyaTextV289(d.campaign.budgetPeriod)) issues.push("Бюджет: укажите период");
+  const volume = g4RsyaVolumeAssessmentV363(d.campaign);
+  if (!volume.complete) issues.push("Стратегия: проверьте объём конверсий за семь завершённых дней");
+  const weeklyBudget = g4RsyaPositiveNumberV363(d.campaign.weeklyBudgetRubV531);
+  if (weeklyBudget === null || weeklyBudget < 300) issues.push("Недельный бюджет: укажите не менее 300 ₽");
   if (["max_conversions", "target_cpa", "target_drr"].includes(d.campaign.strategy)) {
     if (!g4RsyaTextV289(d.campaign.metrikaCounter)) issues.push("Для выбранной стратегии укажите счётчик Метрики");
     if (!g4RsyaTextV289(d.campaign.metrikaGoal)) issues.push("Для выбранной стратегии укажите цель Метрики");
@@ -72900,8 +72901,9 @@ function g4RsyaCampaignIssuesV289(campaign, d, product = "") {
       if (goal.status !== "ready") issues.push(`Связь с Gate 2: ${goal.message}`);
     }
   }
-  if (d.campaign.strategy === "target_cpa" && g4RsyaPositiveNumberV363(d.campaign.strategyTarget?.targetCpaRub) === null)
-    issues.push("Целевая цена конверсии для РСЯ: укажите положительную сумму в ₽");
+  if (g4RsyaLaunchCpaUnlockedV531(campaign, d) && g4RsyaTextV289(d.campaign.strategyTarget?.targetCpaRub) &&
+    (g4RsyaPositiveNumberV363(d.campaign.strategyTarget?.targetCpaRub) ?? 0) < 0.9)
+    issues.push("Целевая цена конверсии для РСЯ: минимум 0,9 ₽");
   if (d.campaign.strategy === "target_drr" && g4RsyaPositiveNumberV363(d.campaign.strategyTarget?.targetDrrPercent) === null)
     issues.push("Целевая ДРР для РСЯ: укажите положительный процент");
   (d.campaign.excludedPlacements || []).forEach((row, index) => {
@@ -72973,8 +72975,12 @@ function g4RsyaCampaignStatusV289(campaign, d, product = "") {
       g4RsyaGroupFoundationV455(product, group).landing,
     )),
   ]);
+  const legacy = d.campaign.legacyStrategySettingsV531 || {};
+  const userCampaignValues = Object.entries(d.campaign)
+    .filter(([key]) => !["strategyMigrationV531", "legacyStrategySettingsV531", "strategyBeforeVolumeV531", "paymentModel", "budgetPeriod"].includes(key))
+    .map(([, value]) => value);
   const touched = d.groups.some((group) => g4RsyaGroupStatusV289(product, group) !== "not_started") ||
-    [campaign.campaignName, campaign.budget, campaign.utm, ...Object.values(d.campaign)].some(g4RsyaAnyFilledV363);
+    [campaign.campaignName, campaign.budget, campaign.utm, legacy.paymentModel, legacy.budgetPeriod, ...userCampaignValues].some(g4RsyaAnyFilledV363);
   if (!touched) return "not_started";
   if (g4RsyaCampaignProblemIssuesV363(campaign, d, product).length) return "problem";
   return campaignIssues.length || groupIssues.length ? "in_progress" : "ready";
@@ -73042,14 +73048,14 @@ function g4RsyaFieldV289(options) {
   const dynamicOptional = ["callout", "sitelink"].includes(options.store)
     ? ' data-guru-optional-mode="empty"'
     : "";
-  const attrs = `id="${escapeAttr(id)}" ${options.readonly ? "" : "data-g4rsya-v289-bind"} data-g4rsya-v289-product="${escapeAttr(options.product)}" data-g4rsya-v289-channel="${escapeAttr(options.channel || "")}" data-g4rsya-v289-store="${escapeAttr(options.store)}" data-g4rsya-v289-field="${escapeAttr(options.field || "value")}" data-g4rsya-v289-group-id="${escapeAttr(options.groupId || "")}" data-g4rsya-v289-ad-id="${escapeAttr(options.adId || "")}" data-g4rsya-v289-item-id="${escapeAttr(options.itemId || "")}" data-g4rsya-v289-kind="${escapeAttr(options.kind || "")}" data-g4rsya-v289-required="${options.required ? "1" : "0"}" data-g4rsya-v482-optional-empty="${options.optionalEmpty ? "1" : "0"}"${dynamicOptional}${options.virtual ? ' data-g4rsya-v482-virtual="1"' : ""}${options.readonly ? ' readonly aria-readonly="true" data-g4rsya-v450-connected="gate-2"' : ""}`;
+  const attrs = `id="${escapeAttr(id)}" ${options.readonly ? "" : "data-g4rsya-v289-bind"} data-g4rsya-v289-product="${escapeAttr(options.product)}" data-g4rsya-v289-channel="${escapeAttr(options.channel || "")}" data-g4rsya-v289-store="${escapeAttr(options.store)}" data-g4rsya-v289-field="${escapeAttr(options.field || "value")}" data-g4rsya-v289-group-id="${escapeAttr(options.groupId || "")}" data-g4rsya-v289-ad-id="${escapeAttr(options.adId || "")}" data-g4rsya-v289-item-id="${escapeAttr(options.itemId || "")}" data-g4rsya-v289-kind="${escapeAttr(options.kind || "")}" data-g4rsya-v289-required="${options.required ? "1" : "0"}" data-g4rsya-v482-optional-empty="${options.optionalEmpty ? "1" : "0"}"${dynamicOptional}${options.virtual ? ' data-g4rsya-v482-virtual="1"' : ""}${options.readonly ? ' readonly aria-readonly="true" data-g4rsya-v450-connected="gate-2"' : ""}${options.disabled ? " disabled" : ""}${options.min !== undefined ? ` min="${escapeAttr(options.min)}"` : ""}${options.step !== undefined ? ` step="${escapeAttr(options.step)}"` : ""}`;
   const control = options.textarea
     ? `<textarea class="g1-input ${emptyClass} ${issues.length ? "has-error" : ""}" rows="${options.rows || 2}" ${attrs} placeholder="${escapeAttr(options.placeholder || "")}">${escapeHtml(value)}</textarea>`
     : `<input class="g1-input ${emptyClass} ${issues.length ? "has-error" : ""}" type="${options.type || "text"}" value="${escapeAttr(value)}" ${attrs} placeholder="${escapeAttr(options.placeholder || "")}" />`;
   return `<label class="g4-rsya-field-v289 ${options.full ? "is-full" : ""} ${options.readonly ? "is-readonly-v450" : ""}">
     <span class="g4-rsya-field-label-v289"><b>${escapeHtml(options.label)}</b>${options.readonly ? '<small class="g4-rsya-source-badge-v450">подключено из Gate 2</small>' : options.badge ? `<small class="g4-rsya-derived-badge-v456">${escapeHtml(options.badge)}</small>` : options.kind ? `<small data-g4rsya-v289-counter>${escapeHtml(g4RsyaCounterV289(value, options.kind))}</small>` : ""}</span>
     ${options.hint ? `<small class="g4-rsya-hint-v289">${escapeHtml(options.hint)}</small>` : ""}
-    <span class="g4-rsya-control-v289">${control}${options.copy ? `<button type="button" class="small-btn" data-g4rsya-v289-copy="${escapeAttr(g4RsyaCopyValueV289(value, options.copyMode))}" data-g4rsya-v289-copy-mode="${escapeAttr(options.copyMode || "raw")}" data-g4rsya-v289-copy-target="${escapeAttr(id)}" ${value.trim() ? "" : "disabled"}>Копировать</button>` : ""}</span>
+    <span class="g4-rsya-control-v289">${control}${options.copy ? `<button type="button" class="small-btn" data-g4rsya-v289-copy="${escapeAttr(g4RsyaCopyValueV289(value, options.copyMode))}" data-g4rsya-v289-copy-mode="${escapeAttr(options.copyMode || "raw")}" data-g4rsya-v289-copy-target="${escapeAttr(id)}" ${value.trim() && !options.copyDisabled && !options.disabled ? "" : "disabled"}>Копировать</button>` : ""}</span>
     <small class="g4-rsya-error-v289" data-g4rsya-v289-error>${issues.map(escapeHtml).join(" · ")}</small>
     ${options.warning !== undefined ? `<small class="g4-rsya-recommendation-v478" data-g4rsya-v478-warning>${escapeHtml(options.warning)}</small>` : ""}
   </label>`;
@@ -73225,19 +73231,20 @@ function g4RsyaPlacementHtmlV363(product, channel, d) {
   </div>`;
 }
 
-function g4RsyaVolumeHtmlV363(product, channel, d) {
+function g4RsyaVolumeHtmlV363(product, channel, d, showGuide = true) {
   const check = d.campaign.conversionVolumeCheck;
   const assessment = g4RsyaVolumeAssessmentV363(d.campaign);
-  const tone = assessment.passed ? "ready" : g4RsyaEffectivePaymentV363(d.campaign) === "conversions" ? "problem" : "in_progress";
+  const tone = assessment.complete ? (assessment.count > 20 ? "ready" : assessment.count >= 10 ? "in_progress" : "problem") : "in_progress";
+  const label = !assessment.complete ? "Не подтверждено" : assessment.count > 20 ? ">20 подтверждено" : assessment.count >= 10 ? "10–20 подтверждено" : "Меньше 10";
   return `<div class="g4-rsya-volume-v363">
-    ${g4RsyaGuideV363("volume", "Проверка ≥10 за неделю. ")}
+    ${showGuide ? g4RsyaGuideV363("volume", "Проверка ≥10 за неделю. ") : ""}
     <div class="g4-rsya-form-v289">
       ${g4RsyaFieldV289({ product, channel, store: "conversionVolumeCheck", field: "from", label: "Начало периода", value: check.from, type: "date" })}
       ${g4RsyaFieldV289({ product, channel, store: "conversionVolumeCheck", field: "to", label: "Конец периода", value: check.to, type: "date" })}
       ${g4RsyaFieldV289({ product, channel, store: "conversionVolumeCheck", field: "count", label: "Достижений выбранной цели", value: check.count, type: "number" })}
       ${g4RsyaFieldV289({ product, channel, store: "conversionVolumeCheck", field: "evidenceUrl", label: "Ссылка на отчёт Метрики", value: check.evidenceUrl, kind: "url", copy: true })}
     </div>
-    <p class="g4-rsya-volume-result-v363"><span class="status-pill status-${tone}">${assessment.passed ? "≥10 подтверждено" : "Не подтверждено"}</span> ${escapeHtml(assessment.message)}</p>
+    <p class="g4-rsya-volume-result-v363"><span class="status-pill status-${tone}">${label}</span> ${escapeHtml(assessment.message)}</p>
     ${check.checkedAt ? `<small>Проверено вручную: ${escapeHtml(new Date(check.checkedAt).toLocaleString("ru-RU"))}</small>` : ""}
   </div>`;
 }
@@ -73278,10 +73285,6 @@ function g4RsyaSettingsHtmlV289(
   scope = "all",
   renderOptions = {},
 ) {
-  const conversionStrategy = g4RsyaConversionStrategyV363(d.campaign.strategy);
-  const goal = conversionStrategy ? g4RsyaGoalQualityV363(product, d.campaign) : null;
-  const volume = conversionStrategy ? g4RsyaVolumeAssessmentV363(d.campaign) : null;
-  const metrikaSource = g4RsyaMetrikaSourceV450(product, state);
   const campaignHtml = `<article class="g4-rsya-subcard-v289" id="g4-rsya-launch-settings-v453">${scope === "campaign" ? "" : "<h5>Уровень кампании</h5>"}<div class="g4-rsya-form-v289">
       ${g4RsyaGuideV363("campaign", "Решение и название. ")}
       ${g4RsyaSelectFieldV289({ product, channel, store: "campaignCommon", field: "decision", label: "Решение", value: campaign.decision, options: G4_SEARCH_DECISIONS })}
@@ -73289,21 +73292,7 @@ function g4RsyaSettingsHtmlV289(
       ${g4RsyaGuideV363("geoSchedule", "Где и когда показывать. ")}
       ${g4RsyaFieldV289({ product, channel, store: "campaign", field: "geography", label: "География", value: d.campaign.geography, required: true, copy: true, hint: "Выберите регион вручную в Директе." })}
       ${g4RsyaFieldV289({ product, channel, store: "campaign", field: "schedule", label: "Расписание", value: d.campaign.schedule, required: true, copy: true, hint: "Настройте расписание в Директе." })}
-      ${g4RsyaGuideV363("strategy", "Стратегия и оплата — разные решения. ")}
-      ${g4RsyaSelectFieldV289({ product, channel, store: "campaign", field: "strategy", label: "Стратегия", value: d.campaign.strategy, options: G4_RSYA_STRATEGIES_V289, hint: "Целевая цена и ДРР — ограничения «Максимума конверсий» в Директе." })}
-      ${conversionStrategy ? `${g4RsyaGuideV363("payment", "Модель оплаты. ")}${g4RsyaSelectFieldV289({ product, channel, store: "campaign", field: "paymentModel", label: "Модель оплаты", value: d.campaign.paymentModel, options: [["", "— Не выбрано —"], ["clicks", "За клики"], ["conversions", "За конверсии"]] })}` : d.campaign.strategy === "max_clicks" ? '<p class="g4-rsya-note-v289">Модель оплаты: за клики. Для «Максимума кликов» другой вариант недоступен.</p>' : ""}
-      ${d.campaign.strategy === "target_cpa" ? `${g4RsyaGuideV363("targetCpa", "Цель для РСЯ. ")}${g4RsyaFieldV289({ product, channel, store: "strategyTarget", field: "targetCpaRub", label: "Целевая цена конверсии для РСЯ, ₽", value: d.campaign.strategyTarget.targetCpaRub, copy: true, placeholder: "Например, 900" })}${g4RsyaSearchForecastHtmlV363(product)}` : ""}
-      ${d.campaign.strategy === "target_drr" ? `${g4RsyaGuideV363("targetDrr", "Цель для РСЯ. ")}${g4RsyaFieldV289({ product, channel, store: "strategyTarget", field: "targetDrrPercent", label: "Целевая ДРР для РСЯ, %", value: d.campaign.strategyTarget.targetDrrPercent, copy: true, placeholder: "Например, 15" })}<p class="g4-rsya-note-v289">Перед переносом вручную проверьте передачу дохода или ценности цели в Директ: GURU не получает этот показатель.</p>` : ""}
-      ${g4RsyaGuideV363("budget", "Бюджет и период. ")}
-      ${g4RsyaFieldV289({ product, channel, store: "campaignCommon", field: "budget", label: "Бюджет", value: campaign.budget, required: true, copy: true, hint: "Сумма не пересчитывается между месяцем и неделей." })}
-      ${g4RsyaSelectFieldV289({ product, channel, store: "campaign", field: "budgetPeriod", label: "Период бюджета", value: d.campaign.budgetPeriod, options: [["", "— укажите период —"], ["week", "Неделя"], ["month", "Месяц"], ["total", "Весь период"]] })}
       ${g4RsyaPromotionHtmlV457(product, channel, d.campaign.promotion)}
-      ${g4RsyaGuideV363("metrika", "Счётчик и цель Метрики. ")}
-      ${g4RsyaFieldV289({ product, channel, store: "campaign", field: "metrikaCounter", label: "Счётчик Метрики", value: d.campaign.metrikaCounter, copy: true, readonly: metrikaSource.counterStatus === "connected", hint: metrikaSource.counterStatus === "connected" ? "Источник: metrikaCompanyV374.counterId." : "В Gate 2 нет номера счётчика — поле можно заполнить вручную." })}
-      ${g4RsyaFieldV289({ product, channel, store: "campaign", field: "metrikaGoal", label: "Цель Метрики", value: d.campaign.metrikaGoal, copy: true, readonly: metrikaSource.goalStatus === "connected", hint: metrikaSource.goalStatus === "connected" ? "Источник: metrikaQualityV360.perProduct[].goalId для этого товара." : "Для товара нет goalId в Gate 2 — поле можно оставить пустым или заполнить вручную." })}
-      ${goal ? `<p class="g4-rsya-goal-status-v363"><span class="status-pill status-${goal.status}">${goal.status === "ready" ? "Gate 2 · цель подтверждена" : "Gate 2 · нужна проверка"}</span> ${escapeHtml(goal.message)}</p>` : ""}
-      ${conversionStrategy ? g4RsyaVolumeHtmlV363(product, channel, d) : ""}
-      ${conversionStrategy && g4RsyaEffectivePaymentV363(d.campaign) === "clicks" && volume.complete && !volume.passed ? '<p class="g4-rsya-warning-v363">По выбранной цели меньше 10 достижений в неделю. Оплата за клики доступна, но конверсионной стратегии может не хватить данных для обучения.</p>' : ""}
       ${g4RsyaGuideV363("utm", "Метки ссылок. ")}
       ${g4RsyaFieldV289({ product, channel, store: "campaignCommon", field: "utmTemplate", label: "UTM-шаблон кампании", value: g4RsyaCampaignUtmTemplateV478(campaign), textarea: true, full: true, copy: true, placeholder: "utm_source=yandex&utm_medium=cpc&utm_campaign=...", hint: "Повторное применение заменяет одноимённые UTM, сохраняя остальные параметры и якорь." })}
     </div>${g4RsyaPlacementHtmlV363(product, channel, d)}</article>`;
@@ -74703,11 +74692,11 @@ function g4RsyaAdPackageV289(campaign, d, group, ad, product = "") {
     `ГРУППА: ${defaults.name}`,
     `ГЕОГРАФИЯ: ${g4RsyaTextV289(d.campaign.geography)}`,
     `РАСПИСАНИЕ: ${g4RsyaTextV289(d.campaign.schedule)}`,
-    `СТРАТЕГИЯ: ${(G4_RSYA_STRATEGIES_V289.find(([value]) => value === d.campaign.strategy) || ["", ""])[1]}`,
-    `МОДЕЛЬ ОПЛАТЫ: ${g4RsyaEffectivePaymentV363(d.campaign) === "conversions" ? "за конверсии" : g4RsyaEffectivePaymentV363(d.campaign) === "clicks" ? "за клики" : "не выбрано"}`,
-    ...(d.campaign.strategy === "target_cpa" ? [`ЦЕЛЕВАЯ ЦЕНА КОНВЕРСИИ ДЛЯ РСЯ: ${g4RsyaTextV289(d.campaign.strategyTarget?.targetCpaRub)} ₽`] : []),
-    ...(d.campaign.strategy === "target_drr" ? [`ЦЕЛЕВАЯ ДРР ДЛЯ РСЯ: ${g4RsyaTextV289(d.campaign.strategyTarget?.targetDrrPercent)} %`] : []),
-    `БЮДЖЕТ: ${g4RsyaTextV289(campaign.budget)} (${g4RsyaTextV289(d.campaign.budgetPeriod)})`,
+    `СТРАТЕГИЯ: ${g4RsyaVolumeAssessmentV363(d.campaign).complete ? d.campaign.strategy === "max_clicks" ? "Оптимизация кликов" : "Максимум конверсий" : "Определится после проверки объёма"}`,
+    `МОДЕЛЬ ОПЛАТЫ: за клики`,
+    ...(g4RsyaLaunchCpaUnlockedV531(campaign, d) && g4RsyaTextV289(d.campaign.strategyTarget?.targetCpaRub) ? [`ЦЕЛЕВАЯ ЦЕНА КОНВЕРСИИ ДЛЯ РСЯ: ${g4RsyaTextV289(d.campaign.strategyTarget.targetCpaRub)} ₽`] : []),
+    ...(g4RsyaTextV289(d.campaign.strategyTarget?.targetDrrPercent) ? [`ЦЕЛЕВАЯ ДРР ДЛЯ РСЯ: ${g4RsyaTextV289(d.campaign.strategyTarget.targetDrrPercent)} %`] : []),
+    `БЮДЖЕТ: ${g4RsyaTextV289(d.campaign.weeklyBudgetRubV531)} ₽ (неделя)`,
     ...(promotionTouched ? [
       `ПРОМОАКЦИЯ · ТИП: ${g4RsyaTextV289(promotion.type)}`,
       `ПРОМОАКЦИЯ · ОПИСАНИЕ: ${g4RsyaTextV289(promotion.description)}`,
@@ -75076,7 +75065,8 @@ function g4RsyaGroupsBodyV453(product, channel, campaign, d) {
 }
 
 function g4RsyaCampaignSettingsBodyV528(product, channel, campaign, d) {
-  return `<div class="g4-v406-launch g4-rsya-workflow-v453" data-g4rsya-v453-panel-body="settings">
+  return `<div class="g4-v406-launch g4-rsya-workflow-v453 g4-rsya-campaign-settings-v530" data-g4rsya-campaign-settings>
+    <h3>Настройки кампании</h3>
     <section class="g4-v406-launch-level g4-rsya-workflow-level-v453">
       <h4>Уровень кампании</h4>
       ${g4RsyaSettingsHtmlV289(product, channel, campaign, d, "campaign")}
@@ -75126,11 +75116,58 @@ function g4RsyaLaunchReadinessHtmlV528(label, ready) {
   });
 }
 
+// Старые значения сохраняются отдельно: месячный бюджет нельзя считать недельным.
+function g4RsyaMigrateStrategyV531(campaign, d) {
+  const settings = d.campaign;
+  if (!settings.strategyMigrationV531) {
+    settings.legacyStrategySettingsV531 = {
+      strategy: settings.strategy,
+      paymentModel: settings.paymentModel,
+      budgetPeriod: settings.budgetPeriod,
+      budget: campaign?.budget ?? "",
+    };
+    if (settings.weeklyBudgetRubV531 === undefined) {
+      const previousWeekly = settings.budgetPeriod === "week" ? String(campaign?.budget ?? "") : "";
+      const amountOnly = previousWeekly.trim().replace(/\s*(?:₽|руб\.?)\s*$/i, "");
+      settings.weeklyBudgetRubV531 = g4RsyaPositiveNumberV363(amountOnly) === null
+        ? previousWeekly : amountOnly.replace(/\s/g, "").replace(",", ".");
+    }
+    settings.paymentModel = "clicks";
+    settings.budgetPeriod = "week";
+    settings.strategyMigrationV531 = true;
+  }
+  const volume = g4RsyaVolumeAssessmentV363(settings);
+  if (volume.complete) {
+    const recommended = volume.count >= 10 ? "max_conversions" : "max_clicks";
+    if (settings.strategy !== recommended) {
+      if (!settings.strategyBeforeVolumeV531) settings.strategyBeforeVolumeV531 = settings.strategy;
+      settings.strategy = recommended;
+    }
+  }
+}
+
+function g4RsyaLaunchCpaUnlockedV531(campaign, d) {
+  if (d.ui?.cpaUnlockManualV531 === true) return true;
+  const date = String(campaign?.launchDate || "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
+  const start = new Date(`${date}T00:00:00`);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Number.isFinite(start.getTime()) && today - start >= 7 * 86400000;
+}
+
+function g4RsyaStrategyFixedFieldV531(label, value, copy = true) {
+  return `<div class="g4-rsya-strategy-fixed-v531"><strong>${escapeHtml(label)}</strong><span class="g4-rsya-control-v289"><input class="g1-input" value="${escapeAttr(value)}" readonly aria-label="${escapeAttr(label)}"><button type="button" class="small-btn" data-g4rsya-v289-copy="${escapeAttr(value)}" ${copy ? "" : "disabled"}>Копировать</button></span></div>`;
+}
+
+function g4RsyaStrategyGuideV531(text, href) {
+  return `<small class="g4-rsya-strategy-guide-v531">${escapeHtml(text)} <a href="${escapeAttr(href)}" target="_blank" rel="noopener noreferrer">Источник: Яндекс</a></small>`;
+}
+
 function g4RsyaLaunchBudgetV528(campaign, settings) {
-  const amount = g4RsyaTextV289(campaign?.budget);
-  const period = { week: "неделя", month: "месяц", total: "весь период" }[settings?.budgetPeriod];
+  const amount = g4RsyaTextV289(settings?.weeklyBudgetRubV531);
   if (!amount) return "не задано";
-  return `${amount}${/[₽р]/i.test(amount) ? "" : " ₽"} · ${period || "период не задан"}`;
+  return `${amount}${/[₽р]/i.test(amount) ? "" : " ₽"} · неделя`;
 }
 
 function g4RsyaLaunchUrlHtmlV528(product, campaign, group = null, ad = null) {
@@ -75145,33 +75182,51 @@ function g4RsyaLaunchUrlHtmlV528(product, campaign, group = null, ad = null) {
   </div>`;
 }
 
-function g4RsyaLaunchStrategyHtmlV528(campaign, d) {
+function g4RsyaLaunchStrategyHtmlV528(product, channel, campaign, d) {
   const settings = d.campaign || {};
-  const strategy = { max_clicks: "Оптимизация кликов", max_conversions: "Максимум конверсий",
-    target_cpa: "Максимум конверсий", target_drr: "Максимум конверсий" }[settings.strategy];
   const volume = g4RsyaVolumeAssessmentV363(settings);
-  const check = settings.conversionVolumeCheck || {};
-  const amount = g4RsyaPositiveNumberV363(campaign.budget);
-  const weeklyBudgetKnown = settings.budgetPeriod === "week" && amount !== null;
-  const budgetStatus = weeklyBudgetKnown ? (amount >= 300 ? "ready" : "problem") : "not_started";
+  const strategy = volume.complete ? (volume.count >= 10 ? "Максимум конверсий" : "Оптимизация кликов") : "Определится после проверки объёма";
+  const amount = g4RsyaPositiveNumberV363(settings.weeklyBudgetRubV531);
+  const budgetStatus = amount === null ? "not_started" : amount >= 300 ? "ready" : "problem";
+  const cpaUnlocked = g4RsyaLaunchCpaUnlockedV531(campaign, d);
   const target = settings.strategyTarget || {};
-  return `<div class="g4-v436-group-fields">
-    ${g4RsyaLaunchFieldV528("Стратегия", strategy, "strategy")}
-    ${g4RsyaLaunchFieldV528("Целевая цена конверсии, ₽", target.targetCpaRub, "target-cpa")}
-    ${g4RsyaLaunchFieldV528("Целевая ДРР, %", target.targetDrrPercent, "target-drr")}
-    ${g4RsyaLaunchFieldV528("Счётчик Метрики", settings.metrikaCounter, "metrika-counter")}
-    ${g4RsyaLaunchFieldV528("Цель Метрики", settings.metrikaGoal, "metrika-goal")}
-    ${g4RsyaLaunchFieldV528("Бюджет и период", g4RsyaLaunchBudgetV528(campaign, settings), "budget")}
-    <div class="g4-v406-launch-notes">
-      <div>10 конверсий в неделю считаются на всю кампанию.</div>
-      <div>Минимум недельного бюджета — 300 ₽ (50 ₽ в день).</div>
-      <div>${g4RsyaLaunchBadgeV528(budgetStatus, weeklyBudgetKnown ? (amount >= 300 ? "Недельный бюджет ≥ 300 ₽" : "Недельный бюджет ниже 300 ₽") : "Недельный бюджет: не задано")}</div>
-      <div>Бюджет за месяц или весь период в недельный автоматически не пересчитывается.</div>
+  const metrikaSource = g4RsyaMetrikaSourceV450(product, state);
+  const goal = g4RsyaGoalQualityV363(product, settings);
+  const cpa = g4RsyaPositiveNumberV363(target.targetCpaRub);
+  return `<div class="g4-rsya-strategy-v531" data-g4rsya-strategy-v531>
+    ${g4RsyaStrategyFixedFieldV531("1. Стратегия", strategy, volume.complete)}
+    ${g4RsyaStrategyGuideV531("Оптимизация конверсий подходит, если на сайте не менее 10 конверсий в неделю.", "https://yandex.ru/adv/products/optimization/autostrategies")}
+    ${g4RsyaStrategyFixedFieldV531("2. Оплата", "За клики")}
+    <div class="g4-rsya-strategy-row-v531"><strong>3. Бюджет · В неделю</strong>
+      ${g4RsyaFieldV289({ product, channel, store: "campaign", field: "weeklyBudgetRubV531", label: "Сумма, ₽", value: settings.weeklyBudgetRubV531, type: "number", min: 300, step: 0.01, copy: true, copyDisabled: amount === null || amount < 300 })}
+      ${g4RsyaLaunchBadgeV528(budgetStatus, amount === null ? "Сумма не указана" : amount < 300 ? "Ошибка: меньше 300 ₽ в неделю" : "Бюджет проверен")}
+      ${settings.legacyStrategySettingsV531?.budget && settings.legacyStrategySettingsV531.budgetPeriod !== "week" ? `<small class="g4-rsya-strategy-guide-v531">Прежний бюджет ${escapeHtml(settings.legacyStrategySettingsV531.budget)} (${escapeHtml(settings.legacyStrategySettingsV531.budgetPeriod)}) сохранён; в недельный не пересчитан.</small>` : ""}
+      ${g4RsyaStrategyGuideV531("Минимум: 300 ₽ в неделю; для бюджета на период — 50 ₽ в день.", "https://yandex.ru/support/direct/ru/strategies/average-cpa-clicks")}
     </div>
-    ${g4RsyaLaunchFieldV528("Проверенный период конверсий", check.from && check.to ? `${check.from} — ${check.to}` : "", "conversion-period")}
-    ${g4RsyaLaunchFieldV528("Достижений цели за проверенный период", check.count, "conversion-count")}
-    ${g4RsyaLaunchFieldV528("Отчёт Метрики", check.evidenceUrl, "conversion-evidence")}
-    <div class="g4-v406-launch-notes"><div>${g4RsyaLaunchBadgeV528(volume.passed ? "ready" : "in_progress", volume.passed ? "Объём конверсий подтверждён" : "Объём конверсий не подтверждён")}</div><div>${escapeHtml(volume.message)}</div></div>
+    ${g4RsyaStrategyFixedFieldV531("4. Ограничение расхода", cpaUnlocked ? "Средняя цена конверсии" : "Бюджет (недельный лимит)")}
+    ${g4RsyaStrategyGuideV531("На старте задайте недельный бюджет: так определяется цена конверсии.", "https://yandex.ru/adv/products/optimization/autostrategies")}
+    <div class="g4-rsya-strategy-row-v531"><strong>5. Целевая цена конверсии, ₽</strong>
+      ${g4RsyaFieldV289({ product, channel, store: "campaignCommon", field: "launchDate", label: "Дата старта", value: campaign.launchDate, type: "date" })}
+      <label class="g4-rsya-strategy-manual-v531"><input type="checkbox" data-g4rsya-cpa-unlock-v531 data-g4rsya-product="${escapeAttr(product)}" ${d.ui?.cpaUnlockManualV531 ? "checked" : ""}> Открыть вручную после первой недели</label>
+      ${g4RsyaFieldV289({ product, channel, store: "strategyTarget", field: "targetCpaRub", label: "Целевая цена конверсии, ₽", value: target.targetCpaRub, type: "number", min: 0.9, step: 0.01, copy: true, disabled: !cpaUnlocked, copyDisabled: cpa === null || cpa < 0.9 })}
+      ${!cpaUnlocked ? '<small class="g4-rsya-strategy-guide-v531">Задайте после первой недели по рекомендации Директа (показывается в интерфейсе).</small>' : cpa !== null && cpa < 0.9 ? g4RsyaLaunchBadgeV528("problem", "Ошибка: меньше 0,9 ₽") : ""}
+      ${g4RsyaStrategyGuideV531("Минимум — 0,9 ₽. В первую неделю фактическая цена может отличаться от заданной; недостижимая цена мешает стратегии.", "https://yandex.ru/support/direct/ru/strategies/average-cpa-clicks")}
+      ${g4RsyaStrategyGuideV531("Для новой кампании Директ показывает рекомендацию средней цены конверсии в интерфейсе.", "https://b2b.yandex.ru/adv/news/personalnye-sovety-po-nastroyke-strategiy-uzhe-v-interfeyse-direkta")}
+    </div>
+    <div class="g4-rsya-strategy-row-v531"><strong>6. Целевая ДРР</strong>
+      ${g4RsyaFieldV289({ product, channel, store: "strategyTarget", field: "targetDrrPercent", label: "Целевая ДРР, %", value: target.targetDrrPercent, copy: true })}
+      <small class="g4-rsya-strategy-guide-v531">Использовать только если у цели задана ценность. Для цели без ценности не применяется</small>
+    </div>
+    <div class="g4-rsya-strategy-row-v531"><strong>7. Метрика</strong>
+      ${g4RsyaFieldV289({ product, channel, store: "campaign", field: "metrikaCounter", label: "Счётчик Метрики", value: settings.metrikaCounter, copy: true, readonly: metrikaSource.counterStatus === "connected", hint: metrikaSource.counterStatus === "connected" ? "Источник: metrikaCompanyV374.counterId." : "В Gate 2 нет номера счётчика — поле можно заполнить вручную." })}
+      ${g4RsyaFieldV289({ product, channel, store: "campaign", field: "metrikaGoal", label: "Цель Метрики", value: settings.metrikaGoal, copy: true, readonly: metrikaSource.goalStatus === "connected", hint: metrikaSource.goalStatus === "connected" ? "Источник: metrikaQualityV360.perProduct[].goalId для этого товара." : "Для товара нет goalId в Gate 2 — поле можно заполнить вручную." })}
+      <p class="g4-rsya-goal-status-v363"><span class="status-pill status-${goal.status}">${goal.status === "ready" ? "Gate 2 · цель подтверждена" : "Gate 2 · нужна проверка"}</span> ${escapeHtml(goal.message)}</p>
+    </div>
+    <div class="g4-rsya-strategy-row-v531"><strong>8. Проверка объёма конверсий</strong>
+      ${g4RsyaVolumeHtmlV363(product, channel, d, false)}
+      ${g4RsyaStrategyGuideV531("Подсветка целей в Директе: больше 20 конверсий в неделю — зелёный; 10–20 — жёлтый; меньше 10 — красный.", "https://b2b.yandex.ru/adv/news/personalnye-sovety-po-nastroyke-strategiy-uzhe-v-interfeyse-direkta")}
+    </div>
+    ${g4RsyaStrategyGuideV531("После запуска: меняйте настройки не чаще раза в неделю и не больше чем на 10%; простой 2–3 дня вредит ставкам, остановка дольше 7 дней сбрасывает обучение. Укрупняйте кампании, не дробите.", "https://b2b.yandex.ru/adv/edu/materials/oplata-za-konversii")}
   </div>`;
 }
 
@@ -75180,7 +75235,7 @@ function g4RsyaLaunchCampaignItemsV528() {
     ["НОВАЯ КАМПАНИЯ"],
     G4SB_V406_CAMPAIGN_LAUNCH_ITEMS[1],
     ["МЕСТА ПОКАЗА", ["Включена только «Рекламная сеть Яндекса».", "Поиск выключен. Поиск запускается отдельной кампанией."]],
-    ["СТРАТЕГИЯ", ["Максимум конверсий или Оптимизация кликов."]],
+    ["СТРАТЕГИЯ"],
     G4SB_V406_CAMPAIGN_LAUNCH_ITEMS[4],
     ["РАСПИСАНИЕ ПОКАЗОВ"],
     G4SB_V406_CAMPAIGN_LAUNCH_ITEMS[6],
@@ -75228,7 +75283,7 @@ function g4RsyaLaunchBodyV453(product, channel, campaign, d, model) {
   const extras = {
     0: g4RsyaLaunchFieldV528("Предложенное имя", name ? `Яндекс Директ / РСЯ - ${name}` : "", "campaign-name"),
     1: g4RsyaLaunchFieldV528("Сайт · Платформа Gate 0", megaPlatformProductUrl(product, state), "advertised-site"),
-    3: g4RsyaLaunchStrategyHtmlV528(campaign, d),
+    3: g4RsyaLaunchStrategyHtmlV528(product, channel, campaign, d),
     4: g4RsyaLaunchFieldV528("Дата запуска", campaign.launchDate, "launch-date"),
     5: g4RsyaLaunchFieldV528("Расписание", settings.schedule, "schedule"),
     6: g4RsyaLaunchUrlHtmlV528(product, campaign),
@@ -75253,6 +75308,7 @@ function g4RsyaLaunchBodyV453(product, channel, campaign, d, model) {
     return g4sbV440AppendGroupAdLevel(heading, body);
   }).join("");
   return `<div class="g4-v406-launch g4-rsya-launch-v528" data-g4rsya-v453-panel-body="launch" data-g4rsya-launch-body>
+    ${g4RsyaCampaignSettingsBodyV528(product, channel, campaign, d)}
     <div class="g4-v407-launch-context">
       <span>Итоговый бюджет: <strong>${escapeHtml(g4RsyaLaunchBudgetV528(campaign, settings))}</strong></span>
       <span>Объявления и уточнения: <strong>${model.groupsReady} из ${model.groups.length} групп готовы</strong></span>
@@ -75265,13 +75321,14 @@ function g4RsyaLaunchBodyV453(product, channel, campaign, d, model) {
 
 function g4RsyaRefreshLaunchV528(product) {
   const d = ensureGate4RsyaV289(product);
+  const channel = document.querySelector(`.g4-rsya-v289[data-g4rsya-product="${CSS.escape(product)}"]`)?.dataset.g4rsyaChannel;
+  g4RsyaMigrateStrategyV531(g4RsyaCampaignV289(product, channel), d);
   const model = g4RsyaLaunchModelV528(product, d);
   const card = document.querySelector(`.g4-rsya-v289[data-g4rsya-product="${CSS.escape(product)}"]`);
   const meta = card?.querySelector('[data-g4rsya-v453-step-meta="launch"]');
   if (meta) meta.textContent = `Готово ${model.ready} из ${model.total}`;
   const body = card?.querySelector("[data-g4rsya-launch-body]");
   if (body) {
-    const channel = card.dataset.g4rsyaChannel;
     const replacement = g4sbV445ElementFromHtml(g4RsyaLaunchBodyV453(
       product, channel, g4RsyaCampaignV289(product, channel), d, model,
     ));
@@ -75310,6 +75367,7 @@ document.addEventListener("click", (event) => {
 
 function g4RsyaChannelCardV289(channel, campaign, index, product) {
   const d = ensureGate4RsyaV289(product);
+  g4RsyaMigrateStrategyV531(campaign, d);
   if (!d.groups.length) {
     const productIdResolution = g4RsyaGroupProductIdResolutionV449(
       product,
@@ -75339,8 +75397,7 @@ function g4RsyaChannelCardV289(channel, campaign, index, product) {
   const steps = d.ui.workflowStepOpenV453;
   return `<article class="g1-card is-open g4-rsya-v289" data-g4rsya-product="${escapeAttr(product)}" data-g4rsya-channel="${escapeAttr(channel.key)}" data-g4rsya-field="audienceType"><button class="g1-card-header" data-g4camp-toggle="${escapeAttr(stateKey)}"><span class="g1-section-left"><span class="g1-card-title">${escapeHtml(g4RsyaChannelLabelV453(channel))}</span><span class="g1-section-progress">${escapeHtml(subtitle)}</span></span><span class="status-pill status-${status}">${statusLabel}</span></button><div class="g1-card-body"><p class="g1-task">${escapeHtml(g4Gate3ChannelRole(channel))}</p>
     ${g4sbStepHtml(product, "1", "JTBD и группы", groupsMeta, "groups", Boolean(steps.groups), steps.groups ? g4RsyaGroupsBodyV453(product, channel.key, campaign, d) : "", { kind: "rsya" })}
-    ${g4sbStepHtml(product, "2", "Настройки кампании", "", "settings", Boolean(steps.settings), steps.settings ? g4RsyaCampaignSettingsBodyV528(product, channel.key, campaign, d) : "", { kind: "rsya" })}
-    ${g4sbStepHtml(product, "3", "Запуск", launchMeta, "launch", Boolean(steps.launch), steps.launch ? g4RsyaLaunchBodyV453(product, channel.key, campaign, d, progress) : "", { kind: "rsya" })}
+    ${g4sbStepHtml(product, "2", "Запуск", launchMeta, "launch", Boolean(steps.launch), steps.launch ? g4RsyaLaunchBodyV453(product, channel.key, campaign, d, progress) : "", { kind: "rsya" })}
   </div></article>`;
 }
 
@@ -75706,6 +75763,14 @@ document.addEventListener("input", (event) => {
     }
   }
   g4RsyaRefreshControlV289(target);
+  if (target.closest("[data-g4rsya-strategy-v531]")) {
+    const copy = target.closest(".g4-rsya-field-v289")?.querySelector("[data-g4rsya-v289-copy]");
+    const numeric = g4RsyaPositiveNumberV363(target.value);
+    if (copy && field === "weeklyBudgetRubV531") copy.disabled = numeric === null || numeric < 300;
+    if (copy && field === "targetCpaRub") copy.disabled = numeric === null || numeric < 0.9;
+    flashSaving();
+    return;
+  }
   if (copyStore && context?.group && context.ad) {
     g4RsyaScheduleInputEffectsV472(
       target.dataset.g4rsyaV289Product,
@@ -75748,6 +75813,22 @@ document.addEventListener("change", (event) => {
     if (target.value === "max_clicks") record.paymentModel = "clicks";
     else if (previousStrategy === "max_clicks" && record.paymentModel === "clicks") record.paymentModel = "";
   } else record[target.dataset.g4rsyaV289Field] = target.type === "checkbox" ? target.checked : target.value;
+  flashSaving();
+  renderGate();
+});
+
+document.addEventListener("change", (event) => {
+  const target = event.target?.closest?.("[data-g4rsya-strategy-v531] [data-g4rsya-v289-bind]");
+  if (!target || target.tagName === "SELECT" || target.type === "checkbox") return;
+  g4RsyaRefreshLaunchV528(target.dataset.g4rsyaV289Product);
+  renderGate();
+});
+
+document.addEventListener("change", (event) => {
+  const toggle = event.target?.closest?.("[data-g4rsya-cpa-unlock-v531]");
+  if (!toggle) return;
+  const d = ensureGate4RsyaV289(toggle.dataset.g4rsyaProduct);
+  d.ui.cpaUnlockManualV531 = toggle.checked;
   flashSaving();
   renderGate();
 });
