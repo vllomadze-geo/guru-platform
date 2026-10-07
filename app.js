@@ -73213,20 +73213,85 @@ function g4RsyaSearchForecastHtmlV363(product) {
   </details>`;
 }
 
+// Общий стартовый список РСЯ: только код, в данные проекта не копируется.
+const RSYA_STARTER_EXCLUDED_PLACEMENTS_V1 = Object.freeze(
+  "com.fugo.wowguru,com.miui.player,dsp.yandex.ru,game.yandex.ru,com.zhiliaoapp.musically,dsp-webeye.yandex.ru,free.vpn.proxy.secure,dsp-minimob-ww.yandex.ru,dsp-cheetahmobile.yandex.ru,dsp-between-exchange.yandex.ru,dsp-blueseax.yandex.ru,ru.rp5.rp5weatherhorizontal,dsp-opera-browser.yandex.ru,free.vpn.unblock.proxy.vpn.master.pro,com.bravestars.faling.blocks.slide.puzzle,com.fugo.wow,dsp-huawei.yandex.ru,wi-fi.ru,com.easybrain.block.puzzle.games,com.camerasideas.instashot,com.amanotes.beathopper,com.miui.cleaner,dsp-inneractive.yandex.ru,dsp-ironsource.yandex.ru,m.video.yandex.ru,com.ihappydate,ru.sports.euro2016liverus,com.agedstudio.card.solitaire.klondike,video.like,dsp-minimob.yandex.ru,dsp-betweenx.yandex.ru,games.mail.ru,dsp-mobfox.yandex.ru,dsp-unityads.yandex.ru,com.openmygame.games.android.wordsearchsea,com.utilappsmasterpro.cleanmasterpro,games.conifer.card.solitaire.klondike.free,teskin.jewels.planet,dsp-opera-exchange.yandex.ru,com.agedstudio.hw.card.solitaire.klondike,pddmaster.ru,dsp-xapads.yandex.ru,loppipoppi.dominoes,video.yandex.ru,coloring.color.number.happy.paint.art.drawing.puzzle,com.openmygame.games.android.fillwordsoffline,dsp-mintagral.yandex.ru,com.openmygame.games.android.wordpizza,com.lenovo.anyshare.gps,com.inspiredsquare.jupiter,com.openmygame.games.android.jigsawpuzzle,dsp-start-io.yandex.ru,checko.ru,com.pixel.art.coloring.color.number".split(","),
+);
+const RSYA_PLACEMENTS_YARD_V536 = "https://yard.yandex.ru/courses/direct-prodvinutyy/otkluchenie-reklamnyh-ploschadok";
+const RSYA_PLACEMENTS_WARNING_V536 = "https://yandex.ru/support/direct/en/campaigns/blocked-sites";
+
+function g4RsyaPlacementDuplicateV536(value, rows, id) {
+  const key = g4RsyaTextV289(value).toLowerCase();
+  if (!key) return "";
+  if (RSYA_STARTER_EXCLUDED_PLACEMENTS_V1.includes(key)) return "Уже есть в стартовом списке.";
+  if (rows.some((row) => row.id !== id && g4RsyaTextV289(row.placement).toLowerCase() === key))
+    return "Уже есть в своих площадках проекта.";
+  return "";
+}
+
 function g4RsyaPlacementHtmlV363(product, channel, d) {
   const rows = d.campaign.excludedPlacements || [];
   const legacy = g4RsyaTextV289(d.exclusions?.themes);
   return `<div class="g4-rsya-placement-v363">
-    ${g4RsyaGuideV363("placements", "Исключения площадок. ")}
     ${rows.map((row, index) => `<div class="g4-rsya-placement-row-v363">
       <span>${index + 1}</span>
       ${g4RsyaFieldV289({ product, channel, store: "excludedPlacement", itemId: row.id, field: "placement", label: "Площадка / домен", value: row.placement, copy: true, required: true })}
       ${g4RsyaFieldV289({ product, channel, store: "excludedPlacement", itemId: row.id, field: "reason", label: "Причина исключения", value: row.reason, copy: true })}
       <button type="button" class="small-btn danger-mini" data-g4rsya-v289-remove-placement="${escapeAttr(row.id)}" data-g4rsya-v289-product="${escapeAttr(product)}" aria-label="Удалить площадку">×</button>
+      <small class="g4-rsya-placement-duplicate-v536" data-g4rsya-placement-duplicate-v536="${escapeAttr(row.id)}">${escapeHtml(g4RsyaPlacementDuplicateV536(row.placement, rows, row.id))}</small>
     </div>`).join("") || '<p class="g4-rsya-empty-v289">Пока нет исключённых площадок. Пустой список допустим.</p>'}
-    <button type="button" class="small-btn add-inline-btn" data-g4rsya-v289-add-placement data-g4rsya-v289-product="${escapeAttr(product)}">+ Добавить площадку</button>
+    <button type="button" class="small-btn add-inline-btn" data-g4rsya-v289-add-placement data-g4rsya-v289-product="${escapeAttr(product)}" ${rows.length >= 1000 ? "disabled" : ""}>+ Добавить площадку</button>
     ${legacy ? `<p class="g4-rsya-note-v289">Старое поле «Нерелевантные тематики и площадки» сохранено без автоматического переноса: ${escapeHtml(legacy)}</p>` : ""}
   </div>`;
+}
+
+function g4RsyaRefreshPlacementUiV536(product) {
+  const d = ensureGate4RsyaV289(product);
+  const panel = document.querySelector(`.g4-rsya-exclusions-v536[data-g4rsya-product="${CSS.escape(product)}"]`);
+  if (!panel) return;
+  const rows = d.campaign.excludedPlacements || [];
+  const names = rows.map((row) => g4RsyaTextV289(row.placement)).filter(Boolean);
+  const count = panel.querySelector("[data-g4rsya-own-count-v536]");
+  if (count) count.textContent = `${rows.length} из 1000`;
+  const copy = panel.querySelector("[data-g4rsya-own-copy-v536]");
+  if (copy) {
+    copy.dataset.g4rsyaV289Copy = names.join(",");
+    copy.hidden = names.length === 0;
+  }
+  rows.forEach((row) => {
+    const warning = panel.querySelector(`[data-g4rsya-placement-duplicate-v536="${CSS.escape(row.id)}"]`);
+    if (warning) warning.textContent = g4RsyaPlacementDuplicateV536(row.placement, rows, row.id);
+  });
+}
+
+function g4RsyaLaunchExclusionsHtmlV536(product, channel, d) {
+  const rows = d.campaign.excludedPlacements || [];
+  const ownNames = rows.map((row) => g4RsyaTextV289(row.placement)).filter(Boolean);
+  const price = g4RsyaDirectPanelModelV533(product, d).price;
+  const threshold = price === null ? "после заполнения Search-прогноза" : `${(Number(g4RsyaMoneyV532(price * 2))).toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`;
+  const yard = `<a href="${RSYA_PLACEMENTS_YARD_V536}" target="_blank" rel="noopener noreferrer">Источник: Яндекс · ЯРД</a>`;
+  const video = `<a href="${G4_RSYA_VIDEO_V532}" target="_blank" rel="noopener noreferrer">Практика автора видео, не официальный источник</a>`;
+  return `<section class="g4-rsya-exclusions-v536" data-g4rsya-product="${escapeAttr(product)}" aria-label="Запрет показов РСЯ">
+    <div class="g4-rsya-exclusions-section-v536">
+      <header><h5>Стартовый список · ${RSYA_STARTER_EXCLUDED_PLACEMENTS_V1.length} площадки</h5><button type="button" class="small-btn" data-g4rsya-v289-copy="${escapeAttr(RSYA_STARTER_EXCLUDED_PLACEMENTS_V1.join(","))}">Копировать</button></header>
+      <p>Список автора видео, не официальный источник. Достаточно на старте, большее число площадок результат не улучшает (по словам автора). Проверяйте список сами: часть записей это сервисы Яндекса и Mail. <a href="${G4_RSYA_VIDEO_V532}" target="_blank" rel="noopener noreferrer">Видео автора</a>.</p>
+      <ol class="g4-rsya-starter-list-v536">${RSYA_STARTER_EXCLUDED_PLACEMENTS_V1.map((placement) => `<li><code>${escapeHtml(placement)}</code></li>`).join("")}</ol>
+    </div>
+    <div class="g4-rsya-exclusions-section-v536">
+      <header><h5>Свои площадки проекта · <span data-g4rsya-own-count-v536>${rows.length} из 1000</span></h5><button type="button" class="small-btn" data-g4rsya-own-copy-v536 data-g4rsya-v289-copy="${escapeAttr(ownNames.join(","))}" ${ownNames.length ? "" : "hidden"}>Копировать</button></header>
+      <small>Лимит площадок в перфоманс-кампании: 1000. ${yard}</small>
+      ${g4RsyaPlacementHtmlV363(product, channel, d)}
+    </div>
+    <div class="g4-rsya-exclusions-section-v536">
+      <h5>Когда добавлять после запуска</h5>
+      <ol>
+        <li>Площадка — кандидат на исключение, если расход на ней без конверсий больше двух плановых цен конверсии: ${price === null ? threshold : `2 × ${Number(price).toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽ = ${threshold}`}. ${yard}</li>
+        <li>Площадки с менее чем 3 кликами не трогать. ${video}</li>
+        <li>Не увлекаться чисткой: она не лечит кампанию; первые дни кампанию не трогать. ${video}</li>
+      </ol>
+      <p>Исключение площадок может ухудшить результат; нельзя отключить ya.ru и проекты, связанные с поиском Яндекса. <a href="${RSYA_PLACEMENTS_WARNING_V536}" target="_blank" rel="noopener noreferrer">Источник: Яндекс · Справка Директа</a>; ${yard}.</p>
+    </div>
+  </section>`;
 }
 
 function g4RsyaVolumeHtmlV363(product, channel, d, showGuide = true) {
@@ -73293,7 +73358,7 @@ function g4RsyaSettingsHtmlV289(
       ${g4RsyaPromotionHtmlV457(product, channel, d.campaign.promotion)}
       ${g4RsyaGuideV363("utm", "Метки ссылок. ")}
       ${g4RsyaFieldV289({ product, channel, store: "campaignCommon", field: "utmTemplate", label: "UTM-шаблон кампании", value: g4RsyaCampaignUtmTemplateV478(campaign), textarea: true, full: true, copy: true, placeholder: "utm_source=yandex&utm_medium=cpc&utm_campaign=...", hint: "Повторное применение заменяет одноимённые UTM, сохраняя остальные параметры и якорь." })}
-    </div>${g4RsyaPlacementHtmlV363(product, channel, d)}</article>`;
+    </div></article>`;
   const groupsHtml = g4RsyaGroupRenderEntriesV460(d, renderOptions)
     .map(({ group, index }) => {
     const defaults = g4RsyaGroupGate1DefaultsV456(product, group);
@@ -75454,7 +75519,6 @@ function g4RsyaLaunchAdHtmlV528(product, campaign, group, ad, index) {
 function g4RsyaLaunchBodyV453(product, channel, campaign, d, model) {
   const settings = d.campaign || {};
   const name = g4RsyaTextV289(campaign.campaignName);
-  const placements = (settings.excludedPlacements || []).filter((row) => g4RsyaTextV289(row?.placement));
   const extras = {
     0: g4RsyaLaunchFieldV528("Предложенное имя", name ? `Яндекс Директ / РСЯ - ${name}` : "", "campaign-name"),
     1: g4RsyaLaunchFieldV528("Сайт · Платформа Gate 0", megaPlatformProductUrl(product, state), "advertised-site"),
@@ -75462,7 +75526,7 @@ function g4RsyaLaunchBodyV453(product, channel, campaign, d, model) {
     4: g4RsyaLaunchFieldV528("Дата запуска", campaign.launchDate, "launch-date"),
     5: g4RsyaLaunchFieldV528("Расписание", settings.schedule, "schedule"),
     6: g4RsyaLaunchUrlHtmlV528(product, campaign),
-    13: `${placements.length > 1000 ? g4RsyaLaunchBadgeV528("problem", "Превышен лимит 1000 площадок") : ""}${g4RsyaLaunchFieldV528(`Исключённые площадки · ${placements.length}/1000`, placements.map((row) => [row.placement, row.reason].filter(Boolean).join(" — ")).join("\n"), "excluded-placements")}`,
+    13: `${settings.excludedPlacements.length > 1000 ? g4RsyaLaunchBadgeV528("problem", "Превышен лимит 1000 площадок") : ""}${g4RsyaLaunchExclusionsHtmlV536(product, channel, d)}`,
   };
   const groupsHtml = model.groups.map(({ group, index, key, fixed, status }) => {
     const defaults = g4RsyaGroupGate1DefaultsV456(product, group);
@@ -75943,6 +76007,11 @@ document.addEventListener("input", (event) => {
     }
   }
   g4RsyaRefreshControlV289(target);
+  if (store === "excludedPlacement") {
+    g4RsyaRefreshPlacementUiV536(target.dataset.g4rsyaV289Product);
+    flashSaving();
+    return;
+  }
   if (target.closest("[data-g4rsya-strategy-v531]")) {
     const copy = target.closest(".g4-rsya-field-v289")?.querySelector("[data-g4rsya-v289-copy]");
     const numeric = g4RsyaPositiveNumberV363(target.value);
