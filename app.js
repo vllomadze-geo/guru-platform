@@ -82368,6 +82368,7 @@ const GURU_OWNED_DETAILS_V512 = [
   "[data-guru-catalog-category-group]",
   ".g4-map-outside-v290",
   ".g4-v166-jtbd:not(.is-orphaned)",
+  "[data-g1-competitor-step-v539]",
 ].join(",");
 
 function guruDisclosureKeyV512(node) {
