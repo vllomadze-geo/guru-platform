@@ -72921,9 +72921,8 @@ function g4RsyaCampaignProblemIssuesV363(campaign, d, product = "") {
 
 function g4RsyaCampaignIssuesV289(campaign, d, product = "") {
   const issues = [];
-  if (!g4RsyaTextV289(campaign.campaignName)) issues.push("Название кампании: заполните поле");
+  if (!g4RsyaTextV289(campaign.campaignName) && !product) issues.push("Название кампании: заполните поле");
   if (!g4RsyaTextV289(d.campaign.geography)) issues.push("География: выберите регион в Директе и зафиксируйте его здесь");
-  if (!g4RsyaTextV289(d.campaign.schedule)) issues.push("Расписание: укажите режим показа");
   const volume = g4RsyaVolumeAssessmentV363(d.campaign);
   if (!volume.complete) issues.push("Стратегия: проверьте объём конверсий за семь завершённых дней");
   const direct = g4RsyaDirectPanelModelV533(product, d);
@@ -73066,7 +73065,7 @@ function g4RsyaFieldV289(options) {
     return `<label class="g4-rsya-field-v289 is-readonly-v450"><span class="g4-rsya-field-label-v289"><b>${escapeHtml(options.label)}</b><small class="g4-rsya-source-badge-v450">из Платформы</small></span>
       <select class="g1-input" data-g4rsya-platform-page-ref data-g4rsya-product="${escapeAttr(options.product)}" data-g4rsya-store="${escapeAttr(options.store)}" data-g4rsya-group-id="${escapeAttr(options.groupId || "")}" data-g4rsya-ad-id="${escapeAttr(options.adId || "")}" data-g4rsya-item-id="${escapeAttr(options.itemId || "")}">
         <option value="">Страница не выбрана</option>${pages.map((page) => `<option value="${escapeAttr(`${page.group}:${page.id}`)}" ${selected === `${page.group}:${page.id}` ? "selected" : ""}>${escapeHtml(page.name)}</option>`).join("")}</select>
-      <span class="mega-platform-source-value">${value ? escapeHtml(value) : "URL не указан"}</span></label>`;
+      <span class="mega-platform-source-value">${value ? escapeHtml(value) : "URL не указан"}</span>${options.copy && value ? `<button type="button" class="small-btn" data-g4rsya-v289-copy="${escapeAttr(value)}">Копировать</button>` : ""}</label>`;
   }
   if (options.platformUrl) return `<label class="g4-rsya-field-v289 is-readonly-v450">
     <span class="g4-rsya-field-label-v289"><b>${escapeHtml(options.label)}</b><small class="g4-rsya-source-badge-v450">из Платформы</small></span>
@@ -73271,14 +73270,26 @@ function g4RsyaPlacementHtmlV363(product, channel, d) {
   return `<div class="g4-rsya-placement-v363">
     ${rows.map((row, index) => `<div class="g4-rsya-placement-row-v363">
       <span>${index + 1}</span>
-      ${g4RsyaFieldV289({ product, channel, store: "excludedPlacement", itemId: row.id, field: "placement", label: "Площадка / домен", value: row.placement, copy: true, required: true })}
-      ${g4RsyaFieldV289({ product, channel, store: "excludedPlacement", itemId: row.id, field: "reason", label: "Причина исключения", value: row.reason, copy: true })}
+      ${g4RsyaFieldV289({ product, channel, store: "excludedPlacement", itemId: row.id, field: "placement", label: "Площадка / домен", value: row.placement, required: true })}
+      ${g4RsyaFieldV289({ product, channel, store: "excludedPlacement", itemId: row.id, field: "reason", label: "Причина исключения", value: row.reason })}
       <button type="button" class="small-btn danger-mini" data-g4rsya-v289-remove-placement="${escapeAttr(row.id)}" data-g4rsya-v289-product="${escapeAttr(product)}" aria-label="Удалить площадку">×</button>
       <small class="g4-rsya-placement-duplicate-v536" data-g4rsya-placement-duplicate-v536="${escapeAttr(row.id)}">${escapeHtml(g4RsyaPlacementDuplicateV536(row.placement, rows, row.id))}</small>
     </div>`).join("") || '<p class="g4-rsya-empty-v289">Пока нет исключённых площадок. Пустой список допустим.</p>'}
     <button type="button" class="small-btn add-inline-btn" data-g4rsya-v289-add-placement data-g4rsya-v289-product="${escapeAttr(product)}" ${rows.length >= 1000 ? "disabled" : ""}>+ Добавить площадку</button>
     ${legacy ? `<p class="g4-rsya-note-v289">Старое поле «Нерелевантные тематики и площадки» сохранено без автоматического переноса: ${escapeHtml(legacy)}</p>` : ""}
   </div>`;
+}
+
+function g4RsyaLaunchExclusionCopyValueV541(rows) {
+  const values = [...RSYA_STARTER_EXCLUDED_PLACEMENTS_V1];
+  const seen = new Set(values.map((value) => value.toLowerCase()));
+  (rows || []).forEach((row) => {
+    const value = g4RsyaTextV289(row.placement);
+    if (!value || seen.has(value.toLowerCase())) return;
+    values.push(value);
+    seen.add(value.toLowerCase());
+  });
+  return values.join(",");
 }
 
 function g4RsyaRefreshPlacementUiV536(product) {
@@ -73294,6 +73305,9 @@ function g4RsyaRefreshPlacementUiV536(product) {
     copy.dataset.g4rsyaV289Copy = names.join(",");
     copy.hidden = names.length === 0;
   }
+  const launchCopy = panel.querySelector("[data-g4rsya-exclusions-copy-v541]");
+  if (launchCopy) launchCopy.dataset.g4rsyaV289Copy =
+    g4RsyaLaunchExclusionCopyValueV541(rows);
   rows.forEach((row) => {
     const warning = panel.querySelector(`[data-g4rsya-placement-duplicate-v536="${CSS.escape(row.id)}"]`);
     if (warning) warning.textContent = g4RsyaPlacementDuplicateV536(row.placement, rows, row.id);
@@ -73303,30 +73317,11 @@ function g4RsyaRefreshPlacementUiV536(product) {
 function g4RsyaLaunchExclusionsHtmlV536(product, channel, d) {
   const rows = d.campaign.excludedPlacements || [];
   const ownNames = rows.map((row) => g4RsyaTextV289(row.placement)).filter(Boolean);
-  const price = g4RsyaDirectPanelModelV533(product, d).price;
-  const threshold = price === null ? "после заполнения Search-прогноза" : `${(Number(g4RsyaMoneyV532(price * 2))).toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`;
-  const yard = `<a href="${RSYA_PLACEMENTS_YARD_V536}" target="_blank" rel="noopener noreferrer">Источник: Яндекс · ЯРД</a>`;
-  const video = `<a href="${G4_RSYA_VIDEO_V532}" target="_blank" rel="noopener noreferrer">Практика автора видео, не официальный источник</a>`;
   return `<section class="g4-rsya-exclusions-v536" data-g4rsya-product="${escapeAttr(product)}" aria-label="Запрет показов РСЯ">
-    <div class="g4-rsya-exclusions-section-v536">
-      <header><h5>Стартовый список · ${RSYA_STARTER_EXCLUDED_PLACEMENTS_V1.length} площадки</h5><button type="button" class="small-btn" data-g4rsya-v289-copy="${escapeAttr(RSYA_STARTER_EXCLUDED_PLACEMENTS_V1.join(","))}">Копировать</button></header>
-      <p>Список автора видео, не официальный источник. Достаточно на старте, большее число площадок результат не улучшает (по словам автора). Проверяйте список сами: часть записей это сервисы Яндекса и Mail. <a href="${G4_RSYA_VIDEO_V532}" target="_blank" rel="noopener noreferrer">Видео автора</a>.</p>
-      <ol class="g4-rsya-starter-list-v536">${RSYA_STARTER_EXCLUDED_PLACEMENTS_V1.map((placement) => `<li><code>${escapeHtml(placement)}</code></li>`).join("")}</ol>
-    </div>
-    <div class="g4-rsya-exclusions-section-v536">
-      <header><h5>Свои площадки проекта · <span data-g4rsya-own-count-v536>${rows.length} из 1000</span></h5><button type="button" class="small-btn" data-g4rsya-own-copy-v536 data-g4rsya-v289-copy="${escapeAttr(ownNames.join(","))}" ${ownNames.length ? "" : "hidden"}>Копировать</button></header>
-      <small>Лимит площадок в перфоманс-кампании: 1000. ${yard}</small>
-      ${g4RsyaPlacementHtmlV363(product, channel, d)}
-    </div>
-    <div class="g4-rsya-exclusions-section-v536">
-      <h5>Когда добавлять после запуска</h5>
-      <ol>
-        <li>Площадка — кандидат на исключение, если расход на ней без конверсий больше двух плановых цен конверсии: ${price === null ? threshold : `2 × ${Number(price).toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽ = ${threshold}`}. ${yard}</li>
-        <li>Площадки с менее чем 3 кликами не трогать. ${video}</li>
-        <li>Не увлекаться чисткой: она не лечит кампанию; первые дни кампанию не трогать. ${video}</li>
-      </ol>
-      <p>Исключение площадок может ухудшить результат; нельзя отключить ya.ru и проекты, связанные с поиском Яндекса. <a href="${RSYA_PLACEMENTS_WARNING_V536}" target="_blank" rel="noopener noreferrer">Источник: Яндекс · Справка Директа</a>; ${yard}.</p>
-    </div>
+    <div class="g4-rsya-launch-value-v537"><span>${RSYA_STARTER_EXCLUDED_PLACEMENTS_V1.length} стартовые площадки${ownNames.length ? ` · ${ownNames.length} своих` : ""}</span><button type="button" class="small-btn" data-g4rsya-exclusions-copy-v541 data-g4rsya-v289-copy="${escapeAttr(g4RsyaLaunchExclusionCopyValueV541(rows))}">Копировать</button></div>
+    <details><summary>Показать стартовый список</summary><ol class="g4-rsya-starter-list-v536">${RSYA_STARTER_EXCLUDED_PLACEMENTS_V1.map((placement) => `<li><code>${escapeHtml(placement)}</code></li>`).join("")}</ol></details>
+    <small>Список автора видео, не официальный источник. Проверяйте площадки сами: часть записей — сервисы Яндекса и Mail. <a href="${G4_RSYA_VIDEO_V532}" target="_blank" rel="noopener noreferrer">Видео автора</a>.</small>
+    <details><summary>Свои площадки проекта · <span data-g4rsya-own-count-v536>${rows.length} из 1000</span></summary>${g4RsyaPlacementHtmlV363(product, channel, d)}</details>
   </section>`;
 }
 
@@ -73341,7 +73336,7 @@ function g4RsyaVolumeHtmlV363(product, channel, d, showGuide = true) {
       ${g4RsyaFieldV289({ product, channel, store: "conversionVolumeCheck", field: "from", label: "Начало периода", value: check.from, type: "date" })}
       ${g4RsyaFieldV289({ product, channel, store: "conversionVolumeCheck", field: "to", label: "Конец периода", value: check.to, type: "date" })}
       ${g4RsyaFieldV289({ product, channel, store: "conversionVolumeCheck", field: "count", label: "Достижений выбранной цели", value: check.count, type: "number" })}
-      ${g4RsyaFieldV289({ product, channel, store: "conversionVolumeCheck", field: "evidenceUrl", label: "Ссылка на отчёт Метрики", value: check.evidenceUrl, kind: "url", copy: true })}
+      ${g4RsyaFieldV289({ product, channel, store: "conversionVolumeCheck", field: "evidenceUrl", label: "Ссылка на отчёт Метрики", value: check.evidenceUrl, kind: "url" })}
     </div>
     <p class="g4-rsya-volume-result-v363"><span class="status-pill status-${tone}">${label}</span> ${escapeHtml(assessment.message)}</p>
     ${check.checkedAt ? `<small>Проверено вручную: ${escapeHtml(new Date(check.checkedAt).toLocaleString("ru-RU"))}</small>` : ""}
@@ -73350,21 +73345,25 @@ function g4RsyaVolumeHtmlV363(product, channel, d, showGuide = true) {
 
 /* v2.3.222 — опциональная промоакция уровня кампании РСЯ. */
 function g4RsyaPromotionHtmlV457(product, channel, promotion) {
+  const filled = [];
+  const missing = [];
+  const add = (html, value) => (g4RsyaTextV289(value) ? filled : missing).push(html);
+  add(g4RsyaSelectFieldV289({ product, channel, store: "promotion", field: "type", label: "Тип промоакции", value: promotion.type, options: G4_RSYA_PROMOTION_TYPES_V457 }), promotion.type);
+  add(g4RsyaFieldV289({ product, channel, store: "promotion", field: "discountValue", label: "Размер скидки / выгоды / кешбэка", value: promotion.discountValue, copy: Boolean(g4RsyaTextV289(promotion.discountValue)), placeholder: "Например, 20% или 1 000 ₽" }), promotion.discountValue);
+  add(g4RsyaFieldV289({ product, channel, store: "promotion", field: "description", label: "Описание промоакции", value: promotion.description, copy: Boolean(g4RsyaTextV289(promotion.description)), textarea: true, rows: 3, full: true, placeholder: "Условия и ценность предложения" }), promotion.description);
+  add(g4RsyaFieldV289({ product, channel, store: "promotion", field: "promoCode", label: "Промокод", value: promotion.promoCode, copy: Boolean(g4RsyaTextV289(promotion.promoCode)), placeholder: "Если нужен" }), promotion.promoCode);
+  add(g4RsyaFieldV289({ product, channel, store: "promotion", field: "dateFrom", label: "Дата начала", value: promotion.dateFrom, copy: Boolean(g4RsyaTextV289(promotion.dateFrom)), type: "date" }), promotion.dateFrom);
+  add(g4RsyaFieldV289({ product, channel, store: "promotion", field: "dateTo", label: "Дата окончания", value: promotion.dateTo, copy: Boolean(g4RsyaTextV289(promotion.dateTo)), type: "date" }), promotion.dateTo);
+  const promoUrl = megaPlatformPageRefUrl(promotion.pageRefV1, state);
+  add(g4RsyaFieldV289({ product, channel, store: "promotion", field: "url", label: "Отдельная страница акции", value: promoUrl, pageRefV1: promotion.pageRefV1 || null, copy: Boolean(promoUrl), full: true }), promoUrl);
   return `<section class="g4-rsya-promotion-v457" data-g4rsya-promotion-v457>
     <div class="g4-rsya-promotion-head-v457">
       <strong>Промоакция</strong>
       <small>необязательно · бизнес-решение</small>
     </div>
     ${g4RsyaGuideV363("promotion", "Промоакция. ")}
-    <div class="g4-rsya-form-v289">
-      ${g4RsyaSelectFieldV289({ product, channel, store: "promotion", field: "type", label: "Тип промоакции", value: promotion.type, options: G4_RSYA_PROMOTION_TYPES_V457 })}
-      ${g4RsyaFieldV289({ product, channel, store: "promotion", field: "discountValue", label: "Размер скидки / выгоды / кешбэка", value: promotion.discountValue, placeholder: "Например, 20% или 1 000 ₽" })}
-      ${g4RsyaFieldV289({ product, channel, store: "promotion", field: "description", label: "Описание промоакции", value: promotion.description, textarea: true, rows: 3, full: true, placeholder: "Условия и ценность предложения" })}
-      ${g4RsyaFieldV289({ product, channel, store: "promotion", field: "promoCode", label: "Промокод", value: promotion.promoCode, placeholder: "Если нужен" })}
-      ${g4RsyaFieldV289({ product, channel, store: "promotion", field: "dateFrom", label: "Дата начала", value: promotion.dateFrom, type: "date" })}
-      ${g4RsyaFieldV289({ product, channel, store: "promotion", field: "dateTo", label: "Дата окончания", value: promotion.dateTo, type: "date" })}
-      ${g4RsyaFieldV289({ product, channel, store: "promotion", field: "url", label: "Отдельная страница акции", value: megaPlatformPageRefUrl(promotion.pageRefV1, state), pageRefV1: promotion.pageRefV1 || null, full: true })}
-    </div>
+    <div class="g4-rsya-form-v289">${filled.join("")}</div>
+    ${missing.length ? `<details><summary>Добавить детали промоакции</summary><div class="g4-rsya-form-v289">${missing.join("")}</div></details>` : ""}
   </section>`;
 }
 
@@ -75185,7 +75184,7 @@ function g4RsyaLaunchGroupKeyV528(group) {
   return productId && jtbdId ? JSON.stringify([productId, jtbdId]) : "";
 }
 
-function g4RsyaLaunchModelV528(product, d) {
+function g4RsyaLaunchModelV528(product, d, campaign = null) {
   const checks = d.ui?.launchChecklistV528 || {};
   const groups = (d.groups || []).map((group, index) => ({
     group, index, key: g4RsyaLaunchGroupKeyV528(group),
@@ -75195,9 +75194,12 @@ function g4RsyaLaunchModelV528(product, d) {
   const groupsReady = groups.filter((entry) => entry.status === "ready").length;
   const manualReady = Array.from({ length: 14 }, (_, index) =>
     checks[`campaign:${index + 1}`] === true).filter(Boolean).length;
+  const rsyaCampaign = campaign || g4RsyaCampaignV289(product,
+    g4LaunchChannels().find(g4IsYandexRsyaChannel)?.key);
+  const campaignReady = g4RsyaCampaignIssuesV289(rsyaCampaign, d, product).length === 0;
   return { checks, groups, groupsReady, manualReady,
     fixed: groups.filter((entry) => entry.fixed).length,
-    ready: manualReady + groupsReady, total: 14 + groups.length };
+    ready: Number(campaignReady) + groupsReady, total: 1 + groups.length };
 }
 
 function g4RsyaLaunchFieldV528(label, value, kind, options = {}) {
@@ -75354,7 +75356,7 @@ function g4RsyaStrategySourceV532(text, href, label) {
 
 function g4RsyaLaunchBudgetV528(product, d) {
   const amount = g4RsyaDirectPanelModelV533(product, d).budget;
-  return amount === null ? "не задано" : `${g4RsyaMoneyV532(amount)} ₽ · неделя`;
+  return amount === null ? "нет данных · заполните Search-прогноз, шаг 2" : `${Number(amount).toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`;
 }
 
 function g4RsyaLaunchUrlHtmlV528(product, campaign, group = null, ad = null) {
@@ -75369,14 +75371,14 @@ function g4RsyaLaunchUrlHtmlV528(product, campaign, group = null, ad = null) {
   </div>`;
 }
 
-function g4RsyaDirectCopyRowV533(label, value, display, reason = "", prominent = false) {
+function g4RsyaDirectCopyRowV533(label, value, display, reason = "", prominent = false, action = "ВСТАВИТЬ") {
   const available = value !== null && value !== undefined && String(value).trim() !== "";
-  return `<div class="g4-rsya-direct-row-v533${prominent ? " is-prominent" : ""}">
-    <span class="g4-rsya-direct-label-v533">${escapeHtml(label)}</span>
-    <strong class="g4-rsya-direct-value-v533">${available ? escapeHtml(display) : "Нет данных"}</strong>
-    ${available
+  return `<div class="g4-rsya-direct-row-v533${prominent ? " is-prominent" : ""}" data-g4rsya-launch-action="${action}">
+    <span class="g4-rsya-direct-label-v533">${escapeHtml(label)} <small class="g4-rsya-action-v541">${action}</small></span>
+    <strong class="g4-rsya-direct-value-v533">${available ? escapeHtml(display) : "Не хватает данных"}</strong>
+    ${available && action === "ВСТАВИТЬ"
       ? `<button type="button" class="small-btn" data-g4rsya-v289-copy="${escapeAttr(value)}">Копировать</button>`
-      : `<small class="g4-rsya-direct-reason-v533">${escapeHtml(reason)}</small>`}
+      : !available ? `<small class="g4-rsya-direct-reason-v533">${escapeHtml(reason)}</small>` : ""}
   </div>`;
 }
 
@@ -75407,10 +75409,11 @@ function g4RsyaDirectGoalDisplayV534(product, d, metrikaSource) {
 function g4RsyaLaunchStrategyHtmlV528(product, channel, campaign, d) {
   const settings = d.campaign || {};
   const direct = g4RsyaDirectPanelModelV533(product, d);
+  const volume = g4RsyaVolumeAssessmentV363(settings);
   const metrikaSource = g4RsyaMetrikaSourceV450(product, state);
   const goal = g4RsyaGoalQualityV363(product, settings);
   const directGoal = g4RsyaDirectGoalDisplayV534(product, d, metrikaSource);
-  const launchDate = String(campaign.launchDate || "");
+  const launchDate = String(settings.launchDateV541 || campaign.launchDate || "");
   const [launchYear, launchMonth, launchDay] = launchDate.split("-").map(Number);
   const date = /^\d{4}-\d{2}-\d{2}$/.test(launchDate) ? new Date(`${launchDate}T12:00:00`) : null;
   const weekday = date && Number.isFinite(date.getTime()) && date.getFullYear() === launchYear &&
@@ -75432,23 +75435,23 @@ function g4RsyaLaunchStrategyHtmlV528(product, channel, campaign, d) {
     <section class="g4-rsya-direct-panel-v533" aria-label="Что вставить в Директ">
       <header><h5>Что вставить в Директ</h5><p>Значения рассчитаны для выбранного товара. В денежных строках копируется число без пробелов и знака ₽.</p></header>
       <div class="g4-rsya-direct-form-v534">
-        <div class="g4-rsya-direct-row-v533" data-g4rsya-direct-row-v534="type"><span class="g4-rsya-direct-label-v533">Тип стратегии</span><strong class="g4-rsya-direct-value-v533">Обычная</strong><small>Не «Пакетная»</small></div>
-        ${g4RsyaDirectCopyRowV533("Стратегия", direct.strategy, direct.strategy)}
-        ${g4RsyaDirectCopyRowV533("С оплатой", "За клики", "За клики")}
-        ${g4RsyaDirectCopyRowV533("Бюджет", direct.budget === null ? null : number(direct.budget), direct.budget === null ? "Нет данных" : `В неделю · ${money(direct.budget)}`, copyReason)}
-        ${g4RsyaDirectCopyRowV533("Ограничение расхода", "Средняя цена конверсии", "Средняя цена конверсии")}
-        ${g4RsyaDirectCopyRowV533("Счётчики Яндекс Метрики", directGoal.counter || null, `${directGoal.domain || "Домен не указан"} · ${directGoal.counter}`, "Укажите счётчик в Gate 2 или восстановите сохранённое значение РСЯ.")}
-        <div class="g4-rsya-direct-goal-row-v534" data-g4rsya-direct-row-v534="goal">
-          <strong class="g4-rsya-direct-label-v533">Целевые действия и их цена</strong>
+        <div class="g4-rsya-direct-row-v533" data-g4rsya-direct-row-v534="type" data-g4rsya-launch-action="ВЫБРАТЬ"><span class="g4-rsya-direct-label-v533">Тип стратегии <small class="g4-rsya-action-v541">ВЫБРАТЬ</small></span><strong class="g4-rsya-direct-value-v533">Обычная</strong><small>Не «Пакетная»</small></div>
+        ${g4RsyaDirectCopyRowV533("Стратегия", direct.strategy, direct.strategy, "", false, "ВЫБРАТЬ")}
+        ${g4RsyaDirectCopyRowV533("С оплатой", "За клики", "За клики", "", false, "ВЫБРАТЬ")}
+        ${g4RsyaDirectCopyRowV533("Бюджет", direct.budget === null ? null : number(direct.budget), direct.budget === null ? "Не хватает данных" : `В неделю · ${money(direct.budget)}`, copyReason)}
+        ${g4RsyaDirectCopyRowV533("Ограничение расхода", "Средняя цена конверсии", "Средняя цена конверсии", "", false, "ВЫБРАТЬ")}
+        ${g4RsyaDirectCopyRowV533("Счётчики Яндекс Метрики", directGoal.counter || null, `${directGoal.domain || "Домен не указан"} · ${directGoal.counter}`, "Укажите счётчик в Gate 2 или восстановите сохранённое значение РСЯ.", false, "ВЫБРАТЬ")}
+        <div class="g4-rsya-direct-goal-row-v534" data-g4rsya-direct-row-v534="goal" data-g4rsya-launch-action="ВСТАВИТЬ">
+          <strong class="g4-rsya-direct-label-v533">Целевые действия и их цена <small class="g4-rsya-action-v541">ВСТАВИТЬ цену</small></strong>
           <span class="g4-rsya-direct-goal-kind-v534">На вашем сайте</span>
           <div class="g4-rsya-direct-goal-layout-v534">
             <div class="g4-rsya-direct-goal-identity-v534">
               <strong>${escapeHtml(directGoal.goalId ? `${directGoal.goalId}${directGoal.goalName ? ` · ${directGoal.goalName}` : ""}` : "Нет данных")}</strong>
               <small>${escapeHtml(`${directGoal.domain || "Домен не указан"} · ${directGoal.counter || "счётчик не указан"}`)}</small>
-              ${directGoal.goalId ? `<button type="button" class="small-btn" data-g4rsya-v289-copy="${escapeAttr(directGoal.goalId)}" aria-label="Копировать ID цели">Копировать</button>` : '<small>Укажите цель Метрики в Gate 2 или восстановите сохранённое значение РСЯ.</small>'}
+              ${directGoal.goalId ? "" : '<small>Укажите цель Метрики в Gate 2 или восстановите сохранённое значение РСЯ.</small>'}
             </div>
             <div class="g4-rsya-direct-goal-price-v534">
-              <span>Цена, ₽</span><strong>${escapeHtml(direct.price === null ? "Нет данных" : money(direct.price))}</strong>
+              <span>Цена, ₽</span><strong>${escapeHtml(direct.price === null ? "Не хватает данных" : money(direct.price))}</strong>
               ${direct.price === null ? `<small>${escapeHtml(copyReason)}</small>` : `<button type="button" class="small-btn" data-g4rsya-v289-copy="${escapeAttr(number(direct.price))}" aria-label="Копировать цену конверсии">Копировать</button>`}
             </div>
           </div>
@@ -75477,31 +75480,20 @@ function g4RsyaLaunchStrategyHtmlV528(product, channel, campaign, d) {
       ${g4RsyaFieldV289({ product, channel, store: "startMethodV532", field: "expectedCpaManualRub", label: "Своя оценка цены заявки, ₽", value: settings.startMethodV532?.expectedCpaManualRub, type: "number", min: 0.01, step: 0.01, optionalEmpty: true })}
       <small>Заполните прогноз в Search → шаг 2 для автоматического расчёта.</small>
     </div>` : ""}
-    <div class="g4-rsya-strategy-row-v531"><strong>Проверка объёма конверсий</strong>
+    <details class="g4-rsya-strategy-row-v531"><summary>Проверка объёма конверсий · ${volume.complete ? `${volume.count} за 7 дней` : "не подтверждена"}</summary>
       ${g4RsyaVolumeHtmlV363(product, channel, d, false)}
       ${g4RsyaStrategyGuideV531("Подсветка целей: больше 20 конверсий в неделю — зелёный; 10–20 — жёлтый; меньше 10 — красный.", "https://b2b.yandex.ru/adv/news/personalnye-sovety-po-nastroyke-strategiy-uzhe-v-interfeyse-direkta")}
-    </div>
+    </details>
     <section class="g4-rsya-start-method-v532 g4-rsya-prelaunch-v532" aria-label="Проверки перед запуском">
       <h5>Проверки перед запуском</h5>
       <label class="g4-rsya-check-v532"><input type="checkbox" data-g4rsya-prelaunch-v532="goalGreen" data-g4rsya-product="${escapeAttr(product)}" ${checks.goalGreen ? "checked" : ""}><span>Цель в Директе зелёная, не серая</span></label>
       ${g4RsyaStrategyGuideV531("Серая цель требует проверки данных и достижения цели в Метрике.", G4_RSYA_YANDEX_GOALS_V532)}
-      ${g4RsyaFieldV289({ product, channel, store: "campaignCommon", field: "launchDate", label: "Дата запуска", value: campaign.launchDate, type: "date" })}
       <label class="g4-rsya-check-v532"><input type="checkbox" disabled ${monday ? "checked" : ""}><span>Запуск в понедельник · день по дате: ${escapeHtml(weekday)}</span></label>
       ${launchDate && !monday ? g4RsyaLaunchBadgeV528("in_progress", "Можно запустить в другой день; понедельник удобнее") : ""}
       ${g4RsyaStrategyGuideV531("Недельный бюджет распределяется с понедельника по воскресенье.", "https://yandex.ru/support/direct/ru/strategies/week-budget")}
       ${g4RsyaStrategyPracticeV532("Запуск в понедельник удобнее для первой полной недели.")}
       <label class="g4-rsya-check-v532"><input type="checkbox" data-g4rsya-prelaunch-v532="balanceReady" data-g4rsya-product="${escapeAttr(product)}" ${checks.balanceReady ? "checked" : ""}><span>На балансе аккаунта хватает на недельный бюджет</span></label>
       ${g4RsyaStrategyGuideV531("Недостаток средств останавливает кампанию и ухудшает эффективность алгоритмов.", G4_RSYA_YANDEX_VOLUME_V532)}
-    </section>
-    <section class="g4-rsya-start-method-v532 g4-rsya-afterlaunch-v532" aria-label="Правила после запуска">
-      <h5>Правила после запуска</h5>
-      <ol>
-        <li>Не меняйте настройки в первые дни, дайте кампании обучиться. ${g4RsyaStrategySourceV532("", G4_RSYA_YANDEX_VOLUME_V532, "Источник: Яндекс")}</li>
-        <li>Не останавливайте кампанию без необходимости: простой от 2–3 дней вредит ставкам, остановка дольше 7 дней сбрасывает обучение. ${g4RsyaStrategySourceV532("", G4_RSYA_YANDEX_AFTER_V532, "Источник: Яндекс")}</li>
-        <li>Не удаляйте и не меняйте ключи: в РСЯ это не главный сигнал. ${g4RsyaStrategyPracticeV532("")}</li>
-        <li>Исключайте площадки только при достаточной статистике и высокой доле кликов без заявок. ${g4RsyaStrategyPracticeV532("")}</li>
-        <li>Меняйте цену не чаще раза в неделю и не больше чем на 10%. ${g4RsyaStrategySourceV532("", G4_RSYA_YANDEX_AFTER_V532, "Источник: Яндекс")}</li>
-      </ol>
     </section>
   </div>`;
 }
@@ -75531,9 +75523,9 @@ function g4RsyaLaunchValueV537(value, options = {}) {
   return `<div class="g4-rsya-launch-value-v537"><span>${escapeHtml(display)}</span>${text && options.copy !== false ? `<button type="button" class="small-btn" data-g4rsya-v289-copy="${escapeAttr(text)}">Копировать</button>` : ""}</div>`;
 }
 
-function g4RsyaLaunchGroupRowV537(number, title, body, note = "") {
-  return `<section class="g4-rsya-launch-group-row-v537" data-g4rsya-launch-group-row="${number}">
-    <div class="g4-rsya-launch-group-row-title-v537"><b>${number}.</b><strong>${escapeHtml(title)}</strong></div>
+function g4RsyaLaunchGroupRowV537(number, title, body, note = "", action = "ВСТАВИТЬ") {
+  return `<section class="g4-rsya-launch-group-row-v537" data-g4rsya-launch-group-row="${number}" data-g4rsya-launch-action="${action}">
+    <div class="g4-rsya-launch-group-row-title-v537"><b>${number}.</b><strong>${escapeHtml(title)}</strong>${action ? `<small class="g4-rsya-action-v541">${action}</small>` : ""}</div>
     <div class="g4-rsya-launch-group-row-content-v537">${body}${note ? `<small>${note}</small>` : ""}</div>
   </section>`;
 }
@@ -75549,17 +75541,12 @@ function g4RsyaLaunchPromotionTextV537(promotion) {
     .map(([label, value]) => `${label}: ${g4RsyaTextV289(value)}`).join("\n");
 }
 
-function g4RsyaLaunchGroupExtrasV537(group, d) {
-  const ads = group.ads || [];
-  const item = (label, value) => `<div class="g4-rsya-launch-subrow-v537"><b>${escapeHtml(label)}</b>${g4RsyaLaunchValueV537(value)}</div>`;
-  const adRows = ads.map((ad, index) => {
-    const suffix = ads.length > 1 ? ` · объявление ${index + 1}` : "";
-    const sitelinks = (ad.sitelinks || []).filter(g4RsyaSitelinkTouchedV482)
-      .map((row, linkIndex) => `${linkIndex + 1}. ${g4RsyaTextV289(row.title) || "не задано"}\n${g4RsyaTextV289(row.description) || "не задано"}\n${megaPlatformPageRefUrl(row.pageRefV1) || "не задано"}`).join("\n\n");
-    const callouts = (ad.callouts || []).map((row) => g4RsyaTextV289(row.value)).filter(Boolean).join("\n");
-    return `${item(`Быстрые ссылки${suffix}`, sitelinks)}${item(`Уточнения${suffix}`, callouts)}`;
-  }).join("");
-  return `${adRows || `${item("Быстрые ссылки", "")}${item("Уточнения", "")}`}${item("Промоакция", g4RsyaLaunchPromotionTextV537(d.campaign.promotion))}`;
+function g4RsyaLaunchGroupExtrasV537(group, kind) {
+  const values = (group.ads || []).flatMap((ad) => kind === "sitelinks"
+    ? (ad.sitelinks || []).filter(g4RsyaSitelinkTouchedV482).map((row) =>
+      [g4RsyaTextV289(row.title), g4RsyaTextV289(row.description), megaPlatformPageRefUrl(row.pageRefV1)].filter(Boolean).join(" | "))
+    : (ad.callouts || []).map((row) => g4RsyaTextV289(row.value)).filter(Boolean));
+  return [...new Set(values.filter(Boolean))].join("\n");
 }
 
 function g4RsyaCompetitorDomainsV538(productId) {
@@ -75588,22 +75575,21 @@ function g4RsyaLaunchCompetitorInterestsV538(productId) {
 }
 
 function g4RsyaLaunchGroupHtmlV537(product, campaign, d, group, defaults, fixed, key) {
-  const template = g4RsyaCampaignUtmTemplateV478(campaign);
-  const urlTemplate = template || G4_YANDEX_RECOMMENDED_UTM_V488.rsya;
   const video = `<a href="${G4_RSYA_VIDEO_V532}" target="_blank" rel="noopener noreferrer">Практика автора видео, не официальный источник</a>`;
   const item = g4RsyaLaunchGroupRowV537;
   return `<div class="g4-v436-group-fields g4-rsya-launch-group-v537" data-g4rsya-launch-group-v537="${escapeAttr(group.id)}">
     <p class="g4-rsya-launch-group-jtbd-v537">JTBD: ${escapeHtml(defaults.name || "не задано")} · ${fixed ? "Зафиксирована" : "В редактировании"}${key ? "" : " · Привязка product_id / jtbdId: не задано"}</p>
-    ${item(1, "География показов", g4RsyaLaunchValueV537(d.campaign.geography), "Из кампании, второй раз не вводится.")}
-    ${item(2, "Сценарий группы", g4RsyaLaunchValueV537("Вся заинтересованная аудитория", { copy: false }), video)}
-    ${item(3, "Автотаргетинг", g4RsyaLaunchValueV537("Включён", { copy: false }), video)}
-    ${item(4, "Тематические слова", `<div class="g4-rsya-launch-subrow-v537"><b>Ключевые фразы</b>${g4RsyaLaunchValueV537(defaults.keywords)}</div><div class="g4-rsya-launch-subrow-v537"><b>Минус-фразы</b>${g4RsyaLaunchValueV537("Не заполнять на старте", { copy: false })}</div>`, `${video}. Яндекс допускает минус-фразы в РСЯ для исключения неподходящих площадок: <a href="https://yandex.ru/support/direct/ru/keywords/negative-keywords" target="_blank" rel="noopener noreferrer">Справка Директа</a>.`)}
-    ${item(5, "Интересы и привычки", g4RsyaLaunchCompetitorInterestsV538(product))}
-    ${item(6, "Сегменты аудитории", `${g4RsyaLaunchValueV537(group.retargetingSegments)}<div class="g4-rsya-launch-subrow-v537"><b>Офферный ретаргетинг</b>${g4RsyaLaunchValueV537("не применимо (только товарные объявления)", { copy: false })}</div>`)}
-    ${item(7, "Дополнительные элементы объявлений", g4RsyaLaunchGroupExtrasV537(group, d))}
-    ${item(8, "Параметры URL", g4RsyaLaunchValueV537(urlTemplate), template ? "UTM-шаблон РСЯ из кампании." : "Рекомендуемый шаблон РСЯ · в кампании ещё не сохранён.")}
-    ${item(9, "Корректировки", g4RsyaLaunchValueV537("не на старте", { copy: false }))}
-    ${item(10, "Дополнительные настройки", g4RsyaLaunchValueV537("без изменений", { copy: false }))}
+    ${item(1, "География", g4RsyaLaunchValueV537(d.campaign.geography, { empty: "Заполните «География для всех групп» выше." }), "Для поиска региона в Директе; значение из кампании.")}
+    ${item(2, "Сценарий группы", g4RsyaLaunchValueV537("Вся заинтересованная аудитория", { copy: false }), video, "ВЫБРАТЬ")}
+    ${item(3, "Автотаргетинг", g4RsyaLaunchValueV537("Включён", { copy: false }), video, "ВЫБРАТЬ")}
+    ${item(4, "Ключевые фразы", g4RsyaLaunchValueV537(defaults.keywords, { empty: "Нет фраз. Заполните ключевые фразы группы в шаге «JTBD и группы»." }))}
+    ${item(5, "Минус-фразы", g4RsyaLaunchValueV537("Не заполнять", { copy: false }), "В РСЯ на старте почти не влияют; сохранённые фразы остаются в данных.", "ПРОПУСТИТЬ")}
+    ${item(6, "Интересы и привычки", g4RsyaLaunchCompetitorInterestsV538(product))}
+    ${item(7, "Сегменты аудитории", g4RsyaLaunchValueV537("Не заполнять", { copy: false }), "На старте не применяем; сохранённые сегменты остаются в данных.", "ПРОПУСТИТЬ")}
+    ${item(8, "Быстрые ссылки", g4RsyaLaunchValueV537(g4RsyaLaunchGroupExtrasV537(group, "sitelinks"), { empty: "Нет быстрых ссылок. Заполните их в шаге «JTBD и группы»." }))}
+    ${item(9, "Уточнения", g4RsyaLaunchValueV537(g4RsyaLaunchGroupExtrasV537(group, "callouts"), { empty: "Нет уточнений. Заполните их в шаге «JTBD и группы»." }))}
+    ${item(10, "Параметры URL группы", g4RsyaLaunchValueV537("Не заполнять", { copy: false }), "UTM-шаблон задан на уровне кампании.", "ПРОПУСТИТЬ")}
+    ${item(11, "Корректировки", g4RsyaLaunchValueV537("Не заполнять", { copy: false }), "На старте не применяем.", "ПРОПУСТИТЬ")}
     ${(group.ads || []).map((ad, adIndex) => g4RsyaLaunchAdHtmlV528(product, campaign, group, ad, adIndex)).join("") || '<p class="g4-v406-launch-notes">Объявление: не задано</p>'}
   </div>`;
 }
@@ -75613,33 +75599,71 @@ function g4RsyaLaunchAdHtmlV528(product, campaign, group, ad, index) {
   const texts = (ad.texts || []).map((row) => g4RsyaTextV289(row.value)).filter(Boolean);
   const images = ad.images || [];
   const filledImages = images.filter((image) => image?.dataUrl || image?.url);
-  const link = g4RsyaFinalUrlValueV478(campaign, product, group, ad) || megaPlatformProductUrl(product, state);
+  const link = megaPlatformProductUrl(product, state);
+  const cta = G4_RSYA_CTA_OPTIONS_V289.find(([value]) => value === ad.ctaText)?.[1] || ad.ctaText || "Без кнопки";
+  const ctaRecommendation = g4RsyaCtaRecommendationV479(product, group);
   return `<section class="g4-v440-group-ad-level g4-rsya-launch-ad-v537" data-g4rsya-launch-ad="${escapeAttr(ad.id)}">
-    <h5>Объявление ${index + 1}${ad.name ? ` · ${escapeHtml(ad.name)}` : ""}</h5>
+    <h5>Шаг 3 · Объявление ${index + 1}${ad.name ? ` · ${escapeHtml(ad.name)}` : ""}</h5>
     <div class="g4-rsya-launch-ad-fields-v537">
-      <div class="g4-rsya-launch-subrow-v537"><b>Ссылка в объявлении</b>${g4RsyaLaunchValueV537(link)}</div>
-      <div class="g4-rsya-launch-subrow-v537"><b>Заголовки ${headings.length}/${G4_RSYA_LIMITS_V289.headings}</b>${g4RsyaLaunchValueV537(headings.join("\n"))}</div>
-      <div class="g4-rsya-launch-subrow-v537"><b>Тексты ${texts.length}/${G4_RSYA_LIMITS_V289.texts}</b>${g4RsyaLaunchValueV537(texts.join("\n"))}</div>
-      <div class="g4-rsya-launch-subrow-v537"><b>Изображения ${filledImages.length}/${G4_RSYA_LIMITS_V289.images}</b>${g4RsyaLaunchValueV537(filledImages.map((image, imageIndex) => `${imageIndex + 1}. ${image.name || image.url || "Без названия"}`).join("\n"), { copy: false })}</div>
+      ${g4RsyaLaunchGroupRowV537(1, "Ссылка", g4RsyaLaunchValueV537(link, { empty: "Укажите URL товара в Платформе Gate 0." }))}
+      ${g4RsyaLaunchGroupRowV537(2, `Заголовки ${headings.length}/${G4_RSYA_LIMITS_V289.headings}`, g4RsyaLaunchValueV537(headings.join("\n"), { empty: "Нет заголовков. Заполните объявление в шаге «JTBD и группы»." }))}
+      ${g4RsyaLaunchGroupRowV537(3, `Тексты ${texts.length}/${G4_RSYA_LIMITS_V289.texts}`, g4RsyaLaunchValueV537(texts.join("\n"), { empty: "Нет текстов. Заполните объявление в шаге «JTBD и группы»." }))}
+      ${g4RsyaLaunchGroupRowV537(4, `Изображения ${filledImages.length}/${G4_RSYA_LIMITS_V289.images}`, g4RsyaLaunchValueV537(filledImages.map((image) => image.name || image.url || "Имя файла не указано").join("\n"), { copy: false, empty: "Нет изображений. Загрузите их в шаге «JTBD и группы»." }), "Выберите или загрузите файлы в Директе.", "ВЫБРАТЬ")}
+      ${g4RsyaLaunchGroupRowV537(5, "Кнопка", g4RsyaLaunchValueV537(cta, { copy: false }), `Рекомендация для целевого действия: ${escapeHtml(ctaRecommendation.category)}.`, "ВЫБРАТЬ")}
     </div>
   </section>`;
 }
 
+function g4RsyaLaunchCampaignNameV529(product, channelKey) {
+  const channel = g4CampaignWritableChannelsV301(g4LaunchChannels())
+    .find((row) => row.key === channelKey) || {};
+  const { productLabel } = g4sbV432CampaignNameModel(channel, product);
+  // Вычисляем из Gate 0 и селектора; сохранённое ручное имя не перезаписываем.
+  return [channel.type, productLabel, channel.platform]
+    .map((value) => g4RsyaTextV289(value) || "не задано").join(" - ");
+}
+
 function g4RsyaLaunchBodyV453(product, channel, campaign, d, model) {
   const settings = d.campaign || {};
-  const name = g4RsyaTextV289(campaign.campaignName);
-  const extras = {
-    0: g4RsyaLaunchFieldV528("Предложенное имя", name ? `Яндекс Директ / РСЯ - ${name}` : "", "campaign-name"),
-    1: g4RsyaLaunchFieldV528("Сайт · Платформа Gate 0", megaPlatformProductUrl(product, state), "advertised-site"),
-    3: g4RsyaLaunchStrategyHtmlV528(product, channel, campaign, d),
-    4: g4RsyaLaunchFieldV528("Дата запуска", campaign.launchDate, "launch-date"),
-    5: g4RsyaLaunchFieldV528("Расписание", settings.schedule, "schedule"),
-    6: g4RsyaLaunchUrlHtmlV528(product, campaign),
-    13: `${settings.excludedPlacements.length > 1000 ? g4RsyaLaunchBadgeV528("problem", "Превышен лимит 1000 площадок") : ""}${g4RsyaLaunchExclusionsHtmlV536(product, channel, d)}`,
-  };
+  // The shared campaign normalizer does not retain launchDate. Keep RSYA's
+  // previous value when present, then save future edits in a product-scoped key.
+  if (settings.launchDateV541 === undefined && campaign.launchDate)
+    settings.launchDateV541 = campaign.launchDate;
+  const item = g4RsyaLaunchGroupRowV537;
+  const platformUrl = megaPlatformProductUrl(product, state);
+  const suggestedName = g4RsyaLaunchCampaignNameV529(product, channel);
+  const today = new Date();
+  const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  monday.setDate(monday.getDate() + (8 - monday.getDay()) % 7);
+  const suggestedStart = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, "0")}-${String(monday.getDate()).padStart(2, "0")}`;
+  const savedStart = g4RsyaTextV289(settings.launchDateV541 || campaign.launchDate);
+  const start = savedStart || suggestedStart;
+  const formatDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${value}T12:00:00`))
+    : value;
+  const promotion = settings.promotion || {};
+  const promotionText = g4RsyaLaunchPromotionTextV537(promotion);
+  const utm = g4RsyaCampaignUtmTemplateV478(campaign) || G4_YANDEX_RECOMMENDED_UTM_V488.rsya;
+  const campaignRows = `
+    ${item(1, "Страница сайта", g4RsyaLaunchValueV537(platformUrl, { empty: "Укажите URL товара в Платформе Gate 0." }))}
+    ${item(2, "Название кампании", g4RsyaFieldV289({ product, channel, store: "campaignCommon", field: "campaignName", label: "Название для Директа", value: campaign.campaignName || suggestedName, copy: true, required: true }), "Предложенное имя можно изменить здесь; сохранённое имя не перезаписывается автоматически.")}
+    ${item(3, "Данные компании", g4RsyaLaunchValueV537("Не заполнять", { copy: false }), "Контакты подтянутся из Яндекс Бизнеса.", "ПРОПУСТИТЬ")}
+    ${item(4, "Места показа", g4RsyaLaunchValueV537("Ручная настройка · только Рекламная сеть Яндекса", { copy: false }), "Поиск выключен; он запускается отдельной кампанией.", "ВЫБРАТЬ")}
+    ${item(5, "Стратегия", g4RsyaLaunchStrategyHtmlV528(product, channel, campaign, d), "Расчёт и проверки сохранены в существующей панели.", "")}
+    ${item(6, "Отслеживание звонков", g4RsyaLaunchValueV537("Не заполнять", { copy: false }), "На старте не настраиваем.", "ПРОПУСТИТЬ")}
+    ${item(7, "Дата начала и окончания", `<div>Начало: ${escapeHtml(formatDate(start))}${savedStart ? "" : " · ближайший понедельник"}</div><div>Окончание: ${escapeHtml(campaign.stopDate ? formatDate(campaign.stopDate) : "по сроку кампании; срок не задан в данных — укажите его в Директе")}</div><details><summary>Изменить дату начала в GURU</summary>${g4RsyaFieldV289({ product, channel, store: "campaign", field: "launchDateV541", label: "Дата начала", value: savedStart, type: "date" })}</details>`, "Даты вводятся в Директе вручную, без копирования.", "ВЫБРАТЬ")}
+    ${item(8, "Расписание показов", g4RsyaLaunchValueV537("Не заполнять", { copy: false }), "На старте оставьте расписание по умолчанию; старое значение сохранено.", "ПРОПУСТИТЬ")}
+    ${item(9, "Параметры URL", g4RsyaFieldV289({ product, channel, store: "campaignCommon", field: "utmTemplate", label: "UTM-шаблон РСЯ", value: utm, textarea: true, full: true, copy: true }), campaign.utmTemplate ? "Шаблон из кампании." : "Рекомендованный шаблон; сохранится в кампании после редактирования.")}
+    ${item(10, "Промоакция", promotionText ? g4RsyaPromotionHtmlV457(product, channel, promotion) : `<span>Не заполнять · промоакция не задана.</span><details><summary>Настроить промоакцию</summary>${g4RsyaPromotionHtmlV457(product, channel, promotion)}</details>`, promotionText ? "Поля промоакции вводятся только здесь." : "Добавьте промоакцию только если она есть в предложении.", promotionText ? "ВСТАВИТЬ" : "ПРОПУСТИТЬ")}
+    ${item(11, "Автоматические рекомендации", g4RsyaLaunchValueV537("Выключить автоматическое применение рекомендаций; выключить оптимизацию текста объявлений", { copy: false }), "Текущая рекомендация РСЯ.", "ВЫБРАТЬ")}
+    <h5 class="g4-rsya-launch-extended-v541">12. Расширенные настройки</h5>
+    ${item("12а", "Корректировки", g4RsyaLaunchValueV537("Не заполнять", { copy: false }), "Не на старте.", "ПРОПУСТИТЬ")}
+    ${item("12б", "Минус-фразы", g4RsyaLaunchValueV537("Не заполнять", { copy: false }), "В РСЯ на старте почти не влияют.", "ПРОПУСТИТЬ")}
+    ${item("12в", "Мониторинг сайта", g4RsyaLaunchValueV537("Включить", { copy: false }), "", "ВЫБРАТЬ")}
+    ${item("12г", "Запрет показов", g4RsyaLaunchExclusionsHtmlV536(product, channel, d))}`;
   const groupsHtml = model.groups.map(({ group, index, key, fixed, status }) => {
     const defaults = g4RsyaGroupGate1DefaultsV456(product, group);
-    const title = `Группа ${index + 1} (1 JTBD = 1 группа)`;
+    const title = `Шаг 2 · Группа ${index + 1} (1 JTBD = 1 группа)`;
     const heading = g4sbV406LaunchLevelHtml(product, {}, "", title, [], [], {}, {
       kind: "rsya", collapsible: Boolean(key), groupId: key,
       isOpen: d.ui?.launchGroupOpenV528?.[key] === true,
@@ -75649,13 +75673,14 @@ function g4RsyaLaunchBodyV453(product, channel, campaign, d, model) {
     return g4sbV440AppendGroupAdLevel(heading, body);
   }).join("");
   return `<div class="g4-v406-launch g4-rsya-launch-v528" data-g4rsya-v453-panel-body="launch" data-g4rsya-launch-body>
-    ${g4RsyaCampaignSettingsBodyV528(product, channel, campaign, d)}
     <div class="g4-v407-launch-context">
-      <span>Итоговый бюджет: <strong>${escapeHtml(g4RsyaLaunchBudgetV528(product, d))}</strong></span>
-      <span>Объявления и уточнения: <strong>${model.groupsReady} из ${model.groups.length} групп готовы</strong></span>
+      <span>Итоговый бюджет в неделю: <strong>${escapeHtml(g4RsyaLaunchBudgetV528(product, d))}</strong></span>
+      <span>Группы готовы: <strong>${model.groupsReady} из ${model.groups.length}</strong></span>
     </div>
-    ${g4sbV406LaunchLevelHtml(product, model.checks, "campaign", "Уровень кампании", g4RsyaLaunchCampaignItemsV528(), [], extras, { kind: "rsya" })}
-    <div class="g4-v407-group-overview"><strong>Уровень группы</strong><p class="g4-v406-launch-notes">Групп всего: ${model.groups.length} · Зафиксировано: ${model.fixed}</p></div>
+    <section class="g4-v406-launch-level g4-rsya-launch-campaign-v541"><h4>Шаг 1 · Кампания</h4><div class="g4-v406-launch-items">${campaignRows}</div></section>
+    <div class="g4-v407-group-overview"><strong>Шаг 2 · Группа</strong><p class="g4-v406-launch-notes">Групп всего: ${model.groups.length} · Зафиксировано: ${model.fixed}</p>
+      ${g4RsyaFieldV289({ product, channel, store: "campaign", field: "geography", label: "География для всех групп", value: settings.geography, required: true, hint: "Одно поле ввода; группы читают его без повторного ввода." })}
+    </div>
     ${groupsHtml || '<section class="g4-v406-launch-level"><h4>Уровень группы</h4><p>Группы: не задано</p></section>'}
   </div>`;
 }
@@ -75665,7 +75690,7 @@ function g4RsyaRefreshLaunchV528(product) {
   const channel = document.querySelector(`.g4-rsya-v289[data-g4rsya-product="${CSS.escape(product)}"]`)?.dataset.g4rsyaChannel;
   g4RsyaMigrateStrategyV531(g4RsyaCampaignV289(product, channel), d);
   g4RsyaMigrateStartMethodV532(d);
-  const model = g4RsyaLaunchModelV528(product, d);
+  const model = g4RsyaLaunchModelV528(product, d, g4RsyaCampaignV289(product, channel));
   const card = document.querySelector(`.g4-rsya-v289[data-g4rsya-product="${CSS.escape(product)}"]`);
   const meta = card?.querySelector('[data-g4rsya-v453-step-meta="launch"]');
   if (meta) meta.textContent = `Готово ${model.ready} из ${model.total}`;
@@ -75733,7 +75758,7 @@ function g4RsyaChannelCardV289(channel, campaign, index, product) {
     ? d.ui.workflowStepOpenV453 : { groups: true, launch: false };
   if (!Object.hasOwn(d.ui.workflowStepOpenV453, "groups")) d.ui.workflowStepOpenV453.groups = true;
   if (!Object.hasOwn(d.ui.workflowStepOpenV453, "launch")) d.ui.workflowStepOpenV453.launch = false;
-  const progress = g4RsyaLaunchModelV528(product, d);
+  const progress = g4RsyaLaunchModelV528(product, d, campaign);
   const adCount = d.groups.reduce((sum, group) => sum + (group.ads || []).length, 0);
   const groupsMeta = `${g4RsyaCountLabelV453(d.groups.length, "группа", "группы", "групп")} · ${g4RsyaCountLabelV453(adCount, "объявление", "объявления", "объявлений")}`;
   const launchMeta = `Готово ${progress.ready} из ${progress.total}`;
@@ -76151,9 +76176,24 @@ document.addEventListener("input", (event) => {
     flashSaving();
     return;
   }
+  if (target.closest("[data-g4rsya-launch-body]") &&
+      ["campaign", "campaignCommon", "promotion"].includes(store)) {
+    // Keep the focused field mounted while the user types; derived launch
+    // values refresh on change after the edit is finished.
+    flashSaving();
+    return;
+  }
   g4RsyaRefreshLaunchV454(target.dataset.g4rsyaV289Product);
   g4RsyaRefreshGroupCardsV458(target.dataset.g4rsyaV289Product);
   flashSaving();
+});
+
+document.addEventListener("change", (event) => {
+  const target = event.target?.closest?.("[data-g4rsya-launch-body] [data-g4rsya-v289-bind]");
+  if (!target || target.tagName === "SELECT" || target.type === "checkbox" ||
+      target.closest("[data-g4rsya-strategy-v531]")) return;
+  if (!["campaign", "campaignCommon", "promotion"].includes(target.dataset.g4rsyaV289Store)) return;
+  g4RsyaRefreshLaunchV528(target.dataset.g4rsyaV289Product);
 });
 
 document.addEventListener("change", (event) => {

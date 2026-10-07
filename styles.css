@@ -12699,6 +12699,38 @@ body {
 }
 .g4-rsya-launch-ad-v537 .g4-rsya-launch-subrow-v537 { grid-template-columns: minmax(180px, 28%) minmax(0, 1fr); }
 
+/* РСЯ · порядок полей запуска по форме Директа. */
+.g4-rsya-launch-v528 .g4-rsya-action-v541 {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.g4-rsya-launch-v528 .g4-rsya-direct-label-v533 .g4-rsya-action-v541 { margin-left: 8px; }
+.g4-rsya-launch-v528 .g4-rsya-launch-group-row-title-v537 { flex-wrap: wrap; }
+.g4-rsya-launch-v528 .g4-rsya-launch-group-row-content-v537 > details,
+.g4-rsya-launch-v528 .g4-rsya-exclusions-v536 > details { min-width: 0; }
+.g4-rsya-launch-v528 details > summary { cursor: pointer; font-size: 12px; }
+.g4-rsya-launch-v528 .g4-rsya-launch-extended-v541 {
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+.g4-rsya-launch-v528 .g4-rsya-launch-campaign-v541 .g4-v406-launch-items { display: grid; }
+.g4-rsya-launch-v528 .g4-rsya-exclusions-v536 { gap: 8px; }
+.g4-rsya-launch-v528 .g4-rsya-exclusions-v536 > small { color: var(--muted); }
+.g4-rsya-launch-v528 .g4-rsya-promotion-v457,
+.g4-rsya-launch-v528 .g4-rsya-exclusions-v536,
+.g4-rsya-launch-v528 .g1-input.is-empty,
+.g4-rsya-launch-v528 .g1-input.has-error {
+  background: var(--surface, #fff) !important;
+  box-shadow: none !important;
+}
+.g4-rsya-launch-v528 .g4-v407-group-overview > .g4-rsya-field-v289 { margin-top: 12px; }
+
 .g4-v406-launch-item > .g4-rsya-exclusions-v536 {
   margin: 14px 0 0 28px;
 }
