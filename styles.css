@@ -11929,6 +11929,7 @@ body {
 
 .g4-rsya-v289 .g1-input.is-empty,
 .g4-rsya-v289 .g1-input.is-filled,
+.g4-rsya-v289 .g1-input.is-optional,
 .g4-rsya-v289 .g1-input.has-error,
 .g4-rsya-v289 .g1-input:disabled,
 .g4-rsya-v289 .g1-input[readonly] {
@@ -11975,10 +11976,84 @@ body {
 .g4-rsya-strategy-metrika-v531 > strong,
 .g4-rsya-strategy-metrika-v531 > .g4-rsya-goal-status-v363 { grid-column: 1 / -1; }
 
+.g4-rsya-start-method-v532 {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  margin: 12px 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface, #fff);
+}
+
+.g4-rsya-start-method-v532 h5 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.g4-rsya-start-intro-v532 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.g4-rsya-start-grid-v532 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.g4-rsya-start-method-v532 .g4-rsya-strategy-fixed-v531 {
+  padding: 10px 0 0;
+}
+
+.g4-rsya-start-method-v532 .g4-rsya-strategy-guide-v531 {
+  margin: 0;
+}
+
+.g4-rsya-check-v532 {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.g4-rsya-check-v532 input {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  accent-color: var(--text);
+}
+
+.g4-rsya-weekday-v532 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.g4-rsya-afterlaunch-v532 ol {
+  display: grid;
+  gap: 12px;
+  padding-left: 22px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.g4-rsya-afterlaunch-v532 li .g4-rsya-strategy-guide-v531 {
+  margin: 2px 0 0;
+}
+
 @media (max-width: 760px) {
   .g4-rsya-strategy-metrika-v531 { grid-template-columns: minmax(0, 1fr); }
   .g4-rsya-strategy-metrika-v531 > strong,
   .g4-rsya-strategy-metrika-v531 > .g4-rsya-goal-status-v363 { grid-column: auto; }
+  .g4-rsya-start-grid-v532 { grid-template-columns: minmax(0, 1fr); }
 }
 
 .g4-v406-launch-level {
