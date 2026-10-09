@@ -113,15 +113,17 @@ try {
     return {beforeIds,afterIds:entry.competitors.map(c=>c.id),sameObject:entry.competitors[0]===competitor,jtbds:jtbds.map(j=>({id:j.id,primary:j.primary,count:j.top.length,frequencies:j.top.map(p=>p.frequency)})),afterRenderJtbds:g1BergenJtbdsV543(product).map(j=>({id:j.id,count:j.top.length})),mapCounts:(state.painV130?.productMaps||[]).map(m=>({demand:m.items?.[pid]?.demandRows?.length||0,extra:m.items?.[pid]?.semL4Model?.additionalJtbds?.length||0})),migrated:structuredClone(competitor.bergenV543),price:g1CompetitorContextV539(product).price.raw};
   })()`);
   await waitFor('document.querySelector(".g1bp-table-v543")');
+  const phrasePlacement = await evaluate(`(() => {const table=document.querySelector('.g1bp-table-v543'),row=table.querySelector('.g1bp-phrase-row-v547'),stage=table.querySelector('.g1bp-stage-v543'),group=table.querySelector('.g1bp-group-v543');return{count:document.querySelectorAll('.g1bp-phrase-strip-v543').length,inTable:!!row?.querySelector('.g1bp-phrase-strip-v543'),afterStage:stage?.nextElementSibling===row,beforeGroup:row?.nextElementSibling===group,columns:row?.cells[0]?.colSpan,phraseGroups:row?.querySelectorAll('.g1bp-phrase-jtbd-v543').length}})()`);
+  assert(phrasePlacement.count===1 && phrasePlacement.inTable && phrasePlacement.afterStage && phrasePlacement.beforeGroup && phrasePlacement.columns===initialized.beforeIds.length+1 && phrasePlacement.phraseGroups===3, "Phrase block is not integrated into comparison: "+JSON.stringify(phrasePlacement));
   assert(initialized.sameObject && JSON.stringify(initialized.beforeIds)===JSON.stringify(initialized.afterIds), "Competitor object or ID changed");
   assert(initialized.jtbds.length===3 && initialized.jtbds.every(j=>j.count===5 && j.frequencies.every((n,i,a)=>i===0||a[i-1]>=n)) && initialized.afterRenderJtbds.length===3 && initialized.afterRenderJtbds.every(j=>j.count===5), "JTBD phrase ranking failed before/after render: "+JSON.stringify(initialized));
   assert(initialized.migrated.product.includes('Старые характеристики') && initialized.migrated.price==='4900' && initialized.migrated.offerCta.includes('Старая посадочная') && initialized.migrated.takeaway==='Старый вывод' && initialized.migrated.matchedJtbdIdsV543.includes(initialized.jtbds[0].id), "Migration failed: "+JSON.stringify(initialized.migrated));
-  const copied = await evaluate(`(async()=>{const button=document.querySelector('.g1bp-phrase-strip-v543 [data-g1-competitor-copy-v539]');const text=button.dataset.g1CompetitorCopyV539;button.click();await new Promise(r=>setTimeout(r,80));const test=document.createElement('input');document.body.append(test);test.value=await navigator.clipboard.readText();const pasted=test.value;test.remove();return{text,pasted}})()`);
+  const copied = await evaluate(`(async()=>{const button=document.querySelector('.g1bp-table-v543 .g1bp-phrase-strip-v543 [data-g1-competitor-copy-v539]');const text=button.dataset.g1CompetitorCopyV539;button.click();await new Promise(r=>setTimeout(r,80));const test=document.createElement('input');document.body.append(test);test.value=await navigator.clipboard.readText();const pasted=test.value;test.remove();return{text,pasted}})()`);
   assert(copied.text===copied.pasted, "Phrase copy/paste failed: "+JSON.stringify(copied));
   if (!layoutOnly) await screenshot('gate1-bergen-goat-phrases-v543.png','.g1bp-phrase-strip-v543');
   if (layoutOnly) {
-    await screenshot('gate1-bergen-goat-context-v546.png','.g1bp-v543',1450);
-    await screenshot('gate1-bergen-goat-table-one-v546.png','.g1bp-scroll-v543',1250);
+    await screenshot('gate1-bergen-goat-comparison-integrated-v547.png','.g1bp-v543',1450);
+    await screenshot('gate1-bergen-goat-table-one-integrated-v547.png','.g1bp-scroll-v543',1250);
   }
   const populated = await evaluate(`(() => {
     const s=window.__bergen,first=s.competitor;
@@ -140,7 +142,7 @@ try {
   assert(layout.columns===3 && layout.phraseRows===15 && layout.oldSteps===0 && layout.oldTable===0 && layout.disabled>=14 && layout.allDisabled && layout.stickyOwn==='sticky' && layout.bodyCells && layout.alignedLabels && layout.repeatedSections && layout.addButtons.join(',')==='2' && layout.headerWidths.every(width=>Math.abs(width-480)<=1) && layout.jtbdLabels.join('|')==='№1 · основной|№2|№3' && layout.jtbdAlignment.every(n=>n.gap>=4&&n.gap<=10&&n.vertical<=4) && layout.ownJtbd.includes('№1 · основной —') && layout.ownJtbd.includes('№2 —') && layout.ownJtbd.includes('№3 —') && layout.inputHeight===40 && Math.abs(layout.inputWidth-(layout.cellInnerWidth-6))<=2 && layout.textAlign==='left', "Table layout failed: "+JSON.stringify(layout));
   if (layoutOnly) {
     await evaluate(`(() => {const sc=document.querySelector('.g1bp-scroll-v543');sc.style.maxHeight='none';sc.style.overflow='visible';sc.scrollTop=0;})()`);
-    await screenshot('gate1-bergen-goat-table-guru-v546.png','.g1bp-table-v543');
+    await screenshot('gate1-bergen-goat-table-integrated-v547.png','.g1bp-table-v543');
   } else {
     await screenshot('gate1-bergen-goat-table-v543.png','.g1bp-v543',1350);
     await evaluate(`(() => {const sc=document.querySelector('.g1bp-scroll-v543');sc.scrollTop=0;})()`);
@@ -157,7 +159,7 @@ try {
   assert(live.immediate==='Новый аналог' && live.after===live.immediate && live.id===initialized.beforeIds[0] && live.old, "Live save changed legacy data: "+JSON.stringify(live));
   const deletion = await evaluate(`(() => {const s=window.__bergen,second=s.entry.competitors[1];window.confirm=()=>false;document.querySelector('[data-g1bp-delete-v543="'+second.id+'"]').click();const cancelled=s.entry.competitors.some(c=>c.id===second.id);window.confirm=()=>true;document.querySelector('[data-g1bp-delete-v543="'+second.id+'"]').click();return{cancelled,archived:s.entry.archivedCompetitorsV540.some(c=>c.id===second.id),firstId:s.entry.competitors[0].id,secondVisible:s.entry.competitors.some(c=>c.id===second.id)}})()`);
   assert(deletion.cancelled && deletion.archived && !deletion.secondVisible && deletion.firstId===initialized.beforeIds[0], "Delete/archive failed: "+JSON.stringify(deletion));
-  console.log(JSON.stringify({ok:true,initialized,populated,layout,horizontal,narrow,copied,live,deletion,errors:page.errors},null,2));
+  console.log(JSON.stringify({ok:true,initialized,phrasePlacement,populated,layout,horizontal,narrow,copied,live,deletion,errors:page.errors},null,2));
   assert(page.errors.length===0, "Browser errors: "+JSON.stringify(page.errors));
 } finally {
   page?.close();

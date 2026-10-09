@@ -129,11 +129,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 10px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
 }
+.g1bp-table-v543 .g1bp-phrase-cell-v547 { padding: 16px 14px; }
 .g1bp-phrase-strip-v543 > header {
   display: flex;
   grid-column: 1 / -1;

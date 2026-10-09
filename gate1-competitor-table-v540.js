@@ -512,7 +512,8 @@ function g1BergenStatusV543(entry, ctx, jtbds) {
 function g1BergenTableHtmlV543(entry, ctx, jtbds) {
   const sections = g1BergenRowsV543(ctx, jtbds);
   const sectionCells = (title) => `<th class="g1bp-own-v543" scope="row">${escapeHtml(title)}</th>${entry.competitors.map(() => `<td class="g1bp-competitor-v543">${escapeHtml(title)}</td>`).join("")}`;
-  const body = sections.map((section) => `<tr class="g1bp-stage-v543">${sectionCells(section.title)}</tr>${section.groups.map((group) => `${group.title ? `<tr class="g1bp-group-v543">${sectionCells(group.title)}</tr>` : ""}${group.rows.map((row) => `<tr data-g1bp-row-v543="${escapeAttr(row.label)}">
+  const phraseRow = `<tr class="g1bp-phrase-row-v547"><td class="g1bp-phrase-cell-v547" colspan="${entry.competitors.length + 1}">${g1BergenPhraseStripV543(ctx, jtbds)}</td></tr>`;
+  const body = sections.map((section, index) => `<tr class="g1bp-stage-v543">${sectionCells(section.title)}</tr>${index === 0 ? phraseRow : ""}${section.groups.map((group) => `${group.title ? `<tr class="g1bp-group-v543">${sectionCells(group.title)}</tr>` : ""}${group.rows.map((row) => `<tr data-g1bp-row-v543="${escapeAttr(row.label)}">
     <td class="g1bp-own-v543"><small class="g1bp-criterion-v545">${escapeHtml(row.label)}</small>${row.ownHtml}</td>
     ${entry.competitors.map((competitor) => {
       const inactive = section.directOnly && g1BergenTypeV543(competitor, jtbds) !== "direct";
@@ -545,7 +546,7 @@ projectComparisonProductHtml = function (product = guruV194SelectedProduct(state
   const status = g1BergenStatusV543(entry, ctx, jtbds);
   return `<section class="project-comparison project-comparison-product-v309 g1-section g1bp-v543 ${entry.open ? "is-open" : ""}" data-project-comparison-product="${escapeAttr(product.id)}" data-g1bp-product-v543="${escapeAttr(product.id)}">
     <button type="button" class="project-comparison-heading" data-project-comparison-product-toggle data-project-comparison-product-id="${escapeAttr(product.id)}" aria-expanded="${entry.open ? "true" : "false"}"><span><b>Сравнение проектов · Продукт/Услуга</b><small>${escapeHtml(product.name)}</small></span><span class="project-comparison-heading-meta">${g1CompetitorStatusPillV539(status.status)}<span data-g1bp-status-meta-v543>${status.filled}/${status.total} ответов прямых конкурентов · ${entry.competitors.length} колонок</span></span><i>${entry.open ? "Свернуть ↑" : "Развернуть ↓"}</i></button>
-    <div class="project-comparison-body" ${entry.open ? "" : "hidden"}>${g1BergenPhraseStripV543(ctx, jtbds)}<h3 class="g1bp-title-v543">Сравнение</h3>${g1BergenTableHtmlV543(entry, ctx, jtbds)}</div>
+    <div class="project-comparison-body" ${entry.open ? "" : "hidden"}><h3 class="g1bp-title-v543">Сравнение</h3>${g1BergenTableHtmlV543(entry, ctx, jtbds)}</div>
   </section>`;
 };
 
