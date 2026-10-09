@@ -413,6 +413,15 @@ function g1BergenTypeV543(competitor, jtbds) {
 
 const G1_BERGEN_SEARCH_OPEN_V548 = new Set();
 const G1_BERGEN_RELEVANCE_V549 = [["high", "Высокая"], ["medium", "Средняя"], ["low", "Низкая"]];
+const G1_BERGEN_RELEVANCE_RANK_V551 = { high: 0, medium: 1, low: 3 };
+
+function g1BergenSortedPhrasesV551(entry, jtbd) {
+  const ratings = entry.keywordRelevanceByPhraseV549 || {};
+  return [...jtbd.phrases].sort((a, b) =>
+    (G1_BERGEN_RELEVANCE_RANK_V551[ratings[a.key]] ?? 2) -
+      (G1_BERGEN_RELEVANCE_RANK_V551[ratings[b.key]] ?? 2) ||
+    (b.frequency ?? -1) - (a.frequency ?? -1) || a.value.localeCompare(b.value, "ru"));
+}
 
 function g1BergenSelectedKeywordKeysV550(entry, jtbd) {
   const valid = new Set(jtbd.phrases.map((phrase) => phrase.key));
@@ -423,7 +432,7 @@ function g1BergenSelectedKeywordKeysV550(entry, jtbd) {
 
 function g1BergenCompetitorKeywordsV550(entry, competitor, jtbd) {
   const selected = g1BergenSelectedKeywordKeysV550(entry, jtbd);
-  const phrases = jtbd.phrases.filter((phrase) => selected.has(phrase.key));
+  const phrases = g1BergenSortedPhrasesV551(entry, jtbd).filter((phrase) => selected.has(phrase.key));
   if (!phrases.length) return '<small class="g1bp-keyword-hint-v550">Нажмите фразу слева, чтобы показать её у конкурентов.</small>';
   const found = new Set(competitor.foundPhraseKeysV539 || []);
   return `<div class="g1bp-keyword-list-v550"><small>Ключевые фразы · ${phrases.length}</small>${phrases.map((phrase) =>
@@ -446,7 +455,7 @@ function g1BergenJtbdSearchV548(ctx, jtbd, index, entry) {
     ${index === 0 ? `<small class="g1bp-search-region-v548">Регион: ${ctx.geography ? escapeHtml(ctx.geography) : `Не заполнено в Gate 0 ${g1CompetitorSourceLinkV539({ gateId: "gate-0" })}`}</small>` : ""}
     <details class="g1bp-search-details-v548" data-g1bp-search-key-v548="${escapeAttr(key)}"${G1_BERGEN_SEARCH_OPEN_V548.has(key) ? " open" : ""}>
       <summary><strong>Что вставить в Яндекс</strong><span>Фраз: ${jtbd.phrases.length} · оценено: ${rated} · выбрано: ${selected.size}</span></summary>
-      ${jtbd.phrases.length ? `<div class="g1bp-phrase-list-v548" tabindex="0" aria-label="Все ${jtbd.phrases.length} фраз JTBD №${index + 1}">${jtbd.phrases.map((phrase) => `<div class="g1bp-phrase-v543"><button type="button" class="g1bp-phrase-pick-v550" data-g1bp-select-keyword-v550="${escapeAttr(jtbd.id)}" data-g1bp-keyword-key-v550="${escapeAttr(phrase.key)}" aria-pressed="${selected.has(phrase.key)}" title="${selected.has(phrase.key) ? "Убрать фразу из колонок конкурентов" : "Показать фразу у конкурентов"}"><code>${escapeHtml(phrase.value)}</code></button><small>${phrase.frequency === null ? "Частотность не указана" : `${Number(phrase.frequency).toLocaleString("ru-RU")} запросов`}</small><button type="button" class="small-btn" data-g1-competitor-copy-v539="${escapeAttr(phrase.value)}">Копировать</button>${g1BergenRelevanceFieldV549(entry, jtbd, phrase)}</div>`).join("")}</div>` : `<div class="g1ct-missing-v540">Нет ключевых слов в этом JTBD ${g1CompetitorSourceLinkV539(target)}</div>`}
+      ${jtbd.phrases.length ? `<div class="g1bp-phrase-list-v548" tabindex="0" aria-label="Все ${jtbd.phrases.length} фраз JTBD №${index + 1}">${g1BergenSortedPhrasesV551(entry, jtbd).map((phrase) => `<div class="g1bp-phrase-v543"><button type="button" class="g1bp-phrase-pick-v550" data-g1bp-select-keyword-v550="${escapeAttr(jtbd.id)}" data-g1bp-keyword-key-v550="${escapeAttr(phrase.key)}" aria-pressed="${selected.has(phrase.key)}" title="${selected.has(phrase.key) ? "Убрать фразу из колонок конкурентов" : "Показать фразу у конкурентов"}"><code>${escapeHtml(phrase.value)}</code></button><small>${phrase.frequency === null ? "Частотность не указана" : `${Number(phrase.frequency).toLocaleString("ru-RU")} запросов`}</small><button type="button" class="small-btn" data-g1-competitor-copy-v539="${escapeAttr(phrase.value)}">Копировать</button>${g1BergenRelevanceFieldV549(entry, jtbd, phrase)}</div>`).join("")}</div>` : `<div class="g1ct-missing-v540">Нет ключевых слов в этом JTBD ${g1CompetitorSourceLinkV539(target)}</div>`}
     </details>
   </div>`;
 }
@@ -662,11 +671,26 @@ document.addEventListener("change", (event) => {
     section.querySelectorAll(".g1bp-search-details-v548").forEach((details) => {
       const id = details.querySelector("[data-g1bp-relevance-v549]")?.dataset.g1bpRelevanceV549;
       const group = jtbds.find((row) => row.id === id);
-      if (!group) return;
+      if (!group?.phrases.some((phrase) => phrase.key === phraseKey)) return;
       const rated = group.phrases.filter((phrase) => G1_BERGEN_RELEVANCE_V549.some(([value]) => ratings[phrase.key] === value)).length;
       const count = details.querySelector("summary span");
       if (count) count.textContent = `Фраз: ${group.phrases.length} · оценено: ${rated} · выбрано: ${g1BergenSelectedKeywordKeysV550(entry, group).size}`;
+      const list = details.querySelector(".g1bp-phrase-list-v548");
+      if (list) {
+        const scrollTop = list.scrollTop;
+        const rows = new Map([...list.children].map((row) =>
+          [row.querySelector("[data-g1bp-keyword-key-v550]")?.dataset.g1bpKeywordKeyV550, row]));
+        list.replaceChildren(...g1BergenSortedPhrasesV551(entry, group)
+          .map((phrase) => rows.get(phrase.key)).filter(Boolean));
+        list.scrollTop = scrollTop;
+      }
+      if (g1BergenSelectedKeywordKeysV550(entry, group).has(phraseKey))
+        details.closest("tr")?.querySelectorAll("[data-g1bp-keywords-for-v550]").forEach((slot) => {
+          const rowCompetitor = entry.competitors.find((item) => item.id === slot.dataset.g1bpKeywordsForV550);
+          if (rowCompetitor) slot.innerHTML = g1BergenCompetitorKeywordsV550(entry, rowCompetitor, group);
+        });
     });
+    target.focus({ preventScroll: true });
     flashSaving();
     return;
   }
