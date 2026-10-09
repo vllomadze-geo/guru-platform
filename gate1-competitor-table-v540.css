@@ -146,8 +146,20 @@
 .g1bp-phrase-v543 code { overflow-wrap: anywhere; font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .g1bp-phrase-v543 small { color: var(--muted); font-size: 10px; white-space: nowrap; }
 .g1bp-phrase-v543 .small-btn { padding: 3px 7px; font-size: 10px; }
+.g1bp-phrase-pick-v550 { min-width: 0; padding: 0; border: 0; background: none; color: var(--text); text-align: left; cursor: pointer; }
+.g1bp-phrase-pick-v550:hover code,
+.g1bp-phrase-pick-v550:focus-visible code { text-decoration: underline; }
+.g1bp-phrase-pick-v550[aria-pressed="true"] { font-weight: 750; }
+.g1bp-phrase-pick-v550[aria-pressed="true"]::before { content: "✓ "; }
 .g1bp-phrase-relevance-v549 { grid-column: 1 / -1; display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 11px; }
 .g1bp-phrase-relevance-v549 select { width: auto; min-width: 128px; height: 28px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--text); font: inherit; font-size: 11px; }
+.g1bp-keyword-hint-v550 { display: block; margin-top: 12px; color: var(--muted); font-size: 11px; }
+.g1bp-keyword-list-v550 { display: grid; gap: 6px; max-height: 420px; overflow-y: auto; margin-top: 12px; scrollbar-gutter: stable; }
+.g1bp-keyword-list-v550 > small { color: var(--muted); font-size: 11px; }
+.g1bp-keyword-list-v550 label { display: flex; align-items: center; gap: 7px; width: 100%; padding: 5px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.g1bp-keyword-list-v550 label input { flex: 0 0 auto; margin: 0; }
+.g1bp-keyword-list-v550 label code { flex: 1; min-width: 0; overflow-wrap: anywhere; font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.g1bp-keyword-list-v550 label span { color: var(--muted); font-size: 10px; }
 .g1bp-scroll-v543 {
   width: min(100%, var(--comparison-min-width));
   overflow-x: auto;
@@ -246,6 +258,8 @@
 .g1bp-jtbd-choices-v543 label { justify-content: flex-start; width: 100%; }
 .g1bp-jtbd-choices-v543 label span { flex: 1; min-width: 0; text-align: left; }
 .g1bp-jtbd-choices-v543 input { flex: 0 0 14px; width: 14px; height: 14px; margin: 2px 0 0; padding: 0; }
+.g1bp-jtbd-choices-v543 [data-g1bp-keywords-for-v550] { width: 100%; min-width: 0; }
+.g1bp-jtbd-choices-v543 .g1bp-keyword-list-v550 label span { flex: 0 0 auto; }
 .g1bp-choices-v543 input { margin: 2px 0 0; }
 .g1bp-choices-v543 { display: flex; flex-wrap: wrap; gap: 8px 15px; }
 .g1bp-date-source-v543 { display: grid; gap: 7px; }
