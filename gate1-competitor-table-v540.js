@@ -395,14 +395,18 @@ function g1BergenTypeV543(competitor, jtbds) {
     : data.similarity === "yes" ? "potential" : "unrelated";
 }
 
-function g1BergenPhraseStripV543(ctx, jtbds) {
+const G1_BERGEN_SEARCH_OPEN_V548 = new Set();
+
+function g1BergenJtbdSearchV548(ctx, jtbd, index) {
   const target = { gateId: "gate-1", kind: "gate1-keywords", productId: ctx.product.id };
-  return `<section class="g1bp-phrase-strip-v543" aria-label="Что вставить в Яндекс">
-    <header><strong>Что вставить в Яндекс</strong><span>Регион: ${ctx.geography ? escapeHtml(ctx.geography) : `Не заполнено в Gate 0 ${g1CompetitorSourceLinkV539({ gateId: "gate-0" })}`}</span></header>
-    ${jtbds.length ? jtbds.map((jtbd) => `<div class="g1bp-phrase-jtbd-v543"><b>${jtbd.primary ? "Основной JTBD" : "JTBD"} · ${escapeHtml(jtbd.text)}</b>
-      ${jtbd.top.length ? jtbd.top.map((phrase) => `<div class="g1bp-phrase-v543"><code>${escapeHtml(phrase.value)}</code><small>${Number(phrase.frequency).toLocaleString("ru-RU")} запросов</small><button type="button" class="small-btn" data-g1-competitor-copy-v539="${escapeAttr(phrase.value)}">Копировать</button></div>`).join("") : `<div class="g1ct-missing-v540">Нет финальных фраз с частотностью ${g1CompetitorSourceLinkV539(target)}</div>`}
-    </div>`).join("") : `<div class="g1ct-missing-v540">Не заполнено в источнике ${g1CompetitorSourceLinkV539({ gateId: "gate-0", kind: "gate0-scoped", productId: ctx.product.id, field: "jtbd" })}</div>`}
-  </section>`;
+  const key = `${ctx.product.id}:${jtbd.id}`;
+  return `<div class="g1bp-jtbd-search-v548"><div class="g1bp-jtbd-text-v548">№${index + 1}${jtbd.primary ? " · основной" : ""} — ${escapeHtml(jtbd.text)}</div>
+    ${index === 0 ? `<small class="g1bp-search-region-v548">Регион: ${ctx.geography ? escapeHtml(ctx.geography) : `Не заполнено в Gate 0 ${g1CompetitorSourceLinkV539({ gateId: "gate-0" })}`}</small>` : ""}
+    <details class="g1bp-search-details-v548" data-g1bp-search-key-v548="${escapeAttr(key)}"${G1_BERGEN_SEARCH_OPEN_V548.has(key) ? " open" : ""}>
+      <summary><strong>Что вставить в Яндекс</strong><span>${jtbd.top.length} фраз</span></summary>
+      ${jtbd.top.length ? `<div class="g1bp-phrase-list-v548">${jtbd.top.map((phrase) => `<div class="g1bp-phrase-v543"><code>${escapeHtml(phrase.value)}</code><small>${Number(phrase.frequency).toLocaleString("ru-RU")} запросов</small><button type="button" class="small-btn" data-g1-competitor-copy-v539="${escapeAttr(phrase.value)}">Копировать</button></div>`).join("")}</div>` : `<div class="g1ct-missing-v540">Нет финальных фраз с частотностью ${g1CompetitorSourceLinkV539(target)}</div>`}
+    </details>
+  </div>`;
 }
 
 function g1BergenFieldV543(competitor, key, mode = "text") {
@@ -418,9 +422,9 @@ function g1BergenChoicesV543(competitor, key, choices) {
   return `<div class="g1bp-choices-v543" role="group">${choices.map(([value, label]) => `<label><input type="radio" name="g1bp-${escapeAttr(competitor.id)}-${escapeAttr(key)}" value="${escapeAttr(value)}" data-g1bp-choice-v543="${escapeAttr(key)}" data-g1bp-competitor-v543="${escapeAttr(competitor.id)}" ${selected === value ? "checked" : ""}>${escapeHtml(label)}</label>`).join("")}</div>`;
 }
 
-function g1BergenJtbdChoicesV543(competitor, jtbds) {
+function g1BergenJtbdChoicesV543(competitor, jtbds, oneIndex = null) {
   const selected = new Set(competitor.bergenV543?.matchedJtbdIdsV543 || []);
-  return jtbds.length ? `<div class="g1bp-jtbd-choices-v543">${jtbds.map((jtbd, index) => `<label><input type="checkbox" data-g1bp-jtbd-v543="${escapeAttr(jtbd.id)}" data-g1bp-competitor-v543="${escapeAttr(competitor.id)}" ${selected.has(jtbd.id) ? "checked" : ""}><span>№${index + 1}${jtbd.primary ? " · основной" : ""}</span></label>`).join("")}</div>`
+  return jtbds.length ? `<div class="g1bp-jtbd-choices-v543">${jtbds.map((jtbd, index) => ({ jtbd, index })).filter(({ index }) => oneIndex === null || index === oneIndex).map(({ jtbd, index }) => `<label><input type="checkbox" data-g1bp-jtbd-v543="${escapeAttr(jtbd.id)}" data-g1bp-competitor-v543="${escapeAttr(competitor.id)}" ${selected.has(jtbd.id) ? "checked" : ""}><span>№${index + 1}${jtbd.primary ? " · основной" : ""}</span></label>`).join("")}</div>`
     : '<span class="g1ct-muted-v540">Сначала добавьте JTBD продукта в Gate 0.</span>';
 }
 
@@ -460,7 +464,7 @@ function g1BergenRowsV543(ctx, jtbds) {
   return [
     { title: "ЭТАП 1. КТО КОНКУРЕНТ", groups: [
       { title: "Пересечение рынков", rows: [
-        row("Задача (JTBD)", jtbds.length ? `<div class="g1bp-own-list-v543">${jtbds.map((jtbd, index) => `<div>№${index + 1}${jtbd.primary ? " · основной" : ""} — ${escapeHtml(jtbd.text)}</div>`).join("")}</div>` : own("", gate0("jtbd")), (c) => g1BergenJtbdChoicesV543(c, jtbds), "matchedJtbdIdsV543"),
+        ...(jtbds.length ? jtbds.map((jtbd, index) => row("Задача (JTBD)", g1BergenJtbdSearchV548(ctx, jtbd, index), (c) => g1BergenJtbdChoicesV543(c, jtbds, index), "matchedJtbdIdsV543")) : [row("Задача (JTBD)", own("", gate0("jtbd")), (c) => g1BergenJtbdChoicesV543(c, jtbds), "matchedJtbdIdsV543")]),
         row("Кому", own(snapshot.segment, gate0("segments")), (c) => g1BergenFieldV543(c, "marketSegment"), "marketSegment"),
         row("География", own(ctx.geography, { gateId: "gate-0" }), (c) => g1BergenFieldV543(c, "marketGeography"), "marketGeography"),
         row("→ Совпадает?", none, match),
@@ -512,8 +516,7 @@ function g1BergenStatusV543(entry, ctx, jtbds) {
 function g1BergenTableHtmlV543(entry, ctx, jtbds) {
   const sections = g1BergenRowsV543(ctx, jtbds);
   const sectionCells = (title) => `<th class="g1bp-own-v543" scope="row">${escapeHtml(title)}</th>${entry.competitors.map(() => `<td class="g1bp-competitor-v543">${escapeHtml(title)}</td>`).join("")}`;
-  const phraseRow = `<tr class="g1bp-phrase-row-v547"><td class="g1bp-phrase-cell-v547" colspan="${entry.competitors.length + 1}">${g1BergenPhraseStripV543(ctx, jtbds)}</td></tr>`;
-  const body = sections.map((section, index) => `<tr class="g1bp-stage-v543">${sectionCells(section.title)}</tr>${index === 0 ? phraseRow : ""}${section.groups.map((group) => `${group.title ? `<tr class="g1bp-group-v543">${sectionCells(group.title)}</tr>` : ""}${group.rows.map((row) => `<tr data-g1bp-row-v543="${escapeAttr(row.label)}">
+  const body = sections.map((section) => `<tr class="g1bp-stage-v543">${sectionCells(section.title)}</tr>${section.groups.map((group) => `${group.title ? `<tr class="g1bp-group-v543">${sectionCells(group.title)}</tr>` : ""}${group.rows.map((row) => `<tr data-g1bp-row-v543="${escapeAttr(row.label)}">
     <td class="g1bp-own-v543"><small class="g1bp-criterion-v545">${escapeHtml(row.label)}</small>${row.ownHtml}</td>
     ${entry.competitors.map((competitor) => {
       const inactive = section.directOnly && g1BergenTypeV543(competitor, jtbds) !== "direct";
@@ -572,6 +575,13 @@ function g1BergenRefreshStatusV543(section, entry, product, jtbds) {
   const meta = section.querySelector("[data-g1bp-status-meta-v543]");
   if (meta) meta.textContent = `${status.filled}/${status.total} ответов прямых конкурентов · ${entry.competitors.length} колонок`;
 }
+
+document.addEventListener("toggle", (event) => {
+  const key = event.target?.dataset?.g1bpSearchKeyV548;
+  if (!key) return;
+  if (event.target.open) G1_BERGEN_SEARCH_OPEN_V548.add(key);
+  else G1_BERGEN_SEARCH_OPEN_V548.delete(key);
+}, true);
 
 document.addEventListener("input", (event) => {
   const target = event.target;
