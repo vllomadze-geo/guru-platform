@@ -36244,7 +36244,9 @@ function guruGate1KeywordTransferTargetsV555(itemId, itemData) {
   const saved = guruGate1SavedAdditionalJtbdsV520(itemId, itemData);
   const seen = new Set();
   const targets = [{ value: "primary", label: "JTBD №1 · основной" }];
-  [...additional.map((entry) => ({ entry, saved: false })),
+  [...additional.filter((entry) => guruV185Text(
+    guruV194JtbdSentence(entry) || guruGate1AdditionalJtbdTextV268(entry),
+  )).map((entry) => ({ entry, saved: false })),
     ...saved.map((entry) => ({ entry, saved: true }))].forEach(({ entry, saved }) => {
     const id = guruV185Text(entry?.id);
     if (!id || seen.has(id)) return;
@@ -36314,7 +36316,7 @@ function pv181DemandRowsHtmlV272(entries, options = {}) {
         control = `<textarea class="g1-input ${filledClass}" aria-label="${escapeAttr(label)}" data-pv181-map="${mapIndex}" data-pv181-item="${escapeAttr(itemId)}" data-pv181-demand="${index}" data-pv181-dfield="${escapeAttr(field)}" rows="1" placeholder="${escapeAttr(label)}">${escapeHtml(value)}</textarea>`;
       }
       const sourceNote = field !== "kw" ? "" : linkedGate4
-        ? '<small class="pv181-linked-foundation-note-v518">из Gate 4 · Поиск</small>'
+        ? '<small class="pv181-linked-foundation-note-v518">Есть в Gate 4 · Поиск</small>'
         : linkedFoundation
           ? `<small class="pv181-linked-foundation-note-v518">из ${linkedFoundation === "gate0" ? "Gate 0" : "Gate 1"} · метрики после импорта</small>`
           : "";
@@ -68545,15 +68547,16 @@ function gate1DirectProductDemandHtmlV265() {
   if (!product)
     return `<div class="pv181-keyword-empty">Выберите категорию и товар в верхнем селекторе.</div>`;
 
+  // Complete the legacy product-id migration before resolving the active item.
+  // A later migration can move the item to another category after the table
+  // has captured its former map index, so the editor and Gate 4 diverge.
+  gate1PainMigrateWorkspaceV237(state);
   const context = guruGate1FinalPainContextV259(product, true);
   if (!context)
     return `<div class="pv181-keyword-empty">Для выбранного товара данные пока не созданы.</div>`;
 
   const source = g3ProductJourneyPageSource(product);
-  const catalogItem = pv181ProductItems(context.row.product).find(
-    (item) => item.id === product.id,
-  );
-  const item = catalogItem || {
+  const item = {
     id: product.id,
     product_id: product.id,
     sourceRowId: guruV185Text(source?.row?.id),
