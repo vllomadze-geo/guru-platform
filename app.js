@@ -36234,7 +36234,7 @@ function pv181DemandTableHeadHtmlV272(options = {}) {
   const keywordActions = options.keywordActions === true;
   return `<div class="pv181-demand-table-head-v263${keywordActions ? " g1kw-actions-v553" : ""}" aria-hidden="true">
     ${PV181_DEMAND_FIELDS_V272.map(([, label]) => `<span>${escapeHtml(label)}</span>`).join("")}
-    ${keywordActions ? "<span>Копировать</span><span>Релевантность</span><span>Перенести в</span>" : ""}
+    ${keywordActions ? '<span title="Копировать" aria-label="Копировать">⧉</span><span>Релевантность</span><span>Перенести в</span>' : ""}
     <span></span>
   </div>`;
 }
@@ -36346,7 +36346,10 @@ function pv181DemandRowsHtmlV272(entries, options = {}) {
     const phraseKey = guruV247KeywordNormalize(row?.kw);
     const keywordCells = keywordActions
       ? phraseKey
-        ? `<div class="g1kw-copy-cell-v553"><button type="button" class="small-btn" data-g1-competitor-copy-v539="${escapeAttr(guruV185Text(row?.kw))}" aria-label="Копировать ключевое слово ${escapeAttr(guruV185Text(row?.kw))}">Копировать</button></div>
+        ? `<div class="g1kw-copy-cell-v553"><button type="button" class="small-btn g1kw-copy-icon-v559" data-g1-competitor-copy-v539="${escapeAttr(guruV185Text(row?.kw))}" data-g1kw-copy-icon-v559 aria-label="Копировать ключевое слово ${escapeAttr(guruV185Text(row?.kw))}" title="Копировать">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg>
+            <span class="g1kw-copy-success-v559" aria-hidden="true">✓</span>
+          </button></div>
           <label class="g1kw-relevance-cell-v553"><span class="pv181-demand-cell-label-v263">Релевантность</span><select data-g1kw-relevance-v553 data-g1kw-product-v553="${escapeAttr(itemId)}" data-g1kw-phrase-v553="${escapeAttr(phraseKey)}" aria-label="Релевантность фразы ${escapeAttr(guruV185Text(row?.kw))}">
             <option value=""${!relevanceByPhrase[phraseKey] ? " selected" : ""}>Не оценено</option>
             <option value="high"${relevanceByPhrase[phraseKey] === "high" ? " selected" : ""}>Высокая</option>
@@ -69386,7 +69389,7 @@ function guruGate1PrimaryGroupHtmlV267(mapIndex, itemId, itemData) {
       itemData,
     )}
     ${entries.length
-      ? `<div class="pv181-demand-table-v263 pv181-primary-jtbd-demand-table-v272">
+      ? `<div class="pv181-demand-table-v263 pv181-primary-jtbd-demand-table-v272 g1kw-table-v559">
           ${guruGate1JtbdDemandListHtmlV278(entries, {
             scope: "primary",
             rowsClass: "pv181-primary-jtbd-demand-rows-v272",
@@ -69592,7 +69595,7 @@ function guruGate1AdditionalJtbdKeywordsHtmlV274(
       itemData,
     )}
     ${entries.length
-      ? `<div class="pv181-demand-table-v263 pv181-additional-jtbd-demand-table-v274">
+      ? `<div class="pv181-demand-table-v263 pv181-additional-jtbd-demand-table-v274 g1kw-table-v559">
           ${guruGate1JtbdDemandListHtmlV278(entries, {
             scope: `additional:${additionalId}`,
             rowsClass: "pv181-additional-jtbd-demand-rows-v274",
@@ -70061,7 +70064,7 @@ function guruGate1SavedJtbdsHtmlV520(mapIndex, itemId, itemData, current, onlyId
         <div class="gate0-jtbd-sentence-v194"><small>Единая формулировка JTBD</small><strong>${escapeHtml(entry.text)}</strong></div>
         <section class="pv181-additional-jtbd-keywords-v274" data-pv181-additional-jtbd-keywords-v274="${escapeAttr(entry.id)}">
           <header><strong>Ключевые слова дополнительного JTBD</strong><span>${visible.length} фраз</span></header>
-          <div class="pv181-demand-table-v263">${guruGate1JtbdDemandListHtmlV278(visible, {
+          <div class="pv181-demand-table-v263 g1kw-table-v559">${guruGate1JtbdDemandListHtmlV278(visible, {
             scope: `saved:${entry.id}`,
             rowsClass: "pv181-additional-jtbd-demand-rows-v274",
             mapIndex, itemId, itemData,

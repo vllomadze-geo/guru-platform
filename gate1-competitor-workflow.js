@@ -360,11 +360,30 @@ function g1CompetitorSaveV539(rerender = false) {
 document.addEventListener("click", async (event) => {
   const copy = event.target?.closest?.("[data-g1-competitor-copy-v539]");
   if (copy) {
+    const iconOnly = copy.hasAttribute("data-g1kw-copy-icon-v559");
     try {
       await g4sbV141CopyText(copy.dataset.g1CompetitorCopyV539);
-      copy.textContent = "Скопировано";
-      setTimeout(() => { if (copy.isConnected) copy.textContent = "Копировать"; }, 1400);
-    } catch (_error) { copy.textContent = "Не удалось скопировать"; }
+      if (iconOnly) {
+        copy.dataset.g1kwCopyState = "copied";
+        copy.title = "Скопировано";
+        copy.setAttribute("aria-label", "Ключевое слово скопировано");
+        setTimeout(() => {
+          if (!copy.isConnected) return;
+          delete copy.dataset.g1kwCopyState;
+          copy.title = "Копировать";
+          copy.setAttribute("aria-label", `Копировать ключевое слово ${copy.dataset.g1CompetitorCopyV539}`);
+        }, 1400);
+      } else {
+        copy.textContent = "Скопировано";
+        setTimeout(() => { if (copy.isConnected) copy.textContent = "Копировать"; }, 1400);
+      }
+    } catch (_error) {
+      if (iconOnly) {
+        copy.dataset.g1kwCopyState = "error";
+        copy.title = "Не удалось скопировать";
+        copy.setAttribute("aria-label", "Не удалось скопировать ключевое слово");
+      } else copy.textContent = "Не удалось скопировать";
+    }
     return;
   }
   const add = event.target?.closest?.("[data-g1-competitor-add-v539]");
