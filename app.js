@@ -36472,8 +36472,19 @@ document.addEventListener("click", (event) => {
     if (!phraseKey || !guruGate1AssignDemandPhraseV274(
       context.itemId, context.itemData, phraseKey, "pending")) return;
     flashSaving();
-    requestAnimationFrame(() =>
-      guruGate1RefreshTransferredKeywordUiV555(button, context, "pending"));
+    // Finish the DOM change and viewport correction in the click task. An
+    // animation-frame update lets the focused row disappear a frame later,
+    // which is visible as a jump in long, horizontally scrolled tables.
+    const scrollRoot = document.scrollingElement;
+    const previousOverflowAnchor = scrollRoot?.style.overflowAnchor || "";
+    if (scrollRoot) scrollRoot.style.overflowAnchor = "none";
+    try {
+      guruGate1RefreshTransferredKeywordUiV555(button, context, "pending", {
+        focusNextRemove: event.detail === 0,
+      });
+    } finally {
+      if (scrollRoot) scrollRoot.style.overflowAnchor = previousOverflowAnchor;
+    }
     return;
   }
   if (!Number.isInteger(index) || !context.itemData?.demandRows?.[index]) return;
@@ -69430,6 +69441,7 @@ function guruGate1JtbdBucketV274(
   demandEntry,
   primary = guruGate1PrimaryJtbdMatchV267(itemId, itemData),
   forms = guruGate1GroupJtbdsV267(itemData),
+  savedAdditionalIds = null,
 ) {
   const assignment = guruGate1JtbdAssignmentV274(itemData, demandEntry.key);
   if (assignment?.target === "primary") return "primary";
@@ -69439,8 +69451,9 @@ function guruGate1JtbdBucketV274(
     const targetExists = forms.some((descriptor) =>
       guruGate1AdditionalDescriptorIdV274(descriptor) ===
         assignment.additional_jtbd_id,
-    ) || guruGate1SavedAdditionalJtbdsV520(itemId, itemData).some((entry) =>
-      entry.id === assignment.additional_jtbd_id);
+    ) || (savedAdditionalIds || new Set(guruGate1SavedAdditionalJtbdsV520(
+      itemId, itemData).map((entry) => entry.id)))
+      .has(assignment.additional_jtbd_id);
     return targetExists
       ? `additional:${assignment.additional_jtbd_id}`
       : "pending";
@@ -69452,8 +69465,9 @@ function guruGate1JtbdBucketV274(
   if (savedJtbd) {
     const savedGroup = forms.find((descriptor) =>
       guruGate1AdditionalDescriptorIdV274(descriptor) === savedJtbd);
-    const recovered = guruGate1SavedAdditionalJtbdsV520(itemId, itemData)
-      .some((entry) => entry.id === savedJtbd);
+    const recovered = (savedAdditionalIds || new Set(
+      guruGate1SavedAdditionalJtbdsV520(itemId, itemData)
+        .map((entry) => entry.id))).has(savedJtbd);
     return savedGroup || recovered ? `additional:${savedJtbd}` : "pending";
   }
   if (primary.phraseKeys.has(demandEntry.key)) return "primary";
@@ -69475,8 +69489,11 @@ function guruGate1DistributedDemandKeysV273(
   primary = guruGate1PrimaryJtbdMatchV267(itemId, itemData),
 ) {
   const forms = guruGate1GroupJtbdsV267(itemData);
+  const savedAdditionalIds = new Set(guruGate1SavedAdditionalJtbdsV520(
+    itemId, itemData).map((entry) => entry.id));
   return new Set(demand.filter((entry) =>
-    guruGate1JtbdBucketV274(itemId, itemData, entry, primary, forms)
+    guruGate1JtbdBucketV274(itemId, itemData, entry, primary, forms,
+      savedAdditionalIds)
       .startsWith("additional:"),
   ).map((entry) => entry.key));
 }
@@ -69485,15 +69502,19 @@ function guruGate1PendingJtbdDemandV273(itemId, itemData) {
   const demand = guruGate1UniqueDemandV267(itemData);
   const primary = guruGate1PrimaryJtbdMatchV267(itemId, itemData);
   const forms = guruGate1GroupJtbdsV267(itemData);
-  const distributedKeys = new Set(demand.filter((entry) =>
-    guruGate1JtbdBucketV274(itemId, itemData, entry, primary, forms)
-      .startsWith("additional:"),
-  ).map((entry) => entry.key));
+  const savedAdditionalIds = new Set(guruGate1SavedAdditionalJtbdsV520(
+    itemId, itemData).map((entry) => entry.id));
+  const buckets = demand.map((entry) => ({
+    entry,
+    bucket: guruGate1JtbdBucketV274(
+      itemId, itemData, entry, primary, forms, savedAdditionalIds),
+  }));
+  const distributedKeys = new Set(buckets.filter(({ bucket }) =>
+    bucket.startsWith("additional:"),
+  ).map(({ entry }) => entry.key));
   return {
-    phrases: demand.filter((entry) =>
-      guruGate1JtbdBucketV274(itemId, itemData, entry, primary, forms) ===
-        "pending",
-    ),
+    phrases: buckets.filter(({ bucket }) => bucket === "pending")
+      .map(({ entry }) => entry),
     distributedKeys,
   };
 }
@@ -69537,8 +69558,11 @@ function guruGate1AdditionalJtbdDemandV274(itemId, itemData, additionalId) {
   const demand = guruGate1UniqueDemandV267(itemData);
   const primary = guruGate1PrimaryJtbdMatchV267(itemId, itemData);
   const forms = guruGate1GroupJtbdsV267(itemData);
+  const savedAdditionalIds = new Set(guruGate1SavedAdditionalJtbdsV520(
+    itemId, itemData).map((entry) => entry.id));
   return demand.filter((entry) =>
-    guruGate1JtbdBucketV274(itemId, itemData, entry, primary, forms) ===
+    guruGate1JtbdBucketV274(itemId, itemData, entry, primary, forms,
+      savedAdditionalIds) ===
       `additional:${additionalId}`,
   );
 }
@@ -70342,7 +70366,7 @@ function guruGate1TransferKeywordToCompanyV555(itemId, itemData, phraseKey) {
   return true;
 }
 
-function guruGate1RefreshTransferredKeywordUiV555(control, context, target) {
+function guruGate1RefreshTransferredKeywordUiV555(control, context, target, options = {}) {
   const level = control.closest(".pv181-jtbd-level");
   if (!level) { renderGate(); return; }
   const sourceDetails = control.closest("[data-pv181-jtbd-demand-details-v278]");
@@ -70458,7 +70482,11 @@ function guruGate1RefreshTransferredKeywordUiV555(control, context, target) {
     const delta = nextAnchor.getBoundingClientRect().top - anchorTop;
     if (delta) window.scrollTo(scrollX, window.scrollY + delta);
   }
-  const focus = nextAnchor?.querySelector("[data-g1kw-transfer-open-v557]");
+  const focus = options.focusNextRemove
+    ? nextAnchor?.querySelector("[data-pv181-demand-remove]")
+    : target === "pending"
+      ? null
+      : nextAnchor?.querySelector("[data-g1kw-transfer-open-v557]");
   if (focus) focus.focus({ preventScroll: true });
 }
 
