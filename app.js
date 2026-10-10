@@ -32484,17 +32484,27 @@ window.addEventListener("beforeunload", () => {
 // Bug 1: debounced gate0 refresh — prevents 8x calls per keystroke
 let _gate0RefreshPending = false;
 let _saveTimer = null;
+let _saveTimerSkipsDerivedRefresh = false;
 const GURU_AUTOSAVE_DELAY_MS = 450;
 const __guruPrevFlashSavingV121 = flashSaving;
-flashSaving = function () {
+flashSaving = function (options = {}) {
   if (!state) return;
   els.saveStatus.textContent = "Сохраняю...";
   els.autosaveDot.style.background = "#d4b05f";
+  // A relevance rating changes only projectComparison's phrase map. Keep a
+  // pending ordinary edit ordinary, even when a rating follows it quickly.
+  const skipDerivedRefresh = options.skipDerivedRefresh === true &&
+    (!_saveTimer || _saveTimerSkipsDerivedRefresh);
   if (_saveTimer) clearTimeout(_saveTimer);
+  _saveTimerSkipsDerivedRefresh = skipDerivedRefresh;
+  // Rating several phrases in succession should produce one snapshot after
+  // the user stops, not a large JSON write between adjacent selections.
+  const saveDelay = skipDerivedRefresh ? 1200 : GURU_AUTOSAVE_DELAY_MS;
   _saveTimer = setTimeout(() => {
     _saveTimer = null;
-    guruAutosaveStateSmooth();
-  }, GURU_AUTOSAVE_DELAY_MS);
+    _saveTimerSkipsDerivedRefresh = false;
+    guruAutosaveStateSmooth({ skipDerivedRefresh });
+  }, saveDelay);
   // Полный пересчёт Gate 0 во время набора текста выполняется общим
   // отложенным проходом после паузы. Клики и выборы обновляют статус сразу.
   const isTyping =
@@ -36327,6 +36337,7 @@ function pv181DemandRowsHtmlV272(entries, options = {}) {
   }).join("");
 }
 
+const guruGate1PendingKeywordReordersV554 = new WeakMap();
 function guruGate1UpdateKeywordRelevanceUiV553(productId, phraseKey, value) {
   document.querySelectorAll("[data-g1kw-relevance-v553]").forEach((control) => {
     if (control.dataset.g1kwProductV553 === productId &&
@@ -36335,19 +36346,35 @@ function guruGate1UpdateKeywordRelevanceUiV553(productId, phraseKey, value) {
   });
   document.querySelectorAll(".pv181-jtbd-demand-details-v278 > div").forEach((list) => {
     const rows = [...list.children].filter((row) => row.hasAttribute("data-g1kw-row-v553"));
-    const row = rows.find((item) => item.dataset.g1kwProductV553 === productId &&
-      item.dataset.g1kwRowV553 === phraseKey);
-    if (!row) return;
-    const ratings = state.projectComparison?.productsById?.[productId]?.keywordRelevanceByPhraseV549 || {};
-    const sorted = [...rows].sort((left, right) =>
-      guruGate1KeywordRelevanceRankV553(ratings[left.dataset.g1kwRowV553]) -
-      guruGate1KeywordRelevanceRankV553(ratings[right.dataset.g1kwRowV553]) ||
-      Number(left.dataset.g1kwSourceOrderV553) - Number(right.dataset.g1kwSourceOrderV553));
-    const next = sorted[sorted.indexOf(row) + 1] || null;
-    if (row.nextElementSibling === next || row === next) return;
-    const focused = row.contains(document.activeElement) ? document.activeElement : null;
-    list.insertBefore(row, next);
-    if (focused?.isConnected) focused.focus({ preventScroll: true });
+    if (!rows.some((row) => row.dataset.g1kwProductV553 === productId &&
+        row.dataset.g1kwRowV553 === phraseKey)) return;
+    const pending = guruGate1PendingKeywordReordersV554.get(list);
+    if (pending) { pending.add(phraseKey); return; }
+    const changed = new Set([phraseKey]);
+    guruGate1PendingKeywordReordersV554.set(list, changed);
+    // Native select can finish its change event before a row moves. Several
+    // quick ratings share one frame and only their rows are repositioned.
+    requestAnimationFrame(() => {
+      guruGate1PendingKeywordReordersV554.delete(list);
+      if (!list.isConnected) return;
+      const ratings = state.projectComparison?.productsById?.[productId]?.keywordRelevanceByPhraseV549 || {};
+      const sorted = [...list.children].filter((row) => row.hasAttribute("data-g1kw-row-v553"))
+        .sort((left, right) =>
+          guruGate1KeywordRelevanceRankV553(ratings[left.dataset.g1kwRowV553]) -
+          guruGate1KeywordRelevanceRankV553(ratings[right.dataset.g1kwRowV553]) ||
+          Number(left.dataset.g1kwSourceOrderV553) - Number(right.dataset.g1kwSourceOrderV553));
+      const positions = new Map(sorted.map((row, index) => [row.dataset.g1kwRowV553, index]));
+      const focused = list.contains(document.activeElement) ? document.activeElement : null;
+      [...changed].sort((left, right) => positions.get(right) - positions.get(left))
+        .forEach((key) => {
+          const index = positions.get(key);
+          if (index === undefined) return;
+          const row = sorted[index], next = sorted[index + 1] || null;
+          if (row.nextElementSibling !== next) list.insertBefore(row, next);
+        });
+      if (focused?.isConnected && document.activeElement !== focused)
+        focused.focus({ preventScroll: true });
+    });
   });
 }
 
@@ -36357,20 +36384,16 @@ document.addEventListener("change", (event) => {
   const productId = select.dataset.g1kwProductV553;
   const phraseKey = select.dataset.g1kwPhraseV553;
   if (!productId || !phraseKey || !["", "high", "medium", "low"].includes(select.value)) return;
-  const entry = state.projectComparison?.productsById?.[productId] ||
-    ensureProjectComparisonProduct(productId);
+  const existingEntry = state.projectComparison?.productsById?.[productId];
+  const entry = existingEntry || ensureProjectComparisonProduct(productId);
   if (!entry) return;
   guruGate1KeywordRelevanceMapV553(entry, true)[phraseKey] = select.value;
   guruGate1UpdateKeywordRelevanceUiV553(productId, phraseKey, select.value);
-  const comparison = [...document.querySelectorAll("[data-g1bp-phrase-v549]")]
-    .find((control) => control.dataset.g1bpPhraseV549 === phraseKey &&
-      control.closest("[data-g1bp-product-v543]")?.dataset.g1bpProductV543 === productId);
-  if (comparison) {
-    comparison.value = select.value;
-    const sharedChange = new Event("change", { bubbles: true });
-    sharedChange.g1kwFromGroupV553 = true;
-    comparison.dispatchEvent(sharedChange);
-  } else flashSaving();
+  // Update the comparison view directly. A synthetic bubbling `change` ran
+  // every document-level change handler again and repeated the group reorder.
+  if (typeof g1BergenSyncRelevanceUiV554 === "function")
+    g1BergenSyncRelevanceUiV554(productId, phraseKey, select.value);
+  flashSaving({ skipDerivedRefresh: Boolean(existingEntry) });
 });
 
 // Gate 4 is a saved source, not a migration target. Enrich only a display
@@ -41180,6 +41203,7 @@ let guruUserEditEventType = "";
 let guruUserEditDispatchToken = 0;
 let guruDerivedRefreshHandle = null;
 let guruDerivedRefreshTimer = null;
+let guruDerivedRefreshRequired = false;
 let guruUiPreferenceTimer = null;
 let guruUiPreferencePending = null;
 
@@ -41274,6 +41298,7 @@ function guruFinishDerivedRefresh(workspace, editEpoch) {
     guruRefreshReadiness({ statusesReady: true });
     if (activeGateId === "gate-0")
       gate0RefreshStatuses({ refreshSummary: true, statusesReady: true });
+    guruDerivedRefreshRequired = false;
   } catch (error) {
     console.warn("Не удалось завершить обновление производных данных", error);
   }
@@ -41319,6 +41344,7 @@ function guruRecalculateStatusesProgressively(workspace, editEpoch) {
 }
 
 function guruScheduleDerivedRefresh() {
+  guruDerivedRefreshRequired = true;
   guruCancelDerivedRefresh();
   if (typeof requestIdleCallback === "function") {
     guruDerivedRefreshHandle = requestIdleCallback(guruRunDerivedRefresh, {
@@ -41329,10 +41355,11 @@ function guruScheduleDerivedRefresh() {
   guruDerivedRefreshTimer = setTimeout(guruRunDerivedRefresh, 900);
 }
 
-function guruAutosaveStateSmooth() {
+function guruAutosaveStateSmooth(options = {}) {
   if (!state || !activeProjectId) return;
   guruPersistStateFast();
-  guruScheduleDerivedRefresh();
+  if (options.skipDerivedRefresh !== true || guruDerivedRefreshRequired)
+    guruScheduleDerivedRefresh();
 }
 
 function guruFlushUiPreferenceSave(options = {}) {

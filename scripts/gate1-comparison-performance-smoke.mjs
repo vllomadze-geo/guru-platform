@@ -175,13 +175,27 @@ try {
     const key=target.dataset.g1kwPhraseV553,productId=target.dataset.g1kwProductV553;
     const row=target.closest('.pv181-demand-row'),copy=row.querySelector('.g1kw-copy-cell-v553 button');
     const phrase=copy.dataset.g1CompetitorCopyV539;
-    copy.click();await new Promise(resolve=>setTimeout(resolve,70));
+    let copySaveCalls=0,comparisonChangeEvents=0;
+    const originalFlashSaving=flashSaving;
+    const countComparisonChange=(event)=>{if(event.target?.matches?.('[data-g1bp-phrase-v549]'))comparisonChangeEvents++};
+    document.addEventListener('change',countComparisonChange);
+    flashSaving=(...args)=>{copySaveCalls++;return originalFlashSaving(...args)};
+    const copyStart=performance.now();copy.click();const copyClickMs=performance.now()-copyStart;
+    await new Promise(resolve=>setTimeout(resolve,70));flashSaving=originalFlashSaving;
     const pasted=await navigator.clipboard.readText();
     const demandBefore=JSON.stringify(state.painV130);
     const idsBefore=state.projectComparison.productsById[productId].competitors.map(c=>c.id);
+    const syncTimings={groupUiMs:0,comparisonUiMs:0,saveDispatchMs:0};
+    const groupUi=guruGate1UpdateKeywordRelevanceUiV553,comparisonUi=g1BergenSyncRelevanceUiV554,saveDispatch=flashSaving;
+    guruGate1UpdateKeywordRelevanceUiV553=(...args)=>{const t=performance.now();try{return groupUi(...args)}finally{syncTimings.groupUiMs+=performance.now()-t}};
+    g1BergenSyncRelevanceUiV554=(...args)=>{const t=performance.now();try{return comparisonUi(...args)}finally{syncTimings.comparisonUiMs+=performance.now()-t}};
+    flashSaving=(...args)=>{const t=performance.now();try{return saveDispatch(...args)}finally{syncTimings.saveDispatchMs+=performance.now()-t}};
     target.closest('details').open=true;
     target.focus();const t1=performance.now();target.value='low';target.dispatchEvent(new Event('change',{bubbles:true}));
     const fromGroupMs=performance.now()-t1;
+    guruGate1UpdateKeywordRelevanceUiV553=groupUi;g1BergenSyncRelevanceUiV554=comparisonUi;flashSaving=saveDispatch;
+    document.removeEventListener('change',countComparisonChange);
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
     const comparison=[...document.querySelectorAll('[data-g1bp-phrase-v549]')].find(n=>n.dataset.g1bpPhraseV549===key);
     const comparisonAfterGroup=comparison.value;
     const groupsAfterLow=groups.map(group=>{
@@ -195,33 +209,61 @@ try {
     const t2=performance.now();comparison.value='medium';comparison.dispatchEvent(new Event('change',{bubbles:true}));
     const fromComparisonMs=performance.now()-t2;
     const groupAfterComparison=target.value;
-    await new Promise(resolve=>setTimeout(resolve,850));
+    await new Promise(resolve=>setTimeout(resolve,1400));
     const saved=JSON.parse(window.__perfWrites.at(-1)?.value||'null');
     const duplicateRatings=[...document.querySelectorAll('[data-g1kw-phrase-v553]')]
       .filter(control=>control.dataset.g1kwPhraseV553===key).map(control=>control.value);
+    const rapid=[...groups[0].querySelectorAll('[data-g1kw-relevance-v553]')]
+      .filter(control=>control.dataset.g1kwPhraseV553!==key).slice(0,3);
+    rapid.forEach((control,index)=>{control.value=['low','high','medium'][index];control.dispatchEvent(new Event('change',{bubbles:true}))});
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    const ratings=state.projectComparison.productsById[productId].keywordRelevanceByPhraseV549;
+    const orderedRows=[...groups[0].querySelectorAll('.pv181-demand-row.g1kw-actions-v553')];
+    const rapidGroupSorted=orderedRows.every((item,index)=>index===0||
+      guruGate1KeywordRelevanceRankV553(ratings[orderedRows[index-1].dataset.g1kwRowV553])<
+        guruGate1KeywordRelevanceRankV553(ratings[item.dataset.g1kwRowV553]) ||
+      (guruGate1KeywordRelevanceRankV553(ratings[orderedRows[index-1].dataset.g1kwRowV553])===
+       guruGate1KeywordRelevanceRankV553(ratings[item.dataset.g1kwRowV553]) &&
+       Number(orderedRows[index-1].dataset.g1kwSourceOrderV553)<Number(item.dataset.g1kwSourceOrderV553)));
     const host=window.__perfKeywordHost,maps=pv140EnsureProductMaps();
     host.innerHTML=pv181SemLevelHtml(${setup.groupMapIndex},productId,PV181_ITEM_LEVELS[0],[],
       guruV194Product(productId,state).url,maps[${setup.groupMapIndex}]);
     const afterRerender=[...host.querySelectorAll('[data-g1kw-relevance-v553]')]
       .find(control=>control.dataset.g1kwPhraseV553===key)?.value;
-    return {scoped,phrase,pasted,fromGroupMs,fromComparisonMs,comparisonAfterGroup,
-      groupAfterComparison,groupStable,groupsAfterLow,duplicateRatings,afterRerender,
+    return {scoped,phrase,pasted,copyClickMs,copySaveCalls,comparisonChangeEvents,syncTimings,
+      fromGroupMs,fromComparisonMs,comparisonAfterGroup,
+      groupAfterComparison,groupStable,groupsAfterLow,duplicateRatings,rapidGroupSorted,afterRerender,
       sourceUnchanged:demandBefore===JSON.stringify(state.painV130),
       competitorIdsUnchanged:JSON.stringify(idsBefore)===JSON.stringify(state.projectComparison.productsById[productId].competitors.map(c=>c.id)),
       savedRating:saved?.projectComparison?.productsById?.[productId]?.keywordRelevanceByPhraseV549?.[key],
       savedWrites:window.__perfWrites.length};
   })()`);
+  const saveScheduling = await evaluate(`(async()=>{
+    guruCancelDerivedRefresh();guruDerivedRefreshRequired=false;
+    flashSaving({skipDerivedRefresh:true});
+    await new Promise(resolve=>setTimeout(resolve,1400));
+    const relevanceOnlySkipsDerived=!guruDerivedRefreshRequired;
+    guruCancelDerivedRefresh();guruDerivedRefreshRequired=false;
+    flashSaving();flashSaving({skipDerivedRefresh:true});
+    await new Promise(resolve=>setTimeout(resolve,700));
+    const mixedEditKeepsDerived=guruDerivedRefreshRequired;
+    guruCancelDerivedRefresh();guruDerivedRefreshRequired=false;
+    return {relevanceOnlySkipsDerived,mixedEditKeepsDerived};
+  })()`);
   if (keywordActions.scoped.length<2 || keywordActions.scoped.some(group=>
       !group.rows || group.rows!==group.copies || group.rows!==group.ratings ||
       group.header[7]!=="Копировать" || group.header[8]!=="Релевантность") ||
-      keywordActions.pasted!==keywordActions.phrase || !keywordActions.groupStable ||
+      keywordActions.pasted!==keywordActions.phrase || keywordActions.copySaveCalls!==0 ||
+      keywordActions.comparisonChangeEvents!==0 || !keywordActions.groupStable ||
       keywordActions.comparisonAfterGroup!=="low" || keywordActions.groupAfterComparison!=="medium" ||
-      !keywordActions.groupsAfterLow.every(Boolean) || keywordActions.duplicateRatings.some(value=>value!=="medium") ||
+      !keywordActions.groupsAfterLow.every(Boolean) || !keywordActions.rapidGroupSorted ||
+      keywordActions.duplicateRatings.some(value=>value!=="medium") ||
       keywordActions.afterRerender!=="medium" ||
       !keywordActions.sourceUnchanged || !keywordActions.competitorIdsUnchanged ||
-      keywordActions.savedRating!=="medium" || keywordActions.savedWrites<2)
-    throw Error("JTBD keyword actions regression: "+JSON.stringify(keywordActions));
-  console.log(JSON.stringify({setup,metrics,persistence,keywordActions},null,2));
+      keywordActions.savedRating!=="medium" || keywordActions.savedWrites<2 ||
+      !saveScheduling.relevanceOnlySkipsDerived || !saveScheduling.mixedEditKeepsDerived)
+    throw Error("JTBD keyword actions regression: "+JSON.stringify({keywordActions,saveScheduling}));
+  console.log(JSON.stringify({setup,metrics,persistence,keywordActions,saveScheduling},null,2));
 } finally {
   page?.close();
   await browser.call("Target.disposeBrowserContext", { browserContextId });

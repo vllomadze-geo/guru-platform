@@ -652,6 +652,64 @@ document.addEventListener("input", (event) => {
   g1BergenRefreshStatusV543(section, entry, jtbds);
 });
 
+const G1_BERGEN_PENDING_REORDER_V554 = new WeakMap();
+function g1BergenSchedulePhraseReorderV554(list, entry, group, phraseKey) {
+  const pending = G1_BERGEN_PENDING_REORDER_V554.get(list);
+  if (pending) { pending.add(phraseKey); return; }
+  const changed = new Set([phraseKey]);
+  G1_BERGEN_PENDING_REORDER_V554.set(list, changed);
+  // Keep the selected native control attached until its change event ends.
+  requestAnimationFrame(() => {
+    G1_BERGEN_PENDING_REORDER_V554.delete(list);
+    if (!list.isConnected) return;
+    const scrollTop = list.scrollTop;
+    const rows = new Map([...list.children].map((row) =>
+      [row.querySelector("[data-g1bp-keyword-key-v550]")?.dataset.g1bpKeywordKeyV550, row]));
+    const sorted = g1BergenSortedPhrasesV551(entry, group);
+    const positions = new Map(sorted.map((phrase, index) => [phrase.key, index]));
+    [...changed].sort((left, right) => positions.get(right) - positions.get(left))
+      .forEach((key) => {
+        const index = positions.get(key);
+        if (index === undefined) return;
+        const row = rows.get(key), next = rows.get(sorted[index + 1]?.key) || null;
+        if (row && row.nextElementSibling !== next) list.insertBefore(row, next);
+      });
+    list.scrollTop = scrollTop;
+  });
+}
+
+function g1BergenSyncRelevanceUiV554(productId, phraseKey, value, context = {}) {
+  const section = context.section || [...document.querySelectorAll("[data-g1bp-product-v543]")]
+    .find((node) => node.dataset.g1bpProductV543 === productId);
+  if (!section) return;
+  const entry = context.entry || state.projectComparison?.productsById?.[productId];
+  const cached = g1BergenRenderContextV552;
+  const jtbds = context.jtbds ||
+    (cached?.workspace === state && cached.productId === productId && cached.entry === entry
+      ? cached.jtbds : null) ||
+    g1BergenJtbdsV543(context.product || guruV194Product(productId, state));
+  if (!entry || !jtbds) return;
+  const ratings = entry.keywordRelevanceByPhraseV549 || {};
+  section.querySelectorAll("[data-g1bp-phrase-v549]").forEach((control) => {
+    if (control.dataset.g1bpPhraseV549 === phraseKey) control.value = value;
+  });
+  section.querySelectorAll(".g1bp-search-details-v548").forEach((details) => {
+    const id = details.querySelector("[data-g1bp-relevance-v549]")?.dataset.g1bpRelevanceV549;
+    const group = jtbds.find((row) => row.id === id);
+    if (!group?.phrases.some((phrase) => phrase.key === phraseKey)) return;
+    const rated = group.phrases.filter((phrase) => G1_BERGEN_RELEVANCE_V549.some(([value]) => ratings[phrase.key] === value)).length;
+    const count = details.querySelector("summary span");
+    if (count) count.textContent = `Фраз: ${group.phrases.length} · оценено: ${rated} · выбрано: ${g1BergenSelectedKeywordKeysV550(entry, group).size}`;
+    const list = details.querySelector(".g1bp-phrase-list-v548");
+    if (list) g1BergenSchedulePhraseReorderV554(list, entry, group, phraseKey);
+    if (g1BergenSelectedKeywordKeysV550(entry, group).has(phraseKey))
+      details.closest("tr")?.querySelectorAll("[data-g1bp-keywords-for-v550]").forEach((slot) => {
+        const rowCompetitor = entry.competitors.find((item) => item.id === slot.dataset.g1bpKeywordsForV550);
+        if (rowCompetitor) slot.innerHTML = g1BergenCompetitorKeywordsV550(entry, rowCompetitor, group);
+      });
+  });
+}
+
 document.addEventListener("change", (event) => {
   const target = event.target;
   if (!target.closest?.("[data-g1bp-product-v543]")) return;
@@ -663,41 +721,12 @@ document.addEventListener("change", (event) => {
     const jtbd = jtbds.find((row) => row.id === jtbdId);
     if (!jtbd?.phrases.some((phrase) => phrase.key === phraseKey) ||
         !["", ...G1_BERGEN_RELEVANCE_V549.map(([value]) => value)].includes(target.value)) return;
-    const ratings = entry.keywordRelevanceByPhraseV549;
-    ratings[phraseKey] = target.value;
+    entry.keywordRelevanceByPhraseV549[phraseKey] = target.value;
     guruGate1UpdateKeywordRelevanceUiV553(section.dataset.g1bpProductV543, phraseKey, target.value);
-    section.querySelectorAll("[data-g1bp-phrase-v549]").forEach((control) => {
-      if (control.dataset.g1bpPhraseV549 === phraseKey) control.value = target.value;
-    });
-    section.querySelectorAll(".g1bp-search-details-v548").forEach((details) => {
-      const id = details.querySelector("[data-g1bp-relevance-v549]")?.dataset.g1bpRelevanceV549;
-      const group = jtbds.find((row) => row.id === id);
-      if (!group?.phrases.some((phrase) => phrase.key === phraseKey)) return;
-      const rated = group.phrases.filter((phrase) => G1_BERGEN_RELEVANCE_V549.some(([value]) => ratings[phrase.key] === value)).length;
-      const count = details.querySelector("summary span");
-      if (count) count.textContent = `Фраз: ${group.phrases.length} · оценено: ${rated} · выбрано: ${g1BergenSelectedKeywordKeysV550(entry, group).size}`;
-      const list = details.querySelector(".g1bp-phrase-list-v548");
-      if (list) {
-        const scrollTop = list.scrollTop;
-        const row = [...list.children].find((item) =>
-          item.querySelector("[data-g1bp-keyword-key-v550]")?.dataset.g1bpKeywordKeyV550 === phraseKey);
-        const sorted = g1BergenSortedPhrasesV551(entry, group);
-        const index = sorted.findIndex((phrase) => phrase.key === phraseKey);
-        const nextKey = sorted[index + 1]?.key;
-        const next = nextKey && [...list.children].find((item) =>
-          item.querySelector("[data-g1bp-keyword-key-v550]")?.dataset.g1bpKeywordKeyV550 === nextKey);
-        if (row && row.nextElementSibling !== (next || null) && row !== next)
-          list.insertBefore(row, next || null);
-        list.scrollTop = scrollTop;
-      }
-      if (g1BergenSelectedKeywordKeysV550(entry, group).has(phraseKey))
-        details.closest("tr")?.querySelectorAll("[data-g1bp-keywords-for-v550]").forEach((slot) => {
-          const rowCompetitor = entry.competitors.find((item) => item.id === slot.dataset.g1bpKeywordsForV550);
-          if (rowCompetitor) slot.innerHTML = g1BergenCompetitorKeywordsV550(entry, rowCompetitor, group);
-        });
-    });
-    if (!event.g1kwFromGroupV553) target.focus({ preventScroll: true });
-    flashSaving();
+    g1BergenSyncRelevanceUiV554(section.dataset.g1bpProductV543, phraseKey, target.value,
+      { section, entry, jtbds });
+    target.focus({ preventScroll: true });
+    flashSaving({ skipDerivedRefresh: true });
     return;
   }
   if (target.dataset.g1bpFoundKeywordV550 !== undefined) {
