@@ -278,6 +278,11 @@ document.addEventListener("click", (event) => {
 });
 
 /* v543 · Compact Bergen–Peteraf comparison. The v539/v540 records remain intact. */
+// A render already resolves all product phrases. Reuse that snapshot for edits
+// in the rendered table instead of scanning Gate 1 demand rows on every click
+// and every character typed into a competitor field.
+let g1BergenRenderContextV552 = null;
+
 const G1_BERGEN_FIELDS_V543 = [
   "marketSegment", "marketGeography", "businessType", "made", "salesChannels",
   "similarity", "product", "price", "positioning", "parity", "offerCta",
@@ -598,6 +603,7 @@ projectComparisonProductHtml = function (product = guruV194SelectedProduct(state
   const { jtbds } = g1BergenMigrateV543(entry, product);
   const ctx = g1CompetitorContextV539(product);
   const status = g1BergenStatusV543(entry, ctx, jtbds);
+  g1BergenRenderContextV552 = { productId: product.id, workspace: state, product, entry, jtbds };
   return `<section class="project-comparison project-comparison-product-v309 g1-section g1bp-v543 ${entry.open ? "is-open" : ""}" data-project-comparison-product="${escapeAttr(product.id)}" data-g1bp-product-v543="${escapeAttr(product.id)}">
     <button type="button" class="project-comparison-heading" data-project-comparison-product-toggle data-project-comparison-product-id="${escapeAttr(product.id)}" aria-expanded="${entry.open ? "true" : "false"}"><span><b>Сравнение проектов · Продукт/Услуга</b><small>${escapeHtml(product.name)}</small></span><span class="project-comparison-heading-meta">${g1CompetitorStatusPillV539(status.status)}<span data-g1bp-status-meta-v543>${status.filled}/${status.total} ответов прямых конкурентов · ${entry.competitors.length} колонок</span></span><i>${entry.open ? "Свернуть ↑" : "Развернуть ↓"}</i></button>
     <div class="project-comparison-body" ${entry.open ? "" : "hidden"}><h3 class="g1bp-title-v543">Сравнение</h3>${g1BergenTableHtmlV543(entry, ctx, jtbds)}</div>
@@ -607,18 +613,24 @@ projectComparisonProductHtml = function (product = guruV194SelectedProduct(state
 function g1BergenFindV543(target) {
   const section = target.closest?.("[data-g1bp-product-v543]");
   const productId = section?.dataset.g1bpProductV543;
-  const product = productId ? guruV194Product(productId, state) : null;
-  if (!product) return {};
-  const entry = ensureProjectComparisonProduct(productId);
-  const { jtbds } = g1BergenMigrateV543(entry, product);
+  if (!productId) return {};
+  let context = g1BergenRenderContextV552;
+  if (!context || context.productId !== productId || context.workspace !== state) {
+    const product = guruV194Product(productId, state);
+    if (!product) return {};
+    const entry = ensureProjectComparisonProduct(productId);
+    const { jtbds } = g1BergenMigrateV543(entry, product);
+    context = { productId, workspace: state, product, entry, jtbds };
+    g1BergenRenderContextV552 = context;
+  }
   const id = target.dataset.g1bpCompetitorV543 || target.dataset.g1bpNameV543 ||
     target.dataset.g1bpDomainV543 || target.dataset.g1bpDeleteV543 ||
     target.dataset.g1bpFoundKeywordV550;
-  return { section, product, entry, jtbds, competitor: entry.competitors.find((row) => row.id === id) };
+  return { section, ...context, competitor: context.entry.competitors.find((row) => row.id === id) };
 }
 
-function g1BergenRefreshStatusV543(section, entry, product, jtbds) {
-  const status = g1BergenStatusV543(entry, g1CompetitorContextV539(product), jtbds);
+function g1BergenRefreshStatusV543(section, entry, jtbds) {
+  const status = g1BergenStatusV543(entry, null, jtbds);
   const pill = section.querySelector(".project-comparison-heading .status-pill");
   if (pill) {
     pill.className = `status-pill status-${status.status}`;
@@ -638,7 +650,7 @@ document.addEventListener("toggle", (event) => {
 document.addEventListener("input", (event) => {
   const target = event.target;
   if (!target.closest?.("[data-g1bp-product-v543]")) return;
-  const { section, product, entry, jtbds, competitor } = g1BergenFindV543(target);
+  const { section, entry, jtbds, competitor } = g1BergenFindV543(target);
   if (!competitor) return;
   if (target.dataset.g1bpNameV543) competitor.name = target.value;
   else if (target.dataset.g1bpDomainV543) {
@@ -649,7 +661,7 @@ document.addEventListener("input", (event) => {
     competitor.bergenV543[target.dataset.g1bpFieldV543] = target.value;
   } else return;
   flashSaving();
-  g1BergenRefreshStatusV543(section, entry, product, jtbds);
+  g1BergenRefreshStatusV543(section, entry, jtbds);
 });
 
 document.addEventListener("change", (event) => {
@@ -678,10 +690,15 @@ document.addEventListener("change", (event) => {
       const list = details.querySelector(".g1bp-phrase-list-v548");
       if (list) {
         const scrollTop = list.scrollTop;
-        const rows = new Map([...list.children].map((row) =>
-          [row.querySelector("[data-g1bp-keyword-key-v550]")?.dataset.g1bpKeywordKeyV550, row]));
-        list.replaceChildren(...g1BergenSortedPhrasesV551(entry, group)
-          .map((phrase) => rows.get(phrase.key)).filter(Boolean));
+        const row = [...list.children].find((item) =>
+          item.querySelector("[data-g1bp-keyword-key-v550]")?.dataset.g1bpKeywordKeyV550 === phraseKey);
+        const sorted = g1BergenSortedPhrasesV551(entry, group);
+        const index = sorted.findIndex((phrase) => phrase.key === phraseKey);
+        const nextKey = sorted[index + 1]?.key;
+        const next = nextKey && [...list.children].find((item) =>
+          item.querySelector("[data-g1bp-keyword-key-v550]")?.dataset.g1bpKeywordKeyV550 === nextKey);
+        if (row && row.nextElementSibling !== (next || null) && row !== next)
+          list.insertBefore(row, next || null);
         list.scrollTop = scrollTop;
       }
       if (g1BergenSelectedKeywordKeysV550(entry, group).has(phraseKey))
@@ -731,7 +748,9 @@ document.addEventListener("change", (event) => {
     competitor.bergenV543[target.dataset.g1bpChoiceV543] = target.value;
   } else if (!target.dataset.g1bpFieldV543 && !target.dataset.g1bpNameV543) return;
   flashSaving();
-  renderGate();
+  if (target.dataset.g1bpDomainV543 || target.dataset.g1bpFieldV543 || target.dataset.g1bpNameV543)
+    g1BergenRefreshStatusV543(section, entry, jtbds);
+  else renderGate();
 });
 
 document.addEventListener("click", (event) => {
