@@ -36196,9 +36196,35 @@ const PV181_DEMAND_IMPORTED_FIELDS_V272 = new Set([
   "forecastBudget",
 ]);
 
-function pv181DemandTableHeadHtmlV272() {
-  return `<div class="pv181-demand-table-head-v263" aria-hidden="true">
+// Both Gate 1 JTBD groups and product comparison use one product-wide rating
+// per normalized phrase. Older per-JTBD ratings remain available for migration.
+function guruGate1KeywordRelevanceMapV553(entry, persist = false) {
+  const current = entry?.keywordRelevanceByPhraseV549;
+  if (current && typeof current === "object" && !Array.isArray(current))
+    return current;
+  const ratings = {};
+  const previous = entry?.keywordRelevanceByJtbdV549;
+  if (previous && typeof previous === "object" && !Array.isArray(previous))
+    Object.values(previous).forEach((group) => {
+      if (!group || typeof group !== "object" || Array.isArray(group)) return;
+      Object.entries(group).forEach(([key, value]) => {
+        if (["high", "medium", "low"].includes(value) && !ratings[key])
+          ratings[key] = value;
+      });
+    });
+  if (entry && persist) entry.keywordRelevanceByPhraseV549 = ratings;
+  return ratings;
+}
+
+function guruGate1KeywordRelevanceRankV553(value) {
+  return { high: 0, medium: 1, low: 3 }[value] ?? 2;
+}
+
+function pv181DemandTableHeadHtmlV272(options = {}) {
+  const keywordActions = options.keywordActions === true;
+  return `<div class="pv181-demand-table-head-v263${keywordActions ? " g1kw-actions-v553" : ""}" aria-hidden="true">
     ${PV181_DEMAND_FIELDS_V272.map(([, label]) => `<span>${escapeHtml(label)}</span>`).join("")}
+    ${keywordActions ? "<span>Копировать</span><span>Релевантность</span>" : ""}
     <span></span>
   </div>`;
 }
@@ -36213,7 +36239,19 @@ function pv181DemandRowsHtmlV272(entries, options = {}) {
     : "primary";
   const draggable = Boolean(options.draggable);
   const showRemove = options.showRemove !== false;
-  return entries.map(({ demandRow: row, index }) => {
+  const keywordActions = options.keywordActions === true;
+  const productEntry = keywordActions
+    ? state.projectComparison?.productsById?.[itemId]
+    : null;
+  const relevanceByPhrase = keywordActions
+    ? guruGate1KeywordRelevanceMapV553(productEntry)
+    : null;
+  const displayEntries = entries.map((entry, order) => ({ entry, order }));
+  if (keywordActions) displayEntries.sort((left, right) =>
+    guruGate1KeywordRelevanceRankV553(relevanceByPhrase[guruV247KeywordNormalize(left.entry.demandRow?.kw)]) -
+    guruGate1KeywordRelevanceRankV553(relevanceByPhrase[guruV247KeywordNormalize(right.entry.demandRow?.kw)]) ||
+    left.order - right.order);
+  return displayEntries.map(({ entry: { demandRow: row, index }, order }) => {
     const linkedFoundation = guruV185Text(row?._linkedFoundationV518);
     const linkedGate4 = Boolean(row?._linkedGate4V519);
     const rowReadOnly = readOnly || Boolean(linkedFoundation) || linkedGate4;
@@ -36268,12 +36306,72 @@ function pv181DemandRowsHtmlV272(entries, options = {}) {
           ? " data-pv181-additional-jtbd-demand-row-v274"
           : " data-pv181-primary-demand-row-v272";
     const phraseKey = guruV247KeywordNormalize(row?.kw);
+    const keywordCells = keywordActions
+      ? phraseKey
+        ? `<div class="g1kw-copy-cell-v553"><button type="button" class="small-btn" data-g1-competitor-copy-v539="${escapeAttr(guruV185Text(row?.kw))}" aria-label="Копировать ключевое слово ${escapeAttr(guruV185Text(row?.kw))}">Копировать</button></div>
+          <label class="g1kw-relevance-cell-v553"><span class="pv181-demand-cell-label-v263">Релевантность</span><select data-g1kw-relevance-v553 data-g1kw-product-v553="${escapeAttr(itemId)}" data-g1kw-phrase-v553="${escapeAttr(phraseKey)}" aria-label="Релевантность фразы ${escapeAttr(guruV185Text(row?.kw))}">
+            <option value=""${!relevanceByPhrase[phraseKey] ? " selected" : ""}>Не оценено</option>
+            <option value="high"${relevanceByPhrase[phraseKey] === "high" ? " selected" : ""}>Высокая</option>
+            <option value="medium"${relevanceByPhrase[phraseKey] === "medium" ? " selected" : ""}>Средняя</option>
+            <option value="low"${relevanceByPhrase[phraseKey] === "low" ? " selected" : ""}>Низкая</option>
+          </select></label>`
+        : "<span></span><span></span>"
+      : "";
     const dragAttributes = draggable && phraseKey
       ? ` draggable="true" aria-grabbed="false" title="Перетащите фразу в нужную JTBD-группу" data-pv181-jtbd-keyword-drag-v274="${escapeAttr(phraseKey)}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}"`
       : "";
-    return `<div class="pv181-demand-row${readOnlyClass}${anomaly ? " is-anomaly-v277" : ""}"${readOnlyRowAttribute}${dragAttributes}>${cells}${action}</div>`;
+    const keywordRowAttributes = keywordActions
+      ? ` data-g1kw-row-v553="${escapeAttr(phraseKey)}" data-g1kw-product-v553="${escapeAttr(itemId)}" data-g1kw-source-order-v553="${order}"`
+      : "";
+    return `<div class="pv181-demand-row${readOnlyClass}${anomaly ? " is-anomaly-v277" : ""}${keywordActions ? " g1kw-actions-v553" : ""}"${readOnlyRowAttribute}${dragAttributes}${keywordRowAttributes}>${cells}${keywordCells}${action}</div>`;
   }).join("");
 }
+
+function guruGate1UpdateKeywordRelevanceUiV553(productId, phraseKey, value) {
+  document.querySelectorAll("[data-g1kw-relevance-v553]").forEach((control) => {
+    if (control.dataset.g1kwProductV553 === productId &&
+        control.dataset.g1kwPhraseV553 === phraseKey)
+      control.value = value;
+  });
+  document.querySelectorAll(".pv181-jtbd-demand-details-v278 > div").forEach((list) => {
+    const rows = [...list.children].filter((row) => row.hasAttribute("data-g1kw-row-v553"));
+    const row = rows.find((item) => item.dataset.g1kwProductV553 === productId &&
+      item.dataset.g1kwRowV553 === phraseKey);
+    if (!row) return;
+    const ratings = state.projectComparison?.productsById?.[productId]?.keywordRelevanceByPhraseV549 || {};
+    const sorted = [...rows].sort((left, right) =>
+      guruGate1KeywordRelevanceRankV553(ratings[left.dataset.g1kwRowV553]) -
+      guruGate1KeywordRelevanceRankV553(ratings[right.dataset.g1kwRowV553]) ||
+      Number(left.dataset.g1kwSourceOrderV553) - Number(right.dataset.g1kwSourceOrderV553));
+    const next = sorted[sorted.indexOf(row) + 1] || null;
+    if (row.nextElementSibling === next || row === next) return;
+    const focused = row.contains(document.activeElement) ? document.activeElement : null;
+    list.insertBefore(row, next);
+    if (focused?.isConnected) focused.focus({ preventScroll: true });
+  });
+}
+
+document.addEventListener("change", (event) => {
+  const select = event.target?.closest?.("[data-g1kw-relevance-v553]");
+  if (!select) return;
+  const productId = select.dataset.g1kwProductV553;
+  const phraseKey = select.dataset.g1kwPhraseV553;
+  if (!productId || !phraseKey || !["", "high", "medium", "low"].includes(select.value)) return;
+  const entry = state.projectComparison?.productsById?.[productId] ||
+    ensureProjectComparisonProduct(productId);
+  if (!entry) return;
+  guruGate1KeywordRelevanceMapV553(entry, true)[phraseKey] = select.value;
+  guruGate1UpdateKeywordRelevanceUiV553(productId, phraseKey, select.value);
+  const comparison = [...document.querySelectorAll("[data-g1bp-phrase-v549]")]
+    .find((control) => control.dataset.g1bpPhraseV549 === phraseKey &&
+      control.closest("[data-g1bp-product-v543]")?.dataset.g1bpProductV543 === productId);
+  if (comparison) {
+    comparison.value = select.value;
+    const sharedChange = new Event("change", { bubbles: true });
+    sharedChange.g1kwFromGroupV553 = true;
+    comparison.dispatchEvent(sharedChange);
+  } else flashSaving();
+});
 
 // Gate 4 is a saved source, not a migration target. Enrich only a display
 // copy; an older Gate 1 value always wins and the source rows stay untouched.
@@ -69106,7 +69204,7 @@ function guruGate1JtbdDemandListHtmlV278(entries, options = {}) {
   const scope = guruV185Text(options.scope) || "group";
   return `<details class="pv181-jtbd-demand-details-v278" data-pv181-jtbd-demand-details-v278="${escapeAttr(scope)}" data-ui-keeper-key="jtbd-demand:${escapeAttr(options.itemId)}:${escapeAttr(scope)}">
     <summary><span>Ключевые слова группы</span><b>${countLabel}</b></summary>
-    ${pv181DemandTableHeadHtmlV272()}
+    ${pv181DemandTableHeadHtmlV272({ keywordActions: true })}
     <div class="${escapeAttr(rowsClass)}">${pv181DemandRowsHtmlV272(entries, {
       mapIndex: options.mapIndex,
       itemId: options.itemId,
@@ -69114,6 +69212,7 @@ function guruGate1JtbdDemandListHtmlV278(entries, options = {}) {
       readOnly: true,
       readOnlyScope: options.readOnlyScope,
       draggable: true,
+      keywordActions: true,
     })}</div>
   </details>`;
 }
@@ -69857,12 +69956,12 @@ function guruGate1SavedJtbdsHtmlV520(mapIndex, itemId, itemData, current) {
         <div class="gate0-jtbd-sentence-v194"><small>Единая формулировка JTBD</small><strong>${escapeHtml(entry.text)}</strong></div>
         <section class="pv181-additional-jtbd-keywords-v274" data-pv181-additional-jtbd-keywords-v274="${escapeAttr(entry.id)}">
           <header><strong>Ключевые слова дополнительного JTBD</strong><span>${visible.length} фраз</span></header>
-          ${guruGate1JtbdDemandListHtmlV278(visible, {
+          <div class="pv181-demand-table-v263">${guruGate1JtbdDemandListHtmlV278(visible, {
             scope: `saved:${entry.id}`,
             rowsClass: "pv181-additional-jtbd-demand-rows-v274",
             mapIndex, itemId, itemData,
             readOnlyScope: "additional",
-          })}
+          })}</div>
         </section>
       </article>`;
     }).join("");

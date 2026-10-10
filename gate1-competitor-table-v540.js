@@ -335,19 +335,7 @@ function g1BergenJtbdsV543(product) {
 
 function g1BergenMigrateV543(entry, product) {
   g1ComparisonTableMigrateV540(entry);
-  if (!entry.keywordRelevanceByPhraseV549 || typeof entry.keywordRelevanceByPhraseV549 !== "object" || Array.isArray(entry.keywordRelevanceByPhraseV549)) {
-    const ratings = {};
-    const previous = entry.keywordRelevanceByJtbdV549;
-    if (previous && typeof previous === "object" && !Array.isArray(previous))
-      Object.values(previous).forEach((group) => {
-        if (!group || typeof group !== "object" || Array.isArray(group)) return;
-        Object.entries(group).forEach(([key, value]) => {
-          if (!["high", "medium", "low"].includes(value) || ratings[key]) return;
-          ratings[key] = value;
-        });
-      });
-    entry.keywordRelevanceByPhraseV549 = ratings;
-  }
+  guruGate1KeywordRelevanceMapV553(entry, true);
   const jtbds = g1BergenJtbdsV543(product);
   if (!entry.selectedKeywordKeysByJtbdV550 || typeof entry.selectedKeywordKeysByJtbdV550 !== "object" || Array.isArray(entry.selectedKeywordKeysByJtbdV550)) {
     const found = new Set(entry.competitors.flatMap((competitor) => competitor.foundPhraseKeysV539 || []));
@@ -677,6 +665,7 @@ document.addEventListener("change", (event) => {
         !["", ...G1_BERGEN_RELEVANCE_V549.map(([value]) => value)].includes(target.value)) return;
     const ratings = entry.keywordRelevanceByPhraseV549;
     ratings[phraseKey] = target.value;
+    guruGate1UpdateKeywordRelevanceUiV553(section.dataset.g1bpProductV543, phraseKey, target.value);
     section.querySelectorAll("[data-g1bp-phrase-v549]").forEach((control) => {
       if (control.dataset.g1bpPhraseV549 === phraseKey) control.value = target.value;
     });
@@ -707,7 +696,7 @@ document.addEventListener("change", (event) => {
           if (rowCompetitor) slot.innerHTML = g1BergenCompetitorKeywordsV550(entry, rowCompetitor, group);
         });
     });
-    target.focus({ preventScroll: true });
+    if (!event.g1kwFromGroupV553) target.focus({ preventScroll: true });
     flashSaving();
     return;
   }
