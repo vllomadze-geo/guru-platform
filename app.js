@@ -70349,41 +70349,111 @@ function guruGate1TransferKeywordToCompanyV555(itemId, itemData, phraseKey) {
   return true;
 }
 
-function guruGate1RefreshTransferredKeywordUiV555(select, context, toCompany) {
+function guruGate1RefreshTransferredKeywordUiV555(select, context, target) {
   const level = select.closest(".pv181-jtbd-level");
   if (!level) { renderGate(); return; }
-  const openByKey = new Map([...level.querySelectorAll("details[data-ui-keeper-key]")]
-    .map((node) => [node.dataset.uiKeeperKey, node.open]));
-  const scrollByKey = new Map([...level.querySelectorAll("details[data-ui-keeper-key]")]
-    .map((node) => [node.dataset.uiKeeperKey,
-      { top: node.scrollTop, left: node.scrollLeft }]));
-  const disclosure = typeof guruDisclosureOpenStateV512 === "function"
-    ? guruDisclosureOpenStateV512() : null;
-  level.querySelectorAll("details[data-guru-disclosure-key-v512]").forEach((node) => {
-    if (disclosure) disclosure[node.dataset.guruDisclosureKeyV512] = node.open;
+  const sourceDetails = select.closest("[data-pv181-jtbd-demand-details-v278]");
+  const normalizeScope = (scope) => scope?.replace(/^saved:/, "additional:") || "";
+  const sourceScope = normalizeScope(sourceDetails?.dataset.pv181JtbdDemandDetailsV278);
+  const scopes = [...new Set([sourceScope, target].filter((scope) =>
+    scope === "primary" || scope.startsWith("additional:")))];
+  const findSection = (scope) => scope === "primary"
+    ? level.querySelector("[data-pv181-primary-jtbd-group-v267]")
+    : [...level.querySelectorAll("[data-pv181-additional-jtbd-keywords-v274]")]
+      .find((node) => node.dataset.pv181AdditionalJtbdKeywordsV274 === scope.slice(11));
+  const selectedRow = select.closest("[data-g1kw-row-v553]");
+  const sibling = selectedRow?.nextElementSibling?.matches("[data-g1kw-row-v553]")
+    ? selectedRow.nextElementSibling
+    : selectedRow?.previousElementSibling?.matches("[data-g1kw-row-v553]")
+      ? selectedRow.previousElementSibling : null;
+  const anchorKey = sibling?.dataset.g1kwRowV553;
+  const sourceSection = findSection(sourceScope);
+  const anchor = sibling || sourceSection?.querySelector("header");
+  const anchorTop = anchor?.getBoundingClientRect().top;
+  const scrollX = window.scrollX;
+
+  // A transfer changes only two keyword groups. Replacing the whole JTBD
+  // level used to discard the native select and the table's horizontal scroll,
+  // while the changed height above the viewport made the page jump.
+  scopes.forEach((scope) => {
+    const current = findSection(scope);
+    if (!current) return;
+    const template = document.createElement("template");
+    if (scope === "primary") {
+      template.innerHTML = guruGate1PrimaryGroupHtmlV267(
+        context.mapIndex, context.itemId, context.itemData).trim();
+    } else if (current.closest("[data-gate1-saved-jtbd-v520]")) {
+      template.innerHTML = guruGate1SavedJtbdsHtmlV520(
+        context.mapIndex, context.itemId, context.itemData,
+        guruGate1EnsureAdditionalJtbdsV268(context.itemData),
+      ).trim();
+    } else {
+      template.innerHTML = guruGate1AdditionalJtbdKeywordsHtmlV274(
+        context.mapIndex, context.itemId, context.itemData,
+        scope.slice(11),
+      ).trim();
+    }
+    const next = scope === "primary"
+      ? template.content.firstElementChild
+      : [...template.content.querySelectorAll("[data-pv181-additional-jtbd-keywords-v274]")]
+        .find((node) => node.dataset.pv181AdditionalJtbdKeywordsV274 === scope.slice(11));
+    if (!next) return;
+    const oldDetails = current.querySelector("[data-pv181-jtbd-demand-details-v278]");
+    const oldTable = current.querySelector(".pv181-demand-table-v263");
+    const nextDetails = next.querySelector("[data-pv181-jtbd-demand-details-v278]");
+    const oldRows = oldDetails?.querySelector(":scope > div");
+    const nextRows = nextDetails?.querySelector(":scope > div");
+    if (oldRows && nextRows) {
+      const existing = new Map([...oldRows.children].map((row) =>
+        [row.dataset.g1kwRowV553, row]));
+      const expected = [...nextRows.children];
+      const expectedKeys = new Set(expected.map((row) => row.dataset.g1kwRowV553));
+      const removed = [...oldRows.children].filter((row) =>
+        !expectedKeys.has(row.dataset.g1kwRowV553));
+      const added = expected.filter((row) => !existing.has(row.dataset.g1kwRowV553));
+      if (removed.length + added.length === 1) {
+        removed.forEach((row) => row.remove());
+        added.forEach((row) => {
+          const index = expected.indexOf(row);
+          const following = expected.slice(index + 1).map((candidate) =>
+            existing.get(candidate.dataset.g1kwRowV553))
+            .find(Boolean);
+          oldRows.insertBefore(row, following || null);
+        });
+        const updateText = (selector) => {
+          const oldNode = current.querySelector(selector);
+          const nextNode = next.querySelector(selector);
+          if (oldNode && nextNode) oldNode.textContent = nextNode.textContent;
+        };
+        updateText(":scope > header > span");
+        updateText("[data-pv181-jtbd-demand-details-v278] > summary > b");
+        updateText("[data-gate1-group-final-foundation-v279] > div > small");
+        const oldTotals = current.querySelector("[data-pv181-demand-totals-v276]");
+        const nextTotals = next.querySelector("[data-pv181-demand-totals-v276]");
+        if (oldTotals && nextTotals) oldTotals.replaceWith(nextTotals);
+        return;
+      }
+    }
+    if (oldDetails && nextDetails) nextDetails.open = oldDetails.open;
+    const scrollLeft = oldTable?.scrollLeft || 0;
+    current.replaceWith(next);
+    const nextTable = next.querySelector(".pv181-demand-table-v263");
+    if (nextTable) nextTable.scrollLeft = scrollLeft;
   });
-  const scrollY = window.scrollY;
-  const template = document.createElement("template");
-  template.innerHTML = pv181JtbdModelHtml(
-    context.mapIndex, context.itemId, context.itemData,
-    PV181_ITEM_LEVELS[0],
-  ).trim();
-  const next = template.content.firstElementChild;
-  if (!next) return;
-  level.replaceWith(next);
-  if (typeof guruApplyDisclosureStateV512 === "function")
-    guruApplyDisclosureStateV512(next);
-  next.querySelectorAll("details[data-ui-keeper-key]").forEach((node) => {
-    const key = node.dataset.uiKeeperKey;
-    if (openByKey.has(key)) node.open = openByKey.get(key);
-    const scroll = scrollByKey.get(key);
-    if (scroll) { node.scrollTop = scroll.top; node.scrollLeft = scroll.left; }
-  });
-  if (toCompany && typeof gate1CompanyBrandDemandRefreshV345 === "function")
+  if (target === "company" && typeof gate1CompanyBrandDemandRefreshV345 === "function")
     gate1CompanyBrandDemandRefreshV345({ preserveOpen: true });
   if (typeof guruStrategicFoundationRefreshV245 === "function")
     guruStrategicFoundationRefreshV245(context.itemId);
-  window.scrollTo(0, scrollY);
+  const refreshedSource = findSection(sourceScope);
+  const nextAnchor = (anchorKey && [...(refreshedSource?.querySelectorAll("[data-g1kw-row-v553]") || [])]
+    .find((row) => row.dataset.g1kwRowV553 === anchorKey)) ||
+    refreshedSource?.querySelector("header");
+  if (nextAnchor && Number.isFinite(anchorTop)) {
+    const delta = nextAnchor.getBoundingClientRect().top - anchorTop;
+    if (delta) window.scrollTo(scrollX, window.scrollY + delta);
+  }
+  const focus = nextAnchor?.querySelector("[data-g1kw-transfer-v555]");
+  if (focus) focus.focus({ preventScroll: true });
 }
 
 document.addEventListener("change", (event) => {
@@ -70409,10 +70479,10 @@ document.addEventListener("change", (event) => {
       );
   if (!moved) return;
   flashSaving();
-  // Refresh only the affected JTBD model and company demand table. A full
+  // Refresh only the affected JTBD groups and company demand table. A full
   // Gate 1 render rebuilds every product and stalls large keyword lists.
   requestAnimationFrame(() =>
-    guruGate1RefreshTransferredKeywordUiV555(select, context, target === "company"));
+    guruGate1RefreshTransferredKeywordUiV555(select, context, target));
 }, true);
 
 function guruGate1ReleaseAdditionalJtbdKeywordsV274(itemId, itemData, entry) {
