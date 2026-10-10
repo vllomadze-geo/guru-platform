@@ -36475,16 +36475,9 @@ document.addEventListener("click", (event) => {
     // Finish the DOM change and viewport correction in the click task. An
     // animation-frame update lets the focused row disappear a frame later,
     // which is visible as a jump in long, horizontally scrolled tables.
-    const scrollRoot = document.scrollingElement;
-    const previousOverflowAnchor = scrollRoot?.style.overflowAnchor || "";
-    if (scrollRoot) scrollRoot.style.overflowAnchor = "none";
-    try {
-      guruGate1RefreshTransferredKeywordUiV555(button, context, "pending", {
-        focusNextRemove: event.detail === 0,
-      });
-    } finally {
-      if (scrollRoot) scrollRoot.style.overflowAnchor = previousOverflowAnchor;
-    }
+    guruGate1RefreshKeywordUiStableV558(button, context, "pending", {
+      focusNextRemove: event.detail === 0,
+    });
     return;
   }
   if (!Number.isInteger(index) || !context.itemData?.demandRows?.[index]) return;
@@ -70046,13 +70039,13 @@ function guruGate1AdditionalJtbdGroupV268(itemData, entry) {
   ) || null;
 }
 
-function guruGate1SavedJtbdsHtmlV520(mapIndex, itemId, itemData, current) {
+function guruGate1SavedJtbdsHtmlV520(mapIndex, itemId, itemData, current, onlyId = "") {
   const filledIds = new Set(current.filter((entry) =>
     guruV185Text(guruV194JtbdSentence(entry) ||
       guruGate1AdditionalJtbdTextV268(entry)),
   ).map((entry) => guruV185Text(entry.id)));
   return guruGate1SavedAdditionalJtbdsV520(itemId, itemData)
-    .filter((entry) => !filledIds.has(entry.id))
+    .filter((entry) => !filledIds.has(entry.id) && (!onlyId || entry.id === onlyId))
     .map((entry) => {
       const phrases = guruGate1AdditionalJtbdDemandV274(
         itemId, itemData, entry.id);
@@ -70403,6 +70396,7 @@ function guruGate1RefreshTransferredKeywordUiV555(control, context, target, opti
       template.innerHTML = guruGate1SavedJtbdsHtmlV520(
         context.mapIndex, context.itemId, context.itemData,
         guruGate1EnsureAdditionalJtbdsV268(context.itemData),
+        scope.slice(11),
       ).trim();
     } else {
       template.innerHTML = guruGate1AdditionalJtbdKeywordsHtmlV274(
@@ -70484,10 +70478,23 @@ function guruGate1RefreshTransferredKeywordUiV555(control, context, target, opti
   }
   const focus = options.focusNextRemove
     ? nextAnchor?.querySelector("[data-pv181-demand-remove]")
-    : target === "pending"
+    : target === "pending" || options.focusNextTransfer === false
       ? null
       : nextAnchor?.querySelector("[data-g1kw-transfer-open-v557]");
   if (focus) focus.focus({ preventScroll: true });
+}
+
+function guruGate1RefreshKeywordUiStableV558(control, context, target, options = {}) {
+  // Keep browser scroll anchoring from racing the explicit row-position
+  // correction while a keyword moves between long groups.
+  const scrollRoot = document.scrollingElement;
+  const previousOverflowAnchor = scrollRoot?.style.overflowAnchor || "";
+  if (scrollRoot) scrollRoot.style.overflowAnchor = "none";
+  try {
+    guruGate1RefreshTransferredKeywordUiV555(control, context, target, options);
+  } finally {
+    if (scrollRoot) scrollRoot.style.overflowAnchor = previousOverflowAnchor;
+  }
 }
 
 let guruGate1TransferMenuV557 = null;
@@ -70563,6 +70570,9 @@ document.addEventListener("click", (event) => {
     const value = choice.dataset.g1kwTransferChoiceV557;
     guruGate1CloseTransferMenuV557(value === select.value);
     if (select.isConnected && value !== select.value) {
+      // Keyboard users need focus on the next row; pointer users should keep
+      // the viewport still instead of focusing a distant replacement row.
+      select.dataset.g1kwFocusAfterTransferV558 = event.detail === 0 ? "true" : "false";
       select.value = value;
       select.dispatchEvent(new Event("change", { bubbles: true }));
     }
@@ -70610,6 +70620,8 @@ document.addEventListener("change", (event) => {
   const select = event.target?.closest?.("[data-g1kw-transfer-v555]");
   if (!select) return;
   event.stopPropagation();
+  const focusNextTransfer = select.dataset.g1kwFocusAfterTransferV558 !== "false";
+  delete select.dataset.g1kwFocusAfterTransferV558;
   const context = pv181QueryGroupTarget(select);
   const phraseKey = guruV185Text(select.dataset.g1kwPhraseV555);
   const target = guruV185Text(select.value);
@@ -70629,10 +70641,11 @@ document.addEventListener("change", (event) => {
       );
   if (!moved) return;
   flashSaving();
-  // Refresh only the affected JTBD groups and company demand table. A full
-  // Gate 1 render rebuilds every product and stalls large keyword lists.
-  requestAnimationFrame(() =>
-    guruGate1RefreshTransferredKeywordUiV555(select, context, target));
+  // Update the affected groups and restore the viewport in this event task.
+  // A deferred frame leaves the old row visible, then makes the page jump.
+  guruGate1RefreshKeywordUiStableV558(select, context, target, {
+    focusNextTransfer,
+  });
 }, true);
 
 function guruGate1ReleaseAdditionalJtbdKeywordsV274(itemId, itemData, entry) {
