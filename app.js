@@ -36234,9 +36234,31 @@ function pv181DemandTableHeadHtmlV272(options = {}) {
   const keywordActions = options.keywordActions === true;
   return `<div class="pv181-demand-table-head-v263${keywordActions ? " g1kw-actions-v553" : ""}" aria-hidden="true">
     ${PV181_DEMAND_FIELDS_V272.map(([, label]) => `<span>${escapeHtml(label)}</span>`).join("")}
-    ${keywordActions ? "<span>Копировать</span><span>Релевантность</span>" : ""}
+    ${keywordActions ? "<span>Копировать</span><span>Релевантность</span><span>Перенести в</span>" : ""}
     <span></span>
   </div>`;
+}
+
+function guruGate1KeywordTransferTargetsV555(itemId, itemData) {
+  const additional = guruGate1EnsureAdditionalJtbdsV268(itemData);
+  const saved = guruGate1SavedAdditionalJtbdsV520(itemId, itemData);
+  const seen = new Set();
+  const targets = [{ value: "primary", label: "JTBD №1 · основной" }];
+  [...additional.map((entry) => ({ entry, saved: false })),
+    ...saved.map((entry) => ({ entry, saved: true }))].forEach(({ entry, saved }) => {
+    const id = guruV185Text(entry?.id);
+    if (!id || seen.has(id)) return;
+    seen.add(id);
+    targets.push({
+      value: `additional:${id}`,
+      label: `JTBD №${targets.length + 1}${saved ? " · из Gate 4" : ""}`,
+    });
+  });
+  targets.push({
+    value: "company",
+    label: "Спрос, ценность, позиционирование · Компания",
+  });
+  return targets;
 }
 
 function pv181DemandRowsHtmlV272(entries, options = {}) {
@@ -36256,6 +36278,10 @@ function pv181DemandRowsHtmlV272(entries, options = {}) {
   const relevanceByPhrase = keywordActions
     ? guruGate1KeywordRelevanceMapV553(productEntry)
     : null;
+  const transferTargets = keywordActions
+    ? guruGate1KeywordTransferTargetsV555(itemId, itemData)
+    : [];
+  const transferScope = guruV185Text(options.transferScope).replace(/^saved:/, "additional:");
   const displayEntries = entries.map((entry, order) => ({ entry, order }));
   if (keywordActions) displayEntries.sort((left, right) =>
     guruGate1KeywordRelevanceRankV553(relevanceByPhrase[guruV247KeywordNormalize(left.entry.demandRow?.kw)]) -
@@ -36324,8 +36350,11 @@ function pv181DemandRowsHtmlV272(entries, options = {}) {
             <option value="high"${relevanceByPhrase[phraseKey] === "high" ? " selected" : ""}>Высокая</option>
             <option value="medium"${relevanceByPhrase[phraseKey] === "medium" ? " selected" : ""}>Средняя</option>
             <option value="low"${relevanceByPhrase[phraseKey] === "low" ? " selected" : ""}>Низкая</option>
+          </select></label>
+          <label class="g1kw-transfer-cell-v555"><span class="pv181-demand-cell-label-v263">Перенести в</span><select data-g1kw-transfer-v555 data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" data-g1kw-phrase-v555="${escapeAttr(phraseKey)}" aria-label="Перенести фразу ${escapeAttr(guruV185Text(row?.kw))}">
+            ${transferTargets.map((target) => `<option value="${escapeAttr(target.value)}"${target.value === transferScope ? " selected" : ""}>${escapeHtml(target.label)}</option>`).join("")}
           </select></label>`
-        : "<span></span><span></span>"
+        : "<span></span><span></span><span></span>"
       : "";
     const dragAttributes = draggable && phraseKey
       ? ` draggable="true" aria-grabbed="false" title="Перетащите фразу в нужную JTBD-группу" data-pv181-jtbd-keyword-drag-v274="${escapeAttr(phraseKey)}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}"`
@@ -56083,7 +56112,8 @@ function guruStrategicGate1TargetV286(product, context, focus, jtbdId = "") {
 function guruStrategicFinalEntriesV286(itemData) {
   if (!itemData) return [];
   return guruGate1UniqueDemandV267(itemData).filter((entry) =>
-    Boolean(guruV185Text(entry?.row?.finalFoundationImportedAtV259)),
+    Boolean(guruV185Text(entry?.row?.finalFoundationImportedAtV259)) &&
+    guruGate1JtbdAssignmentV274(itemData, entry.key)?.target !== "company",
   );
 }
 
@@ -69165,7 +69195,7 @@ function guruGate1JtbdAssignmentV274(itemData, phraseKey) {
   const value = guruGate1JtbdAssignmentsV274(itemData, false)?.[phraseKey];
   if (!value || typeof value !== "object") return null;
   const target = guruV185Text(value.target);
-  if (!["primary", "pending", "additional"].includes(target)) return null;
+  if (!["primary", "pending", "additional", "company"].includes(target)) return null;
   return {
     target,
     additional_jtbd_id: guruV185Text(value.additional_jtbd_id),
@@ -69199,7 +69229,7 @@ function guruGate1PrimaryJtbdMatchV267(itemId, itemData) {
   const phrases = demand.filter((entry) => {
     const assignment = guruGate1JtbdAssignmentV274(itemData, entry.key);
     if (assignment?.target === "primary") return true;
-    if (assignment?.target === "pending" || assignment?.target === "additional")
+    if (["pending", "additional", "company"].includes(assignment?.target))
       return false;
     const savedJtbd = guruV185Text(entry.row?._gate4JtbdIdV519);
     if ((entry.row?._gate4JtbdIdsV519 || []).length > 1) return false;
@@ -69240,6 +69270,7 @@ function guruGate1JtbdDemandListHtmlV278(entries, options = {}) {
       readOnlyScope: options.readOnlyScope,
       draggable: true,
       keywordActions: true,
+      transferScope: scope,
     })}</div>
   </details>`;
 }
@@ -69377,6 +69408,7 @@ function guruGate1JtbdBucketV274(
   const assignment = guruGate1JtbdAssignmentV274(itemData, demandEntry.key);
   if (assignment?.target === "primary") return "primary";
   if (assignment?.target === "pending") return "pending";
+  if (assignment?.target === "company") return "company";
   if (assignment?.target === "additional") {
     const targetExists = forms.some((descriptor) =>
       guruGate1AdditionalDescriptorIdV274(descriptor) ===
@@ -69730,7 +69762,8 @@ function guruGate1GroupJtbdsHtmlV267(mapIndex, itemId, itemData) {
 }
 
 function guruGate1JtbdDemandStatsV267(itemId, itemData) {
-  const demand = guruGate1UniqueDemandV267(itemData);
+  const demand = guruGate1UniqueDemandV267(itemData).filter((entry) =>
+    guruGate1JtbdAssignmentV274(itemData, entry.key)?.target !== "company");
   const primary = guruGate1PrimaryJtbdMatchV267(itemId, itemData);
   const linked = guruGate1GroupJtbdsV267(itemData);
   const distributed = guruGate1DistributedDemandKeysV273(
@@ -70072,7 +70105,8 @@ guruGate1GroupJtbdsHtmlV267 = function () {
 };
 
 guruGate1JtbdDemandStatsV267 = function (itemId, itemData) {
-  const demand = guruGate1UniqueDemandV267(itemData);
+  const demand = guruGate1UniqueDemandV267(itemData).filter((entry) =>
+    guruGate1JtbdAssignmentV274(itemData, entry.key)?.target !== "company");
   const primary = guruGate1PrimaryJtbdMatchV267(itemId, itemData);
   const forms = guruGate1GroupJtbdsV267(itemData);
   const distributed = guruGate1DistributedDemandKeysV273(
@@ -70181,7 +70215,11 @@ function guruGate1AssignDemandPhraseV274(
         entry.id === additionalId,
       )
     : null;
-  if (target === "additional" && !additionalEntry) return false;
+  const savedAdditionalExists = target === "additional" &&
+    guruGate1SavedAdditionalJtbdsV520(itemId, itemData)
+      .some((entry) => entry.id === additionalId);
+  if (target === "additional" && !additionalEntry && !savedAdditionalExists)
+    return false;
 
   guruGate1RemovePhraseFromJtbdGroupsV274(itemData, phraseKey);
   if (additionalEntry) {
@@ -70199,6 +70237,150 @@ function guruGate1AssignDemandPhraseV274(
   pv181SyncJtbdModel(itemData);
   return true;
 }
+
+/* A company transfer changes the active owner, while both the original
+   product demand row and the saved Gate 4 source stay available for audit. */
+function guruGate1TransferKeywordToCompanyV555(itemId, itemData, phraseKey) {
+  const demandEntry = guruGate1UniqueDemandV267(itemData)
+    .find((entry) => entry.key === phraseKey);
+  if (!demandEntry) return false;
+  const previousBucket = guruGate1JtbdBucketV274(
+    itemId, itemData, demandEntry);
+  if (previousBucket === "company") return false;
+
+  const record = guruCompanyKeywordFoundationRecordV351(state, true);
+  if (!record) return false;
+  record.keywords = Array.isArray(record.keywords) ? record.keywords : [];
+  const matchingCandidates = record.keywords
+    .map((keyword, index) => ({ keyword, index }))
+    .filter(({ keyword }) =>
+      guruV247KeywordNormalize(guruV247KeywordText(keyword)) === phraseKey);
+  const candidateIndex = (
+    matchingCandidates.find(({ keyword }) => keyword?.status === "confirmed") ||
+    matchingCandidates[0]
+  )?.index ?? -1;
+  const now = new Date().toISOString();
+  const candidate = candidateIndex >= 0
+    ? guruV247KeywordEntry(record.keywords[candidateIndex])
+    : guruV247KeywordEntry({
+        value: demandEntry.value,
+        source: "manual",
+        status: "confirmed",
+      });
+  candidate.status = "confirmed";
+  candidate.transferOriginsV555 = Array.isArray(candidate.transferOriginsV555)
+    ? candidate.transferOriginsV555 : [];
+  if (!candidate.transferOriginsV555.some((origin) =>
+    origin.product_id === itemId))
+    candidate.transferOriginsV555.push({
+      product_id: itemId,
+      previous_bucket: previousBucket,
+      at: now,
+    });
+  if (candidateIndex >= 0) record.keywords[candidateIndex] = candidate;
+  else {
+    record.keywords.push(candidate);
+  }
+  record.updated_at = now;
+
+  // Reconcile by candidate ID, then fill only missing company metrics.
+  // Existing company measurements take priority over product forecasts.
+  const company = gate1CompanySemanticsV264(state);
+  const model = gate1CompanyBrandDemandReconcileV345(state, { create: true });
+  const companyRow = model.rows.find((row) =>
+    row.candidate_id === candidate.id) || model.rows.find((row) =>
+      guruV247KeywordNormalize(row.kw) === phraseKey);
+  if (companyRow) {
+    PV181_DEMAND_FIELDS_V272.forEach(([field]) => {
+      if (field !== "kw" && !guruV185Text(companyRow[field]))
+        companyRow[field] = guruV185Text(demandEntry.row?.[field]);
+    });
+    companyRow.transferredFromProductV555 ||= {
+      product_id: itemId,
+      phrase_key: phraseKey,
+      at: now,
+    };
+    company.demandRows = model.rows;
+  }
+
+  guruGate1RemovePhraseFromJtbdGroupsV274(itemData, phraseKey);
+  guruGate1JtbdAssignmentsV274(itemData, true)[phraseKey] = {
+    target: "company",
+    additional_jtbd_id: "",
+    company_candidate_id_v555: candidate.id,
+    previous_bucket_v555: previousBucket,
+    updated_at: now,
+  };
+  pv181SyncQueryGroups(itemData);
+  pv181SyncJtbdModel(itemData);
+  return true;
+}
+
+function guruGate1RefreshTransferredKeywordUiV555(select, context, toCompany) {
+  const level = select.closest(".pv181-jtbd-level");
+  if (!level) { renderGate(); return; }
+  const openByKey = new Map([...level.querySelectorAll("details[data-ui-keeper-key]")]
+    .map((node) => [node.dataset.uiKeeperKey, node.open]));
+  const scrollByKey = new Map([...level.querySelectorAll("details[data-ui-keeper-key]")]
+    .map((node) => [node.dataset.uiKeeperKey,
+      { top: node.scrollTop, left: node.scrollLeft }]));
+  const disclosure = typeof guruDisclosureOpenStateV512 === "function"
+    ? guruDisclosureOpenStateV512() : null;
+  level.querySelectorAll("details[data-guru-disclosure-key-v512]").forEach((node) => {
+    if (disclosure) disclosure[node.dataset.guruDisclosureKeyV512] = node.open;
+  });
+  const scrollY = window.scrollY;
+  const template = document.createElement("template");
+  template.innerHTML = pv181JtbdModelHtml(
+    context.mapIndex, context.itemId, context.itemData,
+    PV181_ITEM_LEVELS[0],
+  ).trim();
+  const next = template.content.firstElementChild;
+  if (!next) return;
+  level.replaceWith(next);
+  if (typeof guruApplyDisclosureStateV512 === "function")
+    guruApplyDisclosureStateV512(next);
+  next.querySelectorAll("details[data-ui-keeper-key]").forEach((node) => {
+    const key = node.dataset.uiKeeperKey;
+    if (openByKey.has(key)) node.open = openByKey.get(key);
+    const scroll = scrollByKey.get(key);
+    if (scroll) { node.scrollTop = scroll.top; node.scrollLeft = scroll.left; }
+  });
+  if (toCompany && typeof gate1CompanyBrandDemandRefreshV345 === "function")
+    gate1CompanyBrandDemandRefreshV345({ preserveOpen: true });
+  if (typeof guruStrategicFoundationRefreshV245 === "function")
+    guruStrategicFoundationRefreshV245(context.itemId);
+  window.scrollTo(0, scrollY);
+}
+
+document.addEventListener("change", (event) => {
+  const select = event.target?.closest?.("[data-g1kw-transfer-v555]");
+  if (!select) return;
+  event.stopPropagation();
+  const context = pv181QueryGroupTarget(select);
+  const phraseKey = guruV185Text(select.dataset.g1kwPhraseV555);
+  const target = guruV185Text(select.value);
+  if (!context || !phraseKey) return;
+  const validTargets = guruGate1KeywordTransferTargetsV555(
+    context.itemId, context.itemData);
+  if (!validTargets.some((entry) => entry.value === target)) return;
+  const moved = target === "company"
+    ? guruGate1TransferKeywordToCompanyV555(
+        context.itemId, context.itemData, phraseKey)
+    : guruGate1AssignDemandPhraseV274(
+        context.itemId,
+        context.itemData,
+        phraseKey,
+        target === "primary" ? "primary" : "additional",
+        target.startsWith("additional:") ? target.slice(11) : "",
+      );
+  if (!moved) return;
+  flashSaving();
+  // Refresh only the affected JTBD model and company demand table. A full
+  // Gate 1 render rebuilds every product and stalls large keyword lists.
+  requestAnimationFrame(() =>
+    guruGate1RefreshTransferredKeywordUiV555(select, context, target === "company"));
+}, true);
 
 function guruGate1ReleaseAdditionalJtbdKeywordsV274(itemId, itemData, entry) {
   if (!entry) return;

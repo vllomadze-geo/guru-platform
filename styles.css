@@ -13041,22 +13041,26 @@ body {
     minmax(132px, .8fr)
     minmax(96px, .58fr)
     minmax(132px, .78fr)
+    minmax(158px, .9fr)
     34px;
-  min-width: 1400px;
+  min-width: 1570px;
 }
 
 .g1kw-copy-cell-v553,
-.g1kw-relevance-cell-v553 {
+.g1kw-relevance-cell-v553,
+.g1kw-transfer-cell-v555 {
   min-width: 0;
 }
 
 .g1kw-copy-cell-v553 .small-btn,
-.g1kw-relevance-cell-v553 select {
+.g1kw-relevance-cell-v553 select,
+.g1kw-transfer-cell-v555 select {
   width: 100%;
   min-height: 44px;
 }
 
-.g1kw-relevance-cell-v553 select {
+.g1kw-relevance-cell-v553 select,
+.g1kw-transfer-cell-v555 select {
   padding: 8px 10px;
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
@@ -13590,7 +13594,8 @@ body {
   }
 
   .g1kw-copy-cell-v553,
-  .g1kw-relevance-cell-v553 {
+  .g1kw-relevance-cell-v553,
+  .g1kw-transfer-cell-v555 {
     grid-column: 1;
   }
 
