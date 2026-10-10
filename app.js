@@ -36324,8 +36324,10 @@ function pv181DemandRowsHtmlV272(entries, options = {}) {
     const removeLabel = ["primary", "additional"].includes(removeScope)
       ? "Убрать ключевое слово из JTBD-группы"
       : "Удалить ключевое слово";
-    const action = showRemove && !linkedFoundation && !linkedGate4
-      ? `<button type="button" class="small-btn danger-mini pv181-demand-remove-v263" data-pv181-demand-remove="${index}" data-pv181-demand-remove-scope="${escapeAttr(removeScope)}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" aria-label="${escapeAttr(removeLabel)}">×</button>`
+    // Every JTBD keyword can be unassigned, including read-only projections
+    // from Gate 0/1 and Gate 4. The source keyword itself is never removed.
+    const action = showRemove && (keywordActions || (!linkedFoundation && !linkedGate4))
+      ? `<button type="button" class="small-btn danger-mini pv181-demand-remove-v263" data-pv181-demand-remove="${index}" data-pv181-demand-remove-scope="${escapeAttr(removeScope)}" data-pv181-demand-phrase="${escapeAttr(guruV247KeywordNormalize(row?.kw))}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" aria-label="${escapeAttr(removeLabel)}">×</button>`
       : `<span class="pv181-demand-row-action-spacer-v272" aria-hidden="true"></span>`;
     const readOnlyClass = !rowReadOnly
       ? ""
@@ -36459,31 +36461,22 @@ document.addEventListener("click", (event) => {
   if (!button) return;
   const context = pv181QueryGroupTarget(button);
   const index = Number(button.dataset.pv181DemandRemove);
-  if (
-    !context ||
-    !Number.isInteger(index) ||
-    !context.itemData?.demandRows?.[index]
-  ) return;
+  if (!context) return;
   event.preventDefault();
   event.stopPropagation();
   const removeScope = guruV185Text(button.dataset.pv181DemandRemoveScope);
-  const phraseKey = guruV247KeywordNormalize(
-    context.itemData.demandRows[index]?.kw,
-  );
-  if (
-    phraseKey &&
-    ["primary", "additional"].includes(removeScope) &&
-    guruGate1AssignDemandPhraseV274(
-      context.itemId,
-      context.itemData,
-      phraseKey,
-      "pending",
-    )
-  ) {
+  if (["primary", "additional"].includes(removeScope)) {
+    // Linked phrases may exist only in Gate 0/1 or Gate 4, so their display
+    // order is not an index into demandRows. Identify them by phrase instead.
+    const phraseKey = guruV247KeywordNormalize(button.dataset.pv181DemandPhrase);
+    if (!phraseKey || !guruGate1AssignDemandPhraseV274(
+      context.itemId, context.itemData, phraseKey, "pending")) return;
     flashSaving();
-    renderGate();
+    requestAnimationFrame(() =>
+      guruGate1RefreshTransferredKeywordUiV555(button, context, "pending"));
     return;
   }
+  if (!Number.isInteger(index) || !context.itemData?.demandRows?.[index]) return;
   const [removed] = context.itemData.demandRows.splice(index, 1);
   const removedPhraseKey = guruV247KeywordNormalize(removed?.kw);
   const samePhraseRemains = removedPhraseKey && context.itemData.demandRows.some(
@@ -70349,10 +70342,10 @@ function guruGate1TransferKeywordToCompanyV555(itemId, itemData, phraseKey) {
   return true;
 }
 
-function guruGate1RefreshTransferredKeywordUiV555(select, context, target) {
-  const level = select.closest(".pv181-jtbd-level");
+function guruGate1RefreshTransferredKeywordUiV555(control, context, target) {
+  const level = control.closest(".pv181-jtbd-level");
   if (!level) { renderGate(); return; }
-  const sourceDetails = select.closest("[data-pv181-jtbd-demand-details-v278]");
+  const sourceDetails = control.closest("[data-pv181-jtbd-demand-details-v278]");
   const normalizeScope = (scope) => scope?.replace(/^saved:/, "additional:") || "";
   const sourceScope = normalizeScope(sourceDetails?.dataset.pv181JtbdDemandDetailsV278);
   const scopes = [...new Set([sourceScope, target].filter((scope) =>
@@ -70361,7 +70354,7 @@ function guruGate1RefreshTransferredKeywordUiV555(select, context, target) {
     ? level.querySelector("[data-pv181-primary-jtbd-group-v267]")
     : [...level.querySelectorAll("[data-pv181-additional-jtbd-keywords-v274]")]
       .find((node) => node.dataset.pv181AdditionalJtbdKeywordsV274 === scope.slice(11));
-  const selectedRow = select.closest("[data-g1kw-row-v553]");
+  const selectedRow = control.closest("[data-g1kw-row-v553]");
   const sibling = selectedRow?.nextElementSibling?.matches("[data-g1kw-row-v553]")
     ? selectedRow.nextElementSibling
     : selectedRow?.previousElementSibling?.matches("[data-g1kw-row-v553]")
@@ -70372,9 +70365,9 @@ function guruGate1RefreshTransferredKeywordUiV555(select, context, target) {
   const anchorTop = anchor?.getBoundingClientRect().top;
   const scrollX = window.scrollX;
 
-  // A transfer changes only two keyword groups. Replacing the whole JTBD
-  // level used to discard the native select and the table's horizontal scroll,
-  // while the changed height above the viewport made the page jump.
+  // Update only the affected keyword groups. Replacing the whole JTBD level
+  // would discard open controls and the table's horizontal scroll, while
+  // changing height above the viewport would make the page jump.
   scopes.forEach((scope) => {
     const current = findSection(scope);
     if (!current) return;
@@ -70440,6 +70433,19 @@ function guruGate1RefreshTransferredKeywordUiV555(select, context, target) {
     const nextTable = next.querySelector(".pv181-demand-table-v263");
     if (nextTable) nextTable.scrollLeft = scrollLeft;
   });
+  if (target === "pending") {
+    const current = level.querySelector("[data-pv181-pending-jtbd-card-v273]");
+    if (current) {
+      const template = document.createElement("template");
+      template.innerHTML = guruGate1PendingJtbdCardHtmlV273(
+        context.mapIndex, context.itemId, context.itemData).trim();
+      const next = template.content.firstElementChild;
+      const scrollLeft = current.querySelector(".pv181-demand-table-v263")?.scrollLeft || 0;
+      current.replaceWith(next);
+      const nextTable = next.querySelector(".pv181-demand-table-v263");
+      if (nextTable) nextTable.scrollLeft = scrollLeft;
+    }
+  }
   if (target === "company" && typeof gate1CompanyBrandDemandRefreshV345 === "function")
     gate1CompanyBrandDemandRefreshV345({ preserveOpen: true });
   if (typeof guruStrategicFoundationRefreshV245 === "function")
