@@ -36372,8 +36372,10 @@ const guruGate1PendingKeywordReordersV554 = new WeakMap();
 function guruGate1UpdateKeywordRelevanceUiV553(productId, phraseKey, value) {
   document.querySelectorAll("[data-g1kw-relevance-v553]").forEach((control) => {
     if (control.dataset.g1kwProductV553 === productId &&
-        control.dataset.g1kwPhraseV553 === phraseKey)
+        control.dataset.g1kwPhraseV553 === phraseKey) {
       control.value = value;
+      guruApplyFieldState(control);
+    }
   });
   document.querySelectorAll(".pv181-jtbd-demand-details-v278 > div").forEach((list) => {
     const rows = [...list.children].filter((row) => row.hasAttribute("data-g1kw-row-v553"));

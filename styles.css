@@ -13069,6 +13069,13 @@ body {
   font: inherit;
 }
 
+/* Incremental JTBD row updates can bypass the global field-state pass.
+   Derive the unrated appearance from the selected option itself. */
+.content-area .g1kw-relevance-cell-v553 select:has(option[value=""]:checked) {
+  background: rgba(180,50,50,.22) !important;
+  border-color: rgba(180,50,50,.4) !important;
+}
+
 .g1kw-transfer-cell-v555 select[hidden] {
   display: none;
 }
