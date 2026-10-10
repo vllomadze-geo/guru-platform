@@ -13468,6 +13468,53 @@ body {
   gap: 8px;
 }
 
+.pv181-demand-disclosure-v556 {
+  min-width: 0;
+}
+
+.pv181-demand-disclosure-v556 > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  list-style: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pv181-demand-disclosure-v556 > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pv181-demand-disclosure-v556 > summary::after {
+  content: "▸";
+  color: var(--muted);
+  font-size: 12px;
+  transform: rotate(90deg);
+}
+
+.pv181-demand-disclosure-v556:not([open]) > summary::after {
+  transform: none;
+}
+
+.pv181-demand-disclosure-v556 > summary:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+  border-radius: var(--r-sm);
+}
+
+.pv181-demand-disclosure-body-v556 {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding-top: 8px;
+}
+
+.pv181-demand-disclosure-v556:not([open]) > .pv181-demand-disclosure-body-v556 {
+  display: none;
+}
+
 .pv181-query-group-actions-v266 {
   display: flex;
   flex-wrap: wrap;

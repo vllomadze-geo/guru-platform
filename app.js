@@ -36692,6 +36692,35 @@ function pv181DemandTotalsHtmlV276(entries, options = {}) {
   return `<div class="pv181-demand-row pv181-demand-totals-row-v276" data-pv181-demand-totals-v276>${cells}<span class="pv181-demand-row-action-spacer-v272" aria-hidden="true"></span></div>${benchmarks}`;
 }
 
+function guruGate1DemandLevelOpenV556(productId) {
+  return state?.ui?.gate1DemandLevelOpenV556?.[productId] !== false;
+}
+
+function guruGate1RememberDemandLevelV556(node, open) {
+  if (!state || !els.contentArea?.contains(node)) return;
+  const productId = node.dataset.gate1DemandLevelProductV556;
+  if (!productId || guruGate1DemandLevelOpenV556(productId) === open) return;
+  state.ui = state.ui || {};
+  state.ui.gate1DemandLevelOpenV556 =
+    state.ui.gate1DemandLevelOpenV556 || {};
+  state.ui.gate1DemandLevelOpenV556[productId] = open;
+  guruScheduleUiPreferenceSave();
+}
+
+document.addEventListener("click", (event) => {
+  const summary = event.target?.closest?.(".pv181-demand-disclosure-v556 > summary");
+  if (!summary) return;
+  guruGate1RememberDemandLevelV556(summary.parentElement,
+    !summary.parentElement.open);
+}, true);
+
+document.addEventListener("toggle", (event) => {
+  const node = event.target;
+  if (!(node instanceof HTMLDetailsElement) ||
+      !node.matches("[data-gate1-demand-level-product-v556]")) return;
+  guruGate1RememberDemandLevelV556(node, node.open);
+}, true);
+
 function pv181ItemHtml(mapIndex, item, row, options = {}) {
   const d = pv181ItemData(row, item.id);
   const collapseKey = 'pv181-item-' + item.id;
@@ -36764,7 +36793,9 @@ function pv181ItemHtml(mapIndex, item, row, options = {}) {
   );
   const demandHtml = `<section class="pv181-demand-level-v266">
       <div class="pv140-section-title" style="margin-top:14px;">Спрос</div>
-      <div style="font-weight:800;font-size:13px;">Уровень I — Объём показов/мес</div>
+      <details class="pv181-demand-disclosure-v556" data-ui-keeper-key="gate1-demand-level:${escapeAttr(activeProjectId)}:${escapeAttr(item.id)}" data-gate1-demand-level-product-v556="${escapeAttr(item.id)}"${guruGate1DemandLevelOpenV556(item.id) ? " open" : ""}>
+      <summary>Уровень I — Объём показов/мес</summary>
+      <div class="pv181-demand-disclosure-body-v556">
       <small style="display:block;color:var(--muted);font-size:11px;">Число, из Wordstat / Google Trends</small>
       <div class="g1-fields-grid pv181-demand-origin-list" style="margin-top:6px;">
         <div class="pv181-demand-origin-label"><span>Зафиксировано в аналитике</span><b>${visibleAnalyticsDemandEntries.filter(({ demandRow }) => String(demandRow.kw || '').trim()).length}${visibleAnalyticsDemandEntries.length !== analyticsDemandEntries.length ? ` из ${analyticsDemandEntries.filter(({ demandRow }) => String(demandRow.kw || '').trim()).length}` : ''}</b></div>
@@ -36786,6 +36817,8 @@ function pv181ItemHtml(mapIndex, item, row, options = {}) {
         </div>
       </div>
       <button class="small-btn add-inline-btn" style="margin-top:4px;font-size:12px;" data-pv181-demand-add data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(item.id)}">+</button>
+      </div>
+      </details>
     </section>`;
   const contentHtml = options.direct
     ? `${demandHtml}${semanticLevelsHtml.semL4 || ""}`
@@ -82717,6 +82750,7 @@ const GURU_OWNED_DETAILS_V512 = [
   ".g4-map-outside-v290",
   ".g4-v166-jtbd:not(.is-orphaned)",
   "[data-g1-competitor-step-v539]",
+  "[data-gate1-demand-level-product-v556]",
 ].join(",");
 
 function guruDisclosureKeyV512(node) {
