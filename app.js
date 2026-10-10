@@ -36351,9 +36351,9 @@ function pv181DemandRowsHtmlV272(entries, options = {}) {
             <option value="medium"${relevanceByPhrase[phraseKey] === "medium" ? " selected" : ""}>Средняя</option>
             <option value="low"${relevanceByPhrase[phraseKey] === "low" ? " selected" : ""}>Низкая</option>
           </select></label>
-          <label class="g1kw-transfer-cell-v555"><span class="pv181-demand-cell-label-v263">Перенести в</span><select data-g1kw-transfer-v555 data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" data-g1kw-phrase-v555="${escapeAttr(phraseKey)}" aria-label="Перенести фразу ${escapeAttr(guruV185Text(row?.kw))}">
+          <div class="g1kw-transfer-cell-v555"><span class="pv181-demand-cell-label-v263">Перенести в</span><button type="button" class="g1kw-transfer-trigger-v557" data-g1kw-transfer-open-v557 aria-haspopup="dialog" aria-expanded="false" aria-label="Перенести фразу ${escapeAttr(guruV185Text(row?.kw))}"><span>${escapeHtml(transferTargets.find((target) => target.value === transferScope)?.label || "Выберите JTBD")}</span><span aria-hidden="true">⌄</span></button><select hidden tabindex="-1" aria-hidden="true" data-g1kw-transfer-v555 data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" data-g1kw-phrase-v555="${escapeAttr(phraseKey)}">
             ${transferTargets.map((target) => `<option value="${escapeAttr(target.value)}"${target.value === transferScope ? " selected" : ""}>${escapeHtml(target.label)}</option>`).join("")}
-          </select></label>`
+          </select></div>`
         : "<span></span><span></span><span></span>"
       : "";
     const dragAttributes = draggable && phraseKey
@@ -70452,9 +70452,125 @@ function guruGate1RefreshTransferredKeywordUiV555(select, context, target) {
     const delta = nextAnchor.getBoundingClientRect().top - anchorTop;
     if (delta) window.scrollTo(scrollX, window.scrollY + delta);
   }
-  const focus = nextAnchor?.querySelector("[data-g1kw-transfer-v555]");
+  const focus = nextAnchor?.querySelector("[data-g1kw-transfer-open-v557]");
   if (focus) focus.focus({ preventScroll: true });
 }
+
+let guruGate1TransferMenuV557 = null;
+
+function guruGate1CloseTransferMenuV557(restoreFocus = false) {
+  const menu = guruGate1TransferMenuV557;
+  if (!menu) return;
+  guruGate1TransferMenuV557 = null;
+  menu.trigger.setAttribute("aria-expanded", "false");
+  menu.root.remove();
+  if (restoreFocus && menu.trigger.isConnected)
+    menu.trigger.focus({ preventScroll: true });
+}
+
+function guruGate1OpenTransferMenuV557(trigger) {
+  if (guruGate1TransferMenuV557?.trigger === trigger) {
+    guruGate1CloseTransferMenuV557(true);
+    return;
+  }
+  guruGate1CloseTransferMenuV557();
+  const select = trigger.parentElement?.querySelector("[data-g1kw-transfer-v555]");
+  const context = select && pv181QueryGroupTarget(select);
+  if (!context) return;
+  const main = guruGate1ResolvedMainJtbdV259(context.itemId).value;
+  const descriptions = new Map([["primary", main || "Не заполнено в Gate 0"]]);
+  guruGate1EnsureAdditionalJtbdsV268(context.itemData).forEach((entry) => {
+    descriptions.set(`additional:${entry.id}`,
+      guruV194JtbdSentence(entry) || guruGate1AdditionalJtbdTextV268(entry) ||
+      "Формулировка JTBD пока не заполнена");
+  });
+  guruGate1SavedAdditionalJtbdsV520(context.itemId, context.itemData)
+    .forEach((entry) => {
+      const key = `additional:${entry.id}`;
+      if (!descriptions.has(key)) descriptions.set(key, entry.text);
+    });
+  const targets = guruGate1KeywordTransferTargetsV555(context.itemId, context.itemData);
+  const root = document.createElement("div");
+  root.className = "g1kw-transfer-menu-v557";
+  root.setAttribute("role", "dialog");
+  root.setAttribute("aria-label", "Перенести ключевое слово");
+  root.innerHTML = targets.map((target) => {
+    const detail = descriptions.get(target.value);
+    return `<button type="button" class="g1kw-transfer-option-v557" data-g1kw-transfer-choice-v557="${escapeAttr(target.value)}"${target.value === select.value ? ' aria-current="true"' : ""}>
+      <strong>${escapeHtml(target.label)}</strong>
+      ${detail ? `<span>${escapeHtml(detail)}</span>` : ""}
+    </button>`;
+  }).join("");
+  document.body.append(root);
+  const width = Math.min(640, window.innerWidth - 24);
+  root.style.width = `${width}px`;
+  root.style.maxHeight = `${Math.max(160, window.innerHeight - 24)}px`;
+  const anchor = trigger.getBoundingClientRect();
+  const height = root.getBoundingClientRect().height;
+  const left = Math.max(12, Math.min(anchor.left, window.innerWidth - width - 12));
+  const top = anchor.bottom + height + 6 <= window.innerHeight - 12
+    ? anchor.bottom + 6
+    : Math.max(12, anchor.top - height - 6);
+  root.style.left = `${left}px`;
+  root.style.top = `${top}px`;
+  trigger.setAttribute("aria-expanded", "true");
+  guruGate1TransferMenuV557 = { root, trigger, select };
+  const selected = root.querySelector('[aria-current="true"]') || root.querySelector("button");
+  selected?.focus({ preventScroll: true });
+  if (selected && selected.offsetTop + selected.offsetHeight > root.clientHeight)
+    root.scrollTop = selected.offsetTop + selected.offsetHeight - root.clientHeight;
+}
+
+document.addEventListener("click", (event) => {
+  const choice = event.target?.closest?.("[data-g1kw-transfer-choice-v557]");
+  if (choice && guruGate1TransferMenuV557?.root.contains(choice)) {
+    event.preventDefault();
+    const select = guruGate1TransferMenuV557.select;
+    const value = choice.dataset.g1kwTransferChoiceV557;
+    guruGate1CloseTransferMenuV557(value === select.value);
+    if (select.isConnected && value !== select.value) {
+      select.value = value;
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    return;
+  }
+  const trigger = event.target?.closest?.("[data-g1kw-transfer-open-v557]");
+  if (!trigger) return;
+  event.preventDefault();
+  guruGate1OpenTransferMenuV557(trigger);
+});
+
+document.addEventListener("pointerdown", (event) => {
+  const menu = guruGate1TransferMenuV557;
+  if (menu && !menu.root.contains(event.target) &&
+      !event.target?.closest?.("[data-g1kw-transfer-open-v557]"))
+    guruGate1CloseTransferMenuV557();
+}, true);
+
+document.addEventListener("keydown", (event) => {
+  const menu = guruGate1TransferMenuV557;
+  if (!menu) return;
+  if (event.key === "Escape") {
+    event.preventDefault();
+    guruGate1CloseTransferMenuV557(true);
+  } else if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+    const options = [...menu.root.querySelectorAll("[data-g1kw-transfer-choice-v557]")];
+    const index = options.indexOf(document.activeElement);
+    const next = event.key === "Home" ? 0 : event.key === "End" ? options.length - 1
+      : event.key === "ArrowDown" ? Math.min(options.length - 1, index + 1)
+        : Math.max(0, index - 1);
+    if (options[next]) {
+      event.preventDefault();
+      options[next].focus();
+    }
+  }
+}, true);
+
+document.addEventListener("scroll", (event) => {
+  const menu = guruGate1TransferMenuV557;
+  if (menu && !menu.root.contains(event.target)) guruGate1CloseTransferMenuV557();
+}, true);
+window.addEventListener("resize", () => guruGate1CloseTransferMenuV557());
 
 document.addEventListener("change", (event) => {
   const select = event.target?.closest?.("[data-g1kw-transfer-v555]");
