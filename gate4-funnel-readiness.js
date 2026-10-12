@@ -1729,75 +1729,85 @@ function g4SmmSummaryTargetRowHtmlV341(label, count, target, scope) {
   </div>`;
 }
 
+function g4SmmSummaryCompactStatusV346(planned, fact, target) {
+  const goal = Math.max(0, Number(target) || 0);
+  const plannedCount = Math.max(0, Number(planned) || 0);
+  const factCount = Math.max(0, Number(fact) || 0);
+  if (goal === 0 || factCount >= goal)
+    return { visual: "ready", label: factCount > goal ? \`Сверх плана: \${factCount - goal}\` : "Выполнено" };
+  if (plannedCount >= goal)
+    return { visual: "attention", label: \`Запланировано · факт \${factCount}/\${goal}\` };
+  return {
+    visual: plannedCount || factCount ? "attention" : "problem",
+    label: \`Недобор: \${Math.max(0, goal - Math.max(plannedCount, factCount))}\`,
+  };
+}
+
 function g4SmmActionSummaryHtmlV299(content, strategy) {
   const summary = g4SmmContentSummaryV299(content, strategy);
-  const labels = {
-    videos: "Видео",
-    carousels: "Карусели",
-    cases: "Кейсы",
-  };
-  const planRows = Object.keys(labels).map((key) =>
-    g4SmmSummaryTargetRowHtmlV341(
-      labels[key],
-      summary.plan.counts[key],
-      summary.week.targets[key],
-      `plan-${key}`,
-    ),
-  ).join("");
-  const factRows = Object.keys(labels).map((key) =>
-    g4SmmSummaryTargetRowHtmlV341(
-      labels[key],
-      summary.week.counts[key],
-      summary.week.targets[key],
-      `fact-${key}`,
-    ),
-  ).join("");
-  const quarterTarget = g4SmmStrategyRangeV298(
-    summary.quarter.targetMin,
-    summary.quarter.targetMax,
-  );
-  return `<section class="g4-smm-action-summary-v299" data-g4-smm-action-summary-v299>
-    <div class="g4-smm-idea-stage-head-v299"><strong>Что нужно сделать</strong><small>Календарный план и фактические публикации · подсказка, не ограничение</small></div>
-    <div class="g4-smm-summary-cards-v341">
-      <section class="g1-card g4-smm-summary-card-v341" data-g4-smm-summary-card-v341="plan">
-        <header class="g4-smm-publication-group-head-v335"><strong>План идей на неделю</strong><small>${escapeHtml(summary.plan.weekLabel)}</small></header>
-        <div class="g4-smm-summary-card-body-v341">
-          <p class="g4-smm-summary-meta-v341">Размещено <strong>${escapeHtml(g4SmmIdeaCountLabelV322(summary.plan.total))}</strong> · <strong>${summary.plan.days}/7</strong> дней</p>
-          <div class="g4-smm-summary-targets-v341" data-g4-smm-calendar-plan-v322>${planRows}</div>
-          <div class="g4-smm-summary-notes-v341">
-            ${summary.plan.unscheduled ? `<span class="is-problem-v341">В банке: ${summary.plan.unscheduled}</span>` : '<span class="is-ready-v341">Все идеи размещены</span>'}
-            ${summary.plan.unclassified ? `<span class="is-problem-v341">Без задачи: ${summary.plan.unclassified}</span>` : ""}
-          </div>
-        </div>
-      </section>
-      <section class="g1-card g4-smm-summary-card-v341" data-g4-smm-summary-card-v341="fact">
-        <header class="g4-smm-publication-group-head-v335"><strong>Факт публикаций за неделю</strong><small>${escapeHtml(summary.plan.weekLabel)}</small></header>
-        <div class="g4-smm-summary-card-body-v341"><div class="g4-smm-summary-targets-v341">${factRows}</div></div>
-      </section>
-      <section class="g1-card g4-smm-summary-card-v341 is-wide-v341" data-g4-smm-summary-card-v341="quarter">
-        <header class="g4-smm-publication-group-head-v335"><strong>Квартальная цель</strong><small>Основные публикации · целевой диапазон ≈${escapeHtml(quarterTarget)}</small></header>
-        <div class="g4-smm-summary-card-body-v341">
-          <div class="g4-smm-summary-targets-v341">${g4SmmSummaryTargetRowHtmlV341("Основные публикации", summary.quarter.published, summary.quarter.targetMin, "quarter")}</div>
-        </div>
-      </section>
-      <section class="g1-card g4-smm-summary-card-v341" data-g4-smm-summary-card-v341="unused-formats">
-        <header class="g4-smm-publication-group-head-v335"><strong>Форматы без использования (90 дней)</strong><small>Формат × площадка</small></header>
-        <div class="g4-smm-summary-card-body-v341">
-          ${summary.unusedPairs.length
-            ? `<details class="gate1-final-unmatched-v259" data-g4-smm-unused-pairs-v299><summary>${summary.unusedPairs.length} пар без использования · развернуть</summary><div class="gate1-final-unmatched-list-v259">${summary.unusedPairs.map((pair) => `<span>${escapeHtml(pair.format)} → ${escapeHtml(pair.platform)}</span>`).join("")}</div><small>Пары, которые не встречались среди опубликованных материалов за последние 90 дней.</small></details>`
-            : `<div class="pv181-group-benchmark-item-v277 is-ready-v277" data-pv181-group-benchmark-v277="g4-smm-unused-formats"><span class="pv181-group-benchmark-dot-v277" aria-hidden="true"></span><div><strong>Все предусмотренные пары использовались</strong></div></div>`}
-        </div>
-      </section>
-      <section class="g1-card g4-smm-summary-card-v341" data-g4-smm-summary-card-v341="stale-topics">
-        <header class="g4-smm-publication-group-head-v335"><strong>Темы без использования (3+ недели)</strong><small>Контроль разнообразия</small></header>
-        <div class="g4-smm-summary-card-body-v341">
-          ${summary.staleTopics.length
-            ? `<details class="gate1-final-unmatched-v259" data-g4-smm-stale-topics-v299><summary>${summary.staleTopics.length} тем без использования · развернуть</summary><div class="gate1-final-unmatched-list-v259">${summary.staleTopics.map((topic) => `<span>${escapeHtml(topic.value)}</span>`).join("")}</div><small>Темы, которые не встречались среди опубликованных материалов больше трёх недель.</small></details>`
-            : `<div class="pv181-group-benchmark-item-v277 is-ready-v277" data-pv181-group-benchmark-v277="g4-smm-stale-topics"><span class="pv181-group-benchmark-dot-v277" aria-hidden="true"></span><div><strong>Все темы использовались за последние три недели</strong></div></div>`}
-        </div>
-      </section>
+  const rows = [
+    ["videos", "Видео", "g4-smm-format-v298-1"],
+    ["carousels", "Карусели", "g4-smm-format-v298-3"],
+    ["cases", "Кейсы", "g4-smm-format-v298-2"],
+  ].map(([key, label, formatId]) => {
+    const target = summary.week.targets[key];
+    const planned = summary.plan.counts[key];
+    const fact = summary.week.counts[key];
+    const status = g4SmmSummaryCompactStatusV346(planned, fact, target);
+    return \`<tr class="g4-smm-summary-row-v346 is-\${escapeAttr(status.visual)}-v346"
+      data-g4-smm-summary-format-focus-v346="\${escapeAttr(formatId)}">
+      <td><span class="g4-smm-summary-dot-v346" aria-hidden="true"></span><strong>\${escapeHtml(label)}</strong></td>
+      <td>\${target}</td>
+      <td>\${planned}</td>
+      <td>\${fact}</td>
+      <td><span class="g4-smm-summary-status-v346">\${escapeHtml(status.label)}</span></td>
+    </tr>\`;
+  }).join("");
+  const quarterTarget = Math.max(0, Number(summary.quarter.targetMin) || 0);
+  const quarterPublished = Math.max(0, Number(summary.quarter.published) || 0);
+  const quarterProgress = quarterTarget > 0
+    ? Math.min(100, Math.round((quarterPublished / quarterTarget) * 100))
+    : 100;
+  const weekStart = g4SmmCalendarWeekStartV322(content);
+  const quarterLabel = \`Q\${Math.floor(weekStart.getMonth() / 3) + 1} \${weekStart.getFullYear()}\`;
+  return \`<section class="g4-smm-action-summary-v299 g4-smm-action-summary-compact-v346" data-g4-smm-action-summary-v299>
+    <div class="g4-smm-idea-stage-head-v299">
+      <strong>Что нужно сделать</strong>
+      <small>\${escapeHtml(summary.plan.weekLabel)} · план, идеи и фактические публикации</small>
     </div>
-  </section>`;
+    <div class="g4-smm-summary-table-wrap-v346">
+      <table class="mini-table typed-table g4-smm-summary-table-v346">
+        <thead><tr><th>Формат</th><th>План</th><th>Идеи</th><th>Факт</th><th>Статус</th></tr></thead>
+        <tbody>\${rows}</tbody>
+      </table>
+    </div>
+    <div class="g4-smm-summary-meta-row-v346">
+      <section class="g4-smm-quarter-compact-v346">
+        <div>
+          <strong>\${escapeHtml(quarterLabel)} · Основные публикации</strong>
+          <span>\${quarterPublished}/\${quarterTarget}</span>
+          <small>Осталось: \${Math.max(0, quarterTarget - quarterPublished)}</small>
+        </div>
+        <div class="g4-smm-quarter-progress-v346" aria-label="Прогресс квартальной цели">
+          <span style="width:\${quarterProgress}%"></span>
+        </div>
+      </section>
+      <div class="g4-smm-summary-bank-v346">
+        <span>В банке: <strong>\${summary.plan.unscheduled}</strong></span>
+        \${summary.plan.unclassified ? \`<span>Без задачи: <strong>\${summary.plan.unclassified}</strong></span>\` : ""}
+      </div>
+    </div>
+    <div class="g4-smm-summary-signals-v346">
+      <details class="gate1-final-unmatched-v259" data-g4-smm-unused-pairs-v299>
+        <summary>Форматы без использования <strong>\${summary.unusedPairs.length}</strong> <span>›</span></summary>
+        <div class="gate1-final-unmatched-list-v259">\${summary.unusedPairs.map((pair) => \`<span>\${escapeHtml(pair.format)} → \${escapeHtml(pair.platform)}</span>\`).join("") || "<span>Все предусмотренные пары использовались</span>"}</div>
+      </details>
+      <details class="gate1-final-unmatched-v259" data-g4-smm-stale-topics-v299>
+        <summary>Темы без использования <strong>\${summary.staleTopics.length}</strong> <span>›</span></summary>
+        <div class="gate1-final-unmatched-list-v259">\${summary.staleTopics.map((topic) => \`<span>\${escapeHtml(topic.value)}</span>\`).join("") || "<span>Все темы использовались за последние три недели</span>"}</div>
+      </details>
+    </div>
+  </section>\`;
 }
 
 function g4SmmContentSystemHtmlV299(activeProduct = null) {
@@ -1821,8 +1831,8 @@ function g4SmmContentSystemHtmlV299(activeProduct = null) {
 
       <section class="g4-smm-content-section-v299" data-g4-smm-publications-v299>
         <div class="g4-smm-content-section-head-v299"><div><h4>Визуализация идей SMM-стратегии</h4><p class="g1-task">Банк сформулированных идей и недельный календарь с переносом drag-and-drop.</p></div><span>${g4SmmIdeaCountLabelV322(content.ideas.filter((idea) => guruV185Text(idea?.insight)).length)}</span></div>
-        ${g4SmmWeekCalendarHtmlV322(content, strategy)}
         ${g4SmmActionSummaryHtmlV299(content, strategy)}
+        ${g4SmmWeekCalendarHtmlV322(content, strategy)}
         ${orphanPublications.length ? `<div class="g4-smm-publication-list-v299" data-g4-smm-orphan-publications-v324><strong>Публикации без исходной карточки идеи</strong>${orphanPublications.map((publication) => g4SmmPublicationHtmlV299(publication, content.publications.findIndex((item) => item.id === publication.id), content, strategy)).join("")}</div>` : ""}
       </section>
   </div>`;
@@ -2313,6 +2323,18 @@ document.addEventListener("click", (event) => {
     requestAnimationFrame(() => document.querySelector(
       `[data-g4-smm-publication-card-v299="${CSS.escape(publicationId)}"]`,
     )?.scrollIntoView({ behavior: "smooth", block: "nearest" }));
+    return;
+  }
+
+  const summaryFormatRow = event.target?.closest?.("[data-g4-smm-summary-format-focus-v346]");
+  if (summaryFormatRow) {
+    const formatId = guruV185Text(summaryFormatRow.dataset.g4SmmSummaryFormatFocusV346);
+    const formatRow = document.querySelector(`[data-g4-smm-format-row-v298="${CSS.escape(formatId)}"]`);
+    if (formatRow) {
+      formatRow.scrollIntoView({ behavior: "smooth", block: "center" });
+      formatRow.classList.add("is-focus-v346");
+      setTimeout(() => formatRow.classList.remove("is-focus-v346"), 1400);
+    }
     return;
   }
 
