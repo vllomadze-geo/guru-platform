@@ -1,0 +1,199 @@
+{
+  "sourceExportedAt": "2026-09-23T10:54:16.102Z",
+  "source": {
+    "counterId": "105213127",
+    "product_id": "catalog-item-1786792591872-51f503",
+    "goalId": "ID 573230679"
+  },
+  "campaign": {
+    "metrikaCounter": "105213127",
+    "metrikaGoal": "ID 573230679"
+  },
+  "manualBefore": {
+    "strategy": "target_cpa",
+    "geography": "Москва",
+    "budgetPeriod": "week",
+    "paymentModel": "conversions"
+  },
+  "manualAfter": {
+    "strategy": "target_cpa",
+    "geography": "Москва",
+    "budgetPeriod": "week",
+    "paymentModel": "conversions"
+  },
+  "migration": {
+    "changed": true,
+    "valuesChanged": true,
+    "logCreated": true,
+    "linked": [
+      {
+        "branch_key": "catalog_item_1786792591872_51f503",
+        "catalog_item_id": "catalog-item-1786792591872-51f503",
+        "counter": {
+          "status": "connected",
+          "value": "105213127",
+          "source": "gates[gate-2].cards[g2-metrika-company-counter].fields.metrikaCompanyV374.counterId"
+        },
+        "goal": {
+          "status": "connected",
+          "value": "ID 573230679",
+          "source": "gates[gate-2].cards[g2-metrika-goals-primary].fields.metrikaQualityV360.perProduct[product_id].goalId"
+        },
+        "before": {
+          "metrikaCounter": "legacy-counter",
+          "metrikaGoal": "legacy-goal"
+        },
+        "after": {
+          "metrikaCounter": "105213127",
+          "metrikaGoal": "ID 573230679"
+        }
+      }
+    ],
+    "unavailable": [
+      {
+        "branch_key": "catalog_item_1786792591872_c8b1e9",
+        "catalog_item_id": "catalog-item-1786792591872-c8b1e9",
+        "counter": {
+          "status": "connected",
+          "value": "105213127",
+          "source": "gates[gate-2].cards[g2-metrika-company-counter].fields.metrikaCompanyV374.counterId"
+        },
+        "goal": {
+          "status": "product_row_not_found",
+          "value": "",
+          "source": "gates[gate-2].cards[g2-metrika-goals-primary].fields.metrikaQualityV360.perProduct[product_id].goalId"
+        },
+        "before": {
+          "metrikaCounter": "",
+          "metrikaGoal": ""
+        },
+        "after": {
+          "metrikaCounter": "105213127",
+          "metrikaGoal": ""
+        }
+      }
+    ]
+  },
+  "readonlyUi": {
+    "counter": {
+      "value": "105213127",
+      "readOnly": true,
+      "bound": false
+    },
+    "goal": {
+      "value": "ID 573230679",
+      "readOnly": true,
+      "bound": false
+    },
+    "badges": [
+      "подключено из Gate 2",
+      "подключено из Gate 2"
+    ]
+  },
+  "protectedStore": {
+    "metrikaCounter": "105213127",
+    "metrikaGoal": "ID 573230679"
+  },
+  "missingProduct": {
+    "id": "catalog-item-1786792591872-c8b1e9",
+    "name": "Рубашка Upcycling с кружевом",
+    "campaign": {
+      "strategy": "max_conversions",
+      "geography": "Санкт-Петербург",
+      "budgetPeriod": "month",
+      "paymentModel": "clicks",
+      "metrikaCounter": "105213127",
+      "metrikaGoal": "",
+      "schedule": "",
+      "strategyTarget": {
+        "targetCpaRub": "",
+        "targetDrrPercent": ""
+      },
+      "excludedPlacements": [],
+      "conversionVolumeCheck": {
+        "from": "",
+        "to": "",
+        "count": "",
+        "evidenceUrl": "",
+        "checkedAt": "",
+        "goalId": "",
+        "counterId": ""
+      }
+    },
+    "ui": {
+      "counterValue": "105213127",
+      "counterReadOnly": true,
+      "goalValue": "",
+      "goalReadOnly": false,
+      "goalBound": true
+    }
+  },
+  "log": {
+    "id": "gate4-rsya-metrika-gate2-v450",
+    "at": "2026-09-23T12:45:47.594Z",
+    "status": "completed",
+    "runs": [
+      {
+        "at": "2026-09-23T12:45:47.594Z",
+        "storage": "workspace.gate4Rsya[catalog_item_id].campaign.{metrikaCounter,metrikaGoal}",
+        "match": "catalog_item_id → fields.metrikaQualityV360.perProduct[].product_id",
+        "linked": [
+          {
+            "branch_key": "catalog_item_1786792591872_51f503",
+            "catalog_item_id": "catalog-item-1786792591872-51f503",
+            "counter": {
+              "status": "connected",
+              "value": "105213127",
+              "source": "gates[gate-2].cards[g2-metrika-company-counter].fields.metrikaCompanyV374.counterId"
+            },
+            "goal": {
+              "status": "connected",
+              "value": "ID 573230679",
+              "source": "gates[gate-2].cards[g2-metrika-goals-primary].fields.metrikaQualityV360.perProduct[product_id].goalId"
+            },
+            "before": {
+              "metrikaCounter": "legacy-counter",
+              "metrikaGoal": "legacy-goal"
+            },
+            "after": {
+              "metrikaCounter": "105213127",
+              "metrikaGoal": "ID 573230679"
+            }
+          }
+        ],
+        "unavailable": [
+          {
+            "branch_key": "catalog_item_1786792591872_c8b1e9",
+            "catalog_item_id": "catalog-item-1786792591872-c8b1e9",
+            "counter": {
+              "status": "connected",
+              "value": "105213127",
+              "source": "gates[gate-2].cards[g2-metrika-company-counter].fields.metrikaCompanyV374.counterId"
+            },
+            "goal": {
+              "status": "product_row_not_found",
+              "value": "",
+              "source": "gates[gate-2].cards[g2-metrika-goals-primary].fields.metrikaQualityV360.perProduct[product_id].goalId"
+            },
+            "before": {
+              "metrikaCounter": "",
+              "metrikaGoal": ""
+            },
+            "after": {
+              "metrikaCounter": "105213127",
+              "metrikaGoal": ""
+            }
+          }
+        ],
+        "note": "Непустые значения Gate 2 подключены к кампании РСЯ. Стратегия, география, период бюджета и модель оплаты не изменялись. При отсутствии goalId ручное значение сохраняется, пустое остаётся пустым."
+      }
+    ],
+    "updated_at": "2026-09-23T12:45:47.594Z"
+  },
+  "idempotence": {
+    "changed": false,
+    "valuesChanged": false,
+    "runsBefore": 1,
+    "runsAfter": 1
+  }
+}

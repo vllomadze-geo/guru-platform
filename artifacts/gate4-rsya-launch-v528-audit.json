@@ -1,0 +1,410 @@
+{
+  "ok": true,
+  "source": "/Users/vl/Downloads/gate-4.json",
+  "exportedAt": "2026-10-07T08:52:09.750Z",
+  "platformSource": {
+    "url": "",
+    "source": "Fresh Gate4 export does not contain Gate0 platform; missing values are verified as not set"
+  },
+  "search": {
+    "exactHtmlUnchanged": true,
+    "sha256": "fb281b2de27fb0bb1eac5cd136c7c62bec3624045d1760e1fa4fb051bf410961"
+  },
+  "initial": {
+    "steps": [
+      "1JTBD и группы",
+      "2Запуск"
+    ],
+    "settingsFirst": true,
+    "settingsTitle": "Настройки кампании",
+    "fields": [
+      [
+        "campaignCommon",
+        "decision",
+        "launch"
+      ],
+      [
+        "campaignCommon",
+        "campaignName",
+        ""
+      ],
+      [
+        "campaign",
+        "geography",
+        ""
+      ],
+      [
+        "campaign",
+        "schedule",
+        ""
+      ],
+      [
+        "campaign",
+        "strategy",
+        ""
+      ],
+      [
+        "campaignCommon",
+        "budget",
+        ""
+      ],
+      [
+        "campaign",
+        "budgetPeriod",
+        ""
+      ],
+      [
+        "promotion",
+        "type",
+        ""
+      ],
+      [
+        "promotion",
+        "discountValue",
+        ""
+      ],
+      [
+        "promotion",
+        "description",
+        ""
+      ],
+      [
+        "promotion",
+        "promoCode",
+        ""
+      ],
+      [
+        "promotion",
+        "dateFrom",
+        ""
+      ],
+      [
+        "promotion",
+        "dateTo",
+        ""
+      ],
+      [
+        "campaign",
+        "metrikaCounter",
+        "105213127"
+      ],
+      [
+        "campaign",
+        "metrikaGoal",
+        "ID 573230679"
+      ],
+      [
+        "campaignCommon",
+        "utmTemplate",
+        ""
+      ]
+    ],
+    "legacySettingsKey": false,
+    "bareChoose": 0,
+    "emptyBackgrounds": [
+      "rgb(255, 255, 255)",
+      "rgb(255, 255, 255)",
+      "rgb(255, 255, 255)",
+      "rgb(255, 255, 255)",
+      "rgb(255, 255, 255)",
+      "rgb(255, 255, 255)",
+      "rgb(255, 255, 255)",
+      "rgb(255, 255, 255)",
+      "rgb(255, 255, 255)",
+      "rgb(255, 255, 255)",
+      "rgb(255, 255, 255)",
+      "rgb(255, 255, 255)",
+      "rgb(255, 255, 255)"
+    ],
+    "count": 14,
+    "keys": [
+      "campaign:1",
+      "campaign:2",
+      "campaign:3",
+      "campaign:4",
+      "campaign:5",
+      "campaign:6",
+      "campaign:7",
+      "campaign:8",
+      "campaign:9",
+      "campaign:10",
+      "campaign:11",
+      "campaign:12",
+      "campaign:13",
+      "campaign:14"
+    ],
+    "labels": [
+      "1. НОВАЯ КАМПАНИЯ",
+      "2. ЧТО БУДЕТЕ РЕКЛАМИРОВАТЬ — Сайт ОРГАНИЗАЦИЯ ИЗ ЯНДЕКС БИЗНЕСА",
+      "3. МЕСТА ПОКАЗА",
+      "4. СТРАТЕГИЯ",
+      "5. СРОК ПРОВЕДЕНИЯ КАМПАНИИ — минимум 14 дней, лучше 30 дней",
+      "6. РАСПИСАНИЕ ПОКАЗОВ",
+      "7. ПАРАМЕТРЫ URL",
+      "8. ДОПОЛНИТЕЛЬНЫЕ ЭЛЕМЕНТЫ ОБЪЯВЛЕНИЙ",
+      "9. ДИРЕКТ ПОМОГАЕТ:",
+      "10. КОРРЕКТИРОВКИ — на старте не делается, только по факту при анализе данных",
+      "11. МОНИТОРИНГ САЙТА",
+      "12. РАСШИРЕННЫЙ ГЕОГРАФИЧЕСКИЙ ТАРГЕТИНГ — Если аудитория готова приехать к нам из любого Другово региона",
+      "13. A/B–ЭКСПЕРИМЕНТЫ — не смотрим",
+      "14. ЗАПРЕТ ПОКАЗОВ — исключённые площадки"
+    ],
+    "total": 17,
+    "ready": 0,
+    "groups": 3,
+    "fixed": 0,
+    "statuses": [
+      {
+        "status": "in_progress",
+        "source": "in_progress"
+      },
+      {
+        "status": "in_progress",
+        "source": "in_progress"
+      },
+      {
+        "status": "in_progress",
+        "source": "in_progress"
+      }
+    ],
+    "meta": "Готово 0 из 17",
+    "header": "Итоговый бюджет: не задано\n      Объявления и уточнения: 0 из 3 групп готовы",
+    "noSearchOnly": true,
+    "editableSources": 17,
+    "groupsCount": 3,
+    "commonFields": "{\"decision\":\"launch\",\"product\":\"catalog-item-1786792591872-51f503\",\"campaignName\":\"\",\"objective\":\"\",\"landing\":\"\",\"budget\":\"\",\"utm\":\"\",\"utmTemplate\":\"\",\"creative\":\"\",\"launchStatus\":\"\",\"notes\":\"\",\"audienceSegmentId\":\"\",\"audienceJtbdId\":\"\",\"channelTargeting\":{\"geography\":\"\",\"age\":\"\",\"gender\":\"\",\"searchQueries\":\"\",\"interests\":\"\",\"communities\":\"\",\"customerBases\":\"\",\"siteVisitors\":\"\",\"lookalikes\":\"\"}}"
+  },
+  "interaction": {
+    "stored": true,
+    "storedOpen": true,
+    "keyData": [
+      "product-1786401011698-9e81ee",
+      "primary:catalog-item-1786792591872-51f503"
+    ],
+    "expectedKey": [
+      "product-1786401011698-9e81ee",
+      "primary:catalog-item-1786792591872-51f503"
+    ],
+    "openBefore": true,
+    "openAfterReorder": true,
+    "newReady": 1,
+    "dataUnchanged": true,
+    "searchUnchanged": true,
+    "legacyUnchanged": true,
+    "colors": [
+      "rgb(255, 255, 255)",
+      "rgb(255, 255, 255)",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)",
+      "rgba(0, 0, 0, 0)"
+    ],
+    "saves": 2
+  },
+  "sourceRules": {
+    "positiveUrlFixture": "https://example.test/goat?existing=1",
+    "renderedUrl": "https://example.test/goat?existing=1&utm_source=yandex&utm_medium=cpc&utm_campaign=%7Bcampaign_id%7D&utm_content=%7Bad_id%7D&utm_term=%7Bsource%7D",
+    "expectedUrl": "https://example.test/goat?existing=1&utm_source=yandex&utm_medium=cpc&utm_campaign=%7Bcampaign_id%7D&utm_content=%7Bad_id%7D&utm_term=%7Bsource%7D",
+    "template": "",
+    "lowBadge": "Недельный бюджет ниже 300 ₽",
+    "enoughBadge": "Недельный бюджет ≥ 300 ₽",
+    "monthlyBadge": "Недельный бюджет: не задано|Объём конверсий не подтверждён",
+    "overWarning": "Превышен лимит 7 / 3 / 5",
+    "keptImages": 8,
+    "dataRestored": true
+  },
+  "conditionalFields": {
+    "inventory": {
+      "max_conversions": [
+        "campaignCommon.decision",
+        "campaignCommon.campaignName",
+        "campaign.geography",
+        "campaign.schedule",
+        "campaign.strategy",
+        "campaign.paymentModel",
+        "campaignCommon.budget",
+        "campaign.budgetPeriod",
+        "promotion.type",
+        "promotion.discountValue",
+        "promotion.description",
+        "promotion.promoCode",
+        "promotion.dateFrom",
+        "promotion.dateTo",
+        "campaign.metrikaCounter",
+        "campaign.metrikaGoal",
+        "conversionVolumeCheck.from",
+        "conversionVolumeCheck.to",
+        "conversionVolumeCheck.count",
+        "conversionVolumeCheck.evidenceUrl",
+        "campaignCommon.utmTemplate",
+        "excludedPlacement.placement",
+        "excludedPlacement.reason"
+      ],
+      "target_cpa": [
+        "campaignCommon.decision",
+        "campaignCommon.campaignName",
+        "campaign.geography",
+        "campaign.schedule",
+        "campaign.strategy",
+        "campaign.paymentModel",
+        "strategyTarget.targetCpaRub",
+        "campaignCommon.budget",
+        "campaign.budgetPeriod",
+        "promotion.type",
+        "promotion.discountValue",
+        "promotion.description",
+        "promotion.promoCode",
+        "promotion.dateFrom",
+        "promotion.dateTo",
+        "campaign.metrikaCounter",
+        "campaign.metrikaGoal",
+        "conversionVolumeCheck.from",
+        "conversionVolumeCheck.to",
+        "conversionVolumeCheck.count",
+        "conversionVolumeCheck.evidenceUrl",
+        "campaignCommon.utmTemplate",
+        "excludedPlacement.placement",
+        "excludedPlacement.reason"
+      ],
+      "target_drr": [
+        "campaignCommon.decision",
+        "campaignCommon.campaignName",
+        "campaign.geography",
+        "campaign.schedule",
+        "campaign.strategy",
+        "campaign.paymentModel",
+        "strategyTarget.targetDrrPercent",
+        "campaignCommon.budget",
+        "campaign.budgetPeriod",
+        "promotion.type",
+        "promotion.discountValue",
+        "promotion.description",
+        "promotion.promoCode",
+        "promotion.dateFrom",
+        "promotion.dateTo",
+        "campaign.metrikaCounter",
+        "campaign.metrikaGoal",
+        "conversionVolumeCheck.from",
+        "conversionVolumeCheck.to",
+        "conversionVolumeCheck.count",
+        "conversionVolumeCheck.evidenceUrl",
+        "campaignCommon.utmTemplate",
+        "excludedPlacement.placement",
+        "excludedPlacement.reason"
+      ]
+    },
+    "dataRestored": true
+  },
+  "projectsAudit": [
+    {
+      "id": "project-1783243907480-ec7d8c",
+      "name": "Коричное яблоко",
+      "initial": {
+        "branches": 1,
+        "groups": 3,
+        "ads": 3
+      },
+      "after": {
+        "branches": 1,
+        "groups": 3,
+        "ads": 3
+      },
+      "sourceUnchanged": true,
+      "otherGatesUnchanged": true
+    },
+    {
+      "id": "project-1783068059197-798d26",
+      "name": "iCleaning",
+      "initial": {
+        "branches": 0,
+        "groups": 0,
+        "ads": 0
+      },
+      "after": {
+        "branches": 0,
+        "groups": 0,
+        "ads": 0
+      },
+      "sourceUnchanged": true,
+      "otherGatesUnchanged": true
+    },
+    {
+      "id": "project-1782674551414-146f62",
+      "name": "SIVRCE",
+      "initial": {
+        "branches": 0,
+        "groups": 0,
+        "ads": 0
+      },
+      "after": {
+        "branches": 0,
+        "groups": 0,
+        "ads": 0
+      },
+      "sourceUnchanged": true,
+      "otherGatesUnchanged": true
+    },
+    {
+      "id": "project-default",
+      "name": "УНИВЕРСАЛ / ГУРУ",
+      "initial": {
+        "branches": 0,
+        "groups": 0,
+        "ads": 0
+      },
+      "after": {
+        "branches": 0,
+        "groups": 0,
+        "ads": 0
+      },
+      "sourceUnchanged": true,
+      "otherGatesUnchanged": true
+    }
+  ],
+  "persistence": {
+    "before": {
+      "inlinePayloads": 4,
+      "omittedDiagnosticLog": {
+        "key": "project._jtbdEncodingRepairLogV298",
+        "entries": 741
+      },
+      "bytes": 1018769,
+      "expectedUi": "{\"workflowStepOpenV453\":{\"groups\":false,\"launch\":true,\"settings\":false},\"openGroupIdsV461\":[\"rsya-group-1788714688153-be477b\"],\"launchChecklistV528\":{\"campaign:1\":true,\"campaign:2\":true},\"launchGroupOpenV528\":{\"[\\\"product-1786401011698-9e81ee\\\",\\\"primary:catalog-item-1786792591872-51f503\\\"]\":true,\"[\\\"product-1786401011698-9e81ee\\\",\\\"additional-jtbd-1788609074828-88a3f1\\\"]\":true}}",
+      "groups": 3,
+      "ads": 3
+    },
+    "after": {
+      "ui": "{\"workflowStepOpenV453\":{\"groups\":false,\"launch\":true,\"settings\":false},\"openGroupIdsV461\":[\"rsya-group-1788714688153-be477b\"],\"launchChecklistV528\":{\"campaign:1\":true,\"campaign:2\":true},\"launchGroupOpenV528\":{\"[\\\"product-1786401011698-9e81ee\\\",\\\"primary:catalog-item-1786792591872-51f503\\\"]\":true,\"[\\\"product-1786401011698-9e81ee\\\",\\\"additional-jtbd-1788609074828-88a3f1\\\"]\":true}}",
+      "checked": [
+        "campaign:1",
+        "campaign:2"
+      ],
+      "open": 2,
+      "groups": 3,
+      "ads": 3
+    }
+  },
+  "screenshots": [
+    "gate4-rsya-goat-collapsed-context-v530.png",
+    "gate4-rsya-goat-collapsed-v530.png",
+    "gate4-rsya-goat-launch-open-v530.png",
+    "gate4-rsya-goat-launch-settings-v530.png",
+    "gate4-rsya-launch-header-v528.png",
+    "gate4-rsya-launch-campaign-v528.png",
+    "gate4-rsya-launch-group-v528.png",
+    "gate4-search-launch-unchanged-v528.png"
+  ]
+}

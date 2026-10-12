@@ -1,0 +1,366 @@
+{
+  "auditedAt": "2026-09-23T11:24:54.539Z",
+  "cloudRegistry": {
+    "checked": true,
+    "ok": false,
+    "url": "https://guru-platform-navy.vercel.app/api/workspace-sync?project_id=__guru_project_registry__",
+    "error": "supabase_read_error",
+    "status": 503
+  },
+  "audits": [
+    {
+      "url": "https://guru-platform-navy.vercel.app/",
+      "href": "https://guru-platform-navy.vercel.app/",
+      "origin": "https://guru-platform-navy.vercel.app",
+      "keys": [
+        "guru-platform-projects-v02",
+        "guru-platform-workspace-v02-project-1782674551414-146f62",
+        "guru-platform-workspace-v02-project-1782543561016-a7e06c"
+      ],
+      "projects": [
+        {
+          "id": "project-1782543561016-a7e06c",
+          "usp": "Подарки, которые попадают в сердце и остаются навсегда",
+          "icon": "КЯ",
+          "name": "Коричное яблоко",
+          "type": "Онлайн мастерская",
+          "niche": "Онлайн мастерская",
+          "offer": "",
+          "mainCta": "",
+          "website": "https://k-apple.ru/",
+          "afterUsp": "",
+          "archived": false,
+          "createdAt": "2026-06-27T06:59:21.016Z",
+          "geography": "Россия",
+          "updatedAt": "2026-07-05T07:31:41.097Z",
+          "afterOffer": "",
+          "description": "",
+          "afterMainCta": "",
+          "lifecycleStatus": "active",
+          "afterDescription": ""
+        },
+        {
+          "id": "project-1783067416849-0baa33",
+          "usp": "",
+          "icon": "I",
+          "name": "iCleaning",
+          "type": "Сайт",
+          "niche": "Сайт",
+          "offer": "",
+          "mainCta": "",
+          "website": "https://icleaning.ru/",
+          "afterUsp": "",
+          "archived": false,
+          "createdAt": "2026-07-03T08:30:16.849Z",
+          "geography": "Москва",
+          "updatedAt": "2026-07-03T09:14:39.239Z",
+          "afterOffer": "",
+          "description": "",
+          "afterMainCta": "",
+          "lifecycleStatus": "active",
+          "afterDescription": ""
+        },
+        {
+          "id": "project-1782674551414-146f62",
+          "usp": "Квалифицированные заявки и прозрачная воронка продаж вместо разрозненной рекламы, сайта и CRM.",
+          "icon": "S",
+          "name": "SIVRCE",
+          "type": "Платформа/услуга для привлечения и управления квалифицированными лидами в недвижимости Грузии",
+          "niche": "Платформа/услуга для привлечения и управления квалифицированными лидами в недвижимости Грузии",
+          "offer": "Мы создаём для девелопера больше чем сайт, это цифровая система продаж, которая повышает престиж объекта, фильтрует спрос и помогает получать более качественные заявки из маркетинговых каналов",
+          "mainCta": "",
+          "website": "",
+          "afterUsp": "",
+          "archived": false,
+          "createdAt": "2026-06-28T19:22:31.414Z",
+          "geography": "Грузия",
+          "updatedAt": "2026-07-02T09:15:40.927Z",
+          "afterOffer": "",
+          "description": "SIVRCE - это маркетинговая система для девелоперов, которая помогает превратить интерес к объекту в квалифицированные заявки.\n\nСистема анализирует спрос, показывает, какие аудитории и каналы могут дать целевых клиентов, создаёт премиальный интерактивный интерфейс объекта и даёт прозрачную аналитику маркетинговой активности.\n\nВ результате девелопер получает не просто сайт, а инструмент, который фильтрует спрос, усиливает восприятие объекта, повышает качество лидов и помогает эффективнее использовать рекламный бюджет.\n",
+          "afterMainCta": "",
+          "lifecycleStatus": "active",
+          "afterDescription": ""
+        },
+        {
+          "id": "project-1782898201060-97595b",
+          "usp": "",
+          "icon": "G",
+          "name": "GURU 2.0",
+          "type": "",
+          "niche": "",
+          "offer": "",
+          "mainCta": "",
+          "website": "",
+          "afterUsp": "",
+          "archived": false,
+          "createdAt": "2026-07-01T09:30:01.060Z",
+          "geography": "",
+          "updatedAt": "2026-07-01T12:23:20.229Z",
+          "afterOffer": "",
+          "description": "",
+          "afterMainCta": "",
+          "lifecycleStatus": "active",
+          "afterDescription": ""
+        },
+        {
+          "id": "project-1782582860052-3a45cc",
+          "usp": "De meest complete en nauwkeurige digitale weergave van jouw locatie — geen gemiste hoeken, geen losse foto's, maar één interactieve tour die voelt alsof je er echt bent.",
+          "icon": "P",
+          "name": "360profit",
+          "type": "Digitalisering van bedrijven",
+          "niche": "Digitalisering van bedrijven",
+          "offer": "",
+          "mainCta": "",
+          "website": "https://www.360profit.nl/",
+          "afterUsp": "",
+          "archived": false,
+          "createdAt": "2026-06-27T17:54:20.052Z",
+          "geography": "Nederland",
+          "updatedAt": "2026-06-29T10:01:37.643Z",
+          "afterOffer": "",
+          "description": "",
+          "afterMainCta": "",
+          "lifecycleStatus": "active",
+          "afterDescription": ""
+        },
+        {
+          "id": "project-default",
+          "icon": "G",
+          "name": "УНИВЕРСАЛ / ГУРУ",
+          "type": "Платформа",
+          "website": "",
+          "archived": false,
+          "createdAt": "2026-06-29T10:00:29.347Z",
+          "updatedAt": "2026-06-29T10:00:29.347Z",
+          "description": "Маркетинговая операционная система на основе CSV-чеклиста",
+          "lifecycleStatus": "active"
+        },
+        {
+          "id": "project-1782672239056-4a5099",
+          "usp": "УТП",
+          "icon": "N",
+          "name": "nika1",
+          "type": "nika",
+          "niche": "nika",
+          "offer": "",
+          "mainCta": "",
+          "website": "123213123",
+          "afterUsp": "",
+          "archived": false,
+          "createdAt": "2026-06-28T18:43:59.056Z",
+          "geography": "213123123",
+          "updatedAt": "2026-06-29T09:53:42.960Z",
+          "afterOffer": "",
+          "description": "",
+          "afterMainCta": "",
+          "lifecycleStatus": "active",
+          "afterDescription": ""
+        }
+      ],
+      "workspaces": [
+        {
+          "storageKey": "guru-platform-workspace-v02-project-1782674551414-146f62",
+          "projectId": "",
+          "projectName": "SIVRCE",
+          "catalogItems": 0,
+          "registryProducts": 0,
+          "productBindings": 0,
+          "rsyaBranches": 0,
+          "rsyaGroups": 0,
+          "rsyaGroupsWithProductId": 0,
+          "rsyaGroupsMissingProductId": 0,
+          "groups": []
+        },
+        {
+          "storageKey": "guru-platform-workspace-v02-project-1782543561016-a7e06c",
+          "projectId": "",
+          "projectName": "Коричное яблоко",
+          "catalogItems": 0,
+          "registryProducts": 0,
+          "productBindings": 0,
+          "rsyaBranches": 0,
+          "rsyaGroups": 0,
+          "rsyaGroupsWithProductId": 0,
+          "rsyaGroupsMissingProductId": 0,
+          "groups": []
+        }
+      ]
+    },
+    {
+      "url": "http://localhost:3000/",
+      "href": "http://localhost:3000/",
+      "origin": "http://localhost:3000",
+      "keys": [
+        "guru-platform-projects-v02",
+        "guru-platform-workspace-v02-project-default"
+      ],
+      "projects": [
+        {
+          "id": "project-default",
+          "name": "УНИВЕРСАЛ / ГУРУ",
+          "description": "Маркетинговая операционная система на основе CSV-чеклиста",
+          "website": "",
+          "type": "Платформа",
+          "icon": "G",
+          "createdAt": "2026-06-29T18:23:23.671Z",
+          "updatedAt": "2026-06-29T18:23:36.702Z",
+          "archived": false,
+          "lifecycleStatus": "active",
+          "niche": "Платформа",
+          "geography": "",
+          "mainCta": "",
+          "usp": "",
+          "offer": "",
+          "afterMainCta": "",
+          "afterUsp": "",
+          "afterOffer": "",
+          "afterDescription": ""
+        }
+      ],
+      "workspaces": [
+        {
+          "storageKey": "guru-platform-workspace-v02-project-default",
+          "projectId": "",
+          "projectName": "УНИВЕРСАЛ / ГУРУ",
+          "catalogItems": 0,
+          "registryProducts": 0,
+          "productBindings": 0,
+          "rsyaBranches": 0,
+          "rsyaGroups": 0,
+          "rsyaGroupsWithProductId": 0,
+          "rsyaGroupsMissingProductId": 0,
+          "groups": []
+        }
+      ]
+    },
+    {
+      "url": "http://localhost:8765/",
+      "href": "http://localhost:8765/",
+      "origin": "http://localhost:8765",
+      "keys": [
+        "guru-platform-projects-v02",
+        "guru-platform-workspace-v02-project-default"
+      ],
+      "projects": [
+        {
+          "id": "project-default",
+          "name": "УНИВЕРСАЛ / ГУРУ",
+          "description": "Маркетинговая операционная система на основе CSV-чеклиста",
+          "website": "",
+          "type": "Платформа",
+          "icon": "G",
+          "createdAt": "2026-06-21T22:35:57.808Z",
+          "updatedAt": "2026-06-22T08:16:34.639Z",
+          "archived": false,
+          "lifecycleStatus": "active",
+          "niche": "Платформа",
+          "geography": "",
+          "mainCta": "",
+          "usp": "",
+          "offer": "",
+          "afterMainCta": "",
+          "afterUsp": "",
+          "afterOffer": "",
+          "afterDescription": ""
+        }
+      ],
+      "workspaces": [
+        {
+          "storageKey": "guru-platform-workspace-v02-project-default",
+          "projectId": "",
+          "projectName": "УНИВЕРСАЛ / ГУРУ",
+          "catalogItems": 0,
+          "registryProducts": 0,
+          "productBindings": 0,
+          "rsyaBranches": 0,
+          "rsyaGroups": 0,
+          "rsyaGroupsWithProductId": 0,
+          "rsyaGroupsMissingProductId": 0,
+          "groups": []
+        }
+      ]
+    },
+    {
+      "url": "file:///Users/vl/Developer/guru-platform/README.md",
+      "href": "file:///Users/vl/Developer/guru-platform/README.md",
+      "origin": "file://",
+      "keys": [
+        "guru-platform-projects-v02",
+        "guru-platform-workspace-v02-project-default",
+        "guru-platform-workspace-v02-project-1782024658740-210fa7"
+      ],
+      "projects": [
+        {
+          "id": "project-default",
+          "name": "УНИВЕРСАЛ / ГУРУ",
+          "description": "Маркетинговая операционная система на основе CSV-чеклиста",
+          "website": "",
+          "type": "Платформа",
+          "icon": "G",
+          "createdAt": "2026-06-21T06:49:53.299Z",
+          "updatedAt": "2026-06-21T06:49:53.400Z",
+          "archived": false,
+          "lifecycleStatus": "active",
+          "niche": "Платформа",
+          "geography": "",
+          "mainCta": "",
+          "usp": "",
+          "offer": "",
+          "afterMainCta": "",
+          "afterUsp": "",
+          "afterOffer": "",
+          "afterDescription": ""
+        },
+        {
+          "id": "project-1782024658740-210fa7",
+          "name": "Коричное Яблоко",
+          "type": "Сайт - мастерская подарков",
+          "niche": "Сайт - мастерская подарков",
+          "description": "",
+          "website": "https://k-apple.ru/",
+          "geography": "Россия",
+          "mainCta": "Купить из каталога",
+          "usp": "Подарки, которые попадают в сердце и остаются навсегда",
+          "offer": "",
+          "afterMainCta": "",
+          "afterUsp": "",
+          "afterOffer": "",
+          "afterDescription": "",
+          "icon": "KA",
+          "archived": false,
+          "lifecycleStatus": "active",
+          "createdAt": "2026-06-21T06:50:58.740Z",
+          "updatedAt": "2026-06-21T22:51:52.117Z"
+        }
+      ],
+      "workspaces": [
+        {
+          "storageKey": "guru-platform-workspace-v02-project-default",
+          "projectId": "",
+          "projectName": "УНИВЕРСАЛ / ГУРУ",
+          "catalogItems": 0,
+          "registryProducts": 0,
+          "productBindings": 0,
+          "rsyaBranches": 0,
+          "rsyaGroups": 0,
+          "rsyaGroupsWithProductId": 0,
+          "rsyaGroupsMissingProductId": 0,
+          "groups": []
+        },
+        {
+          "storageKey": "guru-platform-workspace-v02-project-1782024658740-210fa7",
+          "projectId": "",
+          "projectName": "Коричное Яблоко",
+          "catalogItems": 0,
+          "registryProducts": 0,
+          "productBindings": 0,
+          "rsyaBranches": 0,
+          "rsyaGroups": 0,
+          "rsyaGroupsWithProductId": 0,
+          "rsyaGroupsMissingProductId": 0,
+          "groups": []
+        }
+      ]
+    }
+  ]
+}

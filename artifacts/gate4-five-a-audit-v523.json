@@ -1,0 +1,180 @@
+{
+  "version": "gate4-five-a-v523",
+  "projects": [
+    {
+      "id": "project-1783243907480-ec7d8c",
+      "name": "Коричное яблоко",
+      "products": 14,
+      "selected": "catalog-item-1786792591872-51f503",
+      "unchanged": true,
+      "protectedEqual": true,
+      "companyEqual": true,
+      "companyStages": [
+        "Узнал (Aware)",
+        "Понравился (Appeal)",
+        "Изучает (Ask)",
+        "Покупает (Act)",
+        "Рекомендует (Advocate)"
+      ],
+      "productStages": [
+        "Узнал (Aware)",
+        "Понравился (Appeal)",
+        "Изучает (Ask)",
+        "Покупает (Act)",
+        "Рекомендует (Advocate)"
+      ],
+      "preparationCards": 20,
+      "stageReadiness": 0,
+      "hiddenPresent": [],
+      "outsidePresent": false,
+      "referral": "g3-5a-advocate-referral",
+      "productGallery": "\n    Товарная галерея · Яндекс Директ, ЕПК с товарными объявлениямиЯндекс Директ, ЕПК с товарными объявлениямиНужен товарный фид: название, ссылка, изображение, ценаНет реализации\n    \n  ",
+      "companyServiceCount": 11,
+      "emptyFieldBackground": "rgb(255, 255, 255)",
+      "emptyFieldBorder": "rgb(222, 216, 206)",
+      "emptyChoose": 0,
+      "retargetMoved": true,
+      "companyData": "bad8690f88ac404c7e2894a4f6bb5ec1d27600941775b5d0ed767282bee6fc18",
+      "sourceCounts": {
+        "campaigns": 330,
+        "implementations": 1
+      }
+    },
+    {
+      "id": "project-1783068059197-798d26",
+      "name": "iCleaning",
+      "products": 4,
+      "selected": "catalog-item-1786885522653-759ff6",
+      "unchanged": true,
+      "protectedEqual": true,
+      "companyEqual": true,
+      "companyStages": [
+        "Узнал (Aware)",
+        "Понравился (Appeal)",
+        "Изучает (Ask)",
+        "Покупает (Act)",
+        "Рекомендует (Advocate)"
+      ],
+      "productStages": [
+        "Узнал (Aware)",
+        "Понравился (Appeal)",
+        "Изучает (Ask)",
+        "Покупает (Act)",
+        "Рекомендует (Advocate)"
+      ],
+      "preparationCards": 20,
+      "stageReadiness": 0,
+      "hiddenPresent": [],
+      "outsidePresent": false,
+      "referral": "g3-5a-advocate-referral",
+      "productGallery": "\n    Товарная галерея · Яндекс Директ, ЕПК с товарными объявлениямиЯндекс Директ, ЕПК с товарными объявлениямиНужен товарный фид: название, ссылка, изображение, ценаНет реализации\n    \n  ",
+      "companyServiceCount": 11,
+      "emptyFieldBackground": "rgb(255, 255, 255)",
+      "emptyFieldBorder": "rgb(222, 216, 206)",
+      "emptyChoose": 0,
+      "retargetMoved": true,
+      "companyData": "ca71d2a57325cc3e4f81ffbd1a5a859de5bdbdf50c3f3265ac9bc63beb1b2206",
+      "sourceCounts": {
+        "campaigns": 91,
+        "implementations": 0
+      }
+    },
+    {
+      "id": "project-1782674551414-146f62",
+      "name": "SIVRCE",
+      "products": 0,
+      "unchanged": true,
+      "protectedEqual": true,
+      "companyEqual": true,
+      "companyStages": [
+        "Узнал (Aware)",
+        "Понравился (Appeal)",
+        "Изучает (Ask)",
+        "Покупает (Act)",
+        "Рекомендует (Advocate)"
+      ],
+      "productStages": [],
+      "preparationCards": 0,
+      "stageReadiness": 0,
+      "hiddenPresent": [],
+      "outsidePresent": false,
+      "referral": "g3-5a-advocate-referral",
+      "productGallery": "",
+      "companyServiceCount": 11,
+      "emptyFieldBackground": "rgb(255, 255, 255)",
+      "emptyFieldBorder": "rgb(222, 216, 206)",
+      "emptyChoose": 0,
+      "retargetMoved": true,
+      "companyData": "44685ec398e9239282f8c3e9430f4ee875852b576ff1e379566f4238bedab6a7",
+      "sourceCounts": {
+        "campaigns": 15,
+        "implementations": 0
+      }
+    },
+    {
+      "id": "project-1782582860052-3a45cc",
+      "name": "360profit",
+      "products": 0,
+      "unchanged": true,
+      "protectedEqual": true,
+      "companyEqual": true,
+      "companyStages": [
+        "Узнал (Aware)",
+        "Понравился (Appeal)",
+        "Изучает (Ask)",
+        "Покупает (Act)",
+        "Рекомендует (Advocate)"
+      ],
+      "productStages": [],
+      "preparationCards": 0,
+      "stageReadiness": 0,
+      "hiddenPresent": [],
+      "outsidePresent": false,
+      "referral": "g3-5a-advocate-referral",
+      "productGallery": "",
+      "companyServiceCount": 11,
+      "emptyFieldBackground": "rgb(255, 255, 255)",
+      "emptyFieldBorder": "rgb(222, 216, 206)",
+      "emptyChoose": 0,
+      "retargetMoved": true,
+      "companyData": "03025a1b3e1fa8af59817044b6a63acab30d3af523f249cdb747d75a9b055b94",
+      "sourceCounts": {
+        "campaigns": 15,
+        "implementations": 0
+      }
+    }
+  ],
+  "screenshots": {
+    "company": "/Users/vl/Developer/guru-platform/artifacts/gate4-five-a-company-v523.png",
+    "goat": "/Users/vl/Developer/guru-platform/artifacts/gate4-five-a-goat-v523.png",
+    "gallery": "/Users/vl/Developer/guru-platform/artifacts/gate4-product-gallery-v523.png",
+    "companySmm": "/Users/vl/Developer/guru-platform/artifacts/gate4-smm-company-v523.png",
+    "productSmm": "/Users/vl/Developer/guru-platform/artifacts/gate4-smm-product-v523.png",
+    "shirt": "/Users/vl/Developer/guru-platform/artifacts/gate4-five-a-shirt-v523.png"
+  },
+  "hidden": [
+    "Баннеры / видео (две карточки)",
+    "Яндекс Директ / Мастер кампаний и его креативы",
+    "Карточка товара",
+    "Сравнение с конкурентами",
+    "FAQ",
+    "Квизы / тесты",
+    "CTA",
+    "Формы / корзина",
+    "CRM и обработка лидов"
+  ],
+  "errors": [],
+  "productSwitch": {
+    "companySame": true,
+    "companyDataSame": true,
+    "protectedDataSame": true,
+    "otherGatesSame": true,
+    "differentPayload": true,
+    "selected": "catalog-item-1786792591872-c8b1e9",
+    "shirtName": "Рубашка Upcycling с кружевом"
+  },
+  "gate0Exclusions": {
+    "remaining": [],
+    "originalUntouched": true
+  }
+}

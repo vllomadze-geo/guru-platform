@@ -1,0 +1,67 @@
+{
+  "sourceExportedAt": "2026-09-18T11:59:17.493Z",
+  "product_id": "catalog-item-1786792591872-51f503",
+  "initial": {
+    "channelTitle": "Яндекс Директ / РСЯ",
+    "titles": [
+      "1JTBD и группы",
+      "2Запуск"
+    ],
+    "keys": [
+      "groups",
+      "launch"
+    ],
+    "firstOpen": true,
+    "secondOpen": false,
+    "groupsBody": true,
+    "launchBody": false,
+    "legacySections": 0,
+    "groupControls": {
+      "jtbd": 0,
+      "autotargeting": 0,
+      "ads": 1,
+      "adPrompts": 1,
+      "assetPrompts": 1,
+      "addCallout": 1,
+      "addSitelink": 1
+    },
+    "campaignFieldsInGroups": 0,
+    "groupStateUntouched": true,
+    "searchStateUntouched": true,
+    "sharedSearchAttributesPreserved": true,
+    "meta": [
+      "1 группа · 1 объявление",
+      "Готово 1 из 12"
+    ]
+  },
+  "launch": {
+    "steps": {
+      "groups": false,
+      "launch": true
+    },
+    "launchOpen": true,
+    "groupsBody": false,
+    "campaignControls": {
+      "geography": true,
+      "strategy": true,
+      "budgetPeriod": true,
+      "metrikaCounter": true,
+      "metrikaGoal": true,
+      "copyPackage": 1,
+      "copyAll": 1
+    },
+    "groupEditorInputs": 0,
+    "campaignLevelHeadings": 1,
+    "geographyPersisted": "Москва и Московская область",
+    "meta": "Готово 1 из 12",
+    "legacySections": 0
+  },
+  "focus": {
+    "button": true,
+    "groupsReopened": true,
+    "launchStillOpen": true,
+    "adVisible": true,
+    "groupStatePreserved": true,
+    "searchStateUntouched": true
+  }
+}

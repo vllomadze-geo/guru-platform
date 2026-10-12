@@ -1,0 +1,123 @@
+{
+  "auditedAt": "2026-09-24T07:51:50.761Z",
+  "source": "/Users/vl/Developer/guru-platform/artifacts/gate-4-recovered-groups-v408.json",
+  "screenshot": "/Users/vl/Developer/guru-platform/artifacts/gate4-rsya-goat-group-card-v461.png",
+  "build": "2.3.236",
+  "foundationJtbd": "Когда Нужно выбрать подарок к Новому году, клиент хочет Найти необычный авторский подарок, связанный с символом 2027 года, чтобы Порадовать получателя и не ошибиться с выбором.",
+  "autotargetingRemoved": {
+    "migratedFromStorage": true,
+    "absentFromSchema": true,
+    "absentFromPackage": true,
+    "ignoredByReadiness": true
+  },
+  "initial": {
+    "title": "Группа 1",
+    "headerText": "Группа 1 7 фраз · 1 объявление · развернуть ↓ Зафиксирована В работе Зафиксировать группу Вернуть в редактирование Дублировать ×",
+    "foundationText": "Фундамент группы JTBDКогда Нужно выбрать подарок к Новому году, клиент хочет Найти необычный авторский подарок, связанный с символом 2027 года, чтобы Порадовать получателя и не ошибиться с выбором.← зафиксирован Продукт / категорияСимвол 2027 года «Коза»← источник: Gate 4 · селектор товара",
+    "status": "В работе",
+    "fixed": true,
+    "fixedPill": true,
+    "fixDisabled": true,
+    "returnDisabled": false,
+    "deleteDisabled": true,
+    "duplicateVisible": true,
+    "switchLabels": [
+      "Зафиксировать группу",
+      "Вернуть в редактирование"
+    ],
+    "switchSize": {
+      "width": 390,
+      "height": 40
+    },
+    "compact": {
+      "collapsed": true,
+      "editorHidden": true,
+      "summaryHeight": 66
+    },
+    "readiness": {
+      "ready": false,
+      "status": "in_progress",
+      "audienceReady": true,
+      "completeAds": 0,
+      "missing": [
+        "объявление с заголовком, текстом и изображением"
+      ]
+    },
+    "autotargetingControl": false
+  },
+  "expanded": {
+    "open": true,
+    "editorHidden": false,
+    "ariaExpanded": "true"
+  },
+  "duplicate": {
+    "count": 2,
+    "sourceId": "rsya-group-1788714688153-be477b",
+    "copyId": "rsya-group-1790236302565-721c26",
+    "sourceProductId": "product-1786401011698-9e81ee",
+    "copyProductId": "product-1786401011698-9e81ee",
+    "sourceAdId": "rsya-ad-1788714688154-fb1098",
+    "copyAdId": "rsya-ad-1790236302565-c67ce4",
+    "isFixed": false,
+    "title": "Группа 2",
+    "fixCurrent": true,
+    "returnDisabled": true,
+    "deleteDisabled": false
+  },
+  "fixedDeleteGuard": {
+    "count": 2,
+    "confirmCalls": 0
+  },
+  "unlockedDelete": {
+    "count": 1,
+    "confirmCalls": 1
+  },
+  "unlocked": {
+    "isFixed": false,
+    "fixCurrent": true,
+    "fixDisabled": true,
+    "returnDisabled": true,
+    "deleteDisabled": false
+  },
+  "ready": {
+    "assessment": {
+      "ready": true,
+      "status": "ready",
+      "audienceReady": true,
+      "completeAds": 1,
+      "missing": []
+    },
+    "status": "Готово",
+    "statusReadyClass": true,
+    "fixDisabled": false
+  },
+  "fixedAgain": {
+    "isFixed": true,
+    "fixedAt": "2026-09-24T07:51:43.956Z",
+    "fixedPill": true,
+    "fixDisabled": true,
+    "returnDisabled": false,
+    "deleteDisabled": true
+  },
+  "finalCopyUi": {
+    "isFixed": false,
+    "status": "В работе",
+    "deleteDisabled": false
+  },
+  "persisted": [
+    {
+      "id": "rsya-group-1788714688153-be477b",
+      "isFixed": true,
+      "fixedAt": "2026-09-24T07:51:43.956Z"
+    },
+    {
+      "id": "rsya-group-1790236303143-cde374",
+      "isFixed": false,
+      "fixedAt": ""
+    }
+  ],
+  "finalCount": 2,
+  "errorOverlay": false,
+  "bodyHasContent": true,
+  "runtimeExceptions": []
+}

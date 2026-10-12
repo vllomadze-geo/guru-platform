@@ -612,6 +612,8 @@ function openProject(projectId) {
     guruResetGateNavigationState();
   activeProjectId = projectId;
   state = loadState(projectId);
+  if (g4sbV566HydrateGate4PhraseViews())
+    guruPersistStateFast({ quiet: true });
   if (!guruNavigationUrlRestoringV269) guruNavigationPendingRouteV269 = null;
   guruNavigationApplyPendingSelectionV269(projectId);
   activeView = "project";
@@ -30641,6 +30643,12 @@ function guruAutosizeNewTextareas(root) {
     : root.querySelectorAll?.("textarea:not([data-autosized])") || [];
   textareas.forEach((ta) => {
     if (ta.dataset.autosized) return;
+    // Some editors size themselves with a CSS mirror or have a fixed height.
+    // Measuring their scrollHeight on every input forces a synchronous layout.
+    if (ta.dataset.autosize === "off") {
+      ta.dataset.autosized = "manual";
+      return;
+    }
     ta.dataset.autosized = "1";
     ta.rows = 1;
     ta.style.height = "auto";
@@ -30649,7 +30657,7 @@ function guruAutosizeNewTextareas(root) {
 }
 
 document.addEventListener("input", (e) => {
-  if (e.target.tagName === "TEXTAREA") {
+  if (e.target.tagName === "TEXTAREA" && e.target.dataset.autosize !== "off") {
     e.target.style.height = "auto";
     e.target.style.height = e.target.scrollHeight + "px";
   }
@@ -32794,14 +32802,20 @@ function guruApplyFieldStates(root = document) {
 
 function guruApplyFieldState(el) {
   if (!el?.matches?.(GURU_FIELD_STATE_SELECTOR)) return;
-  const stateName = guruFieldState(el);
-  const nextClass = stateName ? "guru-field-" + stateName : "";
   const fieldClasses = [
     "guru-field-empty",
     "guru-field-filled",
     "guru-field-warning",
     "guru-field-selected",
   ];
+  // Comparison previews and their header URL are edited in place. Global
+  // field badges turn their filled text back into grey form controls.
+  if (el.closest(".g1bp-serp-card-v569, .g1bp-landing-v575, .g1bp-head-site-v578")) {
+    el.classList.remove(...fieldClasses);
+    return;
+  }
+  const stateName = guruFieldState(el);
+  const nextClass = stateName ? "guru-field-" + stateName : "";
   if (fieldClasses.every((name) => el.classList.contains(name) === (name === nextClass)))
     return;
   el.classList.remove(...fieldClasses);
@@ -36230,11 +36244,46 @@ function guruGate1KeywordRelevanceRankV553(value) {
   return { high: 0, medium: 1, low: 3 }[value] ?? 2;
 }
 
+const G1KW_SORT_FIELDS_V561 = new Set([
+  "vol", "queryCount", "forecastClicks", "clickPrice", "bid",
+  "forecastBudget", "relevance",
+]);
+const guruGate1KeywordSortByGroupV561 = new Map();
+
+function guruGate1KeywordSortKeyV561(productId, scope) {
+  return JSON.stringify([activeProjectId, guruV185Text(productId),
+    guruV185Text(scope).replace(/^saved:/, "additional:")]);
+}
+
+function guruGate1KeywordSortValueV561(field, row, relevance) {
+  if (field === "relevance")
+    return { high: 3, medium: 2, low: 1 }[relevance] ?? null;
+  return pv181DemandQueryNumberV262(row?.[field]);
+}
+
+function guruGate1KeywordSortCompareV561(leftValue, rightValue, direction,
+  leftOrder, rightOrder) {
+  if (leftValue === null && rightValue === null) return leftOrder - rightOrder;
+  if (leftValue === null) return 1;
+  if (rightValue === null) return -1;
+  return (leftValue - rightValue) * (direction === "asc" ? 1 : -1) ||
+    leftOrder - rightOrder;
+}
+
 function pv181DemandTableHeadHtmlV272(options = {}) {
   const keywordActions = options.keywordActions === true;
-  return `<div class="pv181-demand-table-head-v263${keywordActions ? " g1kw-actions-v553" : ""}" aria-hidden="true">
-    ${PV181_DEMAND_FIELDS_V272.map(([, label]) => `<span>${escapeHtml(label)}</span>`).join("")}
-    ${keywordActions ? '<span title="Копировать" aria-label="Копировать">⧉</span><span>Релевантность</span><span>Перенести в</span>' : ""}
+  const sort = keywordActions ? guruGate1KeywordSortByGroupV561.get(
+    guruGate1KeywordSortKeyV561(options.itemId, options.scope)) : null;
+  const sortHead = (field, label) => {
+    const active = sort?.field === field;
+    const arrow = active ? sort.direction === "asc" ? "↑" : "↓" : "↕";
+    const next = active && sort.direction === "desc" ? "по возрастанию" : "по убыванию";
+    return `<span class="g1kw-sort-head-v561"><button type="button" data-g1kw-sort-v561="${field}" aria-label="Сортировать ${escapeAttr(label)} ${next}" aria-pressed="${active ? "true" : "false"}" title="Сортировать ${escapeAttr(label)} ${next}">${escapeHtml(label)} <span aria-hidden="true">${arrow}</span></button></span>`;
+  };
+  return `<div class="pv181-demand-table-head-v263${keywordActions ? " g1kw-actions-v553" : ""}"${keywordActions ? "" : ' aria-hidden="true"'}>
+    ${PV181_DEMAND_FIELDS_V272.map(([field, label]) => keywordActions && G1KW_SORT_FIELDS_V561.has(field)
+      ? sortHead(field, label) : `<span>${escapeHtml(label)}</span>`).join("")}
+    ${keywordActions ? `<span title="Копировать" aria-label="Копировать">⧉</span>${sortHead("relevance", "Релевантность")}<span>Перенести в</span>` : ""}
     <span></span>
   </div>`;
 }
@@ -36284,15 +36333,37 @@ function pv181DemandRowsHtmlV272(entries, options = {}) {
     ? guruGate1KeywordTransferTargetsV555(itemId, itemData)
     : [];
   const transferScope = guruV185Text(options.transferScope).replace(/^saved:/, "additional:");
+  const sort = keywordActions ? guruGate1KeywordSortByGroupV561.get(
+    guruGate1KeywordSortKeyV561(itemId, transferScope)) : null;
+  const savedJtbdId = transferScope === "primary"
+    ? `primary:${itemId}` : transferScope.replace(/^additional:/, "");
+  const savedPhraseKeys = keywordActions
+    ? new Set((state.gate4SearchBuild?.[normalizeAspectKey(itemId)]?.groupRows || [])
+      .filter((group) =>
+        g4sbV166GroupJtbdKey(itemId, group) === savedJtbdId)
+      .flatMap((group) => group.demandRows || [])
+      .map((row) => guruV247KeywordNormalize(row?.kw)).filter(Boolean))
+    : new Set();
   const displayEntries = entries.map((entry, order) => ({ entry, order }));
-  if (keywordActions) displayEntries.sort((left, right) =>
-    guruGate1KeywordRelevanceRankV553(relevanceByPhrase[guruV247KeywordNormalize(left.entry.demandRow?.kw)]) -
-    guruGate1KeywordRelevanceRankV553(relevanceByPhrase[guruV247KeywordNormalize(right.entry.demandRow?.kw)]) ||
-    left.order - right.order);
+  if (keywordActions) displayEntries.sort((left, right) => {
+    const leftRating = relevanceByPhrase[guruV247KeywordNormalize(left.entry.demandRow?.kw)];
+    const rightRating = relevanceByPhrase[guruV247KeywordNormalize(right.entry.demandRow?.kw)];
+    return sort
+      ? guruGate1KeywordSortCompareV561(
+        guruGate1KeywordSortValueV561(sort.field, left.entry.demandRow, leftRating),
+        guruGate1KeywordSortValueV561(sort.field, right.entry.demandRow, rightRating),
+        sort.direction, left.order, right.order)
+      : guruGate1KeywordRelevanceRankV553(leftRating) -
+        guruGate1KeywordRelevanceRankV553(rightRating) || left.order - right.order;
+  });
   return displayEntries.map(({ entry: { demandRow: row, index }, order }) => {
+    const phraseKey = guruV247KeywordNormalize(row?.kw);
+    const isDuplicate = keywordActions && options.duplicateKeys?.has(phraseKey);
     const linkedFoundation = guruV185Text(row?._linkedFoundationV518);
-    const linkedGate4 = Boolean(row?._linkedGate4V519);
-    const rowReadOnly = readOnly || Boolean(linkedFoundation) || linkedGate4;
+    const savedInGate4 = keywordActions
+      ? savedPhraseKeys.has(guruV247KeywordNormalize(row?.kw))
+      : false;
+    const rowReadOnly = readOnly || Boolean(linkedFoundation);
     const anomaly = readOnly && guruGate1DemandAnomalyV277(row);
     const cells = PV181_DEMAND_FIELDS_V272.map(([field, label]) => {
       const value = guruV185Text(row?.[field]);
@@ -36309,18 +36380,23 @@ function pv181DemandRowsHtmlV272(entries, options = {}) {
         const anomalyBadge = anomaly && field === "kw"
           ? `<span class="pv181-demand-anomaly-v277" role="img" aria-label="Аномалия данных" title="Запросы есть, а показы отсутствуют — стоит перепроверить вручную в Директе"></span>`
           : "";
-        control = `<div class="g1-input ${filledClass} pv181-demand-imported-value-v261${anomalyBadge ? " has-anomaly-v277" : ""}" role="textbox" aria-label="${escapeAttr(label)}" aria-readonly="true"${readOnlyAttribute}>${escapeHtml(value || label)}${anomalyBadge}</div>`;
+        const content = keywordActions && field === "kw"
+          ? `<span class="g1kw-row-number-v565" aria-hidden="true"></span><span class="g1kw-row-text-v565">${escapeHtml(value || label)}</span>`
+          : escapeHtml(value || label);
+        control = `<div class="g1-input ${filledClass} pv181-demand-imported-value-v261${anomalyBadge ? " has-anomaly-v277" : ""}" role="textbox" aria-label="${escapeAttr(label)}" aria-readonly="true"${readOnlyAttribute}>${content}${anomalyBadge}</div>`;
       } else if (PV181_DEMAND_IMPORTED_FIELDS_V272.has(field)) {
         control = `<div class="g1-input ${filledClass} pv181-demand-imported-value-v261" role="textbox" aria-label="${escapeAttr(label)}" aria-readonly="true" data-pv181-imported-field-v262="${escapeAttr(field)}">${escapeHtml(value || "Заполняется при импорте")}</div>`;
       } else {
         control = `<textarea class="g1-input ${filledClass}" aria-label="${escapeAttr(label)}" data-pv181-map="${mapIndex}" data-pv181-item="${escapeAttr(itemId)}" data-pv181-demand="${index}" data-pv181-dfield="${escapeAttr(field)}" rows="1" placeholder="${escapeAttr(label)}">${escapeHtml(value)}</textarea>`;
       }
-      const sourceNote = field !== "kw" ? "" : linkedGate4
+      const sourceNote = field !== "kw" ? "" : savedInGate4
         ? '<small class="pv181-linked-foundation-note-v518">Есть в Gate 4 · Поиск</small>'
         : linkedFoundation
           ? `<small class="pv181-linked-foundation-note-v518">из ${linkedFoundation === "gate0" ? "Gate 0" : "Gate 1"} · метрики после импорта</small>`
           : "";
-      return `<label class="g1-field pv181-demand-cell-v263"><span class="pv181-demand-cell-label-v263">${escapeHtml(label)}</span>${control}${sourceNote}</label>`;
+      const duplicateNote = field === "kw" && isDuplicate
+        ? `<small class="g1kw-duplicate-note-v562">Повтор в JTBD · ${guruGate1DuplicateDecisionsV562(itemData)[phraseKey]?.owner ? "решение принято" : "решение ниже"}</small>` : "";
+      return `<label class="g1-field pv181-demand-cell-v263"><span class="pv181-demand-cell-label-v263">${escapeHtml(label)}</span>${control}${sourceNote}${duplicateNote}</label>`;
     }).join("");
     const removeScope = readOnly ? readOnlyScope : "demand";
     const removeLabel = ["primary", "additional"].includes(removeScope)
@@ -36328,7 +36404,7 @@ function pv181DemandRowsHtmlV272(entries, options = {}) {
       : "Удалить ключевое слово";
     // Every JTBD keyword can be unassigned, including read-only projections
     // from Gate 0/1 and Gate 4. The source keyword itself is never removed.
-    const action = showRemove && (keywordActions || (!linkedFoundation && !linkedGate4))
+    const action = showRemove && (keywordActions || !linkedFoundation)
       ? `<button type="button" class="small-btn danger-mini pv181-demand-remove-v263" data-pv181-demand-remove="${index}" data-pv181-demand-remove-scope="${escapeAttr(removeScope)}" data-pv181-demand-phrase="${escapeAttr(guruV247KeywordNormalize(row?.kw))}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" aria-label="${escapeAttr(removeLabel)}">×</button>`
       : `<span class="pv181-demand-row-action-spacer-v272" aria-hidden="true"></span>`;
     const readOnlyClass = !rowReadOnly
@@ -36345,7 +36421,6 @@ function pv181DemandRowsHtmlV272(entries, options = {}) {
         : readOnlyScope === "additional"
           ? " data-pv181-additional-jtbd-demand-row-v274"
           : " data-pv181-primary-demand-row-v272";
-    const phraseKey = guruV247KeywordNormalize(row?.kw);
     const keywordCells = keywordActions
       ? phraseKey
         ? `<div class="g1kw-copy-cell-v553"><button type="button" class="small-btn g1kw-copy-icon-v559" data-g1-competitor-copy-v539="${escapeAttr(guruV185Text(row?.kw))}" data-g1kw-copy-icon-v559 aria-label="Копировать ключевое слово ${escapeAttr(guruV185Text(row?.kw))}" title="Копировать">
@@ -36366,14 +36441,83 @@ function pv181DemandRowsHtmlV272(entries, options = {}) {
     const dragAttributes = draggable && phraseKey
       ? ` draggable="true" aria-grabbed="false" title="Перетащите фразу в нужную JTBD-группу" data-pv181-jtbd-keyword-drag-v274="${escapeAttr(phraseKey)}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}"`
       : "";
+    const sortAttributes = keywordActions
+      ? PV181_DEMAND_FIELDS_V272.slice(1).map(([field]) => {
+        const value = guruGate1KeywordSortValueV561(field, row, null);
+        return ` data-g1kw-sort-${field.toLowerCase()}-v561="${escapeAttr(value ?? "")}"`;
+      }).join("") : "";
     const keywordRowAttributes = keywordActions
-      ? ` data-g1kw-row-v553="${escapeAttr(phraseKey)}" data-g1kw-product-v553="${escapeAttr(itemId)}" data-g1kw-source-order-v553="${order}"`
+      ? ` data-g1kw-row-v553="${escapeAttr(phraseKey)}" data-g1kw-product-v553="${escapeAttr(itemId)}" data-g1kw-source-order-v553="${order}"${sortAttributes}`
       : "";
-    return `<div class="pv181-demand-row${readOnlyClass}${anomaly ? " is-anomaly-v277" : ""}${keywordActions ? " g1kw-actions-v553" : ""}"${readOnlyRowAttribute}${dragAttributes}${keywordRowAttributes}>${cells}${keywordCells}${action}</div>`;
+    return `<div class="pv181-demand-row${readOnlyClass}${anomaly ? " is-anomaly-v277" : ""}${keywordActions ? " g1kw-actions-v553" : ""}${isDuplicate ? " g1kw-duplicate-v562" : ""}"${readOnlyRowAttribute}${dragAttributes}${keywordRowAttributes}>${cells}${keywordCells}${action}</div>`;
   }).join("");
 }
 
 const guruGate1PendingKeywordReordersV554 = new WeakMap();
+
+function guruGate1CompareKeywordRowsV561(left, right, sort, ratings) {
+  const leftOrder = Number(left.dataset.g1kwSourceOrderV553);
+  const rightOrder = Number(right.dataset.g1kwSourceOrderV553);
+  if (!sort)
+    return guruGate1KeywordRelevanceRankV553(ratings[left.dataset.g1kwRowV553]) -
+      guruGate1KeywordRelevanceRankV553(ratings[right.dataset.g1kwRowV553]) ||
+      leftOrder - rightOrder;
+  const value = (row) => {
+    if (sort.field === "relevance")
+      return guruGate1KeywordSortValueV561("relevance", null,
+        ratings[row.dataset.g1kwRowV553]);
+    const raw = row.getAttribute(`data-g1kw-sort-${sort.field.toLowerCase()}-v561`);
+    return raw ? Number(raw) : null;
+  };
+  return guruGate1KeywordSortCompareV561(
+    value(left), value(right), sort.direction, leftOrder, rightOrder);
+}
+
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-g1kw-sort-v561]");
+  if (!button) return;
+  const field = button.dataset.g1kwSortV561;
+  const details = button.closest("[data-pv181-jtbd-demand-details-v278]");
+  const productId = details?.dataset.g1kwProductV561;
+  const list = details?.querySelector("[data-g1kw-rows-v561]");
+  if (!G1KW_SORT_FIELDS_V561.has(field) || !productId || !list) return;
+  const key = guruGate1KeywordSortKeyV561(productId,
+    details.dataset.pv181JtbdDemandDetailsV278);
+  const current = guruGate1KeywordSortByGroupV561.get(key);
+  const sort = {
+    field,
+    direction: current?.field === field && current.direction === "desc" ? "asc" : "desc",
+  };
+  guruGate1KeywordSortByGroupV561.set(key, sort);
+  const ratings = guruGate1KeywordRelevanceMapV553(
+    state.projectComparison?.productsById?.[productId]);
+  const rows = [...list.children].sort((left, right) =>
+    guruGate1CompareKeywordRowsV561(left, right, sort, ratings));
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+  const scrollRoot = document.scrollingElement;
+  const previousAnchor = scrollRoot?.style.overflowAnchor || "";
+  if (scrollRoot) scrollRoot.style.overflowAnchor = "none";
+  try {
+    list.append(...rows);
+    details.querySelectorAll("[data-g1kw-sort-v561]").forEach((head) => {
+      const active = head.dataset.g1kwSortV561 === field;
+      const label = head.textContent.replace(/[↕↑↓]\s*$/, "").trim();
+      const next = active && sort.direction === "desc" ? "по возрастанию" : "по убыванию";
+      head.setAttribute("aria-pressed", String(active));
+      head.setAttribute("aria-label", `Сортировать ${label} ${next}`);
+      head.title = `Сортировать ${label} ${next}`;
+      head.querySelector("[aria-hidden]").textContent = active
+        ? sort.direction === "asc" ? "↑" : "↓" : "↕";
+    });
+    window.scrollTo(scrollX, scrollY);
+  } finally {
+    if (scrollRoot) requestAnimationFrame(() => {
+      scrollRoot.style.overflowAnchor = previousAnchor;
+    });
+  }
+});
+
 function guruGate1UpdateKeywordRelevanceUiV553(productId, phraseKey, value) {
   document.querySelectorAll("[data-g1kw-relevance-v553]").forEach((control) => {
     if (control.dataset.g1kwProductV553 === productId &&
@@ -36382,10 +36526,15 @@ function guruGate1UpdateKeywordRelevanceUiV553(productId, phraseKey, value) {
       guruApplyFieldState(control);
     }
   });
-  document.querySelectorAll(".pv181-jtbd-demand-details-v278 > div").forEach((list) => {
+  document.querySelectorAll("[data-g1kw-rows-v561]").forEach((list) => {
     const rows = [...list.children].filter((row) => row.hasAttribute("data-g1kw-row-v553"));
     if (!rows.some((row) => row.dataset.g1kwProductV553 === productId &&
         row.dataset.g1kwRowV553 === phraseKey)) return;
+    const details = list.closest("[data-pv181-jtbd-demand-details-v278]");
+    const sort = guruGate1KeywordSortByGroupV561.get(
+      guruGate1KeywordSortKeyV561(productId,
+        details?.dataset.pv181JtbdDemandDetailsV278));
+    if (sort && sort.field !== "relevance") return;
     const pending = guruGate1PendingKeywordReordersV554.get(list);
     if (pending) { pending.add(phraseKey); return; }
     const changed = new Set([phraseKey]);
@@ -36397,10 +36546,7 @@ function guruGate1UpdateKeywordRelevanceUiV553(productId, phraseKey, value) {
       if (!list.isConnected) return;
       const ratings = state.projectComparison?.productsById?.[productId]?.keywordRelevanceByPhraseV549 || {};
       const sorted = [...list.children].filter((row) => row.hasAttribute("data-g1kw-row-v553"))
-        .sort((left, right) =>
-          guruGate1KeywordRelevanceRankV553(ratings[left.dataset.g1kwRowV553]) -
-          guruGate1KeywordRelevanceRankV553(ratings[right.dataset.g1kwRowV553]) ||
-          Number(left.dataset.g1kwSourceOrderV553) - Number(right.dataset.g1kwSourceOrderV553));
+        .sort((left, right) => guruGate1CompareKeywordRowsV561(left, right, sort, ratings));
       const positions = new Map(sorted.map((row, index) => [row.dataset.g1kwRowV553, index]));
       const focused = list.contains(document.activeElement) ? document.activeElement : null;
       [...changed].sort((left, right) => positions.get(right) - positions.get(left))
@@ -36433,31 +36579,6 @@ document.addEventListener("change", (event) => {
     g1BergenSyncRelevanceUiV554(productId, phraseKey, select.value);
   flashSaving({ skipDerivedRefresh: Boolean(existingEntry) });
 });
-
-// Gate 4 is a saved source, not a migration target. Enrich only a display
-// copy; an older Gate 1 value always wins and the source rows stay untouched.
-function guruGate4FillMissingMetricsV519(row, gate4Row) {
-  const merged = { ...(row || {}) };
-  const gate4OwnsRow = merged.originStage === "gate4";
-  ["vol", "queryCount", "forecastClicks", "clickPrice", "bid",
-    "forecastBudget", "growth", "forecast"].forEach((field) => {
-    const current = merged[field];
-    const source = gate4Row?.[field];
-    if ((gate4OwnsRow || current === undefined || current === null || String(current).trim() === "") &&
-        source !== undefined && source !== null && String(source).trim() !== "")
-      merged[field] = source;
-  });
-  // These are display-only links. The original Gate 1 row and its manual
-  // JTBD assignment remain untouched, while the saved Gate 4 id survives
-  // when the same phrase exists in both places.
-  if (gate4Row) {
-    merged._linkedGate4V519 = true;
-    merged._gate4GroupIdV519 = gate4Row._gate4GroupIdV519;
-    merged._gate4JtbdIdV519 = gate4Row._gate4JtbdIdV519;
-    merged._gate4JtbdIdsV519 = [...(gate4Row._gate4JtbdIdsV519 || [])];
-  }
-  return merged;
-}
 
 /* v2.3.61 — рабочий крестик у каждой строки ключевого слова.
    Внутри Основного/дополнительного JTBD он снимает членство и возвращает
@@ -36732,28 +36853,16 @@ function pv181ItemHtml(mapIndex, item, row, options = {}) {
   const anyFilled = ['semL3','semL4'].some(k => d[k].some(v => String(v).trim()))
     || d.demandRows.some(r => Object.values(r).some(v => String(v).trim()));
 
-  // Фразы, зафиксированные в группах запросов Gate 1, остаются аналитическим
-  // фундаментом. Всё, что впервые пришло из Gate 4, хранится отдельно по
-  // originStage и не смешивается с аналитикой после сохранения/загрузки.
+  // Все фразы и метрики принадлежат Gate 1. originStage сохраняет только
+  // происхождение введённой фразы для отображения, но не создаёт второй банк.
   const analyticsPhraseKeys = new Set(
     (d.semL3Groups || []).flatMap((group) => [
       group?.mainQuery,
       ...(Array.isArray(group?.keywords) ? group.keywords.map(pv181KeywordText) : []),
     ]).map((value) => String(value || '').trim().toLocaleLowerCase('ru-RU')).filter(Boolean),
   );
-  const savedGate4Rows = typeof guruGate4PhraseRowsV519 === 'function'
-    ? guruGate4PhraseRowsV519(item.id, state) : [];
-  const gate4ByKey = new Map(savedGate4Rows.map((entry) =>
-    [guruV247KeywordNormalize(entry?.kw), entry],
-  ).filter(([key]) => key));
-  const storedKeys = new Set();
   const demandEntries = d.demandRows.map((storedRow, index) => {
-    const key = guruV247KeywordNormalize(storedRow?.kw);
-    if (key) storedKeys.add(key);
-    const gate4Row = gate4ByKey.get(key);
-    const demandRow = gate4Row
-      ? guruGate4FillMissingMetricsV519(storedRow, gate4Row)
-      : storedRow;
+    const demandRow = storedRow;
     const phraseKey = String(demandRow?.kw || '').trim().toLocaleLowerCase('ru-RU');
     let originStage = demandRow?.originStage;
     if (originStage !== 'gate1' && originStage !== 'gate4') {
@@ -36764,16 +36873,6 @@ function pv181ItemHtml(mapIndex, item, row, options = {}) {
       index,
       originStage,
     };
-  });
-  savedGate4Rows.forEach((sourceRow, offset) => {
-    const key = guruV247KeywordNormalize(sourceRow?.kw);
-    if (!key || storedKeys.has(key)) return;
-    storedKeys.add(key);
-    demandEntries.push({
-      demandRow: { ...sourceRow, originStage: 'gate4', _linkedGate4V519: true },
-      index: d.demandRows.length + offset,
-      originStage: 'gate4',
-    });
   });
   const analyticsDemandEntries = demandEntries.filter((entry) => entry.originStage === 'gate1');
   const implementationDemandEntries = demandEntries.filter((entry) => entry.originStage === 'gate4');
@@ -37379,7 +37478,11 @@ function g4sbV385ProductSemantics(productId) {
     queries: [],
     languageJtbd: [],
   };
-  const phrases = guruGate1FinalConfirmedV259(product).map((entry) => entry.value);
+  const pendingKeys = new Set(guruGate1PendingJtbdDemandV273(
+    product.id, itemData).phrases.map((entry) => entry.key));
+  const phrases = guruGate1FinalConfirmedV259(product)
+    .filter((entry) => !pendingKeys.has(guruV247KeywordNormalize(entry.value)))
+    .map((entry) => entry.value);
   return {
     ...legacy,
     row: { ...context.row, items: { [product.id]: itemData } },
@@ -37390,7 +37493,9 @@ function g4sbV385ProductSemantics(productId) {
       mainQueries: phrases.join("\n"),
       clientLanguage: (itemData.semL4 || []).filter(Boolean).join("; "),
     }] : [],
-    demandRows: guruGate1FinalExportEntriesV279(product).map((entry) => entry.demandRow),
+    demandRows: guruGate1FinalExportEntriesV279(product)
+      .filter((entry) => !pendingKeys.has(guruV247KeywordNormalize(entry.demandRow?.kw)))
+      .map((entry) => entry.demandRow),
     queries: phrases,
     languageJtbd: (itemData.semL4 || []).filter(Boolean),
   };
@@ -39868,7 +39973,8 @@ g4sbSearchChannelCardHtml = function (channel, campaign, index, product) {
 
   const clustersBody = steps.clusters
     ? `<p class="g1-task">Кластер и его группа объявлений — одна единица: соберите кластер (сегмент → JTBD → фразы → спрос), группа с прогнозом и объявлениями создастся автоматически.</p>` +
-      g4sbSegmentCoverageHtml(product, d) +
+      g4sbV448WithEditorReadCache(product, d.clusterDraft, () =>
+        g4sbSegmentCoverageHtml(product, d)) +
       g4sbUsageOverviewHtml(product, d) +
       (d.groupRows.length
         ? `<div class="g1-fields-grid" style="margin-top:12px">${d.groupRows
@@ -39935,8 +40041,20 @@ document.addEventListener("click", (e) => {
     return;
   }
   if (t?.dataset?.g4sbDraftSave !== undefined) {
-    const d = ensureGate4SearchBuild(t.dataset.g4sbProduct);
-    const saved = g4sbSaveClusterDraft(t.dataset.g4sbProduct, d);
+    const product = t.dataset.g4sbProduct;
+    const d = ensureGate4SearchBuild(product);
+    const draft = d.clusterDraft;
+    const phraseRows = (draft?.keywordRows || []).map(g4sbKeywordRow)
+      .filter((row) => guruV247KeywordNormalize(row.kw));
+    const jtbdId = guruV185Text(draft?.jtbdId);
+    const itemId = guruV185Text(draft?.itemId);
+    const saved = g4sbSaveClusterDraft(product, d);
+    if (saved && jtbdId) {
+      g4sbSyncKeywordRowsToGate1(product, itemId, phraseRows);
+      phraseRows.forEach((row) => g4sbV411UpdateManualPhraseOwner(
+        product, guruV247KeywordNormalize(row.kw), jtbdId));
+      g4sbV560SyncGate1PhraseGroups(product, null, d);
+    }
     if (saved) d.clusterListOpen[saved.id] = true;
     flashSaving();
     renderGate();
@@ -40167,65 +40285,6 @@ function g4sbClusterUsageMaps(d, itemId, excludeClusterId) {
   return { usedMainJtbd, jtbdUsage, phraseUsage };
 }
 
-/* ---- Таблица ключевых фраз: чекбокс + фраза + показов/мес +
-   период спроса + служебный источник Gate 4, с фильтрами. Дизайн-система та же
-   (.g1-table-scroll), редактор Gate 1 не дублируем. Показываются ВСЕ
-   фразы товара — никакой жёсткой предфильтрации: пользователь сам
-   решает, какие фразы относятся к текущему кластеру. Уже занятые в
-   других кластерах этого товара — помечаются (phraseUsage), не
-   блокируются. ---- */
-function g4sbPhraseTableHtml(product, itemId, selectedSet, filter, p, phraseUsage) {
-  const rows = g4sbClusterPhraseRows(product, itemId);
-  if (!rows.length) {
-    return `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${itemId ? "У этого товара пока нет базовых фраз в Gate 1" : "Сначала выберите сегмент, чтобы увидеть фразы товара"}</div>`;
-  }
-  const filtered = rows.filter((r) => {
-    if (filter === "selected") return selectedSet.has(r.phrase);
-    if (filter === "withDemand") return r.hasDemand;
-    if (filter === "noDemand") return !r.hasDemand;
-    return true;
-  });
-  const filterBtn = (key, label) =>
-    `<button type="button" class="small-btn ${filter === key ? "" : "secondary"}" ${p} data-g4sb-draft-filter="${key}" style="font-size:11px;">${escapeHtml(label)}</button>`;
-  return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;">
-    ${filterBtn("all", "Все")}
-    ${filterBtn("selected", "Только выбранные")}
-    ${filterBtn("withDemand", "Только со спросом")}
-    ${filterBtn("noDemand", "Только с нулевым спросом")}
-  </div>
-  <div class="g1-table-scroll"><table class="g1-forms-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:640px;">
-    <thead><tr>
-      <th style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--muted);width:44px;">Выбор</th>
-      <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--muted);">Ключевая фраза</th>
-      <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--muted);">Показов в месяц</th>
-      <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--muted);">Период спроса</th>
-      <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--muted);">Источник</th>
-    </tr></thead>
-    <tbody>
-      ${
-        filtered.length
-          ? filtered
-              .map(
-                (r) => `<tr>
-        <td style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--line);"><input type="checkbox" ${p} data-g4sb-draft-phrase="${escapeAttr(r.phrase)}" ${selectedSet.has(r.phrase) ? "checked" : ""} /></td>
-        <td style="padding:6px 8px;border-bottom:1px solid var(--line);">${escapeHtml(r.phrase)}${
-          phraseUsage && phraseUsage.get(r.phrase)
-            ? `<span style="color:var(--muted);font-size:11px;margin-left:6px;">· уже в «${escapeHtml(phraseUsage.get(r.phrase).join("», «"))}»</span>`
-            : ""
-        }</td>
-        <td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);">${r.volText ? escapeHtml(r.volText) : '<span style="color:var(--muted);">—</span>'}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid var(--line);">${r.period ? escapeHtml(r.period) : '<span style="color:var(--muted);">—</span>'}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid var(--line);">${r.source ? escapeHtml(r.source) : '<span style="color:var(--muted);">—</span>'}</td>
-      </tr>`,
-              )
-              .join("")
-          : `<tr><td colspan="5" style="padding:10px;text-align:center;color:var(--muted);">По этому фильтру фраз нет</td></tr>`
-      }
-    </tbody>
-  </table></div>
-  <small style="color:var(--muted);font-size:11px;display:block;margin-top:4px;">Данные из Gate 1 → Аналитика → «Объём показов/мес» (то же поле, что заполняется по товару). Здесь — только выбор для кластера, редактирование самих данных — в Gate 1.</small>`;
-}
-
 function g4sbKeywordRow(row = {}) {
   return {
     kw: String(row.kw || row.phrase || ""),
@@ -40236,7 +40295,6 @@ function g4sbKeywordRow(row = {}) {
     forecastClicks: String(row.forecastClicks ?? row.manualClicks ?? ""),
     forecastBudget: String(row.forecastBudget ?? row.manualBudget ?? ""),
     originStage: row.originStage === "gate4" ? "gate4" : row.originStage === "gate1" ? "gate1" : "",
-    searchJtbdIdV394: String(row.searchJtbdIdV394 || ""),
   };
 }
 
@@ -40302,9 +40360,6 @@ function g4sbSyncKeywordRowsToGate1(product, itemId, rows) {
         if (!guruV185Text(target[field]) && clean[field].trim()) target[field] = clean[field];
       });
       if (!guruV185Text(target.source) && clean.source.trim()) target.source = clean.source;
-      if (existingOrigin === "gate4" && clean.searchJtbdIdV394 &&
-          !guruV185Text(target.searchJtbdIdV394))
-        target.searchJtbdIdV394 = clean.searchJtbdIdV394;
       // Если фраза уже была в Gate 1 до синхронизации, она остаётся
       // аналитической даже после обновления прогноза из Gate 4.
       target.originStage = existingOrigin || (confirmed.has(key) || analyticsPhraseKeys.has(key) ? "gate1" : "gate4");
@@ -42124,13 +42179,6 @@ function g4sbV403ProductGroupEntries(product, d) {
   return entries;
 }
 
-function g4sbV403EarlierPhraseKeys(product, d, draft) {
-  const entries = g4sbV403ProductGroupEntries(product, d);
-  const position = entries.findIndex((entry) => entry.draft === draft);
-  return new Set(entries.slice(0, Math.max(0, position)).flatMap((entry) =>
-    entry.rows.map((row) => g4sbV128PhraseKey(row.kw || row)).filter(Boolean)));
-}
-
 function g4sbV403DuplicateCount(product, d) {
   const seen = new Set();
   let duplicates = 0;
@@ -42160,9 +42208,10 @@ function g4sbV128SourcePhraseRows(product, draft) {
   const { product: catalogProduct, itemData } = g4sbV385ProductSource(product);
   if (!catalogProduct || !itemData) return [];
   const keyOf = guruV247KeywordNormalize;
-  const selected = [...(draft?.keywordRows || []), ...(draft?.forecastBaselineRows || [])];
-  const selectedByKey = new Map(selected.map((row) => [keyOf(row?.kw), row]).filter(([key]) => key));
-  // A read of a draft cannot migrate its JTBD association into Gate 1.
+  const pendingKeys = new Set(guruGate1PendingJtbdDemandV273(
+    catalogProduct.id, itemData).phrases.map((entry) => entry.key));
+  // The selector reads Gate 1 only. A draft's previous phrase snapshot is
+  // never an independent source of membership or metrics.
   const confirmed = guruGate1FinalConfirmedV259(catalogProduct);
   const exported = guruGate1FinalExportEntriesV279(catalogProduct);
   const finalByKey = new Map(exported.map((entry) =>
@@ -42171,61 +42220,33 @@ function g4sbV128SourcePhraseRows(product, draft) {
   const rows = new Map();
   confirmed.forEach((entry) => {
     const key = keyOf(entry.value);
-    if (!key || rows.has(key)) return;
+    if (!key || pendingKeys.has(key) || rows.has(key)) return;
     const source = finalByKey.get(key) || {};
     rows.set(key, g4sbKeywordRow({
       ...source,
-      kw: String(selectedByKey.get(key)?.kw || entry.value),
+      kw: entry.value,
     }));
   });
   g4sbItemJtbdList(product, catalogProduct.id).forEach((jtbd) => {
     g4sbV386JtbdPhraseRows(product, jtbd.id).forEach((row) => {
       const key = keyOf(row.kw);
-      if (key && !rows.has(key)) rows.set(key, row);
+      if (key && !pendingKeys.has(key) && !rows.has(key)) rows.set(key, row);
     });
-  });
-  (itemData.demandRows || []).forEach((row) => {
-    if (!draft?.jtbdId || row?.searchJtbdIdV394 !== draft.jtbdId) return;
-    const key = keyOf(row.kw);
-    if (key && !rows.has(key)) rows.set(key, g4sbKeywordRow(row));
-  });
-  // Подтверждённые фразы читают числа из финального экспорта Gate 1.
-  // Явно выбранные вручную фразы Gate 4 сохраняют собственные числа,
-  // не выдавая их за метрики финального фундамента.
-  selected.forEach((selectedRow) => {
-    const key = keyOf(selectedRow?.kw);
-    if (!key || rows.has(key)) return;
-    // Фраза, добавленная вручную в Поиске, ещё не входит в финальный
-    // фундамент. Её собственные числа не должны исчезать при перерисовке.
-    const source = finalByKey.get(key) ||
-      (selectedRow.originStage === "gate4" ? selectedRow : {});
-    rows.set(key, g4sbKeywordRow({ ...source, kw: selectedRow.kw }));
   });
   return [...rows.values()];
 }
 
 function g4sbV385RefreshDraftMetrics(draft, sourceRows) {
   const byKey = new Map(sourceRows.map((row) => [guruV247KeywordNormalize(row.kw), row]));
-  const previousSource = draft.gate1MetricSnapshotV408 =
-    draft.gate1MetricSnapshotV408 && typeof draft.gate1MetricSnapshotV408 === "object"
-      ? draft.gate1MetricSnapshotV408 : {};
+  delete draft.gate1MetricSnapshotV408;
   [draft?.keywordRows, draft?.forecastBaselineRows].forEach((rows) => {
     if (!Array.isArray(rows)) return;
     rows.forEach((row) => {
       const key = guruV247KeywordNormalize(row?.kw);
       const source = byKey.get(key);
       if (!source) return;
-      const last = previousSource[key] = previousSource[key] || {};
       ["vol", "forecastClicks", "forecastBudget"].forEach((field) => {
-        const current = String(row[field] ?? "");
-        const next = String(source[field] ?? "");
-        // Заполненные метрики из существующего черновика или импорта
-        // сохраняются. Дальше синхронизируем только значения, которые
-        // пользователь не менял относительно прошлого снимка Gate 1.
-        if (!current.trim() ||
-            (Object.hasOwn(last, field) && current === last[field]))
-          row[field] = next;
-        last[field] = next;
+        row[field] = String(source[field] ?? "");
       });
     });
   });
@@ -42465,7 +42486,11 @@ function g4sbV393ApplyGroupMetricImport(productId, d, draft, parsed, fileName) {
     const key = guruV247KeywordNormalize(imported.phrase);
     let draftRow = selected.get(key);
     if (!draftRow) {
-      const localOwner = byKey.get(key)?.searchJtbdIdV394;
+      const assignment = guruGate1JtbdAssignmentV274(itemData, key);
+      const localOwner = assignment?.target === "primary"
+        ? `primary:${productId}`
+        : assignment?.target === "additional"
+          ? assignment.additional_jtbd_id : "";
       const occupiedRecord = (usage.get(g4sbV128PhraseKey(imported.phrase)) || [])
         .find((record) => record.sameCampaign);
       if (occupiedRecord || otherDraftKeys.has(key) ||
@@ -42495,13 +42520,10 @@ function g4sbV393ApplyGroupMetricImport(productId, d, draft, parsed, fileName) {
         vol: "", queryCount: "", forecastClicks: "", clickPrice: "",
         bid: "", forecastBudget: "",
         originStage,
-        searchJtbdIdV394: originStage === "gate4" ? draft.jtbdId : "",
       };
       itemData.demandRows.push(sourceRow);
       byKey.set(key, sourceRow);
     }
-    if (!available.has(key) && !sourceRow.searchJtbdIdV394)
-      sourceRow.searchJtbdIdV394 = draft.jtbdId;
     columns.forEach(([, field, parsedField]) => {
       const importedValue = imported[parsedField];
       if (importedValue === undefined || importedValue === null ||
@@ -42512,6 +42534,8 @@ function g4sbV393ApplyGroupMetricImport(productId, d, draft, parsed, fileName) {
     });
     if (sourceRow.originStage !== "gate4")
       sourceRow.finalFoundationImportedAtV259 = new Date().toISOString();
+    if (draft.jtbdId)
+      g4sbV411UpdateManualPhraseOwner(productId, key, draft.jtbdId);
     if (draftRow) {
       updated += 1;
       importedKeys.add(key);
@@ -42562,10 +42586,7 @@ function g4sbV128PhraseSelectorHtml(product, d, draft, p, jtbd) {
     [g4sbV128PhraseKey(row.kw), index]));
   const assigned = assignedOrder && new Set(assignedOrder.keys());
   const sourceRows = allSourceRows.filter((row) =>
-    !deleted.has(g4sbV128PhraseKey(row.kw)) &&
-    (!assigned || assigned.has(g4sbV128PhraseKey(row.kw)) ||
-      row.searchJtbdIdV394 === draft.jtbdId ||
-      selected.has(g4sbV128PhraseKey(row.kw))));
+    !assigned || assigned.has(g4sbV128PhraseKey(row.kw)));
   if (assignedOrder) sourceRows.sort((left, right) => {
     const leftIndex = assignedOrder.get(g4sbV128PhraseKey(left.kw));
     const rightIndex = assignedOrder.get(g4sbV128PhraseKey(right.kw));
@@ -42578,7 +42599,6 @@ function g4sbV128PhraseSelectorHtml(product, d, draft, p, jtbd) {
     '<div class="g1-empty">В Фундаменте Gate 1 пока нет фраз. Импортируйте файл или добавьте фразу вручную.</div>';
   const excluded = new Set((d.excludedCampaignPhrases || []).map(g4sbV128PhraseKey));
   const usage = g4sbV128PhraseUsage(product, d, draft);
-  const earlierPhraseKeys = g4sbV403EarlierPhraseKeys(product, d, draft);
   const selectedRows = sourceRows.filter((row) => selected.has(g4sbV128PhraseKey(row.kw)));
   const groupCost = g4sbV392GroupCost(draft.keywordRows || []);
   const highestOverpay = selectedRows
@@ -42589,9 +42609,11 @@ function g4sbV128PhraseSelectorHtml(product, d, draft, p, jtbd) {
     ? `<div class="g4-v392-overpay-note" data-g4sb-top-overpay><strong>Переплата: «${escapeHtml(highestOverpay.row.kw)}» · индекс ${g4sbV392CostNumber(highestOverpay.cost.index)}</strong><span>Действие: минус-слова или лимит ставки</span></div>`
     : "";
   const isOccupied = (row) => (usage.get(g4sbV128PhraseKey(row.kw)) || []).some((record) => record.sameCampaign);
+  // Keep every active Gate 1 phrase for this JTBD visible, including phrases
+  // already used by another group. Membership is shown in the status column.
   let visibleRows = sourceRows.filter((row) => {
     const key = g4sbV128PhraseKey(row.kw);
-    return selected.has(key) || (!excluded.has(key) && !isOccupied(row));
+    return selected.has(key) || deleted.has(key) || !excluded.has(key);
   });
   if (draft.phraseSort === "clicks_desc") {
     visibleRows = visibleRows
@@ -42626,6 +42648,7 @@ function g4sbV128PhraseSelectorHtml(product, d, draft, p, jtbd) {
   const tableRows = visibleRows.map((row) => {
     const key = g4sbV128PhraseKey(row.kw);
     const isSelected = selected.has(key);
+    const isGate1Assigned = Boolean(assigned?.has(key));
     const cost = g4sbV392PhraseCost(row, groupCost.cpc);
     const [costLabel, costAction] = G4_V392_COST_STATUS[cost.status];
     const records = usage.get(key) || [];
@@ -42633,14 +42656,19 @@ function g4sbV128PhraseSelectorHtml(product, d, draft, p, jtbd) {
     const otherCampaignRecords = records.filter((record) => !record.sameCampaign);
     const occupied = sameCampaignRecords.length > 0;
     const isExcluded = excluded.has(key);
+    const isDeleted = deleted.has(key);
     const status = isSelected
       ? "В этой группе"
+      : isDeleted
+        ? "Удалена из кампании"
       : occupied
         ? `В группе «${sameCampaignRecords[0].group}»`
         : isExcluded
           ? "Исключена для всей кампании"
           : "Не распределена";
-    const locations = occupied
+    const locations = isDeleted
+      ? "Остаётся в Gate 1. Верните фразу, чтобы снова включить её в кампанию."
+      : occupied
       ? `Фраза уже используется в группе «${sameCampaignRecords[0].group}»`
       : isSelected
         ? "Выбрана для создаваемой группы"
@@ -42649,15 +42677,18 @@ function g4sbV128PhraseSelectorHtml(product, d, draft, p, jtbd) {
           : isExcluded
             ? "Остаётся в банке, но не участвует в этой кампании"
             : "Ожидает распределения в подходящую группу";
-    const isLowerDuplicate = isSelected && earlierPhraseKeys.has(key);
-    const action = occupied && !isSelected
+    const action = isGate1Assigned
+      ? '<small class="g4-v137-hidden-note" title="Принадлежность фразы управляется в Gate 1">Из Gate 1</small>'
+      : isDeleted
+      ? `<button type="button" class="g4-v147-action" ${p} data-g4sb-restore-bank-phrase="${escapeAttr(row.kw)}" title="Вернуть фразу из Gate 1 в поисковую кампанию">Вернуть</button>`
+      : occupied && !isSelected
       ? ""
-      : `<div class="g4-v147-action-group">${isSelected
-        ? `<button type="button" class="g4-v147-action" ${p} data-g4sb-remove-from-draft="${escapeAttr(row.kw)}">Убрать</button>${isLowerDuplicate ? `<button type="button" class="g4-v147-action" ${p} data-g4sb-remove-from-draft="${escapeAttr(row.kw)}">Убрать дубль</button>` : ""}`
-        : `<button type="button" class="g4-v147-action" ${p} data-g4sb-campaign-phrase-exclusion="${escapeAttr(row.kw)}">${isExcluded ? "Вернуть" : "Исключить"}</button>`}
+      : `<div class="g4-v147-action-group${isSelected ? "" : " has-three-actions"}">${isSelected
+        ? ""
+        : `<button type="button" class="g4-v147-action" ${p} data-g4sb-add-to-draft="${escapeAttr(row.kw)}" title="Добавить фразу в эту группу">Добавить</button>`}
+        <button type="button" class="g4-v147-action" ${p} data-g4sb-campaign-phrase-exclusion="${escapeAttr(row.kw)}" title="Исключить фразу из всей поисковой кампании">Исключить</button>
         <button type="button" class="g4-v147-action is-danger" ${p} data-g4sb-delete-bank-phrase="${escapeAttr(row.kw)}">Удалить</button></div>`;
-    return `<tr class="${occupied ? "has-conflict" : isExcluded ? "is-campaign-excluded" : ""}" data-g4sb-phrase-row="${escapeAttr(key)}" data-g4sb-cost-status="${cost.status}" data-g4sb-cost-cpc="${cost.cpc ?? ""}" data-g4sb-cost-index="${cost.index ?? ""}" data-g4sb-membership-status="${escapeAttr(status)}">
-      <td><input type="checkbox" ${p} data-g4sb-phrase-select="${escapeAttr(row.kw)}" ${isSelected ? "checked" : ""} ${isExcluded ? "disabled" : ""} ${occupied ? `title="Фраза уже используется в группе «${escapeAttr(sameCampaignRecords[0].group)}»"` : ""}></td>
+    return `<tr class="${isDeleted ? "is-campaign-excluded" : occupied ? "has-conflict" : isExcluded ? "is-campaign-excluded" : ""}" data-g4sb-phrase-row="${escapeAttr(key)}" data-g4sb-cost-status="${cost.status}" data-g4sb-cost-cpc="${cost.cpc ?? ""}" data-g4sb-cost-index="${cost.index ?? ""}" data-g4sb-membership-status="${escapeAttr(status)}">
       <td><strong>${escapeHtml(row.kw)}</strong>${row.source ? `<small>${escapeHtml(row.source)}</small>` : ""}<small class="g4-v392-membership-note">${escapeHtml(status)}${isSelected ? "" : ` · ${escapeHtml(locations)}`}</small></td>
       <td class="is-number"><input class="g1-input ${g4sbV171PhraseMetricClass(row, "vol")}" type="number" min="0" step="1" value="${escapeAttr(g4sbV171PhraseMetricValue(row, "vol"))}" placeholder="" ${p} data-g4sb-bank-phrase="${escapeAttr(row.kw)}" data-g4sb-bank-phrase-field="vol" aria-label="Спрос и показы в месяц"></td>
       <td class="is-number"><input class="g1-input ${g4sbV171PhraseMetricClass(row, "forecastClicks")}" type="number" min="0" step="1" value="${escapeAttr(g4sbV171PhraseMetricValue(row, "forecastClicks"))}" placeholder="" ${p} data-g4sb-bank-phrase="${escapeAttr(row.kw)}" data-g4sb-bank-phrase-field="forecastClicks" aria-label="Прогноз кликов"></td>
@@ -42680,17 +42711,20 @@ function g4sbV128PhraseSelectorHtml(product, d, draft, p, jtbd) {
   const excludedEmptyRow = `<tr><td colspan="5"><div class="g1-empty">Исключённых фраз пока нет. Исключите нужные фразы из списка группы выше.</div></td></tr>`;
   const excludedHtml = `<details class="g4-v137-separated-bank" data-ui-keeper-key="g4-excluded-campaign-phrases-${escapeAttr(product)}" ${openExcludedAfterMove ? "open" : ""}><summary>Исключённые для кампании · ${excludedRows.length}</summary><div class="g4-v141-excluded-tools"><p>Фразы не удалены из банка семантики. Значения сохраняются и вернутся вместе с фразой в распределение.</p><div class="g4-v170-excluded-actions">${excludedRows.length ? `<button type="button" class="small-btn" ${p} data-g4sb-copy-excluded>Копировать все фразы</button>` : ""}<label class="g4-v171-excluded-sort"><span>Порядок</span><select class="g4-v142-compact-input" ${p} data-g4sb-draft-oper="excludedPhraseSort"><option value="source"${draft.excludedPhraseSort !== "clicks_desc" ? " selected" : ""}>Исходный</option><option value="clicks_desc"${draft.excludedPhraseSort === "clicks_desc" ? " selected" : ""}>Прогноз кликов: больше → меньше</option></select></label></div></div><div class="g1-table-scroll g4-v128-selector g4-v150-excluded-table"><table><thead><tr><th>Ключевая фраза</th><th>Спрос-показы/мес.</th><th>Клики</th><th>Бюджет, ₽</th><th>Действие</th></tr></thead><tbody>${excludedTableRows || excludedEmptyRow}</tbody></table></div></details>`;
   const occupiedNote = occupiedRows.length
-    ? `<div class="g4-v137-hidden-note">Уже распределены в другие группы и скрыты из списка: ${occupiedRows.length}.</div>`
+    ? `<div class="g4-v137-hidden-note">Уже закреплены за другими группами: ${occupiedRows.length}. Эти фразы показаны в списке со статусом их группы.</div>`
     : "";
   const warning = draft.phraseConflictMessage
     ? `<div class="g4-v128-conflict" role="alert"><div><strong>Фраза занята другой группой</strong>${g4sbPhraseConflictHtml(product, draft)}</div></div>`
     : "";
-  const copyCount = selectedRows.length;
+  const copyCount = g4sbV397SelectedPhraseTexts(draft).length;
+  const gate1Count = assignedRows?.length || 0;
+  const deletedGate1Count = assignedRows?.filter((row) =>
+    deleted.has(g4sbV128PhraseKey(row.kw))).length || 0;
   const metricsFeedback = g4sbV393MetricImportFeedback.get(draft);
   const metricsMessage = metricsFeedback
     ? `<div class="g4-v393-metric-feedback ${metricsFeedback.error ? "is-error" : "is-success"}" role="${metricsFeedback.error ? "alert" : "status"}"><div><strong>${metricsFeedback.error ? "Импорт не выполнен" : "Фразы и метрики группы импортированы"}</strong><span>${escapeHtml(metricsFeedback.error || `Обновлено: ${metricsFeedback.updated}. Добавлено в группу: ${metricsFeedback.added}. Пропущено: ${metricsFeedback.skipped}${metricsFeedback.occupied ? ` (заняты другой группой: ${metricsFeedback.occupied})` : ""}${metricsFeedback.excluded ? ` (исключены для кампании: ${metricsFeedback.excluded})` : ""}${metricsFeedback.overLimit ? ` (лимит 200: ${metricsFeedback.overLimit})` : ""}. Служебных строк: ${metricsFeedback.service}.`)}</span></div></div>`
     : "";
-  return `<p class="g1-task">Показаны только свободные фразы и фразы этой группы. Уже распределённые скрыты, исключённые хранятся отдельно. Удаление действует только на банк этой поисковой кампании и не уничтожает источник Gate 1.</p>
+  return `<p class="g1-task">В Gate 1 для этого JTBD: ${gate1Count} фраз. В группе сейчас: ${copyCount}${deletedGate1Count ? `. Удалено из кампании: ${deletedGate1Count} — эти слова видны ниже и их можно вернуть` : ""}. Исключённые для кампании хранятся отдельно.</p>
     ${warning}
     ${occupiedNote}
     <div class="g4-v143-phrase-tools"><div class="g4-v393-metric-actions"><button type="button" class="small-btn" ${p} data-g4sb-group-metrics-export ${copyCount ? "" : "disabled"}>Экспорт CSV</button><button type="button" class="small-btn" ${p} data-g4sb-group-metrics-import>Импорт CSV/XLS/XLSX с метриками</button><input class="gate0-keyword-csv-file-v248" type="file" accept=".csv,.xls,.xlsx,text/csv,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ${p} data-g4sb-group-metrics-file></div><button type="button" class="small-btn" ${p} data-g4sb-copy-group-phrases ${copyCount ? "" : "disabled"}>Копировать все фразы группы · ${copyCount}</button><label><span>Порядок</span><select class="g4-v142-compact-input" ${p} data-g4sb-draft-oper="phraseSort"><option value="source"${draft.phraseSort !== "clicks_desc" ? " selected" : ""}>Исходный</option><option value="clicks_desc"${draft.phraseSort === "clicks_desc" ? " selected" : ""}>Прогноз кликов: больше → меньше</option></select></label></div>
@@ -42702,8 +42736,8 @@ function g4sbV128PhraseSelectorHtml(product, d, draft, p, jtbd) {
     ${emptyBankNote}
     ${overpayNote}
     <div class="g1-table-scroll g4-v128-selector"><table>
-      <thead><tr><th>Выбор</th><th>Ключевая фраза</th><th>Спрос-показы/мес.</th><th>Клики</th><th>Бюджет, ₽</th><th>CPC, ₽</th><th>Индекс</th><th>Статус</th><th>Действие</th></tr></thead>
-      <tbody>${tableRows || '<tr><td colspan="9"><div class="g1-empty">Свободных фраз пока нет. Добавьте новую фразу ниже.</div></td></tr>'}</tbody>
+      <thead><tr><th>Ключевая фраза</th><th>Спрос-показы/мес.</th><th>Клики</th><th>Бюджет, ₽</th><th>CPC, ₽</th><th>Индекс</th><th>Статус</th><th>Действие</th></tr></thead>
+      <tbody>${tableRows || '<tr><td colspan="8"><div class="g1-empty">Свободных фраз пока нет. Добавьте новую фразу ниже.</div></td></tr>'}</tbody>
     </table></div>
     <div class="g4-v137-manual-phrase"><label><span>Добавить ключевую фразу</span><input type="text" ${p} data-g4sb-manual-phrase data-guru-field-neutral placeholder="Введите новую ключевую фразу"></label><button type="button" class="small-btn add-inline-btn" ${p} data-g4sb-manual-phrase-add>+ Добавить фразу</button></div>
     ${excludedHtml}`;
@@ -42726,11 +42760,12 @@ g4sbClusterAssemblyHtml = function (product, d) {
     : (draft.keywordRows = []);
   g4sbV385RefreshDraftMetrics(draft, g4sbV128SourcePhraseRows(product, draft));
   const filledRows = keywordRows.filter((row) => String(row.kw || "").trim());
+  const phraseCount = g4sbV397SelectedPhraseTexts(draft).length;
   const currentForecast = g4sbV128Forecast(filledRows, draft);
   draft.col2 = currentForecast.hasPhraseImpressions ? String(currentForecast.impressions) : "";
   draft.col3 = currentForecast.hasPhraseClicks ? String(currentForecast.clicks) : "";
   draft.col4 = currentForecast.hasPhraseBudget ? String(currentForecast.budget) : "";
-  const saveAssessment = g4sbV140ForecastAssessment(draft, filledRows.length, d.settings || {}, product);
+  const saveAssessment = g4sbV140ForecastAssessment(draft, phraseCount, d.settings || {}, product);
   const saveBlocked = saveAssessment.phraseLimitExceeded || saveAssessment.blockingErrors.length > 0;
   return `<div class="g4-upstream g4-v126-editor">
     <div class="g4-upstream-title">${draft.editingClusterId ? "Редактирование группы объявлений" : "Создание группы объявлений"}</div>
@@ -42742,7 +42777,7 @@ g4sbClusterAssemblyHtml = function (product, d) {
       ${g4ReadonlyRow("Название группы", fixedGroupName, "равно JTBD")}
     </section>
     <div class="g4-v126-keywords"><div class="g4-upstream-title">3. Ключевые фразы группы</div>${g4sbV128PhraseSelectorHtml(product, d, draft, p, fixedGroupName)}</div>
-    ${g4sbV127DraftOperationsHtml(product, draft, filledRows.length, fixedGroupName)}
+    <div class="g4-v127-draft-operations">${g4sbV127DraftOperationsHtml(product, draft, phraseCount, fixedGroupName)}</div>
     ${draft.validationError && draft.validationErrorKind !== "phrase_conflict" ? `<div class="g4-v126-validation" role="alert">${escapeHtml(draft.validationError)}</div>` : ""}
     <div class="g4-v126-actions">
       <button class="small-btn add-inline-btn" ${p} data-g4sb-draft-save ${saveBlocked ? "disabled" : ""}>${draft.editingClusterId ? "Сохранить группу" : "Создать группу"}</button>
@@ -43530,6 +43565,8 @@ function projectComparisonProductNode(product) {
 }
 
 function updateProjectComparisonInput(target) {
+  if (!target?.matches?.("[data-project-comparison-competitor], [data-project-comparison-criterion], [data-project-comparison-cell], [data-project-comparison-summary]"))
+    return false;
   const model = ensureProjectComparison();
   if (!model) return false;
   if (target.dataset.projectComparisonCompetitor) {
@@ -43798,6 +43835,41 @@ function g4sbV131LaunchPriorities(groups) {
 
 /* v1.26.1 — покрытие становится рабочим контейнером: сегмент,
    его JTBD и группы редактируются в одном месте. */
+function g4sbV166JtbdPhraseSummary(d, jtbdId, groups) {
+  const draft = g4sbV405JtbdDraft(d, jtbdId);
+  const hasNewDraft = g4sbV405WorkingDraft(draft) && !draft.editingClusterId;
+  const groupSummary = groups.length
+    ? `${groups.length} ${groups.length === 1 ? "группа" : "группы"}${hasNewDraft ? " + черновик" : ""}`
+    : hasNewDraft ? "Черновик группы" : "Нет групп";
+  const keys = new Set();
+  let editingGroupFound = false;
+  const addRows = (rows) => (rows || []).forEach((row) => {
+    const key = g4sbV128PhraseKey(row?.kw);
+    if (key) keys.add(key);
+  });
+  groups.forEach(({ row }) => {
+    const groupId = row.groupId || row.clusterId;
+    const editing = draft?.open && draft.editingClusterId === groupId;
+    if (editing) editingGroupFound = true;
+    addRows(editing ? draft.keywordRows : row.demandRows);
+  });
+  if (draft?.open && (hasNewDraft || (draft.editingClusterId && !editingGroupFound)))
+    addRows(draft.keywordRows);
+  const count = keys.size;
+  const phraseLabel = count % 100 >= 11 && count % 100 <= 14 ? "фраз" :
+    count % 10 === 1 ? "фраза" : count % 10 >= 2 && count % 10 <= 4 ? "фразы" : "фраз";
+  return `${groupSummary} · ${count} ${phraseLabel}`;
+}
+
+function g4sbV166RefreshJtbdPhraseSummary(product, d, card) {
+  const jtbdId = card?.dataset.g4sbJtbdId;
+  const label = card?.querySelector(":scope > summary [data-g4sb-jtbd-phrase-summary]");
+  if (!jtbdId || !label) return;
+  const groups = (d.groupRows || []).map((row, index) => ({ row, index }))
+    .filter(({ row }) => g4sbV166GroupJtbdKey(product, row) === jtbdId);
+  label.textContent = g4sbV166JtbdPhraseSummary(d, jtbdId, groups);
+}
+
 g4sbSegmentCoverageHtml = function (product, d) {
   const segments = g4sbAllSegmentsFlat(product);
   if (!segments.length) {
@@ -44106,37 +44178,49 @@ document.addEventListener("click", (event) => {
   renderGate();
 });
 
-document.addEventListener("change", (event) => {
-  const target = event.target;
-  if (target?.dataset?.g4sbPhraseSelect === undefined) return;
-  const product = target.dataset.g4sbProduct;
+function g4sbV128DraftForPhraseControl(d, control) {
+  const jtbdId = control.closest(".g4-v166-jtbd[data-g4sb-jtbd-id]")
+    ?.dataset.g4sbJtbdId;
+  if (!jtbdId || d.clusterDraft?.jtbdId === jtbdId) return d.clusterDraft;
+  return d.jtbdDraftsV388?.[jtbdId] || null;
+}
+
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-g4sb-add-to-draft]");
+  if (!button) return;
+  event.preventDefault();
+  const product = button.dataset.g4sbProduct;
   const d = ensureGate4SearchBuild(product);
-  const draft = d.clusterDraft;
-  const phrase = target.dataset.g4sbPhraseSelect;
+  const draft = g4sbV128DraftForPhraseControl(d, button);
+  if (!draft?.open) return;
+  const phrase = button.dataset.g4sbAddToDraft;
   const key = g4sbV128PhraseKey(phrase);
-  const usage = g4sbV128PhraseUsage(product, d, draft).get(key) || [];
-  const occupied = usage.find((record) => record.sameCampaign);
-  if (target.checked && occupied) {
-    target.checked = false;
+  const rows = Array.isArray(draft.keywordRows) ? draft.keywordRows : (draft.keywordRows = []);
+  if (rows.some((row) => g4sbV128PhraseKey(row.kw) === key)) return;
+  const occupied = (g4sbV128PhraseUsage(product, d, draft).get(key) || [])
+    .find((record) => record.sameCampaign);
+  if (occupied) {
     g4sbSetPhraseConflict(draft, occupied, phrase);
+  } else if (rows.length >= 200) {
+    draft.validationError = "В группе может быть не более 200 ключевых фраз.";
+  } else {
+    const source = g4sbV128SourcePhraseRows(product, draft).find((row) =>
+      g4sbV128PhraseKey(row.kw) === key);
+    rows.push(g4sbKeywordRow(source || { kw: phrase }));
+    if (draft.jtbdId)
+      g4sbV411UpdateManualPhraseOwner(product, key, draft.jtbdId);
+    g4sbClearPhraseConflict(draft);
     draft.validationError = "";
     draft.validationErrorKind = "";
-    flashSaving();
-    renderGate();
-    return;
   }
-  const sourceRow = g4sbV128SourcePhraseRows(product, draft).find(
-    (row) => g4sbV128PhraseKey(row.kw) === key,
-  ) || g4sbKeywordRow({ kw: phrase });
-  const rows = Array.isArray(draft.keywordRows) ? draft.keywordRows : (draft.keywordRows = []);
-  const index = rows.findIndex((row) => g4sbV128PhraseKey(row.kw) === key);
-  if (target.checked && index === -1) rows.push(g4sbKeywordRow(sourceRow));
-  if (!target.checked && index !== -1) rows.splice(index, 1);
-  g4sbClearPhraseConflict(draft);
-  draft.validationError = "";
-  draft.validationErrorKind = "";
-  flashSaving();
-  renderGate();
+  d.clusterDraft = draft;
+  d.activeJtbdId = draft.jtbdId;
+  g4sbV411RefreshDraftForecast(draft);
+  const refreshed = g4sbV448WithEditorReadCache(product, draft, () =>
+    g4sbV128RefreshPhraseActionUi(product, d, draft, button));
+  guruPersistStateFast({ durable: true });
+  guruScheduleDerivedRefresh();
+  if (!refreshed) renderGate();
 });
 
 document.addEventListener("click", (event) => {
@@ -44173,13 +44257,15 @@ document.addEventListener("click", (event) => {
     (row) => g4sbV128PhraseKey(row.kw) === key,
   );
   if (!sourceRow) g4sbSyncKeywordRowsToGate1(product, draft.itemId, [g4sbKeywordRow({
-    kw: phrase, originStage: "gate4", searchJtbdIdV394: draft.jtbdId,
+    kw: phrase, originStage: "gate4",
   })]);
   if (!Array.isArray(draft.keywordRows)) draft.keywordRows = [];
   if (!draft.keywordRows.some((row) => g4sbV128PhraseKey(row.kw) === key))
     draft.keywordRows.push(g4sbKeywordRow(sourceRow || {
-      kw: phrase, originStage: "gate4", searchJtbdIdV394: draft.jtbdId,
+      kw: phrase, originStage: "gate4",
     }));
+  if (draft.jtbdId)
+    g4sbV411UpdateManualPhraseOwner(product, key, draft.jtbdId);
   g4sbClearPhraseConflict(draft);
   draft.validationError = "";
   draft.validationErrorKind = "";
@@ -44201,13 +44287,7 @@ function g4sbV152MovePhraseToCampaignExclusions(product, d, phrase, draft = d.cl
   // Фраза, принадлежащая другой группе, не становится исключением всей кампании.
   if (!otherGroupOwnsPhrase && !excluded.some((value) => g4sbV128PhraseKey(value) === key))
     excluded.push(key);
-  if (!otherGroupOwnsPhrase) {
-    // Если список уже есть на странице, раскрываем его до снимка UI Keeper.
-    // Если это первая исключённая фраза, флаг раскроет новый блок при рендере.
-    const excludedDetails = document.querySelector(".g4-v137-separated-bank");
-    if (excludedDetails) excludedDetails.open = true;
-    else d._g4V152OpenExcludedAfterMove = true;
-  }
+  if (!otherGroupOwnsPhrase) d._g4V152OpenExcludedAfterMove = true;
 
   // При редактировании существующей группы действие применяется сразу,
   // иначе отмена формы могла бы оставить фразу одновременно в группе и
@@ -44239,38 +44319,56 @@ function g4sbV152MovePhraseToCampaignExclusions(product, d, phrase, draft = d.cl
 }
 
 document.addEventListener("click", (event) => {
-  const target = event.target;
-  if (target?.dataset?.g4sbCampaignPhraseExclusion === undefined) return;
+  const target = event.target?.closest?.("[data-g4sb-campaign-phrase-exclusion]");
+  if (!target) return;
+  event.preventDefault();
   const product = target.dataset.g4sbProduct;
   const d = ensureGate4SearchBuild(product);
-  const draft = d.clusterDraft;
+  const draft = g4sbV128DraftForPhraseControl(d, target);
+  if (!draft?.open) return;
   const phrase = target.dataset.g4sbCampaignPhraseExclusion;
   const key = g4sbV128PhraseKey(phrase);
+  if (g4sbV386JtbdPhraseRows(product, draft.jtbdId).some((row) =>
+    g4sbV128PhraseKey(row.kw) === key)) return;
   const selected = (draft.keywordRows || []).some((row) => g4sbV128PhraseKey(row.kw) === key);
   const occupied = (g4sbV128PhraseUsage(product, d, draft).get(key) || []).find((record) => record.sameCampaign);
   if (occupied) {
     g4sbSetPhraseConflict(draft, occupied, phrase);
-    flashSaving();
-    renderGate();
-    return;
+  } else if (selected) {
+    g4sbV152MovePhraseToCampaignExclusions(product, d, phrase, draft);
+    const details = target.closest(".g4-v126-editor")
+      ?.querySelector(".g4-v137-separated-bank");
+    if (details) details.open = true;
+  } else {
+    const excluded = d.excludedCampaignPhrases = Array.isArray(d.excludedCampaignPhrases)
+      ? d.excludedCampaignPhrases : [];
+    const position = excluded.findIndex((value) => g4sbV128PhraseKey(value) === key);
+    if (position === -1) excluded.push(key);
+    else excluded.splice(position, 1);
+    g4sbClearPhraseConflict(draft);
+    draft.validationError = "";
+    draft.validationErrorKind = "";
   }
-  if (selected) {
-    g4sbV152MovePhraseToCampaignExclusions(product, d, phrase);
-    flashSaving();
-    renderGate();
-    return;
+  d.clusterDraft = draft;
+  d.activeJtbdId = draft.jtbdId;
+  g4sbV560SyncGate1PhraseGroups(product);
+  // Возврат из исключений может снова закрепить фразу за сохранённой
+  // группой через Gate 1. Редактор той же группы должен видеть её сразу.
+  if (!selected && draft.editingClusterId &&
+      !(d.excludedCampaignPhrases || []).some((value) => g4sbV128PhraseKey(value) === key)) {
+    const group = (d.groupRows || []).find((row) =>
+      row.groupId === draft.editingClusterId || row.clusterId === draft.editingClusterId);
+    const restored = (group?.demandRows || []).find((row) =>
+      g4sbV128PhraseKey(row.kw) === key);
+    if (restored && !(draft.keywordRows || []).some((row) =>
+      g4sbV128PhraseKey(row.kw) === key))
+      draft.keywordRows.push(g4sbKeywordRow(restored));
   }
-  const excluded = d.excludedCampaignPhrases = Array.isArray(d.excludedCampaignPhrases)
-    ? d.excludedCampaignPhrases
-    : [];
-  const position = excluded.findIndex((value) => g4sbV128PhraseKey(value) === key);
-  if (position === -1) excluded.push(key);
-  else excluded.splice(position, 1);
-  g4sbClearPhraseConflict(draft);
-  draft.validationError = "";
-  draft.validationErrorKind = "";
-  flashSaving();
-  renderGate();
+  const refreshed = g4sbV448WithEditorReadCache(product, draft, () =>
+    g4sbV128RefreshPhraseActionUi(product, d, draft, target));
+  guruPersistStateFast({ durable: true });
+  guruScheduleDerivedRefresh();
+  if (!refreshed) renderGate();
 });
 
 async function g4sbV141CopyText(text) {
@@ -44416,19 +44514,6 @@ document.addEventListener("click", async (event) => {
     button.textContent = initialLabel;
     button.disabled = false;
   }, 1600);
-});
-
-document.addEventListener("click", (event) => {
-  const button = event.target?.closest?.("[data-g4sb-remove-from-draft]");
-  if (!button) return;
-  const product = button.dataset.g4sbProduct;
-  const d = ensureGate4SearchBuild(product);
-  const jtbdId = button.closest(".g4-v166-jtbd[data-g4sb-jtbd-id]")?.dataset.g4sbJtbdId;
-  const draft = jtbdId ? d.jtbdDraftsV388?.[jtbdId] : d.clusterDraft;
-  g4sbV152MovePhraseToCampaignExclusions(product, d, button.dataset.g4sbRemoveFromDraft,
-    draft || d.clusterDraft);
-  flashSaving();
-  renderGate();
 });
 
 /* ================================================================
@@ -45430,31 +45515,73 @@ document.addEventListener("click", (event) => {
 document.addEventListener("click", (event) => {
   const button = event.target?.closest?.("[data-g4sb-delete-bank-phrase]");
   if (!button) return;
+  event.preventDefault();
   const product = button.dataset.g4sbProduct;
   const d = ensureGate4SearchBuild(product);
+  const draft = g4sbV128DraftForPhraseControl(d, button);
+  if (!draft?.open) return;
   const phrase = String(button.dataset.g4sbDeleteBankPhrase || "").trim();
   const key = g4sbV128PhraseKey(phrase);
-  const occupied = (g4sbV128PhraseUsage(product, d, d.clusterDraft).get(key) || [])
+  if (g4sbV386JtbdPhraseRows(product, draft.jtbdId).some((row) =>
+    g4sbV128PhraseKey(row.kw) === key)) return;
+  const occupied = (g4sbV128PhraseUsage(product, d, draft).get(key) || [])
     .find((record) => record.sameCampaign);
   if (occupied) {
-    g4sbSetPhraseConflict(d.clusterDraft, occupied, phrase, "Сначала освободите её.");
-    renderGate();
+    g4sbSetPhraseConflict(draft, occupied, phrase, "Сначала освободите её.");
+    const refreshed = g4sbV448WithEditorReadCache(product, draft, () =>
+      g4sbV128RefreshPhraseActionUi(product, d, draft, button));
+    if (!refreshed) renderGate();
     return;
   }
   if (!window.confirm(`Удалить фразу «${phrase}» из банка этой поисковой кампании?`)) return;
   d.deletedBankPhrases = Array.isArray(d.deletedBankPhrases) ? d.deletedBankPhrases : [];
   if (!d.deletedBankPhrases.some((value) => g4sbV128PhraseKey(value) === key)) d.deletedBankPhrases.push(key);
-  d.clusterDraft.keywordRows = (d.clusterDraft.keywordRows || [])
+  draft.keywordRows = (draft.keywordRows || [])
     .filter((row) => g4sbV128PhraseKey(row.kw) !== key);
-  d.clusterDraft.forecastBaselineRows = (d.clusterDraft.forecastBaselineRows || [])
+  draft.forecastBaselineRows = (draft.forecastBaselineRows || [])
     .filter((row) => g4sbV128PhraseKey(row.kw) !== key);
   d.excludedCampaignPhrases = (d.excludedCampaignPhrases || [])
     .filter((value) => g4sbV128PhraseKey(value) !== key);
-  g4sbClearPhraseConflict(d.clusterDraft);
-  d.clusterDraft.validationError = "";
-  d.clusterDraft.validationErrorKind = "";
-  flashSaving();
-  renderGate();
+  g4sbClearPhraseConflict(draft);
+  draft.validationError = "";
+  draft.validationErrorKind = "";
+  d.clusterDraft = draft;
+  d.activeJtbdId = draft.jtbdId;
+  g4sbV560SyncGate1PhraseGroups(product);
+  g4sbV411RefreshDraftForecast(draft);
+  const refreshed = g4sbV448WithEditorReadCache(product, draft, () =>
+    g4sbV128RefreshPhraseActionUi(product, d, draft, button));
+  guruPersistStateFast({ durable: true });
+  guruScheduleDerivedRefresh();
+  if (!refreshed) renderGate();
+});
+
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-g4sb-restore-bank-phrase]");
+  if (!button) return;
+  event.preventDefault();
+  const product = button.dataset.g4sbProduct;
+  const d = ensureGate4SearchBuild(product);
+  const draft = g4sbV128DraftForPhraseControl(d, button);
+  if (!draft?.open) return;
+  const key = g4sbV128PhraseKey(button.dataset.g4sbRestoreBankPhrase);
+  const source = g4sbV386JtbdPhraseRows(product, draft.jtbdId)
+    .find((row) => g4sbV128PhraseKey(row.kw) === key);
+  if (!source) return;
+  d.deletedBankPhrases = (d.deletedBankPhrases || [])
+    .filter((value) => g4sbV128PhraseKey(value) !== key);
+  if (!draft.editingClusterId && !(draft.keywordRows || []).some((row) =>
+    g4sbV128PhraseKey(row.kw) === key))
+    draft.keywordRows.push(g4sbKeywordRow(source));
+  d.clusterDraft = draft;
+  d.activeJtbdId = draft.jtbdId;
+  g4sbV560SyncGate1PhraseGroups(product);
+  g4sbV411RefreshDraftForecast(draft);
+  const refreshed = g4sbV448WithEditorReadCache(product, draft, () =>
+    g4sbV128RefreshPhraseActionUi(product, d, draft, button));
+  guruPersistStateFast({ durable: true });
+  guruScheduleDerivedRefresh();
+  if (!refreshed) renderGate();
 });
 
 document.addEventListener("click", async (event) => {
@@ -46478,6 +46605,8 @@ function g4sbV405LaunchSummaryHtml(product, d, duplicateCount) {
 }
 
 g4sbSegmentCoverageHtml = function (product, d) {
+  if (g4sbV560SyncGate1PhraseGroups(product, null, d))
+    guruScheduleUiPreferenceSave();
   delete d._g4V1261EditorRenderedInline;
   const jtbds = g4sbV166DirectionJtbds(product);
   const openDraftJtbd = d.clusterDraft?.open && (
@@ -46517,14 +46646,9 @@ g4sbSegmentCoverageHtml = function (product, d) {
   const jtbdHtml = jtbds.map((jtbd, jtbdIndex) => {
     const groups = groupsByJtbd.get(jtbd.key) || [];
     const isOpen = openIds.has(jtbd.key);
-    const sourceRows = g4sbV386JtbdPhraseRows(product, jtbd.key);
     if (isOpen) g4sbV166ActivateDraft(product, d, jtbd);
     const readiness = g4sbV166JtbdReadiness(product, d, jtbd, groups);
-    const draft = g4sbV405JtbdDraft(d, jtbd.key);
-    const hasNewDraft = g4sbV405WorkingDraft(draft) && !draft.editingClusterId;
-    const groupSummary = groups.length
-      ? `${groups.length} ${groups.length === 1 ? "группа" : "группы"}${hasNewDraft ? " + черновик" : ""}`
-      : hasNewDraft ? "Черновик группы" : "Нет групп";
+    const phraseSummary = g4sbV166JtbdPhraseSummary(d, jtbd.key, groups);
     const editorIsHere = isOpen && d.clusterDraft?.open && d.clusterDraft.jtbdId === jtbd.key;
     const editor = editorIsHere ? g4sbV166EditorHtml(product, d) : "";
     if (editorIsHere)
@@ -46533,7 +46657,7 @@ g4sbSegmentCoverageHtml = function (product, d) {
       <summary class="g4-v126-jtbd-head g4-v166-jtbd-head">
         <span class="g4-v126-level">JTBD ${jtbdIndex + 1}</span>
         <strong>${escapeHtml(jtbd.text)}</strong>
-        <span class="g4-v160-jtbd-summary-actions"><span>${groupSummary} · ${sourceRows.length} фраз</span><span class="status-pill status-${readiness}" data-g4sb-jtbd-readiness="${readiness}">${escapeHtml(STATUS_LABELS[readiness])}</span><i aria-hidden="true"></i></span>
+        <span class="g4-v160-jtbd-summary-actions"><span data-g4sb-jtbd-phrase-summary>${escapeHtml(phraseSummary)}</span><span class="status-pill status-${readiness}" data-g4sb-jtbd-readiness="${readiness}">${escapeHtml(STATUS_LABELS[readiness])}</span><i aria-hidden="true"></i></span>
       </summary>
       <div class="g4-v160-jtbd-body">
         ${groups.length ? `<div class="g4-v166-groups-title">Группы объявлений · ${groups.length}</div><div class="g4-v126-groups">${groups.map(({ row, index }, groupIndex) =>
@@ -49317,6 +49441,14 @@ const G8_PROJECT_GOAL_FIELDS = [
   ["goalBudget", "Допустимый бюджет, ₽", "number"],
   ["goalAllowedCost", "Допустимая стоимость результата, ₽", "number"],
 ];
+const G8_PROJECT_GOAL_HELP = {
+  goalDescription: "Определите критерий зачёта результата (например, заявка с действующим контактом) и дату начала периода.",
+  goalMetric: "Выберите один итоговый показатель: заявки, продажи, выручка, прибыль или окупаемость.",
+  goalTargetValue: "Укажите цель за весь период в единицах показателя: например, 155 заявок или сумма выручки.",
+  goalDeadline: "Последний день периода достижения цели; начальную дату укажите в описании результата.",
+  goalBudget: "Максимальный рекламный расход за тот же период, а не сумма, которую обязательно нужно потратить.",
+  goalAllowedCost: "Максимум за один засчитанный результат: рекламные расходы ÷ число результатов, например ₽ за заявку.",
+};
 
 function isG8ProjectGoalCard(card) {
   return card?.id === G8_PROJECT_GOAL_CARD_ID;
@@ -49375,13 +49507,14 @@ function g8ProjectGoalSourceHtml() {
   const project = state.project || {};
   return `<div class="g8-goal-source">
     ${G8_PROJECT_GOAL_FIELDS.map(([key, label, type]) => {
+      const help = `<small>${escapeHtml(G8_PROJECT_GOAL_HELP[key])}</small>`;
       if (type === "metric") {
-        return `<label><strong>${escapeHtml(label)}</strong><select data-g8-project-goal="${escapeAttr(key)}"><option value="">Выберите показатель</option>${GATE8_RESULTS.filter(([value]) => value !== "goal").map(([value, text]) => `<option value="${escapeAttr(value)}" ${project[key] === value ? "selected" : ""}>${escapeHtml(text)}</option>`).join("")}</select></label>`;
+        return `<label><strong>${escapeHtml(label)}</strong><select data-g8-project-goal="${escapeAttr(key)}"><option value="">Выберите показатель</option>${GATE8_RESULTS.filter(([value]) => value !== "goal").map(([value, text]) => `<option value="${escapeAttr(value)}" ${project[key] === value ? "selected" : ""}>${escapeHtml(text)}</option>`).join("")}</select>${help}</label>`;
       }
       if (type === "text") {
-        return `<label><strong>${escapeHtml(label)}</strong><textarea rows="2" data-g8-project-goal="${escapeAttr(key)}">${escapeHtml(project[key] || "")}</textarea></label>`;
+        return `<label><strong>${escapeHtml(label)}</strong><textarea rows="2" data-g8-project-goal="${escapeAttr(key)}">${escapeHtml(project[key] || "")}</textarea>${help}</label>`;
       }
-      return `<label><strong>${escapeHtml(label)}</strong><input type="${type}" ${type === "number" ? 'min="0" step="any"' : ""} data-g8-project-goal="${escapeAttr(key)}" value="${escapeAttr(project[key] || "")}" /></label>`;
+      return `<label><strong>${escapeHtml(label)}</strong><input type="${type}" ${type === "number" ? 'min="0" step="any"' : ""} data-g8-project-goal="${escapeAttr(key)}" value="${escapeAttr(project[key] || "")}" />${help}</label>`;
     }).join("")}
     <div class="g8-goal-source-link">Единый источник цели для Gate 8. Значения бюджета и стоимости результата также сверяются с Gate 3–5.</div>
   </div>`;
@@ -54936,9 +55069,6 @@ function guruProductLinkedQueriesV519(product, workspace = state) {
     .map((map) => map?.items?.[product.id])
     .find((entry) => entry && typeof entry === "object");
   (itemData?.demandRows || []).forEach((row) => add(row?.kw));
-  (typeof guruGate4PhraseRowsV519 === "function"
-    ? guruGate4PhraseRowsV519(product.id, workspace) : [])
-    .forEach((row) => add(row?.kw));
   return rows;
 }
 
@@ -56156,8 +56286,6 @@ function guruStrategicFinalEntriesV286(itemData) {
 
 function guruStrategicJtbdDescriptorsV286(product, snapshot, painContext) {
   const descriptors = [];
-  const savedJtbds = typeof guruGate4SavedJtbdsV520 === "function"
-    ? guruGate4SavedJtbdsV520(product.id, state).descriptors : [];
   const gate0Records = snapshot?.scoped?.jtbd?.records || [];
   gate0Records.forEach((record) => {
     const text = guruStrategicRecordValueV286("jtbd", record);
@@ -56204,30 +56332,6 @@ function guruStrategicJtbdDescriptorsV286(product, snapshot, painContext) {
       ),
     });
   });
-  const existingIds = new Set(descriptors.filter((entry) =>
-    entry.sourceType === "additional").map((entry) => entry.sourceId));
-  savedJtbds.filter((entry) => entry.id !== `primary:${product.id}` &&
-    entry.text && !existingIds.has(entry.id)).forEach((entry) => {
-    existingIds.add(entry.id);
-    descriptors.push({
-      id: `gate1:${entry.id}`,
-      sourceType: "additional",
-      sourceId: entry.id,
-      text: entry.text,
-      entry: null,
-      savedFromGate4: true,
-      target: guruStrategicGate1TargetV286(product, painContext,
-        "additional", entry.id),
-    });
-  });
-  descriptors.forEach((descriptor) => {
-    const savedId = descriptor.sourceType === "additional"
-      ? descriptor.sourceId
-      : descriptors.filter((entry) => entry.sourceType === "gate0").length === 1
-        ? `primary:${product.id}` : "";
-    descriptor.gate4Phrases = savedJtbds.find((entry) =>
-      entry.id === savedId)?.phrases || [];
-  });
   return descriptors;
 }
 
@@ -56255,15 +56359,7 @@ function guruStrategicJtbdKeywordModelV286(product, painContext, descriptors) {
       );
       if (descriptor) linked.add(descriptor.id);
     } else if (!assignment) {
-      const savedIds = entry.row?._gate4JtbdIdsV519 || [];
-      const savedId = savedIds.length > 1 ? "" :
-        guruV185Text(entry.row?._gate4JtbdIdV519);
-      const savedDescriptor = descriptors.find((candidate) =>
-        candidate.sourceType === "additional" &&
-        candidate.sourceId === savedId);
-      if (savedDescriptor) linked.add(savedDescriptor.id);
-      else if ((!savedId || savedId === `primary:${product.id}`) &&
-        primary.phraseKeys.has(entry.key) && sourcePrimary.length === 1)
+      if (primary.phraseKeys.has(entry.key) && sourcePrimary.length === 1)
         linked.add(sourcePrimary[0].id);
       /* Одна и та же фраза может быть явно включена в несколько смысловых
          групп. Сохраняем каждую такую связь, но ниже всё равно дедуплицируем
@@ -56515,7 +56611,6 @@ function guruStrategicJtbdCardV286(model, descriptor, number) {
   const savedOpen = ui.openByContext?.[model.contextKey]?.[descriptor.id];
   const isOpen = savedOpen === true;
   const count = descriptor.entries.length;
-  const savedGate4 = descriptor.gate4Phrases || [];
   const keywordTarget = descriptor.sourceType === "additional"
     ? guruStrategicGate1TargetV286(
         model.snapshot.product,
@@ -56541,12 +56636,11 @@ function guruStrategicJtbdCardV286(model, descriptor, number) {
     <summary>
       <span class="guru-strategic-jtbd-number-v286">№${number} · ${isPrimary ? "Основной JTBD" : "Дополнительный JTBD"}</span>
       <strong>${escapeHtml(descriptor.text)}</strong>
-      <span class="guru-strategic-jtbd-count-v286">${count} финальных · ${savedGate4.length} из Gate 4</span>
+      <span class="guru-strategic-jtbd-count-v286">${count} финальных</span>
       <i aria-hidden="true"></i>
     </summary>
     <div class="guru-strategic-jtbd-body-v286">
       ${groupsHtml}
-      ${savedGate4.length ? `<section class="guru-strategic-keyword-group-v286"><strong>Сохранено в Gate 4 · Поиск · ${savedGate4.length} фраз</strong><div>${savedGate4.map((row) => `<span>${escapeHtml(row.kw)}</span>`).join("")}</div></section>` : ""}
       ${assigned ? `<section class="guru-strategic-assigned-offer-v286">
         <strong>Оффер для этого JTBD</strong>
         ${assigned.offer ? `<span>${escapeHtml(assigned.offer)}</span>` : ""}
@@ -64324,6 +64418,82 @@ function gate1PainMergePreferredV237(target, source, conflicts, path = "") {
   return target;
 }
 
+// A product can move between categories while its former Gate 1 record still
+// contains keyword assignments. Generic object merging cannot merge arrays:
+// an unrelated row at the destination would otherwise hide every old phrase.
+function gate1PainMergeMovedKeywordStateV566(target, source) {
+  const targetRows = Array.isArray(target.demandRows) ? target.demandRows : [];
+  const known = new Map(targetRows.map((row) =>
+    [guruV247KeywordNormalize(row?.kw), row]).filter(([key]) => key));
+  (Array.isArray(source.demandRows) ? source.demandRows : []).forEach((row) => {
+    const key = guruV247KeywordNormalize(row?.kw);
+    if (!key) return;
+    const existing = known.get(key);
+    if (!existing) {
+      const copy = structuredClone(row);
+      targetRows.push(copy);
+      known.set(key, copy);
+      return;
+    }
+    Object.entries(row).forEach(([field, value]) => {
+      if (gate1PainIsBlankV237(existing[field]) &&
+          !gate1PainIsBlankV237(value)) existing[field] = structuredClone(value);
+    });
+  });
+  if (targetRows.length) target.demandRows = targetRows;
+  const targetJtbds = Array.isArray(target.semL4Model?.additionalJtbds)
+    ? target.semL4Model.additionalJtbds : [];
+  const knownJtbds = new Map(targetJtbds.map((entry) =>
+    [guruV185Text(entry?.id), entry]).filter(([id]) => id));
+  (Array.isArray(source.semL4Model?.additionalJtbds)
+    ? source.semL4Model.additionalJtbds : []).forEach((entry) => {
+    const id = guruV185Text(entry?.id);
+    if (!id) return;
+    if (knownJtbds.has(id)) {
+      gate1PainMergePreferredV237(knownJtbds.get(id), entry, []);
+      return;
+    }
+    const copy = structuredClone(entry);
+    targetJtbds.push(copy);
+    knownJtbds.set(id, copy);
+  });
+  if (targetJtbds.length) {
+    target.semL4Model = target.semL4Model || {};
+    target.semL4Model.additionalJtbds = targetJtbds;
+  }
+  const targetGroups = Array.isArray(target.semL3Groups)
+    ? target.semL3Groups : [];
+  const groupKey = (entry) => guruV185Text(entry?.id) ||
+    guruV247KeywordNormalize(entry?.mainQuery);
+  const knownGroups = new Map(targetGroups.map((entry) =>
+    [groupKey(entry), entry]).filter(([key]) => key));
+  (Array.isArray(source.semL3Groups)
+    ? source.semL3Groups : []).forEach((entry) => {
+    const key = groupKey(entry);
+    if (!key) return;
+    const existing = knownGroups.get(key);
+    if (existing) {
+      gate1PainMergePreferredV237(existing, entry, []);
+      const keywords = Array.isArray(existing.keywords)
+        ? existing.keywords : [];
+      const knownKeywords = new Set(keywords.map((value) =>
+        guruV247KeywordNormalize(pv181KeywordText(value))));
+      (Array.isArray(entry.keywords) ? entry.keywords : []).forEach((value) => {
+        const phraseKey = guruV247KeywordNormalize(pv181KeywordText(value));
+        if (!phraseKey || knownKeywords.has(phraseKey)) return;
+        keywords.push(structuredClone(value));
+        knownKeywords.add(phraseKey);
+      });
+      if (keywords.length) existing.keywords = keywords;
+      return;
+    }
+    const copy = structuredClone(entry);
+    targetGroups.push(copy);
+    knownGroups.set(key, copy);
+  });
+  if (targetGroups.length) target.semL3Groups = targetGroups;
+}
+
 function gate1PainSyncQueryMirrorV237(itemData) {
   if (!itemData || !Array.isArray(itemData.semL3Groups)) return;
   itemData.semL3 = itemData.semL3Groups
@@ -64488,6 +64658,7 @@ function gate1PainMigrateWorkspaceV237(workspace) {
   const archivedUnmatched = [];
   const relocatedCategoryItems = [];
   const movedActiveProducts = new Set();
+  const movedActiveItemSnapshots = [];
   const conflicts = [];
   const shirtNormalizations = [];
   let changed = false;
@@ -64509,7 +64680,11 @@ function gate1PainMigrateWorkspaceV237(workspace) {
       );
       if (!product || (categoryId && !megaPlatformProductCategoryIds(product, workspace)
         .includes(categoryId))) {
-        if (product) movedActiveProducts.add(product.id);
+        if (product) {
+          movedActiveProducts.add(product.id);
+          movedActiveItemSnapshots.push({ product, sourceData:
+            structuredClone(sourceData || {}) });
+        }
         if (
           gate1PainArchiveLegacyV237(
             row,
@@ -64608,6 +64783,27 @@ function gate1PainMigrateWorkspaceV237(workspace) {
     }
   });
 
+  // Merge the active record from the former category immediately. An older
+  // archive can already have a replay marker, and the destination can contain
+  // partial edits; neither condition should discard live Gate 1 assignments.
+  movedActiveItemSnapshots.forEach(({ product, sourceData }) => {
+    megaPlatformProductCategoryIds(product, workspace).forEach((categoryId) => {
+      const targetRow = productMaps.find((candidate) =>
+        gate1PainCategoryIdV237(candidate, workspace) === categoryId);
+      if (!targetRow) return;
+      targetRow.items = targetRow.items || {};
+      const before = JSON.stringify(targetRow.items[product.id]);
+      const incoming = { ...sourceData, product_id: product.id };
+      if (!targetRow.items[product.id])
+        targetRow.items[product.id] = incoming;
+      else {
+        gate1PainMergePreferredV237(targetRow.items[product.id], incoming, conflicts);
+        gate1PainMergeMovedKeywordStateV566(targetRow.items[product.id], incoming);
+      }
+      if (before !== JSON.stringify(targetRow.items[product.id])) changed = true;
+    });
+  });
+
   // Reattach data after a category move. Older snapshots stay in the
   // archive; only the newest snapshot for a product is projected back into
   // its current category. A replay marker prevents an old snapshot from
@@ -64684,6 +64880,8 @@ function gate1PainMigrateWorkspaceV237(workspace) {
         else {
           const itemConflicts = [];
           gate1PainMergePreferredV237(current, incoming, itemConflicts);
+          if (movedActiveProducts.has(productId))
+            gate1PainMergeMovedKeywordStateV566(current, incoming);
           if (itemConflicts.length) conflicts.push({
             row: productMaps.indexOf(targetRow),
             direction: guruV185Text(targetRow.product),
@@ -67081,10 +67279,6 @@ function guruGate1FinalExportEntriesV279(product) {
         demandRow?.originStage !== "gate4")))
       demandByKey.set(key, { demandRow, index });
   });
-  const gate4ByKey = new Map((typeof guruGate4PhraseRowsV519 === "function"
-    ? guruGate4PhraseRowsV519(product?.id, state) : []).map((row) =>
-    [guruV247KeywordNormalize(row?.kw), row],
-  ).filter(([key]) => key));
   return guruGate1FinalConfirmedV259(product).map((candidate, index) => {
     const key = guruV247KeywordNormalize(candidate.value);
     const stored = demandByKey.get(key);
@@ -67099,9 +67293,7 @@ function guruGate1FinalExportEntriesV279(product) {
         originStage: "gate1",
     };
     return {
-      demandRow: gate4ByKey.has(key)
-        ? guruGate4FillMissingMetricsV519(displayRow, gate4ByKey.get(key))
-        : { ...displayRow },
+      demandRow: { ...displayRow },
       index: stored?.index ?? index,
     };
   });
@@ -67576,6 +67768,8 @@ function guruGate1ResolvedMainJtbdV259(itemId) {
    Старое поле оставлено как совместимый legacy-слепок; активный UI всегда
    берёт актуальное значение из gate0ScopedValuesV194 по product_id. */
 pv181JtbdModelHtml = function (mapIndex, itemId, itemData, level) {
+  if (g4sbV560SyncGate1PhraseGroups(itemId, itemData))
+    guruScheduleUiPreferenceSave();
   const model = itemData.semL4Model;
   const main = guruGate1ResolvedMainJtbdV259(itemId);
   const additional = model.additionalJtbds.map((value) =>
@@ -67588,6 +67782,8 @@ pv181JtbdModelHtml = function (mapIndex, itemId, itemData, level) {
   ).map((entry) => guruV185Text(entry.id)));
   const recoveredCount = guruGate1SavedAdditionalJtbdsV520(itemId, itemData)
     .filter((entry) => !filledIds.has(entry.id)).length;
+  const duplicates = guruGate1DuplicatePhrasesV562(itemId, itemData);
+  const duplicateKeys = new Set(duplicates.map((entry) => entry.key));
   const scopeNote = main.scope === "product"
     ? ""
     : ` · с уровня ${main.scope === "category" ? "направления" : "проекта"}`;
@@ -67606,9 +67802,9 @@ pv181JtbdModelHtml = function (mapIndex, itemId, itemData, level) {
         <div class="g1-input ${main.value ? "is-filled" : "is-empty"}" data-gate1-live-jtbd-v259>${escapeHtml(main.value || "Не заполнено в источнике")}</div>
       </label>
       ${typeof guruGate1PrimaryGroupHtmlV267 === "function"
-        ? guruGate1PrimaryGroupHtmlV267(mapIndex, itemId, itemData)
+        ? guruGate1PrimaryGroupHtmlV267(mapIndex, itemId, itemData, duplicateKeys)
         : ""}
-      ${guruGate1AdditionalJtbdsHtmlV268(mapIndex, itemId, itemData)}
+      ${guruGate1AdditionalJtbdsHtmlV268(mapIndex, itemId, itemData, duplicates)}
       ${guruGate1PendingJtbdCardHtmlV273(mapIndex, itemId, itemData)}
     </section>
   </div>`;
@@ -68554,6 +68750,8 @@ function gate1DirectProductDemandHtmlV265() {
   const context = guruGate1FinalPainContextV259(product, true);
   if (!context)
     return `<div class="pv181-keyword-empty">Для выбранного товара данные пока не созданы.</div>`;
+  if (g4sbV560SyncGate1PhraseGroups(product.id, context.itemData))
+    guruScheduleUiPreferenceSave();
 
   const source = g3ProductJourneyPageSource(product);
   const item = {
@@ -69139,24 +69337,17 @@ function guruGate1JtbdConceptTokensV267(text) {
 function guruGate1UniqueDemandV267(itemData) {
   const rows = new Map();
   const productId = guruV185Text(itemData?.product_id);
-  const gate4Rows = productId && typeof guruGate4PhraseRowsV519 === "function"
-    ? guruGate4PhraseRowsV519(productId, state) : [];
-  const gate4ByKey = new Map(gate4Rows.map((row) =>
-    [guruV247KeywordNormalize(row?.kw), row],
-  ).filter(([key]) => key));
   (itemData?.demandRows || []).forEach((row, order) => {
     const value = guruV185Text(row?.kw);
     const key = guruV247KeywordNormalize(value);
     if (!key) return;
-    const displayRow = gate4ByKey.has(key)
-      ? guruGate4FillMissingMetricsV519(row, gate4ByKey.get(key)) : row;
     const candidate = {
       key,
       value,
-      queryCount: pv181DemandQueryNumberV262(displayRow?.queryCount),
-      volume: pv181DemandQueryNumberV262(displayRow?.vol),
+      queryCount: pv181DemandQueryNumberV262(row?.queryCount),
+      volume: pv181DemandQueryNumberV262(row?.vol),
       order,
-      row: displayRow,
+      row,
     };
     const previous = rows.get(key);
     if (!previous || guruGate1GroupingMetricSortV266(candidate, previous) < 0)
@@ -69175,35 +69366,13 @@ function guruGate1UniqueDemandV267(itemData) {
       originStage: "gate1",
       _linkedFoundationV518: entry.foundation,
     };
-    const displayRow = gate4ByKey.has(key)
-      ? guruGate4FillMissingMetricsV519(confirmedRow, gate4ByKey.get(key))
-      : confirmedRow;
     rows.set(key, {
       key,
       value: entry.value,
-      queryCount: pv181DemandQueryNumberV262(displayRow.queryCount),
-      volume: pv181DemandQueryNumberV262(displayRow.vol),
+      queryCount: pv181DemandQueryNumberV262(confirmedRow.queryCount),
+      volume: pv181DemandQueryNumberV262(confirmedRow.vol),
       order: (itemData?.demandRows?.length || 0) + index,
-      row: displayRow,
-    });
-  });
-  gate4Rows.forEach((sourceRow, index) => {
-    const key = guruV247KeywordNormalize(sourceRow?.kw);
-    if (!key || rows.has(key)) return;
-    const row = {
-      ...sourceRow,
-      originStage: "gate4",
-      _linkedGate4V519: true,
-      _gate4JtbdIdV519: guruV185Text(sourceRow?.jtbdId),
-    };
-    rows.set(key, {
-      key,
-      value: guruV185Text(sourceRow.kw),
-      queryCount: pv181DemandQueryNumberV262(row.queryCount),
-      volume: pv181DemandQueryNumberV262(row.vol),
-      order: (itemData?.demandRows?.length || 0) +
-        confirmed.length + index,
-      row,
+      row: confirmedRow,
     });
   });
   return [...rows.values()].sort((left, right) => left.order - right.order);
@@ -69211,10 +69380,16 @@ function guruGate1UniqueDemandV267(itemData) {
 
 function guruGate1SavedAdditionalJtbdsV520(itemId, itemData = null) {
   const productId = guruV185Text(itemId || itemData?.product_id);
-  if (!productId || typeof guruGate4SavedJtbdsV520 !== "function") return [];
-  return guruGate4SavedJtbdsV520(productId, state).descriptors
-    .filter((entry) => entry.id && entry.text &&
-      entry.id !== `primary:${productId}`);
+  const source = itemData || (productId
+    ? g4sbV385ProductSource(productId).itemData : null);
+  return (Array.isArray(source?.semL4Model?.additionalJtbds)
+    ? source.semL4Model.additionalJtbds : [])
+    .map((entry) => ({
+      id: guruV185Text(entry?.id),
+      text: guruV185Text(guruV194JtbdSentence(entry) ||
+        guruGate1AdditionalJtbdTextV268(entry)),
+    }))
+    .filter((entry) => entry.id && entry.text);
 }
 
 /* v2.3.47 — ручное распределение строк «Спроса» между JTBD-корзинами.
@@ -69240,7 +69415,7 @@ function guruGate1JtbdAssignmentV274(itemData, phraseKey) {
   };
 }
 
-function guruGate1PrimaryJtbdMatchV267(itemId, itemData) {
+function guruGate1PrimaryJtbdMatchV267(itemId, itemData, demandOverride = null) {
   const main = guruGate1ResolvedMainJtbdV259(itemId);
   const product = guruV194Product(guruV185Text(itemId), state);
   const category = product
@@ -69258,7 +69433,7 @@ function guruGate1PrimaryJtbdMatchV267(itemId, itemData) {
       .map((token) => [token.core, token]),
   ).values()];
   const conceptCores = new Set(conceptTokens.map((token) => token.core));
-  const demand = guruGate1UniqueDemandV267(itemData);
+  const demand = demandOverride || guruGate1UniqueDemandV267(itemData);
   const automaticPhraseKeys = new Set(demand.filter((entry) =>
     guruGate1JtbdConceptTokensV267(entry.value).some((token) =>
       conceptCores.has(token.core),
@@ -69269,9 +69444,6 @@ function guruGate1PrimaryJtbdMatchV267(itemId, itemData) {
     if (assignment?.target === "primary") return true;
     if (["pending", "additional", "company"].includes(assignment?.target))
       return false;
-    const savedJtbd = guruV185Text(entry.row?._gate4JtbdIdV519);
-    if ((entry.row?._gate4JtbdIdsV519 || []).length > 1) return false;
-    if (savedJtbd) return savedJtbd === `primary:${guruV185Text(itemId)}`;
     return automaticPhraseKeys.has(entry.key);
   });
   return {
@@ -69297,10 +69469,10 @@ function guruGate1JtbdDemandListHtmlV278(entries, options = {}) {
       : `${count} фраз`;
   const rowsClass = guruV185Text(options.rowsClass);
   const scope = guruV185Text(options.scope) || "group";
-  return `<details class="pv181-jtbd-demand-details-v278" data-pv181-jtbd-demand-details-v278="${escapeAttr(scope)}" data-ui-keeper-key="jtbd-demand:${escapeAttr(options.itemId)}:${escapeAttr(scope)}">
+  return `<details class="pv181-jtbd-demand-details-v278" data-pv181-jtbd-demand-details-v278="${escapeAttr(scope)}" data-g1kw-product-v561="${escapeAttr(options.itemId)}" data-ui-keeper-key="jtbd-demand:${escapeAttr(options.itemId)}:${escapeAttr(scope)}">
     <summary><span>Ключевые слова группы</span><b>${countLabel}</b></summary>
-    ${pv181DemandTableHeadHtmlV272({ keywordActions: true })}
-    <div class="${escapeAttr(rowsClass)}">${pv181DemandRowsHtmlV272(entries, {
+    ${pv181DemandTableHeadHtmlV272({ keywordActions: true, itemId: options.itemId, scope })}
+    <div class="${escapeAttr(rowsClass)}" data-g1kw-rows-v561>${pv181DemandRowsHtmlV272(entries, {
       mapIndex: options.mapIndex,
       itemId: options.itemId,
       itemData: options.itemData,
@@ -69309,6 +69481,8 @@ function guruGate1JtbdDemandListHtmlV278(entries, options = {}) {
       draggable: true,
       keywordActions: true,
       transferScope: scope,
+      duplicateKeys: options.duplicateKeys ||
+        guruGate1DuplicatePhraseKeysV562(options.itemId, options.itemData),
     })}</div>
   </details>`;
 }
@@ -69346,6 +69520,380 @@ function guruGate1GroupFinalEntriesV279(
   );
 }
 
+// Phrase arrays in Gate 4 are only an in-memory view for existing editors and
+// forecast code. JSON export, local storage and cloud sync persist the phrase
+// and its metrics once, in Gate 1.
+function g4sbV566RuntimePhraseField(record, field) {
+  if (!record || typeof record !== "object") return false;
+  const descriptor = Object.getOwnPropertyDescriptor(record, field);
+  if (descriptor && !descriptor.enumerable) return false;
+  let value = record[field];
+  Object.defineProperty(record, field, {
+    configurable: true,
+    enumerable: false,
+    get() { return value; },
+    set(next) { value = next; },
+  });
+  return true;
+}
+
+/* Gate 1 owns JTBD membership and measurements. Gate 4 keeps only a runtime
+   projection for its saved group, editor and forecast. */
+function g4sbV560SyncGate1PhraseGroups(productId, itemData = null, build = null) {
+  const id = guruV185Text(productId);
+  const d = build || state.gate4SearchBuild?.[normalizeAspectKey(id)];
+  if (!id || !d) return false;
+  const source = itemData || g4sbV385ProductSource(id).itemData;
+  if (!source) return false;
+  const groupRows = Array.isArray(d.groupRows) ? d.groupRows : [];
+  const legacyClusters = Array.isArray(d.clusters) ? d.clusters : [];
+  const savedDrafts = d.jtbdDraftsV388 &&
+    typeof d.jtbdDraftsV388 === "object"
+    ? Object.values(d.jtbdDraftsV388) : [];
+  const drafts = [...new Set([d.clusterDraft, ...savedDrafts]
+    .filter((draft) => draft && typeof draft === "object"))];
+  if (!groupRows.length && !legacyClusters.length &&
+      !(d.deletedBankPhrases || []).length &&
+      !(d.excludedCampaignPhrases || []).length && !drafts.some((draft) =>
+    ["keywordRows", "forecastBaselineRows", "phraseSelection", "extraPhrases"]
+      .some((field) => Array.isArray(draft[field]) && draft[field].length) ||
+      Boolean(draft.open && draft.jtbdId)))
+    return false;
+  guruGate1EnsureAdditionalJtbdsV268(source);
+  const groupByJtbd = new Map();
+  const groupJtbdIds = new Map();
+  groupRows.forEach((group) => {
+    const jtbdId = g4sbV166GroupJtbdKey(id, group) || group?.jtbdId;
+    groupJtbdIds.set(group, jtbdId);
+    if (jtbdId && !groupByJtbd.has(jtbdId))
+      groupByJtbd.set(jtbdId, group);
+  });
+  let changed = false;
+  const gate4Rows = [
+    ...groupRows.flatMap((group) => Array.isArray(group.demandRows)
+      ? group.demandRows : []),
+    ...legacyClusters.flatMap((cluster) => Array.isArray(cluster.demandRows)
+      ? cluster.demandRows : []),
+    ...drafts.flatMap((draft) => [
+      ...(Array.isArray(draft.keywordRows) ? draft.keywordRows : []),
+      ...(Array.isArray(draft.forecastBaselineRows)
+        ? draft.forecastBaselineRows : []),
+    ]),
+  ];
+  const gate4ByKey = new Map();
+  gate4Rows.forEach((row) => {
+    const key = guruV247KeywordNormalize(row?.kw);
+    if (!key) return;
+    if (!gate4ByKey.has(key)) gate4ByKey.set(key, []);
+    gate4ByKey.get(key).push(row);
+  });
+  // One-time import of legacy measurements into Gate 1. A Gate 4 row may
+  // enrich an already known Gate 1 phrase, never establish JTBD ownership.
+  const product = guruV194Product(id, state);
+  const confirmedKeys = new Set((product
+    ? guruGate1FinalConfirmedV259(product) : []).map((entry) =>
+    guruV247KeywordNormalize(entry.value)));
+  source.demandRows = Array.isArray(source.demandRows) ? source.demandRows : [];
+  const demandByKey = new Map(source.demandRows.map((row) =>
+    [guruV247KeywordNormalize(row?.kw), row]).filter(([key]) => key));
+  const metricFields = ["vol", "queryCount", "forecastClicks", "clickPrice",
+    "bid", "forecastBudget", "growth", "forecast"];
+  // Migrate old Gate 4 snapshots once, then treat Gate 1 as authoritative.
+  // Later Gate 1 deletions or cleared metrics must never be restored from a
+  // stale Gate 4 runtime array.
+  if (d.gate1PhraseMigrationV566 !== true) {
+    gate4ByKey.forEach((rows, key) => {
+      let target = demandByKey.get(key);
+      if (!target) {
+        target = { kw: rows[0].kw,
+          originStage: confirmedKeys.has(key) ? "gate1" : "gate4" };
+        source.demandRows.push(target);
+        demandByKey.set(key, target);
+        if (!confirmedKeys.has(key) &&
+            !guruGate1JtbdAssignmentV274(source, key)) {
+          const assignments = guruGate1JtbdAssignmentsV274(source, true);
+          assignments[key] = { target: "pending", additional_jtbd_id: "",
+            updated_at: new Date().toISOString() };
+        }
+        changed = true;
+      }
+      metricFields.forEach((field) => {
+        if (guruV185Text(target[field])) return;
+        const measured = rows.find((row) => guruV185Text(row?.[field]));
+        if (!measured) return;
+        target[field] = measured[field];
+        changed = true;
+      });
+    });
+    source.demandRows.forEach((row) => {
+      ["searchJtbdIdV394", "_linkedGate4V519",
+        "_gate4GroupIdV519", "_gate4GroupIdsV519",
+        "_gate4GroupTitleV519", "_gate4JtbdIdV519",
+        "_gate4JtbdIdsV519"].forEach((field) => {
+        if (!Object.hasOwn(row, field)) return;
+        delete row[field];
+        changed = true;
+      });
+    });
+    d.gate1PhraseMigrationV566 = true;
+    changed = true;
+  }
+  const expected = new Map();
+  const desiredOwner = new Map();
+  const demand = guruGate1UniqueDemandV267(source);
+  const primary = guruGate1PrimaryJtbdMatchV267(id, source, demand);
+  const forms = guruGate1GroupJtbdsV267(source);
+  const savedAdditionalIds = new Set(guruGate1SavedAdditionalJtbdsV520(
+    id, source).map((entry) => entry.id));
+  const pendingKeys = new Set(demand.filter((entry) =>
+    guruGate1JtbdBucketV274(id, source, entry, primary, forms,
+      savedAdditionalIds) === "pending").map((entry) => entry.key));
+  const byBucket = new Map([["primary", primary.phrases]]);
+  demand.forEach((entry) => {
+    const bucket = guruGate1JtbdBucketV274(
+      id, source, entry, primary, forms, savedAdditionalIds);
+    if (!bucket.startsWith("additional:")) return;
+    if (!byBucket.has(bucket)) byBucket.set(bucket, []);
+    byBucket.get(bucket).push(entry);
+  });
+  // Gate 1 owns JTBD membership. Older Gate 4 campaign exclusions and bank
+  // deletions must not hide a phrase that is still assigned to a Gate 1 JTBD.
+  const assignedKeys = new Set([...byBucket.values()].flatMap((entries) =>
+    entries.map((entry) => entry.key)));
+  ["excludedCampaignPhrases", "deletedBankPhrases"].forEach((field) => {
+    const values = Array.isArray(d[field]) ? d[field] : [];
+    const kept = values.filter((value) =>
+      !assignedKeys.has(guruV247KeywordNormalize(value)));
+    if (kept.length !== values.length) {
+      d[field] = kept;
+      changed = true;
+    }
+  });
+  const unavailableKeys = new Set([
+    ...pendingKeys,
+    ...(d.excludedCampaignPhrases || []).map(guruV247KeywordNormalize),
+    ...(d.deletedBankPhrases || []).map(guruV247KeywordNormalize),
+  ]);
+  g4sbItemJtbdList(id, id).forEach((jtbd) => {
+    const bucket = jtbd.id === `primary:${id}`
+      ? "primary" : `additional:${jtbd.id}`;
+    const rows = pv181DemandVisibleEntriesV262(
+      (byBucket.get(bucket) || []).map((entry) => ({
+        demandRow: entry.row,
+        index: entry.order,
+        originStage: entry.row?.originStage || "gate1",
+      })),
+      { sortQueryCount: "desc" },
+    ).filter((entry) => !unavailableKeys.has(guruV247KeywordNormalize(
+      entry.demandRow?.kw))).map((entry) => g4sbKeywordRow(entry.demandRow));
+    expected.set(jtbd.id, rows);
+    rows.forEach((row) => {
+      const key = guruV247KeywordNormalize(row?.kw);
+      if (key && !desiredOwner.has(key)) desiredOwner.set(key, jtbd.id);
+    });
+  });
+  const changedGroups = new Set();
+  const seenInJtbd = new Map();
+  const canonicalRows = new Map([...expected.entries()].map(([jtbdId, rows]) =>
+    [jtbdId, new Map(rows.map((row) =>
+      [guruV247KeywordNormalize(row?.kw), row]))]));
+  groupRows.forEach((group) => {
+    const jtbdId = groupJtbdIds.get(group);
+    if (!jtbdId || !expected.has(jtbdId)) {
+      if (Array.isArray(group?.demandRows) && group.demandRows.length) {
+        group.demandRows = [];
+        changed = true;
+      }
+      return;
+    }
+    if (!Array.isArray(group?.demandRows)) {
+      const legacy = legacyClusters.find((row) =>
+        row.id === group.clusterId || row.id === group.groupId);
+      group.demandRows = (legacy?.demandRows || []).map(g4sbKeywordRow);
+      changedGroups.add(group);
+      changed = true;
+    }
+    // The linked group's complete membership is a projection of Gate 1.
+    if (!seenInJtbd.has(jtbdId)) seenInJtbd.set(jtbdId, new Set());
+    const seen = seenInJtbd.get(jtbdId);
+    const kept = group.demandRows.filter((row) => {
+      const key = guruV247KeywordNormalize(row?.kw);
+      const owner = desiredOwner.get(key);
+      if (!key || unavailableKeys.has(key) || owner !== jtbdId || seen.has(key)) {
+        changed = true;
+        return false;
+      }
+      seen.add(key);
+      const sourceRow = canonicalRows.get(jtbdId)?.get(key);
+      if (sourceRow) ["kw", "vol", "growth", "source", "forecast",
+        "forecastClicks", "forecastBudget", "originStage"].forEach((field) => {
+        if (row[field] === sourceRow[field]) return;
+        row[field] = sourceRow[field];
+        changedGroups.add(group);
+        changed = true;
+      });
+      return true;
+    });
+    if (kept.length !== group.demandRows.length) {
+      group.demandRows = kept;
+      changedGroups.add(group);
+    }
+  });
+
+  expected.forEach((rows, jtbdId) => {
+    const target = groupByJtbd.get(jtbdId);
+    if (!target) return;
+    target.demandRows = Array.isArray(target.demandRows)
+      ? target.demandRows : [];
+    const present = new Set(groupRows
+      .filter((group) => groupJtbdIds.get(group) === jtbdId)
+      .flatMap((group) => group.demandRows || [])
+      .map((row) => guruV247KeywordNormalize(row?.kw)).filter(Boolean));
+    rows.forEach((sourceRow) => {
+      const key = guruV247KeywordNormalize(sourceRow?.kw);
+      if (!key || present.has(key) || desiredOwner.get(key) !== jtbdId) return;
+      // A phrase chosen for a new, unsaved group belongs to that draft until
+      // the group is saved. Do not silently put it in the first saved group.
+      const ownsOpenDraft = drafts.some((draft) => draft.open &&
+        draft.jtbdId === jtbdId && !draft.editingClusterId &&
+        (draft.keywordRows || []).some((row) =>
+          guruV247KeywordNormalize(row?.kw) === key));
+      if (ownsOpenDraft) return;
+      const row = g4sbKeywordRow(sourceRow);
+      target.demandRows.push(row);
+      present.add(key);
+      changedGroups.add(target);
+      changed = true;
+    });
+  });
+  const removeUnavailable = (rows, keyOf, jtbdId) => Array.isArray(rows)
+    ? rows.filter((row) => {
+      const key = keyOf(row);
+      return !unavailableKeys.has(key) &&
+        (!expected.has(jtbdId) || desiredOwner.get(key) === jtbdId);
+    }) : rows;
+  [...legacyClusters, ...drafts].forEach((record) => {
+    [["demandRows", (row) => guruV247KeywordNormalize(row?.kw)],
+      ["keywordRows", (row) => guruV247KeywordNormalize(row?.kw)],
+      ["forecastBaselineRows", (row) => guruV247KeywordNormalize(row?.kw)],
+      ["phraseSelection", guruV247KeywordNormalize],
+      ["extraPhrases", guruV247KeywordNormalize]].forEach(([field, keyOf]) => {
+      const rows = record[field];
+      const kept = removeUnavailable(rows, keyOf, record.jtbdId);
+      if (kept === rows || kept.length === rows.length) return;
+      record[field] = kept;
+      changed = true;
+    });
+  });
+  changedGroups.forEach((group) => {
+    const forecast = g4sbV128Forecast(group.demandRows);
+    [["col2", "impressions", "hasPhraseImpressions"],
+      ["col3", "clicks", "hasPhraseClicks"],
+      ["col4", "budget", "hasPhraseBudget"]].forEach(([field, metric, known]) => {
+      group[field] = forecast[known] ? String(forecast[metric]) : "";
+    });
+    const compatibility = (d.clusters || []).find((row) =>
+      row.id === group.clusterId || row.id === group.groupId);
+    if (compatibility) {
+      compatibility.demandRows = group.demandRows.map(g4sbKeywordRow);
+      compatibility.phraseSelection = group.demandRows.map((row) => row.kw);
+    }
+  });
+  // A saved group can gain Gate 1 phrases while its editor is already open.
+  // Keep that editor on the same membership snapshot as the saved group;
+  // otherwise the table, copy action and forecast count stale draft rows.
+  drafts.forEach((draft) => {
+    if (!draft?.open || !draft.editingClusterId) return;
+    const group = groupRows.find((row) =>
+      g4sbV420GroupId(row) === String(draft.editingClusterId));
+    if (!group || groupJtbdIds.get(group) !== draft.jtbdId) return;
+    const rows = Array.isArray(draft.keywordRows) ? draft.keywordRows : [];
+    const currentKeys = new Set(rows.map((row) =>
+      guruV247KeywordNormalize(row?.kw)).filter(Boolean));
+    const groupKeys = new Set((group.demandRows || []).map((row) =>
+      guruV247KeywordNormalize(row?.kw)).filter(Boolean));
+    const byKey = new Map();
+    rows.forEach((row) => {
+      const key = guruV247KeywordNormalize(row?.kw);
+      if (key && groupKeys.has(key) &&
+          !byKey.has(key)) byKey.set(key, row);
+    });
+    (group.demandRows || []).forEach((row) => {
+      const key = guruV247KeywordNormalize(row?.kw);
+      if (key && !byKey.has(key)) byKey.set(key, g4sbKeywordRow(row));
+    });
+    if (rows.length !== byKey.size || [...byKey.keys()].some((key) =>
+      !currentKeys.has(key))) {
+      draft.keywordRows = [...byKey.values()];
+      changed = true;
+    }
+    if (changedGroups.has(group)) {
+      draft.col2 = group.col2;
+      draft.col3 = group.col3;
+      draft.col4 = group.col4;
+    }
+  });
+  // An open, not-yet-saved group is also a Gate 4 destination. Keep its
+  // membership current even after the user has edited other draft fields.
+  drafts.forEach((draft) => {
+    if (!draft?.open || draft.editingClusterId ||
+        groupByJtbd.has(draft.jtbdId)) return;
+    const sourceRows = expected.get(draft.jtbdId);
+    if (!sourceRows) return;
+    const previous = Array.isArray(draft.keywordRows) ? draft.keywordRows : [];
+    const previousByKey = new Map(previous.map((row) =>
+      [guruV247KeywordNormalize(row?.kw), row]).filter(([key]) => key));
+    const rows = [];
+    sourceRows.forEach((row) => {
+      const key = guruV247KeywordNormalize(row?.kw);
+      if (!key || desiredOwner.get(key) !== draft.jtbdId) return;
+      rows.push(previousByKey.get(key) || g4sbKeywordRow(row));
+    });
+    if (rows.length !== previous.length || rows.some((row, index) =>
+      row !== previous[index])) {
+      draft.keywordRows = rows;
+      changed = true;
+    }
+  });
+  // Remove old serialized copies after the first reconciliation. Existing
+  // code can still read and edit these arrays during the session; reopening
+  // the workspace rebuilds them from Gate 1 before the Gate 4 UI renders.
+  groupRows.forEach((group) => {
+    ["demandRows", "keywordRows", "phraseSelection", "extraPhrases"]
+      .forEach((field) => {
+        if (g4sbV566RuntimePhraseField(group, field)) changed = true;
+      });
+  });
+  legacyClusters.forEach((cluster) => {
+    ["demandRows", "keywordRows", "phraseSelection", "extraPhrases"]
+      .forEach((field) => {
+        if (g4sbV566RuntimePhraseField(cluster, field)) changed = true;
+      });
+  });
+  drafts.forEach((draft) => {
+    if (Object.hasOwn(draft, "gate1MetricSnapshotV408")) {
+      delete draft.gate1MetricSnapshotV408;
+      changed = true;
+    }
+    ["demandRows", "keywordRows", "forecastBaselineRows",
+      "phraseSelection", "extraPhrases"].forEach((field) => {
+      if (g4sbV566RuntimePhraseField(draft, field)) changed = true;
+    });
+  });
+  return changed;
+}
+
+function g4sbV566HydrateGate4PhraseViews() {
+  if (!state?.gate4SearchBuild) return false;
+  let changed = false;
+  (state.project?.catalogItemsV189 || []).forEach((product) => {
+    const id = guruV185Text(product?.id);
+    if (!id || !state.gate4SearchBuild[normalizeAspectKey(id)]) return;
+    if (g4sbV560SyncGate1PhraseGroups(id)) changed = true;
+  });
+  return changed;
+}
+
 function guruGate1GroupFinalFoundationHtmlV279(
   mapIndex,
   itemId,
@@ -69368,7 +69916,7 @@ function guruGate1GroupFinalFoundationHtmlV279(
   </section>`;
 }
 
-function guruGate1PrimaryGroupHtmlV267(mapIndex, itemId, itemData) {
+function guruGate1PrimaryGroupHtmlV267(mapIndex, itemId, itemData, duplicateKeys = null) {
   const match = guruGate1PrimaryJtbdMatchV267(itemId, itemData);
   const entries = pv181DemandVisibleEntriesV262(
     match.phrases.map((entry) => ({
@@ -69399,6 +69947,7 @@ function guruGate1PrimaryGroupHtmlV267(mapIndex, itemId, itemData) {
             mapIndex,
             itemId,
             itemData,
+            duplicateKeys,
           })}
           ${pv181DemandTotalsHtmlV276(entries, { itemId })}
         </div>`
@@ -69458,18 +70007,6 @@ function guruGate1JtbdBucketV274(
     return targetExists
       ? `additional:${assignment.additional_jtbd_id}`
       : "pending";
-  }
-  const savedJtbd = guruV185Text(demandEntry.row?._gate4JtbdIdV519);
-  if ((demandEntry.row?._gate4JtbdIdsV519 || []).length > 1)
-    return "pending";
-  if (savedJtbd === `primary:${guruV185Text(itemId)}`) return "primary";
-  if (savedJtbd) {
-    const savedGroup = forms.find((descriptor) =>
-      guruGate1AdditionalDescriptorIdV274(descriptor) === savedJtbd);
-    const recovered = (savedAdditionalIds || new Set(
-      guruGate1SavedAdditionalJtbdsV520(itemId, itemData)
-        .map((entry) => entry.id))).has(savedJtbd);
-    return savedGroup || recovered ? `additional:${savedJtbd}` : "pending";
   }
   if (primary.phraseKeys.has(demandEntry.key)) return "primary";
   const linked = forms.find((descriptor) =>
@@ -69573,6 +70110,7 @@ function guruGate1AdditionalJtbdKeywordsHtmlV274(
   itemId,
   itemData,
   additionalId,
+  duplicateKeys = null,
 ) {
   const phrases = guruGate1AdditionalJtbdDemandV274(
     itemId,
@@ -69606,6 +70144,7 @@ function guruGate1AdditionalJtbdKeywordsHtmlV274(
             itemId,
             itemData,
             readOnlyScope: "additional",
+            duplicateKeys,
           })}
           ${pv181DemandTotalsHtmlV276(entries, { itemId })}
         </div>`
@@ -70047,7 +70586,7 @@ function guruGate1AdditionalJtbdGroupV268(itemData, entry) {
   ) || null;
 }
 
-function guruGate1SavedJtbdsHtmlV520(mapIndex, itemId, itemData, current, onlyId = "") {
+function guruGate1SavedJtbdsHtmlV520(mapIndex, itemId, itemData, current, onlyId = "", duplicateKeys = null) {
   const filledIds = new Set(current.filter((entry) =>
     guruV185Text(guruV194JtbdSentence(entry) ||
       guruGate1AdditionalJtbdTextV268(entry)),
@@ -70072,13 +70611,111 @@ function guruGate1SavedJtbdsHtmlV520(mapIndex, itemId, itemData, current, onlyId
             rowsClass: "pv181-additional-jtbd-demand-rows-v274",
             mapIndex, itemId, itemData,
             readOnlyScope: "additional",
+            duplicateKeys,
           })}</div>
         </section>
       </article>`;
     }).join("");
 }
 
-function guruGate1AdditionalJtbdsHtmlV268(mapIndex, itemId, itemData) {
+/* Compare source memberships before the one-owner JTBD projection hides
+   overlaps. Decisions are stored separately, so source groups and metrics
+   remain available for audit and a later change of owner. */
+function guruGate1DuplicateDecisionsV562(itemData, create = false) {
+  const current = itemData?.jtbdDuplicateDecisionsV562;
+  if (current && typeof current === "object" && !Array.isArray(current))
+    return current;
+  if (!create || !itemData) return {};
+  itemData.jtbdDuplicateDecisionsV562 = {};
+  return itemData.jtbdDuplicateDecisionsV562;
+}
+
+function guruGate1DuplicateTargetsV562(itemId, itemData) {
+  const targets = [{ value: "primary", label: "JTBD №1 · основной" }];
+  const seen = new Set();
+  const add = (id) => {
+    if (!id || seen.has(id)) return;
+    seen.add(id);
+    targets.push({ value: `additional:${id}`, label: `JTBD №${targets.length + 1}` });
+  };
+  guruGate1EnsureAdditionalJtbdsV268(itemData).forEach((entry) =>
+    add(guruV185Text(entry.id)));
+  guruGate1SavedAdditionalJtbdsV520(itemId, itemData).forEach((entry) =>
+    add(guruV185Text(entry.id)));
+  return targets;
+}
+
+function guruGate1DuplicatePhrasesV562(itemId, itemData) {
+  if (!itemId || !itemData) return [];
+  const demand = guruGate1UniqueDemandV267(itemData);
+  const byKey = new Map(demand.map((entry) => [entry.key, entry]));
+  const memberships = new Map();
+  const targets = guruGate1DuplicateTargetsV562(itemId, itemData);
+  const targetOrder = new Map(targets.map((target, index) =>
+    [target.value, index]));
+  const add = (key, bucket) => {
+    if (!byKey.has(key) || !targetOrder.has(bucket)) return;
+    if (!memberships.has(key)) memberships.set(key, new Set());
+    memberships.get(key).add(bucket);
+  };
+  const primary = guruGate1PrimaryJtbdMatchV267(itemId, itemData, demand);
+  primary.phraseKeys.forEach((key) => add(key, "primary"));
+  guruGate1EnsureAdditionalJtbdsV268(itemData).forEach((entry) => {
+    const group = guruGate1AdditionalJtbdGroupV268(itemData, entry);
+    guruGate1GroupPhraseKeysV274(group).forEach((key) =>
+      add(key, `additional:${entry.id}`));
+  });
+  guruGate1SavedAdditionalJtbdsV520(itemId, itemData).forEach((entry) => {
+    (entry.phrases || []).forEach((row) => add(
+      guruV247KeywordNormalize(row?.kw), `additional:${entry.id}`));
+  });
+  demand.forEach((entry) => {
+    (entry.row?._gate4JtbdIdsV519 || []).forEach((id) => add(
+      entry.key, id === `primary:${itemId}` ? "primary" : `additional:${id}`));
+  });
+  const decisions = guruGate1DuplicateDecisionsV562(itemData);
+  return demand.flatMap((entry) => {
+    const live = memberships.get(entry.key) || new Set();
+    const saved = decisions[entry.key];
+    const candidates = new Set(live);
+    if (saved && Array.isArray(saved.candidates)) saved.candidates.forEach((bucket) => {
+      if (targetOrder.has(bucket)) candidates.add(bucket);
+    });
+    if (candidates.size < 2 || (live.size < 2 && !saved)) return [];
+    const buckets = [...candidates].sort((left, right) =>
+      targetOrder.get(left) - targetOrder.get(right));
+    return [{ key: entry.key, phrase: entry.value, buckets,
+      owner: buckets.includes(saved?.owner) ? saved.owner : "" }];
+  });
+}
+
+function guruGate1DuplicatePhraseKeysV562(itemId, itemData) {
+  return new Set(guruGate1DuplicatePhrasesV562(itemId, itemData)
+    .map((entry) => entry.key));
+}
+
+function guruGate1DuplicateDecisionsHtmlV562(mapIndex, itemId, itemData, duplicates = null) {
+  duplicates ||= guruGate1DuplicatePhrasesV562(itemId, itemData);
+  const labels = new Map(guruGate1DuplicateTargetsV562(itemId, itemData)
+    .map((target) => [target.value, target.label]));
+  const unresolved = duplicates.filter((entry) => !entry.owner).length;
+  return `<section class="g1-jtbd-duplicates-v562" data-g1-jtbd-duplicates-v562 data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}">
+    <header><div><strong>Повторяющиеся ключевые слова</strong><small>Одна фраза должна остаться в одной JTBD-группе. Исходные записи и метрики сохраняются.</small></div><div class="g1-jtbd-duplicate-actions-v563"><span data-g1-jtbd-duplicate-summary-v563 aria-live="polite">${duplicates.length ? `${unresolved} требуют решения · ${duplicates.length} всего` : "Совпадений нет"}</span><button type="button" class="small-btn" data-g1-jtbd-duplicate-check-v563 data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}">Проверить группы</button></div></header>
+    ${duplicates.length ? `<div class="g1-jtbd-duplicate-list-v562">${duplicates
+      .sort((left, right) => Number(Boolean(left.owner)) - Number(Boolean(right.owner)) ||
+        left.phrase.localeCompare(right.phrase, "ru"))
+      .map((entry) => `<fieldset class="g1-jtbd-duplicate-v562${entry.owner ? " is-decided-v562" : ""}" data-g1-jtbd-duplicate-v562="${escapeAttr(entry.key)}">
+        <legend>${escapeHtml(entry.phrase)}</legend>
+        <small data-g1-jtbd-duplicate-status-v562>${entry.owner ? "Решение принято" : "Повтор в нескольких JTBD · выберите, где оставить"}</small>
+        <div class="g1-jtbd-duplicate-choices-v562">${entry.buckets.map((bucket) =>
+          `<label><input type="radio" name="g1-jtbd-duplicate:${escapeAttr(itemId)}:${escapeAttr(entry.key)}" value="${escapeAttr(bucket)}" data-g1-jtbd-duplicate-choice-v562="${escapeAttr(entry.key)}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}"${entry.owner === bucket ? " checked" : ""}><span>${escapeHtml(labels.get(bucket) || bucket)}</span></label>`).join("")}</div>
+      </fieldset>`).join("")}</div>` : `<p>Одинаковых ключевых слов в разных JTBD-группах нет.</p>`}
+  </section>`;
+}
+
+function guruGate1AdditionalJtbdsHtmlV268(mapIndex, itemId, itemData, duplicates = null) {
+  duplicates ||= guruGate1DuplicatePhrasesV562(itemId, itemData);
+  const duplicateKeys = new Set(duplicates.map((entry) => entry.key));
   const additional = guruGate1EnsureAdditionalJtbdsV268(itemData);
   const filledIds = new Set(additional.filter((entry) =>
     guruV185Text(guruV194JtbdSentence(entry) ||
@@ -70087,7 +70724,7 @@ function guruGate1AdditionalJtbdsHtmlV268(mapIndex, itemId, itemData) {
   const savedIds = new Set(guruGate1SavedAdditionalJtbdsV520(itemId, itemData)
     .filter((entry) => !filledIds.has(entry.id)).map((entry) => entry.id));
   const savedHtml = guruGate1SavedJtbdsHtmlV520(
-    mapIndex, itemId, itemData, additional);
+    mapIndex, itemId, itemData, additional, "", duplicateKeys);
   const totalCount = new Set([...additional.map((entry) =>
     guruV185Text(entry.id)), ...savedIds]).size;
   const fields = [
@@ -70116,12 +70753,14 @@ function guruGate1AdditionalJtbdsHtmlV268(mapIndex, itemId, itemData) {
           itemId,
           itemData,
           entry.id,
+          duplicateKeys,
         )}
         <button type="button" class="small-btn danger-mini" data-pv181-jtbd-remove="${index}" data-pv181-jtbd-remove-id="${escapeAttr(entry.id)}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" aria-label="Удалить дополнительный JTBD">×</button>
       </article>`;
     }).join("") : savedIds.size ? "" : '<div class="pv181-keyword-empty">Дополнительные JTBD пока не добавлены.</div>'}
     ${savedHtml}
     <button type="button" class="small-btn add-inline-btn" data-pv181-jtbd-add data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" ${totalCount >= 3 ? "disabled" : ""}>+ Добавить дополнительный JTBD</button>
+    ${guruGate1DuplicateDecisionsHtmlV562(mapIndex, itemId, itemData, duplicates)}
   </div>`;
 }
 
@@ -70372,7 +71011,8 @@ function guruGate1RefreshTransferredKeywordUiV555(control, context, target, opti
   if (!level) { renderGate(); return; }
   const sourceDetails = control.closest("[data-pv181-jtbd-demand-details-v278]");
   const normalizeScope = (scope) => scope?.replace(/^saved:/, "additional:") || "";
-  const sourceScope = normalizeScope(sourceDetails?.dataset.pv181JtbdDemandDetailsV278);
+  const sourceScope = normalizeScope(options.sourceScope ||
+    sourceDetails?.dataset.pv181JtbdDemandDetailsV278);
   const scopes = [...new Set([sourceScope, target].filter((scope) =>
     scope === "primary" || scope.startsWith("additional:")))];
   const findSection = (scope) => scope === "primary"
@@ -70386,7 +71026,7 @@ function guruGate1RefreshTransferredKeywordUiV555(control, context, target, opti
       ? selectedRow.previousElementSibling : null;
   const anchorKey = sibling?.dataset.g1kwRowV553;
   const sourceSection = findSection(sourceScope);
-  const anchor = sibling || sourceSection?.querySelector("header");
+  const anchor = options.anchorNode || sibling || sourceSection?.querySelector("header");
   const anchorTop = anchor?.getBoundingClientRect().top;
   const scrollX = window.scrollX;
 
@@ -70420,8 +71060,8 @@ function guruGate1RefreshTransferredKeywordUiV555(control, context, target, opti
     const oldDetails = current.querySelector("[data-pv181-jtbd-demand-details-v278]");
     const oldTable = current.querySelector(".pv181-demand-table-v263");
     const nextDetails = next.querySelector("[data-pv181-jtbd-demand-details-v278]");
-    const oldRows = oldDetails?.querySelector(":scope > div");
-    const nextRows = nextDetails?.querySelector(":scope > div");
+    const oldRows = oldDetails?.querySelector("[data-g1kw-rows-v561]");
+    const nextRows = nextDetails?.querySelector("[data-g1kw-rows-v561]");
     if (oldRows && nextRows) {
       const existing = new Map([...oldRows.children].map((row) =>
         [row.dataset.g1kwRowV553, row]));
@@ -70431,6 +71071,11 @@ function guruGate1RefreshTransferredKeywordUiV555(control, context, target, opti
         !expectedKeys.has(row.dataset.g1kwRowV553));
       const added = expected.filter((row) => !existing.has(row.dataset.g1kwRowV553));
       if (removed.length + added.length === 1) {
+        expected.forEach((row) => {
+          const currentRow = existing.get(row.dataset.g1kwRowV553);
+          if (currentRow)
+            currentRow.dataset.g1kwSourceOrderV553 = row.dataset.g1kwSourceOrderV553;
+        });
         removed.forEach((row) => row.remove());
         added.forEach((row) => {
           const index = expected.indexOf(row);
@@ -70459,7 +71104,7 @@ function guruGate1RefreshTransferredKeywordUiV555(control, context, target, opti
     const nextTable = next.querySelector(".pv181-demand-table-v263");
     if (nextTable) nextTable.scrollLeft = scrollLeft;
   });
-  if (target === "pending") {
+  if (target === "pending" || sourceScope === "pending") {
     const current = level.querySelector("[data-pv181-pending-jtbd-card-v273]");
     if (current) {
       const template = document.createElement("template");
@@ -70477,7 +71122,8 @@ function guruGate1RefreshTransferredKeywordUiV555(control, context, target, opti
   if (typeof guruStrategicFoundationRefreshV245 === "function")
     guruStrategicFoundationRefreshV245(context.itemId);
   const refreshedSource = findSection(sourceScope);
-  const nextAnchor = (anchorKey && [...(refreshedSource?.querySelectorAll("[data-g1kw-row-v553]") || [])]
+  const nextAnchor = (options.anchorNode?.isConnected && options.anchorNode) ||
+    (anchorKey && [...(refreshedSource?.querySelectorAll("[data-g1kw-row-v553]") || [])]
     .find((row) => row.dataset.g1kwRowV553 === anchorKey)) ||
     refreshedSource?.querySelector("header");
   if (nextAnchor && Number.isFinite(anchorTop)) {
@@ -70493,6 +71139,7 @@ function guruGate1RefreshTransferredKeywordUiV555(control, context, target, opti
 }
 
 function guruGate1RefreshKeywordUiStableV558(control, context, target, options = {}) {
+  g4sbV560SyncGate1PhraseGroups(context.itemId, context.itemData);
   // Keep browser scroll anchoring from racing the explicit row-position
   // correction while a keyword moves between long groups.
   const scrollRoot = document.scrollingElement;
@@ -70504,6 +71151,113 @@ function guruGate1RefreshKeywordUiStableV558(control, context, target, options =
     if (scrollRoot) scrollRoot.style.overflowAnchor = previousOverflowAnchor;
   }
 }
+
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-g1-jtbd-duplicate-check-v563]");
+  if (!button) return;
+  event.preventDefault();
+  const context = pv181QueryGroupTarget(button);
+  const panel = button.closest("[data-g1-jtbd-duplicates-v562]");
+  if (!context || !panel) return;
+
+  const duplicates = guruGate1DuplicatePhrasesV562(context.itemId, context.itemData);
+  const duplicateKeys = new Set(duplicates.map((entry) => entry.key));
+  const decisions = guruGate1DuplicateDecisionsV562(context.itemData);
+  const scrollRoot = document.scrollingElement;
+  const previousAnchor = scrollRoot?.style.overflowAnchor || "";
+  const scrollX = window.scrollX;
+  const buttonTop = button.getBoundingClientRect().top;
+  const wasFocused = document.activeElement === button;
+  if (scrollRoot) scrollRoot.style.overflowAnchor = "none";
+  try {
+    panel.closest(".pv181-jtbd-level")?.querySelectorAll(
+      "[data-g1kw-row-v553][data-g1kw-product-v553]").forEach((row) => {
+      if (row.dataset.g1kwProductV553 !== context.itemId) return;
+      const key = row.dataset.g1kwRowV553;
+      const isDuplicate = duplicateKeys.has(key);
+      row.classList.toggle("g1kw-duplicate-v562", isDuplicate);
+      const cell = row.querySelector(".pv181-demand-cell-v263");
+      const note = cell?.querySelector(".g1kw-duplicate-note-v562");
+      if (!isDuplicate) note?.remove();
+      else {
+        const target = note || document.createElement("small");
+        target.className = "g1kw-duplicate-note-v562";
+        target.textContent = `Повтор в JTBD · ${decisions[key]?.owner
+          ? "решение принято" : "решение ниже"}`;
+        if (!note) cell?.append(target);
+      }
+    });
+
+    const template = document.createElement("template");
+    template.innerHTML = guruGate1DuplicateDecisionsHtmlV562(
+      context.mapIndex, context.itemId, context.itemData, duplicates);
+    const nextPanel = template.content.firstElementChild;
+    panel.replaceWith(nextPanel);
+    const summary = nextPanel.querySelector("[data-g1-jtbd-duplicate-summary-v563]");
+    if (summary) summary.textContent += " · проверено сейчас";
+    const nextButton = nextPanel.querySelector("[data-g1-jtbd-duplicate-check-v563]");
+    const delta = nextButton.getBoundingClientRect().top - buttonTop;
+    if (delta) window.scrollTo(scrollX, window.scrollY + delta);
+    if (wasFocused) nextButton.focus({ preventScroll: true });
+  } finally {
+    if (scrollRoot) scrollRoot.style.overflowAnchor = previousAnchor;
+  }
+});
+
+document.addEventListener("change", (event) => {
+  const choice = event.target?.closest?.("[data-g1-jtbd-duplicate-choice-v562]");
+  if (!choice) return;
+  const context = pv181QueryGroupTarget(choice);
+  const phraseKey = guruV247KeywordNormalize(
+    choice.dataset.g1JtbdDuplicateChoiceV562);
+  const duplicate = guruGate1DuplicatePhrasesV562(
+    context?.itemId, context?.itemData).find((entry) => entry.key === phraseKey);
+  const target = choice.value;
+  if (!context || !duplicate?.buckets.includes(target)) return;
+  const demandEntry = guruGate1UniqueDemandV267(context.itemData)
+    .find((entry) => entry.key === phraseKey);
+  if (!demandEntry) return;
+  const previousBucket = guruGate1JtbdBucketV274(
+    context.itemId, context.itemData, demandEntry);
+  const additionalId = target.startsWith("additional:")
+    ? target.slice("additional:".length) : "";
+  if (additionalId) {
+    const additionalEntry = guruGate1EnsureAdditionalJtbdsV268(context.itemData)
+      .find((entry) => entry.id === additionalId);
+    if (additionalEntry) guruGate1AddPhraseToAdditionalGroupV274(
+      guruGate1EnsureAdditionalGroupV274(context.itemData, additionalEntry),
+      demandEntry.value);
+  }
+  const now = new Date().toISOString();
+  guruGate1JtbdAssignmentsV274(context.itemData, true)[phraseKey] = {
+    target: additionalId ? "additional" : "primary",
+    additional_jtbd_id: additionalId,
+    updated_at: now,
+  };
+  guruGate1DuplicateDecisionsV562(context.itemData, true)[phraseKey] = {
+    owner: target,
+    candidates: duplicate.buckets,
+    updated_at: now,
+  };
+  pv181SyncQueryGroups(context.itemData);
+  pv181SyncJtbdModel(context.itemData);
+  flashSaving({ skipDerivedRefresh: true });
+  const card = choice.closest("[data-g1-jtbd-duplicate-v562]");
+  const panel = choice.closest("[data-g1-jtbd-duplicates-v562]");
+  card?.classList.add("is-decided-v562");
+  const status = card?.querySelector("[data-g1-jtbd-duplicate-status-v562]");
+  if (status) status.textContent = "Решение принято";
+  const remaining = panel?.querySelectorAll(
+    "[data-g1-jtbd-duplicate-v562]:not(.is-decided-v562)").length || 0;
+  const summary = panel?.querySelector("[data-g1-jtbd-duplicate-summary-v563]");
+  if (summary) summary.textContent = `${remaining} требуют решения · ${
+    panel.querySelectorAll("[data-g1-jtbd-duplicate-v562]").length} всего`;
+  guruGate1RefreshKeywordUiStableV558(choice, context, target, {
+    sourceScope: previousBucket,
+    anchorNode: card,
+    focusNextTransfer: false,
+  });
+});
 
 let guruGate1TransferMenuV557 = null;
 
@@ -78448,15 +79202,12 @@ g4sbSaveClusterDraft = function (product, d) {
   const group = d.groupRows.find((row) => row.clusterId === saved.id || row.groupId === saved.id);
   const newKey = group && `group:${group.groupId || group.clusterId}`;
   if (newKey && oldKey !== newKey) {
-    let moved = false;
     G4SB_V406_GROUP_LAUNCH_ITEMS.forEach((_, index) => {
       const from = `${oldKey}:${index + 1}`;
       if (!Object.hasOwn(d.launchChecklistV406, from)) return;
       d.launchChecklistV406[`${newKey}:${index + 1}`] = d.launchChecklistV406[from];
       delete d.launchChecklistV406[from];
-      moved = true;
     });
-    if (moved) saveState();
   }
   return saved;
 };
@@ -78721,9 +79472,182 @@ function g4sbV411EnsureEditableDraft(product, d, entry) {
 
 function g4sbV411UpdateManualPhraseOwner(product, phraseKey, jtbdId) {
   const { itemData } = g4sbV385ProductSource(product);
-  const row = (itemData?.demandRows || []).find((item) =>
-    g4sbV128PhraseKey(item?.kw) === phraseKey);
-  if (row?.originStage === "gate4") row.searchJtbdIdV394 = jtbdId || "";
+  if (!itemData || !jtbdId) return;
+  const assignment = guruGate1JtbdAssignmentsV274(itemData, true);
+  const primary = jtbdId === `primary:${product}`;
+  assignment[phraseKey] = {
+    target: primary ? "primary" : "additional",
+    additional_jtbd_id: primary ? "" : jtbdId,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+function g4sbV411SyncEditedGroupPhrase(d, draft, phraseKey, phraseRow, keep) {
+  if (!draft?.editingClusterId) return;
+  const group = (d.groupRows || []).find((row) =>
+    row.groupId === draft.editingClusterId ||
+    row.clusterId === draft.editingClusterId);
+  if (!group) return;
+  const rows = Array.isArray(group.demandRows) ? group.demandRows : [];
+  const previous = g4sbV128Forecast(rows);
+  group.demandRows = rows.filter((row) => g4sbV128PhraseKey(row?.kw) !== phraseKey);
+  if (keep) group.demandRows.push(g4sbKeywordRow(phraseRow));
+  const forecast = g4sbV128Forecast(group.demandRows, draft);
+  [["col2", "impressions", "hasPhraseImpressions"],
+    ["col3", "clicks", "hasPhraseClicks"],
+    ["col4", "budget", "hasPhraseBudget"]].forEach(([field, metric, known]) => {
+    const saved = g4sbV392Metric({ value: group[field] }, "value");
+    if (saved !== null && saved !== previous[metric]) return;
+    group[field] = forecast[known] ? String(forecast[metric]) : "";
+  });
+  const legacy = (d.clusters || []).find((row) =>
+    row.id === group.clusterId || row.id === group.groupId);
+  if (legacy) {
+    legacy.demandRows = group.demandRows.map(g4sbKeywordRow);
+    legacy.phraseSelection = group.demandRows.map((row) => row.kw);
+  }
+}
+
+function g4sbV128RefreshPhraseActionUi(product, d, draft, control) {
+  const editor = control?.closest?.(".g4-v126-editor");
+  const keywords = editor?.querySelector(".g4-v126-keywords");
+  const operations = editor?.querySelector(".g4-v127-draft-operations");
+  if (!keywords?.isConnected || !operations) return false;
+  const scroller = guruStableScrollContainer(control);
+  const previousAnchor = scroller?.style.overflowAnchor || "";
+  const oldTable = keywords.querySelector(".g4-v128-selector:not(.g4-v150-excluded-table)");
+  const oldExcludedTable = keywords.querySelector(".g4-v150-excluded-table");
+  const oldLeft = oldTable?.scrollLeft || 0;
+  const oldExcludedLeft = oldExcludedTable?.scrollLeft || 0;
+  const inExcludedTable = Boolean(control.closest(".g4-v150-excluded-table"));
+  const anchorTable = inExcludedTable ? oldExcludedTable : oldTable;
+  const clickedRow = control.closest("tr");
+  const visibleRows = [...(anchorTable?.querySelectorAll("tbody tr") || [])]
+    .filter((row) => row.querySelector("strong"));
+  const rowIndex = visibleRows.indexOf(clickedRow);
+  const anchorRow = rowIndex >= 0 ? visibleRows[rowIndex + 1] || clickedRow : null;
+  const anchorKey = g4sbV128PhraseKey(anchorRow?.querySelector("strong")?.textContent);
+  const anchorTop = (anchorRow || anchorTable || keywords).getBoundingClientRect().top;
+  const excludedOpen = keywords.querySelector(".g4-v137-separated-bank")?.open;
+  const openExcludedAfterMove = Boolean(d._g4V152OpenExcludedAfterMove);
+  if (scroller) scroller.style.overflowAnchor = "none";
+  try {
+    const jtbd = g4sbV445DraftJtbdText(product, draft);
+    const phraseCount = g4sbV397SelectedPhraseTexts(draft).length;
+    const p = `data-g4sb-product="${escapeAttr(product)}"`;
+    keywords.innerHTML = `<div class="g4-upstream-title">3. Ключевые фразы группы</div>${g4sbV128PhraseSelectorHtml(product, d, draft, p, jtbd)}`;
+    operations.innerHTML = g4sbV127DraftOperationsHtml(product, draft, phraseCount, jtbd);
+    const table = keywords.querySelector(".g4-v128-selector:not(.g4-v150-excluded-table)");
+    const excludedTable = keywords.querySelector(".g4-v150-excluded-table");
+    if (table) table.scrollLeft = oldLeft;
+    if (excludedTable) excludedTable.scrollLeft = oldExcludedLeft;
+    const excluded = keywords.querySelector(".g4-v137-separated-bank");
+    if (excluded) excluded.open = Boolean(excludedOpen || openExcludedAfterMove);
+    const nextAnchorTable = inExcludedTable ? excludedTable : table;
+    const newRows = [...(nextAnchorTable?.querySelectorAll("tbody tr") || [])]
+      .filter((row) => row.querySelector("strong"));
+    const newAnchor = newRows.find((row) =>
+      g4sbV128PhraseKey(row.querySelector("strong")?.textContent) === anchorKey) ||
+      (rowIndex >= 0 ? newRows[Math.min(rowIndex, newRows.length - 1)] : null) ||
+      nextAnchorTable || keywords;
+    const delta = newAnchor.getBoundingClientRect().top - anchorTop;
+    if (scroller === document.scrollingElement ||
+        scroller === document.documentElement || scroller === document.body)
+      window.scrollBy({ top: delta, left: 0, behavior: "instant" });
+    else if (scroller) scroller.scrollTop += delta;
+    const validation = editor.querySelector(".g4-v126-validation");
+    const message = draft.validationErrorKind === "phrase_conflict" ? "" : draft.validationError;
+    if (message) {
+      if (validation) validation.textContent = message;
+      else editor.querySelector(".g4-v126-actions")?.insertAdjacentHTML("beforebegin",
+        `<div class="g4-v126-validation" role="alert">${escapeHtml(message)}</div>`);
+    } else validation?.remove();
+    const assessment = g4sbV140ForecastAssessment(draft, phraseCount, d.settings || {}, product);
+    const save = editor.querySelector("[data-g4sb-draft-save]");
+    if (save) save.disabled = assessment.phraseLimitExceeded || assessment.blockingErrors.length > 0;
+    guruApplyFieldStates(keywords);
+    guruApplyFieldStates(operations);
+    guruAutosizeProgressively(keywords);
+    guruAutosizeProgressively(operations);
+    g4sbV166RefreshJtbdPhraseSummary(product, d, editor.closest(".g4-v166-jtbd"));
+  } finally {
+    if (scroller) requestAnimationFrame(() => {
+      scroller.style.overflowAnchor = previousAnchor;
+    });
+  }
+  guruInvalidateGateViewCache();
+  return true;
+}
+
+function g4sbV411RefreshConflictChoiceUi(product, d, sourceDraft, winner,
+  phrase, control = null, editedGroupIds = []) {
+  const editor = control?.closest?.(".g4-v126-editor") ||
+    g4sbV418JtbdCard(product, sourceDraft.jtbdId)
+      ?.querySelector(".g4-v126-editor");
+  const keywords = editor?.querySelector(".g4-v126-keywords");
+  if (!keywords?.isConnected) return false;
+  const scroller = guruStableScrollContainer(control || keywords);
+  const previousAnchor = scroller?.style.overflowAnchor || "";
+  const oldTable = keywords.querySelector(".g4-v128-selector:not(.g4-v150-excluded-table)");
+  const oldTop = oldTable?.getBoundingClientRect().top;
+  const oldLeft = oldTable?.scrollLeft || 0;
+  const oldExcludedOpen = keywords.querySelector(".g4-v137-separated-bank")?.open;
+  if (scroller) scroller.style.overflowAnchor = "none";
+  try {
+    const jtbd = g4sbV445DraftJtbdText(product, sourceDraft);
+    keywords.innerHTML = `<div class="g4-upstream-title">3. Ключевые фразы группы</div>
+      <div class="g4-v393-metric-feedback is-success" role="status"><div><strong>Фраза распределена</strong><span>«${escapeHtml(phrase)}» закреплена за ${escapeHtml(winner.jtbd?.text || winner.group?.col0 || "выбранной группой")}.</span></div></div>
+      ${g4sbV128PhraseSelectorHtml(product, d, sourceDraft,
+        `data-g4sb-product="${escapeAttr(product)}"`, jtbd)}`;
+    const table = keywords.querySelector(".g4-v128-selector:not(.g4-v150-excluded-table)");
+    if (table) table.scrollLeft = oldLeft;
+    const excluded = keywords.querySelector(".g4-v137-separated-bank");
+    if (excluded) excluded.open = Boolean(oldExcludedOpen);
+    if (table && Number.isFinite(oldTop)) {
+      const delta = table.getBoundingClientRect().top - oldTop;
+      if (scroller === document.scrollingElement ||
+          scroller === document.documentElement || scroller === document.body)
+        window.scrollBy({ top: delta, left: 0, behavior: "auto" });
+      else scroller.scrollTop += delta;
+    }
+    guruApplyFieldStates(keywords);
+    guruAutosizeProgressively(keywords);
+  } finally {
+    if (scroller) requestAnimationFrame(() => {
+      scroller.style.overflowAnchor = previousAnchor;
+    });
+  }
+  const summary = editor.closest(".g4-v166-coverage")?.querySelector(
+    ":scope > .g4-v403-duplicate-summary");
+  if (summary) {
+    const count = g4sbV403DuplicateCount(product, d);
+    summary.dataset.g4sbProductDuplicateCount = String(count);
+    const label = summary.querySelector("strong");
+    if (label) label.textContent =
+      `Дубли фраз продукта (включая черновики): ${count}`;
+  }
+  editedGroupIds.forEach((groupId) => {
+    if (!groupId) return;
+    const group = (d.groupRows || []).find((row) =>
+      row.groupId === groupId || row.clusterId === groupId);
+    const index = (d.groupRows || []).indexOf(group);
+    const card = group && editor.closest(".g4-v166-coverage")?.querySelector(
+      `[data-g4sb-saved-group-id="${CSS.escape(groupId)}"]`);
+    if (!card || index < 0) return;
+    const rank = Number(card.querySelector(".g4-v131-priority")?.textContent
+      .match(/\d+/)?.[0]) || 0;
+    const html = g4sbV126RenderGroupCard(product, group, index,
+      d.groupRows, (d.adsRows || {})[index] || [{}], rank ? { rank } : null);
+    if (html) card.replaceWith(g4sbV445ElementFromHtml(html));
+    else card.remove();
+  });
+  const key = g4sbV128PhraseKey(phrase);
+  const visibleRow = [...keywords.querySelectorAll("[data-g4sb-phrase-row]")]
+    .find((row) => row.dataset.g4sbPhraseRow === key);
+  if (visibleRow) visibleRow.classList.add("g4-phrase-conflict-target");
+  g4sbV166RefreshJtbdPhraseSummary(product, d, editor.closest(".g4-v166-jtbd"));
+  guruInvalidateGateViewCache();
+  return true;
 }
 
 function g4sbV411ScrollToWinner(product, jtbdId, phrase, ownerId = "") {
@@ -78814,7 +79738,8 @@ function g4sbV411ConflictDraft(d, sourceJtbdId, ownerId, phrase) {
     sameJtbd[0] || null;
 }
 
-function g4sbV411ResolvePhraseConflict(product, sourceJtbdId, ownerId, choice, requestedPhrase = "") {
+function g4sbV411ResolvePhraseConflict(product, sourceJtbdId, ownerId, choice,
+  requestedPhrase = "", control = null) {
   const d = ensureGate4SearchBuild(product);
   const sourceDraft = g4sbV411ConflictDraft(
     d, sourceJtbdId, ownerId, requestedPhrase,
@@ -78866,22 +79791,44 @@ function g4sbV411ResolvePhraseConflict(product, sourceJtbdId, ownerId, choice, r
       winnerDraft.keywordRows.push(g4sbKeywordRow(sourceRow));
     g4sbV411RefreshDraftForecast(winnerDraft);
   }
+  g4sbV411SyncEditedGroupPhrase(d, loserDraft, key, sourceRow, false);
+  if (winnerDraft && winnerDraft !== loserDraft)
+    g4sbV411SyncEditedGroupPhrase(d, winnerDraft, key, sourceRow, true);
   g4sbV411UpdateManualPhraseOwner(product, key, winner.jtbdId);
   g4sbClearPhraseConflict(sourceDraft);
   sourceDraft.validationError = "";
   sourceDraft.validationErrorKind = "";
 
+  const sourceEditorVisible = Boolean(control?.closest?.(".g4-v126-editor")?.isConnected);
   if (winnerDraft?.open) {
     d.jtbdDraftsV388 = d.jtbdDraftsV388 && typeof d.jtbdDraftsV388 === "object"
       ? d.jtbdDraftsV388 : {};
     d.jtbdDraftsV388[winner.jtbdId] = winnerDraft;
-    d.clusterDraft = winnerDraft;
-    d.activeJtbdId = winner.jtbdId;
+    if (!sourceEditorVisible) {
+      d.clusterDraft = winnerDraft;
+      d.activeJtbdId = winner.jtbdId;
+    }
     d.openJtbdIdsV391 = [...new Set([...(d.openJtbdIdsV391 || []), winner.jtbdId])];
   }
-  saveState();
-  renderGate();
-  g4sbV411ScrollToWinner(product, winner.jtbdId, phrase, winner.ownerId);
+  if (sourceEditorVisible) {
+    d.clusterDraft = sourceDraft;
+    d.activeJtbdId = sourceDraft.jtbdId;
+    d.jtbdDraftsV388 = d.jtbdDraftsV388 || {};
+    d.jtbdDraftsV388[sourceDraft.jtbdId] = sourceDraft;
+  }
+  g4sbV560SyncGate1PhraseGroups(product);
+  // A button click does not trigger the input/change dirty-tab guard. Mark
+  // this data mutation durable now, then recalculate project status in idle.
+  guruPersistStateFast({ durable: true });
+  guruScheduleDerivedRefresh();
+  const editedGroupIds = [...new Set([
+    sourceDraft.editingClusterId, loserDraft?.editingClusterId,
+    winnerDraft?.editingClusterId,
+  ].filter(Boolean))];
+  const refreshed = g4sbV448WithEditorReadCache(product, sourceDraft, () =>
+    g4sbV411RefreshConflictChoiceUi(product, d, sourceDraft, winner,
+      phrase, control, editedGroupIds));
+  if (!refreshed) renderGate();
   return true;
 }
 
@@ -78896,6 +79843,7 @@ document.addEventListener("click", (event) => {
     button.dataset.g4sbConflictOwnerId,
     button.dataset.g4sbConflictChoice,
     button.dataset.g4sbConflictPhrase,
+    button,
   );
 }, true);
 

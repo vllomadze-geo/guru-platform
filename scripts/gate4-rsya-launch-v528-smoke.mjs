@@ -81,6 +81,7 @@ try {
     throw new Error(`Timed out: ${expression}`);
   };
   const screenshot = async (name, selector, maxHeight = 0) => {
+    if (process.env.GURU_SKIP_SCREENSHOTS === '1') return;
     const clip = await evaluate(`(async () => {
       const node=document.querySelector(${JSON.stringify(selector)});
       if(!node) throw new Error('Screenshot target missing');
@@ -149,6 +150,14 @@ try {
   await screenshot('gate4-search-launch-unchanged-v528.png','.g1-card:has(> [data-g4sb-step="launch"])');
   console.error("Search exact HTML unchanged",hash(source.searchHtml));
   const platformSource={url:"",source:"Fresh Gate4 export does not contain Gate0 platform; missing values are verified as not set"};
+  await evaluate(`(() => {
+    const s=window.__rsyaLaunchSmoke;
+    s.d.ui.workflowStepOpenV453={...s.d.ui.workflowStepOpenV453,groups:false,launch:false};
+    s.render();
+  })()`);
+  await screenshot('gate4-rsya-goat-collapsed-v530.png','.g4-rsya-v289');
+  await evaluate(`document.querySelector('#workspaceToolbar').style.display='none'`);
+  await screenshot('gate4-rsya-goat-collapsed-context-v530.png','main.main',650);
   const initial = await evaluate(`(() => {
     const s=window.__rsyaLaunchSmoke;
     s.d.ui.workflowStepOpenV453={...s.d.ui.workflowStepOpenV453,groups:false,settings:false,launch:true};
@@ -156,9 +165,16 @@ try {
     s.initialData=s.snapshot(); s.searchData=JSON.stringify(state.gate4SearchBuild);
     s.legacyChecks=JSON.stringify(s.d.launchChecklistV454);
     const body=document.querySelector('[data-g4rsya-launch-body]');
+    const settings=body.querySelector('[data-g4rsya-campaign-settings]');
+    const fields=[...settings.querySelectorAll('[data-g4rsya-v289-store][data-g4rsya-v289-field]')]
+      .map(e=>[e.dataset.g4rsyaV289Store,e.dataset.g4rsyaV289Field,e.value]);
     const model=g4RsyaLaunchModelV528(s.pid,s.d);
     const checks=[...body.querySelectorAll('[data-g4rsya-launch-check]')];
     return {steps:[...document.querySelectorAll('[data-g4rsya-v453-step] .g1-card-title')].map(e=>e.textContent.trim()),
+      settingsFirst:body.firstElementChild===settings,settingsTitle:settings.querySelector('h3')?.textContent,
+      fields,legacySettingsKey:s.d.ui.workflowStepOpenV453.settings,
+      bareChoose:[...settings.querySelectorAll('select')].filter(e=>e.selectedOptions[0]?.textContent.trim()==='Выбрать').length,
+      emptyBackgrounds:[...settings.querySelectorAll('.g1-input.is-empty')].map(e=>getComputedStyle(e).backgroundColor),
       count:checks.length,keys:checks.map(e=>e.dataset.g4rsyaLaunchCheck),
       labels:checks.map(e=>e.parentElement.textContent.trim()),
       total:model.total,ready:model.ready,groups:model.groups.length,fixed:model.fixed,
@@ -170,13 +186,18 @@ try {
       groupsCount:body.querySelectorAll('[data-g4rsya-launch-group-level]').length,
       commonFields:JSON.stringify(s.campaign)};
   })()`);
-  assert(initial.steps.join('|')==='1JTBD и группы|2Настройки кампании|3Запуск',`Wrong steps ${JSON.stringify(initial.steps)}`);
+  assert(initial.steps.join('|')==='1JTBD и группы|2Запуск'&&initial.settingsFirst&&initial.settingsTitle==='Настройки кампании',`Wrong steps ${JSON.stringify(initial.steps)}`);
+  assert(initial.legacySettingsKey===false && initial.fields.some(([store,field,value])=>store==='campaign'&&field==='metrikaCounter'&&value==='105213127') && initial.fields.some(([store,field,value])=>store==='campaign'&&field==='metrikaGoal'&&value==='ID 573230679'),`Settings fields missing ${JSON.stringify(initial.fields)}`);
+  assert(initial.bareChoose===0,'Settings contain an empty «Выбрать» option');
+  assert(initial.emptyBackgrounds.every(color=>{const rgb=color.match(/[\d.]+/g)?.slice(0,3).map(Number);return !rgb||Math.max(...rgb)-Math.min(...rgb)<12}),`Empty settings fields have color fill ${initial.emptyBackgrounds}`);
   assert(initial.count===14 && initial.keys.every((key,i)=>key===`campaign:${i+1}`),`Campaign checklist invalid ${JSON.stringify(initial)}`);
   assert(initial.total===17 && initial.groups===3 && initial.statuses.every(e=>e.status===e.source),`Status/model mismatch ${JSON.stringify(initial)}`);
-  assert(initial.meta===`Готово ${initial.ready} из ${initial.total}` && initial.noSearchOnly && !initial.editableSources,`Launch contents invalid ${JSON.stringify(initial)}`);
+  assert(initial.meta===`Готово ${initial.ready} из ${initial.total}` && initial.noSearchOnly && initial.editableSources>0,`Launch contents invalid ${JSON.stringify(initial)}`);
   assert(initial.header.includes('Итоговый бюджет:') && initial.header.includes('не задано') && initial.header.includes('из 3 групп готовы'),`Missing source/header ${initial.header}`);
   await screenshot('gate4-rsya-launch-header-v528.png','.g1-card:has(> [data-g4rsya-v453-step="launch"])',1100);
-  await screenshot('gate4-rsya-launch-campaign-v528.png','[data-g4rsya-launch-body] > .g4-v406-launch-level');
+  await screenshot('gate4-rsya-goat-launch-open-v530.png','.g1-card:has(> [data-g4rsya-v453-step="launch"])',2400);
+  await screenshot('gate4-rsya-launch-campaign-v528.png','[data-g4rsya-campaign-settings]',1100);
+  await screenshot('gate4-rsya-goat-launch-settings-v530.png','[data-g4rsya-campaign-settings]');
   const interaction = await evaluate(`(() => {
     const s=window.__rsyaLaunchSmoke;
     const check=document.querySelector('[data-g4rsya-launch-check="campaign:1"]');
@@ -238,26 +259,57 @@ try {
   assert(sourceRules.renderedUrl===sourceRules.expectedUrl && sourceRules.renderedUrl.includes('utm_term='),`UTM diverged ${JSON.stringify(sourceRules)}`);
   assert(sourceRules.lowBadge?.includes('ниже 300')&&sourceRules.enoughBadge?.includes('≥ 300')&&sourceRules.monthlyBadge.includes('не задано'),`Budget rules invalid ${JSON.stringify(sourceRules)}`);
   assert(sourceRules.overWarning && sourceRules.keptImages===8 && sourceRules.dataRestored,`Image overflow lost data ${JSON.stringify(sourceRules)}`);
+  const conditionalFields=await evaluate(`(() => {
+    const s=window.__rsyaLaunchSmoke;
+    const original=structuredClone(s.d.campaign);
+    const inventory={};
+    for(const strategy of ['max_conversions','target_cpa','target_drr']){
+      s.d.campaign.strategy=strategy;
+      s.d.campaign.excludedPlacements=[{id:'layout-smoke-placement',placement:'example.test',reason:'тест'}];
+      const root=document.createElement('div');
+      root.innerHTML=g4RsyaLaunchBodyV453(s.pid,s.channel.key,s.campaign,s.d,g4RsyaLaunchModelV528(s.pid,s.d));
+      inventory[strategy]=[...root.querySelectorAll('[data-g4rsya-campaign-settings] [data-g4rsya-v289-store][data-g4rsya-v289-field]')]
+        .map(e=>e.dataset.g4rsyaV289Store+'.'+e.dataset.g4rsyaV289Field);
+    }
+    s.d.campaign=original;
+    return {inventory,dataRestored:s.initialData===s.snapshot()};
+  })()`);
+  for(const [strategy,fields] of Object.entries(conditionalFields.inventory)){
+    for(const field of ['campaign.paymentModel','conversionVolumeCheck.from','conversionVolumeCheck.to','conversionVolumeCheck.count','conversionVolumeCheck.evidenceUrl','excludedPlacement.placement','excludedPlacement.reason'])
+      assert(fields.includes(field),`Missing ${field} for ${strategy}`);
+  }
+  assert(conditionalFields.inventory.target_cpa.includes('strategyTarget.targetCpaRub')&&conditionalFields.inventory.target_drr.includes('strategyTarget.targetDrrPercent')&&conditionalFields.dataRestored,`Conditional settings lost ${JSON.stringify(conditionalFields)}`);
   console.error('RSYA UI/source checks passed');
 
   const projectsAudit=[];
   for(const fixture of fixtures){
     const result=await evaluate(`(() => {
       const previous=state;const previousId=activeProjectId;
-      state=${JSON.stringify(fixture.workspace)};activeProjectId=${JSON.stringify(fixture.id)};
-      const branches=state.gate4Rsya||{};
-      // Existing Platform read helper initializes its legacy empty containers.
-      // Compare the new renderer after this ordinary app normalization.
-      megaPlatformUrlStore(state);megaPlatformCategoryStore(state);
-      const before=JSON.stringify(branches);const gates=JSON.stringify(state.gates);
-      const count=()=>({branches:Object.keys(branches).length,groups:Object.values(branches).reduce((n,d)=>n+(d.groups||[]).length,0),ads:Object.values(branches).reduce((n,d)=>n+(d.groups||[]).reduce((v,g)=>v+(g.ads||[]).length,0),0)});
-      const initial=count();
-      const entries=Object.entries(branches);
-      if(entries.length){for(const [key,d] of entries){const pid=(state.project.catalogItemsV189||[]).find(p=>normalizeAspectKey(p.id)===key)?.id||${JSON.stringify(productId)};const model=g4RsyaLaunchModelV528(pid,d);g4RsyaLaunchBodyV453(pid,'test-rsya',{},d,model);}}
-      else {const d={campaign:{},groups:[],ui:{}};const model=g4RsyaLaunchModelV528('',d);if(model.total!==14||model.groups.length)throw new Error('Empty model failed');}
-      const after=count();const sourceUnchanged=before===JSON.stringify(branches);const otherGatesUnchanged=gates===JSON.stringify(state.gates);
+      const stable=value=>JSON.stringify(value,(_key,row)=>row&&typeof row==='object'&&!Array.isArray(row)?Object.fromEntries(Object.keys(row).sort().map(key=>[key,row[key]])):row);
+      const settingsRenderer=g4RsyaCampaignSettingsBodyV528;
+      const run=(embedded)=>{
+        state=structuredClone(${JSON.stringify(fixture.workspace)});
+        activeProjectId=${JSON.stringify(fixture.id)};
+        guruV194Ensure(state);megaPlatformUrlStore(state);megaPlatformCategoryStore(state);
+        const branches=state.gate4Rsya||{};
+        const entries=Object.entries(branches);
+        const count={branches:entries.length,groups:entries.reduce((n,[,d])=>n+(d.groups||[]).length,0),ads:entries.reduce((n,[,d])=>n+(d.groups||[]).reduce((v,g)=>v+(g.ads||[]).length,0),0)};
+        for(const [key,d] of entries){
+          const pid=(state.project.catalogItemsV189||[]).find(p=>normalizeAspectKey(p.id)===key)?.id||${JSON.stringify(productId)};
+          const model=g4RsyaLaunchModelV528(pid,d);
+          if(!embedded)settingsRenderer(pid,'test-rsya',{},d);
+          if(!embedded)g4RsyaCampaignSettingsBodyV528=()=>'';
+          try{g4RsyaLaunchBodyV453(pid,'test-rsya',{},d,model);}
+          finally{g4RsyaCampaignSettingsBodyV528=settingsRenderer;}
+        }
+        if(!entries.length){const d={campaign:{},groups:[],ui:{}};const model=g4RsyaLaunchModelV528('',d);if(model.total!==14||model.groups.length)throw new Error('Empty model failed');}
+        return {count,rsya:stable(branches),gates:stable(state.gates),search:stable(state.gate4SearchBuild||{})};
+      };
+      const oldLayout=run(false);const newLayout=run(true);
+      const sourceUnchanged=oldLayout.rsya===newLayout.rsya;
+      const otherGatesUnchanged=!oldLayout.count.branches||oldLayout.gates===newLayout.gates&&oldLayout.search===newLayout.search;
       state=previous;activeProjectId=previousId;
-      return {initial,after,sourceUnchanged,otherGatesUnchanged};
+      return {initial:oldLayout.count,after:newLayout.count,sourceUnchanged,otherGatesUnchanged};
     })()`);
     assert(JSON.stringify(result.initial)===JSON.stringify(result.after)&&result.sourceUnchanged&&result.otherGatesUnchanged,`Project data changed ${fixture.name}: ${JSON.stringify(result)}`);
     projectsAudit.push({id:fixture.id,name:fixture.name,...result});
@@ -300,7 +352,7 @@ try {
   assert(persistenceAfter.ui===persistenceBefore.expectedUi&&persistenceAfter.checked.includes('campaign:1')&&persistenceAfter.checked.includes('campaign:2')&&persistenceAfter.open===2,`Hard reload lost UI ${JSON.stringify({persistenceBefore,persistenceAfter})}`);
   assert(persistenceBefore.groups===persistenceAfter.groups&&persistenceBefore.ads===persistenceAfter.ads,`Hard reload lost source records`);
   assert(page.exceptions.length===0,`Browser errors ${JSON.stringify(page.exceptions)}`);
-  const audit={ok:true,source:gate4Path,exportedAt:gate4Export.exportedAt,platformSource,search:{exactHtmlUnchanged:true,sha256:hash(source.searchHtml)},initial,interaction:{...interaction,groupText:undefined},sourceRules,projectsAudit,persistence:{before:persistenceBefore,after:persistenceAfter},screenshots:['gate4-rsya-launch-header-v528.png','gate4-rsya-launch-campaign-v528.png','gate4-rsya-launch-group-v528.png','gate4-search-launch-unchanged-v528.png']};
+  const audit={ok:true,source:gate4Path,exportedAt:gate4Export.exportedAt,platformSource,search:{exactHtmlUnchanged:true,sha256:hash(source.searchHtml)},initial,interaction:{...interaction,groupText:undefined},sourceRules,conditionalFields,projectsAudit,persistence:{before:persistenceBefore,after:persistenceAfter},screenshots:['gate4-rsya-goat-collapsed-context-v530.png','gate4-rsya-goat-collapsed-v530.png','gate4-rsya-goat-launch-open-v530.png','gate4-rsya-goat-launch-settings-v530.png','gate4-rsya-launch-header-v528.png','gate4-rsya-launch-campaign-v528.png','gate4-rsya-launch-group-v528.png','gate4-search-launch-unchanged-v528.png']};
   await writeFile(new URL('gate4-rsya-launch-v528-audit.json',outputDir),JSON.stringify(audit,null,2)+'\n');
   console.log(JSON.stringify(audit,null,2));
 } finally {

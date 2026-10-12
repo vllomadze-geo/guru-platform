@@ -1,0 +1,209 @@
+{
+  "auditedAt": "2026-09-23T21:18:01.372Z",
+  "source": "read-only localStorage copy",
+  "origin": "http://localhost:3000/",
+  "retiredCardIds": [
+    "card-147",
+    "card-149",
+    "card-150"
+  ],
+  "projects": [
+    {
+      "id": "project-1783243907480-ec7d8c",
+      "name": "Коричное яблоко",
+      "storageKey": "guru-platform-workspace-v02-project-1783243907480-ec7d8c",
+      "found": true,
+      "workspaceProjectName": "Коричное яблоко",
+      "cards": {
+        "card-147": {
+          "title": "Карта реализации",
+          "templateRows": [],
+          "templateMethodHints": [],
+          "byProduct": [],
+          "legacyUnassigned": null,
+          "hasStoredData": false
+        },
+        "card-149": {
+          "title": "Продукт и оффер зафиксированы",
+          "templateRows": [],
+          "templateMethodHints": [
+            {
+              "rowKey": "итоговый_результат_блока",
+              "values": {
+                "comment": "1 рабочий оффер и 1 основное УТП, которые дальше идут в сайт, креативы и рекламу"
+              }
+            }
+          ],
+          "byProduct": [],
+          "legacyUnassigned": null,
+          "hasStoredData": false
+        },
+        "card-150": {
+          "title": "Приоритетный сегмент выбран",
+          "templateRows": [],
+          "templateMethodHints": [
+            {
+              "rowKey": "итоговый_результат_блока",
+              "values": {
+                "comment": "понятно, на кого идёт первая реализация и под кого пишется весь запуск"
+              }
+            }
+          ],
+          "byProduct": [],
+          "legacyUnassigned": null,
+          "hasStoredData": false
+        }
+      },
+      "card147HasManualData": false
+    },
+    {
+      "id": "project-1783068059197-798d26",
+      "name": "iCleaning",
+      "storageKey": "guru-platform-workspace-v02-project-1783068059197-798d26",
+      "found": true,
+      "workspaceProjectName": "iCleaning",
+      "cards": {
+        "card-147": {
+          "title": "Карта реализации",
+          "templateRows": [],
+          "templateMethodHints": [],
+          "byProduct": [],
+          "legacyUnassigned": null,
+          "hasStoredData": false
+        },
+        "card-149": {
+          "title": "Продукт и оффер зафиксированы",
+          "templateRows": [],
+          "templateMethodHints": [
+            {
+              "rowKey": "итоговый_результат_блока",
+              "values": {
+                "comment": "1 рабочий оффер и 1 основное УТП, которые дальше идут в сайт, креативы и рекламу"
+              }
+            }
+          ],
+          "byProduct": [],
+          "legacyUnassigned": null,
+          "hasStoredData": false
+        },
+        "card-150": {
+          "title": "Приоритетный сегмент выбран",
+          "templateRows": [],
+          "templateMethodHints": [
+            {
+              "rowKey": "итоговый_результат_блока",
+              "values": {
+                "comment": "понятно, на кого идёт первая реализация и под кого пишется весь запуск"
+              }
+            }
+          ],
+          "byProduct": [],
+          "legacyUnassigned": null,
+          "hasStoredData": false
+        }
+      },
+      "card147HasManualData": false
+    },
+    {
+      "id": "project-1782674551414-146f62",
+      "name": "SIVRCE",
+      "storageKey": "guru-platform-workspace-v02-project-1782674551414-146f62",
+      "found": true,
+      "workspaceProjectName": "SIVRCE",
+      "cards": {
+        "card-147": {
+          "title": "Карта реализации",
+          "templateRows": [],
+          "templateMethodHints": [],
+          "byProduct": [],
+          "legacyUnassigned": null,
+          "hasStoredData": false
+        },
+        "card-149": {
+          "title": "Продукт и оффер зафиксированы",
+          "templateRows": [],
+          "templateMethodHints": [
+            {
+              "rowKey": "итоговый_результат_блока",
+              "values": {
+                "comment": "1 рабочий оффер и 1 основное УТП, которые дальше идут в сайт, креативы и рекламу"
+              }
+            }
+          ],
+          "byProduct": [],
+          "legacyUnassigned": null,
+          "hasStoredData": false
+        },
+        "card-150": {
+          "title": "Приоритетный сегмент выбран",
+          "templateRows": [],
+          "templateMethodHints": [
+            {
+              "rowKey": "итоговый_результат_блока",
+              "values": {
+                "comment": "понятно, на кого идёт первая реализация и под кого пишется весь запуск"
+              }
+            }
+          ],
+          "byProduct": [],
+          "legacyUnassigned": null,
+          "hasStoredData": false
+        }
+      },
+      "card147HasManualData": false
+    },
+    {
+      "id": "project-1782582860052-3a45cc",
+      "name": "360profit",
+      "storageKey": "guru-platform-workspace-v02-project-1782582860052-3a45cc",
+      "found": true,
+      "workspaceProjectName": "360profit",
+      "cards": {
+        "card-147": {
+          "title": "Карта реализации",
+          "templateRows": [],
+          "templateMethodHints": [],
+          "byProduct": [],
+          "legacyUnassigned": null,
+          "hasStoredData": false
+        },
+        "card-149": {
+          "title": "Продукт и оффер зафиксированы",
+          "templateRows": [],
+          "templateMethodHints": [
+            {
+              "rowKey": "итоговый_результат_блока",
+              "values": {
+                "comment": "1 рабочий оффер и 1 основное УТП, которые дальше идут в сайт, креативы и рекламу"
+              }
+            }
+          ],
+          "byProduct": [],
+          "legacyUnassigned": null,
+          "hasStoredData": false
+        },
+        "card-150": {
+          "title": "Приоритетный сегмент выбран",
+          "templateRows": [],
+          "templateMethodHints": [
+            {
+              "rowKey": "итоговый_результат_блока",
+              "values": {
+                "comment": "понятно, на кого идёт первая реализация и под кого пишется весь запуск"
+              }
+            }
+          ],
+          "byProduct": [],
+          "legacyUnassigned": null,
+          "hasStoredData": false
+        }
+      },
+      "card147HasManualData": false
+    }
+  ],
+  "summary": {
+    "requested": 4,
+    "found": 4,
+    "card147WithManualData": []
+  }
+}

@@ -148,7 +148,7 @@ const result = await evaluate(`(() => {
     stages: document.querySelectorAll("[data-g3-product-stage]").length,
     manualInputs: document.querySelectorAll("[data-g3a-step], [data-g3a-tool-step], .g3-product-journey input, .g3-product-journey textarea").length,
     cells: document.querySelectorAll('[data-g3-product-stage="appeal"] .g3-product-journey-cell').length,
-    productVisible: document.querySelector(".g3-product-journey-context")?.textContent.includes("Рубашка Upcycling с кружевом") || false,
+    productVisible: [...(document.querySelector("[data-g3-product-journey-select]")?.selectedOptions || [])].some((option) => option.textContent.includes("Рубашка Upcycling с кружевом")),
     positioningVisible: appealText.includes("Авторская одежда из винтажных материалов"),
     offerVisible: appealText.includes("Бесплатная доставка уникальной вещи"),
     cardVisible: appealText.includes("Единственный экземпляр · ручная работа"),

@@ -1,0 +1,138 @@
+{
+  "auditedAt": "2026-10-05T15:00:08.102Z",
+  "mode": "read-only source audit",
+  "source": {
+    "kind": "Isolated copy of Chrome Profile 2 Local Storage, blank intercepted pages",
+    "origin": "https://guru-platform-navy.vercel.app",
+    "storageCopiedAt": "2026-10-05T14:58:48.093Z",
+    "userStorageModified": false,
+    "applicationLoadedDuringExtraction": false,
+    "cloudWritesPerformed": false
+  },
+  "projects": [
+    {
+      "id": "project-1783243907480-ec7d8c",
+      "name": "Коричное яблоко",
+      "found": true,
+      "workspaceUpdatedAt": "2026-09-29T16:12:07.624Z",
+      "counts": {
+        "catalogItems": 8,
+        "registryProducts": 6,
+        "gate4Cards": 23,
+        "storedCampaigns": 256,
+        "rsyaBranches": 1,
+        "searchBuildBranches": 8,
+        "readinessProductBranches": 0
+      }
+    },
+    {
+      "id": "project-1783068059197-798d26",
+      "name": "iCleaning",
+      "found": true,
+      "workspaceUpdatedAt": "2026-09-01T14:44:48.188Z",
+      "counts": {
+        "catalogItems": 4,
+        "registryProducts": 9,
+        "gate4Cards": 23,
+        "storedCampaigns": 527,
+        "rsyaBranches": 0,
+        "searchBuildBranches": 11,
+        "readinessProductBranches": 0
+      }
+    },
+    {
+      "id": "project-1782674551414-146f62",
+      "name": "SIVRCE",
+      "found": true,
+      "workspaceUpdatedAt": "2026-09-01T14:47:32.662Z",
+      "counts": {
+        "catalogItems": 0,
+        "registryProducts": 7,
+        "gate4Cards": 23,
+        "storedCampaigns": 122,
+        "rsyaBranches": 0,
+        "searchBuildBranches": 0,
+        "readinessProductBranches": 0
+      }
+    },
+    {
+      "id": "project-1782582860052-3a45cc",
+      "name": "360profit",
+      "found": true,
+      "workspaceUpdatedAt": "2026-09-01T14:46:05.738Z",
+      "counts": {
+        "catalogItems": 0,
+        "registryProducts": 0,
+        "gate4Cards": 23,
+        "storedCampaigns": 15,
+        "rsyaBranches": 0,
+        "searchBuildBranches": 0,
+        "readinessProductBranches": 0
+      }
+    }
+  ],
+  "freshAppleExport": {
+    "path": "/Users/vl/Downloads/gate-4.json",
+    "exportedAt": "2026-10-05T14:03:46.210Z",
+    "exportedGateId": "gate-4",
+    "projectId": "project-1783243907480-ec7d8c",
+    "projectName": "Коричное яблоко",
+    "counts": {
+      "catalogItems": 14,
+      "registryProducts": 7,
+      "gate4Cards": 0,
+      "storedCampaigns": 330,
+      "rsyaBranches": 1,
+      "searchBuildBranches": 14,
+      "readinessProductBranches": 0
+    },
+    "goatProductId": "catalog-item-1786792591872-51f503",
+    "otherProductId": "catalog-item-1786792591872-c8b1e9"
+  },
+  "local": {
+    "gitSha": "0a232842d9bffe7a90912167dccb66e6ed9db7f8",
+    "workingTreeHasPreexistingUncommittedChanges": true
+  },
+  "production": {
+    "url": "https://guru-platform-navy.vercel.app/",
+    "gitSha": null,
+    "gitShaAvailability": "unavailable",
+    "reasons": [
+      "Vercel GET deployment metadata returned HTTP 403 with the existing CLI credential.",
+      "Existing CLI credential is expired.",
+      "Public build-info.js exposes UI version but no Git commit SHA."
+    ],
+    "deployedBuildVersion": "2.3.203",
+    "assets": [
+      {
+        "path": "build-info.js",
+        "bytes": 443,
+        "sha256": "8b205ee4698cca07cac79dbd88914384d89091a01e7bc0e25d9b8611b7802139"
+      },
+      {
+        "path": "app.js",
+        "bytes": 3392152,
+        "sha256": "8987dbd85267c1e531aa6b527bcce031c34690744e4aa1151ee7f671eeb19d67"
+      },
+      {
+        "path": "gate4-funnel-readiness.js",
+        "bytes": 173006,
+        "sha256": "3e1b4205c66a76fb2a1fc268984110d7228c123cd0d379dedc7e31b75111c1c7"
+      }
+    ],
+    "deployed": false
+  },
+  "backendReadAvailability": {
+    "endpoint": "/api/workspace-sync",
+    "requestedProjects": 4,
+    "successfulReads": 0,
+    "error": "supabase_read_error",
+    "backendStatus": 503
+  },
+  "notes": [
+    "Production-origin browser snapshots are newer than localhost snapshots.",
+    "Use the fresh Apple export for Goat and second-product acceptance tests.",
+    "No workspace payloads, tokens, field values or user content are included in this summary.",
+    "Extraction browser closed after copying."
+  ]
+}

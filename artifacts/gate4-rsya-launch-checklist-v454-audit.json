@@ -1,0 +1,127 @@
+{
+  "sourceExportedAt": "2026-09-23T10:54:16.102Z",
+  "product_id": "catalog-item-1786792591872-51f503",
+  "initial": {
+    "ready": 2,
+    "total": 12,
+    "autoReady": 2,
+    "autoTotal": 8,
+    "manualReady": 0,
+    "manualTotal": 4,
+    "meta": "Готово 2 из 12",
+    "automaticRows": 8,
+    "manualRows": 4,
+    "product": {
+      "ready": true,
+      "value": "product-1786401011698-9e81ee",
+      "expected": "product-1786401011698-9e81ee",
+      "status": "product_id: product-1786401011698-9e81ee"
+    },
+    "metrika": {
+      "ready": true,
+      "counter": "105213127",
+      "goal": "ID 573230679",
+      "status": "Счётчик 105213127 · цель ID 573230679"
+    },
+    "forbiddenSearchMechanisms": false,
+    "separateAutoStorage": false,
+    "calloutComponentReused": true
+  },
+  "interaction": {
+    "states": {
+      "before": {
+        "ready": 2,
+        "total": 12,
+        "autoReady": 2,
+        "manualReady": 0,
+        "meta": "Готово 2 из 12"
+      },
+      "afterInterests": {
+        "ready": 3,
+        "total": 12,
+        "autoReady": 3,
+        "manualReady": 0,
+        "meta": "Готово 3 из 12"
+      },
+      "afterHeadingOnly": {
+        "ready": 3,
+        "total": 12,
+        "autoReady": 3,
+        "manualReady": 0,
+        "meta": "Готово 3 из 12"
+      },
+      "afterAdCopy": {
+        "ready": 4,
+        "total": 12,
+        "autoReady": 4,
+        "manualReady": 0,
+        "meta": "Готово 4 из 12"
+      },
+      "afterGeographyOnly": {
+        "ready": 4,
+        "total": 12,
+        "autoReady": 4,
+        "manualReady": 0,
+        "meta": "Готово 4 из 12"
+      },
+      "afterCampaignSettings": {
+        "ready": 5,
+        "total": 12,
+        "autoReady": 5,
+        "manualReady": 0,
+        "meta": "Готово 5 из 12"
+      },
+      "afterImage": {
+        "ready": 6,
+        "total": 12,
+        "autoReady": 6,
+        "manualReady": 0,
+        "meta": "Готово 6 из 12"
+      },
+      "afterCallout": {
+        "ready": 7,
+        "total": 12,
+        "autoReady": 7,
+        "manualReady": 0,
+        "meta": "Готово 7 из 12"
+      },
+      "afterCalloutOverflow": {
+        "ready": 6,
+        "total": 12,
+        "autoReady": 6,
+        "manualReady": 0,
+        "meta": "Готово 6 из 12",
+        "state": "error",
+        "warning": "Для мобильного показа сократите общую длину до 76 символов; на десктопе лимит 132"
+      },
+      "afterSitelink": {
+        "ready": 8,
+        "total": 12,
+        "autoReady": 8,
+        "manualReady": 0,
+        "meta": "Готово 8 из 12"
+      },
+      "afterSitelinkOverflow": {
+        "ready": 7,
+        "total": 12,
+        "autoReady": 7,
+        "manualReady": 0,
+        "meta": "Готово 7 из 12"
+      },
+      "afterManual": {
+        "ready": 9,
+        "total": 12,
+        "autoReady": 8,
+        "manualReady": 1,
+        "meta": "Готово 9 из 12"
+      }
+    },
+    "missingGoal": {
+      "product": "catalog-item-1786792591872-c8b1e9",
+      "ready": false,
+      "state": "manual",
+      "status": "Требует ручного ввода цели: для товара нет записи Gate 2"
+    },
+    "manualStored": true
+  }
+}

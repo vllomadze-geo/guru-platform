@@ -1,0 +1,1001 @@
+{
+  "build": "2.3.235",
+  "product": "Символ 2027 года «Коза»",
+  "counts": {
+    "cards": 20,
+    "rows": 60,
+    "channels": 15,
+    "automaticRows": 38,
+    "storedCampaigns": 15,
+    "campaignsOutsideCurrentMap": 0
+  },
+  "sourceFixtureExpectedChannels": 17,
+  "sourceFixtureActualChannels": 15,
+  "stageOrder": [
+    "aware",
+    "appeal",
+    "ask",
+    "act",
+    "advocate"
+  ],
+  "stageCards": {
+    "aware": [],
+    "appeal": [
+      "card-160",
+      "card-161",
+      "card-162",
+      "card-163"
+    ],
+    "ask": [
+      "card-152",
+      "card-153",
+      "card-154",
+      "card-155",
+      "card-156",
+      "card-157",
+      "card-158",
+      "card-159"
+    ],
+    "act": [
+      "card-148",
+      "card-151",
+      "card-164",
+      "card-165",
+      "card-166",
+      "card-167",
+      "card-168",
+      "card-169"
+    ],
+    "advocate": []
+  },
+  "cards": [
+    {
+      "id": "card-148",
+      "title": "Единая карта запуска",
+      "stage": "act",
+      "automatic": 0,
+      "manual": 2
+    },
+    {
+      "id": "card-151",
+      "title": "Целевое действие выбрано",
+      "stage": "act",
+      "automatic": 3,
+      "manual": 1
+    },
+    {
+      "id": "card-152",
+      "title": "Посадочная страница собрана под сегмент",
+      "stage": "ask",
+      "automatic": 3,
+      "manual": 0
+    },
+    {
+      "id": "card-153",
+      "title": "Смысловой каркас страницы собран",
+      "stage": "ask",
+      "automatic": 2,
+      "manual": 0
+    },
+    {
+      "id": "card-154",
+      "title": "Архитектура психослоев на посадочной",
+      "stage": "ask",
+      "automatic": 1,
+      "manual": 0
+    },
+    {
+      "id": "card-155",
+      "title": "Формы и контакты работают",
+      "stage": "ask",
+      "automatic": 3,
+      "manual": 0
+    },
+    {
+      "id": "card-156",
+      "title": "Мобильная версия не ломает конверсию",
+      "stage": "ask",
+      "automatic": 3,
+      "manual": 0
+    },
+    {
+      "id": "card-157",
+      "title": "Метрика и базовые цели подключены",
+      "stage": "ask",
+      "automatic": 4,
+      "manual": 0
+    },
+    {
+      "id": "card-158",
+      "title": "UTM и разметка готовы",
+      "stage": "ask",
+      "automatic": 4,
+      "manual": 1
+    },
+    {
+      "id": "card-159",
+      "title": "Передача лидов и статусов не теряется",
+      "stage": "ask",
+      "automatic": 3,
+      "manual": 0
+    },
+    {
+      "id": "card-160",
+      "title": "Креативная рамка зафиксирована",
+      "stage": "appeal",
+      "automatic": 0,
+      "manual": 2
+    },
+    {
+      "id": "card-161",
+      "title": "Креативная матрица 3×3",
+      "stage": "appeal",
+      "automatic": 0,
+      "manual": 2
+    },
+    {
+      "id": "card-162",
+      "title": "Собран минимальный пакет креативов",
+      "stage": "appeal",
+      "automatic": 0,
+      "manual": 1
+    },
+    {
+      "id": "card-163",
+      "title": "Креативы связаны со страницей",
+      "stage": "appeal",
+      "automatic": 0,
+      "manual": 2
+    },
+    {
+      "id": "card-164",
+      "title": "Стартовые рекламные сущности собраны",
+      "stage": "act",
+      "automatic": 1,
+      "manual": 2
+    },
+    {
+      "id": "card-165",
+      "title": "Посадки привязаны к типу спроса",
+      "stage": "act",
+      "automatic": 0,
+      "manual": 1
+    },
+    {
+      "id": "card-166",
+      "title": "Бюджет и критерий остановки заданы",
+      "stage": "act",
+      "automatic": 1,
+      "manual": 2
+    },
+    {
+      "id": "card-167",
+      "title": "Предзапусковый QA пройден",
+      "stage": "act",
+      "automatic": 0,
+      "manual": 3
+    },
+    {
+      "id": "card-168",
+      "title": "Менеджерская обработка готова",
+      "stage": "act",
+      "automatic": 3,
+      "manual": 0
+    },
+    {
+      "id": "card-169",
+      "title": "Запусковая готовность подтверждена",
+      "stage": "act",
+      "automatic": 7,
+      "manual": 3
+    }
+  ],
+  "channels": [
+    {
+      "key": "платная_реклама_яндекс_директ_поиск_0",
+      "label": "Яндекс Директ / Поиск",
+      "stage": "ask",
+      "source": "Gate 0 · Каналы → gate4Production.campaigns[product_id/channel_key]"
+    },
+    {
+      "key": "платная_реклама_яндекс_директ_рся_1",
+      "label": "Яндекс Директ / РСЯ",
+      "stage": "aware",
+      "source": "Gate 0 · Каналы → gate4Production.campaigns[product_id/channel_key]"
+    },
+    {
+      "key": "платная_реклама_яндекс_директ_мастер_кампаний_2",
+      "label": "Яндекс Директ / Мастер кампаний",
+      "stage": "aware",
+      "source": "Gate 0 · Каналы → gate4Production.campaigns[product_id/channel_key]"
+    },
+    {
+      "key": "платная_реклама_google_ads_search_3",
+      "label": "Google Ads / Search",
+      "stage": "ask",
+      "source": "Gate 0 · Каналы → gate4Production.campaigns[product_id/channel_key]"
+    },
+    {
+      "key": "платная_реклама_google_ads_display_4",
+      "label": "Google Ads / Display",
+      "stage": "aware",
+      "source": "Gate 0 · Каналы → gate4Production.campaigns[product_id/channel_key]"
+    },
+    {
+      "key": "платная_реклама_vk_ads_таргет_5",
+      "label": "VK Ads / Таргет",
+      "stage": "aware",
+      "source": "Gate 0 · Каналы → gate4Production.campaigns[product_id/channel_key]"
+    },
+    {
+      "key": "платная_реклама_meta_ads_feed_reels_6",
+      "label": "Meta Ads / Feed / Reels",
+      "stage": "aware",
+      "source": "Gate 0 · Каналы → gate4Production.campaigns[product_id/channel_key]"
+    },
+    {
+      "key": "платная_реклама_telegram_ads_посевы_ads_7",
+      "label": "Telegram Ads / Посевы / Ads",
+      "stage": "aware",
+      "source": "Gate 0 · Каналы → gate4Production.campaigns[product_id/channel_key]"
+    },
+    {
+      "key": "органика_seo_страницы_сайта_8",
+      "label": "SEO / Страницы сайта",
+      "stage": "ask",
+      "source": "Gate 0 · Каналы → gate4Production.campaigns[product_id/channel_key]"
+    },
+    {
+      "key": "геосервисы_яндекс_карты_карточка_организации_9",
+      "label": "Яндекс Карты / Карточка организации",
+      "stage": "ask",
+      "source": "Gate 0 · Каналы → gate4Production.campaigns[product_id/channel_key]"
+    },
+    {
+      "key": "геосервисы_google_business_profile_карточка_организации_10",
+      "label": "Google Business Profile / Карточка организации",
+      "stage": "ask",
+      "source": "Gate 0 · Каналы → gate4Production.campaigns[product_id/channel_key]"
+    },
+    {
+      "key": "smm_vk_контент_11",
+      "label": "VK / Контент",
+      "stage": "aware",
+      "source": "Gate 0 · Каналы → gate4Production.campaigns[product_id/channel_key]"
+    },
+    {
+      "key": "smm_telegram_контент_посевы_12",
+      "label": "Telegram / Контент / посевы",
+      "stage": "aware",
+      "source": "Gate 0 · Каналы → gate4Production.campaigns[product_id/channel_key]"
+    },
+    {
+      "key": "smm_instagram_reels_stories_13",
+      "label": "Instagram / Reels / Stories",
+      "stage": "aware",
+      "source": "Gate 0 · Каналы → gate4Production.campaigns[product_id/channel_key]"
+    },
+    {
+      "key": "smm_youtube_shorts_pre_roll_14",
+      "label": "YouTube / Shorts / Pre-roll",
+      "stage": "aware",
+      "source": "Gate 0 · Каналы → gate4Production.campaigns[product_id/channel_key]"
+    }
+  ],
+  "rows": [
+    {
+      "cardId": "card-148",
+      "key": "собрать_один_запусковой_лист_в_котором_по_каждому_элементу_есть_что_сделано_чем_проверено_кто_отвечает_что_готово",
+      "stage": "act",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-148",
+      "key": "итоговый_результат_блока",
+      "stage": "act",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-151",
+      "key": "crm_crm",
+      "stage": "act",
+      "mode": "automatic",
+      "source": [
+        "Gate 2 · CRM и обработка лидов"
+      ]
+    },
+    {
+      "cardId": "card-151",
+      "key": "формы_формы",
+      "stage": "act",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-151",
+      "key": "выбрать_1_главное_действие_заявка_звонок_сообщение_заказ_бронирование",
+      "stage": "act",
+      "mode": "automatic",
+      "source": [
+        "Gate 1 · Карточка товара · Финальный CTA"
+      ]
+    },
+    {
+      "cardId": "card-151",
+      "key": "итоговый_результат_блока",
+      "stage": "act",
+      "mode": "automatic",
+      "source": [
+        "Gate 1 · Карточка товара · Финальный CTA"
+      ]
+    },
+    {
+      "cardId": "card-152",
+      "key": "формы_формы",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 2 · Формы"
+      ]
+    },
+    {
+      "cardId": "card-152",
+      "key": "проверить_что_на_странице_есть_оффер_для_кого_в_чем_польза_почему_доверять_примеры_кейсы_cta_контакты_форма",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 1 · Карточка товара"
+      ]
+    },
+    {
+      "cardId": "card-152",
+      "key": "итоговый_результат_блока",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 1 · Карточка товара"
+      ]
+    },
+    {
+      "cardId": "card-153",
+      "key": "проверить_порядок_блоков_проблема_задача_решение_выгоды_доверие_снятие_возражений_действие",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 1 · Карточка товара"
+      ]
+    },
+    {
+      "cardId": "card-153",
+      "key": "итоговый_результат_блока",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 1 · Карточка товара"
+      ]
+    },
+    {
+      "cardId": "card-154",
+      "key": "итоговый_результат_блока",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 1 · Карточка товара"
+      ]
+    },
+    {
+      "cardId": "card-155",
+      "key": "crm_crm",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 2 · CRM и обработка лидов"
+      ]
+    },
+    {
+      "cardId": "card-155",
+      "key": "формы_формы",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 2 · Формы",
+        "Gate 0 · Контакты"
+      ]
+    },
+    {
+      "cardId": "card-155",
+      "key": "итоговый_результат_блока",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 2 · Формы",
+        "Gate 0 · Контакты",
+        "Gate 2 · CRM и обработка лидов"
+      ]
+    },
+    {
+      "cardId": "card-156",
+      "key": "pagespeed_insights_pagespeed_insights",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 0 · Мобильная версия"
+      ]
+    },
+    {
+      "cardId": "card-156",
+      "key": "проверить_первый_экран_читаемость_текста_кнопки_формы_скорость_отступы_порядок_блоков",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 0 · Мобильная версия",
+        "Gate 1 · Карточка товара"
+      ]
+    },
+    {
+      "cardId": "card-156",
+      "key": "итоговый_результат_блока",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 0 · Мобильная версия",
+        "Gate 1 · Карточка товара"
+      ]
+    },
+    {
+      "cardId": "card-157",
+      "key": "яндекс_метрика_яндекс_метрика",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 0 · Яндекс Метрика"
+      ]
+    },
+    {
+      "cardId": "card-157",
+      "key": "crm_crm",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 2 · CRM и обработка лидов"
+      ]
+    },
+    {
+      "cardId": "card-157",
+      "key": "проверить_счетчик_цели_на_формы_клики_по_телефону_мессенджеры_thank_you_page_событие_отправки",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 0 · Яндекс Метрика"
+      ]
+    },
+    {
+      "cardId": "card-157",
+      "key": "итоговый_результат_блока",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 0 · Яндекс Метрика"
+      ]
+    },
+    {
+      "cardId": "card-158",
+      "key": "яндекс_директ_яндекс_директ",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 0 · Яндекс Директ"
+      ]
+    },
+    {
+      "cardId": "card-158",
+      "key": "crm_crm",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 2 · CRM и обработка лидов"
+      ]
+    },
+    {
+      "cardId": "card-158",
+      "key": "utm_utm",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 0 · UTM-разметка"
+      ]
+    },
+    {
+      "cardId": "card-158",
+      "key": "зафиксировать_единый_шаблон_меток_для_всех_кампаний_и_проверить_что_параметры_доходят_до_аналитики_crm",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 0 · UTM-разметка",
+        "Gate 0 · Яндекс Метрика",
+        "Gate 2 · CRM и обработка лидов"
+      ]
+    },
+    {
+      "cardId": "card-158",
+      "key": "итоговый_результат_блока",
+      "stage": "ask",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-159",
+      "key": "crm_crm",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 2 · CRM и обработка лидов"
+      ]
+    },
+    {
+      "cardId": "card-159",
+      "key": "проверить_путь_лида_форма_уведомление_crm_таблица_статус_продажа_отказ",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 2 · Формы",
+        "Gate 2 · CRM и обработка лидов"
+      ]
+    },
+    {
+      "cardId": "card-159",
+      "key": "итоговый_результат_блока",
+      "stage": "ask",
+      "mode": "automatic",
+      "source": [
+        "Gate 2 · CRM и обработка лидов"
+      ]
+    },
+    {
+      "cardId": "card-160",
+      "key": "зафиксировать_главный_тезис_вторичный_тезис_визуальный_стиль_допустимые_формулировки_запреты_cta",
+      "stage": "appeal",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-160",
+      "key": "итоговый_результат_блока",
+      "stage": "appeal",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-161",
+      "key": "создать_минимум_3_креатива_на_один_оффер",
+      "stage": "appeal",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-161",
+      "key": "итоговый_результат_блока",
+      "stage": "appeal",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-162",
+      "key": "итоговый_результат_блока",
+      "stage": "appeal",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-163",
+      "key": "проверить_что_заголовок_тезис_визуал_объявления_совпадает_с_первым_экраном_и_cta_страницы",
+      "stage": "appeal",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-163",
+      "key": "итоговый_результат_блока",
+      "stage": "appeal",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-164",
+      "key": "яндекс_директ_яндекс_директ",
+      "stage": "act",
+      "mode": "automatic",
+      "source": [
+        "Gate 0 · Яндекс Директ"
+      ]
+    },
+    {
+      "cardId": "card-164",
+      "key": "собрать_минимум_1_поисковую_кампанию_и_или_1_кампанию_в_рся_под_выбранный_сегмент_без_лишнего_дробления",
+      "stage": "act",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-164",
+      "key": "итоговый_результат_блока",
+      "stage": "act",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-165",
+      "key": "итоговый_результат_блока",
+      "stage": "act",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-166",
+      "key": "яндекс_директ_яндекс_директ",
+      "stage": "act",
+      "mode": "automatic",
+      "source": [
+        "Gate 0 · Яндекс Директ"
+      ]
+    },
+    {
+      "cardId": "card-166",
+      "key": "зафиксировать_тестовый_бюджет_период_первичного_набора_данных_условия_паузы_условия_продолжения",
+      "stage": "act",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-166",
+      "key": "итоговый_результат_блока",
+      "stage": "act",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-167",
+      "key": "пройти_вручную_весь_путь_объявление_страница_форма_уведомление_crm_таблица_ответ_менеджера",
+      "stage": "act",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-167",
+      "key": "итоговый_результат_блока",
+      "stage": "act",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-167",
+      "key": "цель_метрики_срабатывает_на_конверсионном_действии_товара",
+      "stage": "act",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-168",
+      "key": "crm_crm",
+      "stage": "act",
+      "mode": "automatic",
+      "source": [
+        "Gate 2 · CRM и обработка лидов"
+      ]
+    },
+    {
+      "cardId": "card-168",
+      "key": "зафиксировать_кто_отвечает_как_быстро_отвечает_что_пишет_говорит_первым_сообщением_как_ставится_статус",
+      "stage": "act",
+      "mode": "automatic",
+      "source": [
+        "Gate 2 · CRM и обработка лидов"
+      ]
+    },
+    {
+      "cardId": "card-168",
+      "key": "итоговый_результат_блока",
+      "stage": "act",
+      "mode": "automatic",
+      "source": [
+        "Gate 2 · CRM и обработка лидов"
+      ]
+    },
+    {
+      "cardId": "card-169",
+      "key": "crm_crm",
+      "stage": "act",
+      "mode": "automatic",
+      "source": [
+        "Gate 2 · CRM и обработка лидов"
+      ]
+    },
+    {
+      "cardId": "card-169",
+      "key": "оффер",
+      "stage": "act",
+      "mode": "automatic",
+      "source": [
+        "Gate 0 · Оффер"
+      ]
+    },
+    {
+      "cardId": "card-169",
+      "key": "сегмент",
+      "stage": "act",
+      "mode": "automatic",
+      "source": [
+        "Gate 0 · Сегмент"
+      ]
+    },
+    {
+      "cardId": "card-169",
+      "key": "страница",
+      "stage": "act",
+      "mode": "automatic",
+      "source": [
+        "Gate 1 · Карточка товара"
+      ]
+    },
+    {
+      "cardId": "card-169",
+      "key": "формы",
+      "stage": "act",
+      "mode": "automatic",
+      "source": [
+        "Gate 2 · Формы"
+      ]
+    },
+    {
+      "cardId": "card-169",
+      "key": "аналитика",
+      "stage": "act",
+      "mode": "automatic",
+      "source": [
+        "Gate 0 · Яндекс Метрика"
+      ]
+    },
+    {
+      "cardId": "card-169",
+      "key": "креативы",
+      "stage": "act",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-169",
+      "key": "кампании",
+      "stage": "act",
+      "mode": "manual",
+      "source": []
+    },
+    {
+      "cardId": "card-169",
+      "key": "обработка_лида",
+      "stage": "act",
+      "mode": "automatic",
+      "source": [
+        "Gate 2 · CRM и обработка лидов"
+      ]
+    },
+    {
+      "cardId": "card-169",
+      "key": "итоговый_результат_блока",
+      "stage": "act",
+      "mode": "manual",
+      "source": []
+    }
+  ],
+  "preservation": {
+    "cards": 20,
+    "rows": 60,
+    "campaigns": 120,
+    "manualState": "manual-value-after-v294",
+    "deletions": {
+      "id": "gate4-funnel-readiness-v294",
+      "status": "completed",
+      "cardsBefore": 20,
+      "cardsAfter": 20,
+      "rowsBefore": 60,
+      "rowsAfter": 60,
+      "campaignsBefore": 120,
+      "campaignsAfter": 120,
+      "deletedCards": 0,
+      "deletedRows": 0,
+      "deletedCampaigns": 0,
+      "repairedEncoding": 0,
+      "updatedAt": "2026-09-23T21:25:18.077Z"
+    }
+  },
+  "liveUpdate": {
+    "supported": true,
+    "updated": true,
+    "before": "Женщины 25+ из Москвы, которые заранее выбирают новогодние подарки для близких, семьи, коллег или клиентов. Ценят уют, ручную работу, символику года и вещи с душой, сравнивают внешний вид, цену и сроки. Ищут особенный подарок, который порадует получателя и не будет восприниматься как массовый сувенир.",
+    "stored": "LIVE SEGMENT V294",
+    "after": "LIVE SEGMENT V294",
+    "rowText": "\n    сегмент\n    Gate 0 · Сегмент\n    Открыть · Сегмент\n    В работеавтоматически\n    Сегмент: LIVE SEGMENT V294\n    Читается из источника; сохранённые ручные поля не удалены.\n  "
+  },
+  "navigation": {
+    "gate": "gate-2",
+    "highlighted": false,
+    "selectedProductId": "catalog-item-1786792591872-51f503"
+  },
+  "wrapperRemoved": true,
+  "brokenEncoding": [
+    {
+      "kind": "instruction",
+      "id": "card-154",
+      "value": "Инструменты:\nпрототип страницы, структура блоков, трехслойная формула УТП\n\nОтвечает за:\nправильную последовательность психологических слоев на странице\n\nИнструкция:\nПостроить архитектуру блоков:\n- Первый экран - доминирующий слой (если доминанта иррациональная - заголовок про эмоцию)\n- Блок 2-3 - рациональное подкрепление (цифры, характеристики, сроки, прайс)\n- Блок 4-5 - социальное доказательство (кейсы, отзывы, логотипы кли��нтов)\n- CTA - возврат к доминанте (повторяем эмоциональный крючок)\n\nПример структуры:\nЭкран 1: \"Мы не исчезнем после предоплаты\" [иррациональное]\nБлок 2: \"Фиксированная смета. Договор с печатью. Оплата по факту\" [рациональное]\nБлок 3: \"Нам доверяют 847 семей в ЖК Сколково, Символ, Алые Паруса\" [социальное]\nCTA: \"Получить гарантированную смету без предоплаты\" [иррациональное]                \n\nэкран 1 (доминанта):\n\nблок 2-3 (рациональное):\n\nблок 4-5 (социальное):\n\nCTA (возврат к доминанте):\n\nЧто должно быть на выходе:\nструктура страницы, где психослои идут в правильной последовательности - зацепили эмоцией, дали факты, показали социальное доказательство"
+    },
+    {
+      "kind": "instruction",
+      "id": "card-162",
+      "value": "Для старта нужен не один баннер, а минимум на тест.\n\nИнструменты:\nбаннеры, текст�� объявлений, видео / статичные креативы, Google Sheets\n\nОтвечает за:\nперв��й тест сообщений и визуалов\n\nИнструкция:\nсделать минимум 3–5 креативов на один сегмент: разные углы подачи, но один оффер и одна цель\n\nЧто должно быть на выходе:\nпакет креативов, готовый к запуску и сравнению"
+    }
+  ],
+  "retirement": {
+    "progress": {
+      "trackedCards": 20,
+      "rawCards": 23,
+      "progress": 100,
+      "rawProgress": 87,
+      "sidebarBefore": {
+        "total": 120,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 2,
+        "problem": 0,
+        "notStarted": 118,
+        "percent": 1
+      },
+      "sidebarWithRetiredReady": {
+        "total": 120,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 2,
+        "problem": 0,
+        "notStarted": 118,
+        "percent": 1
+      }
+    },
+    "migration": {
+      "changed": true,
+      "legacyCardCount": 1,
+      "archivedSnapshots": 1
+    },
+    "migrationRerun": {
+      "changed": false,
+      "legacyCardCount": 1,
+      "archivedSnapshots": 1
+    },
+    "idempotent": true,
+    "audit": {
+      "id": "gate4-prerequisite-retirement-v468",
+      "retiredCardIds": [
+        "card-147",
+        "card-149",
+        "card-150"
+      ],
+      "activeReadinessCardIds": [
+        "card-148",
+        "card-151",
+        "card-152",
+        "card-153",
+        "card-154",
+        "card-155",
+        "card-156",
+        "card-157",
+        "card-158",
+        "card-159",
+        "card-160",
+        "card-161",
+        "card-162",
+        "card-163",
+        "card-164",
+        "card-165",
+        "card-166",
+        "card-167",
+        "card-168",
+        "card-169"
+      ],
+      "currentLegacyCards": {
+        "card-147": {
+          "byProduct": {
+            "catalog-item-1786792591872-51f503": {
+              "rows": {
+                "карта_реализации_вводный_раздел": {
+                  "status": "works",
+                  "result": "legacy-product-result-v468",
+                  "comment": "legacy-product-comment-v468"
+                }
+              }
+            }
+          },
+          "legacyUnassigned": {
+            "rows": {
+              "карта_реализации_вводный_раздел": {
+                "status": "works",
+                "result": "legacy-template-result-v468",
+                "comment": "legacy-template-comment-v468"
+              }
+            }
+          }
+        }
+      },
+      "currentLegacyCardCount": 1,
+      "archivedSnapshots": 1,
+      "archivePath": "state.gate4Production.readinessV225.legacyRetiredPrerequisiteV468"
+    },
+    "log": {
+      "id": "gate4-prerequisite-retirement-v468",
+      "status": "completed_with_legacy_archive",
+      "retiredCardIds": [
+        "card-147",
+        "card-149",
+        "card-150"
+      ],
+      "removedFromUi": true,
+      "removedFromProgress": true,
+      "removedFromActiveReadinessDiagnostics": true,
+      "legacyCardCount": 1,
+      "archivePath": "state.gate4Production.readinessV225.legacyRetiredPrerequisiteV468",
+      "updatedAt": "2026-09-23T21:25:18.098Z"
+    },
+    "sidebar": "120 блоков, прогресс 1%",
+    "runtimeReadinessIds": [
+      "card-148",
+      "card-151",
+      "card-152",
+      "card-153",
+      "card-154",
+      "card-155",
+      "card-156",
+      "card-157",
+      "card-158",
+      "card-159",
+      "card-160",
+      "card-161",
+      "card-162",
+      "card-163",
+      "card-164",
+      "card-165",
+      "card-166",
+      "card-167",
+      "card-168",
+      "card-169"
+    ],
+    "debugBlockIds": [
+      "card-148",
+      "card-151",
+      "card-152",
+      "card-153",
+      "card-154",
+      "card-155",
+      "card-156",
+      "card-157",
+      "card-158",
+      "card-159",
+      "card-160",
+      "card-161",
+      "card-162",
+      "card-163",
+      "card-164",
+      "card-165",
+      "card-166",
+      "card-167",
+      "card-168",
+      "card-169"
+    ],
+    "projectReadiness": "4% · 11 из 254 блоков готовы",
+    "prerequisiteRemovedFromDom": true,
+    "retiredCardsRendered": 0
+  },
+  "artifacts": {
+    "auditPath": "/Users/vl/Developer/guru-platform/artifacts/gate4-prerequisite-retirement-v468-audit.json",
+    "screenshotPath": "/Users/vl/Developer/guru-platform/artifacts/gate4-prerequisite-retirement-v468.png"
+  }
+}

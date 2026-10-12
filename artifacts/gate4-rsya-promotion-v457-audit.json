@@ -1,0 +1,132 @@
+{
+  "auditedAt": "2026-09-23T17:21:14.085Z",
+  "source": "/Users/vl/Developer/guru-platform/artifacts/gate-4-recovered-groups-v408.json",
+  "screenshot": "/Users/vl/Developer/guru-platform/artifacts/gate4-rsya-goat-promotion-v457.png",
+  "build": "2.3.227",
+  "promotionKeys": [
+    "type",
+    "description",
+    "discountValue",
+    "promoCode",
+    "dateFrom",
+    "dateTo",
+    "url"
+  ],
+  "initial": {
+    "type": "",
+    "description": "",
+    "discountValue": "",
+    "promoCode": "",
+    "dateFrom": "",
+    "dateTo": "",
+    "url": ""
+  },
+  "initialDom": {
+    "type": "",
+    "description": "",
+    "discountValue": "",
+    "promoCode": "",
+    "dateFrom": "",
+    "dateTo": "",
+    "url": ""
+  },
+  "sectionCount": 1,
+  "typeOptions": [
+    {
+      "value": "",
+      "label": "— без промоакции —"
+    },
+    {
+      "value": "скидка",
+      "label": "Скидка"
+    },
+    {
+      "value": "выгода",
+      "label": "Выгода"
+    },
+    {
+      "value": "кешбэк",
+      "label": "Кешбэк"
+    },
+    {
+      "value": "подарок",
+      "label": "Подарок"
+    }
+  ],
+  "hint": "",
+  "editable": true,
+  "emptyErrors": [],
+  "hasInitialErrorClass": false,
+  "renderGateCalls": 1,
+  "expected": {
+    "type": "скидка",
+    "description": "Скидка на символ 2027 года",
+    "discountValue": "20%",
+    "promoCode": "KOZA20",
+    "dateFrom": "2026-10-01",
+    "dateTo": "2026-12-31",
+    "url": "https://k-apple.ru/promo/koza-2027"
+  },
+  "storedAfterInput": {
+    "type": "скидка",
+    "description": "Скидка на символ 2027 года",
+    "discountValue": "20%",
+    "promoCode": "KOZA20",
+    "dateFrom": "2026-10-01",
+    "dateTo": "2026-12-31",
+    "url": "https://k-apple.ru/promo/koza-2027"
+  },
+  "restored": {
+    "type": "скидка",
+    "description": "Скидка на символ 2027 года",
+    "discountValue": "20%",
+    "promoCode": "KOZA20",
+    "dateFrom": "2026-10-01",
+    "dateTo": "2026-12-31",
+    "url": "https://k-apple.ru/promo/koza-2027"
+  },
+  "persisted": {
+    "type": "скидка",
+    "description": "Скидка на символ 2027 года",
+    "discountValue": "20%",
+    "promoCode": "KOZA20",
+    "dateFrom": "2026-10-01",
+    "dateTo": "2026-12-31",
+    "url": "https://k-apple.ru/promo/koza-2027"
+  },
+  "beforeCounts": {
+    "ready": 1,
+    "total": 12,
+    "autoReady": 1,
+    "autoTotal": 8,
+    "manualReady": 0,
+    "manualTotal": 4
+  },
+  "afterCounts": {
+    "ready": 1,
+    "total": 12,
+    "autoReady": 1,
+    "autoTotal": 8,
+    "manualReady": 0,
+    "manualTotal": 4
+  },
+  "beforeIssues": [
+    "География: выберите регион в Директе и зафиксируйте его здесь",
+    "Расписание: укажите режим показа",
+    "Стратегия: выберите вариант",
+    "Бюджет: укажите период"
+  ],
+  "afterIssues": [
+    "География: выберите регион в Директе и зафиксируйте его здесь",
+    "Расписание: укажите режим показа",
+    "Стратегия: выберите вариант",
+    "Бюджет: укажите период"
+  ],
+  "launchMentionsPromotion": false,
+  "packageContainsPromotion": true,
+  "packageText": "КАМПАНИЯ: РСЯ · Коза\nГРУППА: Когда Нужно выбрать подарок к Новому году, клиент хочет Найти необычный авторский подарок, связанный с символом 2027 года, чтобы Порадовать получателя и не ошибиться с выбором.\nГЕОГРАФИЯ: \nРАСПИСАНИЕ: \nСТРАТЕГИЯ: — выберите в Директе —\nМОДЕЛЬ ОПЛАТЫ: не выбрано\nБЮДЖЕТ: 30000 ()\nПРОМОАКЦИЯ · ТИП: скидка\nПРОМОАКЦИЯ · ОПИСАНИЕ: Скидка на символ 2027 года\nПРОМОАКЦИЯ · РАЗМЕР: 20%\nПРОМОАКЦИЯ · ПРОМОКОД: KOZA20\nПРОМОАКЦИЯ · ПЕРИОД: 2026-10-01 — 2026-12-31\nПРОМОАКЦИЯ · URL: https://k-apple.ru/promo/koza-2027\nСЧЁТЧИК МЕТРИКИ: \nЦЕЛЬ МЕТРИКИ: \nИСКЛЮЧЁННЫЕ ПЛОЩАДКИ: \nАВТОТАРГЕТИНГ: \nКЛЮЧЕВЫЕ ФРАЗЫ:\n\nИНТЕРЕСЫ И ПРИВЫЧКИ:\n\nРЕТАРГЕТИНГ / СЕГМЕНТЫ:\n\nМИНУС-ФРАЗЫ:\n\nОБЪЯВЛЕНИЕ: \nОСНОВНАЯ ССЫЛКА: https://k-apple.ru/simvol-2027-koza\nОТОБРАЖАЕМАЯ ССЫЛКА: \nЗАГОЛОВОК 1: \nТЕКСТ 1: \nИЗОБРАЖЕНИЯ: \nВИДЕО: \nКНОПКА: без кнопки\nССЫЛКА КНОПКИ: основная ссылка\nУТОЧНЕНИЯ: ",
+  "urlHint": "Не подставляется автоматически.",
+  "errorOverlay": false,
+  "bodyHasContent": true,
+  "runtimeExceptions": []
+}

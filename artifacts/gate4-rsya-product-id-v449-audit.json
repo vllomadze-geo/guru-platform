@@ -1,0 +1,77 @@
+{
+  "auditedAt": "2026-09-23T12:45:56.641Z",
+  "source": {
+    "path": "/Users/vl/Downloads/gate-4.json",
+    "exportedAt": "2026-09-22T09:43:03.601Z",
+    "branchKey": "catalog_item_1786792591872_51f503",
+    "category": "Символ 2027 года «Коза»",
+    "product_id": ""
+  },
+  "migrated": {
+    "branchKey": "catalog_item_1786792591872_51f503",
+    "category": "Символ 2027 года «Коза»",
+    "product_id": "product-1786401011698-9e81ee",
+    "logStatus": "completed",
+    "idempotent": true,
+    "visualMode": "live-production-renderer",
+    "productIdVisibleInUi": false
+  },
+  "creation": {
+    "manualProductId": "product-1786401011698-9e81ee",
+    "activeProductId": "product-1786401011698-9e81ee",
+    "activeDefaultProductId": "product-1786401011698-9e81ee",
+    "starterProductIds": [
+      "product-1786401011698-9e81ee",
+      "product-1786401011698-9e81ee",
+      "product-1786401011698-9e81ee"
+    ]
+  },
+  "sharedProjectsGuard": [
+    {
+      "name": "iCleaning",
+      "changed": false,
+      "unchanged": true
+    },
+    {
+      "name": "SIVRCE",
+      "changed": false,
+      "unchanged": true
+    },
+    {
+      "name": "360profit",
+      "changed": false,
+      "unchanged": true
+    }
+  ],
+  "migrationLog": {
+    "id": "gate4-rsya-group-product-id-v449",
+    "status": "completed",
+    "run": {
+      "at": "2026-09-23T12:45:49.315Z",
+      "storage": "workspace.gate4Rsya[catalog_item_id].groups[].product_id",
+      "source": "project.catalogItemsV189[].categoryId → project.productRegistryV185[id] + project.productBindingsV185[id]",
+      "before": {
+        "groups": 1,
+        "linked": 0
+      },
+      "after": {
+        "groups": 1,
+        "linked": 1
+      },
+      "linked": [
+        {
+          "catalog_item_id": "catalog-item-1786792591872-51f503",
+          "branch_key": "catalog_item_1786792591872_51f503",
+          "group_index": 0,
+          "category": "Символ 2027 года «Коза»",
+          "product_id": "product-1786401011698-9e81ee",
+          "product_name": "Дизайнерские подарки"
+        }
+      ],
+      "unresolved": [],
+      "conflicts": [],
+      "note": "Добавлено только скрытое поле product_id. Отображаемое поле category и остальные данные групп РСЯ не изменялись; существующий непустой product_id не перезаписывается."
+    }
+  },
+  "screenshot": "/Users/vl/Developer/guru-platform/artifacts/gate4-rsya-goat-product-id-v449.png"
+}

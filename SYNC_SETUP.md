@@ -3,8 +3,13 @@
 ## 1. Подготовить Supabase
 
 1. Открыть проект Supabase.
-2. В `SQL Editor` выполнить файл `supabase_workspace_setup.sql`.
-3. В `Project Settings → API` скопировать `Project URL` и серверный
+2. Если таблиц ещё нет, в `SQL Editor` выполнить `supabase_workspace_setup.sql`.
+3. Перед деплоем обновлённого API выполнить
+   `supabase_workspace_egress_migration.sql`. Миграция добавит триггер
+   `guru_workspaces_archive_version` и короткую функцию проверки
+   `guru_workspace_write_metadata`, не меняя таблицы и RLS. Без неё новая
+   версия API не отправит запись в облако; локальная копия останется доступна.
+4. В `Project Settings → API` скопировать `Project URL` и серверный
    `service_role` key.
 
 ## 2. Настроить локальный сервер
@@ -39,11 +44,11 @@ http://localhost:3000/api/supabase-test
 После подключения приложение при старте:
 
 1. объединит локальный и облачный реестры проектов;
-2. загрузит workspace каждого проекта;
-3. сохранит более новую версию;
+2. загрузит полный workspace из Supabase только при открытии проекта;
+3. сравнит даты локальной и облачной версий и сохранит более новую;
 4. перед заменой локальных данных создаст backup в `localStorage`;
-5. перед облачной перезаписью сохранит предыдущую версию в
-   `guru_workspace_versions`;
+5. при облачной перезаписи триггер PostgreSQL сохранит предыдущую версию в
+   `guru_workspace_versions` без скачивания через API;
 6. не отправит автоматически пустой seed для карточки без workspace.
 
 Открыть `localhost:3000`, дождаться статуса Supabase и по очереди проверить
