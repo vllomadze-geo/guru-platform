@@ -386,7 +386,7 @@ function g4SmmFormatsProjectionHtmlV305(
         const topics = g4SmmFormatTopicsV308(row, strategy);
         const ideaCount = ideas.filter((idea) =>
           guruV185Text(idea?.primaryTaskFormatId) === guruV185Text(row.id) &&
-          (!productId || !guruV185Text(idea?.productId) || guruV185Text(idea.productId) === productId)
+          (!productId || guruV185Text(idea?.productId) === productId)
         ).length;
         const topicHtml = topics.map((topic) => \`<span class="g4-smm-format-topic-row-v345" data-g4-smm-format-topic-v308="\${escapeAttr(topic.id)}">
           <span class="g4-smm-format-topic-label-v345">\${escapeHtml(topic.value)}</span>
