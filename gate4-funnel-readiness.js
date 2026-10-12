@@ -378,38 +378,38 @@ function g4SmmFormatsProjectionHtmlV305(
     : null);
   const productId = guruV185Text(options?.productId);
   const ideas = Array.isArray(content?.ideas) ? content.ideas : [];
-  return \`<div class="g4-smm-table-wrap-v298">
+  return `<div class="g4-smm-table-wrap-v298">
     <table class="mini-table typed-table g4-smm-table-v298">
       <thead><tr><th>Основная задача</th><th>Формат</th><th>Темы</th><th>Объём контента</th><th>Идеи</th><th>Площадки</th></tr></thead>
-      <tbody>\${g4SmmFormatsOrderedBy5AV303(strategy.formats).map(({ format: row, stage }) => {
+      <tbody>${g4SmmFormatsOrderedBy5AV303(strategy.formats).map(({ format: row, stage }) => {
         const volume = g4SmmFormatVolumeV305(row, strategy, projection);
         const topics = g4SmmFormatTopicsV308(row, strategy);
         const ideaCount = ideas.filter((idea) =>
           guruV185Text(idea?.primaryTaskFormatId) === guruV185Text(row.id) &&
           (!productId || guruV185Text(idea?.productId) === productId)
         ).length;
-        const topicHtml = topics.map((topic) => \`<span class="g4-smm-format-topic-row-v345" data-g4-smm-format-topic-v308="\${escapeAttr(topic.id)}">
-          <span class="g4-smm-format-topic-label-v345">\${escapeHtml(topic.value)}</span>
+        const topicHtml = topics.map((topic) => `<span class="g4-smm-format-topic-row-v345" data-g4-smm-format-topic-v308="${escapeAttr(topic.id)}">
+          <span class="g4-smm-format-topic-label-v345">${escapeHtml(topic.value)}</span>
           <button type="button" class="small-btn g4-smm-topic-idea-add-v345"
             data-g4-smm-topic-idea-add-v345
-            data-g4-smm-format-id-v345="\${escapeAttr(row.id)}"
-            data-g4-smm-topic-id-v345="\${escapeAttr(topic.id)}"
-            data-g4-smm-product-id-v345="\${escapeAttr(productId)}"
-            \${productId ? "" : "disabled"}>+ Новая идея</button>
-        </span>\`).join("");
-        return \`<tr data-g4-smm-format-row-v298="\${escapeAttr(row.id)}" data-g4-smm-format-stage-v303="\${escapeAttr(stage)}">
-          <td>\${escapeHtml(row.task) || "—"}</td>
-          <td>\${escapeHtml(row.format) || "—"}</td>
-          <td><span class="g4-smm-format-topics-v308">\${topicHtml || "—"}</span></td>
-          <td data-g4-smm-format-volume-v305="\${escapeAttr(row.id)}"><span class="g4-smm-format-volume-v305"><b>\${escapeHtml(volume.projected)}</b><small>\${escapeHtml(volume.note)}</small></span></td>
-          <td><span class="g4-smm-format-idea-count-v345" data-g4-smm-format-idea-count-v345="\${escapeAttr(row.id)}">\${ideaCount}</span></td>
-          <td>\${escapeHtml(row.platforms) || "—"}</td>
-        </tr>\`;
+            data-g4-smm-format-id-v345="${escapeAttr(row.id)}"
+            data-g4-smm-topic-id-v345="${escapeAttr(topic.id)}"
+            data-g4-smm-product-id-v345="${escapeAttr(productId)}"
+            ${productId ? "" : "disabled"}>+ Новая идея</button>
+        </span>`).join("");
+        return `<tr data-g4-smm-format-row-v298="${escapeAttr(row.id)}" data-g4-smm-format-stage-v303="${escapeAttr(stage)}">
+          <td>${escapeHtml(row.task) || "—"}</td>
+          <td>${escapeHtml(row.format) || "—"}</td>
+          <td><span class="g4-smm-format-topics-v308">${topicHtml || "—"}</span></td>
+          <td data-g4-smm-format-volume-v305="${escapeAttr(row.id)}"><span class="g4-smm-format-volume-v305"><b>${escapeHtml(volume.projected)}</b><small>${escapeHtml(volume.note)}</small></span></td>
+          <td><span class="g4-smm-format-idea-count-v345" data-g4-smm-format-idea-count-v345="${escapeAttr(row.id)}">${ideaCount}</span></td>
+          <td>${escapeHtml(row.platforms) || "—"}</td>
+        </tr>`;
       }).join("")}</tbody>
     </table>
   </div>
-  <p class="g4-smm-total-v298" data-g4-smm-total-v298>Итого за \${escapeHtml(projection.label)}: \${projection.approximate}\${escapeHtml(projection.total)} основных публикаций</p>
-  <p class="g1-task">Расчётный период: \${projection.weeks.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} нед. Результат округляется до целых единиц контента.</p>\`;
+  <p class="g4-smm-total-v298" data-g4-smm-total-v298>Итого за ${escapeHtml(projection.label)}: ${projection.approximate}${escapeHtml(projection.total)} основных публикаций</p>
+  <p class="g1-task">Расчётный период: ${projection.weeks.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} нед. Результат округляется до целых единиц контента.</p>`;
 }
 
 function g4SmmStrategyHtmlV298(activeProduct = null) {
@@ -1251,31 +1251,31 @@ function g4SmmIdeaPrimaryTaskHtmlV315(idea, locked = false) {
   const topics = selected ? g4SmmFormatTopicsV308(selected, strategy) : [];
   const selectedTopicId = guruV185Text(idea?.topicId);
   const selectedTopic = topics.find((topic) => guruV185Text(topic?.id) === selectedTopicId) || null;
-  return \`<div class="g4-smm-idea-primary-task-v315" data-g4-smm-idea-primary-task-v315>
+  return `<div class="g4-smm-idea-primary-task-v315" data-g4-smm-idea-primary-task-v315>
     <div class="g4-smm-idea-primary-selectors-v345">
       <label class="g1-field">
         <span>Основная задача</span>
-        <select class="g1-input \${selected ? "is-filled" : "is-empty"}" data-g4-smm-idea-field-v299="primaryTaskFormatId" data-g4-smm-idea-id-v299="\${escapeAttr(idea.id)}" \${locked ? "disabled" : ""}>
+        <select class="g1-input ${selected ? "is-filled" : "is-empty"}" data-g4-smm-idea-field-v299="primaryTaskFormatId" data-g4-smm-idea-id-v299="${escapeAttr(idea.id)}" ${locked ? "disabled" : ""}>
           <option value="">Выберите основную задачу</option>
-          \${g4SmmFormatsOrderedBy5AV303(strategy.formats).map(({ format: row }) => \`<option value="\${escapeAttr(row.id)}" \${guruV185Text(row.id) === selectedId ? "selected" : ""}>\${escapeHtml(row.task)}</option>\`).join("")}
+          ${g4SmmFormatsOrderedBy5AV303(strategy.formats).map(({ format: row }) => `<option value="${escapeAttr(row.id)}" ${guruV185Text(row.id) === selectedId ? "selected" : ""}>${escapeHtml(row.task)}</option>`).join("")}
         </select>
       </label>
       <label class="g1-field">
         <span>Тема</span>
-        <select class="g1-input \${selectedTopic ? "is-filled" : "is-empty"}" data-g4-smm-idea-field-v299="topicId" data-g4-smm-idea-id-v299="\${escapeAttr(idea.id)}" \${!selected || locked ? "disabled" : ""}>
+        <select class="g1-input ${selectedTopic ? "is-filled" : "is-empty"}" data-g4-smm-idea-field-v299="topicId" data-g4-smm-idea-id-v299="${escapeAttr(idea.id)}" ${!selected || locked ? "disabled" : ""}>
           <option value="">Выберите тему</option>
-          \${topics.map((topic) => \`<option value="\${escapeAttr(topic.id)}" \${guruV185Text(topic.id) === selectedTopicId ? "selected" : ""}>\${escapeHtml(topic.value)}</option>\`).join("")}
+          ${topics.map((topic) => `<option value="${escapeAttr(topic.id)}" ${guruV185Text(topic.id) === selectedTopicId ? "selected" : ""}>${escapeHtml(topic.value)}</option>`).join("")}
         </select>
       </label>
     </div>
-    \${selected ? \`<div class="g4-smm-idea-task-details-v316" data-g4-smm-idea-primary-task-live-v315="\${escapeAttr(selected.id)}">
-      <div><strong>Основная задача</strong><span>\${escapeHtml(selected.task) || "—"}</span></div>
-      <div><strong>Формат</strong><span>\${escapeHtml(selected.format) || "—"}</span></div>
-      <div><strong>Тема</strong><span>\${escapeHtml(selectedTopic?.value) || "Не выбрана"}</span></div>
-      <div><strong>Объём контента</strong><span class="g4-smm-format-volume-v305"><b>\${escapeHtml(volume.projected)}</b><small>\${escapeHtml(volume.note)}</small></span></div>
-      <div><strong>Площадки</strong><span>\${escapeHtml(selected.platforms) || "—"}</span></div>
-    </div>\` : '<p class="g4-smm-empty-v299">Выберите основную задачу — здесь появится связанная строка SMM-стратегии.</p>'}
-  </div>\`;
+    ${selected ? `<div class="g4-smm-idea-task-details-v316" data-g4-smm-idea-primary-task-live-v315="${escapeAttr(selected.id)}">
+      <div><strong>Основная задача</strong><span>${escapeHtml(selected.task) || "—"}</span></div>
+      <div><strong>Формат</strong><span>${escapeHtml(selected.format) || "—"}</span></div>
+      <div><strong>Тема</strong><span>${escapeHtml(selectedTopic?.value) || "Не выбрана"}</span></div>
+      <div><strong>Объём контента</strong><span class="g4-smm-format-volume-v305"><b>${escapeHtml(volume.projected)}</b><small>${escapeHtml(volume.note)}</small></span></div>
+      <div><strong>Площадки</strong><span>${escapeHtml(selected.platforms) || "—"}</span></div>
+    </div>` : '<p class="g4-smm-empty-v299">Выберите основную задачу — здесь появится связанная строка SMM-стратегии.</p>'}
+  </div>`;
 }
 
 function g4SmmPublicationForIdeaV324(idea, content = g4SmmContentEnsureV299()) {
@@ -1734,12 +1734,12 @@ function g4SmmSummaryCompactStatusV346(planned, fact, target) {
   const plannedCount = Math.max(0, Number(planned) || 0);
   const factCount = Math.max(0, Number(fact) || 0);
   if (goal === 0 || factCount >= goal)
-    return { visual: "ready", label: factCount > goal ? \`Сверх плана: \${factCount - goal}\` : "Выполнено" };
+    return { visual: "ready", label: factCount > goal ? `Сверх плана: ${factCount - goal}` : "Выполнено" };
   if (plannedCount >= goal)
-    return { visual: "attention", label: \`Запланировано · факт \${factCount}/\${goal}\` };
+    return { visual: "attention", label: `Запланировано · факт ${factCount}/${goal}` };
   return {
     visual: plannedCount || factCount ? "attention" : "problem",
-    label: \`Недобор: \${Math.max(0, goal - Math.max(plannedCount, factCount))}\`,
+    label: `Недобор: ${Math.max(0, goal - Math.max(plannedCount, factCount))}`,
   };
 }
 
@@ -1754,14 +1754,14 @@ function g4SmmActionSummaryHtmlV299(content, strategy) {
     const planned = summary.plan.counts[key];
     const fact = summary.week.counts[key];
     const status = g4SmmSummaryCompactStatusV346(planned, fact, target);
-    return \`<tr class="g4-smm-summary-row-v346 is-\${escapeAttr(status.visual)}-v346"
-      data-g4-smm-summary-format-focus-v346="\${escapeAttr(formatId)}">
-      <td><span class="g4-smm-summary-dot-v346" aria-hidden="true"></span><strong>\${escapeHtml(label)}</strong></td>
-      <td>\${target}</td>
-      <td>\${planned}</td>
-      <td>\${fact}</td>
-      <td><span class="g4-smm-summary-status-v346">\${escapeHtml(status.label)}</span></td>
-    </tr>\`;
+    return `<tr class="g4-smm-summary-row-v346 is-${escapeAttr(status.visual)}-v346"
+      data-g4-smm-summary-format-focus-v346="${escapeAttr(formatId)}">
+      <td><span class="g4-smm-summary-dot-v346" aria-hidden="true"></span><strong>${escapeHtml(label)}</strong></td>
+      <td>${target}</td>
+      <td>${planned}</td>
+      <td>${fact}</td>
+      <td><span class="g4-smm-summary-status-v346">${escapeHtml(status.label)}</span></td>
+    </tr>`;
   }).join("");
   const quarterTarget = Math.max(0, Number(summary.quarter.targetMin) || 0);
   const quarterPublished = Math.max(0, Number(summary.quarter.published) || 0);
@@ -1769,45 +1769,45 @@ function g4SmmActionSummaryHtmlV299(content, strategy) {
     ? Math.min(100, Math.round((quarterPublished / quarterTarget) * 100))
     : 100;
   const weekStart = g4SmmCalendarWeekStartV322(content);
-  const quarterLabel = \`Q\${Math.floor(weekStart.getMonth() / 3) + 1} \${weekStart.getFullYear()}\`;
-  return \`<section class="g4-smm-action-summary-v299 g4-smm-action-summary-compact-v346" data-g4-smm-action-summary-v299>
+  const quarterLabel = `Q${Math.floor(weekStart.getMonth() / 3) + 1} ${weekStart.getFullYear()}`;
+  return `<section class="g4-smm-action-summary-v299 g4-smm-action-summary-compact-v346" data-g4-smm-action-summary-v299>
     <div class="g4-smm-idea-stage-head-v299">
       <strong>Что нужно сделать</strong>
-      <small>\${escapeHtml(summary.plan.weekLabel)} · план, идеи и фактические публикации</small>
+      <small>${escapeHtml(summary.plan.weekLabel)} · план, идеи и фактические публикации</small>
     </div>
     <div class="g4-smm-summary-table-wrap-v346">
       <table class="mini-table typed-table g4-smm-summary-table-v346">
         <thead><tr><th>Формат</th><th>План</th><th>Идеи</th><th>Факт</th><th>Статус</th></tr></thead>
-        <tbody>\${rows}</tbody>
+        <tbody>${rows}</tbody>
       </table>
     </div>
     <div class="g4-smm-summary-meta-row-v346">
       <section class="g4-smm-quarter-compact-v346">
         <div>
-          <strong>\${escapeHtml(quarterLabel)} · Основные публикации</strong>
-          <span>\${quarterPublished}/\${quarterTarget}</span>
-          <small>Осталось: \${Math.max(0, quarterTarget - quarterPublished)}</small>
+          <strong>${escapeHtml(quarterLabel)} · Основные публикации</strong>
+          <span>${quarterPublished}/${quarterTarget}</span>
+          <small>Осталось: ${Math.max(0, quarterTarget - quarterPublished)}</small>
         </div>
         <div class="g4-smm-quarter-progress-v346" aria-label="Прогресс квартальной цели">
-          <span style="width:\${quarterProgress}%"></span>
+          <span style="width:${quarterProgress}%"></span>
         </div>
       </section>
       <div class="g4-smm-summary-bank-v346">
-        <span>В банке: <strong>\${summary.plan.unscheduled}</strong></span>
-        \${summary.plan.unclassified ? \`<span>Без задачи: <strong>\${summary.plan.unclassified}</strong></span>\` : ""}
+        <span>В банке: <strong>${summary.plan.unscheduled}</strong></span>
+        ${summary.plan.unclassified ? `<span>Без задачи: <strong>${summary.plan.unclassified}</strong></span>` : ""}
       </div>
     </div>
     <div class="g4-smm-summary-signals-v346">
       <details class="gate1-final-unmatched-v259" data-g4-smm-unused-pairs-v299>
-        <summary>Форматы без использования <strong>\${summary.unusedPairs.length}</strong> <span>›</span></summary>
-        <div class="gate1-final-unmatched-list-v259">\${summary.unusedPairs.map((pair) => \`<span>\${escapeHtml(pair.format)} → \${escapeHtml(pair.platform)}</span>\`).join("") || "<span>Все предусмотренные пары использовались</span>"}</div>
+        <summary>Форматы без использования <strong>${summary.unusedPairs.length}</strong> <span>›</span></summary>
+        <div class="gate1-final-unmatched-list-v259">${summary.unusedPairs.map((pair) => `<span>${escapeHtml(pair.format)} → ${escapeHtml(pair.platform)}</span>`).join("") || "<span>Все предусмотренные пары использовались</span>"}</div>
       </details>
       <details class="gate1-final-unmatched-v259" data-g4-smm-stale-topics-v299>
-        <summary>Темы без использования <strong>\${summary.staleTopics.length}</strong> <span>›</span></summary>
-        <div class="gate1-final-unmatched-list-v259">\${summary.staleTopics.map((topic) => \`<span>\${escapeHtml(topic.value)}</span>\`).join("") || "<span>Все темы использовались за последние три недели</span>"}</div>
+        <summary>Темы без использования <strong>${summary.staleTopics.length}</strong> <span>›</span></summary>
+        <div class="gate1-final-unmatched-list-v259">${summary.staleTopics.map((topic) => `<span>${escapeHtml(topic.value)}</span>`).join("") || "<span>Все темы использовались за последние три недели</span>"}</div>
       </details>
     </div>
-  </section>\`;
+  </section>`;
 }
 
 function g4SmmContentSystemHtmlV299(activeProduct = null) {
@@ -2387,7 +2387,7 @@ document.addEventListener("click", (event) => {
     const idea = g4SmmCreateIdeaV299(productId, { primaryTaskFormatId: formatId, topicId });
     renderGate();
     requestAnimationFrame(() => document.querySelector(
-      \`[data-g4-smm-idea-card-v299="\${CSS.escape(idea?.id || "")}"]\`,
+      `[data-g4-smm-idea-card-v299="${CSS.escape(idea?.id || "")}"]`,
     )?.scrollIntoView({ behavior: "smooth", block: "center" }));
     return;
   }
