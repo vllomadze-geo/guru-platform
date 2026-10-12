@@ -123,6 +123,7 @@ function g4ProductSmmAdaptHtmlV523(html, productId = "") {
     if (subtitle) subtitle.textContent = "Продукт · VK / Telegram / Instagram / YouTube";
     const header = root.querySelector("[data-g1-collapse-key]");
     if (header) header.setAttribute("data-g1-collapse-key", key);
+    root.querySelector(".g4-smm-new-idea-v299")?.remove();
   }
   return template.innerHTML;
 }
