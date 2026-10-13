@@ -587,6 +587,9 @@ function g4SmmContentEnsureV299(workspace = state) {
     primaryTaskFormatId: guruV185Text(idea?.primaryTaskFormatId),
     topicId: guruV185Text(idea?.topicId),
     insight: String(idea?.insight || ""),
+    planningPeriodStart: g4SmmDateValueV299(idea?.planningPeriodStart)
+      ? guruV185Text(idea.planningPeriodStart)
+      : "",
     scheduledDate: g4SmmDateValueV299(idea?.scheduledDate)
       ? guruV185Text(idea.scheduledDate)
       : "",
@@ -1867,6 +1870,9 @@ function g4SmmCreateIdeaV299(productId = "", seed = {}) {
     primaryTaskFormatId: guruV185Text(seed?.primaryTaskFormatId),
     topicId: guruV185Text(seed?.topicId),
     insight: "",
+    planningPeriodStart: g4SmmDateValueV299(seed?.planningPeriodStart)
+      ? guruV185Text(seed.planningPeriodStart)
+      : "",
     scheduledDate: g4SmmDateValueV299(seed?.scheduledDate) ? guruV185Text(seed.scheduledDate) : "",
     publicationId: "",
     createdAt: now,

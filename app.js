@@ -422,6 +422,7 @@ function loadState(projectId) {
 }
 
 function migrateWorkspace(workspace, projectId) {
+  megaPlatformIntentBackupV1(workspace, projectId);
   const meta = projects.find((p) => p.id === projectId);
   workspace.project = workspace.project || {};
   const categoriesWithoutStableId = (Array.isArray(workspace.project.productRegistryV185)
@@ -471,6 +472,7 @@ function migrateWorkspace(workspace, projectId) {
   }
   megaPlatformMigrateUrls(workspace, categoriesWithoutStableId);
   megaPlatformPromoteManualPages(workspace);
+  megaPlatformIntentMigrateV1(workspace);
   initializeEvidenceStructure(workspace);
   for (const [cardId, evidence] of auditEvidenceBefore) {
     const card = workspace.gates.find((gate) => gate.id === "gate-1")?.cards
@@ -510,6 +512,7 @@ function createFreshWorkspace(meta = {}) {
   fresh.linkBank = [];
   fresh.tools = defaultProjectTools();
   prepareSystemCards(fresh);
+  megaPlatformIntentMigrateV1(fresh);
   initializeEvidenceStructure(fresh);
   harvestKnownLinks(fresh);
   syncProjectPassportCard(fresh);
@@ -8242,6 +8245,9 @@ function openAuditPageCard(cardId, context = {}) {
     ? card.pageRows?.findIndex((row) =>
       String(row.catalogItemIdV189 || "") === String(context.productId)) ?? -1
     : -1;
+  const auditRowIndex = context.auditRowId
+    ? card.pageRows?.findIndex((row) => String(row.id || "") === String(context.auditRowId)) ?? -1
+    : -1;
   const navigationToken = ++auditPageNavigationToken;
   const locate = () => {
     const cardNode = document.querySelector(`[data-card="${CSS.escape(cardId)}"]`);
@@ -8251,9 +8257,10 @@ function openAuditPageCard(cardId, context = {}) {
         `[data-guru-category-page-row-id-v495="${CSS.escape(categoryRowId)}"]`);
       if (row) return row;
     }
-    if (productRowIndex >= 0) {
+    const targetRowIndex = auditRowIndex >= 0 ? auditRowIndex : productRowIndex;
+    if (targetRowIndex >= 0) {
       const row = cardNode.querySelector(
-        `[data-gate1-page-index="${productRowIndex}"]`)?.closest(".page-structure-card");
+        `[data-gate1-page-index="${targetRowIndex}"]`)?.closest(".page-structure-card");
       if (row) return row;
     }
     return cardNode;
@@ -8283,7 +8290,9 @@ document.addEventListener("click", (event) => {
   if (!btn) return;
   event.preventDefault();
   event.stopPropagation();
-  openAuditPageCard(btn.dataset.openAuditPage);
+  openAuditPageCard(btn.dataset.openAuditPage, {
+    auditRowId: btn.dataset.auditRowId || "",
+  });
 });
 
 /* ================================================================
@@ -20772,6 +20781,9 @@ const MEGA_PLATFORM_HIDDEN_EXTRA = new Set([
   ...MEGA_PLATFORM_LEGAL_PAGES,
   ...Object.values(MEGA_PLATFORM_LEGAL_ALIASES).flat(),
 ]);
+function megaPlatformHiddenLegacyExtra(row) {
+  return !row?.manualV2 && MEGA_PLATFORM_HIDDEN_EXTRA.has(row?.name);
+}
 const MEGA_INFRA_DEFAULTS_V2 = [
   {
     name: "Яндекс Метрика",
@@ -21039,6 +21051,7 @@ function ensureMegaMarketing(card, workspace = state) {
   m.platformV2.fundamental = MEGA_PLATFORM_FUNDAMENTAL.map((name) => {
     const old = prevFund.get(name) || {};
     return {
+      ...old,
       name,
       status: old.status || "",
       url: old.url || "",
@@ -21078,7 +21091,7 @@ function ensureMegaMarketing(card, workspace = state) {
         : {};
     const old = legalPrevious.get(name) || Object.fromEntries(["status", "url", "comment"].map((field) =>
       [field, legacyRows.map((row) => row[field]).find(Boolean) || footer[field] || ""]));
-    return { name, status: old.status || "", url: old.url || "", comment: old.comment || "" };
+    return { ...old, name, status: old.status || "", url: old.url || "", comment: old.comment || "" };
   });
   if (!m.platformV2.onOrder) {
     const old = m.platformV2.extra.find((row) => row.name === "На заказ") || {};
@@ -21243,8 +21256,16 @@ function megaPlatformUrl(group, id, workspace = state) {
   if (!id) return "";
   const store = megaPlatformUrlStore(workspace);
   if (group === "categories" && store?.missingCategoryGeneratedIds?.includes(id)) return "";
-  if (group === "categories" && id === store?.onOrderCategoryId)
-    return String(store.fixed.on_order || "");
+  if (group === "fixed" && id === "on_order") {
+    const categoryId = store?.onOrderCategoryId;
+    if (categoryId && workspace?.project?.productRegistryV185?.some((item) => item.id === categoryId))
+      return String(store.categories[categoryId] || "");
+    const landingId = store?.onOrderLandingIdV2;
+    const platform = workspace?.gates?.find((gate) => gate.id === "gate-0")?.cards
+      ?.find(isMegaMarketingCard)?.megaMarketing?.platformV2;
+    return landingId && platform?.extra?.some((item) => item.id === landingId)
+      ? String(store.custom[landingId] || "") : "";
+  }
   return String(store?.[group]?.[id] || "");
 }
 
@@ -21253,17 +21274,27 @@ function megaPlatformSetUrl(group, id, value, workspace = state) {
   const store = megaPlatformUrlStore(workspace);
   if (group === "categories" && store?.missingCategoryGeneratedIds?.includes(id)) return false;
   if (!store?.[group]) return false;
-  if (group === "categories" && id === store.onOrderCategoryId) {
-    store.fixed.on_order = String(value ?? "").trim();
-    return true;
-  }
+  if (group === "fixed" && id === "on_order") return false;
   store[group][id] = String(value ?? "").trim();
+  if (group === "custom") {
+    const audit = workspace?.gates?.find((gate) => gate.id === "gate-1")?.cards
+      ?.find((card) => card.id === "card-32");
+    const linked = audit?.pageRows?.find((row) => row.platformPageIdV2 === id);
+    if (linked) linked.url = store.custom[id];
+  }
   return true;
 }
 
-function megaPlatformAuditUrlKey(card, row) {
-  if (card?.id === "card-32")
+function megaPlatformAuditUrlKey(card, row, workspace = state) {
+  if (card?.id === "card-32") {
+    if (row?.platformPageIdV2) {
+      const platform = workspace?.gates?.find((gate) => gate.id === "gate-0")?.cards
+        ?.find(isMegaMarketingCard)?.megaMarketing?.platformV2;
+      if (platform?.extra?.some((item) => item.id === row.platformPageIdV2 && !item.promotedV2))
+        return ["custom", row.platformPageIdV2];
+    }
     return row?.id ? ["custom", `audit:${row.id}`] : null;
+  }
   if (card?.id === "card-25" && card.pageRows?.indexOf(row) > 0)
     return row?.id ? ["custom", `audit:${row.id}`] : null;
   if (card?.id === "card-22")
@@ -21275,14 +21306,14 @@ function megaPlatformAuditUrlKey(card, row) {
 }
 
 function megaPlatformAuditUrl(card, row, workspace = state) {
-  const key = megaPlatformAuditUrlKey(card, row);
+  const key = megaPlatformAuditUrlKey(card, row, workspace);
   return key ? megaPlatformUrl(...key, workspace) : "";
 }
 
 function megaPlatformAuditRowUrl(row, workspace = state) {
   const card = workspace?.gates?.find((gate) => gate.id === "gate-1")?.cards
     ?.find((item) => item.pageRows?.includes(row));
-  const key = megaPlatformAuditUrlKey(card, row);
+  const key = megaPlatformAuditUrlKey(card, row, workspace);
   return key ? megaPlatformUrl(...key, workspace) : String(row?.url || "").trim();
 }
 
@@ -21302,7 +21333,7 @@ function megaPlatformAllPages(workspace = state) {
   const labels = {
     home: "Главная страница", catalog: "Каталог (Хаб)", contacts: "Контакты",
     delivery: "Доставка и оплата", about: "О нас / история бренда",
-    blog: "Блог", on_order: "На заказ", not_found: "Страница 404",
+    blog: "Блог", not_found: "Страница 404",
     thank_you: "Страница «Спасибо»",
     ...Object.fromEntries(Object.entries(MEGA_PLATFORM_LEGAL_KEYS)
       .map(([label, key]) => [key, label])),
@@ -21311,7 +21342,7 @@ function megaPlatformAllPages(workspace = state) {
     name, url: store.fixed[id] || "", group: "fixed", id,
   }));
   (workspace.project?.productRegistryV185 || []).forEach((item) => {
-    if (!item.id || item.id === store.onOrderCategoryId ||
+    if (!item.id ||
         !item.manualOriginV2 && (store.missingCategoryIds?.includes(item.name) ||
           store.missingCategoryGeneratedIds?.includes(item.id))) return;
     rows.push({ name: item.name, url: megaPlatformUrl("categories", item.id, workspace),
@@ -21327,22 +21358,640 @@ function megaPlatformAllPages(workspace = state) {
       ?.find((item) => item.id === cardId);
     (card?.pageRows || []).forEach((row, index) => {
       if (cardId === "card-25" && index === 0 || !row.id) return;
+      if (cardId === "card-32" && megaPlatformAuditUrlKey(card, row, workspace)?.[1] !== `audit:${row.id}`)
+        return;
       rows.push({ name: String(row.name || (cardId === "card-32" ? "Лендинг" : "Статья блога")),
         url: store.custom[`audit:${row.id}`] || "", group: "custom", id: `audit:${row.id}` });
     });
   }
-  const platform = workspace.gates?.find((gate) => gate.id === "gate-0")?.cards
+  const platform = workspace?.gates?.find((gate) => gate.id === "gate-0")?.cards
     ?.find(isMegaMarketingCard)?.megaMarketing?.platformV2;
   (platform?.extra || []).forEach((item) => {
-    if (!item.id || item.promotedV2 || MEGA_PLATFORM_HIDDEN_EXTRA.has(item.name)) return;
+    if (!item.id || item.promotedV2 || megaPlatformHiddenLegacyExtra(item)) return;
     rows.push({ name: item.name, url: store.custom[item.id] || "",
       group: "custom", id: item.id });
   });
   return rows;
 }
 
+const MEGA_SEARCH_INTENTS_V1 = Object.freeze({
+  informational: { label: "Информационное", description: "Узнать, разобраться, получить ответ." },
+  commercial: { label: "Коммерческое", description: "Сравнить варианты и выбрать." },
+  transactional: { label: "Транзакционное", description: "Совершить действие: купить, заказать, записаться." },
+  navigational: { label: "Навигационное", description: "Найти конкретный бренд, компанию или страницу." },
+});
+const MEGA_SEARCH_INTENT_KEYS_V1 = Object.keys(MEGA_SEARCH_INTENTS_V1);
+
+function megaPlatformIntentBackupV1(workspace, projectId) {
+  const card = workspace?.gates?.find((gate) => gate.id === "gate-0")?.cards
+    ?.find(isMegaMarketingCard);
+  if (!card || card.megaMarketing?.platformV2?.searchIntentMigrationV1 || !projectId) return;
+  const key = `guru-search-intent-backup-v1-${projectId}`;
+  if (localStorage.getItem(key)) return;
+  const snapshot = { createdAt: new Date().toISOString(), projectId,
+    megaMarketing: card.megaMarketing || null,
+    productRegistryV185: workspace.project?.productRegistryV185 || [],
+    catalogItemsV189: workspace.project?.catalogItemsV189 || [] };
+  if (!safeStorageSet(key, JSON.stringify(snapshot), { silent: true }))
+    throw new Error("Не удалось сохранить резервную копию Платформы перед миграцией intent");
+}
+
+function megaPlatformIntentRecordV1(group, id, workspace = state) {
+  const platform = workspace?.gates?.find((gate) => gate.id === "gate-0")?.cards
+    ?.find(isMegaMarketingCard)?.megaMarketing?.platformV2;
+  if (!platform || !id) return null;
+  if (group === "custom") {
+    const manual = platform.extra?.find((item) => item.id === id);
+    if (manual) return manual;
+    if (id.startsWith("audit:")) {
+      const auditId = id.slice(6);
+      const auditCards = workspace.gates?.find((gate) => gate.id === "gate-1")?.cards || [];
+      const source = auditCards.find((card) => ["card-25", "card-32"].includes(card.id) &&
+        card.pageRows?.some((row) => row.id === auditId));
+      if (!source) return null;
+      if (source.id === "card-32") {
+        platform.auditExtraV1 ||= {};
+        const meta = platform.auditExtraV1[auditId] ||= { pageTypeV1: "landing", targetV1: null };
+        meta.id ||= auditId;
+        return meta;
+      }
+    }
+  }
+  if (group === "fixed") {
+    const fundamentalName = { home: "Главная страница",
+      contacts: "Контакты (телефон, адрес, мессенджер)",
+      delivery: "Страница доставки и оплаты" }[id];
+    const fundamental = platform.fundamental?.find((row) => row.name === fundamentalName);
+    if (fundamental) return fundamental;
+    const legal = platform.legal?.find((row) => MEGA_PLATFORM_LEGAL_KEYS[row.name] === id);
+    if (legal) return legal;
+  }
+  platform.landings = platform.landings && typeof platform.landings === "object"
+    ? platform.landings : {};
+  const key = `${group}:${id}`;
+  const product = group === "products" ? workspace.project?.catalogItemsV189
+    ?.find((item) => item.id === id) : null;
+  const matchingLegacy = product && workspace.project.catalogItemsV189
+    .filter((item) => item.name === product.name).length === 1
+    ? platform.landings[product.name] : null;
+  if (matchingLegacy && typeof matchingLegacy === "object" &&
+      (!matchingLegacy.productIdV1 || matchingLegacy.productIdV1 === id)) {
+    matchingLegacy.id ||= id;
+    matchingLegacy.productIdV1 = id;
+    return matchingLegacy;
+  }
+  const record = platform.landings[key] && typeof platform.landings[key] === "object"
+    ? platform.landings[key] : (platform.landings[key] = {});
+  record.id ||= group === "categories" || group === "products" || id.startsWith("audit:")
+    ? id.replace(/^audit:/, "") : makeId("platform-page");
+  return record;
+}
+
+function megaPlatformIntentAuditRowV1(group, id, workspace = state) {
+  const cards = workspace?.gates?.find((gate) => gate.id === "gate-1")?.cards || [];
+  const card = (cardId) => cards.find((item) => item.id === cardId);
+  if (group === "fixed") {
+    const cardId = Object.entries(MEGA_PLATFORM_FIXED_URLS)
+      .find(([, key]) => key === id)?.[0];
+    return card(cardId)?.pageRows?.[0] || null;
+  }
+  if (group === "categories") return card("card-22")?.pageRows
+    ?.find((row) => String(row.categoryId || "") === String(id)) || null;
+  if (group === "products") return ["card-23", "card-24"]
+    .flatMap((cardId) => card(cardId)?.pageRows || [])
+    .find((row) => String(row.catalogItemIdV189 || "") === String(id)) || null;
+  if (group === "custom") {
+    const rows = ["card-32", "card-25"].flatMap((cardId) => card(cardId)?.pageRows || []);
+    return id.startsWith("audit:") ? rows.find((row) => row.id === id.slice(6)) || null
+      : rows.find((row) => row.platformPageIdV2 === id) || null;
+  }
+  return null;
+}
+
+function megaPlatformIntentTermsV1(value, limit = 50) {
+  const result = [];
+  const add = (source, depth = 0) => {
+    if (result.length >= limit || depth > 4 || source == null) return;
+    if (Array.isArray(source)) { source.forEach((item) => add(item, depth + 1)); return; }
+    if (typeof source === "object") {
+      add(source.query || source.keyword || source.phrase || source.text || source.value, depth + 1);
+      return;
+    }
+    if (typeof source !== "string") return;
+    source.split(/[\n;,]+/).map((term) => term.trim()).filter(Boolean)
+      .forEach((term) => { if (result.length < limit && !result.includes(term)) result.push(term); });
+  };
+  add(value);
+  return result;
+}
+
+function megaPlatformQueryIntentV1(raw) {
+  const query = String(raw || "").toLocaleLowerCase("ru-RU");
+  if (/(?:^|\s)(?:как|что|почему|зачем|когда|инструкция|советы|объяснение|обзор)(?:\s|$)|что такое/.test(query))
+    return "informational";
+  if (/(?:^|\s)(?:заказать|купить|записаться|вызвать|оформить|оставить заявку|заказ)(?:\s|$)/.test(query))
+    return "transactional";
+  if (/(?:^|\s)(?:цены|цена|стоимость|прайс|лучший|лучшая|лучшее|лучшие|лучших|сравнить|сравнение|отзывы|условия)(?:\s|$)|сколько стоит/.test(query))
+    return "commercial";
+  if (/(?:^|\s)(?:контакты|адрес|телефон|официальный сайт|режим работы)(?:\s|$)/.test(query))
+    return "navigational";
+  return "";
+}
+
+const megaPlatformIntentQueryIndexCacheV1 = new WeakMap();
+function megaPlatformIntentReportQueriesV1(page, workspace = state) {
+  const reports = Array.isArray(workspace.gate5?.reports?.query)
+    ? workspace.gate5.reports.query : [];
+  let index = megaPlatformIntentQueryIndexCacheV1.get(workspace);
+  if (!index || index.reports !== reports || index.length !== reports.length) {
+    const byUrl = new Map();
+    const byProduct = new Map();
+    for (const record of reports) {
+      const query = String(record?.query || "").trim();
+      if (!query) continue;
+      const url = String(record.landing || record.pageUrl || record.url || "").replace(/\/$/, "");
+      if (url) {
+        if (!byUrl.has(url)) byUrl.set(url, []);
+        byUrl.get(url).push(query);
+      }
+      const productId = record.productId || record.product_id;
+      if (productId) {
+        if (!byProduct.has(productId)) byProduct.set(productId, []);
+        byProduct.get(productId).push(query);
+      }
+    }
+    index = { reports, length: reports.length, byUrl, byProduct };
+    megaPlatformIntentQueryIndexCacheV1.set(workspace, index);
+  }
+  const url = String(page.url || "").replace(/\/$/, "");
+  return [...(url ? index.byUrl.get(url) || [] : []),
+    ...(page.group === "products" ? index.byProduct.get(page.id) || [] : [])].slice(0, 50);
+}
+
+function megaPlatformIntentEvidenceV1(page, workspace = state) {
+  const audit = megaPlatformIntentAuditRowV1(page.group, page.id, workspace);
+  const extra = page.group === "custom" && !page.id.startsWith("audit:")
+    ? workspace.gates?.find((gate) => gate.id === "gate-0")?.cards
+      ?.find(isMegaMarketingCard)?.megaMarketing?.platformV2?.extra
+      ?.find((item) => item.id === page.id) : null;
+  const product = page.group === "products" ? workspace.project?.catalogItemsV189
+    ?.find((item) => item.id === page.id) : null;
+  const context = audit?.contextFields || {};
+  const keywords = megaPlatformIntentTermsV1([
+    audit?.keywords, audit?.seoKeywords, context.seoKeywords,
+    context.productKeywordFoundationMiddleV257?.keywords,
+    product?.keywords, product?.landing?.keywords,
+  ]);
+  const realQueries = megaPlatformIntentTermsV1([
+    audit?.searchQueries, audit?.queries, context.searchQueries,
+    ...megaPlatformIntentReportQueriesV1(page, workspace),
+  ]);
+  const heading = [page.name, audit?.h1, audit?.title].filter(Boolean)
+    .join(" ").toLocaleLowerCase("ru-RU");
+  return { audit, extra, product, keywords, realQueries, heading,
+    text: [page.name, audit?.h1, audit?.title, audit?.description,
+      audit?.offer, audit?.finalCta, context.serviceSubhead]
+      .filter(Boolean).join(" ").toLocaleLowerCase("ru-RU") };
+}
+
+function megaPlatformIntentExamplesV1(page, intent, evidence, includeUnclassified = false) {
+  const name = String(page.name || "").trim();
+  const matching = [...evidence.realQueries, ...evidence.keywords]
+    .filter((query) => {
+      const classified = megaPlatformQueryIntentV1(query);
+      return classified === intent || includeUnclassified && !classified;
+    });
+  const generated = {
+    informational: [`что такое ${name}`, `как выбрать ${name}`, `${name} советы`],
+    commercial: [`${name} цены`, `лучшие ${name}`, `${name} отзывы`],
+    transactional: [`заказать ${name}`, `записаться на ${name}`, `${name} рядом`],
+    navigational: [`${name} официальный сайт`, `${name} адрес`, `${name} контакты`],
+  }[intent] || [];
+  return [...new Set([...matching, ...generated].filter(Boolean))].slice(0, 50);
+}
+
+function megaPlatformIntentAutoV1(page, workspace = state) {
+  const evidence = megaPlatformIntentEvidenceV1(page, workspace);
+  const text = evidence.text;
+  const heading = evidence.heading;
+  let primary = null;
+  let secondary = [];
+  let confidence = 45;
+  let rationale = "Недостаточно признаков назначения страницы; проверьте поисковое намерение.";
+  const set = (main, extra, score, why) => {
+    primary = main; secondary = extra; confidence = score; rationale = why;
+  };
+  if (page.group === "fixed" && page.id === "not_found") {
+    confidence = 0;
+    rationale = "Страница 404 не предназначена для поискового входа.";
+  } else if (page.group === "fixed" && page.id === "home")
+    set("navigational", ["commercial"], 88, "Главная помогает найти бренд и перейти к предложениям.");
+  else if (page.group === "fixed" && page.id === "contacts" || /контакт|адрес|телефон/.test(heading))
+    set("navigational", ["transactional"], 85, "Страница помогает найти компанию и связаться с ней.");
+  else if (page.group === "fixed" && page.id === "about" || /о компании|о нас|история бренда/.test(heading))
+    set("navigational", ["informational"], 82, "Страница рассказывает о компании и помогает проверить бренд.");
+  else if (page.group === "fixed" && page.id === "delivery")
+    set("informational", ["transactional"], 78, "Страница объясняет условия доставки и оплаты перед заказом.");
+  else if (page.group === "fixed" && ["company_details", "privacy", "data_consent", "offer", "returns"].includes(page.id))
+    set("informational", [], 76, "Страница объясняет юридические условия и правила работы компании.");
+  else if (page.group === "fixed" && page.id === "blog" || /блог|статья|faq|вопросы|как выбрать|советы/.test(heading))
+    set("informational", [], 85, "Страница отвечает на вопросы и раскрывает тему.");
+  else if (page.group === "categories" || page.group === "fixed" && page.id === "catalog" ||
+      /каталог|категория|направление/.test(heading))
+    set("commercial", ["transactional"], 82, "Страница объединяет предложения для сравнения и выбора.");
+  else if (/цены|цена|стоимость|прайс/.test(heading))
+    set("commercial", ["transactional"], 83, "Страница помогает сравнить стоимость и условия.");
+  else if (/консьерж/.test(heading))
+    set("transactional", ["commercial"], 88, "Консьерж-сервис описывает конкретную услугу и ведёт к обращению.");
+  else if (page.group === "products" || evidence.extra?.pageTypeV1 === "product" ||
+      /услуг|сервис|заказ|запис|вызов/.test(text))
+    set("transactional", ["commercial"], 82, "Страница описывает конкретный товар или услугу и ведёт к действию.");
+  else if (evidence.extra?.pageTypeV1 === "landing")
+    set("transactional", ["commercial"], /^лендинг$|^без названия$/i.test(String(page.name || "").trim())
+      ? 45 : 64, "Лендинг обычно ведёт к заявке или заказу; данных о содержании пока мало.");
+  const counts = Object.fromEntries(MEGA_SEARCH_INTENT_KEYS_V1.map((key) => [key, 0]));
+  evidence.realQueries.forEach((query) => { const intent = megaPlatformQueryIntentV1(query); if (intent) counts[intent]++; });
+  const ranked = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const classified = ranked.reduce((sum, [, count]) => sum + count, 0);
+  if (classified >= 3 && ranked[0][1] >= 3 && ranked[0][1] / classified >= .65) {
+    if (ranked[0][0] !== primary) {
+      secondary = primary ? [primary] : [];
+      primary = ranked[0][0];
+      rationale = "Фактические поисковые запросы этой страницы показывают преобладание другого намерения.";
+    } else rationale += " Классификация подтверждена поисковыми запросами.";
+    confidence = Math.max(confidence, Math.min(95, 75 + Math.round(20 * ranked[0][1] / classified)));
+  } else if (classified >= 3 && ranked[0][1] < classified * .5) {
+    confidence = Math.min(confidence, 58);
+    rationale += " Поисковые запросы пока дают неоднозначный сигнал.";
+  }
+  const exampleQueries = Object.fromEntries(MEGA_SEARCH_INTENT_KEYS_V1.map((intent) =>
+    [intent, primary === intent || secondary.includes(intent)
+      ? megaPlatformIntentExamplesV1(page, intent, evidence, primary === intent) : []]));
+  return { primary, secondary: secondary.slice(0, 2), confidence, rationale,
+    exampleQueries, source: "auto", manualOverride: false, updatedAt: "" };
+}
+
+let megaPlatformIntentAutosaveQueuedV1 = false;
+function megaPlatformIntentSyncV1(page, workspace = state, force = false) {
+  const record = megaPlatformIntentRecordV1(page.group, page.id, workspace);
+  if (!record) return null;
+  record.id ||= makeId("platform-page");
+  const current = record.searchIntentV1;
+  if (current?.manualOverride && !force) return current;
+  const next = megaPlatformIntentAutoV1(page, workspace);
+  if (current && JSON.stringify({ ...current, updatedAt: "" }) === JSON.stringify(next))
+    return current;
+  next.updatedAt = new Date().toISOString();
+  record.searchIntentV1 = next;
+  if (workspace === state && activeProjectId && !megaPlatformIntentAutosaveQueuedV1) {
+    megaPlatformIntentAutosaveQueuedV1 = true;
+    queueMicrotask(() => {
+      megaPlatformIntentAutosaveQueuedV1 = false;
+      if (workspace === state) guruSaveFocusedEditSmooth();
+    });
+  }
+  return next;
+}
+
+function megaPlatformIntentMigrateV1(workspace = state) {
+  const platform = workspace?.gates?.find((gate) => gate.id === "gate-0")?.cards
+    ?.find(isMegaMarketingCard)?.megaMarketing?.platformV2;
+  if (!platform || platform.searchIntentMigrationV1) return;
+  const invariant = () => JSON.stringify({ count: megaPlatformAllPages(workspace).length,
+    urlsV1: platform.urlsV1,
+    entities: [...(workspace.project?.catalogItemsV189 || []),
+      ...(workspace.project?.productRegistryV185 || [])]
+      .map((item) => [item.id, item.productId, item.categoryId, item.status, item.comment]),
+    pages: [...(platform.fundamental || []), ...(platform.legal || []), ...(platform.extra || [])]
+      .map((item) => [item.status, item.comment, item.url]),
+    audit: (workspace.gates?.find((gate) => gate.id === "gate-1")?.cards || [])
+      .flatMap((card) => (card.pageRows || []).map((row) =>
+        [row.id, row.categoryId, row.catalogItemIdV189, row.status, row.comment, row.url])),
+  });
+  const before = invariant();
+  [...(platform.fundamental || []), ...(platform.legal || []), ...(platform.extra || [])]
+    .forEach((record) => {
+      if (record && typeof record === "object") record.id ||= makeId("platform-page");
+    });
+  Object.entries(platform.landings || {}).forEach(([name, record]) => {
+    if (!record || typeof record !== "object" || record.id) return;
+    const products = (workspace.project?.catalogItemsV189 || [])
+      .filter((product) => product.name === name);
+    record.id = products.length === 1 ? products[0].id : makeId("platform-page");
+  });
+  megaPlatformAllPages(workspace).forEach((page) => megaPlatformIntentSyncV1(page, workspace));
+  (platform.fundamental || []).filter((row) =>
+    /главная|страница|контакты|форма|политика/i.test(String(row.name || "")))
+    .forEach((row) => {
+      if (!row.searchIntentV1) {
+        const intent = megaPlatformIntentAutoV1({ group: "legacy", id: row.id,
+          name: row.name, url: row.url || "" }, workspace);
+        intent.updatedAt = new Date().toISOString();
+        row.searchIntentV1 = intent;
+      }
+    });
+  Object.entries(platform.landings || {}).forEach(([name, row]) => {
+    if (!row || typeof row !== "object" || row.searchIntentV1 ||
+        !String(row.url || row.status || "").trim()) return;
+    const intent = megaPlatformIntentAutoV1({ group: "legacy", id: row.id,
+      name, url: row.url || "" }, workspace);
+    intent.updatedAt = new Date().toISOString();
+    row.searchIntentV1 = intent;
+  });
+  const after = invariant();
+  if (before !== after) throw new Error("Миграция intent изменила существующие страницы или их данные");
+  platform.searchIntentMigrationV1 = true;
+}
+
+function megaPlatformIntentLabelV1(intent) {
+  if (intent?.primary === null && intent?.rationale?.includes("404")) return "—";
+  if (!intent || intent.confidence < 60 || !MEGA_SEARCH_INTENTS_V1[intent.primary])
+    return "Требует проверки";
+  return MEGA_SEARCH_INTENTS_V1[intent.primary].label +
+    (intent.secondary?.length ? ` +${intent.secondary.length}` : "");
+}
+
+function megaPlatformIntentCellV1(group, id, name) {
+  if (!id) return '<span class="mega-platform-intent-unresolved">Требует проверки</span>';
+  const page = { group, id, name, url: megaPlatformUrl(group, id) };
+  const intent = megaPlatformIntentSyncV1(page);
+  const label = megaPlatformIntentLabelV1(intent);
+  if (label === "—") return '<span class="mega-platform-intent-unresolved">—</span>';
+  const tone = intent?.confidence >= 60 && MEGA_SEARCH_INTENTS_V1[intent.primary]
+    ? intent.primary : "review";
+  return `<button type="button" class="mega-platform-intent-badge is-${escapeAttr(tone)}"
+    data-mega-intent-open data-mega-intent-group="${escapeAttr(group)}"
+    data-mega-intent-id="${escapeAttr(id)}" aria-haspopup="dialog" aria-expanded="false"
+    aria-label="Интент страницы ${escapeAttr(name)}: ${escapeAttr(label)}">${escapeHtml(label)}</button>`;
+}
+
+let megaPlatformIntentPopoverV1 = null;
+let megaPlatformIntentTriggerV1 = null;
+
+function megaPlatformIntentCloseV1(restoreFocus = false) {
+  megaPlatformIntentPopoverV1?.remove();
+  megaPlatformIntentPopoverV1 = null;
+  megaPlatformIntentTriggerV1?.setAttribute("aria-expanded", "false");
+  if (restoreFocus && megaPlatformIntentTriggerV1?.isConnected)
+    megaPlatformIntentTriggerV1.focus({ preventScroll: true });
+  megaPlatformIntentTriggerV1 = null;
+}
+
+function megaPlatformIntentPositionV1() {
+  if (!megaPlatformIntentPopoverV1 || !megaPlatformIntentTriggerV1?.isConnected) return;
+  const trigger = megaPlatformIntentTriggerV1.getBoundingClientRect();
+  const panel = megaPlatformIntentPopoverV1;
+  const width = Math.min(390, window.innerWidth - 24);
+  panel.style.width = `${width}px`;
+  const left = Math.max(12, Math.min(trigger.left, window.innerWidth - width - 12));
+  const panelHeight = Math.min(panel.scrollHeight, window.innerHeight - 24);
+  const below = trigger.bottom + 8;
+  const top = below + panelHeight <= window.innerHeight - 12
+    ? below : Math.max(12, trigger.top - panelHeight - 8);
+  panel.style.left = `${left}px`;
+  panel.style.top = `${top}px`;
+}
+
+function megaPlatformIntentPopoverHtmlV1(page, intent, edit = false) {
+  const queryWord = (count) => count % 10 === 1 && count % 100 !== 11 ? "запрос"
+    : count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 12 || count % 100 > 14)
+      ? "запроса" : "запросов";
+  const section = (key, label) => {
+    if (!MEGA_SEARCH_INTENTS_V1[key]) return "";
+    const info = MEGA_SEARCH_INTENTS_V1[key];
+    const queries = Array.isArray(intent.exampleQueries?.[key])
+      ? intent.exampleQueries[key] : [];
+    return `<section class="mega-platform-intent-detail">
+      <div class="mega-platform-intent-kicker">● ${escapeHtml(label)}</div>
+      <strong>${escapeHtml(info.label)}</strong><p>${escapeHtml(info.description)}</p>
+      <div class="mega-platform-intent-query-label">Примеры запросов:</div>
+      ${queries.length ? `<ul>${queries.slice(0, 3).map((query) => `<li>${escapeHtml(query)}</li>`).join("")}</ul>
+        ${queries.length > 3 ? `<button type="button" class="mega-platform-intent-more" data-mega-intent-more="${escapeAttr(key)}" aria-expanded="false">+ ещё ${queries.length - 3} ${queryWord(queries.length - 3)}</button><ul class="mega-platform-intent-extra-queries" data-mega-intent-extra="${escapeAttr(key)}" hidden>${queries.slice(3).map((query) => `<li>${escapeHtml(query)}</li>`).join("")}</ul>` : ""}`
+        : '<span class="mega-platform-intent-no-queries">Запросы пока не указаны</span>'}
+    </section>`;
+  };
+  const confidence = intent.confidence >= 80 ? "Высокая"
+    : intent.confidence >= 60 ? "Средняя" : "Требует проверки";
+  const editor = `<div class="mega-platform-intent-editor">
+    <div class="mega-platform-intent-editor-field">
+      <label for="mega-platform-intent-primary">Основное намерение</label>
+      <select id="mega-platform-intent-primary" data-mega-intent-primary aria-describedby="mega-platform-intent-primary-description">${intent.primary ? "" : '<option value="" selected disabled>Выберите намерение</option>'}${MEGA_SEARCH_INTENT_KEYS_V1.map((key) =>
+        `<option value="${key}" ${intent.primary === key ? "selected" : ""}>${MEGA_SEARCH_INTENTS_V1[key].label}</option>`).join("")}</select>
+      <p id="mega-platform-intent-primary-description" class="mega-platform-intent-primary-description" data-mega-intent-primary-description>${intent.primary ? escapeHtml(MEGA_SEARCH_INTENTS_V1[intent.primary]?.description || "") : "Выберите основное намерение страницы."}</p>
+    </div>
+    <fieldset class="mega-platform-intent-secondary"><legend>Дополнительные намерения</legend>
+      <p class="mega-platform-intent-editor-hint">Выберите до двух, если страница решает несколько задач.</p>
+      ${MEGA_SEARCH_INTENT_KEYS_V1.map((key) => `<label class="mega-platform-intent-choice${intent.secondary?.includes(key) ? " is-selected" : ""}" data-mega-intent-secondary-choice="${key}" ${intent.primary === key ? "hidden" : ""}>
+        <input type="checkbox" data-mega-intent-secondary="${key}" ${intent.secondary?.includes(key) ? "checked" : ""} ${intent.primary === key ? "disabled" : ""}>
+        <span class="mega-platform-intent-choice-copy"><strong>${escapeHtml(MEGA_SEARCH_INTENTS_V1[key].label)}</strong><span>${escapeHtml(MEGA_SEARCH_INTENTS_V1[key].description)}</span></span>
+      </label>`).join("")}
+      <span class="mega-platform-intent-secondary-count" data-mega-intent-secondary-count>Выбрано: ${Math.min(intent.secondary?.length || 0, 2)} из 2</span>
+    </fieldset>
+    <div class="mega-platform-intent-actions"><button type="button" class="is-primary" data-mega-intent-save>Сохранить</button><button type="button" data-mega-intent-cancel>Отмена</button></div>
+  </div>`;
+  return `<div class="mega-platform-intent-head"><strong>${escapeHtml(page.name)}</strong><button type="button" data-mega-intent-close aria-label="Закрыть">×</button></div>
+    ${edit ? editor : `${intent.primary ? section(intent.primary, "Основное намерение") : '<p class="mega-platform-intent-no-queries">Основное намерение не определено.</p>'}
+      ${(intent.secondary || []).map((key) => section(key, "Дополнительное намерение")).join("")}
+      <div class="mega-platform-intent-rationale"><strong>Почему так определено</strong><p>${escapeHtml(intent.rationale || "Данных пока недостаточно.")}</p></div>
+      <div class="mega-platform-intent-confidence">Уверенность: ${confidence}</div>
+      <div class="mega-platform-intent-actions"><button type="button" data-mega-intent-edit>Изменить</button>${intent.manualOverride ? '<button type="button" data-mega-intent-reset>Вернуть автоопределение</button>' : ""}</div>`}`;
+}
+
+function megaPlatformIntentUpdateEditorV1(panel, changedInput = null) {
+  const primary = panel.querySelector("[data-mega-intent-primary]")?.value;
+  const description = panel.querySelector("[data-mega-intent-primary-description]");
+  if (description) {
+    description.textContent = MEGA_SEARCH_INTENTS_V1[primary]?.description ||
+      "Выберите основное намерение страницы.";
+    description.dataset.intent = primary || "";
+  }
+  const secondary = [...panel.querySelectorAll("[data-mega-intent-secondary]")];
+  const primaryChoice = secondary.find((input) => input.dataset.megaIntentSecondary === primary);
+  if (primaryChoice) primaryChoice.checked = false;
+  if (secondary.filter((input) => input.checked).length > 2 &&
+      changedInput?.matches("[data-mega-intent-secondary]")) changedInput.checked = false;
+  const selected = secondary.filter((input) => input.checked);
+  secondary.forEach((input) => {
+    const isPrimary = input.dataset.megaIntentSecondary === primary;
+    input.disabled = isPrimary || selected.length >= 2 && !input.checked;
+    const choice = input.closest("[data-mega-intent-secondary-choice]");
+    choice.hidden = isPrimary;
+    choice.classList.toggle("is-selected", input.checked);
+  });
+  const count = panel.querySelector("[data-mega-intent-secondary-count]");
+  if (count) count.textContent = `Выбрано: ${selected.length} из 2`;
+}
+
+function megaPlatformIntentOpenV1(trigger, edit = false) {
+  const group = trigger.dataset.megaIntentGroup;
+  const id = trigger.dataset.megaIntentId;
+  const page = megaPlatformAllPages().find((item) => item.group === group && item.id === id);
+  if (!page) return;
+  const intent = megaPlatformIntentSyncV1(page);
+  if (!intent) return;
+  if (megaPlatformIntentTriggerV1 !== trigger) megaPlatformIntentCloseV1();
+  megaPlatformIntentTriggerV1 = trigger;
+  trigger.setAttribute("aria-expanded", "true");
+  if (!megaPlatformIntentPopoverV1) {
+    megaPlatformIntentPopoverV1 = document.createElement("div");
+    megaPlatformIntentPopoverV1.className = "mega-platform-intent-popover";
+    megaPlatformIntentPopoverV1.setAttribute("role", "dialog");
+    megaPlatformIntentPopoverV1.setAttribute("aria-label", "Поисковое намерение страницы");
+    document.body.append(megaPlatformIntentPopoverV1);
+  }
+  megaPlatformIntentPopoverV1.innerHTML = megaPlatformIntentPopoverHtmlV1(page, intent, edit);
+  if (edit) megaPlatformIntentUpdateEditorV1(megaPlatformIntentPopoverV1);
+  megaPlatformIntentPositionV1();
+}
+
+function megaPlatformIntentRefreshBadgeV1() {
+  const trigger = megaPlatformIntentTriggerV1;
+  if (trigger) megaPlatformIntentRefreshCellsV1(trigger.dataset.megaIntentGroup,
+    trigger.dataset.megaIntentId);
+}
+
+function megaPlatformIntentRefreshCellsV1(group, id) {
+  if (!group || !id) return;
+  const page = megaPlatformAllPages().find((item) => item.group === group && item.id === id);
+  if (!page) return;
+  const intent = megaPlatformIntentSyncV1(page);
+  const label = megaPlatformIntentLabelV1(intent);
+  document.querySelectorAll(`[data-mega-intent-open][data-mega-intent-group="${CSS.escape(group)}"][data-mega-intent-id="${CSS.escape(id)}"]`)
+    .forEach((trigger) => {
+      trigger.textContent = label;
+      trigger.className = `mega-platform-intent-badge is-${intent.confidence >= 60 &&
+        MEGA_SEARCH_INTENTS_V1[intent.primary] ? intent.primary : "review"}`;
+      trigger.setAttribute("aria-label", `Интент страницы ${page.name}: ${label}`);
+    });
+}
+
+document.addEventListener("click", (event) => {
+  const trigger = event.target?.closest?.("[data-mega-intent-open]");
+  if (trigger) {
+    event.preventDefault();
+    if (trigger === megaPlatformIntentTriggerV1 && megaPlatformIntentPopoverV1)
+      megaPlatformIntentCloseV1();
+    else megaPlatformIntentOpenV1(trigger);
+    return;
+  }
+  const panel = megaPlatformIntentPopoverV1;
+  if (!panel) return;
+  if (!panel.contains(event.target)) { megaPlatformIntentCloseV1(); return; }
+  if (event.target.closest("[data-mega-intent-close]")) {
+    megaPlatformIntentCloseV1(true); return;
+  }
+  if (event.target.closest("[data-mega-intent-edit]")) {
+    megaPlatformIntentOpenV1(megaPlatformIntentTriggerV1, true); return;
+  }
+  if (event.target.closest("[data-mega-intent-cancel]")) {
+    megaPlatformIntentOpenV1(megaPlatformIntentTriggerV1); return;
+  }
+  const more = event.target.closest("[data-mega-intent-more]");
+  if (more) {
+    const extra = panel.querySelector(`[data-mega-intent-extra="${CSS.escape(more.dataset.megaIntentMore)}"]`);
+    if (extra) {
+      extra.hidden = !extra.hidden;
+      more.setAttribute("aria-expanded", String(!extra.hidden));
+      megaPlatformIntentPositionV1();
+    }
+    return;
+  }
+  const reset = event.target.closest("[data-mega-intent-reset]");
+  const save = event.target.closest("[data-mega-intent-save]");
+  if (!reset && !save) return;
+  const active = megaPlatformIntentTriggerV1;
+  const page = megaPlatformAllPages().find((item) => item.group === active?.dataset.megaIntentGroup &&
+    item.id === active?.dataset.megaIntentId);
+  const record = page && megaPlatformIntentRecordV1(page.group, page.id);
+  if (!record) return;
+  if (reset) megaPlatformIntentSyncV1(page, state, true);
+  else {
+    const primary = panel.querySelector("[data-mega-intent-primary]")?.value;
+    if (!MEGA_SEARCH_INTENTS_V1[primary]) return;
+    const secondary = [...panel.querySelectorAll("[data-mega-intent-secondary]:checked")]
+      .map((input) => input.dataset.megaIntentSecondary)
+      .filter((key) => MEGA_SEARCH_INTENTS_V1[key] && key !== primary).slice(0, 2);
+    const previous = record.searchIntentV1 || megaPlatformIntentAutoV1(page);
+    const evidence = megaPlatformIntentEvidenceV1(page);
+    const exampleQueries = Object.fromEntries(MEGA_SEARCH_INTENT_KEYS_V1.map((key) =>
+      [key, primary === key || secondary.includes(key)
+        ? previous.exampleQueries?.[key]?.length ? previous.exampleQueries[key]
+          : megaPlatformIntentExamplesV1(page, key, evidence) : []]));
+    record.searchIntentV1 = { primary, secondary, confidence: 100,
+      rationale: "Поисковое намерение выбрано вручную.", exampleQueries,
+      source: "manual", manualOverride: true, updatedAt: new Date().toISOString() };
+  }
+  guruInvalidateGateViewCache();
+  guruSaveFocusedEditSmooth();
+  megaPlatformIntentRefreshBadgeV1();
+  megaPlatformIntentOpenV1(active);
+});
+
+document.addEventListener("change", (event) => {
+  const panel = megaPlatformIntentPopoverV1;
+  if (!panel?.contains(event.target) ||
+      !event.target.matches("[data-mega-intent-primary], [data-mega-intent-secondary]")) return;
+  megaPlatformIntentUpdateEditorV1(panel, event.target);
+});
+
+document.addEventListener("change", (event) => {
+  const input = event.target;
+  if (!input?.closest?.(".mega-platform-section")) return;
+  if (input.dataset.megaField === "url" && input.dataset.megaUrlGroup) {
+    megaPlatformIntentRefreshCellsV1(input.dataset.megaUrlGroup, input.dataset.megaUrlId);
+    return;
+  }
+  if (input.dataset.megaPlatformRenameCategory) {
+    megaPlatformIntentRefreshCellsV1("categories", input.dataset.megaPlatformRenameCategory);
+    return;
+  }
+  if (input.dataset.megaPlatformRenameProduct) {
+    megaPlatformIntentRefreshCellsV1("products", input.dataset.megaPlatformRenameProduct);
+    return;
+  }
+  if (input.dataset.megaPlatformAuditName) {
+    megaPlatformIntentRefreshCellsV1("custom", `audit:${input.dataset.megaPlatformAuditName}`);
+    return;
+  }
+  if (input.dataset.megaPv2 === "extra" && input.dataset.megaField === "name") {
+    const card = state.gates?.find((gate) => gate.id === "gate-0")?.cards.find(isMegaMarketingCard);
+    const page = card?.megaMarketing?.platformV2?.extra?.[Number(input.dataset.megaIdx)];
+    if (page?.id) megaPlatformIntentRefreshCellsV1("custom", page.id);
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && megaPlatformIntentPopoverV1) {
+    event.preventDefault();
+    megaPlatformIntentCloseV1(true);
+  }
+});
+window.addEventListener("resize", megaPlatformIntentPositionV1);
+document.addEventListener("scroll", (event) => {
+  if (megaPlatformIntentPopoverV1 &&
+      !megaPlatformIntentPopoverV1.contains(event.target)) megaPlatformIntentCloseV1();
+}, true);
+
 function megaPlatformCanonicalPageRefV2(ref, workspace = state) {
+  if (ref?.group === "fixed" && ref.id === "on_order") {
+    const store = megaPlatformUrlStore(workspace);
+    if (store?.onOrderCategoryId && workspace?.project?.productRegistryV185
+        ?.some((item) => item.id === store.onOrderCategoryId))
+      return { group: "categories", id: store.onOrderCategoryId };
+    const platform = workspace?.gates?.find((gate) => gate.id === "gate-0")?.cards
+      ?.find(isMegaMarketingCard)?.megaMarketing?.platformV2;
+    if (platform?.extra?.some((item) => item.id === store?.onOrderLandingIdV2))
+      return { group: "custom", id: store.onOrderLandingIdV2 };
+    return null;
+  }
   if (ref?.group !== "custom" || !ref.id) return ref;
+  if (ref.id.startsWith("audit:")) {
+    const auditRow = workspace?.gates?.find((gate) => gate.id === "gate-1")?.cards
+      ?.find((card) => card.id === "card-32")?.pageRows
+      ?.find((row) => `audit:${row.id}` === ref.id);
+    if (auditRow && megaPlatformAuditUrlKey({ id: "card-32" }, auditRow, workspace)?.[1] !== ref.id)
+      return { group: "custom", id: auditRow.platformPageIdV2 };
+  }
   const platform = workspace?.gates?.find((gate) => gate.id === "gate-0")?.cards
     ?.find(isMegaMarketingCard)?.megaMarketing?.platformV2;
   const origin = (platform?.extra || []).find((row) => row?.id === ref.id);
@@ -21354,9 +22003,6 @@ function megaPlatformCanonicalPageRefV2(ref, workspace = state) {
   if (!Array.isArray(entries) || !entries.some((entry) =>
       entry?.id === promoted.id && entry.manualOriginV2 === origin.id))
     return ref;
-  if (group === "categories" &&
-      megaPlatformUrlStore(workspace)?.onOrderCategoryId === promoted.id)
-    return { group: "fixed", id: "on_order" };
   return { group, id: promoted.id };
 }
 
@@ -21370,13 +22016,8 @@ function megaPlatformPageRefForUrl(raw, workspace = state) {
   const url = String(raw || "").trim();
   if (!url) return null;
   const matches = megaPlatformAllPages(workspace).filter((page) => page.url === url);
-  const store = megaPlatformUrlStore(workspace);
-  const unique = new Map(matches.map((page) => {
-    const alias = page.group === "categories" && page.id === store?.onOrderCategoryId;
-    const group = alias ? "fixed" : page.group;
-    const id = alias ? "on_order" : page.id;
-    return [`${group}:${id}`, { group, id }];
-  }));
+  const unique = new Map(matches.map((page) =>
+    [`${page.group}:${page.id}`, { group: page.group, id: page.id }]));
   return unique.size === 1 ? [...unique.values()][0] : null;
 }
 
@@ -21427,6 +22068,47 @@ document.addEventListener("change", (event) => {
   if (kind === "link-bank") renderLinkBank();
   else renderGate();
 });
+
+function megaPlatformMigrateOptionalOnOrderV2(workspace, store) {
+  if (store.optionalOnOrderMigratedV2) return;
+  const platform = workspace?.gates?.find((gate) => gate.id === "gate-0")?.cards
+    ?.find(isMegaMarketingCard)?.megaMarketing?.platformV2;
+  if (!platform) return;
+  platform.extra = Array.isArray(platform.extra) ? platform.extra : [];
+  const legacyUrl = String(store.fixed.on_order || platform.onOrder?.url || "").trim();
+  const categoryId = store.onOrderCategoryId;
+  if (categoryId && workspace.project?.productRegistryV185
+      ?.some((category) => category.id === categoryId)) {
+    if (!Object.hasOwn(store.categories, categoryId) && legacyUrl)
+      store.categories[categoryId] = legacyUrl;
+  } else {
+    delete store.onOrderCategoryId;
+    let row = platform.extra.find((item) => item.manualV2 && !item.promotedV2 &&
+      item.group === "commercial" && item.pageTypeV1 === "landing" &&
+      String(item.name || "").trim().toLocaleLowerCase("ru-RU") === "на заказ");
+    if (!row && legacyUrl) {
+      row = platform.extra.find((item) => !item.manualV2 && !item.promotedV2 &&
+        String(item.name || "").trim().toLocaleLowerCase("ru-RU") === "на заказ");
+      if (row) {
+        row.id ||= makeId("platform-page");
+        row.group = "commercial";
+        row.manualV2 = true;
+        row.pageTypeV1 = "landing";
+        row.targetV1 = null;
+      } else {
+        row = { id: makeId("platform-page"), name: "На заказ", group: "commercial",
+          manualV2: true, pageTypeV1: "landing", targetV1: null };
+        platform.extra.push(row);
+      }
+    }
+    if (row) {
+      store.onOrderLandingIdV2 = row.id;
+      if (!Object.hasOwn(store.custom, row.id) && legacyUrl)
+        store.custom[row.id] = legacyUrl;
+    }
+  }
+  store.optionalOnOrderMigratedV2 = true;
+}
 
 function megaPlatformMigrateUrls(workspace, categoriesWithoutStableId = []) {
   const store = megaPlatformUrlStore(workspace);
@@ -21486,7 +22168,7 @@ function megaPlatformMigrateUrls(workspace, categoriesWithoutStableId = []) {
         url: row.url.trim(), reason: "Нет системного ключа страницы" });
   }
   (platform.extra || []).forEach((row) => {
-    if (row.promotedV2 || MEGA_PLATFORM_HIDDEN_EXTRA.has(row.name)) return;
+    if (row.promotedV2 || megaPlatformHiddenLegacyExtra(row)) return;
     row.id = row.id || makeId("platform-page");
     add("custom", row.id, row.url, `platformV2.extra.${row.id}.url`);
   });
@@ -21510,7 +22192,7 @@ function megaPlatformMigrateUrls(workspace, categoriesWithoutStableId = []) {
   (gate1?.cards || []).forEach((card) => {
     (card.pageRows || []).forEach((row, index) => {
       let key = card.id === "card-22" && store.missingCategoryIds.includes(row.name)
-        ? null : megaPlatformAuditUrlKey(card, row);
+        ? null : megaPlatformAuditUrlKey(card, row, workspace);
       if (key?.[0] === "categories" &&
           !(workspace.project?.productRegistryV185 || []).some((item) => String(item.id) === key[1]))
         key = null;
@@ -21542,12 +22224,10 @@ function megaPlatformMigrateUrls(workspace, categoriesWithoutStableId = []) {
   (platform.legal || []).forEach((row) => add("fixed", MEGA_PLATFORM_LEGAL_KEYS[row.name], row.url,
     `platformV2.legal.${row.name}`));
   add("fixed", "on_order", platform.onOrder?.url, "platformV2.onOrder.url");
-  const onOrderProposal = guruSiteChromeProposalV499(workspace)
-    .find((item) => item.key === "on_order");
-  add("fixed", "on_order", onOrderProposal?.url, "guruSiteChromeProposalV499.on_order");
   const onOrderCategory = (workspace.project?.productRegistryV185 || [])
     .find((item) => String(item?.name || "").trim().toLocaleLowerCase("ru-RU") === "на заказ");
-  if (onOrderCategory?.id && !categoriesWithoutStableId.includes(onOrderCategory.name))
+  if (!store.optionalOnOrderMigratedV2 && onOrderCategory?.id &&
+      !categoriesWithoutStableId.includes(onOrderCategory.name))
     store.onOrderCategoryId = String(onOrderCategory.id);
   const onOrderAudit = gate1?.cards.find((card) => card.id === "card-22")?.pageRows
     ?.find((row) => row.categoryId === onOrderCategory?.id);
@@ -21674,7 +22354,7 @@ function megaPlatformMigrateUrls(workspace, categoriesWithoutStableId = []) {
       add("fixed", "thank_you", row?.thankYouUrl,
         `gate2.${card.id}.perProduct[${index}].thankYouUrl`);
   const conflicts = [];
-  if (store.onOrderCategoryId) {
+  if (!store.optionalOnOrderMigratedV2 && store.onOrderCategoryId) {
     const aliasKey = `categories:${store.onOrderCategoryId}`;
     const aliasCandidates = candidates.get(aliasKey) || [];
     aliasCandidates.forEach((entry) => add("fixed", "on_order", entry.url, entry.source));
@@ -21691,6 +22371,8 @@ function megaPlatformMigrateUrls(workspace, categoriesWithoutStableId = []) {
     if (new Set(entries.map((entry) => entry.url)).size > 1)
       conflicts.push({ key, selected: store[group][id], candidates: entries });
   }
+  megaPlatformMigrateOptionalOnOrderV2(workspace, store);
+  megaPlatformReconcileManualAuditRows(workspace);
   store.migrationConflicts = conflicts;
   store.unmappedLegacyUrls = unmappedLegacyUrls;
   const unresolvedReferences = [];
@@ -21854,6 +22536,9 @@ function megaPlatformAutoRows(workspace = state) {
   const auditExtraRows = ["card-25", "card-32"].flatMap((cardId) =>
     (card(cardId)?.pageRows || []).flatMap((audit, index) => {
       if (cardId === "card-25" && index === 0 || !audit.id) return [];
+      if (cardId === "card-32" &&
+          megaPlatformAuditUrlKey(card(cardId), audit, workspace)?.[1] !== `audit:${audit.id}`)
+        return [];
       return [{ name: audit.name || (cardId === "card-32" ? "Лендинг" : "Статья блога"),
         urlGroup: "custom", urlId: `audit:${audit.id}`, sourceCardId: cardId,
         sourceText: "Карточка аудита", sourceFound: true }];
@@ -21879,6 +22564,7 @@ function megaPlatformReadonlyRow(item, cardId) {
   return `<tr class="mega-platform-auto-row">
     <td class="cr-label">${escapeHtml(item.name)}</td>
     <td>${megaPlatformUrlInput(cardId, item.urlGroup, item.urlId)}</td>
+    <td>${megaPlatformIntentCellV1(item.urlGroup, item.urlId, item.name)}</td>
     <td>${source}</td>
   </tr>`;
 }
@@ -21890,6 +22576,7 @@ function megaPlatformManualRow(cardId, item, group, index, removable = false, no
   return `<tr>
     <td class="cr-label"><div class="mega-platform-page-name">${escapeHtml(item.name)}${removable ? `<button type="button" class="v116-multi-remove" data-mega-card="${escapeAttr(cardId)}" data-mega-pv2-remove="${index}" title="Удалить">×</button>` : ""}</div>${note ? `<small class="mega-platform-note">${escapeHtml(note)}</small>` : ""}</td>
     <td>${megaPlatformUrlInput(cardId, urlGroup, urlId)}</td>
+    <td>${megaPlatformIntentCellV1(urlGroup, urlId, item.name)}</td>
     <td></td>
   </tr>`;
 }
@@ -21903,6 +22590,7 @@ function megaPlatformAddedRow(cardId, item, index) {
       <button type="button" class="v116-multi-remove" data-mega-card="${escapeAttr(cardId)}" data-mega-pv2-remove="${index}" title="Удалить страницу" aria-label="Удалить страницу">×</button>
     </div></td>
     <td><label class="mega-platform-added-field"><span>URL</span>${megaPlatformUrlInput(cardId, "custom", item.id)}</label></td>
+    <td>${megaPlatformIntentCellV1("custom", item.id, item.name)}</td>
     <td>Добавлено вручную</td>
   </tr>`;
 }
@@ -21952,9 +22640,8 @@ function megaPlatformPromoteManualPage(row, workspace = state) {
     item.id === marker.id && item.manualOriginV2 === row.id);
   if (marked) {
     const urls = megaPlatformUrlStore(workspace);
-    const onOrder = kind === "category" && urls.onOrderCategoryId === marked.id;
-    const urlGroup = onOrder ? "fixed" : kind === "category" ? "categories" : "products";
-    const urlId = onOrder ? "on_order" : marked.id;
+    const urlGroup = kind === "category" ? "categories" : "products";
+    const urlId = marked.id;
     if (!Object.hasOwn(urls[urlGroup], urlId))
       megaPlatformSetUrl(urlGroup, urlId,
         Object.hasOwn(urls.custom, row.id) ? urls.custom[row.id] : row.url || "", workspace);
@@ -21972,15 +22659,9 @@ function megaPlatformPromoteManualPage(row, workspace = state) {
   const oldUrl = Object.hasOwn(urls.custom, row.id)
     ? urls.custom[row.id] : String(row.url || "");
   if (kind === "category") {
-    const onOrder = name.toLocaleLowerCase("ru-RU") === "на заказ";
-    if (onOrder && (urls.onOrderCategoryId && urls.onOrderCategoryId !== id ||
-        categories.some((item) => item.id !== id &&
-          String(item.name || "").trim().toLocaleLowerCase("ru-RU") === "на заказ"))) return false;
     if (!existing) categories.push({ id, name, legacyNames: [],
       createdAt: new Date().toISOString(), manualOriginV2: row.id });
-    if (onOrder) urls.onOrderCategoryId = id;
-    if (!Object.hasOwn(urls.categories, id) && !(onOrder &&
-        Object.hasOwn(urls.fixed, "on_order")))
+    if (!Object.hasOwn(urls.categories, id))
       megaPlatformSetUrl("categories", id, oldUrl, workspace);
     row.promotedV2 = { kind, id };
     guruV187EnsureProductCards(workspace);
@@ -22013,6 +22694,36 @@ function megaPlatformPromoteManualPages(workspace = state) {
 
 let megaPlatformOpenProductPickerCategoryId = "";
 let megaPlatformProductPickerDraft = null;
+
+function megaPlatformRemoveManualPage(btn) {
+  const card = findCard(btn.dataset.megaCard);
+  if (!card) return;
+  const m = ensureMegaMarketing(card, state);
+  const [removed] = m.platformV2.extra.splice(Number(btn.dataset.megaPv2Remove), 1);
+  const store = megaPlatformUrlStore(state);
+  if (removed?.id && store?.custom) delete store.custom[removed.id];
+  const audit = state.gates?.find((gate) => gate.id === "gate-1")?.cards
+    ?.find((card) => card.id === "card-32");
+  if (removed?.id && audit?.pageRows) {
+    const linked = audit.pageRows.filter((row) => row.platformPageIdV2 === removed.id);
+    audit.pageRows = audit.pageRows.filter((row) => row.platformPageIdV2 !== removed.id);
+    linked.forEach((row) => { if (store?.custom) delete store.custom[`audit:${row.id}`]; });
+    if (linked.length) recalculateStatusForCard(audit);
+  }
+  if (store?.onOrderLandingIdV2 === removed?.id) delete store.onOrderLandingIdV2;
+  flashSaving();
+  guruInvalidateGateViewCache();
+  if (removed?.group === "commercial") megaPlatformRefreshManualTable(btn, "");
+  else renderGate();
+}
+
+function megaPlatformBindCommercialTable(table) {
+  table.querySelectorAll('[data-mega-card][data-mega-field]:not([data-mega-url-group])')
+    .forEach((input) => input.addEventListener(input.tagName === "SELECT" ? "change" : "input",
+      (event) => updateMegaMarketing(event.target)));
+  table.querySelectorAll('[data-mega-pv2-remove]')
+    .forEach((button) => button.addEventListener("click", () => megaPlatformRemoveManualPage(button)));
+}
 
 function megaPlatformProductPickerSelection(categoryId) {
   return new Set(guruV189CatalogItems(state)
@@ -22061,22 +22772,24 @@ function megaPlatformCommercialRow(cardId, item, kind, depth = 0, displayCategor
   if (kind === "category" && !id) return `<tr class="mega-platform-commercial-row">
     <td class="cr-label">${escapeHtml(item.name)}<small class="mega-platform-note">Нет стабильного ID в «Что продаём»</small></td>
     <td>Категория</td><td></td><td>URL не указан</td>
+    <td>${megaPlatformIntentCellV1("categories", item.sourceCategoryId, item.name)}</td>
     <td>${megaPlatformCommercialSource(item)}</td><td></td></tr>`;
-  const isCategory = kind === "category" || kind === "on_order" && Boolean(item.sourceCategoryId);
+  const isCategory = kind === "category";
   const isProduct = kind === "product";
   const branchId = displayCategoryId || (isCategory ? id : "");
   const dragHandle = isProduct
     ? `<button type="button" class="mega-platform-product-handle" data-mega-platform-drag-product="${escapeAttr(id)}" data-mega-platform-drag-from="${escapeAttr(branchId)}" title="Перетащить товар или изменить порядок" aria-label="Перетащить товар или изменить порядок">⠿</button>` : "";
-  const editableName = `<div class="mega-platform-row-name">${dragHandle}<input data-mega-platform-rename-${isProduct ? "product" : "category"}="${escapeAttr(id)}" ${isCategory ? `data-mega-platform-initial-name="${escapeAttr(item.name)}"` : ""} data-guru-field-neutral value="${escapeAttr(item.name)}" placeholder="${isProduct ? "Название товара" : "Название категории"}" /></div><small class="mega-platform-duplicate-hint" data-mega-platform-duplicate-hint hidden>${isProduct ? "Товар" : "Категория"} с таким названием уже есть</small>`;
+  const editableName = `<div class="mega-platform-row-name">${dragHandle}<input data-mega-platform-rename-${isProduct ? "product" : "category"}="${escapeAttr(id)}" data-mega-platform-initial-name="${escapeAttr(item.name)}" data-guru-field-neutral value="${escapeAttr(item.name)}" placeholder="${isProduct ? "Название товара" : "Название категории"}" /></div><small class="mega-platform-duplicate-hint" data-mega-platform-duplicate-hint hidden>${isProduct ? "Товар" : "Категория"} с таким названием уже есть</small>`;
   const name = isProduct && item.manualOriginV2
     ? `<div class="mega-platform-manual-name">${editableName}${megaPlatformManualProductCategorySelect(id)}</div>`
     : isCategory || isProduct ? `<div class="mega-platform-manual-name">${editableName}</div>` : escapeHtml(item.name);
-  const type = kind === "hub" ? "Хаб" : isProduct ? "Товар" : kind === "on_order" ? "На заказ" : "Категория";
-  const remove = kind === "hub" || kind === "on_order" && !item.sourceCategoryId ? "" : `<button type="button" class="v116-multi-remove" data-mega-platform-delete-kind="${isProduct ? "product" : "category"}" data-mega-platform-delete-id="${escapeAttr(id)}" title="Удалить из всей системы" aria-label="Удалить ${escapeAttr(type)} из всей системы">×</button>`;
+  const type = kind === "hub" ? "Хаб" : isProduct ? "Товар" : "Категория";
+  const remove = kind === "hub" ? "" : `<button type="button" class="v116-multi-remove" data-mega-platform-delete-kind="${isProduct ? "product" : "category"}" data-mega-platform-delete-id="${escapeAttr(id)}" title="Удалить из всей системы" aria-label="Удалить ${escapeAttr(type)} из всей системы">×</button>`;
   return `<tr class="mega-platform-commercial-row ${depth ? "is-child" : ""}" ${branchId ? `data-mega-platform-drop-category="${escapeAttr(branchId)}"` : ""}>
     <td class="cr-label">${name}</td><td>${type}</td>
     <td>${isProduct ? megaPlatformContinuumSelect(id) : ""}</td>
     <td>${megaPlatformUrlInput(cardId, item.urlGroup, item.urlId)}</td>
+    <td>${megaPlatformIntentCellV1(item.urlGroup, isCategory ? item.sourceCategoryId : item.urlId, item.name)}</td>
     <td>${megaPlatformCommercialSource(item)}</td><td>${remove}</td>
   </tr>`;
 }
@@ -22090,16 +22803,15 @@ function megaPlatformCommercialManualRow(cardId, item, index, auditRow = null) {
     megaPlatformDuplicateEntityName(type, name, id, state);
   const target = item.targetV1 && typeof item.targetV1 === "object" ? item.targetV1 : null;
   const selected = target?.kind && target?.id ? `${target.kind}:${target.id}` : "";
-  const categoryChoices = megaPlatformStableCategories(state).map((category) => `<option value="categories:${escapeAttr(category.id)}" ${selected === `categories:${category.id}` ? "selected" : ""}>Категория · ${escapeHtml(category.name)}</option>`).join("");
-  const productChoices = guruV194Products(state).map((product) => `<option value="products:${escapeAttr(product.id)}" ${selected === `products:${product.id}` ? "selected" : ""}>Товар · ${escapeHtml(product.name)}</option>`).join("");
-  const targetControl = !auditRow && type === "category" ? ""
-    : !auditRow && type === "product"
-      ? categoryChoices
-        ? `<select class="mega-platform-purpose-select" data-mega-platform-manual-target="${escapeAttr(id)}" aria-label="Категория товара"><option value="">Без категории</option>${categoryChoices}</select>`
-        : '<span class="mega-platform-purpose-empty">Без категории</span>'
-      : categoryChoices || productChoices
-        ? `<select class="mega-platform-purpose-select" data-mega-platform-manual-target="${escapeAttr(id)}" aria-label="Для чего"><option value="">Для чего</option>${categoryChoices}${productChoices}</select>`
-        : '<span class="mega-platform-purpose-empty">Для чего · нет категорий и товаров</span>';
+  const categoryChoices = !auditRow && type === "product"
+    ? megaPlatformStableCategories(state).map((category) => `<option value="categories:${escapeAttr(category.id)}" ${selected === `categories:${category.id}` ? "selected" : ""}>Категория · ${escapeHtml(category.name)}</option>`).join("") : "";
+  const targetControl = !auditRow && type === "product"
+    ? categoryChoices
+      ? `<select class="mega-platform-purpose-select" data-mega-platform-manual-target="${escapeAttr(id)}" aria-label="Категория товара"><option value="">Без категории</option>${categoryChoices}</select>`
+      : '<span class="mega-platform-purpose-empty">Без категории</span>' : "";
+  const source = auditRow
+    ? `<button type="button" class="small-btn" data-open-audit-page="card-32" data-audit-row-id="${escapeAttr(auditRow.id)}">Карточка аудита</button>`
+    : `<button type="button" class="small-btn" data-mega-platform-open-manual-audit="${escapeAttr(id)}">Карточка аудита</button>`;
   return `<tr class="mega-platform-commercial-row mega-platform-added-row">
     <td><div class="mega-platform-manual-name"><input ${auditRow ? `data-mega-platform-audit-name="${escapeAttr(auditRow.id)}"` : `data-mega-card="${escapeAttr(cardId)}" data-mega-pv2="extra" data-mega-idx="${index}" data-mega-field="name"`} data-guru-field-neutral value="${escapeAttr(name)}" placeholder="Название страницы" />${duplicate ? `<small class="mega-platform-duplicate-hint">${type === "category" ? "Категория" : "Товар"} с таким названием уже есть</small>` : ""}${targetControl}</div></td>
     <td><select class="mega-platform-manual-type" data-mega-platform-manual-type="${escapeAttr(id)}" aria-label="Тип страницы">${auditRow
@@ -22107,14 +22819,15 @@ function megaPlatformCommercialManualRow(cardId, item, index, auditRow = null) {
       : `<option value="category" ${type === "category" ? "selected" : ""}>Категория</option><option value="product" ${type === "product" ? "selected" : ""}>Товар</option><option value="landing" ${type === "landing" ? "selected" : ""}>Лендинг</option><option value="other" ${type === "other" ? "selected" : ""}>Другая</option>`}</select></td>
     <td></td>
     <td>${megaPlatformUrlInput(cardId, "custom", id)}</td>
-    <td>Добавлено вручную</td><td><button type="button" class="v116-multi-remove" ${auditRow ? `data-mega-platform-audit-remove="${escapeAttr(auditRow.id)}"` : `data-mega-card="${escapeAttr(cardId)}" data-mega-pv2-remove="${index}"`} aria-label="Удалить страницу" title="Удалить страницу">×</button></td>
+    <td>${megaPlatformIntentCellV1("custom", id, name)}</td>
+    <td>${source}</td><td><button type="button" class="v116-multi-remove" ${auditRow ? `data-mega-platform-audit-remove="${escapeAttr(auditRow.id)}"` : `data-mega-card="${escapeAttr(cardId)}" data-mega-pv2-remove="${index}"`} aria-label="Удалить страницу" title="Удалить страницу">×</button></td>
   </tr>`;
 }
 
 function megaPlatformProductPickerRows(categoryId, products) {
   const open = megaPlatformOpenProductPickerCategoryId === categoryId &&
     megaPlatformProductPickerDraft?.projectId === activeProjectId;
-  const button = `<tr class="mega-platform-add-product-row" data-mega-platform-drop-category="${escapeAttr(categoryId)}"><td colspan="6"><button type="button" data-mega-platform-pick-category="${escapeAttr(categoryId)}" aria-expanded="${open}">+ товар</button></td></tr>`;
+  const button = `<tr class="mega-platform-add-product-row" data-mega-platform-drop-category="${escapeAttr(categoryId)}"><td colspan="7"><button type="button" data-mega-platform-pick-category="${escapeAttr(categoryId)}" aria-expanded="${open}">+ товар</button></td></tr>`;
   if (!open) return [button];
   const draft = megaPlatformProductPickerDraft?.categoryId === categoryId
     ? megaPlatformProductPickerDraft : {
@@ -22124,7 +22837,7 @@ function megaPlatformProductPickerRows(categoryId, products) {
   const list = choices.length
     ? choices.map((product) => `<label><input type="checkbox" data-mega-platform-pick-product="${escapeAttr(product.urlId)}" data-mega-platform-pick-in="${escapeAttr(categoryId)}" ${draft.selectedIds.has(product.urlId) ? "checked" : ""} />${escapeHtml(product.name)}</label>`).join("")
     : '<span class="mega-platform-note">Существующих товаров пока нет</span>';
-  return [button, `<tr class="mega-platform-product-picker-row"><td colspan="6"><div class="mega-platform-product-picker" data-mega-platform-picker="${escapeAttr(categoryId)}">
+  return [button, `<tr class="mega-platform-product-picker-row"><td colspan="7"><div class="mega-platform-product-picker" data-mega-platform-picker="${escapeAttr(categoryId)}">
     <label class="mega-platform-picker-new"><span>Новый товар</span><input type="text" data-mega-platform-picker-name="${escapeAttr(categoryId)}" data-guru-field-neutral value="${escapeAttr(draft.name)}" placeholder="Название товара" /></label>
     <small class="mega-platform-duplicate-hint" data-mega-platform-picker-duplicate ${megaPlatformDuplicateEntityName("product", draft.name, "", state) ? "" : "hidden"}>Товар с таким названием уже есть</small>
     <span class="mega-platform-picker-label">Существующие товары</span><div class="mega-platform-picker-list">${list}</div>
@@ -22145,6 +22858,7 @@ function megaPlatformRefreshCommercialTable(categoryId) {
   const next = container.querySelector(".mega-platform-commercial-table");
   if (!next) return;
   current.replaceWith(next);
+  megaPlatformBindCommercialTable(next);
   const nextAnchor = next.querySelector(`[data-mega-platform-pick-category="${CSS.escape(categoryId)}"]`);
   if (top === undefined || !nextAnchor) return;
   const delta = nextAnchor.getBoundingClientRect().top - top;
@@ -22152,6 +22866,34 @@ function megaPlatformRefreshCommercialTable(categoryId) {
   if (scroller === document.scrollingElement || scroller === document.documentElement ||
       scroller === document.body) window.scrollBy(0, delta);
   else if (scroller?.isConnected) scroller.scrollTop += delta;
+}
+
+function megaPlatformRefreshManualTable(anchor, selector) {
+  const current = anchor?.closest(".mega-platform-commercial-table");
+  const card = state.gates?.find((gate) => gate.id === "gate-0")?.cards
+    ?.find(isMegaMarketingCard);
+  if (!current || !card?.megaMarketing?.platformV2) return null;
+  const oldRow = anchor.closest("tr");
+  const oldTop = oldRow?.getBoundingClientRect().top;
+  const oldIndex = oldRow ? [...current.tBodies[0].rows].indexOf(oldRow) : -1;
+  const scroller = guruStableScrollContainer(anchor);
+  const container = document.createElement("div");
+  container.innerHTML = megaPlatformSectionHtml(card.id, card.megaMarketing.platformV2);
+  const next = container.querySelector(".mega-platform-commercial-table");
+  if (!next) return null;
+  current.replaceWith(next);
+  megaPlatformBindCommercialTable(next);
+  const focus = selector ? next.querySelector(selector) : null;
+  const nextRows = [...(next.tBodies[0]?.rows || [])];
+  const nextRow = focus?.closest("tr") ||
+    (oldIndex >= 0 ? nextRows[Math.min(oldIndex, nextRows.length - 1)] : null);
+  if (oldTop !== undefined && nextRow) {
+    const delta = nextRow.getBoundingClientRect().top - oldTop;
+    if (scroller === document.scrollingElement || scroller === document.documentElement ||
+        scroller === document.body) window.scrollBy(0, delta);
+    else if (scroller?.isConnected) scroller.scrollTop += delta;
+  }
+  return focus;
 }
 
 function megaPlatformSaveProductPicker(categoryId) {
@@ -22188,8 +22930,8 @@ function megaPlatformSaveProductPicker(categoryId) {
   return true;
 }
 
-function megaPlatformCommercialTable(cardId, auto, commercialAudit, commercialCustom, onOrderCategory) {
-  const categories = auto.required.filter((item) => item.urlGroup === "categories" && item.urlId !== onOrderCategory?.id);
+function megaPlatformCommercialTable(cardId, auto, commercialAudit, commercialCustom) {
+  const categories = auto.required.filter((item) => item.urlGroup === "categories");
   const products = auto.required.filter((item) => item.urlGroup === "products");
   const hub = auto.required.find((item) => item.urlGroup === "fixed" && item.urlId === "catalog");
   const rows = [];
@@ -22204,28 +22946,16 @@ function megaPlatformCommercialTable(cardId, auto, commercialAudit, commercialCu
       rows.push(...megaPlatformProductPickerRows(category.urlId, products));
     }
   }
-  rows.push(megaPlatformCommercialRow(cardId, {
-    name: onOrderCategory?.name || "На заказ", urlGroup: "fixed", urlId: "on_order",
-    entityId: onOrderCategory?.id,
-    sourceCategoryId: onOrderCategory?.id, sourceCardId: "card-22",
-    sourceText: onOrderCategory ? "Что продаём · категория" : "Карточка аудита",
-  }, "on_order"));
-  if (onOrderCategory?.id) {
-    rows.push(...megaPlatformOrderedProductsInCategory(onOrderCategory.id,
-      products.filter((item) => megaPlatformProductCategoryIds(item.urlId).includes(onOrderCategory.id)))
-      .map((item) => megaPlatformCommercialRow(cardId,
-        { ...item, sourceCategoryId: onOrderCategory.id }, "product", 1, onOrderCategory.id)));
-    rows.push(...megaPlatformProductPickerRows(onOrderCategory.id, products));
-  }
   const uncategorized = megaPlatformOrderedProductsInCategory("__uncategorized__",
     products.filter((item) => !megaPlatformProductCategoryIds(item.urlId).length));
   if (uncategorized.length) rows.push(
-    `<tr class="mega-platform-uncategorized" data-mega-platform-drop-category="__uncategorized__"><td colspan="6">Без категории</td></tr>`,
+    `<tr class="mega-platform-uncategorized" data-mega-platform-drop-category="__uncategorized__"><td colspan="7">Без категории</td></tr>`,
     ...uncategorized.map((item) => megaPlatformCommercialRow(cardId, item, "product", 1, "__uncategorized__")));
   rows.push(...commercialCustom.filter(({ item }) =>
     ["category", "product"].includes(item.pageTypeV1))
     .map(({ item, index }) => megaPlatformCommercialManualRow(cardId, item, index)));
-  rows.push('<tr class="mega-platform-additional-pages"><td colspan="6">Дополнительные страницы</td></tr>');
+  rows.push('<tr class="mega-platform-additional-pages"><td colspan="7">Дополнительные страницы</td></tr>');
+  rows.push('<tr class="mega-platform-additional-columns"><th scope="col">Страница</th><th scope="col">Тип</th><th scope="col">Что это</th><th scope="col">URL</th><th scope="col">Интент</th><th scope="col">Источник</th><th scope="col" aria-label="Удаление"></th></tr>');
   rows.push(...commercialAudit.map((item) => {
     const row = state.gates.find((gate) => gate.id === "gate-1")?.cards.find((card) => card.id === "card-32")?.pageRows.find((entry) => `audit:${entry.id}` === item.urlId);
     const meta = megaPlatformAuditManualMeta(row?.id);
@@ -22234,7 +22964,7 @@ function megaPlatformCommercialTable(cardId, auto, commercialAudit, commercialCu
   rows.push(...commercialCustom.filter(({ item }) =>
     !["category", "product"].includes(item.pageTypeV1))
     .map(({ item, index }) => megaPlatformCommercialManualRow(cardId, item, index)));
-  return `<table class="cr-table mega-platform-table mega-platform-commercial-table"><thead><tr><th>Страница</th><th>Тип</th><th>Что это</th><th>URL</th><th>Источник</th><th aria-label="Удаление">×</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+  return `<table class="cr-table mega-platform-table mega-platform-commercial-table"><thead><tr><th>Страница</th><th>Тип</th><th>Что это</th><th>URL</th><th>Интент</th><th>Источник</th><th aria-label="Удаление">×</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
 }
 
 function megaPlatformAuditManualMeta(rowId, workspace = state) {
@@ -22253,16 +22983,94 @@ function megaPlatformManualById(id, workspace = state) {
     : platform?.extra?.find((item) => item.id === id);
 }
 
+function megaPlatformReconcileManualAuditRows(workspace = state) {
+  const platform = workspace?.gates?.find((gate) => gate.id === "gate-0")?.cards
+    ?.find(isMegaMarketingCard)?.megaMarketing?.platformV2;
+  const audit = workspace?.gates?.find((gate) => gate.id === "gate-1")?.cards
+    ?.find((item) => item.id === "card-32");
+  if (!platform || !audit?.pageRows) return false;
+  const commercialPages = (platform.extra || []).filter((page) => page.id &&
+    page.group === "commercial" && !page.promotedV2);
+  const pages = commercialPages.filter((page) => page.pageTypeV1 === "landing");
+  const nameKey = (value) => String(value || "").trim().toLocaleLowerCase("ru-RU");
+  const store = megaPlatformUrlStore(workspace);
+  let changed = false;
+  for (const page of pages) {
+    const name = nameKey(page.name);
+    if (!name || commercialPages.filter((item) => nameKey(item.name) === name).length !== 1 ||
+        audit.pageRows.some((row) => row.platformPageIdV2 === page.id)) continue;
+    const pageUrl = String(store?.custom?.[page.id] || "").trim();
+    const sameName = audit.pageRows.filter((row) => nameKey(row.name) === name);
+    if (sameName.length !== 1) continue;
+    const row = sameName[0];
+    const auditType = platform.auditExtraV1?.[row.id]?.pageTypeV1 || "landing";
+    if (row.platformPageIdV2 || auditType !== "landing") continue;
+    const auditUrl = megaPlatformAuditUrl(audit, row, workspace) ||
+      String(row.url || "").trim();
+    // A unique title plus one compatible URL identifies the same page; two
+    // blank URLs or conflicting URLs do not justify joining records.
+    if ((!pageUrl && !auditUrl) || (pageUrl && auditUrl && pageUrl !== auditUrl)) continue;
+    row.platformPageIdV2 = page.id;
+    row.name = String(page.name || "").trim();
+    row.url = pageUrl || auditUrl;
+    if (!pageUrl) store.custom[page.id] = auditUrl;
+    changed = true;
+  }
+  if (changed) recalculateStatusForCard(audit, workspace);
+  return changed;
+}
+
+function megaPlatformEnsureManualAuditRow(pageId, workspace = state) {
+  megaPlatformReconcileManualAuditRows(workspace);
+  const page = megaPlatformManualById(pageId, workspace);
+  if (!page || page.group !== "commercial" || page.promotedV2) return null;
+  const card = workspace.gates?.find((gate) => gate.id === "gate-1")?.cards
+    ?.find((item) => item.id === "card-32");
+  if (!card) return null;
+  ensureGate1TypedData(card);
+  const rows = card.pageRows;
+  let row = rows.find((item) => item.platformPageIdV2 === pageId);
+  if (row) return row;
+  const url = megaPlatformUrl("custom", pageId, workspace);
+  const name = String(page.name || "").trim();
+  const matches = name && url ? rows.filter((item) =>
+    !item.platformPageIdV2 && String(item.name || "").trim().toLocaleLowerCase("ru-RU") ===
+      name.toLocaleLowerCase("ru-RU") &&
+    (megaPlatformAuditUrl(card, item, workspace) || String(item.url || "").trim()) === url) : [];
+  if (matches.length === 1) row = matches[0];
+  if (!row) row = rows.find((item) =>
+    !item.platformPageIdV2 && /^лендинг$/i.test(String(item.name || "").trim()) &&
+    ![item.url, megaPlatformAuditUrl(card, item, workspace), item.urlStatus,
+      item.h1, item.title, item.description, item.body, item.offer,
+      item.finalCta, item.comment, item.auditEvidence].some((value) => String(value || "").trim()) &&
+    !Object.values(item.contextFields || {}).some((value) =>
+      typeof value === "string" && value.trim()));
+  if (!row) {
+    row = createPageStructureRow(name || "Лендинг", false);
+    rows.push(row);
+  }
+  row.platformPageIdV2 = pageId;
+  row.name = name || "Лендинг";
+  row.url = url;
+  recalculateStatusForCard(card, workspace);
+  return row;
+}
+
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-mega-platform-open-manual-audit]");
+  if (!button) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const row = megaPlatformEnsureManualAuditRow(button.dataset.megaPlatformOpenManualAudit);
+  if (!row) return;
+  guruInvalidateGateViewCache();
+  openAuditPageCard("card-32", { auditRowId: row.id });
+});
+
 function megaPlatformRenameCategory(categoryId, name, workspace = state, originalName = "") {
-  const category = guruV185Registry(workspace).find((item) => item.id === categoryId);
+  const category = workspace?.project?.productRegistryV185?.find((item) => item.id === categoryId);
   if (!category || !String(name || "").trim()) return false;
   if (megaPlatformDuplicateEntityName("category", name, categoryId, workspace)) return false;
-  const urlStore = megaPlatformUrlStore(workspace);
-  if (String(name).trim().toLocaleLowerCase("ru-RU") === "на заказ") {
-    if (urlStore?.onOrderCategoryId && urlStore.onOrderCategoryId !== categoryId)
-      return false;
-    if (urlStore && !urlStore.onOrderCategoryId) urlStore.onOrderCategoryId = categoryId;
-  }
   const previous = String(category.name || "");
   category.name = name;
   if (previous && previous !== name) {
@@ -22270,6 +23078,20 @@ function megaPlatformRenameCategory(categoryId, name, workspace = state, origina
       String(originalName || previous)])];
   }
   return true;
+}
+
+function megaPlatformSyncRenamedOptions(kind, id, name) {
+  const escapedId = CSS.escape(id);
+  const selectors = kind === "category"
+    ? [
+      `[data-gate0-scope-category-select] option[value="${escapedId}"]`,
+      `[data-mega-platform-product-category] option[value="${escapedId}"]`,
+      `[data-mega-platform-manual-target] option[value="categories:${escapedId}"]`,
+    ]
+    : [`[data-gate0-scope-product-select] option[value="${escapedId}"]`];
+  document.querySelectorAll(selectors.join(", ")).forEach((option) => {
+    option.textContent = option.value.startsWith("categories:") ? `Категория · ${name}` : name;
+  });
 }
 
 document.addEventListener("input", (event) => {
@@ -22282,13 +23104,10 @@ document.addEventListener("input", (event) => {
     const hint = categoryInput.closest(".mega-platform-manual-name")
       ?.querySelector("[data-mega-platform-duplicate-hint]");
     if (hint) hint.hidden = !duplicate;
-  }
-  if (categoryInput && !megaPlatformRenameCategory(categoryInput.dataset.megaPlatformRenameCategory,
-      categoryInput.value, state, categoryInput.dataset.megaPlatformInitialName)) {
-    const original = categoryInput.dataset.megaPlatformInitialName || "";
-    const category = guruV185ProductById(categoryInput.dataset.megaPlatformRenameCategory);
-    if (category && original) category.name = original;
-    categoryInput.value = category?.name || "";
+    // Пустое или повторяющееся название остаётся черновиком до завершения ввода.
+    if (categoryInput.value.trim() && !duplicate)
+      megaPlatformRenameCategory(categoryInput.dataset.megaPlatformRenameCategory,
+        categoryInput.value, state, categoryInput.dataset.megaPlatformInitialName);
   }
   if (productInput) {
     const product = guruV189CatalogItemById(productInput.dataset.megaPlatformRenameProduct, state);
@@ -22297,7 +23116,7 @@ document.addEventListener("input", (event) => {
     const hint = productInput.closest(".mega-platform-manual-name")
       ?.querySelector("[data-mega-platform-duplicate-hint]");
     if (hint) hint.hidden = !duplicate;
-    if (product && !duplicate) {
+    if (product && productInput.value.trim() && !duplicate) {
       product.name = productInput.value;
       document.querySelectorAll(`[data-mega-platform-rename-product="${CSS.escape(product.id)}"]`)
         .forEach((other) => { if (other !== productInput) other.value = productInput.value; });
@@ -22308,24 +23127,51 @@ document.addEventListener("input", (event) => {
     const row = card?.pageRows?.find((item) => item.id === auditInput.dataset.megaPlatformAuditName);
     if (row) row.name = auditInput.value;
   }
-  if (categoryInput || productInput || auditInput) flashSaving();
+  if (categoryInput || productInput || auditInput) guruSaveFocusedEditSmooth();
 }, true);
 
 document.addEventListener("change", (event) => {
   const categoryInput = event.target?.closest?.("[data-mega-platform-rename-category]");
   const productInput = event.target?.closest?.("[data-mega-platform-rename-product]");
-  if (categoryInput && !categoryInput.value.trim())
-    categoryInput.value = guruV185ProductById(categoryInput.dataset.megaPlatformRenameCategory)?.name || "";
-  if (categoryInput && categoryInput.value.trim())
-    guruV187SyncLegacyProductList(state);
-  if (productInput && !productInput.value.trim())
-    productInput.value = guruV189CatalogItemById(productInput.dataset.megaPlatformRenameProduct)?.name || "";
-  if ((categoryInput || productInput) &&
-      !(productInput && megaPlatformDuplicateEntityName("product", productInput.value,
-        productInput.dataset.megaPlatformRenameProduct, state))) {
-    guruInvalidateGateViewCache();
-    renderGate();
+  const input = categoryInput || productInput;
+  if (!input) return;
+  const kind = categoryInput ? "category" : "product";
+  const id = categoryInput?.dataset.megaPlatformRenameCategory ||
+    productInput.dataset.megaPlatformRenameProduct;
+  const original = input.dataset.megaPlatformInitialName || "";
+  const name = input.value.trim();
+  const duplicate = megaPlatformDuplicateEntityName(kind, name, id, state);
+  const valid = Boolean(name) && !duplicate &&
+    (kind === "product" || megaPlatformRenameCategory(id, name, state, original));
+  if (!valid) {
+    input.value = original;
+    if (kind === "category") megaPlatformRenameCategory(id, original, state, original);
+    else {
+      const product = guruV189CatalogItemById(id, state);
+      if (product) product.name = original;
+    }
+  } else {
+    input.value = name;
+    input.dataset.megaPlatformInitialName = name;
+    if (kind === "product") {
+      const product = guruV189CatalogItemById(id, state);
+      if (product) product.name = name;
+    }
   }
+  const finalName = input.value;
+  input.closest(".mega-platform-manual-name")
+    ?.querySelector("[data-mega-platform-duplicate-hint]")?.setAttribute("hidden", "");
+  if (kind === "category") guruV187SyncLegacyProductList(state);
+  megaPlatformSyncRenamedOptions(kind, id, finalName);
+  // Меняем только связанные подписи: замена всего Gate здесь уничтожала input
+  // и переносила пользователя в другую часть длинной таблицы.
+  document.querySelectorAll(`[data-mega-platform-rename-${kind}="${CSS.escape(id)}"]`)
+    .forEach((control) => {
+      control.value = finalName;
+      control.dataset.megaPlatformInitialName = finalName;
+    });
+  guruInvalidateGateViewCache();
+  guruSaveFocusedEditSmooth();
 }, true);
 
 document.addEventListener("change", (event) => {
@@ -22336,13 +23182,7 @@ document.addEventListener("change", (event) => {
   const manualName = event.target?.closest?.('[data-mega-pv2="extra"][data-mega-field="name"]');
   if (continuum) {
     const product = guruV189CatalogItemById(continuum.dataset.megaPlatformContinuum, state);
-    if (product) {
-      product.continuum = continuum.value;
-      document.querySelectorAll(`[data-mega-platform-continuum="${CSS.escape(product.id)}"]`)
-        .forEach((control) => { control.value = continuum.value; });
-      flashSaving();
-      guruInvalidateGateViewCache();
-    }
+    if (product) guruV192SetProductContinuum(product, continuum.value);
   }
   if (productCategory) {
     const id = productCategory.dataset.megaPlatformProductCategory;
@@ -22365,11 +23205,24 @@ document.addEventListener("change", (event) => {
         };
       }
       if (!id.startsWith("audit:")) megaPlatformPromoteManualPage(item, state);
+      if (type && item.pageTypeV1 === "landing")
+        megaPlatformReconcileManualAuditRows(state);
     }
   }
   if (manualName) {
     const card = state.gates.find((gate) => gate.id === "gate-0")?.cards.find(isMegaMarketingCard);
     const row = card?.megaMarketing?.platformV2?.extra?.[Number(manualName.dataset.megaIdx)];
+    if (row?.group === "commercial" && row.pageTypeV1 === "landing") {
+      if (megaPlatformReconcileManualAuditRows(state)) {
+        guruInvalidateGateViewCache();
+        const selector = `[data-mega-pv2="extra"][data-mega-idx="${CSS.escape(manualName.dataset.megaIdx)}"][data-mega-field="name"]`;
+        const focused = document.activeElement === manualName;
+        const replacement = megaPlatformRefreshManualTable(manualName, selector);
+        if (focused) replacement?.focus({ preventScroll: true });
+        flashSaving();
+      }
+      return;
+    }
     if (row?.group !== "commercial" ||
         !["category", "product"].includes(row.pageTypeV1)) return;
     row.name = manualName.value;
@@ -22378,13 +23231,20 @@ document.addEventListener("change", (event) => {
   if (type || target || productCategory || manualName) {
     flashSaving();
     guruInvalidateGateViewCache();
-    renderGate();
-    if (type?.value === "product") {
-      const row = megaPlatformManualById(type.dataset.megaPlatformManualType);
-      const productId = row?.promotedV2?.kind === "product" ? row.promotedV2.id : "";
-      if (productId) setTimeout(() => document.querySelector(
-        `[data-mega-platform-rename-product="${CSS.escape(productId)}"]`)?.focus(), 0);
-    }
+    const anchor = type || target || productCategory || manualName;
+    const id = type?.dataset.megaPlatformManualType ||
+      target?.dataset.megaPlatformManualTarget;
+    const row = id ? megaPlatformManualById(id) : null;
+    const promoted = row?.promotedV2;
+    const selector = promoted?.id
+      ? `[data-mega-platform-rename-${promoted.kind}="${CSS.escape(promoted.id)}"]`
+      : type ? `[data-mega-platform-manual-type="${CSS.escape(id)}"]`
+      : target ? `[data-mega-platform-manual-target="${CSS.escape(id)}"]`
+      : productCategory ? `[data-mega-platform-product-category="${CSS.escape(productCategory.dataset.megaPlatformProductCategory)}"]`
+      : `[data-mega-pv2="extra"][data-mega-idx="${CSS.escape(manualName.dataset.megaIdx)}"][data-mega-field="name"]`;
+    const focused = document.activeElement === anchor;
+    const replacement = megaPlatformRefreshManualTable(anchor, selector);
+    if (focused || type?.value === "product") replacement?.focus({ preventScroll: true });
   }
 }, true);
 
@@ -22563,7 +23423,7 @@ document.addEventListener("pointermove", (event) => {
     drag.handle.classList.add("mega-platform-product-dragging");
     if (!document.querySelector(".mega-platform-uncategorized"))
       document.querySelector(".mega-platform-additional-pages")?.insertAdjacentHTML("beforebegin",
-        '<tr class="mega-platform-uncategorized mega-platform-temporary-drop" data-mega-platform-drop-category="__uncategorized__"><td colspan="6">Без категории</td></tr>');
+        '<tr class="mega-platform-uncategorized mega-platform-temporary-drop" data-mega-platform-drop-category="__uncategorized__"><td colspan="7">Без категории</td></tr>');
     drag.frame = requestAnimationFrame(() => megaPlatformPointerAutoScrollV2(drag));
   }
   if (drag.active) {
@@ -22606,20 +23466,8 @@ document.addEventListener("pointercancel", (event) => {
 
 function megaPlatformSectionHtml(cardId, pv2) {
   const auto = megaPlatformAutoRows();
-  const urlStore = megaPlatformUrlStore(state);
-  const categories = megaPlatformStableCategories(state);
-  let onOrderCategory = categories.find((item) =>
-    item.id === urlStore?.onOrderCategoryId);
-  if (!onOrderCategory && !urlStore?.onOrderCategoryId) {
-    const matches = categories.filter((item) =>
-      String(item.name || "").trim().toLocaleLowerCase("ru-RU") === "на заказ");
-    if (matches.length === 1) {
-      onOrderCategory = matches[0];
-      urlStore.onOrderCategoryId = onOrderCategory.id;
-    }
-  }
   const custom = (pv2.extra || []).map((item, index) => ({ item, index }))
-    .filter(({ item }) => !item.promotedV2 && !MEGA_PLATFORM_HIDDEN_EXTRA.has(item.name));
+    .filter(({ item }) => !item.promotedV2 && !megaPlatformHiddenLegacyExtra(item));
   const fixedRequired = (id) => auto.required.find((item) => item.urlGroup === "fixed" && item.urlId === id);
   const fundamental = ["home", "contacts", "delivery"].map(fixedRequired).filter(Boolean);
   const commercialAudit = auto.supplemental.filter((item) => item.sourceCardId === "card-32");
@@ -22628,14 +23476,14 @@ function megaPlatformSectionHtml(cardId, pv2) {
     item.urlId === "not_found" || item.urlId === "thank_you");
   const commercialCustom = custom.filter(({ item }) => item.group === "commercial");
   const conversionCustom = custom.filter(({ item }) => item.group !== "commercial");
-  const table = (rows) => `<table class="cr-table mega-platform-table"><thead><tr><th>Страница</th><th>URL</th><th>Источник</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+  const table = (rows) => `<table class="cr-table mega-platform-table"><thead><tr><th>Страница</th><th>URL</th><th>Интент</th><th>Источник</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
   return `<div class="mega-section mega-platform-section">
     <div class="mega-section-title">Платформа</div>
     <div class="mega-section-hint">URL страниц задаются здесь. Остальные разделы читают их из «Платформы».</div>
     <div class="mega-subsection"><div class="mega-subsection-title">Фундаментальные страницы</div>
       ${table(fundamental.map((item) => megaPlatformReadonlyRow(item, cardId)))}</div>
     <div class="mega-subsection mega-platform-commercial-group"><div class="mega-subsection-title">Коммерческие страницы</div>
-      ${megaPlatformCommercialTable(cardId, auto, commercialAudit, commercialCustom, onOrderCategory)}
+      ${megaPlatformCommercialTable(cardId, auto, commercialAudit, commercialCustom)}
       <button type="button" class="v116-multi-add" data-mega-card="${escapeAttr(cardId)}" data-mega-add-page-group="commercial">+ Добавить страницу</button>
     </div>
     <div class="mega-subsection"><div class="mega-subsection-title">Юридически обязательные страницы</div>
@@ -22690,13 +23538,11 @@ function megaMarketingStatus(card, workspace = state) {
     status: megaPlatformUrl("fixed", MEGA_PLATFORM_LEGAL_KEYS[item.name], workspace) ? "works" : "",
   }));
   const extraItems = (pv2.extra || []).filter((item) =>
-    !item.promotedV2 && !MEGA_PLATFORM_HIDDEN_EXTRA.has(item.name))
+    !item.promotedV2 && !megaPlatformHiddenLegacyExtra(item))
     .map((item) => ({ status: megaPlatformUrl("custom", item.id, workspace) ? "works" : "" }));
-  const onOrderItem = { status: megaPlatformUrl("fixed", "on_order", workspace) ? "works" : "" };
   const allItems = [
     ...autoItems,
     ...legalItems,
-    onOrderItem,
     ...extraItems,
     ...m.infra,
     ...m.channels,
@@ -22722,15 +23568,6 @@ function updateMegaMarketing(target) {
     megaPlatformSetUrl(group, id, target.value, state);
     document.querySelectorAll(`[data-mega-url-group="${CSS.escape(group)}"][data-mega-url-id="${CSS.escape(id)}"]`)
       .forEach((input) => { if (input !== target) input.value = target.value; });
-    const store = megaPlatformUrlStore(state);
-    if (group === "fixed" && id === "on_order" ||
-        group === "categories" && id === store?.onOrderCategoryId) {
-      document.querySelectorAll('[data-mega-url-group="fixed"][data-mega-url-id="on_order"], [data-mega-url-group="categories"]').forEach((input) => {
-        if (input === target || input.dataset.megaUrlGroup === "categories" &&
-            input.dataset.megaUrlId !== store?.onOrderCategoryId) return;
-        input.value = megaPlatformUrl("fixed", "on_order", state);
-      });
-    }
     recalculateStatusForCard(card);
     flashSaving();
     return;
@@ -22746,7 +23583,14 @@ function updateMegaMarketing(target) {
     m.platformV2.landings[product] = m.platformV2.landings[product] || {};
     m.platformV2.landings[product][field] = target.value;
   } else if (pv2 === "extra" && m.platformV2?.extra?.[idx]) {
-    m.platformV2.extra[idx][field] = target.value;
+    const page = m.platformV2.extra[idx];
+    page[field] = target.value;
+    if (field === "name") {
+      const audit = state.gates?.find((gate) => gate.id === "gate-1")?.cards
+        ?.find((item) => item.id === "card-32");
+      const linked = audit?.pageRows?.find((row) => row.platformPageIdV2 === page.id);
+      if (linked) linked.name = target.value;
+    }
   } else if (section && field && m[section]?.[idx]) {
     m[section][idx][field] = target.value;
   }
@@ -22854,8 +23698,9 @@ bindCardInputs = function () {
       const card = findCard(btn.dataset.megaCard);
       if (!card) return;
       const m = ensureMegaMarketing(card, state);
+      const id = makeId("platform-page");
       m.platformV2.extra.push({
-        id: makeId("platform-page"),
+        id,
         name: "",
         group: btn.dataset.megaAddPageGroup === "commercial" ? "commercial" : "conversion",
         manualV2: true,
@@ -22866,13 +23711,28 @@ bindCardInputs = function () {
         comment: "",
       });
       flashSaving();
-      renderGate();
-      const sectionTitle = btn.dataset.megaAddPageGroup === "commercial"
-        ? "Коммерческие страницы" : "Страницы, усиливающие конверсию";
-      const section = [...document.querySelectorAll(".mega-platform-section .mega-subsection")]
-        .find((item) => item.querySelector(".mega-subsection-title")?.textContent === sectionTitle);
-      const input = section?.querySelector(".mega-platform-added-row:last-of-type input[data-mega-field='name']");
-      input?.focus();
+      guruInvalidateGateViewCache();
+      if (btn.dataset.megaAddPageGroup === "commercial") {
+        const scroller = guruStableScrollContainer(btn);
+        const scrollTop = scroller === document.scrollingElement ||
+          scroller === document.documentElement || scroller === document.body
+          ? window.scrollY : scroller?.scrollTop;
+        const table = btn.parentElement?.querySelector(".mega-platform-commercial-table");
+        const container = document.createElement("div");
+        container.innerHTML = megaPlatformSectionHtml(card.id, m.platformV2);
+        const next = container.querySelector(".mega-platform-commercial-table");
+        if (table && next) {
+          table.replaceWith(next);
+          megaPlatformBindCommercialTable(next);
+        }
+        if (scroller === document.scrollingElement || scroller === document.documentElement ||
+            scroller === document.body) window.scrollTo(0, scrollTop);
+        else if (scroller?.isConnected && scrollTop !== undefined)
+          scroller.scrollTop = scrollTop;
+        next?.querySelector(`[data-mega-platform-manual-type="${CSS.escape(id)}"]`)
+          ?.closest("tr")?.querySelector('input[data-mega-field="name"]')
+          ?.focus({ preventScroll: true });
+      } else renderGate();
     });
   });
   document.querySelectorAll("[data-mega-preset]").forEach((btn) => {
@@ -22888,16 +23748,7 @@ bindCardInputs = function () {
     });
   });
   document.querySelectorAll("[data-mega-pv2-remove]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const card = findCard(btn.dataset.megaCard);
-      if (!card) return;
-      const m = ensureMegaMarketing(card, state);
-      const [removed] = m.platformV2.extra.splice(Number(btn.dataset.megaPv2Remove), 1);
-      const store = megaPlatformUrlStore(state);
-      if (removed?.id && store?.custom) delete store.custom[removed.id];
-      flashSaving();
-      renderGate();
-    });
+    btn.addEventListener("click", () => megaPlatformRemoveManualPage(btn));
   });
 };
 
@@ -83932,6 +84783,7 @@ updateGate1PageRow = function (event) {
    never the visible heading, so editing copy does not reset a block. */
 const GURU_OWNED_DETAILS_V512 = [
   ".gate0-card",
+  "[data-g4-product-smm-workspace-v2] details",
   "[data-gate0-diagnostic-stage]",
   "[data-g6-event-detail]",
   "[data-guru-strategic-jtbd-v286]",

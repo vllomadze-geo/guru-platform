@@ -1,6 +1,5 @@
-/* Gate 4 only: reuse the company SMM component with independent product data.
-   No company values are imported. The existing component runs synchronously
-   against a deep workspace copy; only this module's product bucket is retained. */
+/* Product data stays in its existing bucket. Its workspace renderer is independent
+   from the company strategy renderer; legacy detail editors remain scoped. */
 
 const G4_PRODUCT_SMM_VERSION_V523 = "gate4-product-smm-v523";
 const g4ProductSmmIdeaEditingV523 = new Set();
@@ -16,9 +15,23 @@ function g4ProductSmmIdV523(product) {
   return guruV185Text(typeof product === "string" ? product : product?.id);
 }
 
+function g4ProductSmmBackupV2(workspace, productId) {
+  const bucket = workspace?.gate4ProductSmmV523?.byProduct?.[productId];
+  const projectId = guruV185Text(workspace?.project?.id);
+  if (!bucket || !projectId) return;
+  const key = `guru-g4-product-smm-workspace-v2-backup-${projectId}-${productId}`;
+  try {
+    if (!localStorage.getItem(key) && !safeStorageSet(key, JSON.stringify({
+      createdAt: new Date().toISOString(), projectId, productId,
+      bucket: g4ProductSmmCloneV523(bucket),
+    }), { silent: true })) console.warn("Product SMM backup unavailable", productId);
+  } catch (error) { console.warn("Product SMM backup unavailable", productId, error); }
+}
+
 function g4ProductSmmStoreV523(product, workspace = state) {
   const productId = g4ProductSmmIdV523(product);
   if (!productId || !workspace || typeof workspace !== "object") return null;
+  g4ProductSmmBackupV2(workspace, productId);
   const current = workspace.gate4ProductSmmV523;
   const store = current && typeof current === "object" && !Array.isArray(current)
     ? current : {};
@@ -131,19 +144,45 @@ function g4ProductSmmAdaptHtmlV523(html, productId = "") {
 function g4ProductSmmStrategyHtmlV523(product) {
   const productId = g4ProductSmmIdV523(product);
   if (!productId) return "";
-  const html = g4ProductSmmWithScopeV523(productId, () => g4SmmStrategyHtmlV298(product));
-  return g4ProductSmmAdaptHtmlV523(html || "", productId);
+  return g4ProductSmmWithScopeV523(productId, ({ strategy, content }) =>
+    g4ProductSmmWorkspaceV2(product, strategy, content));
 }
 
 function g4ProductSmmRootV523(node) {
   return node?.closest?.("[data-g4-product-smm-product-id-v523]") || null;
 }
 
-function g4ProductSmmRefreshV523(root) {
+function g4ProductSmmUiV2(root) {
+  const openStagesByIdea = {};
+  root?.querySelectorAll("[data-g4-product-smm-idea-panel-v2] [data-g4-product-smm-stage-v2][open]")
+    .forEach((stage) => {
+      const ideaId = stage.closest("[data-g4-product-smm-idea-panel-v2]")?.dataset.g4ProductSmmIdeaPanelV2;
+      if (ideaId) (openStagesByIdea[ideaId] ||= []).push(stage.dataset.g4ProductSmmStageV2);
+    });
+  return {
+    activeDay: root?.querySelector("[data-g4-product-smm-active-day-v2]")?.dataset.g4ProductSmmActiveDayV2,
+    otherDatesOpen: Boolean(root?.querySelector("[data-g4-product-smm-other-dates-v2][open]")),
+    openIdeaIds: [...(root?.querySelectorAll("[data-g4-product-smm-idea-panel-v2][open]") || [])]
+      .map((panel) => panel.dataset.g4ProductSmmIdeaPanelV2),
+    openStagesByIdea,
+    openSignals: [...(root?.querySelectorAll("[data-g4-product-smm-signal-v2][open]") || [])]
+      .map((panel) => panel.dataset.g4ProductSmmSignalV2),
+  };
+}
+
+function g4ProductSmmRefreshV523(root, options = {}) {
   if (!root) return;
   const productId = root.dataset.g4ProductSmmProductIdV523;
   const product = g4SmmProductReadOnlyV299(productId) || { id: productId };
-  root.outerHTML = g4ProductSmmStrategyHtmlV523(product);
+  const ui = { ...g4ProductSmmUiV2(root), ...options };
+  const html = g4ProductSmmWithScopeV523(productId, ({ strategy, content }) =>
+    g4ProductSmmWorkspaceV2(product, strategy, content, ui));
+  const template = document.createElement("template");
+  template.innerHTML = html;
+  const replacement = template.content.firstElementChild;
+  if (!replacement) return root;
+  root.replaceWith(replacement);
+  return replacement;
 }
 
 function g4ProductSmmPersistV523(bucket, record = null) {
@@ -167,20 +206,54 @@ function g4ProductSmmIdeaCanEditV523(bucket, idea) {
     g4ProductSmmIdeaEditingV523.has(idea.id));
 }
 
-function g4ProductSmmPlanningRefreshV523(root) {
+function g4ProductSmmPlanningRefreshV523(root, options = {}) {
   const productId = root?.dataset.g4ProductSmmProductIdV523;
   if (!productId) return;
-  const html = g4ProductSmmWithScopeV523(productId, ({ content, strategy }) => ({
-    calendar: g4SmmWeekCalendarHtmlV322(content, strategy),
-    summary: g4SmmActionSummaryHtmlV299(content, strategy),
-  }));
-  const calendar = root.querySelector("[data-g4-product-smm-week-calendar-v322]");
-  if (calendar) calendar.outerHTML = g4ProductSmmAdaptHtmlV523(html.calendar);
-  const summary = root.querySelector("[data-g4-product-smm-action-summary-v299]");
-  if (summary) summary.outerHTML = g4ProductSmmAdaptHtmlV523(html.summary);
+  const ui = { ...g4ProductSmmUiV2(root), ...options };
+  const html = g4ProductSmmWithScopeV523(productId, ({ content, strategy }) => {
+    const model = g4ProductSmmModelV2(content, strategy);
+    const positionsByIdea = g4ProductSmmIdeaPlanPositionsV2(model);
+    return {
+      table: g4ProductSmmTableHtmlV2(model, productId),
+      bank: g4ProductSmmBankHtmlV2(content, strategy,
+        g4SmmProductReadOnlyV299(productId)),
+      calendar: g4ProductSmmCalendarHtmlV2(content, strategy,
+        g4SmmProductReadOnlyV299(productId), ui),
+      summary: g4ProductSmmSummaryHtmlV2(model, ui),
+      planLabels: Object.fromEntries(content.ideas.map((idea) => [idea.id,
+        g4ProductSmmIdeaPlanLabelV2(idea, model, positionsByIdea)])),
+      covered: model.coveredIdeas, target: model.targetIdeas, scheduled: model.scheduledCount,
+    };
+  });
+  for (const [key, selector] of Object.entries({
+    table: ".g4-product-smm-table-wrap-v2",
+    bank: "[data-g4-product-smm-bank-v2]",
+    calendar: "[data-g4-product-smm-calendar-v2]",
+    summary: "[data-g4-product-smm-summary-v2]",
+  })) {
+    const current = root.querySelector(selector);
+    if (current) current.outerHTML = html[key];
+  }
+  root.querySelectorAll("[data-g4-product-smm-idea-plan-label-v2]").forEach((label) => {
+    label.textContent = html.planLabels[label.dataset.g4ProductSmmIdeaPlanLabelV2] || "";
+  });
+  const progress = root.querySelector(".g4-product-smm-toolbar-progress-v2");
+  if (progress) {
+    progress.querySelector("strong").textContent = `${html.covered} / ${html.target} идей`;
+    progress.querySelector("progress").max = Math.max(1, html.target);
+    progress.querySelector("progress").value = Math.min(html.covered, Math.max(1, html.target));
+    progress.querySelector("span").textContent = `${html.scheduled} запланировано`;
+  }
 }
 
 function g4ProductSmmPreviewRefreshV523(root, publication) {
+  const bucket = g4ProductSmmStoreV523(root.dataset.g4ProductSmmProductIdV523);
+  const idea = bucket?.content.ideas.find((row) => row.id === publication.sourceIdeaId ||
+    row.publicationId === publication.id);
+  const stage = idea && root.querySelector(`[data-g4-product-smm-idea-panel-v2="${CSS.escape(idea.id)}"] [data-g4-product-smm-stage-v2="preview"][open]`);
+  if (stage) stage.querySelector("[data-g4-product-smm-stage-body-v2]").innerHTML =
+    g4ProductSmmSocialPreviewV2(idea, bucket.content, bucket.strategy,
+      g4SmmProductReadOnlyV299(root.dataset.g4ProductSmmProductIdV523));
   const production = root.querySelector(`[data-g4-product-smm-production-v344="${CSS.escape(publication.id)}"]`);
   if (!production) return;
   const brief = publication.creativeBrief || {};
@@ -238,8 +311,12 @@ document.addEventListener("input", (event) => {
     record[ideaField] = target.value;
     target.classList.toggle("is-filled", Boolean(guruV185Text(target.value)));
     if (ideaField === "name") {
-      const title = root.querySelector(`[data-g4-product-smm-idea-card-v299="${CSS.escape(record.id)}"] [data-g4-product-smm-idea-card-title-v332]`);
-      if (title) title.textContent = g4SmmIdeaNameV332(record, bucket.content.ideas.indexOf(record));
+      const subtitle = root.querySelector(`[data-g4-product-smm-idea-subtitle-v2="${CSS.escape(record.id)}"]`);
+      if (subtitle) {
+        subtitle.textContent = g4ProductSmmIdeaSubtitleV2(record,
+          g4SmmProductReadOnlyV299(record.productId)?.name);
+        subtitle.hidden = !subtitle.textContent;
+      }
     }
     if (ideaField === "insight") root.querySelectorAll(`[data-g4-product-smm-brief-meaning-v325="${CSS.escape(record.id)}"]`).forEach((node) => {
       node.textContent = guruV185Text(record.insight) || "Идея пока не сформулирована";
@@ -247,7 +324,23 @@ document.addEventListener("input", (event) => {
       node.classList.remove("is-empty");
     });
     g4ProductSmmPersistV523(bucket, record);
-    if (ideaField === "name" || ideaField === "insight") g4ProductSmmPlanningRefreshV523(root);
+    if (ideaField === "name" || ideaField === "insight") {
+      root.querySelectorAll(`[data-g4-product-smm-calendar-title-v2="${CSS.escape(record.id)}"]`).forEach((label) => {
+        label.textContent = g4ProductSmmCalendarIdeaTitleV2(record, bucket.strategy,
+          g4SmmProductReadOnlyV299(record.productId));
+      });
+      const preview = root.querySelector(`[data-g4-product-smm-social-preview-v2="${CSS.escape(record.id)}"]`);
+      if (preview) {
+        const topic = bucket.strategy.topics.find((row) => row.id === record.topicId);
+        const publication = g4SmmPublicationForIdeaV324(record, bucket.content);
+        const heading = preview.querySelector(".g4-product-smm-social-heading-v2");
+        const caption = preview.querySelector(".g4-product-smm-social-caption-v2");
+        if (heading) heading.textContent = guruV185Text(record.name) || guruV185Text(topic?.value) || "Название идеи";
+        if (caption) caption.textContent = guruV185Text(publication?.publicationPackage?.caption) ||
+          guruV185Text(publication?.content) || guruV185Text(record.insight) ||
+          "Здесь появится текст после заполнения этапа «Озарение».";
+      }
+    }
     return;
   }
   const { record } = g4ProductSmmRecordV523(root, "publication", data.g4ProductSmmPublicationIdV299);
@@ -303,12 +396,35 @@ document.addEventListener("change", (event) => {
     g4ProductSmmRefreshV523(root);
     return;
   }
+  if (target.matches("[data-g4-product-smm-period-select-v2]")) {
+    const [countValue, unit] = target.value.split(":");
+    const count = Number(countValue);
+    if (!Number.isInteger(count) || count < 1 || !G4_SMM_PERIOD_UNITS_V304.some((row) => row.key === unit)) return;
+    bucket.strategy.planningPeriod = { count, unit };
+    g4ProductSmmPersistV523(bucket);
+    g4ProductSmmRefreshV523(root);
+    return;
+  }
+  if (target.matches("[data-g4-product-smm-calendar-assign-v2]")) {
+    const idea = bucket.content.ideas.find((row) => row.id === data.g4ProductSmmCalendarIdeaIdV2);
+    if (!idea || target.value && !g4SmmDateValueV299(target.value)) return;
+    idea.scheduledDate = target.value;
+    g4ProductSmmPersistV523(bucket, idea);
+    g4ProductSmmPlanningRefreshV523(root, {
+      ...(target.value ? { activeDay: target.value } : {}),
+      otherDatesOpen: Boolean(target.value && !g4SmmCalendarDaysV322(bucket.content)
+        .some((day) => day.value === target.value)),
+    });
+    return;
+  }
   if (data.g4ProductSmmCalendarPlaceV322) {
     const { record } = g4ProductSmmRecordV523(root, "idea", target.value);
-    if (!record || !guruV185Text(record.insight) || !g4SmmDateValueV299(data.g4ProductSmmCalendarPlaceV322)) return;
+    if (!record || !g4SmmDateValueV299(data.g4ProductSmmCalendarPlaceV322)) return;
     record.scheduledDate = data.g4ProductSmmCalendarPlaceV322;
     g4ProductSmmPersistV523(bucket, record);
-    g4ProductSmmPlanningRefreshV523(root);
+    g4ProductSmmPlanningRefreshV523(root, {
+      activeDay: record.scheduledDate,
+    });
     return;
   }
   if (data.g4ProductSmmIdeaFieldV299 === "primaryTaskFormatId") {
@@ -358,8 +474,104 @@ document.addEventListener("change", (event) => {
   } else if (["status", "date", "link"].includes(field)) record[field] = target.value;
   else return;
   g4ProductSmmPersistV523(bucket, record);
-  if (["platforms", "formatId", "topicId", "status"].includes(field)) g4ProductSmmRefreshV523(root);
+  if (["platforms", "formatId", "topicId", "status", "date"].includes(field)) g4ProductSmmRefreshV523(root);
 });
+
+document.addEventListener("click", (event) => {
+  document.querySelectorAll("[data-g4-product-smm-idea-menu-toggle-v2][aria-expanded='true']")
+    .forEach((toggle) => {
+      if (toggle.closest(".g4-product-smm-idea-menu-v2")?.contains(event.target)) return;
+      toggle.setAttribute("aria-expanded", "false");
+      toggle.parentElement.querySelector("[data-g4-product-smm-idea-menu-panel-v2]").hidden = true;
+    });
+  const root = g4ProductSmmRootV523(event.target);
+  if (!root) return;
+  const day = event.target.closest("[data-g4-product-smm-calendar-day-v2]");
+  if (day) {
+    const bucket = g4ProductSmmStoreV523(root.dataset.g4ProductSmmProductIdV523);
+    const content = bucket?.content;
+    const calendar = root.querySelector("[data-g4-product-smm-calendar-v2]");
+    if (calendar && content) calendar.outerHTML = g4ProductSmmCalendarHtmlV2(content, bucket.strategy,
+      g4SmmProductReadOnlyV299(root.dataset.g4ProductSmmProductIdV523), {
+      activeDay: day.dataset.g4ProductSmmCalendarDayV2,
+      otherDatesOpen: Boolean(root.querySelector("[data-g4-product-smm-other-dates-v2][open]")),
+    });
+    return;
+  }
+  const ideaButton = event.target.closest("[data-g4-product-smm-open-idea-v2]");
+  if (ideaButton) {
+    const panel = root.querySelector(`[data-g4-product-smm-idea-panel-v2="${CSS.escape(ideaButton.dataset.g4ProductSmmOpenIdeaV2)}"]`);
+    if (panel) { panel.open = true; panel.scrollIntoView({ behavior: "smooth", block: "center" }); }
+    return;
+  }
+  const gap = event.target.closest("[data-g4-product-smm-gap-format-v2]");
+  if (gap) {
+    const row = root.querySelector(`[data-g4-product-smm-format-row-v2="${CSS.escape(gap.dataset.g4ProductSmmGapFormatV2)}"]`);
+    if (row) {
+      row.scrollIntoView({ behavior: "smooth", block: "center" });
+      row.classList.add("is-highlighted-v2");
+      setTimeout(() => row.classList.remove("is-highlighted-v2"), 3000);
+    }
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    const toggle = event.target.closest?.(".g4-product-smm-idea-menu-v2")
+      ?.querySelector("[data-g4-product-smm-idea-menu-toggle-v2]");
+    if (toggle?.getAttribute("aria-expanded") === "true") {
+      toggle.setAttribute("aria-expanded", "false");
+      toggle.parentElement.querySelector("[data-g4-product-smm-idea-menu-panel-v2]").hidden = true;
+      toggle.focus();
+    }
+    return;
+  }
+  if (!["Enter", " "].includes(event.key)) return;
+  const gap = event.target.closest?.("[data-g4-product-smm-gap-format-v2]");
+  if (!gap) return;
+  event.preventDefault();
+  gap.click();
+});
+
+document.addEventListener("toggle", (event) => {
+  const panel = event.target;
+  const initialOpen = panel?.dataset?.g4ProductSmmInitialOpenV2 === "true";
+  if (initialOpen) delete panel.dataset.g4ProductSmmInitialOpenV2;
+  if (!panel?.open || initialOpen) return;
+  const root = g4ProductSmmRootV523(panel);
+  if (!root) return;
+  if (panel.matches("[data-g4-product-smm-stage-v2]")) {
+    const ideaPanel = panel.closest("[data-g4-product-smm-idea-panel-v2]");
+    const slot = panel.querySelector("[data-g4-product-smm-stage-body-v2]");
+    if (panel.dataset.g4ProductSmmStageV2 === "preview") {
+      const bucket = g4ProductSmmStoreV523(root.dataset.g4ProductSmmProductIdV523);
+      const idea = bucket?.content.ideas.find((row) => row.id === ideaPanel?.dataset.g4ProductSmmIdeaPanelV2);
+      if (idea && slot) slot.innerHTML = g4ProductSmmSocialPreviewV2(idea, bucket.content, bucket.strategy,
+        g4SmmProductReadOnlyV299(root.dataset.g4ProductSmmProductIdV523));
+    } else {
+      const lazy = slot?.querySelector(":scope > template");
+      if (lazy) slot.replaceChildren(lazy.content);
+    }
+    return;
+  }
+  const productId = root.dataset.g4ProductSmmProductIdV523;
+  const ideaId = panel.dataset.g4ProductSmmIdeaPanelV2;
+  const publicationId = panel.dataset.g4ProductSmmOrphanPanelV2;
+  const slot = ideaId ? panel.querySelector("[data-g4-product-smm-idea-detail-v2]")
+    : publicationId ? panel.querySelector("[data-g4-product-smm-orphan-detail-v2]") : null;
+  if (!slot || slot.firstElementChild) return;
+  const html = g4ProductSmmWithScopeV523(productId, ({ content, strategy }) => {
+    if (ideaId) {
+      const index = content.ideas.findIndex((idea) => idea.id === ideaId);
+      return index < 0 ? "" : g4ProductSmmDetailV2(g4SmmIdeaHtmlV299(content.ideas[index], index, content, strategy), {
+        idea: content.ideas[index], content, strategy, product: g4SmmProductReadOnlyV299(productId),
+      });
+    }
+    const index = content.publications.findIndex((publication) => publication.id === publicationId);
+    return index < 0 ? "" : g4ProductSmmDetailV2(g4SmmPublicationHtmlV299(content.publications[index], index, content, strategy));
+  });
+  slot.innerHTML = html || "";
+}, true);
 
 document.addEventListener("click", (event) => {
   const root = g4ProductSmmRootV523(event.target);
@@ -367,9 +579,39 @@ document.addEventListener("click", (event) => {
   const button = event.target.closest("button");
   if (!button) return;
   const data = button.dataset;
+  if (button.matches("[data-g4-product-smm-idea-menu-toggle-v2]")) {
+    event.preventDefault();
+    const expanded = button.getAttribute("aria-expanded") !== "true";
+    button.setAttribute("aria-expanded", String(expanded));
+    button.parentElement.querySelector("[data-g4-product-smm-idea-menu-panel-v2]").hidden = !expanded;
+    return;
+  }
   const productId = root.dataset.g4ProductSmmProductIdV523;
   const bucket = g4ProductSmmStoreV523(productId);
-  if (button.matches("[data-g4-product-smm-topic-idea-add-v345]")) {
+  if (button.matches("[data-g4-product-smm-delete-idea-v2]")) {
+    event.preventDefault();
+    const menuToggle = button.closest(".g4-product-smm-idea-menu-v2")
+      ?.querySelector("[data-g4-product-smm-idea-menu-toggle-v2]");
+    if (menuToggle) {
+      menuToggle.setAttribute("aria-expanded", "false");
+      button.parentElement.hidden = true;
+    }
+    const ideaId = data.g4ProductSmmDeleteIdeaV2;
+    const index = bucket.content.ideas.findIndex((row) => row.id === ideaId);
+    if (index < 0) return;
+    const linked = bucket.content.publications.filter((row) => row.sourceIdeaId === ideaId ||
+      row.id === bucket.content.ideas[index].publicationId);
+    const message = linked.length
+      ? "Удалить карточку идеи? Связанная публикация сохранится отдельно."
+      : "Удалить карточку идеи?";
+    if (!window.confirm(message)) return;
+    bucket.content.ideas.splice(index, 1);
+    linked.forEach((publication) => { publication.sourceIdeaId = ""; });
+    g4ProductSmmIdeaEditingV523.delete(ideaId);
+    g4ProductSmmPersistV523(bucket);
+    g4ProductSmmRefreshV523(root);
+    return;
+  } else if (button.matches("[data-g4-product-smm-topic-idea-add-v345]")) {
     event.preventDefault();
     const formatId = guruV185Text(data.g4ProductSmmFormatIdV345);
     const topicId = guruV185Text(data.g4ProductSmmTopicIdV345);
@@ -377,13 +619,16 @@ document.addEventListener("click", (event) => {
     if (!format || !g4SmmFormatTopicsV308(format, bucket.strategy).some((topic) =>
       guruV185Text(topic?.id) === topicId))
       return;
+    const planningPeriodStart = g4SmmIsoDateV322(g4SmmCalendarWeekStartV322(bucket.content));
     const idea = g4ProductSmmWithScopeV523(productId, () =>
-      g4SmmCreateIdeaV299(productId, { primaryTaskFormatId: formatId, topicId }));
+      g4SmmCreateIdeaV299(productId, { primaryTaskFormatId: formatId, topicId, planningPeriodStart }));
     g4ProductSmmPersistV523(bucket);
-    g4ProductSmmRefreshV523(root);
-    requestAnimationFrame(() => root.querySelector(
-      `[data-g4-product-smm-idea-card-v299="${CSS.escape(idea?.id || "")}"]`,
-    )?.scrollIntoView({ behavior: "smooth", block: "center" }));
+    const refreshed = g4ProductSmmRefreshV523(root, {
+      openIdeaIds: idea?.id ? [idea.id] : [],
+    });
+    requestAnimationFrame(() => refreshed?.querySelector(
+      `[data-g4-product-smm-idea-panel-v2="${CSS.escape(idea?.id || "")}"]`,
+    )?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" }));
     return;
   } else if (button.matches("[data-g4-product-smm-idea-add-v299]")) {
     event.preventDefault();
@@ -454,10 +699,14 @@ document.addEventListener("drop", (event) => {
   event.preventDefault();
   const { bucket, record } = g4ProductSmmRecordV523(root, "idea", g4ProductSmmDraggingV523);
   const date = target.dataset.g4ProductSmmCalendarDropV339;
-  if (record && guruV185Text(record.insight) && (date === "bank" || g4SmmDateValueV299(date))) {
+  if (record && (date === "bank" || g4SmmDateValueV299(date))) {
     record.scheduledDate = date === "bank" ? "" : date;
     g4ProductSmmPersistV523(bucket, record);
-    g4ProductSmmPlanningRefreshV523(root);
+    g4ProductSmmPlanningRefreshV523(root, {
+      ...(date === "bank" ? {} : { activeDay: date }),
+      otherDatesOpen: Boolean(date !== "bank" && !g4SmmCalendarDaysV322(bucket.content)
+        .some((day) => day.value === date)),
+    });
   }
   g4ProductSmmDraggingV523 = "";
 });

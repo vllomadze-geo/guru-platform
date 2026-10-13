@@ -75,7 +75,7 @@ try {
   await waitFor("Boolean(state)");
   if (!await evaluate('typeof g4ProductSmmStrategyHtmlV523 === "function"'))
     await evaluate(await readFile("gate4-product-smm.js", "utf8"));
-  const result = await evaluate(`(() => {
+  const result = await evaluate(`(async () => {
     scheduleCloudSync = () => {}; scheduleProjectsCloudSync = () => {};
     flashSaving = () => {}; guruPersistStateFast = () => true;
     const products = [{ id: "product-smm-goat", name: "Символ 2027 года Коза" }, { id: "product-smm-other", name: "Другой товар" }];
@@ -98,17 +98,26 @@ try {
       const node = holder.querySelector(selector); if (!node) throw new Error("Missing " + selector);
       node.value = value; node.dispatchEvent(new Event(kind, { bubbles: true }));
     };
+    const openStage = async (key) => {
+      const stage = holder.querySelector('[data-g4-product-smm-stage-v2="' + key + '"]');
+      if (!stage) throw new Error('Missing stage ' + key);
+      stage.open = true;
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    };
     renderProduct(products[0]);
     const renderDidNotWriteProduct = !state.gate4ProductSmmV523;
-    input('[data-g4-product-smm-period-count-v304]', "2");
+    input('[data-g4-product-smm-period-select-v2]', "2:week", "change");
     const defaultsSeparate = state.gate4ProductSmmV523.byProduct[products[0].id].strategy.volume.shortVideos === 3 &&
       state.gate4ProductSmmV523.byProduct[products[0].id].strategy.planningPeriod.count === 2 &&
       state.gate4ProductSmmV523.byProduct[products[0].id].content.ideas.length === 0;
     click('[data-g4-product-smm-topic-idea-add-v345][data-g4-product-smm-format-id-v345="g4-smm-format-v298-1"]');
+    await openStage('insight');
     input('[data-g4-product-smm-idea-field-v299="name"]', "Коза: идея продукта");
     input('[data-g4-product-smm-idea-field-v299="insight"]', "Коза: особенный подарок");
+    await openStage('digestion');
     input('[data-g4-product-smm-idea-field-v299="digestionNotes"]', "Связь с ручной работой");
     input('[data-g4-product-smm-idea-field-v299="primaryTaskFormatId"]', "g4-smm-format-v298-1", "change");
+    await openStage('verification');
     click("[data-g4-product-smm-idea-convert-v299]");
     click('[data-g4-product-smm-workflow-mode-v342="edit"]');
     input('[data-g4-product-smm-publication-field-v299="formatId"]', "g4-smm-format-v298-1", "change");
@@ -116,14 +125,15 @@ try {
     input('[data-g4-product-smm-brief-field-v325="hook"]', "Подарок с характером");
     input('[data-g4-product-smm-package-field-v344="caption"]', "Коза: уникальная подпись");
     click('[data-g4-product-smm-workflow-mode-v342="save"]');
-    input('[data-g4-product-smm-period-count-v304]', "3", "change");
+    input('[data-g4-product-smm-period-select-v2]', "4:week", "change");
     renderProduct(products[1]);
     click('[data-g4-product-smm-topic-idea-add-v345][data-g4-product-smm-format-id-v345="g4-smm-format-v298-1"]');
+    await openStage('insight');
     input('[data-g4-product-smm-idea-field-v299="name"]', "Другой товар: другая идея");
     input('[data-g4-product-smm-idea-field-v299="insight"]', "Другой товар: свой контекст");
     const first = state.gate4ProductSmmV523.byProduct[products[0].id];
     const second = state.gate4ProductSmmV523.byProduct[products[1].id];
-    const separateProducts = first.strategy.planningPeriod.count === 3 && second.strategy.planningPeriod.count === 1 &&
+    const separateProducts = first.strategy.planningPeriod.count === 4 && second.strategy.planningPeriod.count === 1 &&
       first.content.ideas[0].insight !== second.content.ideas[0].insight && second.content.publications.length === 0;
     renderProduct(products[0]);
     let threw = false;

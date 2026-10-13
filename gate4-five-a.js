@@ -47,6 +47,13 @@ const G4_FIVE_A_PRODUCT_CHANNELS_V523 = Object.freeze({
   ],
 });
 
+const G4_FIVE_A_AWARE_BLOCKS_V544 = Object.freeze([
+  { id: "yandex_media", title: "Медийная реклама · Яндекс Директ / РСЯ", toolIds: ["rsya"] },
+  { id: "google_media", title: "Медийная реклама · Google Ads / Display", toolIds: ["display"] },
+  { id: "content_smm", title: "Контентная SMM-стратегия", toolIds: ["vk_content", "telegram_content", "instagram", "youtube"] },
+  { id: "paid_social", title: "Платное продвижение", toolIds: ["vk_target", "meta", "telegram_ads"] },
+]);
+
 const __g4FivePrevProductionHtmlV523 = gate4ProductionHtml;
 const __g4FivePrevLaunchHtmlV523 = g4CampaignLaunchCenterHtml;
 
@@ -171,6 +178,28 @@ function g4FiveCampaignHtmlV523(context, tool) {
   }).join("");
 }
 
+function g4FiveAwareBlockHtmlV544(block, number, content) {
+  return `<section class="g4five-aware-block-v544" data-g4five-aware-block-v544="${escapeAttr(block.id)}">
+    <header class="g4five-aware-block-head-v544"><span aria-hidden="true">${number}</span><h4>${escapeHtml(block.title)}</h4></header>
+    <div class="g4five-aware-block-content-v544">${content}</div>
+  </section>`;
+}
+
+function g4FiveAwareHtmlV544(context, product) {
+  const tools = new Map(G4_FIVE_A_PRODUCT_CHANNELS_V523.aware.map((tool) => [tool.id, tool]));
+  const groupedIds = new Set(G4_FIVE_A_AWARE_BLOCKS_V544.flatMap((block) => block.toolIds));
+  return G4_FIVE_A_AWARE_BLOCKS_V544.map((block, index) => {
+    const toolIds = block.id === "paid_social"
+      ? [...block.toolIds, ...[...tools.keys()].filter((id) => !groupedIds.has(id))]
+      : block.toolIds;
+    const cards = toolIds.map((id) => tools.get(id))
+      .filter(Boolean).map((tool) => g4FiveCampaignHtmlV523(context, tool)).join("");
+    const content = block.id === "content_smm"
+      ? g4ProductSmmStrategyHtmlV523(product) + cards : cards;
+    return g4FiveAwareBlockHtmlV544(block, index + 1, content);
+  }).join("");
+}
+
 function g4FiveLinkedToolHtmlV523(context, id, legacyStage, title, service, note = "", options = {}) {
   const item = { ...g4FiveLegacyItemV523(id, legacyStage, context.productId), label: title };
   const html = g4Gate3MapToolHtmlV290(context, item, options);
@@ -228,8 +257,7 @@ function g4FiveProductHtmlV523(product) {
   const stages = G4_FIVE_A_STAGES_V523.map((stage, index) => {
     let content = "";
     if (stage.key === "aware") {
-      content = G4_FIVE_A_PRODUCT_CHANNELS_V523.aware.map((tool) => g4FiveCampaignHtmlV523(context, tool)).join("");
-      content += g4ProductSmmStrategyHtmlV523(product);
+      content = g4FiveAwareHtmlV544(context, product);
     } else if (stage.key === "appeal") {
       if (rsya.length) content += g4FiveLinkedToolHtmlV523(context, "content_creatives", "appeal", "Контент и креативы · Яндекс Директ / РСЯ", "Яндекс Директ / РСЯ", "", { channels: rsya });
       content += g4FiveToolCardHtmlV523({ id: "promo_landing", title: "ПромоСтраница / контентная посадочная", service: "Tilda" }, "appeal", productId);
