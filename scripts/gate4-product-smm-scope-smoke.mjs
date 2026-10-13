@@ -104,7 +104,7 @@ try {
     const defaultsSeparate = state.gate4ProductSmmV523.byProduct[products[0].id].strategy.volume.shortVideos === 3 &&
       state.gate4ProductSmmV523.byProduct[products[0].id].strategy.planningPeriod.count === 2 &&
       state.gate4ProductSmmV523.byProduct[products[0].id].content.ideas.length === 0;
-    click("[data-g4-product-smm-idea-add-v299]");
+    click('[data-g4-product-smm-topic-idea-add-v345][data-g4-product-smm-format-id-v345="g4-smm-format-v298-1"]');
     input('[data-g4-product-smm-idea-field-v299="name"]', "Коза: идея продукта");
     input('[data-g4-product-smm-idea-field-v299="insight"]', "Коза: особенный подарок");
     input('[data-g4-product-smm-idea-field-v299="digestionNotes"]', "Связь с ручной работой");
@@ -118,7 +118,7 @@ try {
     click('[data-g4-product-smm-workflow-mode-v342="save"]');
     input('[data-g4-product-smm-period-count-v304]', "3", "change");
     renderProduct(products[1]);
-    click("[data-g4-product-smm-idea-add-v299]");
+    click('[data-g4-product-smm-topic-idea-add-v345][data-g4-product-smm-format-id-v345="g4-smm-format-v298-1"]');
     input('[data-g4-product-smm-idea-field-v299="name"]', "Другой товар: другая идея");
     input('[data-g4-product-smm-idea-field-v299="insight"]', "Другой товар: свой контекст");
     const first = state.gate4ProductSmmV523.byProduct[products[0].id];
