@@ -123,6 +123,7 @@ function g4ProductSmmAdaptHtmlV523(html, productId = "") {
     if (subtitle) subtitle.textContent = "Продукт · VK / Telegram / Instagram / YouTube";
     const header = root.querySelector("[data-g1-collapse-key]");
     if (header) header.setAttribute("data-g1-collapse-key", key);
+    root.querySelector(".g4-smm-new-idea-v299")?.remove();
   }
   return template.innerHTML;
 }
@@ -225,7 +226,7 @@ document.addEventListener("input", (event) => {
     if (!Number.isFinite(count) || count <= 0) return;
     bucket.strategy.planningPeriod.count = Math.min(999, Math.round(count));
     const projection = root.querySelector("[data-g4-product-smm-period-projection-v304]");
-    if (projection) projection.innerHTML = g4ProductSmmAdaptHtmlV523(g4SmmFormatsProjectionHtmlV305(bucket.strategy));
+    if (projection) projection.innerHTML = g4ProductSmmAdaptHtmlV523(g4SmmFormatsProjectionHtmlV305(bucket.strategy, { productId, content: bucket.content }), productId);
     g4ProductSmmPersistV523(bucket);
     return;
   }
@@ -314,6 +315,24 @@ document.addEventListener("change", (event) => {
     const { record } = g4ProductSmmRecordV523(root, "idea", data.g4ProductSmmIdeaIdV299);
     if (!g4ProductSmmIdeaCanEditV523(bucket, record)) return;
     record.primaryTaskFormatId = bucket.strategy.formats.some((row) => row.id === target.value) ? target.value : "";
+    const selectedFormat = bucket.strategy.formats.find((row) => row.id === record.primaryTaskFormatId);
+    const allowedTopics = selectedFormat ? g4SmmFormatTopicsV308(selectedFormat, bucket.strategy) : [];
+    if (!allowedTopics.some((topic) => guruV185Text(topic?.id) === guruV185Text(record.topicId)))
+      record.topicId = "";
+    g4ProductSmmPersistV523(bucket, record);
+    g4ProductSmmRefreshV523(root);
+    return;
+  }
+  if (data.g4ProductSmmIdeaFieldV299 === "topicId") {
+    const { record } = g4ProductSmmRecordV523(root, "idea", data.g4ProductSmmIdeaIdV299);
+    if (!g4ProductSmmIdeaCanEditV523(bucket, record)) return;
+    const selectedFormat = bucket.strategy.formats.find((row) =>
+      guruV185Text(row?.id) === guruV185Text(record.primaryTaskFormatId),
+    );
+    const allowedTopics = selectedFormat ? g4SmmFormatTopicsV308(selectedFormat, bucket.strategy) : [];
+    record.topicId = allowedTopics.some((topic) => guruV185Text(topic?.id) === target.value)
+      ? target.value
+      : "";
     g4ProductSmmPersistV523(bucket, record);
     g4ProductSmmRefreshV523(root);
     return;
@@ -350,7 +369,23 @@ document.addEventListener("click", (event) => {
   const data = button.dataset;
   const productId = root.dataset.g4ProductSmmProductIdV523;
   const bucket = g4ProductSmmStoreV523(productId);
-  if (button.matches("[data-g4-product-smm-idea-add-v299]")) {
+  if (button.matches("[data-g4-product-smm-topic-idea-add-v345]")) {
+    event.preventDefault();
+    const formatId = guruV185Text(data.g4ProductSmmFormatIdV345);
+    const topicId = guruV185Text(data.g4ProductSmmTopicIdV345);
+    const format = bucket.strategy.formats.find((row) => guruV185Text(row?.id) === formatId);
+    if (!format || !g4SmmFormatTopicsV308(format, bucket.strategy).some((topic) =>
+      guruV185Text(topic?.id) === topicId))
+      return;
+    const idea = g4ProductSmmWithScopeV523(productId, () =>
+      g4SmmCreateIdeaV299(productId, { primaryTaskFormatId: formatId, topicId }));
+    g4ProductSmmPersistV523(bucket);
+    g4ProductSmmRefreshV523(root);
+    requestAnimationFrame(() => root.querySelector(
+      `[data-g4-product-smm-idea-card-v299="${CSS.escape(idea?.id || "")}"]`,
+    )?.scrollIntoView({ behavior: "smooth", block: "center" }));
+    return;
+  } else if (button.matches("[data-g4-product-smm-idea-add-v299]")) {
     event.preventDefault();
     g4ProductSmmWithScopeV523(productId, () => g4SmmCreateIdeaV299(productId));
   } else if (data.g4ProductSmmIdeaConvertV299) {

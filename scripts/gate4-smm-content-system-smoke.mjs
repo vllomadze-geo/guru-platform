@@ -598,8 +598,7 @@ try {
     summaryTemplate.innerHTML = g4SmmActionSummaryHtmlV299(state.gate4SmmContentV299, state.gate4SmmStrategyV298);
     const summaryText = summaryTemplate.content.textContent || "";
     const renderedSummary = document.querySelector('[data-g4-smm-action-summary-v299]');
-    const summaryCards = [...renderedSummary.querySelectorAll('[data-g4-smm-summary-card-v341]')];
-    const summaryTargets = [...renderedSummary.querySelectorAll('[data-g4-smm-summary-target-v341]')];
+    const summaryRows = [...renderedSummary.querySelectorAll('[data-g4-smm-summary-format-focus-v346]')];
     const summaryCollapsibles = [...renderedSummary.querySelectorAll('details.gate1-final-unmatched-v259')];
     const collapsiblesDefaultClosed = summaryCollapsibles.length === 2 &&
       summaryCollapsibles.every((node) => !node.open);
@@ -608,21 +607,12 @@ try {
       summaryCollapsibles.every((node) => node.open);
     summaryCollapsibles.forEach((node) => node.querySelector('summary')?.click());
     const summaryVisual = {
-      cards: summaryCards.map((card) => card.querySelector(':scope > header > strong')?.textContent.trim() || ""),
-      cardsFramed: summaryCards.every((card) => {
-        const style = getComputedStyle(card);
-        return parseFloat(style.borderWidth) > 0 && parseFloat(style.borderRadius) >= 12;
-      }),
-      targetRows: summaryTargets.map((row) => ({
-        scope: row.dataset.g4SmmSummaryTargetV341,
-        fraction: row.querySelector('.g4-smm-summary-fraction-v341')?.textContent.trim() || "",
-        status: row.querySelector('.g4-smm-summary-status-v341')?.textContent.trim() || "",
-        visual: [...row.classList].find((name) => /^is-(ready|attention|problem)-v277$/.test(name)) || "",
+      compact: Boolean(renderedSummary.querySelector('.g4-smm-summary-table-v346')),
+      rows: summaryRows.map((row) => ({
+        formatId: row.dataset.g4SmmSummaryFormatFocusV346,
+        cells: [...row.querySelectorAll('td')].map((cell) => cell.textContent.trim()),
+        visual: [...row.classList].find((name) => /^is-(ready|attention|problem)-v346$/.test(name)) || "",
       })),
-      verdictComponentReused: summaryTargets.length === 7 && summaryTargets.every((row) =>
-        row.classList.contains('pv181-group-benchmark-item-v277') &&
-        Boolean(row.querySelector(':scope > .pv181-group-benchmark-dot-v277')),
-      ),
       collapseComponentReused: summaryCollapsibles.every((node) =>
         node.classList.contains('gate1-final-unmatched-v259') &&
         Boolean(node.querySelector(':scope > .gate1-final-unmatched-list-v259')),
@@ -630,7 +620,14 @@ try {
       collapsiblesDefaultClosed,
       collapsiblesExpandOnClick,
       collapseSummaries: summaryCollapsibles.map((node) => node.querySelector('summary')?.textContent.trim() || ""),
-      yellowMapping: g4SmmSummaryTargetStatusV341(2, 3).visual === "attention",
+      statusLogic:
+        g4SmmSummaryCompactStatusV346(3, 1, 3).visual === "attention" &&
+        g4SmmSummaryCompactStatusV346(0, 0, 3).visual === "problem" &&
+        g4SmmSummaryCompactStatusV346(3, 3, 3).visual === "ready",
+      beforeCalendar: Boolean(
+        renderedSummary.compareDocumentPosition(document.querySelector('[data-g4-smm-week-calendar-v322]')) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+      ),
     };
     const after = g4SmmGateStructureAuditV299(state);
     const afterExact = Object.fromEntries(Object.entries(after).map(([id, data]) => [id, data.exactJson]));
@@ -928,7 +925,7 @@ try {
     const digestionLayout = root?.querySelector('[data-g4-smm-digestion-layout-v316]');
     const calendarDay = root?.querySelector('[data-g4-smm-week-day-v322]');
     const calendarTrack = root?.querySelector('.g4-smm-week-days-v322');
-    const summaryGrid = root?.querySelector('.g4-smm-summary-cards-v341');
+    const summaryGrid = root?.querySelector('.g4-smm-summary-meta-row-v346');
     const storyboardScroll = root?.querySelector('.g4-smm-storyboard-scroll-v344');
     const storyboardTrack = root?.querySelector('.g4-smm-storyboard-track-v344');
     const packageLayout = root?.querySelector('.g4-smm-package-layout-v344');
@@ -940,7 +937,7 @@ try {
       publicationColumns: publicationFields ? getComputedStyle(publicationFields).gridTemplateColumns : "",
       digestionColumns: digestionLayout ? getComputedStyle(digestionLayout).gridTemplateColumns : "",
       summaryColumns: summaryGrid ? getComputedStyle(summaryGrid).gridTemplateColumns : "",
-      summaryCards: summaryGrid?.querySelectorAll('[data-g4-smm-summary-card-v341]').length || 0,
+      summaryRows: root?.querySelectorAll('[data-g4-smm-summary-format-focus-v346]').length || 0,
       calendarDayColumns: calendarDay ? getComputedStyle(calendarDay).gridTemplateColumns : "",
       calendarTrackColumns: calendarTrack ? getComputedStyle(calendarTrack).gridTemplateColumns.split(" ").length : 0,
       calendarTrackScrollable: calendarTrack ? calendarTrack.scrollWidth > calendarTrack.clientWidth : false,
@@ -1030,13 +1027,16 @@ try {
     !result.comparison.text.includes("Сильный") ||
     result.summary.videoCount !== 4 || result.summary.videoTarget !== 3 || result.summary.plannedCases !== 1 || result.summary.plannedTotal !== 1 ||
     !result.summary.text.includes("Сверх плана: 1") || !result.summary.unusedPairs || result.summary.staleTopics !== 5 ||
-    JSON.stringify(result.summary.visual.cards) !== JSON.stringify(["План идей на неделю", "Факт публикаций за неделю", "Квартальная цель", "Форматы без использования (90 дней)", "Темы без использования (3+ недели)"]) ||
-    !result.summary.visual.cardsFramed || result.summary.visual.targetRows.length !== 7 || !result.summary.visual.verdictComponentReused || !result.summary.visual.collapseComponentReused || !result.summary.visual.collapsiblesDefaultClosed || !result.summary.visual.collapsiblesExpandOnClick || result.summary.visual.collapseSummaries.length !== 2 || result.summary.visual.collapseSummaries.some((value) => !value.includes("без использования · развернуть")) || !result.summary.visual.yellowMapping ||
+    !result.summary.visual.compact || result.summary.visual.rows.length !== 3 ||
+    !result.summary.visual.rows.every((row) => row.cells.length === 5 && row.visual) ||
+    !result.summary.visual.collapseComponentReused || !result.summary.visual.collapsiblesDefaultClosed ||
+    !result.summary.visual.collapsiblesExpandOnClick || result.summary.visual.collapseSummaries.length !== 2 ||
+    !result.summary.visual.statusLogic || !result.summary.visual.beforeCalendar ||
     JSON.stringify(result.storage.rootKeys) !== JSON.stringify(["gate4SmmContentV299"]) ||
     result.storage.version !== "gate4-smm-content-v299" || result.storage.ideas !== 4 || result.storage.publications !== 4 ||
     result.storage.restoredIdeas !== 4 || result.storage.restoredPublications !== 4 || result.storage.restoredContent !== "Сценарий вертикального ролика о процессе создания" ||
     result.storage.restoredPrimaryTaskFormatId !== "g4-smm-format-v298-2" ||
-    !result.mobile.visible || result.mobile.overflow > 1 || result.mobile.digestionColumns.split(" ").length !== 1 || result.mobile.summaryColumns.split(" ").length !== 1 || result.mobile.summaryCards !== 5 || result.mobile.calendarTrackColumns !== 8 || !result.mobile.calendarTrackScrollable || result.mobile.calendarDays !== 7 || result.mobile.stageCards !== 20 || result.mobile.storyboardColumns !== 5 || !result.mobile.storyboardScrollable || result.mobile.packageColumns !== 1 || !result.mobile.publicationPreviewVisible ||
+    !result.mobile.visible || result.mobile.overflow > 1 || result.mobile.digestionColumns.split(" ").length !== 1 || result.mobile.summaryColumns.split(" ").length !== 1 || result.mobile.summaryRows !== 3 || result.mobile.calendarTrackColumns !== 8 || !result.mobile.calendarTrackScrollable || result.mobile.calendarDays !== 7 || result.mobile.stageCards !== 20 || result.mobile.storyboardColumns !== 5 || !result.mobile.storyboardScrollable || result.mobile.packageColumns !== 1 || !result.mobile.publicationPreviewVisible ||
     result.mobile.ideaControls !== 0 || result.mobile.publicationColumns.split(" ").length !== 1 ||
     !result.safety.exactGate0To3 || !result.safety.readinessExact || !result.safety.channelsExact || !result.safety.strategyExact ||
     result.safety.readinessBefore !== 23 || result.safety.readinessAfter !== 23 ||

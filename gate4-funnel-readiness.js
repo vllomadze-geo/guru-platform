@@ -241,7 +241,17 @@ function g4SmmPeriodProjectionHtmlV304(strategy = g4SmmStrategyEnsureV298()) {
 
 function g4SmmRefreshPeriodProjectionV304() {
   const target = document.querySelector("[data-g4-smm-period-projection-v304]");
-  if (target) target.innerHTML = g4SmmFormatsProjectionHtmlV305();
+  if (!target) return;
+  const selectedProduct = typeof g4ProductPickSelected === "function"
+    ? g4ProductPickSelected(state)
+    : null;
+  const productId = selectedProduct && typeof g4ProductPickKey === "function"
+    ? g4ProductPickKey(selectedProduct, state)
+    : guruV185Text(selectedProduct?.id);
+  target.innerHTML = g4SmmFormatsProjectionHtmlV305(
+    g4SmmStrategyEnsureV298(),
+    { productId, content: g4SmmContentEnsureV299() },
+  );
 }
 
 function g4SmmStrategyThresholdLabelsV298(strategy = g4SmmStrategyEnsureV298()) {
@@ -358,19 +368,41 @@ function g4SmmFormatVolumeV305(format, strategy, projection) {
   };
 }
 
-function g4SmmFormatsProjectionHtmlV305(strategy = g4SmmStrategyEnsureV298()) {
+function g4SmmFormatsProjectionHtmlV305(
+  strategy = g4SmmStrategyEnsureV298(),
+  options = {},
+) {
   const projection = g4SmmPeriodProjectionV304(strategy);
+  const content = options?.content || (typeof g4SmmContentEnsureV299 === "function"
+    ? g4SmmContentEnsureV299()
+    : null);
+  const productId = guruV185Text(options?.productId);
+  const ideas = Array.isArray(content?.ideas) ? content.ideas : [];
   return `<div class="g4-smm-table-wrap-v298">
     <table class="mini-table typed-table g4-smm-table-v298">
-      <thead><tr><th>Основная задача</th><th>Формат</th><th>Темы</th><th>Объём контента</th><th>Площадки</th></tr></thead>
+      <thead><tr><th>Основная задача</th><th>Формат</th><th>Темы</th><th>Объём контента</th><th>Идеи</th><th>Площадки</th></tr></thead>
       <tbody>${g4SmmFormatsOrderedBy5AV303(strategy.formats).map(({ format: row, stage }) => {
         const volume = g4SmmFormatVolumeV305(row, strategy, projection);
         const topics = g4SmmFormatTopicsV308(row, strategy);
+        const ideaCount = ideas.filter((idea) =>
+          guruV185Text(idea?.primaryTaskFormatId) === guruV185Text(row.id) &&
+          (!productId || guruV185Text(idea?.productId) === productId)
+        ).length;
+        const topicHtml = topics.map((topic) => `<span class="g4-smm-format-topic-row-v345" data-g4-smm-format-topic-v308="${escapeAttr(topic.id)}">
+          <span class="g4-smm-format-topic-label-v345">${escapeHtml(topic.value)}</span>
+          <button type="button" class="small-btn g4-smm-topic-idea-add-v345"
+            data-g4-smm-topic-idea-add-v345
+            data-g4-smm-format-id-v345="${escapeAttr(row.id)}"
+            data-g4-smm-topic-id-v345="${escapeAttr(topic.id)}"
+            data-g4-smm-product-id-v345="${escapeAttr(productId)}"
+            ${productId ? "" : "disabled"}>+ Новая идея</button>
+        </span>`).join("");
         return `<tr data-g4-smm-format-row-v298="${escapeAttr(row.id)}" data-g4-smm-format-stage-v303="${escapeAttr(stage)}">
           <td>${escapeHtml(row.task) || "—"}</td>
           <td>${escapeHtml(row.format) || "—"}</td>
-          <td><span class="g4-smm-format-topics-v308">${topics.map((topic) => `<span data-g4-smm-format-topic-v308="${escapeAttr(topic.id)}">${escapeHtml(topic.value)}</span>`).join("") || "—"}</span></td>
+          <td><span class="g4-smm-format-topics-v308">${topicHtml || "—"}</span></td>
           <td data-g4-smm-format-volume-v305="${escapeAttr(row.id)}"><span class="g4-smm-format-volume-v305"><b>${escapeHtml(volume.projected)}</b><small>${escapeHtml(volume.note)}</small></span></td>
+          <td><span class="g4-smm-format-idea-count-v345" data-g4-smm-format-idea-count-v345="${escapeAttr(row.id)}">${ideaCount}</span></td>
           <td>${escapeHtml(row.platforms) || "—"}</td>
         </tr>`;
       }).join("")}</tbody>
@@ -385,6 +417,9 @@ function g4SmmStrategyHtmlV298(activeProduct = null) {
   if (!strategy) return "";
   const collapseKey = "g4-smm-strategy-company-v298";
   const collapsed = g1CollapsedSet().has(collapseKey);
+  const activeProductId = guruV185Text(activeProduct?.id);
+  const content = g4SmmContentEnsureV299();
+  const periodWeekLabel = content ? g4SmmCalendarWeekLabelV322(content) : "";
   return `<section class="g1-card g1-card-collapsible g4-smm-strategy-v298${collapsed ? " is-collapsed" : ""}" data-g4-smm-strategy-v298 data-g4-smm-scope-v298="company-project" data-g4-smm-readonly-v300="true">
     <div class="g1-card-header-static g1-card-collapse-header" data-g1-collapse data-g1-collapse-key="${collapseKey}">
       <span class="g1-section-left"><span class="g4-smm-idea-title-line-v343"><span class="g1-card-title">SMM-стратегия</span><span class="g4-smm-idea-collapse-mark-v343" aria-hidden="true"></span></span><span class="g1-section-progress">Компания · зафиксированный справочник</span></span>
@@ -392,12 +427,14 @@ function g4SmmStrategyHtmlV298(activeProduct = null) {
     <div class="g1-card-body g1-card-collapse-body">
       <section class="g4-smm-section-v298" data-g4-smm-part-v298="formats">
         <h4>Форматы, темы, объём контента и площадки</h4>
-        <p class="g1-task">Недельные нормы зафиксированы. Выберите период — объём пересчитается автоматически.</p>
-        <div class="g4-smm-period-controls-v304">
-          <label class="g1-field"><span>Количество</span><input class="g1-input is-filled" type="number" min="1" max="999" step="1" value="${escapeAttr(strategy.planningPeriod.count)}" data-g4-smm-period-count-v304 /></label>
-          <label class="g1-field"><span>Единица периода</span><select class="g1-input is-filled" data-g4-smm-period-unit-v304>${G4_SMM_PERIOD_UNITS_V304.map((item) => `<option value="${escapeAttr(item.key)}" ${item.key === strategy.planningPeriod.unit ? "selected" : ""}>${escapeHtml(item.label)}</option>`).join("")}</select></label>
+        <div class="g4-smm-period-bar-v345">
+          <div><strong>Период планирования</strong><small>${escapeHtml(periodWeekLabel)}</small></div>
+          <div class="g4-smm-period-controls-v304">
+            <label class="g1-field"><span>Количество</span><input class="g1-input is-filled" type="number" min="1" max="999" step="1" value="${escapeAttr(strategy.planningPeriod.count)}" data-g4-smm-period-count-v304 /></label>
+            <label class="g1-field"><span>Единица периода</span><select class="g1-input is-filled" data-g4-smm-period-unit-v304>${G4_SMM_PERIOD_UNITS_V304.map((item) => `<option value="${escapeAttr(item.key)}" ${item.key === strategy.planningPeriod.unit ? "selected" : ""}>${escapeHtml(item.label)}</option>`).join("")}</select></label>
+          </div>
         </div>
-        <div class="g4-smm-period-projection-v304" data-g4-smm-period-projection-v304>${g4SmmFormatsProjectionHtmlV305(strategy)}</div>
+        <div class="g4-smm-period-projection-v304" data-g4-smm-period-projection-v304>${g4SmmFormatsProjectionHtmlV305(strategy, { productId: activeProductId, content })}</div>
       </section>
 
       <section class="g4-smm-section-v298" data-g4-smm-part-v298="principle">
@@ -548,6 +585,7 @@ function g4SmmContentEnsureV299(workspace = state) {
       : "collection",
     digestionNotes: String(idea?.digestionNotes || ""),
     primaryTaskFormatId: guruV185Text(idea?.primaryTaskFormatId),
+    topicId: guruV185Text(idea?.topicId),
     insight: String(idea?.insight || ""),
     scheduledDate: g4SmmDateValueV299(idea?.scheduledDate)
       ? guruV185Text(idea.scheduledDate)
@@ -1209,22 +1247,31 @@ function g4SmmIdeaPrimaryTaskHtmlV315(idea, locked = false) {
     guruV185Text(row?.id) === selectedId,
   ) || null;
   const projection = g4SmmPeriodProjectionV304(strategy);
-  const volume = selected
-    ? g4SmmFormatVolumeV305(selected, strategy, projection)
-    : null;
+  const volume = selected ? g4SmmFormatVolumeV305(selected, strategy, projection) : null;
   const topics = selected ? g4SmmFormatTopicsV308(selected, strategy) : [];
+  const selectedTopicId = guruV185Text(idea?.topicId);
+  const selectedTopic = topics.find((topic) => guruV185Text(topic?.id) === selectedTopicId) || null;
   return `<div class="g4-smm-idea-primary-task-v315" data-g4-smm-idea-primary-task-v315>
-    <label class="g1-field">
-      <span>Основная задача</span>
-      <select class="g1-input ${selected ? "is-filled" : "is-empty"}" data-g4-smm-idea-field-v299="primaryTaskFormatId" data-g4-smm-idea-id-v299="${escapeAttr(idea.id)}" ${locked ? "disabled" : ""}>
-        <option value="">Выберите основную задачу</option>
-        ${g4SmmFormatsOrderedBy5AV303(strategy.formats).map(({ format: row }) => `<option value="${escapeAttr(row.id)}" ${guruV185Text(row.id) === selectedId ? "selected" : ""}>${escapeHtml(row.task)}</option>`).join("")}
-      </select>
-    </label>
+    <div class="g4-smm-idea-primary-selectors-v345">
+      <label class="g1-field">
+        <span>Основная задача</span>
+        <select class="g1-input ${selected ? "is-filled" : "is-empty"}" data-g4-smm-idea-field-v299="primaryTaskFormatId" data-g4-smm-idea-id-v299="${escapeAttr(idea.id)}" ${locked ? "disabled" : ""}>
+          <option value="">Выберите основную задачу</option>
+          ${g4SmmFormatsOrderedBy5AV303(strategy.formats).map(({ format: row }) => `<option value="${escapeAttr(row.id)}" ${guruV185Text(row.id) === selectedId ? "selected" : ""}>${escapeHtml(row.task)}</option>`).join("")}
+        </select>
+      </label>
+      <label class="g1-field">
+        <span>Тема</span>
+        <select class="g1-input ${selectedTopic ? "is-filled" : "is-empty"}" data-g4-smm-idea-field-v299="topicId" data-g4-smm-idea-id-v299="${escapeAttr(idea.id)}" ${!selected || locked ? "disabled" : ""}>
+          <option value="">Выберите тему</option>
+          ${topics.map((topic) => `<option value="${escapeAttr(topic.id)}" ${guruV185Text(topic.id) === selectedTopicId ? "selected" : ""}>${escapeHtml(topic.value)}</option>`).join("")}
+        </select>
+      </label>
+    </div>
     ${selected ? `<div class="g4-smm-idea-task-details-v316" data-g4-smm-idea-primary-task-live-v315="${escapeAttr(selected.id)}">
       <div><strong>Основная задача</strong><span>${escapeHtml(selected.task) || "—"}</span></div>
       <div><strong>Формат</strong><span>${escapeHtml(selected.format) || "—"}</span></div>
-      <div><strong>Темы</strong><span class="g4-smm-format-topics-v308">${topics.map((topic) => `<span>${escapeHtml(topic.value)}</span>`).join("") || "—"}</span></div>
+      <div><strong>Тема</strong><span>${escapeHtml(selectedTopic?.value) || "Не выбрана"}</span></div>
       <div><strong>Объём контента</strong><span class="g4-smm-format-volume-v305"><b>${escapeHtml(volume.projected)}</b><small>${escapeHtml(volume.note)}</small></span></div>
       <div><strong>Площадки</strong><span>${escapeHtml(selected.platforms) || "—"}</span></div>
     </div>` : '<p class="g4-smm-empty-v299">Выберите основную задачу — здесь появится связанная строка SMM-стратегии.</p>'}
@@ -1682,73 +1729,83 @@ function g4SmmSummaryTargetRowHtmlV341(label, count, target, scope) {
   </div>`;
 }
 
+function g4SmmSummaryCompactStatusV346(planned, fact, target) {
+  const goal = Math.max(0, Number(target) || 0);
+  const plannedCount = Math.max(0, Number(planned) || 0);
+  const factCount = Math.max(0, Number(fact) || 0);
+  if (goal === 0 || factCount >= goal)
+    return { visual: "ready", label: factCount > goal ? `Сверх плана: ${factCount - goal}` : "Выполнено" };
+  if (plannedCount >= goal)
+    return { visual: "attention", label: `Запланировано · факт ${factCount}/${goal}` };
+  return {
+    visual: plannedCount || factCount ? "attention" : "problem",
+    label: `Недобор: ${Math.max(0, goal - Math.max(plannedCount, factCount))}`,
+  };
+}
+
 function g4SmmActionSummaryHtmlV299(content, strategy) {
   const summary = g4SmmContentSummaryV299(content, strategy);
-  const labels = {
-    videos: "Видео",
-    carousels: "Карусели",
-    cases: "Кейсы",
-  };
-  const planRows = Object.keys(labels).map((key) =>
-    g4SmmSummaryTargetRowHtmlV341(
-      labels[key],
-      summary.plan.counts[key],
-      summary.week.targets[key],
-      `plan-${key}`,
-    ),
-  ).join("");
-  const factRows = Object.keys(labels).map((key) =>
-    g4SmmSummaryTargetRowHtmlV341(
-      labels[key],
-      summary.week.counts[key],
-      summary.week.targets[key],
-      `fact-${key}`,
-    ),
-  ).join("");
-  const quarterTarget = g4SmmStrategyRangeV298(
-    summary.quarter.targetMin,
-    summary.quarter.targetMax,
-  );
-  return `<section class="g4-smm-action-summary-v299" data-g4-smm-action-summary-v299>
-    <div class="g4-smm-idea-stage-head-v299"><strong>Что нужно сделать</strong><small>Календарный план и фактические публикации · подсказка, не ограничение</small></div>
-    <div class="g4-smm-summary-cards-v341">
-      <section class="g1-card g4-smm-summary-card-v341" data-g4-smm-summary-card-v341="plan">
-        <header class="g4-smm-publication-group-head-v335"><strong>План идей на неделю</strong><small>${escapeHtml(summary.plan.weekLabel)}</small></header>
-        <div class="g4-smm-summary-card-body-v341">
-          <p class="g4-smm-summary-meta-v341">Размещено <strong>${escapeHtml(g4SmmIdeaCountLabelV322(summary.plan.total))}</strong> · <strong>${summary.plan.days}/7</strong> дней</p>
-          <div class="g4-smm-summary-targets-v341" data-g4-smm-calendar-plan-v322>${planRows}</div>
-          <div class="g4-smm-summary-notes-v341">
-            ${summary.plan.unscheduled ? `<span class="is-problem-v341">В банке: ${summary.plan.unscheduled}</span>` : '<span class="is-ready-v341">Все идеи размещены</span>'}
-            ${summary.plan.unclassified ? `<span class="is-problem-v341">Без задачи: ${summary.plan.unclassified}</span>` : ""}
-          </div>
+  const rows = [
+    ["videos", "Видео", "g4-smm-format-v298-1"],
+    ["carousels", "Карусели", "g4-smm-format-v298-3"],
+    ["cases", "Кейсы", "g4-smm-format-v298-2"],
+  ].map(([key, label, formatId]) => {
+    const target = summary.week.targets[key];
+    const planned = summary.plan.counts[key];
+    const fact = summary.week.counts[key];
+    const status = g4SmmSummaryCompactStatusV346(planned, fact, target);
+    return `<tr class="g4-smm-summary-row-v346 is-${escapeAttr(status.visual)}-v346"
+      data-g4-smm-summary-format-focus-v346="${escapeAttr(formatId)}">
+      <td><span class="g4-smm-summary-dot-v346" aria-hidden="true"></span><strong>${escapeHtml(label)}</strong></td>
+      <td>${target}</td>
+      <td>${planned}</td>
+      <td>${fact}</td>
+      <td><span class="g4-smm-summary-status-v346">${escapeHtml(status.label)}</span></td>
+    </tr>`;
+  }).join("");
+  const quarterTarget = Math.max(0, Number(summary.quarter.targetMin) || 0);
+  const quarterPublished = Math.max(0, Number(summary.quarter.published) || 0);
+  const quarterProgress = quarterTarget > 0
+    ? Math.min(100, Math.round((quarterPublished / quarterTarget) * 100))
+    : 100;
+  const weekStart = g4SmmCalendarWeekStartV322(content);
+  const quarterLabel = `Q${Math.floor(weekStart.getMonth() / 3) + 1} ${weekStart.getFullYear()}`;
+  return `<section class="g4-smm-action-summary-v299 g4-smm-action-summary-compact-v346" data-g4-smm-action-summary-v299>
+    <div class="g4-smm-idea-stage-head-v299">
+      <strong>Что нужно сделать</strong>
+      <small>${escapeHtml(summary.plan.weekLabel)} · план, идеи и фактические публикации</small>
+    </div>
+    <div class="g4-smm-summary-table-wrap-v346">
+      <table class="mini-table typed-table g4-smm-summary-table-v346">
+        <thead><tr><th>Формат</th><th>План</th><th>Идеи</th><th>Факт</th><th>Статус</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="g4-smm-summary-meta-row-v346">
+      <section class="g4-smm-quarter-compact-v346">
+        <div>
+          <strong>${escapeHtml(quarterLabel)} · Основные публикации</strong>
+          <span>${quarterPublished}/${quarterTarget}</span>
+          <small>Осталось: ${Math.max(0, quarterTarget - quarterPublished)}</small>
+        </div>
+        <div class="g4-smm-quarter-progress-v346" aria-label="Прогресс квартальной цели">
+          <span style="width:${quarterProgress}%"></span>
         </div>
       </section>
-      <section class="g1-card g4-smm-summary-card-v341" data-g4-smm-summary-card-v341="fact">
-        <header class="g4-smm-publication-group-head-v335"><strong>Факт публикаций за неделю</strong><small>${escapeHtml(summary.plan.weekLabel)}</small></header>
-        <div class="g4-smm-summary-card-body-v341"><div class="g4-smm-summary-targets-v341">${factRows}</div></div>
-      </section>
-      <section class="g1-card g4-smm-summary-card-v341 is-wide-v341" data-g4-smm-summary-card-v341="quarter">
-        <header class="g4-smm-publication-group-head-v335"><strong>Квартальная цель</strong><small>Основные публикации · целевой диапазон ≈${escapeHtml(quarterTarget)}</small></header>
-        <div class="g4-smm-summary-card-body-v341">
-          <div class="g4-smm-summary-targets-v341">${g4SmmSummaryTargetRowHtmlV341("Основные публикации", summary.quarter.published, summary.quarter.targetMin, "quarter")}</div>
-        </div>
-      </section>
-      <section class="g1-card g4-smm-summary-card-v341" data-g4-smm-summary-card-v341="unused-formats">
-        <header class="g4-smm-publication-group-head-v335"><strong>Форматы без использования (90 дней)</strong><small>Формат × площадка</small></header>
-        <div class="g4-smm-summary-card-body-v341">
-          ${summary.unusedPairs.length
-            ? `<details class="gate1-final-unmatched-v259" data-g4-smm-unused-pairs-v299><summary>${summary.unusedPairs.length} пар без использования · развернуть</summary><div class="gate1-final-unmatched-list-v259">${summary.unusedPairs.map((pair) => `<span>${escapeHtml(pair.format)} → ${escapeHtml(pair.platform)}</span>`).join("")}</div><small>Пары, которые не встречались среди опубликованных материалов за последние 90 дней.</small></details>`
-            : `<div class="pv181-group-benchmark-item-v277 is-ready-v277" data-pv181-group-benchmark-v277="g4-smm-unused-formats"><span class="pv181-group-benchmark-dot-v277" aria-hidden="true"></span><div><strong>Все предусмотренные пары использовались</strong></div></div>`}
-        </div>
-      </section>
-      <section class="g1-card g4-smm-summary-card-v341" data-g4-smm-summary-card-v341="stale-topics">
-        <header class="g4-smm-publication-group-head-v335"><strong>Темы без использования (3+ недели)</strong><small>Контроль разнообразия</small></header>
-        <div class="g4-smm-summary-card-body-v341">
-          ${summary.staleTopics.length
-            ? `<details class="gate1-final-unmatched-v259" data-g4-smm-stale-topics-v299><summary>${summary.staleTopics.length} тем без использования · развернуть</summary><div class="gate1-final-unmatched-list-v259">${summary.staleTopics.map((topic) => `<span>${escapeHtml(topic.value)}</span>`).join("")}</div><small>Темы, которые не встречались среди опубликованных материалов больше трёх недель.</small></details>`
-            : `<div class="pv181-group-benchmark-item-v277 is-ready-v277" data-pv181-group-benchmark-v277="g4-smm-stale-topics"><span class="pv181-group-benchmark-dot-v277" aria-hidden="true"></span><div><strong>Все темы использовались за последние три недели</strong></div></div>`}
-        </div>
-      </section>
+      <div class="g4-smm-summary-bank-v346">
+        <span>В банке: <strong>${summary.plan.unscheduled}</strong></span>
+        ${summary.plan.unclassified ? `<span>Без задачи: <strong>${summary.plan.unclassified}</strong></span>` : ""}
+      </div>
+    </div>
+    <div class="g4-smm-summary-signals-v346">
+      <details class="gate1-final-unmatched-v259" data-g4-smm-unused-pairs-v299>
+        <summary>Форматы без использования <strong>${summary.unusedPairs.length}</strong> <span>›</span></summary>
+        <div class="gate1-final-unmatched-list-v259">${summary.unusedPairs.map((pair) => `<span>${escapeHtml(pair.format)} → ${escapeHtml(pair.platform)}</span>`).join("") || "<span>Все предусмотренные пары использовались</span>"}</div>
+      </details>
+      <details class="gate1-final-unmatched-v259" data-g4-smm-stale-topics-v299>
+        <summary>Темы без использования <strong>${summary.staleTopics.length}</strong> <span>›</span></summary>
+        <div class="gate1-final-unmatched-list-v259">${summary.staleTopics.map((topic) => `<span>${escapeHtml(topic.value)}</span>`).join("") || "<span>Все темы использовались за последние три недели</span>"}</div>
+      </details>
     </div>
   </section>`;
 }
@@ -1774,8 +1831,8 @@ function g4SmmContentSystemHtmlV299(activeProduct = null) {
 
       <section class="g4-smm-content-section-v299" data-g4-smm-publications-v299>
         <div class="g4-smm-content-section-head-v299"><div><h4>Визуализация идей SMM-стратегии</h4><p class="g1-task">Банк сформулированных идей и недельный календарь с переносом drag-and-drop.</p></div><span>${g4SmmIdeaCountLabelV322(content.ideas.filter((idea) => guruV185Text(idea?.insight)).length)}</span></div>
-        ${g4SmmWeekCalendarHtmlV322(content, strategy)}
         ${g4SmmActionSummaryHtmlV299(content, strategy)}
+        ${g4SmmWeekCalendarHtmlV322(content, strategy)}
         ${orphanPublications.length ? `<div class="g4-smm-publication-list-v299" data-g4-smm-orphan-publications-v324><strong>Публикации без исходной карточки идеи</strong>${orphanPublications.map((publication) => g4SmmPublicationHtmlV299(publication, content.publications.findIndex((item) => item.id === publication.id), content, strategy)).join("")}</div>` : ""}
       </section>
   </div>`;
@@ -1797,7 +1854,7 @@ function g4SmmPlanningRefreshV322() {
   if (summary) summary.outerHTML = g4SmmActionSummaryHtmlV299(content, strategy);
 }
 
-function g4SmmCreateIdeaV299(productId = "") {
+function g4SmmCreateIdeaV299(productId = "", seed = {}) {
   const content = g4SmmContentEnsureV299();
   if (!content) return null;
   const now = new Date().toISOString();
@@ -1807,9 +1864,10 @@ function g4SmmCreateIdeaV299(productId = "") {
     productId: guruV185Text(productId),
     stage: "collection",
     digestionNotes: "",
-    primaryTaskFormatId: "",
+    primaryTaskFormatId: guruV185Text(seed?.primaryTaskFormatId),
+    topicId: guruV185Text(seed?.topicId),
     insight: "",
-    scheduledDate: "",
+    scheduledDate: g4SmmDateValueV299(seed?.scheduledDate) ? guruV185Text(seed.scheduledDate) : "",
     publicationId: "",
     createdAt: now,
     updatedAt: now,
@@ -1828,15 +1886,24 @@ function g4SmmPublicationFromIdeaV299(idea) {
     : null;
   if (existing) return existing;
   const now = new Date().toISOString();
+  const strategy = g4SmmStrategyEnsureV298();
+  const sourceFormat = (strategy?.formats || []).find((row) =>
+    guruV185Text(row?.id) === guruV185Text(storedIdea.primaryTaskFormatId),
+  ) || null;
+  const sourceTopic = sourceFormat
+    ? g4SmmFormatTopicsV308(sourceFormat, strategy).find((topic) =>
+      guruV185Text(topic?.id) === guruV185Text(storedIdea.topicId),
+    ) || null
+    : null;
   const publication = {
     id: makeId("g4-smm-publication"),
     sourceIdeaId: storedIdea.id,
     productId: storedIdea.productId,
-    topicId: "",
-    topicLabel: "",
-    formatId: "",
-    formatLabel: "",
-    platforms: [],
+    topicId: guruV185Text(sourceTopic?.id),
+    topicLabel: guruV185Text(sourceTopic?.value),
+    formatId: guruV185Text(sourceFormat?.id),
+    formatLabel: guruV185Text(sourceFormat?.format),
+    platforms: sourceFormat ? g4SmmFormatPlatformsV299(sourceFormat) : [],
     date: "",
     link: "",
     status: "not_started",
@@ -2069,6 +2136,28 @@ document.addEventListener("change", (event) => {
     record.primaryTaskFormatId = (strategy?.formats || []).some((row) =>
       guruV185Text(row?.id) === target.value,
     ) ? target.value : "";
+    const selectedFormat = (strategy?.formats || []).find((row) =>
+      guruV185Text(row?.id) === record.primaryTaskFormatId,
+    );
+    const allowedTopics = selectedFormat ? g4SmmFormatTopicsV308(selectedFormat, strategy) : [];
+    if (!allowedTopics.some((topic) => guruV185Text(topic?.id) === guruV185Text(record.topicId)))
+      record.topicId = "";
+    g4SmmContentTouchV299(record);
+    saveState();
+    renderGate();
+    return;
+  }
+  if (ideaId && ideaField === "topicId") {
+    const { content, record } = g4SmmContentRecordV299("idea", ideaId);
+    if (!record || !g4SmmIdeaCanEditV330(record, content)) return;
+    const strategy = g4SmmStrategyEnsureV298();
+    const selectedFormat = (strategy?.formats || []).find((row) =>
+      guruV185Text(row?.id) === guruV185Text(record.primaryTaskFormatId),
+    );
+    const allowedTopics = selectedFormat ? g4SmmFormatTopicsV308(selectedFormat, strategy) : [];
+    record.topicId = allowedTopics.some((topic) => guruV185Text(topic?.id) === target.value)
+      ? target.value
+      : "";
     g4SmmContentTouchV299(record);
     saveState();
     renderGate();
@@ -2237,6 +2326,18 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  const summaryFormatRow = event.target?.closest?.("[data-g4-smm-summary-format-focus-v346]");
+  if (summaryFormatRow) {
+    const formatId = guruV185Text(summaryFormatRow.dataset.g4SmmSummaryFormatFocusV346);
+    const formatRow = document.querySelector(`[data-g4-smm-format-row-v298="${CSS.escape(formatId)}"]`);
+    if (formatRow) {
+      formatRow.scrollIntoView({ behavior: "smooth", block: "center" });
+      formatRow.classList.add("is-focus-v346");
+      setTimeout(() => formatRow.classList.remove("is-focus-v346"), 1400);
+    }
+    return;
+  }
+
   const weekShift = event.target?.closest?.("[data-g4-smm-week-shift-v322]");
   const weekToday = event.target?.closest?.("[data-g4-smm-week-today-v322]");
   if (weekShift || weekToday) {
@@ -2266,6 +2367,28 @@ document.addEventListener("click", (event) => {
     if (typeof guruPersistStateFast === "function")
       guruPersistStateFast({ quiet: false, durable: true });
     g4SmmPlanningRefreshV322();
+    return;
+  }
+
+  const topicIdeaButton = event.target?.closest?.("[data-g4-smm-topic-idea-add-v345]");
+  if (topicIdeaButton) {
+    event.preventDefault();
+    const selectedProduct = g4ProductPickSelected(state);
+    const productId = guruV185Text(topicIdeaButton.dataset.g4SmmProductIdV345) ||
+      (selectedProduct ? g4ProductPickKey(selectedProduct, state) : "");
+    if (!productId) return;
+    const strategy = g4SmmStrategyEnsureV298();
+    const formatId = guruV185Text(topicIdeaButton.dataset.g4SmmFormatIdV345);
+    const topicId = guruV185Text(topicIdeaButton.dataset.g4SmmTopicIdV345);
+    const format = (strategy?.formats || []).find((row) => guruV185Text(row?.id) === formatId);
+    if (!format || !g4SmmFormatTopicsV308(format, strategy).some((topic) =>
+      guruV185Text(topic?.id) === topicId))
+      return;
+    const idea = g4SmmCreateIdeaV299(productId, { primaryTaskFormatId: formatId, topicId });
+    renderGate();
+    requestAnimationFrame(() => document.querySelector(
+      `[data-g4-smm-idea-card-v299="${CSS.escape(idea?.id || "")}"]`,
+    )?.scrollIntoView({ behavior: "smooth", block: "center" }));
     return;
   }
 
