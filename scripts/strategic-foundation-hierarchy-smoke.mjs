@@ -202,6 +202,9 @@ try {
     };
     const rows = Array.from(panel.querySelectorAll(".guru-strategic-row-v286"))
       .map((row) => row.querySelector(".guru-strategic-row-copy-v286 > strong")?.textContent.trim());
+    const steps = Array.from(panel.querySelectorAll(
+      ".guru-strategic-flow-v286 > [data-guru-strategic-step]",
+    )).map((step) => step.dataset.guruStrategicStep);
     const details = Array.from(panel.querySelectorAll("[data-guru-strategic-jtbd-v286]"));
     const descriptorData = details.map((node) => {
       const chips = Array.from(node.querySelectorAll(".guru-strategic-keyword-group-v286 span"))
@@ -221,6 +224,9 @@ try {
       contextKey: model.contextKey,
       primaryId: model.primaryId,
       rows,
+      steps,
+      segmentCount: model.segmentRows.length,
+      renderedSegmentCount: panel.querySelectorAll("[data-guru-strategic-segment-id]").length,
       descriptors: descriptorData,
       modelCounts: model.descriptors.map((descriptor) => ({
         id: descriptor.id,
@@ -252,10 +258,19 @@ try {
     };
   }, goatId);
 
-  assert(goat.build === "2.3.90", "Unexpected build " + goat.build);
+  assert(Boolean(goat.build), "Interface build is missing");
   assert(
-    goat.rows.join("|") === "Посадочная страница|Сегмент|Позиционирование|УТП|Оффер + CTA",
-    "The strategic order is wrong: " + goat.rows.join("|"),
+    goat.steps.join("|") === "jtbd|segment|positioning|usp|offer|landing",
+    "The strategic hierarchy is wrong: " + goat.steps.join("|"),
+  );
+  assert(
+    goat.rows.join("|") === [
+      ...(goat.segmentCount > 1
+        ? Array.from({ length: goat.segmentCount }, (_, index) => `Сегмент ${index + 1}`)
+        : ["Сегмент"]),
+      "Позиционирование", "УТП", "Оффер + CTA", "Посадочная страница",
+    ].join("|") && goat.renderedSegmentCount === goat.segmentCount,
+    "The strategic row order is wrong: " + goat.rows.join("|"),
   );
   assert(goat.descriptors.length >= 2, "Main/additional JTBD cards are missing");
   assert(goat.firstIsMain && goat.descriptors[0].open, "Main JTBD is not first and open");
@@ -394,7 +409,7 @@ try {
   );
   console.log("phase:rename");
 
-  const noMainState = await evaluateFunction((productId) => {
+  const multipleJtbdState = await evaluateFunction((productId) => {
     const product = guruV194Product(productId, state);
     const snapshot = g3ProductJourneySnapshot(product);
     const source = snapshot.scoped.jtbd.records[0];
@@ -419,6 +434,8 @@ try {
       notice: Boolean(document.querySelector(".guru-strategic-primary-notice-v286")),
       primaryActions: document.querySelectorAll("[data-guru-strategic-primary-v286]").length,
       cardCount: document.querySelectorAll("[data-guru-strategic-jtbd-v286]").length,
+      primaryId: guruStrategicFoundationModelV286(product).primaryId,
+      sourceId: source.id,
     };
     records.splice(records.indexOf(extra), 1);
     if (oldPrimary) ui.primaryByContext[temporaryModel.contextKey] = oldPrimary;
@@ -427,12 +444,13 @@ try {
     return result;
   }, goatId);
   assert(
-    noMainState.notice &&
-      noMainState.cardCount >= 2 &&
-      noMainState.primaryActions === 0,
-    "No-main state is missing its prompt or still renders make-primary actions",
+    !multipleJtbdState.notice &&
+      multipleJtbdState.cardCount >= 2 &&
+      multipleJtbdState.primaryId === `gate0:${multipleJtbdState.sourceId}` &&
+      multipleJtbdState.primaryActions === 0,
+    "The first Gate 0 JTBD was not kept as primary after another JTBD was added",
   );
-  console.log("phase:no-main");
+  console.log("phase:multiple-jtbd");
 
   const empty = await evaluateFunction((productId) => {
     const product = guruV194Product(productId, state);
@@ -504,7 +522,7 @@ try {
       afterRename: renameStability.open,
       isolatedProject: reloadPersistence.isolatedDefault,
     },
-    noMainState,
+    multipleJtbdState,
     empty,
     navigation,
   }, null, 2));

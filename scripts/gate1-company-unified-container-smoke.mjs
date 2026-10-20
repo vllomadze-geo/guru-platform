@@ -196,6 +196,17 @@ try {
       createdAt: fixtureAt,
       source: { kind: "gate1", cardId: "card-24", rowId: pageId, rowIndex: 0 },
     }];
+    const platformCard = state.gates
+      .find((gate) => gate.id === "gate-0")
+      ?.cards?.find((card) => isMegaMarketingCard(card));
+    if (!platformCard) throw new Error("Platform fixture card is missing");
+    platformCard.megaMarketing ||= {};
+    platformCard.megaMarketing.platform ||= [];
+    platformCard.megaMarketing.infra ||= [];
+    platformCard.megaMarketing.channels ||= [];
+    ensureMegaMarketing(platformCard, state);
+    if (!megaPlatformSetProductCategoryIds(productId, [categoryId], state))
+      throw new Error("Product category fixture relation is missing");
     const productCard = state.gates
       .find((gate) => gate.id === "gate-1")
       ?.cards?.find((card) => card.id === "card-24");
@@ -213,7 +224,7 @@ try {
       items: {},
     }];
     const product = guruV194Products(state).find((candidate) =>
-      Boolean(g3ProductJourneyPageSource(candidate)?.row));
+      candidate.id === productId);
     if (!product) throw new Error("Product control fixture is missing");
     const productUi = guruV194Ui(state);
     productUi.selectedCategoryId = product.categoryId || "__uncategorized__";
@@ -227,7 +238,17 @@ try {
       status: "confirmed",
     }];
     const productPain = guruGate1FinalPainContextV259(product, true);
-    if (!productPain?.itemData) throw new Error("Product demand fixture is missing");
+    if (!productPain?.itemData) throw new Error(
+      "Product demand fixture is missing: " + JSON.stringify({
+        productId: product.id,
+        categoryId: product.categoryId,
+        maps: state.painV130.productMaps.map((row) => ({
+          product: row.product,
+          product_id: row.product_id,
+          itemIds: Object.keys(row.items || {}),
+        })),
+      }),
+    );
     productPain.itemData.demandRows = [{
       id: "product-demand-control-v357",
       kw: "товарная контрольная фраза",
@@ -276,9 +297,9 @@ try {
       const section = toggle?.closest(".g1-section") || null;
       const body = section?.querySelector(":scope > .g1-section-body") || null;
       const redesign = document.querySelector(".g1-redesign");
-      const foundation = body?.querySelector(
+      const foundation = document.querySelector(
         "[data-guru-strategic-foundation-company]",
-      ) || null;
+      );
       const semantics = body?.querySelector(
         "[data-gate1-company-semantics-v264]",
       ) || null;
@@ -321,7 +342,12 @@ try {
           section && style && style.borderTopStyle !== "none" &&
           parseFloat(style.borderTopWidth) > 0 && parseFloat(style.borderRadius) > 0
         ),
-        foundationInside: Boolean(foundation && foundation.closest(".g1-section") === section),
+        foundationAdjacent: Boolean(
+          foundation && foundation.parentElement === redesign &&
+          foundation.nextElementSibling === section &&
+          foundation.dataset.projectId === section.dataset.projectId &&
+          document.querySelectorAll("[data-guru-strategic-foundation-company]").length === 1
+        ),
         semanticsInside: Boolean(semantics && semantics.closest(".g1-section") === section),
         productSectionCount: document.querySelectorAll(
           '[data-gate1-toggle-section="pain_jtbd_offer"]',
@@ -381,7 +407,7 @@ try {
     assert(snapshot.hasCompanyMarker, `Company container marker is missing at ${label}`);
     assert(snapshot.topLevelSection, `Company container is not one top-level node at ${label}`);
     assert(snapshot.hasFrame, `Company container has no common frame at ${label}`);
-    assert(snapshot.foundationInside, `Strategic foundation escaped the frame at ${label}`);
+    assert(snapshot.foundationAdjacent, `Strategic foundation placement changed at ${label}`);
     assert(snapshot.semanticsInside, `Company demand escaped the frame at ${label}`);
     assert(
       snapshot.title === "Спрос, ценность, позиционирование · Компания",
@@ -431,19 +457,19 @@ try {
     "Three of four strategy formulations incorrectly completed the strategy block",
   );
 
-  const oneOfThree = await evaluate(page, `(() => {
+  const unlinkedOffer = await evaluate(page, `(() => {
     guruV347ProjectCompanyOfferRecord(state, true).value = "Единый оффер компании";
     return window.__renderAndAuditCompanyContainerV357();
   })()`);
-  assertCompanyStage(oneOfThree, 1, "in_progress", "1/3");
+  assertCompanyStage(unlinkedOffer, 0, "in_progress", "unlinked offer");
   assert(
-    oneOfThree.completion.strategicFoundationReady &&
-      !oneOfThree.completion.keywordFoundationReady &&
-      !oneOfThree.completion.demandReady,
-    "Company 1/3 stage does not represent the four-formulation strategy block",
+    !unlinkedOffer.completion.strategicFoundationReady &&
+      !unlinkedOffer.completion.keywordFoundationReady &&
+      !unlinkedOffer.completion.demandReady,
+    "Offer without a segment link and CTA completed the strategy block",
   );
 
-  const twoOfThree = await evaluate(page, `(() => {
+  const oneOfThree = await evaluate(page, `(() => {
     const record = guruCompanyKeywordFoundationRecordV351(state, true);
     record.keywords = [{
       id: "company-keyword-control-v357",
@@ -453,12 +479,37 @@ try {
     }];
     return window.__renderAndAuditCompanyContainerV357();
   })()`);
+  assertCompanyStage(oneOfThree, 1, "in_progress", "1/3");
+  assert(
+    !oneOfThree.completion.strategicFoundationReady &&
+      oneOfThree.completion.keywordFoundationReady &&
+      !oneOfThree.completion.demandReady,
+    "Confirmed keyword did not produce the expected 1/3 stage",
+  );
+
+  const twoOfThree = await evaluate(page, `(() => {
+    const segment = guruV309ProjectSegmentRecord(state, true);
+    segment.segment_name = "Контрольный сегмент";
+    const offer = guruV347ProjectCompanyOfferRecord(state, true);
+    offer.segment_id = segment.id;
+    offer.offer.ctaV2 = { primary: "Оформить заказ", secondary: "", alternative: "" };
+    const goal = guruCompanyPrimaryGoalV360(state);
+    Object.assign(goal, {
+      goalDescription: "Получить заявки на контрольный товар",
+      goalMetric: "leads",
+      goalTargetValue: "10",
+      goalDeadline: "2026-12-31",
+      goalBudget: "10000",
+      goalAllowedCost: "1000",
+    });
+    return window.__renderAndAuditCompanyContainerV357();
+  })()`);
   assertCompanyStage(twoOfThree, 2, "in_progress", "2/3");
   assert(
     twoOfThree.completion.strategicFoundationReady &&
       twoOfThree.completion.keywordFoundationReady &&
       !twoOfThree.completion.demandReady,
-    "Confirmed keyword did not produce the expected 2/3 stage",
+    "Complete segment, linked offer, CTA, goal, and keyword did not produce 2/3",
   );
 
   const threeOfThree = await evaluate(page, `(() => {
@@ -553,8 +604,15 @@ try {
       expanded: toggle?.getAttribute("aria-expanded") || "",
       openClass: Boolean(section?.classList.contains("is-open")),
       bodyHidden: Boolean(body?.hidden),
-      foundationInside: Boolean(
-        body?.querySelector("[data-guru-strategic-foundation-company]")),
+      foundationAdjacent: Boolean((() => {
+        const foundation = document.querySelector(
+          "[data-guru-strategic-foundation-company]",
+        );
+        return foundation && foundation.parentElement === section?.parentElement &&
+          foundation.nextElementSibling === section &&
+          foundation.dataset.projectId === section?.dataset.projectId &&
+          document.querySelectorAll("[data-guru-strategic-foundation-company]").length === 1;
+      })()),
       semanticsInside: Boolean(
         body?.querySelector("[data-gate1-company-semantics-v264]")),
       companySectionCount: document.querySelectorAll(
@@ -580,7 +638,7 @@ try {
     `Company accordion expansion did not survive reload: ${JSON.stringify(afterReload)}`,
   );
   assert(
-    afterReload.companySectionCount === 1 && afterReload.foundationInside &&
+    afterReload.companySectionCount === 1 && afterReload.foundationAdjacent &&
       afterReload.semanticsInside && afterReload.hasCompanyMarker,
     "Unified company frame did not survive reload",
   );
@@ -606,7 +664,7 @@ try {
       title: threeOfThree.title,
       sectionCount: threeOfThree.sectionCount,
       hasFrame: threeOfThree.hasFrame,
-      foundationInside: threeOfThree.foundationInside,
+      foundationAdjacent: threeOfThree.foundationAdjacent,
       semanticsInside: threeOfThree.semanticsInside,
       screenshot,
     },

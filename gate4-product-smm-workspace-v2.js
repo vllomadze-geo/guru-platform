@@ -34,6 +34,11 @@ function g4ProductSmmIdeaPlanningDateV2(idea) {
   return Number.isFinite(created.getTime()) ? g4SmmIsoDateV322(created) : "";
 }
 
+function g4ProductSmmCanScheduleV528(value, now = new Date()) {
+  const date = g4SmmDateValueV299(value);
+  return Boolean(date && g4SmmIsoDateV322(date) === value && value >= g4SmmIsoDateV322(now));
+}
+
 function g4ProductSmmModelV2(content, strategy, now = new Date()) {
   const period = g4ProductSmmPeriodV2(content, strategy, now);
   const today = g4SmmIsoDateV322(now);
@@ -94,11 +99,12 @@ function g4ProductSmmModelV2(content, strategy, now = new Date()) {
   const unusedPairs = (strategy.formats || []).flatMap((format) =>
     g4SmmFormatPlatformsV299(format).flatMap((platform) => {
       const samePair = (publication) => sameFormat(publication, format) &&
-        (publication.platforms || []).some((value) => value.toLocaleLowerCase("ru-RU") === platform.toLocaleLowerCase("ru-RU"));
+        g4SmmPublicationPlatformIdsV532(publication).includes(g4SmmPlatformIdV529(platform));
       const last = published.filter(samePair).sort((a, b) => b.date.localeCompare(a.date))[0];
       if (last?.date >= cutoff90) return [];
       const planned = futurePublications.some(samePair) || futureIdeas.some((idea) =>
-        idea.primaryTaskFormatId === format.id);
+        idea.primaryTaskFormatId === format.id &&
+        g4SmmIdeaPlatformRowsV529(idea).some((row) => row.platform_id === g4SmmPlatformIdV529(platform)));
       return [{ format: format.format, platform, last: last?.date || "",
         status: planned ? "Запланировано" : "Не используется" }];
     }));
@@ -148,31 +154,223 @@ function g4ProductSmmTableHtmlV2(model, productId) {
       <td><span class="g4-product-smm-format-v2"><span class="g4-product-smm-format-icon-v2" aria-hidden="true">${g4ProductSmmFormatIconV2(row.format)}</span><strong>${escapeHtml(row.format.format)}</strong></span></td>
       <td><div class="g4-product-smm-topics-v2">${row.topics.map((topic) => `<div class="g4-product-smm-topic-v2" data-g4-product-smm-topic-v2="${escapeAttr(topic.id)}"><span>→ ${escapeHtml(topic.value)}</span><button type="button" data-g4-product-smm-topic-idea-add-v345 data-g4-product-smm-format-id-v345="${escapeAttr(row.format.id)}" data-g4-product-smm-topic-id-v345="${escapeAttr(topic.id)}" data-g4-product-smm-product-id-v345="${escapeAttr(productId)}" aria-label="Новая идея: ${escapeAttr(topic.value)}">+ Идея</button></div>`).join("") || "—"}</div></td>
       <td><div class="g4-product-smm-progress-v2 is-${row.tone}-v2"><strong>${row.ideas} / ${row.min === null ? "—" : row.max === row.min ? row.min : `${row.min}–${row.max}`}</strong><progress max="100" value="${row.progress}" aria-label="Идеи для формата ${escapeAttr(row.format.format)}"></progress></div></td>
-      <td><div class="g4-product-smm-platforms-v2">${g4SmmFormatPlatformsV299(row.format).map(g4ProductSmmPlatformChipV2).join("") || "—"}</div></td>
+      <td><div class="g4-product-smm-platforms-v2">${g4SmmMatrixRowsV529(row.format.id).map((pair) => `<label class="g4-smm-pair-toggle-v529" title="${escapeAttr(pair.platform_notes ? "Подходит · " + pair.platform_notes : "Подходит")}"><input type="checkbox" data-g4-product-smm-strategy-platform-v529="${escapeAttr(pair.platform_id)}" data-g4-product-smm-format-id-v529="${escapeAttr(row.format.id)}" ${g4SmmFormatPlatformsV299(row.format).some((name) => g4SmmPlatformIdV529(name) === pair.platform_id) ? "checked" : ""}><span>${g4ProductSmmPlatformChipV2(pair.display_name)}</span></label>`).join("") || "—"}${g4SmmFormatLegacyPlatformsV529(row.format).map((value) => `<span class="g4-smm-legacy-pair-v529" title="Не поддерживается для формата · сохранено из прежних данных">${escapeHtml(value)}</span>`).join("")}</div></td>
     </tr>`).join("")}</tbody>
   </table></div>`;
 }
 
-function g4ProductSmmSocialPreviewV2(idea, content, strategy, product) {
+function g4ProductSmmMessageDateV535(idea, month = "long") {
+  const scheduledDate = guruV185Text(idea?.scheduledDate);
+  if (!/^(\d{4})-(\d{2})-(\d{2})$/.test(scheduledDate)) return "";
+  const day = new Date(`${scheduledDate}T00:00:00Z`);
+  return Number.isFinite(day.getTime()) && day.toISOString().slice(0, 10) === scheduledDate
+    ? new Intl.DateTimeFormat("ru-RU", { day: "numeric", month, timeZone: "UTC" }).format(day).replace(/\.$/, "")
+    : "";
+}
+
+function g4ProductSmmNativePreviewV532(row, value, product, format, topic, idea) {
+  // The account belongs to the project/company, not to the product selected in
+  // the SMM workspace. Read the passport live so product switching never
+  // changes the apparent author of the same social page.
+  const name = guruV185Text(state?.project?.name || state?.project?.companyName) || "Название компании";
+  const initials = name.split(/\s+/).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase();
+  const title = idea?.platformOverrides?.[row.platform_id]?.title ?? idea?.base?.title ?? "";
+  const media = value.media?.assetId
+    ? value.media.kind === "video"
+      ? `<video controls playsinline preload="metadata" aria-label="Видео публикации" data-g4-product-smm-media-asset-v529="${escapeAttr(value.media.assetId)}"></video>`
+      : `<img alt="Медиа публикации" data-g4-product-smm-media-asset-v529="${escapeAttr(value.media.assetId)}">`
+    : `<span aria-hidden="true">${escapeHtml(g4ProductSmmFormatIconV2(format || {}))}</span><strong>${escapeHtml(row.native_format)}</strong><small>${escapeHtml(topic?.value || "Тема публикации")}</small>`;
+  const author = `<div class="g4-product-smm-social-author-v2"><span class="g4-product-smm-social-avatar-v2">${escapeHtml(initials || "Б")}</span><span><strong>${escapeHtml(name)}</strong><small>${escapeHtml(row.display_name)}</small></span></div>`;
+  const captionText = escapeHtml(value.text || "Добавьте текст в общем редакторе");
+  const caption = `<p class="g4-product-smm-social-caption-v2">${row.platform_id === "instagram" ? `<strong class="g4-smm-caption-account-v533">${escapeHtml(name)}</strong> ` : ""}${captionText}</p>`;
+  const actions = row.platform_id === "instagram" ? "♡|◯|➤|▢"
+    : row.platform_id === "vk" ? "♡|▢|↗"
+      : row.platform_id === "youtube" ? "♡ Нравится|◌ Комментарии|↗ Поделиться"
+        : "♡ Нравится|◌ Комментировать|↗ Поделиться";
+  const parts = {
+    author,
+    title: title ? `<strong class="g4-product-smm-social-heading-v2">${escapeHtml(title)}</strong>` : "",
+    caption,
+    media: row.media_type === "optional" && !value.media?.assetId ? ""
+      : `<div class="g4-product-smm-social-media-v2">${media}</div>`,
+    actions: `<div class="g4-product-smm-social-actions-v2" aria-hidden="true">${actions.split("|").map((label) => `<span>${label}</span>`).join("")}</div>`,
+    views: `<div class="g4-smm-native-views-v532" aria-hidden="true">◉ Просмотры</div>`,
+    reactions: `<div class="g4-smm-native-reactions-v532" aria-hidden="true">♡ Реакции</div>`,
+    comments: `<div class="g4-smm-native-comments-v532" aria-hidden="true">◌ Комментарии</div>`,
+    carousel_position: `<div class="g4-smm-native-carousel-v532" aria-hidden="true">1 / подборка <span>● ○ ○</span></div>`,
+    story_progress: `<div class="g4-smm-native-story-progress-v532" aria-hidden="true"><span></span><span></span><span></span><strong>${escapeHtml(row.preview_chrome?.top || "")}</strong></div>`,
+    video_controls: `<div class="g4-smm-native-video-controls-v532" aria-hidden="true"><strong>${escapeHtml(row.preview_chrome?.top || "")}</strong><div>${(row.preview_chrome?.actions || []).map((icon) => `<span>${escapeHtml(icon)}</span>`).join("")}</div></div>`,
+  };
+  const body = row.preview_parts?.length
+    ? row.preview_parts.map((key) => parts[key] || "").join("")
+    : `${author}<p class="g4-product-smm-social-caption-v2">Эта площадка сохранена из прежних данных. Проверьте совместимость формата.</p>`;
+  const followUp = value.cta ? `<span class="g4-smm-pair-cta-v529">${escapeHtml(value.cta)}</span>` : "";
+  const link = row.link_model?.supported && value.link ? `<span class="g4-smm-pair-link-v529">${escapeHtml(value.link)}</span>` : "";
+  if (row.platform_id === "telegram" && row.preview_model === "message") {
+    const date = g4ProductSmmMessageDateV535(idea);
+    // Telegram has a channel header and a separate message bubble. Engagement
+    // numbers are omitted because the draft has no published metrics yet.
+    return `<div class="g4-product-smm-social-post-v2 g4-smm-native-preview-v532 is-message is-platform-telegram g4-smm-telegram-preview-v534" data-g4-product-smm-social-preview-v2="${escapeAttr(idea.id)}" data-g4-smm-preview-renderer-v532="${escapeAttr(row.preview_renderer)}">
+      <div class="g4-smm-telegram-header-v534"><span class="g4-smm-telegram-back-v534" aria-hidden="true">‹</span><strong>${escapeHtml(name)}</strong><span class="g4-product-smm-social-avatar-v2" aria-hidden="true">${escapeHtml(initials || "Б")}</span></div>
+      <div class="g4-smm-telegram-chat-v534">
+        ${date ? `<div class="g4-smm-telegram-date-v534">${escapeHtml(date)}</div>` : ""}
+        <div class="g4-smm-telegram-message-v534">
+          <span class="g4-product-smm-social-avatar-v2 g4-smm-telegram-message-avatar-v534" aria-hidden="true">${escapeHtml(initials || "Б")}</span>
+          <div class="g4-smm-telegram-bubble-v534">${parts.media}${caption}${followUp || link ? `<div class="g4-smm-native-followup-v532">${followUp}${link}</div>` : ""}
+            <div class="g4-smm-native-reactions-v532 g4-smm-telegram-reactions-v534" aria-label="Реакции после публикации"><span>❤️</span><span>🔥</span><span>🥰</span><span>👀</span></div>
+            <div class="g4-smm-native-views-v532 g4-smm-telegram-views-v534" aria-label="Просмотры после публикации">◉</div>
+          </div>
+          <span class="g4-smm-telegram-share-v534" aria-hidden="true">➜</span>
+        </div>
+        <div class="g4-smm-native-comments-v532 g4-smm-telegram-comments-v534" aria-hidden="true"><span>◯</span><span>Прокомментировать</span><span>›</span></div>
+      </div>
+    </div>`;
+  }
+  if (row.platform_id === "max" && row.preview_model === "message") {
+    const date = g4ProductSmmMessageDateV535(idea);
+    // MAX displays the channel above the blue chat, while media, caption and
+    // engagement belong to one bubble. Draft previews have no real counters.
+    return `<div class="g4-product-smm-social-post-v2 g4-smm-native-preview-v532 is-message is-platform-max g4-smm-max-preview-v535" data-g4-product-smm-social-preview-v2="${escapeAttr(idea.id)}" data-g4-smm-preview-renderer-v532="${escapeAttr(row.preview_renderer)}">
+      <div class="g4-smm-max-header-v535"><span class="g4-smm-max-back-v535" aria-hidden="true">‹</span><span class="g4-product-smm-social-avatar-v2" aria-hidden="true">${escapeHtml(initials || "Б")}</span><strong>${escapeHtml(name)}</strong><span class="g4-smm-max-menu-v535" aria-hidden="true">⋯</span></div>
+      <div class="g4-smm-max-chat-v535">
+        ${date ? `<div class="g4-smm-max-date-v535">${escapeHtml(date)}</div>` : ""}
+        <div class="g4-smm-max-bubble-v535">${parts.media}${caption}${followUp || link ? `<div class="g4-smm-native-followup-v532">${followUp}${link}</div>` : ""}
+          <div class="g4-smm-native-reactions-v532 g4-smm-max-reactions-v535" aria-label="Реакции после публикации"><span>❤️</span><span>☺</span></div>
+          <div class="g4-smm-native-views-v532 g4-smm-max-views-v535" aria-label="Просмотры после публикации">◉</div>
+        </div>
+        <span class="g4-smm-max-down-v535" aria-hidden="true">⌄</span>
+      </div>
+      <div class="g4-smm-max-composer-v535" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 12.5 14 6.5a3 3 0 0 1 4.2 4.2l-8.3 8.3a5 5 0 0 1-7.1-7.1l8.8-8.8" /></svg><span>Пост</span><span>☺</span><span>▣</span><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="13" rx="3" /><path d="M6 11a6 6 0 0 0 12 0M12 17v5m-4 0h8" /></svg></div>
+    </div>`;
+  }
+  if (row.platform_id === "vk" && ["feed", "carousel", "article"].includes(row.preview_model)) {
+    const date = g4ProductSmmMessageDateV535(idea, "short");
+    const icon = (path) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+    const backIcon = icon('<path d="m15 4-8 8 8 8"/>');
+    const searchIcon = icon('<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/>');
+    const bellIcon = icon('<path d="M6 9a6 6 0 0 1 12 0v4l2 3H4l2-3V9ZM10 20h4"/>');
+    const heartIcon = icon('<path d="M20.8 8.5c0 4.6-8.8 10.1-8.8 10.1S3.2 13.1 3.2 8.5a4.6 4.6 0 0 1 8.8-1.8 4.6 4.6 0 0 1 8.8 1.8Z"/>');
+    const commentIcon = icon('<path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H8l-4 2v-5a7.5 7.5 0 1 1 16-4.5Z"/>');
+    const shareIcon = icon('<path d="m14 4 7 7-7 7v-4.2C8.4 13.8 5 16 3 20c0-7 4.4-11 11-11V4Z"/>');
+    const homeIcon = icon('<path d="m3 11 9-8 9 8v9H4v-9Zm6 9v-7h6v7"/>');
+    const mediaBlock = parts.media
+      ? `<div class="g4-smm-vk-media-v536">${parts.media}${row.preview_model === "carousel" ? parts.carousel_position : ""}</div>`
+      : "";
+    // The passport owns the page name. The draft supplies only its own media,
+    // caption and optional CTA/link; published engagement counts are unknown.
+    return `<div class="g4-product-smm-social-post-v2 g4-smm-native-preview-v532 is-${escapeAttr(row.preview_model)} is-platform-vk g4-smm-vk-preview-v536" data-g4-product-smm-social-preview-v2="${escapeAttr(idea.id)}" data-g4-smm-preview-renderer-v532="${escapeAttr(row.preview_renderer)}">
+      <div class="g4-smm-vk-appbar-v536" aria-hidden="true"><span class="g4-smm-vk-back-v536">${backIcon}</span><span class="g4-smm-vk-search-v536">${searchIcon}<span>Поиск</span></span><span class="g4-smm-vk-bell-v536">${bellIcon}</span><span class="g4-smm-vk-menu-v536">•••</span></div>
+      <div class="g4-smm-vk-tabs-v536" aria-hidden="true"><span class="is-active">Главная</span><span>Посты</span><span>Товары</span><span>Клипы</span><span>Фото</span><span>Видео</span></div>
+      <div class="g4-smm-vk-post-v536">
+        <div class="g4-smm-vk-post-header-v536">${author}<span aria-hidden="true">•••</span></div>
+        ${mediaBlock}${caption}
+        ${followUp || link ? `<div class="g4-smm-native-followup-v532">${followUp}${link}</div>` : ""}
+        <div class="g4-smm-vk-actions-v536" aria-label="Действия после публикации"><span aria-hidden="true">${heartIcon}${commentIcon}${shareIcon}</span>${date ? `<time datetime="${escapeAttr(idea.scheduledDate)}">${escapeHtml(date)}</time>` : ""}</div>
+      </div>
+      <div class="g4-smm-vk-bottom-v536" aria-hidden="true"><span>${homeIcon}</span><span>${searchIcon}</span><span>${commentIcon}</span><span>◌</span><span>▧</span><span>☰</span></div>
+    </div>`;
+  }
+  if (row.platform_id === "instagram" && ["feed", "carousel"].includes(row.preview_model)) {
+    const date = g4ProductSmmMessageDateV535(idea);
+    const icon = (path) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+    const backIcon = icon('<path d="m15 4-8 8 8 8"/>');
+    const heartIcon = icon('<path d="M20.8 8.5c0 4.6-8.8 10.1-8.8 10.1S3.2 13.1 3.2 8.5a4.6 4.6 0 0 1 8.8-1.8 4.6 4.6 0 0 1 8.8 1.8Z"/>');
+    const commentIcon = icon('<path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H8l-4 2v-5a7.5 7.5 0 1 1 16-4.5Z"/>');
+    const shareIcon = icon('<path d="m21 3-8.5 18-2.7-7.8L2 10.5 21 3Zm-11.2 10.2L21 3"/>');
+    const saveIcon = icon('<path d="M5 3h14v18l-7-5-7 5V3Z"/>');
+    // Only one asset is stored per idea today. Show its position without
+    // inventing a total number of carousel slides or engagement metrics.
+    const carousel = row.preview_model === "carousel";
+    return `<div class="g4-product-smm-social-post-v2 g4-smm-native-preview-v532 is-${escapeAttr(row.preview_model)} is-platform-instagram g4-smm-instagram-preview-v537" data-g4-product-smm-social-preview-v2="${escapeAttr(idea.id)}" data-g4-smm-preview-renderer-v532="${escapeAttr(row.preview_renderer)}">
+      <div class="g4-smm-instagram-appbar-v537" aria-hidden="true"><span>${backIcon}</span><span><strong>Публикации</strong><small>${escapeHtml(name)}</small></span><span class="g4-smm-instagram-follow-v537">Подписаться</span></div>
+      <div class="g4-smm-instagram-post-v537">
+        <div class="g4-smm-instagram-post-header-v537">${author}<span aria-hidden="true">•••</span></div>
+        <div class="g4-smm-instagram-media-v537">${parts.media}${carousel ? '<span class="g4-smm-instagram-slide-v537" aria-label="Первое фото подборки">1 / подборка</span>' : ""}</div>
+        ${carousel ? '<div class="g4-smm-instagram-pager-v537" aria-hidden="true"><span></span></div>' : ""}
+        <div class="g4-smm-instagram-actions-v537" aria-hidden="true"><span>${heartIcon}${commentIcon}${shareIcon}</span>${saveIcon}</div>
+        <div class="g4-smm-instagram-caption-v537">${caption}${followUp ? `<div class="g4-smm-native-followup-v532">${followUp}</div>` : ""}</div>
+        ${date ? `<time class="g4-smm-instagram-date-v537" datetime="${escapeAttr(idea.scheduledDate)}">${escapeHtml(date)}</time>` : ""}
+      </div>
+    </div>`;
+  }
+  return `<div class="g4-product-smm-social-post-v2 g4-smm-native-preview-v532 is-${escapeAttr(row.preview_model)} is-platform-${escapeAttr(row.platform_id)}" data-g4-product-smm-social-preview-v2="${escapeAttr(idea.id)}" data-g4-smm-preview-renderer-v532="${escapeAttr(row.preview_renderer)}">${body}${followUp || link ? `<div class="g4-smm-native-followup-v532">${followUp}${link}</div>` : ""}</div>`;
+}
+
+function g4ProductSmmPreviewCardsV529(idea, strategy, product, ctaListId = "") {
   const format = (strategy.formats || []).find((row) => row.id === idea.primaryTaskFormatId);
   const topic = (strategy.topics || []).find((row) => row.id === idea.topicId);
-  const publication = g4SmmPublicationForIdeaV324(idea, content);
-  const platform = guruV185Text(publication?.platforms?.[0]) ||
-    g4SmmFormatPlatformsV299(format || {})[0] || "VK";
-  const name = guruV185Text(product?.name) || "Ваш бренд";
-  const initials = name.split(/\s+/).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase();
-  const heading = guruV185Text(idea.name) || guruV185Text(topic?.value) || "Название идеи";
-  const caption = guruV185Text(publication?.publicationPackage?.caption) ||
-    guruV185Text(publication?.content) || guruV185Text(idea.insight) ||
-    "Здесь появится текст после заполнения этапа «Озарение».";
-  return `<div class="g4-product-smm-preview-intro-v2">Один пример публикации для площадки ${escapeHtml(platform)}. Содержимое обновляется из карточки идеи.</div>
-    <div class="g4-product-smm-social-post-v2" data-g4-product-smm-social-preview-v2="${escapeAttr(idea.id)}">
-      <div class="g4-product-smm-social-author-v2"><span class="g4-product-smm-social-avatar-v2">${escapeHtml(initials || "Б")}</span><span><strong>${escapeHtml(name)}</strong><small>${escapeHtml(platform)} · Предпросмотр</small></span></div>
-      <strong class="g4-product-smm-social-heading-v2">${escapeHtml(heading)}</strong>
-      <p class="g4-product-smm-social-caption-v2">${escapeHtml(caption)}</p>
-      <div class="g4-product-smm-social-media-v2"><span aria-hidden="true">${escapeHtml(g4ProductSmmFormatIconV2(format || {}))}</span><strong>${escapeHtml(format?.format || "Ваш формат")}</strong><small>${escapeHtml(topic?.value || "Тема публикации")}</small></div>
-      <div class="g4-product-smm-social-actions-v2" aria-hidden="true"><span>♡ Нравится</span><span>◌ Комментировать</span><span>↗ Поделиться</span></div>
-    </div>`;
+  const readiness = g4SmmIdeaReadinessV529(idea);
+  return readiness.items.map(({ row, ready, reason }) => {
+    const value = g4SmmIdeaEffectiveContentV529(idea, row.platform_id);
+    const override = idea.platformOverrides?.[row.platform_id] || {};
+    const field = (key, label, multiline = false) => {
+      const inherited = guruV185Text(value[key]).slice(0, 90);
+      const placeholder = inherited ? `Из общего редактора: ${inherited}` : "Не задано в общем редакторе";
+      const attributes = `data-g4-product-smm-override-field-v529="${key}" data-g4-product-smm-idea-id-v529="${escapeAttr(idea.id)}" data-g4-product-smm-platform-id-v529="${escapeAttr(row.platform_id)}"`;
+      return `<label>${escapeHtml(label)}${multiline
+        ? `<textarea rows="3" placeholder="${escapeAttr(placeholder)}" ${attributes}>${escapeHtml(override[key] ?? "")}</textarea>`
+        : `<input type="text" value="${escapeAttr(override[key] ?? "")}" placeholder="${escapeAttr(placeholder)}" ${key === "cta" && ctaListId ? `list="${escapeAttr(ctaListId)}"` : ""} ${attributes}>`}</label>`;
+    };
+    return `<article class="g4-smm-pair-card-v529" data-g4-product-smm-pair-card-v529="${escapeAttr(row.platform_id)}" data-g4-smm-pair-format-v532="${escapeAttr(row.format_id)}">
+      <header><strong>${escapeHtml(row.display_name)}</strong><span>${escapeHtml(row.native_format)}</span><em class="${ready ? "is-ready" : "is-pending"}">${ready ? "Готово" : reason}</em></header>
+      <div class="g4-smm-preview-launch-v538" data-g4-product-smm-preview-launch-v538>
+        <div class="g4-smm-preview-launch-bar-v538"><button type="button" data-g4-product-smm-preview-open-v538 aria-label="Открыть предпросмотр ${escapeAttr(row.display_name)} на весь экран">⤢ На весь экран</button></div>
+        ${g4ProductSmmNativePreviewV532(row, value, product, format, topic, idea)}
+      </div>
+      ${row.platform_notes ? `<p class="g4-smm-pair-note-v529">${escapeHtml(row.platform_notes)}</p>` : ""}
+      <details class="g4-smm-pair-overrides-v529"><summary>Настроить для площадки</summary><div><small>Пустые поля используют общий редактор.</small>
+        ${row.title_model?.supported ? field("title", row.title_model.max_characters ? `Название · до ${row.title_model.max_characters} символов` : "Название") : ""}
+        ${row.text_model?.supported ? field("text", row.platform_id === "youtube" ? "Описание" : "Подпись", true) : ""}
+        ${row.cta_model?.supported ? field("cta", "CTA") : ""}
+        ${row.link_model?.supported ? field("link", "Ссылка") : ""}
+        ${row.supported ? `<label class="g4-smm-pair-media-label-v529">Создать адаптацию медиа<input type="file" accept="image/*,video/*" data-g4-product-smm-media-upload-v529 data-g4-product-smm-idea-id-v529="${escapeAttr(idea.id)}" data-g4-product-smm-platform-id-v529="${escapeAttr(row.platform_id)}"></label>` : ""}
+      </div></details>
+    </article>`;
+  }).join("") || '<p class="g4-product-smm-empty-v2">Выберите площадки для этой идеи.</p>';
+}
+
+function g4ProductSmmCtaSuggestionsV531(product, workspace = state) {
+  if (!product?.id) return [];
+  // Match the offer record shown by the strategic foundation, while reading
+  // the existing Gate 0 records without creating or copying a data source.
+  const offers = g4SmmScopedRecordsReadOnlyV299(product, "offers", workspace);
+  const record = guruStrategicCurrentRecordV286({ scoped: { offers } }, "offers");
+  const seen = new Set();
+  return guruStrategicOfferCtasV286(guruV194OfferParts(record || {})).filter(({ value }) => {
+    const key = value.toLocaleLowerCase("ru-RU");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function g4ProductSmmSocialPreviewV2(idea, content, strategy, product) {
+  const format = (strategy.formats || []).find((row) => row.id === idea.primaryTaskFormatId);
+  const selected = new Set(idea.selectedPlatformIds || []);
+  const readiness = g4SmmIdeaReadinessV529(idea);
+  const base = idea.base || {};
+  const initial = g4SmmIdeaEffectiveContentV529(idea);
+  const ctaSuggestions = g4ProductSmmCtaSuggestionsV531(product);
+  const ctaListId = `g4-product-smm-cta-v531-${idea.id}`;
+  const field = (key, label, multiline = false) => `<label>${escapeHtml(label)}${multiline
+    ? `<textarea rows="5" data-g4-product-smm-base-field-v529="${key}" data-g4-product-smm-idea-id-v529="${escapeAttr(idea.id)}">${escapeHtml(initial[key] || "")}</textarea>`
+    : `<input type="text" value="${escapeAttr(initial[key] || "")}" ${key === "cta" && ctaSuggestions.length ? `list="${escapeAttr(ctaListId)}"` : ""} data-g4-product-smm-base-field-v529="${key}" data-g4-product-smm-idea-id-v529="${escapeAttr(idea.id)}">`}</label>`;
+  const ctaSuggestionsHtml = ctaSuggestions.length
+    ? `<div class="g4-smm-cta-suggestions-v531" aria-label="CTA из стратегической основы"><small>Из стратегической основы · Продукт/Услуга</small><div>${ctaSuggestions.map(({ key, label, value }) => `<button type="button" class="g4-smm-cta-suggestion-v531 ${value === initial.cta ? "is-selected" : ""}" data-g4-product-smm-cta-suggestion-v531="${escapeAttr(value)}" aria-pressed="${value === initial.cta}"><small>${escapeHtml(label)}</small><span>${escapeHtml(value)}</span></button>`).join("")}</div><datalist id="${escapeAttr(ctaListId)}">${ctaSuggestions.map(({ label, value }) => `<option value="${escapeAttr(value)}" label="${escapeAttr(label)}"></option>`).join("")}</datalist></div>`
+    : '<small class="g4-smm-cta-empty-v531">CTA для этого продукта пока не зафиксированы в стратегической основе.</small>';
+  return `<div class="g4-smm-pair-workspace-v529" data-g4-product-smm-pair-workspace-v529="${escapeAttr(idea.id)}">
+    <div class="g4-smm-pair-editor-v529"><h4>Общий редактор</h4><small>Один исходный материал для всех выбранных площадок</small>
+      ${field("title", "Заголовок")}${field("text", "Текст", true)}
+      <label class="g4-smm-pair-media-label-v529">Фото / видео<input type="file" accept="image/*,video/*" data-g4-product-smm-media-upload-v529 data-g4-product-smm-idea-id-v529="${escapeAttr(idea.id)}"></label>
+      ${base.media ? `<small>${escapeHtml(base.media.name || "Медиа загружено")} · ${base.media.width || "?"}×${base.media.height || "?"}${base.media.duration ? ` · ${Math.round(base.media.duration)} сек` : ""}</small>` : ""}
+      ${field("cta", "CTA")}${ctaSuggestionsHtml}${field("link", "Ссылка")}
+      <div class="g4-smm-pair-picker-v529 g4-smm-platform-chips-v335"><strong>Площадки идеи</strong>${g4SmmMatrixRowsV529(idea.primaryTaskFormatId).map((row) => `<label class="g4-smm-platform-option-v530"><input type="checkbox" data-g4-product-smm-idea-platform-v529="${escapeAttr(row.platform_id)}" data-g4-product-smm-idea-id-v529="${escapeAttr(idea.id)}" ${selected.has(row.platform_id) ? "checked" : ""}><span>${escapeHtml(row.display_name)}</span></label>`).join("") || "Сначала выберите формат"}</div>
+      ${idea.legacyPlatforms?.length ? `<small>Сохранённые старые площадки: ${escapeHtml(idea.legacyPlatforms.join(", "))}. Проверьте совместимость.</small>` : ""}
+    </div>
+    <div class="g4-smm-pair-previews-v529"><div class="g4-smm-pair-toolbar-v529"><strong data-g4-product-smm-readiness-v529>Готово ${readiness.ready} из ${readiness.total} площадок</strong><span><button type="button" data-g4-product-smm-preview-shift-v529="-1" aria-label="Предыдущая площадка">‹</button><button type="button" data-g4-product-smm-preview-shift-v529="1" aria-label="Следующая площадка">›</button></span></div>
+      <div class="g4-smm-pair-rail-v529" data-g4-product-smm-preview-rail-v529>${g4ProductSmmPreviewCardsV529(idea, strategy, product, ctaSuggestions.length ? ctaListId : "")}</div>
+    </div>
+  </div>`;
 }
 
 function g4ProductSmmDetailV2(html, options = {}) {
@@ -197,6 +395,10 @@ function g4ProductSmmDetailV2(html, options = {}) {
     body?.querySelectorAll(":scope > .g4-smm-idea-stage-v299").forEach((stage) => {
       const key = stage.dataset.g4ProductSmmIdeaStageViewV299;
       const head = stage.querySelector(".g4-smm-idea-stage-head-v299");
+      if (key === "verification") {
+        const title = head?.querySelector("strong");
+        if (title) title.textContent = "6. Проверка и доработка";
+      }
       const label = head?.innerHTML || escapeHtml(key);
       head?.remove();
       const panel = document.createElement("details");
@@ -218,14 +420,16 @@ function g4ProductSmmDetailV2(html, options = {}) {
     const preview = document.createElement("details");
     preview.className = "g4-product-smm-stage-v2";
     preview.dataset.g4ProductSmmStageV2 = "preview";
-    preview.innerHTML = `<summary><strong>6. Предпросмотр в соцсети</strong><small>Один пример публикации на выбранной площадке</small><span class="g4-product-smm-stage-arrow-v2" aria-hidden="true">›</span></summary><div class="g4-product-smm-stage-body-v2" data-g4-product-smm-stage-body-v2></div>`;
+    preview.innerHTML = `<summary><strong>5. Предпросмотр в соцсети</strong><small>Один редактор · выбранные площадки</small><span class="g4-product-smm-stage-arrow-v2" aria-hidden="true">›</span></summary><div class="g4-product-smm-stage-body-v2" data-g4-product-smm-stage-body-v2></div>`;
     if (options.openStages?.includes("preview")) {
       preview.open = true;
       preview.dataset.g4ProductSmmInitialOpenV2 = "true";
       preview.querySelector("[data-g4-product-smm-stage-body-v2]").innerHTML =
         g4ProductSmmSocialPreviewV2(options.idea, options.content, options.strategy, options.product);
     }
-    body.insertBefore(preview, body.querySelector(".g4-smm-publication-embedded-v342"));
+    body.insertBefore(preview,
+      body.querySelector(':scope > [data-g4-product-smm-stage-v2="verification"]') ||
+      body.querySelector(".g4-smm-publication-embedded-v342"));
   }
   return template.innerHTML;
 }
@@ -258,7 +462,7 @@ function g4ProductSmmIdeaPlanLabelV2(idea, model, positionsByIdea) {
 function g4ProductSmmIdeaListHtmlV2(model, strategy, content, product, ui = {}) {
   const positionsByIdea = g4ProductSmmIdeaPlanPositionsV2(model);
   return `<section class="g4-product-smm-ideas-v2" data-g4-product-smm-ideas-v2>
-    <div class="g4-product-smm-section-title-v2"><h4>Карточки идей · ${content.ideas.length}</h4><span>Подробности открываются по клику</span></div>
+    <div class="g4-product-smm-section-title-v2"><h4>Карточки идей</h4><span>Подробности открываются по клику</span></div>
     <div class="g4-product-smm-idea-list-v2">${content.ideas.map((idea, index) => {
       const topic = (strategy.topics || []).find((row) => row.id === idea.topicId);
       const row = model.rows.find((item) => item.format.id === idea.primaryTaskFormatId);
@@ -266,21 +470,23 @@ function g4ProductSmmIdeaListHtmlV2(model, strategy, content, product, ui = {}) 
       const productName = guruV185Text(product?.name) || "Продукт";
       const subtitle = g4ProductSmmIdeaSubtitleV2(idea, productName);
       const plan = g4ProductSmmIdeaPlanLabelV2(idea, model, positionsByIdea);
-      const platforms = format ? g4SmmFormatPlatformsV299(format) : [];
+      const platforms = g4SmmIdeaPlatformsV529(idea);
+      const photo = g4ProductSmmIdeaPhotoV2(idea);
       const open = ui.openIdeaIds?.includes(idea.id);
       const detail = open ? g4ProductSmmDetailV2(g4SmmIdeaHtmlV299(idea, index, content, strategy),
         { idea, content, strategy, product, openStages: ui.openStagesByIdea?.[idea.id] }) : "";
       return `<details class="g4-product-smm-idea-v2" data-g4-product-smm-idea-panel-v2="${escapeAttr(idea.id)}" ${open ? "open" : ""}>
-        <summary><span class="g4-product-smm-idea-summary-content-v2">
+        <summary class="${photo ? "has-photo-v2" : ""}"><span class="g4-product-smm-idea-summary-content-v2">
           <span class="g4-product-smm-idea-headline-v2"><span class="g4-product-smm-idea-number-v2" aria-label="Идея номер ${index + 1}">№${index + 1}</span><span class="g4-product-smm-idea-format-v2"><span class="g4-product-smm-format-icon-v2" aria-hidden="true">${g4ProductSmmFormatIconV2(format || {})}</span><strong>${escapeHtml(format?.format || "Формат не выбран")}</strong></span></span>
           <span class="g4-product-smm-idea-title-v2"><strong>${escapeHtml(productName)}</strong><small data-g4-product-smm-idea-subtitle-v2="${escapeAttr(idea.id)}" ${subtitle ? "" : "hidden"}>${escapeHtml(subtitle)}</small></span>
           <span class="g4-product-smm-idea-meta-v2">
             <span class="g4-product-smm-idea-field-v2"><small>Основная задача</small><span>${escapeHtml(format?.task || "Не выбрана")}</span></span>
             <span class="g4-product-smm-idea-field-v2"><small>Тема</small><span>${escapeHtml(topic?.value || "Не выбрана")}</span></span>
             <span class="g4-product-smm-idea-field-v2"><small>Площадки</small><span class="g4-product-smm-idea-platforms-v2">${platforms.map(g4ProductSmmPlatformChipV2).join("") || "—"}</span></span>
+            <span class="g4-product-smm-idea-field-v2"><small>Готовность</small><span data-g4-product-smm-idea-readiness-v529="${escapeAttr(idea.id)}">${(() => { const ready = g4SmmIdeaReadinessV529(idea); return `Готово ${ready.ready} из ${ready.total} площадок`; })()}</span></span>
             <span class="g4-product-smm-idea-field-v2 g4-product-smm-idea-plan-v2"><small>План формата</small><strong data-g4-product-smm-idea-plan-label-v2="${escapeAttr(idea.id)}">${escapeHtml(plan)}</strong></span>
           </span>
-        </span><span class="g4-product-smm-idea-controls-v2">
+        </span>${g4ProductSmmIdeaPhotoHtmlV2(idea, photo)}<span class="g4-product-smm-idea-controls-v2">
           <span class="g4-product-smm-idea-menu-v2"><button type="button" data-g4-product-smm-idea-menu-toggle-v2 aria-label="Действия с идеей для ${escapeAttr(productName)}" aria-expanded="false" aria-haspopup="true">⋯</button><span class="g4-product-smm-idea-menu-panel-v2" data-g4-product-smm-idea-menu-panel-v2 hidden><button type="button" data-g4-product-smm-delete-idea-v2="${escapeAttr(idea.id)}" aria-label="Удалить идею для ${escapeAttr(productName)}">Удалить идею</button></span></span>
           <span class="g4-product-smm-idea-chevron-v2" aria-hidden="true">⌄</span>
         </span></summary>
@@ -298,17 +504,35 @@ function g4ProductSmmCalendarIdeaTitleV2(idea, strategy, product) {
   return [productName, guruV185Text(topic?.value)].filter(Boolean).join(" · ");
 }
 
-function g4ProductSmmCalendarIdeaCardV2(idea, content, strategy, product, days) {
+function g4ProductSmmIdeaPhotoV2(idea) {
+  return [idea.base?.media, ...(Array.isArray(idea.selectedPlatformIds) ? idea.selectedPlatformIds : [])
+    .map((id) => idea.platformOverrides?.[id]?.media)]
+    .find((value) => value?.kind === "image" && value.assetId);
+}
+
+function g4ProductSmmIdeaPhotoHtmlV2(idea, media = g4ProductSmmIdeaPhotoV2(idea)) {
+  return media ? `<span class="g4-product-smm-idea-photo-v2" data-g4-product-smm-idea-photo-v2="${escapeAttr(idea.id)}" aria-hidden="true"><span class="g4-product-smm-idea-photo-fallback-v2">▣</span><img alt="" loading="lazy" data-g4-product-smm-media-asset-v529="${escapeAttr(media.assetId)}"></span>` : "";
+}
+
+function g4ProductSmmCalendarThumbnailHtmlV2(idea, format) {
+  const media = g4ProductSmmIdeaPhotoV2(idea);
+  return `<span class="g4-product-smm-calendar-thumbnail-v2" title="${escapeAttr(format?.format || "Формат не выбран")}" aria-hidden="true"><span class="g4-product-smm-calendar-thumbnail-fallback-v2">${g4ProductSmmFormatIconV2(format || {})}</span>${media ? `<img alt="" loading="lazy" data-g4-product-smm-media-asset-v529="${escapeAttr(media.assetId)}">` : ""}</span>`;
+}
+
+function g4ProductSmmCalendarIdeaCardV2(idea, content, strategy, product, days, compact = false) {
   const title = g4ProductSmmCalendarIdeaTitleV2(idea, strategy, product);
   const format = (strategy.formats || []).find((row) => row.id === idea.primaryTaskFormatId);
+  const hasPhoto = Boolean(g4ProductSmmIdeaPhotoV2(idea));
   const publication = g4SmmPublicationForIdeaV324(idea, content);
-  const platforms = publication?.platforms?.length ? publication.platforms : g4SmmFormatPlatformsV299(format || {});
+  const platforms = g4SmmIdeaPlatformsV529(idea);
   const dateLabel = (day) => new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short" }).format(day.date);
-  return `<article class="g4-product-smm-calendar-item-v2" draggable="true" data-g4-product-smm-calendar-drag-v339="${escapeAttr(idea.id)}">
-    <span class="g4-product-smm-calendar-thumbnail-v2" aria-hidden="true">${g4ProductSmmFormatIconV2(format || {})}</span>
+  const availableDays = days.filter((day) => g4ProductSmmCanScheduleV528(day.value));
+  const savedDateOutsideOptions = idea.scheduledDate && !availableDays.some((day) => day.value === idea.scheduledDate);
+  return `<article class="g4-product-smm-calendar-item-v2 ${compact ? "is-day-v2" : ""} ${hasPhoto ? "has-photo-v2" : ""}" draggable="true" data-g4-product-smm-calendar-drag-v339="${escapeAttr(idea.id)}">
+    ${g4ProductSmmCalendarThumbnailHtmlV2(idea, format)}
     <button type="button" class="g4-product-smm-calendar-idea-v2" data-g4-product-smm-open-idea-v2="${escapeAttr(idea.id)}" aria-label="Открыть идею: ${escapeAttr(title)}"><strong data-g4-product-smm-calendar-title-v2="${escapeAttr(idea.id)}">${escapeHtml(title)}</strong><small>${escapeHtml(format?.format || "Формат не выбран")} · ${escapeHtml(format?.task || "Задача не выбрана")}</small></button>
-    <span class="g4-product-smm-calendar-platforms-v2">${platforms.slice(0, 2).map(g4ProductSmmPlatformChipV2).join("")}</span>
-    <details class="g4-product-smm-calendar-menu-v2"><summary aria-label="Планирование: ${escapeAttr(title)}" title="Перенести идею">⋯</summary><div><label>Дата публикации<select data-g4-product-smm-calendar-assign-v2 data-g4-product-smm-calendar-idea-id-v2="${escapeAttr(idea.id)}" aria-label="Дата идеи ${escapeAttr(title)}"><option value="">Банк идей</option>${idea.scheduledDate && !days.some((day) => day.value === idea.scheduledDate) ? `<option value="${escapeAttr(idea.scheduledDate)}" selected>${escapeHtml(idea.scheduledDate)}</option>` : ""}${days.map((day) => `<option value="${escapeAttr(day.value)}" ${idea.scheduledDate === day.value ? "selected" : ""}>${escapeHtml(day.label)}, ${escapeHtml(dateLabel(day))}</option>`).join("")}</select></label></div></details>
+    <span class="g4-product-smm-calendar-platforms-v2">${platforms.map(g4ProductSmmPlatformChipV2).join("")}</span>
+    <details class="g4-product-smm-calendar-menu-v2"><summary aria-label="Планирование: ${escapeAttr(title)}" title="Перенести идею">⋯</summary><div><label>Дата публикации<select data-g4-product-smm-calendar-assign-v2 data-g4-product-smm-calendar-idea-id-v2="${escapeAttr(idea.id)}" aria-label="Дата идеи ${escapeAttr(title)}"><option value="">Банк идей</option>${savedDateOutsideOptions ? `<option value="${escapeAttr(idea.scheduledDate)}" selected disabled>${escapeHtml(idea.scheduledDate)} · уже назначено</option>` : ""}${availableDays.map((day) => `<option value="${escapeAttr(day.value)}" ${idea.scheduledDate === day.value ? "selected" : ""}>${escapeHtml(day.label)}, ${escapeHtml(dateLabel(day))}</option>`).join("")}${!availableDays.length ? '<option disabled>В этой неделе нет доступных дат</option>' : ""}</select></label></div></details>
   </article>`;
 }
 
@@ -316,26 +540,30 @@ function g4ProductSmmBankHtmlV2(content, strategy, product) {
   const bank = (content.ideas || []).filter((idea) => !idea.scheduledDate);
   const days = g4SmmCalendarDaysV322(content);
   return `<section class="g4-product-smm-bank-section-v2" data-g4-product-smm-bank-v2 data-g4-product-smm-calendar-drop-v339="bank">
-    <div class="g4-product-smm-section-title-v2"><h4>Банк идей · ${bank.length}</h4><span>Идеи без даты · перетащите в календарь</span></div>
+    <div class="g4-product-smm-section-title-v2"><h4>Банк идей</h4><span>Идеи без даты · перетащите в календарь</span></div>
     <div class="g4-product-smm-calendar-cards-v2">${bank.map((idea) => g4ProductSmmCalendarIdeaCardV2(idea, content, strategy, product, days)).join("") || '<p class="g4-product-smm-empty-v2">Все идеи распределены по датам.</p>'}</div>
   </section>`;
 }
 
 function g4ProductSmmCalendarHtmlV2(content, strategy, product, ui = {}) {
   const days = g4SmmCalendarDaysV322(content);
-  const active = days.some((day) => day.value === ui.activeDay) ? ui.activeDay : days[0]?.value;
+  const today = g4SmmIsoDateV322(new Date());
+  const active = days.some((day) => day.value === ui.activeDay) ? ui.activeDay
+    : days.find((day) => day.value === today)?.value || days.find((day) => day.value > today)?.value || days[6]?.value;
   const ideas = content.ideas || [];
   const otherDates = ideas.filter((idea) => idea.scheduledDate &&
     !days.some((day) => day.value === idea.scheduledDate));
-  const selected = ideas.filter((idea) => idea.scheduledDate === active);
   const dateLabel = (day) => new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short" }).format(day.date);
   return `<section class="g4-product-smm-calendar-v2" data-g4-product-smm-calendar-v2 data-g4-product-smm-active-day-v2="${escapeAttr(active)}">
     <div class="g4-product-smm-section-title-v2"><h4>Календарь идей · ${escapeHtml(g4SmmCalendarWeekLabelV322(content))}</h4><span>Перетащите идею на день или выберите дату в её меню</span></div>
     <div class="g4-product-smm-calendar-navigation-v2"><button type="button" data-g4-product-smm-week-shift-v322="-7" aria-label="Предыдущая неделя">‹</button><div class="g4-product-smm-calendar-week-scroll-v2"><div class="g4-product-smm-calendar-week-v2">${days.map((day) => {
-      const count = ideas.filter((idea) => idea.scheduledDate === day.value).length;
-      return `<button type="button" class="${day.value === active ? "is-active-v2" : ""}" data-g4-product-smm-calendar-day-v2="${escapeAttr(day.value)}" data-g4-product-smm-calendar-drop-v339="${escapeAttr(day.value)}" aria-pressed="${day.value === active}"><span>${escapeHtml(day.short)}</span><small>${escapeHtml(dateLabel(day))}</small><strong>${count}</strong></button>`;
+      const scheduled = ideas.filter((idea) => idea.scheduledDate === day.value);
+      const isPast = day.value < today;
+      return `<div class="g4-product-smm-calendar-day-v2 ${isPast ? "is-past-v2" : ""} ${day.value === today ? "is-today-v2" : ""} ${day.value === active ? "is-active-v2" : ""}" ${isPast ? "" : `data-g4-product-smm-calendar-drop-v339="${escapeAttr(day.value)}"`} data-g4-product-smm-calendar-date-v2="${escapeAttr(day.value)}">
+        <button type="button" class="g4-product-smm-calendar-day-head-v2" data-g4-product-smm-calendar-day-v2="${escapeAttr(day.value)}" aria-pressed="${day.value === active}" aria-label="${escapeAttr(day.label)}, ${escapeAttr(dateLabel(day))}: ${scheduled.length} идей${isPast ? ". Прошедший день, перенос недоступен" : ""}"><span>${escapeHtml(day.short)}${day.value === today ? ' <em>Сегодня</em>' : ""}</span><small>${escapeHtml(dateLabel(day))}</small><strong>${scheduled.length}</strong></button>
+        <div class="g4-product-smm-calendar-day-ideas-v2">${scheduled.map((idea) => g4ProductSmmCalendarIdeaCardV2(idea, content, strategy, product, days, true)).join("")}</div>
+      </div>`;
     }).join("")}</div></div><button type="button" data-g4-product-smm-week-shift-v322="7" aria-label="Следующая неделя">›</button></div>
-    <div class="g4-product-smm-calendar-selection-v2" data-g4-product-smm-calendar-selection-v2 data-g4-product-smm-calendar-drop-v339="${escapeAttr(active)}" aria-live="polite"><div class="g4-product-smm-calendar-cards-v2">${selected.map((idea) => g4ProductSmmCalendarIdeaCardV2(idea, content, strategy, product, days)).join("") || '<p class="g4-product-smm-empty-v2">На выбранный день идей пока нет. Перетащите идею из банка или выберите дату в её меню.</p>'}</div></div>
     ${otherDates.length ? `<details class="g4-product-smm-bank-v2" data-g4-product-smm-other-dates-v2 ${ui.otherDatesOpen ? "open" : ""}><summary>Идеи на другие даты · ${otherDates.length}<span aria-hidden="true">›</span></summary><div class="g4-product-smm-calendar-cards-v2">${otherDates.map((idea) => g4ProductSmmCalendarIdeaCardV2(idea, content, strategy, product, days)).join("")}</div></details>` : ""}
   </section>`;
 }
@@ -374,8 +602,8 @@ function g4ProductSmmWorkspaceV2(product, strategy, content, ui = {}) {
     periodOptions.unshift({ count: model.period.count, unit: model.period.unit });
   const linked = new Set(content.ideas.map((idea) => g4SmmPublicationForIdeaV324(idea, content)?.id).filter(Boolean));
   const orphan = content.publications.filter((publication) => !linked.has(publication.id));
-  return `<section class="g4-product-smm-workspace-v2 g4-product-smm-v523" data-g4-product-smm-product-id-v523="${escapeAttr(productId)}" data-g4-product-smm-workspace-v2>
-    <header class="g4-product-smm-head-v2"><div><h3>SMM-стратегия продукта</h3><span>${escapeHtml(product?.name || "Продукт")} · VK / Telegram / Instagram / YouTube</span></div></header>
+  return `<section class="g4-product-smm-workspace-v2 g4-product-smm-v523${ui.collapsed ? " is-collapsed" : ""}" data-g4-product-smm-product-id-v523="${escapeAttr(productId)}" data-g4-product-smm-workspace-v2>
+    <header class="g4-product-smm-head-v2"><button type="button" class="g4-product-smm-collapse-v2" data-g4-product-smm-collapse-v2 aria-expanded="${!ui.collapsed}"><span><h3>SMM-стратегия продукта</h3><small>${escapeHtml(product?.name || "Продукт")} · Формат + площадка</small></span><span class="g4-product-smm-collapse-mark-v2" aria-hidden="true">⌄</span></button></header>
     <div class="g4-product-smm-toolbar-v2">
       <div class="g4-product-smm-period-v2"><strong>${escapeHtml(model.period.dateLabel)}</strong><button type="button" data-g4-product-smm-week-shift-v322="-7" aria-label="Предыдущая неделя">←</button><button type="button" data-g4-product-smm-week-shift-v322="7" aria-label="Следующая неделя">→</button><select data-g4-product-smm-period-select-v2 aria-label="Период планирования">${periodOptions.map((option) => {
         const unit = g4SmmPeriodUnitV304(option.unit);

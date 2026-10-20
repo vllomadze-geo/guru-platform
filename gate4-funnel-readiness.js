@@ -22,44 +22,153 @@ const G4_SMM_PRINCIPLE_V298 =
 const G4_SMM_THRESHOLDS_NOTE_V298 =
   "Применяется к просмотрам, сохранениям, подпискам и заявкам. Сравнение — с типичным результатом аккаунта, не с абсолютным числом.";
 
+/* One registry for format/platform capability. Unknown limits stay null: they
+   must not silently become invented publication rules. */
+const SMM_FORMAT_PLATFORM_MATRIX = Object.freeze(([
+  [1, "vk", "VK Клипы", "Клипы", "video", "9:16", null, null, "vertical-video", "Первые кадры должны объяснять, зачем смотреть дальше."],
+  [1, "rutube", "RUTUBE Shorts", "Shorts", "video", "9:16", null, null, "vertical-video", "Проверьте кадрирование короткой вертикальной версии."],
+  [1, "instagram", "Instagram Reels", "Reels", "video", "9:16", null, null, "reels", "Ключевые элементы держите в safe zone."],
+  [1, "tiktok", "TikTok", "Видео", "video", "9:16", null, null, "vertical-video", "Хук должен работать с первых секунд; оставьте место для интерфейса."],
+  [1, "youtube", "YouTube Shorts", "Shorts", "video", "9:16", null, 180, "shorts", "Учитывайте название и вертикальную композицию."],
+  [2, "vk", "ВКонтакте", "Фото / кейс", "image", null, null, null, "feed", ""],
+  [2, "telegram", "Telegram", "Пост с фото", "image", null, null, null, "message", ""],
+  [2, "max", "MAX", "Пост с фото", "image", null, null, null, "message", ""],
+  [2, "instagram", "Instagram", "Публикация", "image", null, null, null, "feed", ""],
+  [3, "vk", "ВКонтакте", "Карусель", "image", null, null, null, "carousel", ""],
+  [3, "instagram", "Instagram", "Карусель", "image", null, null, null, "carousel", ""],
+  [4, "dzen", "Дзен", "Статья", "optional", null, null, null, "article", ""],
+  [4, "telegram", "Telegram", "Пост", "optional", null, null, null, "message", ""],
+  [4, "vk", "ВКонтакте", "Статья / пост", "optional", null, null, null, "article", ""],
+  [4, "max", "MAX", "Пост", "optional", null, null, null, "message", ""],
+  [5, "vk", "ВКонтакте", "История", "image-or-video", "9:16", null, null, "story", "Оставьте пространство для элементов интерфейса."],
+  [5, "telegram", "Telegram", "История канала", "image-or-video", "9:16", null, null, "story", "Для истории канала нужны доступ и права администратора."],
+  [5, "instagram", "Instagram", "Stories", "image-or-video", "9:16", null, null, "story", "Оставьте пространство для элементов интерфейса."],
+  [6, "vk", "VK Видео", "Длинное видео", "video", null, null, null, "video", ""],
+  [6, "rutube", "RUTUBE", "Длинное видео", "video", null, null, null, "video", ""],
+  [6, "youtube", "YouTube", "Длинное видео", "video", null, null, null, "video", ""],
+]).map(([number, platform_id, display_name, native_format, media_type, aspect_ratio, duration_min, duration_max, preview_model, platform_notes]) => {
+  const isShorts = number === 1 && platform_id === "youtube";
+  const source_url = isShorts ? "https://support.google.com/youtube/answer/12779649?co=GENIE.Platform%3DAndroid&hl=en"
+    : number === 1 && platform_id === "tiktok" ? "https://ads.tiktok.com/business/en/creative-codes"
+      : number === 5 && platform_id === "telegram" ? "https://telegram.org/blog/channel-stories" : "";
+  // These parts describe the visible reading order, not extra persisted content.
+  // The format/platform pair is the only preview key; a platform alone is not enough.
+  const preview_parts = number === 1 ? platform_id === "youtube"
+    ? ["media", "video_controls", "author", "title", "caption"]
+    : ["media", "video_controls", "author", "caption"]
+    : number === 2 ? platform_id === "instagram"
+      ? ["author", "media", "actions", "caption"]
+      : platform_id === "telegram" ? ["author", "media", "caption", "reactions", "views", "comments"]
+        : platform_id === "max" ? ["author", "media", "caption", "reactions", "views"]
+          : ["author", "media", "caption", "actions"]
+      : number === 3 ? platform_id === "instagram"
+        ? ["author", "media", "carousel_position", "actions", "caption"]
+        : ["author", "media", "carousel_position", "caption", "actions"]
+        : number === 4 ? platform_id === "dzen"
+          ? ["author", "title", "media", "caption", "actions"]
+          : platform_id === "telegram" ? ["author", "media", "caption", "reactions", "views", "comments"]
+            : platform_id === "max" ? ["author", "media", "caption", "reactions", "views"]
+              : ["author", "media", "caption", "actions"]
+          : number === 5 ? ["media", "story_progress", "author", "caption"]
+            : platform_id === "youtube" ? ["media", "author", "title", "caption", "actions"]
+              : ["author", "media", "caption", "actions"];
+  const needsMedia = media_type !== "optional";
+  const title_supported = platform_id === "youtube" || platform_id === "dzen";
+  const link_supported = !["instagram", "tiktok"].includes(platform_id);
+  const orientation = isShorts ? "square-or-vertical" : aspect_ratio === "9:16" ? "vertical" : null;
+  const validation_rules = Object.freeze({ media_kind: media_type, orientation,
+    duration_max_seconds: duration_max, title_max_characters: platform_id === "youtube" ? 100 : null });
+  const chrome = number === 1 ? ({
+    vk: { top: "Клипы", actions: ["♡", "◌", "↗"] },
+    rutube: { top: "RUTUBE Shorts", actions: ["♡", "◌", "↗"] },
+    instagram: { top: "Reels", actions: ["♡", "◌", "↗", "♫"] },
+    tiktok: { top: "Для вас", actions: ["♡", "◌", "↗", "♫"] },
+    youtube: { top: "Shorts", actions: ["♡", "◌", "↗", "⋮"] },
+  })[platform_id] : number === 5 ? { top: display_name, actions: [] } : { top: "", actions: [] };
+  const preview_chrome = Object.freeze({ top: chrome.top, actions: Object.freeze(chrome.actions) });
+  return Object.freeze({ format_id: `g4-smm-format-v298-${number}`, platform_id, display_name,
+    supported: true, native_format, aspect_ratio: isShorts ? "square-or-vertical" : aspect_ratio,
+    duration_min, duration_max, media_type,
+    native_content_type: native_format,
+    duration: Object.freeze({ min_seconds: duration_min, max_seconds: duration_max }),
+    media_requirements: Object.freeze({ kind: media_type, orientation }),
+    title_model: Object.freeze({ supported: title_supported, max_characters: validation_rules.title_max_characters }),
+    text_model: Object.freeze({ supported: true }),
+    link_model: Object.freeze({ supported: link_supported, placement: link_supported ? "text" : null }),
+    cta_model: Object.freeze({ supported: true, placement: "text" }),
+    validation_rules, preview_renderer: `smm-${number}-${platform_id}`,
+    preview_parts: Object.freeze(preview_parts), preview_chrome,
+    title_supported,
+    title_max: platform_id === "youtube" ? 100 : null,
+    description_supported: true, link_supported,
+    cta_supported: true, safe_zone: Boolean(aspect_ratio),
+    platform_notes, preview_model, source_url, verified_at: source_url ? "2026-10-15" : null });
+}));
+const G4_SMM_MISSING_ASSETS_V529 = new Set();
+
+function g4SmmMatrixRowsV529(formatId) {
+  return SMM_FORMAT_PLATFORM_MATRIX.filter((row) => row.format_id === guruV185Text(formatId));
+}
+
+function g4SmmPairProfileV529(formatId, platformId) {
+  return g4SmmMatrixRowsV529(formatId)
+    .find((row) => row.platform_id === g4SmmPlatformIdV529(platformId)) || null;
+}
+
+function g4SmmFormatLegacyPlatformsV529(format) {
+  const supported = new Set(g4SmmMatrixRowsV529(format?.id).map((row) => row.platform_id));
+  return guruV185Text(format?.platforms).split(",").map((value) => value.trim())
+    .filter((value) => value && !supported.has(g4SmmPlatformIdV529(value)));
+}
+
+function g4SmmPlatformIdV529(value) {
+  const label = guruV185Text(value).toLocaleLowerCase("ru-RU");
+  if (/^vk|вконтакте|клипы/.test(label)) return "vk";
+  if (/rutube/.test(label)) return "rutube";
+  if (/instagram|reels/.test(label)) return "instagram";
+  if (/tiktok/.test(label)) return "tiktok";
+  if (/youtube/.test(label)) return "youtube";
+  if (/telegram/.test(label)) return "telegram";
+  if (/^max$/i.test(label)) return "max";
+  if (/дзен/.test(label)) return "dzen";
+  return label;
+}
+
 const G4_SMM_DEFAULT_FORMATS_V298 = Object.freeze([
   Object.freeze({
     id: "g4-smm-format-v298-1",
     format: "Короткое вертикальное видео",
     task: "Охват, новая аудитория",
-    platforms: "VK Клипы, RUTUBE Shorts, Instagram Reels, TikTok, YouTube Shorts",
   }),
   Object.freeze({
     id: "g4-smm-format-v298-2",
     format: "Фото / кейс",
     task: "Доверие, результат",
-    platforms: "ВКонтакте, Telegram, MAX, Instagram",
   }),
   Object.freeze({
     id: "g4-smm-format-v298-3",
     format: "Карусель / подборка",
     task: "Объяснение, сохранения",
-    platforms: "ВКонтакте, Instagram",
   }),
   Object.freeze({
     id: "g4-smm-format-v298-4",
     format: "Экспертный текст / статья",
     task: "Глубина, поиск, доверие",
-    platforms: "Дзен, Telegram, ВКонтакте, MAX",
   }),
   Object.freeze({
     id: "g4-smm-format-v298-5",
     format: "Stories",
     task: "Удержание, контакт",
-    platforms: "ВКонтакте, Telegram, Instagram",
   }),
   Object.freeze({
     id: "g4-smm-format-v298-6",
     format: "Длинное видео",
     task: "Глубокое раскрытие темы",
-    platforms: "VK Видео, RUTUBE, YouTube",
   }),
-]);
+].map((row) => Object.freeze({ ...row,
+  enabledPlatformIds: Object.freeze(g4SmmMatrixRowsV529(row.id).map((entry) => entry.platform_id)),
+  platforms: g4SmmMatrixRowsV529(row.id).map((entry) => entry.display_name).join(", "),
+})));
 
 const G4_SMM_DEFAULT_TOPICS_V298 = Object.freeze([
   "Проблема → решение",
@@ -103,12 +212,16 @@ function g4SmmStrategyEnsureV298(workspace = state) {
   if (!Array.isArray(strategy.formats)) {
     strategy.formats = G4_SMM_DEFAULT_FORMATS_V298.map((row) => ({ ...row }));
   } else {
-    strategy.formats = strategy.formats.map((row, index) => ({
-      id: guruV185Text(row?.id) || `g4-smm-format-v298-${index + 1}`,
-      format: guruV185Text(row?.format),
-      task: guruV185Text(row?.task),
-      platforms: guruV185Text(row?.platforms),
-    }));
+    strategy.formats = strategy.formats.map((row, index) => {
+      const id = guruV185Text(row?.id) || `g4-smm-format-v298-${index + 1}`;
+      const allowed = new Set(g4SmmMatrixRowsV529(id).map((pair) => pair.platform_id));
+      const oldIds = guruV185Text(row?.platforms).split(",").map(g4SmmPlatformIdV529);
+      const ids = Array.isArray(row?.enabledPlatformIds) ? row.enabledPlatformIds : oldIds;
+      return { id, format: guruV185Text(row?.format), task: guruV185Text(row?.task),
+        platforms: guruV185Text(row?.platforms),
+        enabledPlatformIds: g3ProductJourneyUnique(ids.map(g4SmmPlatformIdV529)
+          .filter((platformId) => allowed.has(platformId))) };
+    });
   }
   if (!Array.isArray(strategy.topics)) {
     strategy.topics = G4_SMM_DEFAULT_TOPICS_V298.map((value, index) => ({
@@ -403,7 +516,7 @@ function g4SmmFormatsProjectionHtmlV305(
           <td><span class="g4-smm-format-topics-v308">${topicHtml || "—"}</span></td>
           <td data-g4-smm-format-volume-v305="${escapeAttr(row.id)}"><span class="g4-smm-format-volume-v305"><b>${escapeHtml(volume.projected)}</b><small>${escapeHtml(volume.note)}</small></span></td>
           <td><span class="g4-smm-format-idea-count-v345" data-g4-smm-format-idea-count-v345="${escapeAttr(row.id)}">${ideaCount}</span></td>
-          <td>${escapeHtml(row.platforms) || "—"}</td>
+          <td>${escapeHtml(g4SmmFormatPlatformsV299(row).join(" · ")) || "—"}${g4SmmFormatLegacyPlatformsV529(row).length ? `<small title="Не поддерживается для формата"> · ${escapeHtml(g4SmmFormatLegacyPlatformsV529(row).join(", "))}</small>` : ""}</td>
         </tr>`;
       }).join("")}</tbody>
     </table>
@@ -587,6 +700,22 @@ function g4SmmContentEnsureV299(workspace = state) {
     primaryTaskFormatId: guruV185Text(idea?.primaryTaskFormatId),
     topicId: guruV185Text(idea?.topicId),
     insight: String(idea?.insight || ""),
+    selectedPlatformIds: Array.isArray(idea?.selectedPlatformIds)
+      ? g3ProductJourneyUnique(idea.selectedPlatformIds.map(g4SmmPlatformIdV529))
+      : Array.isArray(idea?.platforms) ? g3ProductJourneyUnique(idea.platforms.map(g4SmmPlatformIdV529)) : null,
+    legacyPlatforms: g3ProductJourneyUnique([
+      ...(Array.isArray(idea?.legacyPlatforms) ? idea.legacyPlatforms : []),
+      ...(Array.isArray(idea?.platforms) ? idea.platforms.filter((value) =>
+        !g4SmmMatrixRowsV529(idea?.primaryTaskFormatId).some((row) => row.platform_id === g4SmmPlatformIdV529(value))) : []),
+    ]),
+    base: idea?.base && typeof idea.base === "object" && !Array.isArray(idea.base)
+      ? { title: String(idea.base.title || ""), text: String(idea.base.text || ""),
+        media: idea.base.media && typeof idea.base.media === "object" ? { ...idea.base.media } : null,
+        cta: String(idea.base.cta || ""), link: String(idea.base.link || "") }
+      : null,
+    baseEdited: Array.isArray(idea?.baseEdited) ? g3ProductJourneyUnique(idea.baseEdited) : [],
+    platformOverrides: idea?.platformOverrides && typeof idea.platformOverrides === "object" && !Array.isArray(idea.platformOverrides)
+      ? { ...idea.platformOverrides } : {},
     planningPeriodStart: g4SmmDateValueV299(idea?.planningPeriodStart)
       ? guruV185Text(idea.planningPeriodStart)
       : "",
@@ -638,6 +767,8 @@ function g4SmmContentEnsureV299(workspace = state) {
       platforms: Array.isArray(publication?.platforms)
         ? g3ProductJourneyUnique(publication.platforms)
         : [],
+      platformIds: g3ProductJourneyUnique((Array.isArray(publication?.platformIds)
+        ? publication.platformIds : publication?.platforms || []).map(g4SmmPlatformIdV529).filter(Boolean)),
       date: guruV185Text(publication?.date),
       link: String(publication?.link || ""),
       status,
@@ -675,6 +806,25 @@ function g4SmmContentEnsureV299(workspace = state) {
         : null,
       createdAt: guruV185Text(publication?.createdAt) || new Date().toISOString(),
       updatedAt: guruV185Text(publication?.updatedAt) || guruV185Text(publication?.createdAt) || new Date().toISOString(),
+    };
+  });
+  const strategy = g4SmmStrategyEnsureV298(workspace);
+  content.ideas.forEach((idea) => {
+    const publication = content.publications.find((row) => row.id === idea.publicationId || row.sourceIdeaId === idea.id);
+    const format = (strategy?.formats || []).find((row) => row.id === idea.primaryTaskFormatId);
+    if (!Array.isArray(idea.selectedPlatformIds)) {
+      const oldSelection = publication?.platforms?.length ? publication.platforms
+        : format ? g4SmmFormatPlatformsV299(format) : [];
+      idea.selectedPlatformIds = g3ProductJourneyUnique(oldSelection.map(g4SmmPlatformIdV529));
+    }
+    const supported = new Set(g4SmmMatrixRowsV529(idea.primaryTaskFormatId).map((row) => row.platform_id));
+    idea.legacyPlatforms = g3ProductJourneyUnique([...idea.legacyPlatforms,
+      ...(publication?.platforms || []).filter((value) => !supported.has(g4SmmPlatformIdV529(value))),
+      ...idea.selectedPlatformIds.filter((id) => !supported.has(id))]);
+    if (!idea.base) idea.base = {
+      title: guruV185Text(publication?.title),
+      text: guruV185Text(publication?.publicationPackage?.caption) || guruV185Text(publication?.content),
+      media: null, cta: guruV185Text(publication?.creativeBrief?.cta), link: guruV185Text(publication?.link),
     };
   });
   if (decoupleLegacyIdeaTitles) migrations.push(G4_SMM_TITLE_DECOUPLING_MIGRATION_V331);
@@ -724,6 +874,7 @@ function g4SmmScopedRecordsReadOnlyV299(product, field, workspace = state) {
   const categoryId = product ? megaPlatformProductCategoryId(product, workspace) : "";
   const exact = (scope) => rows.filter((record) => {
     if (record?.field !== field || record?.scope !== scope) return false;
+    if (field === "segments" && scope === "project" && record.archived_at) return false;
     if (scope === "project") return true;
     if (scope === "category")
       return Boolean(categoryId) && record.category_id === categoryId;
@@ -985,9 +1136,90 @@ function g4SmmPublicationTopicLabelV299(publication, strategy = g4SmmStrategyEns
 }
 
 function g4SmmFormatPlatformsV299(format) {
-  return g3ProductJourneyUnique(
-    guruV185Text(format?.platforms).split(",").map((value) => value.trim()),
-  );
+  const allowed = g4SmmMatrixRowsV529(format?.id);
+  if (!allowed.length) return g3ProductJourneyUnique(
+    guruV185Text(format?.platforms).split(",").map((value) => value.trim()));
+  const enabled = new Set((Array.isArray(format?.enabledPlatformIds) ? format.enabledPlatformIds
+    : guruV185Text(format?.platforms).split(",")).map(g4SmmPlatformIdV529).filter(Boolean));
+  return allowed.filter((row) => enabled.has(row.platform_id)).map((row) => row.display_name);
+}
+
+function g4SmmIdeaPlatformRowsV529(idea) {
+  const ids = Array.isArray(idea?.selectedPlatformIds) ? idea.selectedPlatformIds : [];
+  return ids.map((id) => g4SmmPairProfileV529(idea?.primaryTaskFormatId, id))
+    .filter(Boolean);
+}
+
+function g4SmmIdeaPlatformsV529(idea) {
+  const rows = g4SmmIdeaPlatformRowsV529(idea);
+  const known = new Set(rows.map((row) => row.platform_id));
+  return [...rows.map((row) => row.display_name),
+    ...(idea?.selectedPlatformIds || []).filter((id) => !known.has(id))
+      .map((id) => idea.legacyPlatforms?.find((value) => g4SmmPlatformIdV529(value) === id) || id)];
+}
+
+function g4SmmPublicationPlatformIdsV532(publication) {
+  return g3ProductJourneyUnique((Array.isArray(publication?.platformIds)
+    ? publication.platformIds : publication?.platforms || []).map(g4SmmPlatformIdV529).filter(Boolean));
+}
+
+function g4SmmIdeaEffectiveContentV529(idea, platformId = "") {
+  const base = idea?.base || {};
+  const override = idea?.platformOverrides?.[platformId] || {};
+  return {
+    title: override.title ?? (base.title || ""),
+    text: override.text ?? (base.text || guruV185Text(idea?.insight)),
+    media: override.media ?? base.media ?? null,
+    cta: override.cta ?? base.cta ?? "",
+    link: override.link ?? base.link ?? "",
+  };
+}
+
+function g4SmmMediaCheckV529(media, row) {
+  if (media?.assetId && G4_SMM_MISSING_ASSETS_V529.has(media.assetId))
+    return { ready: false, status: "adaptation", reason: "Медиа недоступно · загрузите заново" };
+  const rules = row.validation_rules || { media_kind: row.media_type, orientation: row.aspect_ratio === "9:16" ? "vertical" : null,
+    duration_max_seconds: row.duration_max };
+  if (rules.media_kind === "optional" && !media?.assetId) return { ready: true, status: "ready", reason: "" };
+  if (!media?.assetId) return { ready: false, status: "adaptation", reason: "Добавьте фото или видео" };
+  if (!["image", "video"].includes(media.kind))
+    return { ready: false, status: "adaptation", reason: "Нужен файл фото или видео" };
+  if (rules.media_kind === "video" && media.kind !== "video")
+    return { ready: false, status: "adaptation", reason: "Нужен видеофайл" };
+  if (rules.media_kind === "image" && media.kind !== "image")
+    return { ready: false, status: "adaptation", reason: "Нужно фото" };
+  if (rules.orientation === "square-or-vertical" && media.width && media.height && media.width > media.height)
+    return { ready: false, status: "adaptation", reason: "Нужен квадратный или вертикальный вариант" };
+  if (rules.orientation === "vertical" && media.width && media.height && media.width / media.height > 0.68)
+    return { ready: false, status: "adaptation", reason: "Нужен вертикальный вариант 9:16" };
+  if (rules.duration_max_seconds && media.duration && media.duration > rules.duration_max_seconds)
+    return { ready: false, status: "adaptation", reason: `Видео длиннее ${rules.duration_max_seconds} сек` };
+  return { ready: true, status: "ready", reason: "" };
+}
+
+function g4SmmIdeaReadinessV529(idea) {
+  const rows = g4SmmIdeaPlatformRowsV529(idea);
+  const items = rows.map((row) => {
+    const value = g4SmmIdeaEffectiveContentV529(idea, row.platform_id);
+    const media = g4SmmMediaCheckV529(value.media, row);
+    const nativeTitle = idea?.platformOverrides?.[row.platform_id]?.title ?? idea?.base?.title ?? "";
+    const titleModel = row.title_model || { supported: row.title_supported, max_characters: row.title_max };
+    const reason = !guruV185Text(value.text) ? "Добавьте текст"
+      : titleModel.supported && !guruV185Text(nativeTitle) ? "Добавьте название"
+        : titleModel.max_characters && nativeTitle.length > titleModel.max_characters ? `Название длиннее ${titleModel.max_characters} символов`
+          : media.reason;
+    return { row, ready: !reason, status: reason ? "adaptation" : "ready", reason };
+  });
+  const known = new Set(rows.map((row) => row.platform_id));
+  (idea?.selectedPlatformIds || []).filter((id) => !known.has(id)).forEach((id) =>
+    items.push({ row: { platform_id: id,
+      display_name: idea.legacyPlatforms?.find((value) => g4SmmPlatformIdV529(value) === id) || id,
+      native_format: "Прежняя площадка",
+      preview_model: "legacy", media_type: "optional", supported: false,
+      platform_notes: "Сохранено из прежних данных; для текущего формата площадка не поддерживается." },
+    ready: false, status: "unsupported", reason: "Не поддерживается для формата" }));
+  return { items, ready: items.filter((item) => item.ready).length, total: items.length,
+    complete: Boolean(items.length) && items.every((item) => item.ready) };
 }
 
 function g4SmmPublicationKindV299(publication, strategy = g4SmmStrategyEnsureV298()) {
@@ -1122,7 +1354,7 @@ function g4SmmContentSummaryV299(
           : g4SmmPublicationFormatLabelV299(publication, strategy).toLocaleLowerCase("ru-RU") ===
             guruV185Text(format.format).toLocaleLowerCase("ru-RU");
         return sameFormat && (publication.platforms || []).some(
-          (value) => guruV185Text(value).toLocaleLowerCase("ru-RU") === platform.toLocaleLowerCase("ru-RU"),
+          (value) => g4SmmPlatformIdV529(value) === g4SmmPlatformIdV529(platform),
         );
       });
       if (!used) unusedPairs.push({ formatId: format.id, format: format.format, platform });
@@ -1197,70 +1429,248 @@ function g4SmmPublicationStatusLabelV299(status) {
     "Не начато";
 }
 
+/* Этап идеи читает только уже существующие записи. Полный продуктовый
+   snapshot подготавливает Gate 0 для других экранов и потому здесь не нужен. */
+function g4SmmIdeaFoundationSnapshotReadOnlyV529(product, workspace = state) {
+  const scoped = Object.fromEntries(
+    ["segments", "jtbd", "positioning", "usp", "offers", "cta"].map((field) => {
+      const resolved = g4SmmScopedRecordsReadOnlyV299(product, field, workspace);
+      const value = g3ProductJourneyUnique(resolved.records.map((record) =>
+        field === "jtbd"
+          ? guruV194JtbdSentence(guruV194JtbdParts(record)) || guruV185Text(record?.value)
+          : guruV185Text(record?.value),
+      )).join("\n");
+      return [field, { field, ...resolved, value }];
+    }),
+  );
+  const page = g4SmmProductPageReadOnlyV299(product, workspace);
+  const mega = workspace?.gates?.find((gate) => gate.id === "gate-0")?.cards
+    ?.find(isMegaMarketingCard)?.megaMarketing;
+  const landing = guruV185Text(mega?.platformV2?.urlsV1?.products?.[product.id]);
+  return {
+    product,
+    page,
+    scoped,
+    landing,
+    campaigns: [],
+    jtbd: scoped.jtbd.value,
+    segment: scoped.segments.value,
+    positioning: scoped.positioning.value,
+    usp: scoped.usp.value,
+  };
+}
+
 function g4SmmIdeaMaterialHtmlV299(idea) {
-  const material = g4SmmIdeaMaterialV299(idea);
-  if (!material.product)
+  const product = g4SmmProductReadOnlyV299(idea?.productId);
+  if (!product)
     return `<div class="g4-smm-material-v299"><span class="g4-smm-empty-v299">Идея относится к бренду в целом — товарный контекст не выбран.</span></div>`;
 
-  /* Переиспользуем живую JTBD-модель «Стратегической основы»: финальные
-     фразы остаются внутри своего JTBD, а не смешиваются в общий список. */
-  const product = g4SmmProductReadOnlyV299(material.product.id);
-  const model = guruStrategicFoundationModelV286(product);
-  const creation = material.concrete.find((row) => row.key === "creation");
+  /* Одна модель и один шаблон цепочки со «Стратегической основой»:
+     этап идеи всегда отражает текущие Gate 0–3 выбранного продукта. */
+  const snapshot = g4SmmIdeaFoundationSnapshotReadOnlyV529(product);
+  const model = guruStrategicFoundationModelV286(product, {
+    snapshot,
+    readOnly: true,
+  });
   const creationField = {
-    value: guruV185Text(creation?.value),
+    value: guruV185Text(snapshot.page.row?.contextFields?.productCreationV253),
     source: "Gate 1 · Карточка товара",
     target: g3ProductJourneyPageTarget(model.snapshot, {
       contextKey: "productCreationV253",
       sectionKey: "productCreationV253",
     }),
   };
-  const offerField = {
-    value: model.fields.offer.value,
-    source: model.fields.offer.source,
-    target: model.fields.offer.target,
-  };
   return `<div class="g4-smm-material-v299">
-    <div class="guru-strategic-flow-v286 g4-smm-idea-foundation-v313" data-g4-smm-idea-foundation-v313>
-      ${guruStrategicRowV286("Сегмент", model.fields.segment)}
-      ${guruStrategicRowV286("Позиционирование", model.fields.positioning)}
-      ${guruStrategicRowV286("УТП", model.fields.usp)}
-      ${guruStrategicRowV286("Оффер", offerField)}
-      ${guruStrategicRowV286("Как создаётся", creationField)}
-      ${model.descriptors.map((descriptor, index) =>
-        guruStrategicJtbdCardV286(model, descriptor, index + 1),
-      ).join("")}
-      ${!model.descriptors.length
-        ? '<div class="guru-strategic-primary-notice-v286">JTBD не заполнены в источнике</div>'
-        : ""}
-      ${!model.keywordModel.finalEntries.length
-        ? '<div class="guru-strategic-final-notice-v286">Финальные ключевые слова не сформированы</div>'
-        : ""}
+    <div class="guru-strategic-flow-v286 g4-smm-idea-foundation-v313" data-g4-smm-idea-foundation-v313 data-guru-strategic-product-flow>
+      ${guruStrategicFoundationFlowHtmlV529(model)}
     </div>
+    <section class="g4-smm-material-extra-v529" aria-label="Дополнительный материал">
+      <strong class="guru-strategic-step-title-v529">Дополнительный материал</strong>
+      ${guruStrategicRowV286("Как создаётся", creationField)}
+    </section>
   </div>`;
 }
 
-/* Стадия 2 хранит только стабильный id строки формата. Задача, темы,
-   расчётный объём и площадки всегда читаются из актуальной стратегии. */
-function g4SmmIdeaPrimaryTaskHtmlV315(idea, locked = false) {
-  const strategy = g4SmmStrategyEnsureV298();
+/* Маршрут — производная от стабильных связей стратегии, а не поле идеи.
+   В каждой паре: название шага и ожидаемый результат для зрителя. */
+const G4_SMM_DIGESTION_ROADMAPS_V527 = Object.freeze({
+  "1:6": [
+    ["Узнаваемый тренд / событие", "Зритель сразу узнаёт актуальный повод и останавливается."],
+    ["Связь с продуктом", "Становится понятно, почему этот повод относится к продукту."],
+    ["Собственный поворот", "Появляется оригинальный взгляд бренда, а не повтор тренда."],
+    ["Продукт в действии", "В кадре видно применение продукта в контексте повода."],
+    ["Эмоциональный финал", "Одна законченная эмоция или мысль завершает ролик."],
+    ["CTA", "Зрителю предложено одно конкретное действие после просмотра."],
+  ],
+  "1:3": [
+    ["Вопрос / проблема в первых секундах", "Знакомый вопрос даёт причину остановиться и смотреть дальше."],
+    ["Короткий ответ", "Зритель сразу понимает главный вывод объяснения."],
+    ["2-3 доказательства или шага", "Факты или последовательность показывают, почему ответ верен."],
+    ["Наглядный пример", "На продукте или ситуации видно, как работает объяснение."],
+    ["Итог одной фразой", "Одна законченная мысль остаётся после ролика."],
+    ["CTA сохранить / посмотреть", "Предложено одно конкретное действие: сохранить или узнать больше."],
+  ],
+  "1:4": [
+    ["Будущий результат", "Первый кадр показывает итог и даёт причину смотреть процесс."],
+    ["Исходный материал", "Зритель понимает, с чем команда начала работу."],
+    ["Ключевые этапы", "Видна последовательность действий без лишних деталей."],
+    ["Самая интересная деталь", "Выделен момент, который отличает этот процесс."],
+    ["Финальная сборка", "Показано, как отдельные действия складываются в результат."],
+    ["Готовое изделие", "Итог виден целиком и завершает историю процесса."],
+    ["CTA", "Предложено одно конкретное следующее действие."],
+  ],
+  "1:5": [
+    ["Результат первым кадром", "Сразу показать зрителю итог и дать причину продолжить просмотр."],
+    ["Что было нужно", "Быстро объяснить исходную ситуацию или задачу."],
+    ["Что сделали", "Показать главное действие или решение."],
+    ["Ключевой момент", "Выделить то, что сильнее всего повлияло на результат."],
+    ["Итог крупно", "Ещё раз ясно показать конечный результат."],
+    ["Подтверждение", "Дать факт, визуальное доказательство, деталь или сравнение."],
+    ["CTA", "Предложить одно конкретное следующее действие."],
+  ],
+  "3:3": [
+    ["Обложка с конкретной пользой", "Первый слайд обещает ясный результат просмотра подборки."],
+    ["Контекст", "Зритель понимает, к какой ситуации относится объяснение."],
+    ["Главный принцип", "Названо правило, которое связывает следующие шаги."],
+    ["Шаг 1", "Показано первое применимое действие."],
+    ["Шаг 2", "Показано следующее действие и его связь с первым."],
+    ["Шаг 3", "Последнее действие завершает последовательность."],
+    ["Пример", "На конкретном случае видно применение принципа."],
+    ["Итог / чек-лист", "Короткая сводка помогает восстановить весь маршрут."],
+    ["CTA сохранить", "Предложено сохранить подборку для дальнейшего применения."],
+  ],
+  "3:1": [
+    ["Проблема на обложке", "Знакомая проблема побуждает открыть подборку."],
+    ["Как она проявляется", "Зритель узнаёт конкретные признаки своей ситуации."],
+    ["Почему возникает", "Объяснена причина, а не только внешний симптом."],
+    ["Что обычно делают", "Показан распространённый подход и его ограничение."],
+    ["Правильный подход", "Сформулирован принцип более подходящего решения."],
+    ["Решение по шагам", "Действия выстроены в понятной последовательности."],
+    ["Результат", "Видно, что изменилось после применения решения."],
+    ["CTA", "Предложено одно конкретное следующее действие."],
+  ],
+  "3:5": [
+    ["Результат на обложке", "Итог кейса даёт причину листать дальше."],
+    ["Исходная ситуация", "Зритель понимает начальные условия."],
+    ["Задача", "Ясно, какой результат требовалось получить."],
+    ["Решение", "Назван выбранный подход к задаче."],
+    ["Процесс", "Показаны ключевые действия по порядку."],
+    ["Важная деталь", "Выделено решение, заметно повлиявшее на итог."],
+    ["Итог", "Финальный результат показан ясно и целиком."],
+    ["Что можно вынести из кейса", "Одна полезная мысль связывает кейс с опытом зрителя."],
+    ["CTA", "Предложено одно конкретное следующее действие."],
+  ],
+  "2:5": [
+    ["Сильное итоговое фото", "Первый кадр показывает результат и привлекает внимание."],
+    ["Что за изделие / задача", "Подпись даёт необходимый контекст без догадок."],
+    ["Что сделали", "Названы основные действия, приведшие к результату."],
+    ["Особенность работы", "Показана деталь, отличающая этот кейс."],
+    ["Итог", "Финальное фото и одна мысль завершают историю."],
+    ["CTA", "Предложено одно конкретное следующее действие."],
+  ],
+  "2:2": [
+    ["До", "Исходное фото ясно показывает начальное состояние."],
+    ["Что требовало изменения", "Зритель понимает конкретную проблему или задачу."],
+    ["Что сделали", "Показаны действия между двумя состояниями."],
+    ["После", "Сопоставимое фото показывает результат без дополнительных обещаний."],
+    ["Что изменилось", "Названы заметные отличия и практический эффект."],
+    ["Деталь крупным планом", "Факт или визуальная деталь подтверждает изменение."],
+    ["CTA", "Предложено одно конкретное следующее действие."],
+  ],
+  "4:1": [
+    ["Проблема в заголовке", "Заголовок помогает читателю узнать свою задачу."],
+    ["Почему это важно", "Показаны последствия проблемы для читателя."],
+    ["Причина", "Объяснён источник проблемы, а не только её признак."],
+    ["Типичные ошибки", "Читатель видит, какие действия не приводят к решению."],
+    ["Решение", "Сформулирован подход, который устраняет причину."],
+    ["Пошаговые рекомендации", "Подход разложен на применимые действия."],
+    ["Пример", "Конкретный случай подтверждает, как работает решение."],
+    ["Вывод", "Одна законченная мысль подводит итог статье."],
+    ["CTA", "Предложено одно конкретное следующее действие."],
+  ],
+  "4:3": [
+    ["Вопрос в заголовке", "Читатель сразу узнаёт вопрос, на который отвечает статья."],
+    ["Короткий ответ сразу", "Главный вывод доступен без чтения всей статьи."],
+    ["Что нужно знать", "Дан контекст, без которого ответ легко понять неверно."],
+    ["Основные принципы", "Показаны правила, объясняющие ответ."],
+    ["Примеры", "Конкретные случаи служат доказательством принципов."],
+    ["Практическое применение", "Читатель понимает, как использовать знание."],
+    ["Краткий вывод", "Одна законченная мысль завершает объяснение."],
+  ],
+  "4:5": [
+    ["Результат в заголовке / лиде", "Итог кейса даёт причину читать статью."],
+    ["Исходная ситуация", "Описаны начальные условия проекта."],
+    ["Задача", "Ясно, какого результата нужно было достичь."],
+    ["Ограничения", "Показаны условия, повлиявшие на выбор решения."],
+    ["Решение", "Назван выбранный подход и его логика."],
+    ["Процесс", "Основные действия изложены по порядку."],
+    ["Результат", "Показано, что получилось на практике."],
+    ["Доказательства", "Факты, цифры или примеры подтверждают итог."],
+    ["Вывод", "Одна законченная мысль завершает кейс."],
+  ],
+  "6:4": [
+    ["Результат и обещание видео", "Зритель видит итог и понимает, что узнает дальше."],
+    ["Исходная задача", "Дан контекст начала работы."],
+    ["Подготовка", "Показаны материалы и решения перед стартом."],
+    ["Последовательный процесс", "Этапы работы идут в понятном порядке."],
+    ["Ключевые решения", "Выделено, почему были выбраны важные действия."],
+    ["Ошибки / сложности", "Показано, что мешало и как это преодолели."],
+    ["Финальная сборка", "Видно, как работа складывается в готовое целое."],
+    ["Результат", "Итог показан и подтверждён конкретными деталями."],
+    ["Вывод", "Одна законченная мысль завершает историю."],
+    ["CTA", "Предложено одно конкретное следующее действие."],
+  ],
+  "5:4": [
+    ["Что сегодня создаём", "Первая история задаёт цель и повод следить за процессом."],
+    ["Первый этап", "Показано, с чего начинается работа."],
+    ["Интересная деталь", "Выделен момент, который удерживает внимание."],
+    ["Следующий этап", "Зритель видит развитие процесса, а не разрозненные кадры."],
+    ["Интерактив / вопрос", "Один вопрос вовлекает зрителя в происходящее."],
+    ["Почти готово", "Показано приближение к обещанному итогу."],
+    ["Результат", "Готовый итог ясно виден и завершает историю."],
+    ["CTA / ссылка", "Предложено одно действие или переход по ссылке."],
+  ],
+});
+
+function g4SmmDigestionRoadmapV527(formatId, topicId) {
+  const format = /^g4-smm-format-v298-([1-6])$/.exec(guruV185Text(formatId))?.[1];
+  const topic = /^g4-smm-topic-v298-([1-6])$/.exec(guruV185Text(topicId))?.[1];
+  return G4_SMM_DIGESTION_ROADMAPS_V527[`${format}:${topic}`] || null;
+}
+
+function g4SmmDigestionRoadmapHtmlV527(idea, strategy) {
+  const format = (strategy?.formats || []).find((row) => row.id === idea?.primaryTaskFormatId);
+  const topic = g4SmmFormatTopicsV308(format, strategy).find((row) => row.id === idea?.topicId);
+  const steps = format && topic ? g4SmmDigestionRoadmapV527(format.id, topic.id) : null;
+  const adaptations = g3ProductJourneyUnique(g4SmmIdeaPlatformRowsV529(idea)
+    .filter((row) => row.platform_notes)
+    .map((row) => `${row.display_name}: ${row.platform_notes}`));
+  return `<section class="g4-smm-digestion-roadmap-v527" aria-label="Дорожная карта" data-g4-smm-digestion-roadmap-v527>
+    <div class="g4-smm-digestion-column-head-v527"><h4>Дорожная карта</h4><small>${format && topic ? `${escapeHtml(format.format)} · ${escapeHtml(topic.value)}` : "Формат + тема"}</small></div>
+    ${steps ? '<strong class="g4-smm-route-label-v529">Основной маршрут материала</strong>' : ""}
+    ${steps ? `<ol class="g4-smm-digestion-steps-v527">${steps.map(([title, description]) => `<li><strong>${escapeHtml(title)}</strong><span>${escapeHtml(description)}</span></li>`).join("")}</ol>`
+      : `<p class="g4-smm-empty-v299">${format && topic ? "Для этой связки формат и тема маршрут пока не задан." : "Выберите формат и тему — маршрут появится автоматически."}</p>`}
+    ${adaptations.length ? `<div class="g4-smm-adaptations-v529"><strong>Адаптация для площадок</strong>${adaptations.map((note) => `<p>${escapeHtml(note)}</p>`).join("")}</div>` : ""}
+  </section>`;
+}
+
+/* Стадия 2 хранит только стабильные id формата и темы. Сводка и маршрут
+   всегда читаются из актуальной стратегии, а мысли остаются в идее. */
+function g4SmmIdeaSelectorsHtmlV527(idea, locked = false, strategy = g4SmmStrategyEnsureV298()) {
   if (!strategy) return "";
   const selectedId = guruV185Text(idea?.primaryTaskFormatId);
   const selected = (strategy.formats || []).find((row) =>
     guruV185Text(row?.id) === selectedId,
   ) || null;
-  const projection = g4SmmPeriodProjectionV304(strategy);
-  const volume = selected ? g4SmmFormatVolumeV305(selected, strategy, projection) : null;
   const topics = selected ? g4SmmFormatTopicsV308(selected, strategy) : [];
   const selectedTopicId = guruV185Text(idea?.topicId);
   const selectedTopic = topics.find((topic) => guruV185Text(topic?.id) === selectedTopicId) || null;
-  return `<div class="g4-smm-idea-primary-task-v315" data-g4-smm-idea-primary-task-v315>
-    <div class="g4-smm-idea-primary-selectors-v345">
+  return `<div class="g4-smm-idea-primary-selectors-v345 g4-smm-digestion-selectors-v527">
       <label class="g1-field">
-        <span>Основная задача</span>
+        <span>Формат идеи</span>
         <select class="g1-input ${selected ? "is-filled" : "is-empty"}" data-g4-smm-idea-field-v299="primaryTaskFormatId" data-g4-smm-idea-id-v299="${escapeAttr(idea.id)}" ${locked ? "disabled" : ""}>
-          <option value="">Выберите основную задачу</option>
-          ${g4SmmFormatsOrderedBy5AV303(strategy.formats).map(({ format: row }) => `<option value="${escapeAttr(row.id)}" ${guruV185Text(row.id) === selectedId ? "selected" : ""}>${escapeHtml(row.task)}</option>`).join("")}
+          <option value="">Выберите формат</option>
+          ${g4SmmFormatsOrderedBy5AV303(strategy.formats).map(({ format: row }) => `<option value="${escapeAttr(row.id)}" ${guruV185Text(row.id) === selectedId ? "selected" : ""}>${escapeHtml(row.format)}</option>`).join("")}
         </select>
       </label>
       <label class="g1-field">
@@ -1270,15 +1680,30 @@ function g4SmmIdeaPrimaryTaskHtmlV315(idea, locked = false) {
           ${topics.map((topic) => `<option value="${escapeAttr(topic.id)}" ${guruV185Text(topic.id) === selectedTopicId ? "selected" : ""}>${escapeHtml(topic.value)}</option>`).join("")}
         </select>
       </label>
-    </div>
+      <div class="g4-smm-idea-platform-picker-v529"><strong>Площадки идеи</strong><span class="g4-smm-platform-chips-v335">${selected ? g4SmmMatrixRowsV529(selected.id).map((row) => `<label class="g4-smm-platform-option-v530"><input type="checkbox" data-g4-smm-idea-platform-v529="${escapeAttr(row.platform_id)}" data-g4-smm-idea-id-v529="${escapeAttr(idea.id)}" ${(idea.selectedPlatformIds || []).includes(row.platform_id) ? "checked" : ""} ${locked ? "disabled" : ""}><span>${escapeHtml(row.display_name)}</span></label>`).join("") : "Выберите формат"}</span></div>
+    </div>`;
+}
+
+function g4SmmIdeaPrimaryTaskHtmlV315(idea, strategy = g4SmmStrategyEnsureV298()) {
+  if (!strategy) return "";
+  const selected = (strategy.formats || []).find((row) =>
+    guruV185Text(row?.id) === guruV185Text(idea?.primaryTaskFormatId),
+  ) || null;
+  const projection = g4SmmPeriodProjectionV304(strategy);
+  const volume = selected ? g4SmmFormatVolumeV305(selected, strategy, projection) : null;
+  const selectedTopic = selected ? g4SmmFormatTopicsV308(selected, strategy).find((topic) =>
+    guruV185Text(topic?.id) === guruV185Text(idea?.topicId),
+  ) : null;
+  return `<section class="g4-smm-idea-primary-task-v315" data-g4-smm-idea-primary-task-v315 aria-label="Основная задача">
+    <div class="g4-smm-digestion-column-head-v527"><h4>Основная задача</h4><small>Из выбранной стратегии</small></div>
     ${selected ? `<div class="g4-smm-idea-task-details-v316" data-g4-smm-idea-primary-task-live-v315="${escapeAttr(selected.id)}">
       <div><strong>Основная задача</strong><span>${escapeHtml(selected.task) || "—"}</span></div>
       <div><strong>Формат</strong><span>${escapeHtml(selected.format) || "—"}</span></div>
       <div><strong>Тема</strong><span>${escapeHtml(selectedTopic?.value) || "Не выбрана"}</span></div>
       <div><strong>Объём контента</strong><span class="g4-smm-format-volume-v305"><b>${escapeHtml(volume.projected)}</b><small>${escapeHtml(volume.note)}</small></span></div>
-      <div><strong>Площадки</strong><span>${escapeHtml(selected.platforms) || "—"}</span></div>
+      <div><strong>Площадки</strong><span>${escapeHtml(g4SmmIdeaPlatformsV529(idea).join(", ")) || "—"}</span></div>
     </div>` : '<p class="g4-smm-empty-v299">Выберите основную задачу — здесь появится связанная строка SMM-стратегии.</p>'}
-  </div>`;
+  </section>`;
 }
 
 function g4SmmPublicationForIdeaV324(idea, content = g4SmmContentEnsureV299()) {
@@ -1326,9 +1751,11 @@ function g4SmmIdeaHtmlV299(idea, index, content, strategy) {
       <section class="g4-smm-idea-stage-v299" data-g4-smm-idea-stage-view-v299="digestion">
         <div class="g4-smm-idea-stage-head-v299"><strong>2. Переваривание</strong><small>Черновик связей и наблюдений — не финальный результат</small></div>
         ${g3ProductJourneyStageExplanationHtmlV296("digestion", "gate4-idea", G4_SMM_IDEA_STAGE_EXPLANATIONS_V311.digestion)}
+        ${g4SmmIdeaSelectorsHtmlV527(idea, locked, strategy)}
         <div class="g4-smm-digestion-layout-v316" data-g4-smm-digestion-layout-v316>
-          ${g4SmmIdeaPrimaryTaskHtmlV315(idea, locked)}
-          <label class="g1-field g4-smm-digestion-thoughts-v316"><span>Мысли / связи</span><textarea class="g1-input g4-smm-digestion-notes-v315 ${guruV185Text(idea.digestionNotes) ? "is-filled" : "is-optional"}" rows="14" data-g4-smm-idea-field-v299="digestionNotes" data-g4-smm-idea-id-v299="${escapeAttr(idea.id)}" placeholder="Что связано между собой, где конфликт, какой поворот можно проверить" ${locked ? "disabled" : ""}>${escapeHtml(idea.digestionNotes)}</textarea></label>
+          ${g4SmmIdeaPrimaryTaskHtmlV315(idea, strategy)}
+          ${g4SmmDigestionRoadmapHtmlV527(idea, strategy)}
+          <label class="g1-field g4-smm-digestion-thoughts-v316"><span class="g4-smm-digestion-column-head-v527"><strong>Мысли / связи</strong><small>Черновик наблюдений</small></span><textarea class="g1-input g4-smm-digestion-notes-v315 ${guruV185Text(idea.digestionNotes) ? "is-filled" : "is-optional"}" rows="14" data-g4-smm-idea-field-v299="digestionNotes" data-g4-smm-idea-id-v299="${escapeAttr(idea.id)}" placeholder="Фиксируйте наблюдения, ассоциации, конфликты, сильные детали, возможные повороты и идеи для каждого этапа дорожной карты." ${locked ? "disabled" : ""}>${escapeHtml(idea.digestionNotes)}</textarea></label>
         </div>
       </section>
 
@@ -1348,6 +1775,7 @@ function g4SmmIdeaHtmlV299(idea, index, content, strategy) {
       <section class="g4-smm-idea-stage-v299" data-g4-smm-idea-stage-view-v299="verification">
         <div class="g4-smm-idea-stage-head-v299"><strong>5. Проверка и доработка</strong><small>Переход к рабочей карточке публикации без повторного ввода</small></div>
         ${g3ProductJourneyStageExplanationHtmlV296("verification", "gate4-idea", G4_SMM_IDEA_STAGE_EXPLANATIONS_V311.verification)}
+        ${(() => { const readiness = g4SmmIdeaReadinessV529(idea); return `<div class="g4-smm-readiness-v529"><strong>Готово ${readiness.ready} из ${readiness.total} площадок</strong>${readiness.items.map(({ row, ready, reason }) => `<span class="${ready ? "is-ready" : "is-pending"}">${escapeHtml(row.display_name)} · ${ready ? "готово" : escapeHtml(reason)}</span>`).join("")}</div>`; })()}
         ${publication
           ? `<div class="g4-smm-idea-saved-actions-v330"><span class="status-pill status-ready g4-smm-publication-saved-v329">Сохранено как публикация</span></div>`
           : `<button type="button" class="small-btn add-inline-btn" data-g4-smm-idea-convert-v299="${escapeAttr(idea.id)}">Сохранить как публикацию</button>`}
@@ -1375,10 +1803,14 @@ function g4SmmMetricVerdictHtmlV299(publication, metricKey, content) {
 }
 
 function g4SmmPublicationPlatformsV299(publication, strategy) {
-  return g3ProductJourneyUnique([
-    ...(strategy?.formats || []).flatMap((format) => g4SmmFormatPlatformsV299(format)),
-    ...(publication?.platforms || []),
-  ]).sort((left, right) => left.localeCompare(right, "ru"));
+  const format = (strategy?.formats || []).find((row) => row.id === publication?.formatId);
+  const options = new Map();
+  (publication?.platforms || []).forEach((value) => options.set(g4SmmPlatformIdV529(value), value));
+  (format ? g4SmmFormatPlatformsV299(format) : []).forEach((value) => {
+    const id = g4SmmPlatformIdV529(value);
+    if (!options.has(id)) options.set(id, value);
+  });
+  return [...options.values()].sort((left, right) => left.localeCompare(right, "ru"));
 }
 
 function g4SmmPublicationVideoKindV325(publication, strategy) {
@@ -1600,7 +2032,7 @@ function g4SmmPublicationHtmlV299(publication, index, content, strategy, options
     <label class="g1-field" data-g4-smm-publication-order-v334="topic"><span>Тема публикации</span><small>Конкретная тема для этого материала.</small><select class="g1-input ${publication.topicId ? "is-filled" : "is-empty"}" data-g4-smm-publication-field-v299="topicId" data-g4-smm-publication-id-v299="${escapeAttr(publication.id)}"><option value="">Выберите тему</option>${strategy.topics.map((row) => `<option value="${escapeAttr(row.id)}" ${row.id === publication.topicId ? "selected" : ""}>${escapeHtml(row.value)}</option>`).join("")}${publication.topicId && !topic ? `<option value="${escapeAttr(publication.topicId)}" selected>${escapeHtml(publication.topicLabel || "Удалённая из стратегии тема")}</option>` : ""}</select></label>
     <label class="g1-field" data-g4-smm-publication-order-v334="format"><span>Формат публикации</span><small>Рабочий формат конкретного материала.</small><select class="g1-input ${publication.formatId ? "is-filled" : "is-empty"}" data-g4-smm-publication-field-v299="formatId" data-g4-smm-publication-id-v299="${escapeAttr(publication.id)}"><option value="">Выберите формат</option>${strategy.formats.map((row) => `<option value="${escapeAttr(row.id)}" ${row.id === publication.formatId ? "selected" : ""}>${escapeHtml(row.format)}</option>`).join("")}${publication.formatId && !format ? `<option value="${escapeAttr(publication.formatId)}" selected>${escapeHtml(publication.formatLabel || "Удалённый из стратегии формат")}</option>` : ""}</select></label>` : "";
   const platformField = showRoutingControls
-    ? `<label class="g1-field g4-smm-platform-select-v299" data-g4-smm-publication-order-v334="platforms"><span>Площадки публикации</span><small>Из формата подставляются автоматически; выбор можно изменить.</small><span class="g4-smm-platform-chips-v335 ${publication.platforms.length ? "is-filled" : "is-empty"}">${platformOptions.map((value) => `<label><input type="checkbox" value="${escapeAttr(value)}" ${publication.platforms.includes(value) ? "checked" : ""} data-g4-smm-platform-option-v335 data-g4-smm-publication-field-v299="platforms" data-g4-smm-publication-id-v299="${escapeAttr(publication.id)}" /><span>${escapeHtml(value)}</span></label>`).join("")}</span></label>`
+    ? `<label class="g1-field g4-smm-platform-select-v299" data-g4-smm-publication-order-v334="platforms"><span>Площадки публикации</span><small>Из формата подставляются автоматически; выбор можно изменить.</small><span class="g4-smm-platform-chips-v335 ${publication.platforms.length ? "is-filled" : "is-empty"}">${platformOptions.map((value) => { const compatible = g4SmmMatrixRowsV529(publication.formatId).some((row) => row.platform_id === g4SmmPlatformIdV529(value)); const selected = publication.platforms.includes(value); return `<label title="${compatible ? "Подходит" : "Не поддерживается для формата · сохранено из прежних данных"}"><input type="checkbox" value="${escapeAttr(value)}" ${selected ? "checked" : ""} ${!compatible && !selected ? "disabled" : ""} data-g4-smm-platform-option-v335 data-g4-smm-publication-field-v299="platforms" data-g4-smm-publication-id-v299="${escapeAttr(publication.id)}" /><span>${escapeHtml(value)}</span></label>`; }).join("")}</span></label>`
     : "";
   const statusField = showRoutingControls
     ? `<label class="g1-field" data-g4-smm-publication-order-v334="status"><span>Статус</span><select class="g1-input is-filled" data-g4-smm-publication-field-v299="status" data-g4-smm-publication-id-v299="${escapeAttr(publication.id)}">${G4_SMM_PUBLICATION_STATUSES_V299.map(([key, label]) => `<option value="${escapeAttr(key)}" ${key === publication.status ? "selected" : ""}>${escapeHtml(label)}</option>`).join("")}</select></label>`
@@ -1861,6 +2293,8 @@ function g4SmmCreateIdeaV299(productId = "", seed = {}) {
   const content = g4SmmContentEnsureV299();
   if (!content) return null;
   const now = new Date().toISOString();
+  const strategy = g4SmmStrategyEnsureV298();
+  const sourceFormat = strategy?.formats?.find((row) => row.id === guruV185Text(seed?.primaryTaskFormatId));
   const idea = {
     id: makeId("g4-smm-idea"),
     name: "",
@@ -1870,6 +2304,11 @@ function g4SmmCreateIdeaV299(productId = "", seed = {}) {
     primaryTaskFormatId: guruV185Text(seed?.primaryTaskFormatId),
     topicId: guruV185Text(seed?.topicId),
     insight: "",
+    selectedPlatformIds: sourceFormat ? g4SmmFormatPlatformsV299(sourceFormat).map(g4SmmPlatformIdV529) : [],
+    legacyPlatforms: [],
+    base: { title: "", text: "", media: null, cta: "", link: "" },
+    baseEdited: [],
+    platformOverrides: {},
     planningPeriodStart: g4SmmDateValueV299(seed?.planningPeriodStart)
       ? guruV185Text(seed.planningPeriodStart)
       : "",
@@ -1909,23 +2348,25 @@ function g4SmmPublicationFromIdeaV299(idea) {
     topicLabel: guruV185Text(sourceTopic?.value),
     formatId: guruV185Text(sourceFormat?.id),
     formatLabel: guruV185Text(sourceFormat?.format),
-    platforms: sourceFormat ? g4SmmFormatPlatformsV299(sourceFormat) : [],
+    platforms: g4SmmIdeaPlatformsV529(storedIdea),
+    platformIds: [...(storedIdea.selectedPlatformIds || [])],
     date: "",
-    link: "",
+    link: guruV185Text(storedIdea.base?.link),
     status: "not_started",
-    title: "",
+    title: guruV185Text(storedIdea.base?.title),
     description: storedIdea.digestionNotes,
     creativeBrief: {
       hook: "",
       promise: "",
       storyboard: "",
       proof: "",
-      cta: "",
+      cta: guruV185Text(storedIdea.base?.cta),
       durationSeconds: "",
       checks: Object.fromEntries(G4_SMM_STORYBOARD_PHASES_V344.map((phase) => [phase.key, false])),
     },
-    publicationPackage: Object.fromEntries(G4_SMM_PUBLICATION_PACKAGE_FIELDS_V344.map((field) => [field.key, ""])),
-    content: "",
+    publicationPackage: Object.fromEntries(G4_SMM_PUBLICATION_PACKAGE_FIELDS_V344.map((field) =>
+      [field.key, field.key === "caption" ? guruV185Text(storedIdea.base?.text) : ""])),
+    content: guruV185Text(storedIdea.base?.text),
     results: Object.fromEntries(G4_SMM_RESULT_METRICS_V299.map(([key]) => [key, ""])),
     sourceContext: g4SmmCaptureIdeaContextV299(storedIdea),
     createdAt: now,
@@ -2080,6 +2521,24 @@ document.addEventListener("input", (event) => {
 
 document.addEventListener("change", (event) => {
   const target = event.target;
+  if (target?.matches?.("[data-g4-smm-idea-platform-v529]")) {
+    const { content, record } = g4SmmContentRecordV299("idea", target.dataset.g4SmmIdeaIdV529);
+    if (!record || !g4SmmIdeaCanEditV330(record, content)) return;
+    const id = target.dataset.g4SmmIdeaPlatformV529;
+    if (!g4SmmMatrixRowsV529(record.primaryTaskFormatId).some((row) => row.platform_id === id)) return;
+    const selected = new Set(record.selectedPlatformIds || []);
+    if (target.checked) selected.add(id); else selected.delete(id);
+    record.selectedPlatformIds = [...selected];
+    const publication = g4SmmPublicationForIdeaV324(record, content);
+    if (publication) {
+      publication.platforms = g4SmmIdeaPlatformsV529(record);
+      publication.platformIds = [...record.selectedPlatformIds];
+    }
+    g4SmmContentTouchV299(record);
+    saveState();
+    renderGate();
+    return;
+  }
   const storyboardCheck = target?.dataset?.g4SmmBriefCheckV344;
   const storyboardPublicationId = target?.dataset?.g4SmmPublicationIdV299;
   if (storyboardCheck && storyboardPublicationId && G4_SMM_STORYBOARD_PHASES_V344.some((phase) => phase.key === storyboardCheck)) {
@@ -2139,15 +2598,29 @@ document.addEventListener("change", (event) => {
     const { content, record } = g4SmmContentRecordV299("idea", ideaId);
     if (!record || !g4SmmIdeaCanEditV330(record, content)) return;
     const strategy = g4SmmStrategyEnsureV298();
+    const oldSelected = record.selectedPlatformIds || [];
     record.primaryTaskFormatId = (strategy?.formats || []).some((row) =>
       guruV185Text(row?.id) === target.value,
     ) ? target.value : "";
     const selectedFormat = (strategy?.formats || []).find((row) =>
       guruV185Text(row?.id) === record.primaryTaskFormatId,
     );
+    const compatible = new Set(g4SmmMatrixRowsV529(record.primaryTaskFormatId).map((row) => row.platform_id));
+    record.legacyPlatforms = g3ProductJourneyUnique([...(record.legacyPlatforms || []),
+      ...oldSelected.filter((id) => !compatible.has(id))]);
+    record.selectedPlatformIds = selectedFormat ? g4SmmFormatPlatformsV299(selectedFormat).map(g4SmmPlatformIdV529) : [];
     const allowedTopics = selectedFormat ? g4SmmFormatTopicsV308(selectedFormat, strategy) : [];
     if (!allowedTopics.some((topic) => guruV185Text(topic?.id) === guruV185Text(record.topicId)))
       record.topicId = "";
+    const linkedPublication = g4SmmPublicationForIdeaV324(record, content);
+    if (linkedPublication) {
+      linkedPublication.formatId = record.primaryTaskFormatId;
+      linkedPublication.formatLabel = guruV185Text(selectedFormat?.format);
+      linkedPublication.topicId = record.topicId;
+      linkedPublication.topicLabel = guruV185Text(allowedTopics.find((topic) => topic.id === record.topicId)?.value);
+      linkedPublication.platforms = g4SmmIdeaPlatformsV529(record);
+      linkedPublication.platformIds = [...record.selectedPlatformIds];
+    }
     g4SmmContentTouchV299(record);
     saveState();
     renderGate();
@@ -2164,6 +2637,11 @@ document.addEventListener("change", (event) => {
     record.topicId = allowedTopics.some((topic) => guruV185Text(topic?.id) === target.value)
       ? target.value
       : "";
+    const linkedPublication = g4SmmPublicationForIdeaV324(record, content);
+    if (linkedPublication) {
+      linkedPublication.topicId = record.topicId;
+      linkedPublication.topicLabel = guruV185Text(allowedTopics.find((topic) => topic.id === record.topicId)?.value);
+    }
     g4SmmContentTouchV299(record);
     saveState();
     renderGate();
@@ -2173,7 +2651,7 @@ document.addEventListener("change", (event) => {
   const publicationId = target?.dataset?.g4SmmPublicationIdV299;
   const publicationField = target?.dataset?.g4SmmPublicationFieldV299;
   if (!publicationId || !publicationField) return;
-  const { record } = g4SmmContentRecordV299("publication", publicationId);
+  const { content, record } = g4SmmContentRecordV299("publication", publicationId);
   if (!record) return;
   const strategy = g4SmmStrategyEnsureV298();
 
@@ -2185,11 +2663,20 @@ document.addEventListener("change", (event) => {
     } else {
       record.platforms = [...target.selectedOptions].map((option) => option.value);
     }
+    record.platformIds = record.platforms.map(g4SmmPlatformIdV529);
+    const idea = content.ideas.find((row) => row.id === record.sourceIdeaId || row.publicationId === record.id);
+    if (idea) idea.selectedPlatformIds = g3ProductJourneyUnique(record.platforms.map(g4SmmPlatformIdV529));
   } else if (publicationField === "formatId") {
     record.formatId = target.value;
     const format = (strategy?.formats || []).find((row) => row.id === record.formatId);
     record.formatLabel = guruV185Text(format?.format) || record.formatLabel;
     record.platforms = format ? g4SmmFormatPlatformsV299(format) : record.platforms;
+    record.platformIds = record.platforms.map(g4SmmPlatformIdV529);
+    const idea = content.ideas.find((row) => row.id === record.sourceIdeaId || row.publicationId === record.id);
+    if (idea) {
+      idea.primaryTaskFormatId = record.formatId;
+      idea.selectedPlatformIds = record.platforms.map(g4SmmPlatformIdV529);
+    }
   } else if (publicationField === "topicId") {
     record.topicId = target.value;
     const topic = (strategy?.topics || []).find((row) => row.id === record.topicId);

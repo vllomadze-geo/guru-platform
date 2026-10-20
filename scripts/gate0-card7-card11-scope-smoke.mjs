@@ -179,7 +179,7 @@ try {
     );
     return { legacyBefore, afterMigration, before, diagnosticCounts, migration };
   })()`);
-  await evaluate(page, "location.reload(); true");
+  await page.call("Page.navigate", { url: appUrl });
   await waitFor(page, 'document.querySelector("[data-open-project]")');
   await evaluate(page, 'document.querySelector("[data-open-project]").click(); true');
   await waitFor(
@@ -295,6 +295,9 @@ try {
       createdAt: now
     };
     guruV189CatalogItems(state).push(productA, productB);
+    megaPlatformSetProductCategoryIds(productA.id, [category.id], state);
+    megaPlatformSetProductCategoryIds(productB.id, [category.id], state);
+    megaPlatformSetUrl("products", productA.id, "https://example.test/koza", state);
     state.project.productBindingsV185[productA.id] = {
       audiences: [],
       goal: {},
@@ -403,6 +406,8 @@ try {
     recalculateStatusForCard(productDiagnostic, state);
     const exportBefore = JSON.stringify(startupSummaryRows(state));
     activeGateId = "gate-0";
+    els.searchInput.value = "";
+    els.statusFilter.value = "all";
     renderGate();
     // Some legacy-recovery wrappers materialize a missing infrastructure row
     // on the first render. Complete the now-final company collection, then
@@ -473,7 +478,7 @@ try {
     const productDiagnostic = document.querySelector('[data-card-row="gate0-product-diagnostic"]');
     const card2 = document.querySelector('[data-card-row="card-2"]');
     const landingCard = document.querySelector('[data-card-row="gate0-landing-check-v215"]');
-    const landingUrl = landingCard?.querySelector('[data-mega-field="url"]')?.value || "";
+    const landingUrl = landingCard?.querySelector('.mega-platform-source-value')?.textContent.trim() || "";
     return {
       landingDomCount: document.querySelectorAll('[data-card-row="gate0-landing-check-v215"]').length,
       landingFollowsCard2: card2?.nextElementSibling === landingCard,
@@ -488,6 +493,9 @@ try {
       productGroupCount: productDiagnostic?.querySelectorAll('[data-gate0-diagnostic-product-id]').length || 0,
       productGroupIds: [...(productDiagnostic?.querySelectorAll('[data-gate0-diagnostic-product-id]') || [])]
         .map((element) => element.dataset.gate0DiagnosticProductId),
+      productHeadingCount: productDiagnostic?.querySelectorAll('.diag-scope-head-v348').length || 0,
+      productHeadingText: productDiagnostic?.querySelector('.diag-scope-head-v348 h4')?.textContent.trim() || '',
+      productStatusCount: productDiagnostic?.querySelectorAll('.diag-scope-head-v348 .status-pill').length || 0,
       aggregateProductGroupCount: model.productGroups.length,
       companyNames: companyItems.map((item) => item.text),
       companyCounts: {
@@ -497,10 +505,12 @@ try {
       },
       kozaPositioning: kozaPositioning?.items.map((item) => item.status) || [],
       kozaOffer: kozaOffer?.items.map((item) => item.status) || [],
-      kozaHasResults: koza.stages.some((stage) => stage.name === "Текущие результаты"),
+      kozaResults: koza.stages.find((stage) => stage.name === "Текущие результаты")?.items.map((item) => item.status) || [],
       lisaPositioning: lisaPositioning?.items.map((item) => item.status) || [],
       lisaOffer: lisaOffer?.items.map((item) => item.status) || [],
-      lisaHasResults: lisa.stages.some((stage) => stage.name === "Текущие результаты"),
+      lisaPositioningSource: lisaPositioning?.desc || '',
+      lisaOfferSource: lisaOffer?.desc || '',
+      lisaResults: lisa.stages.find((stage) => stage.name === "Текущие результаты")?.items.map((item) => item.status) || [],
       unassignedCount: model.unassignedStages.length,
       summaryCardCount: gate0.cards.filter(isStartupSummaryCard).length,
       companyDiagnosticCount: gate0.cards.filter((card) => card.id === "card-11").length,
@@ -512,21 +522,23 @@ try {
       productBlockTitles: ["segments", "positioning", "offers"].map((field) =>
         card2?.querySelector('[data-gate0-scope-field-row="' + field + '"] .gate0-scope-field-head-v194 strong')?.textContent.trim() || ""
       ),
-      productStrategicTitle: card2?.querySelector(".guru-strategic-foundation-title-v246")?.textContent.trim() || "",
-      companyStrategicTitle: document.querySelector("[data-guru-strategic-foundation-company] .guru-strategic-foundation-title-v246")?.textContent.trim() || "",
       startupExportUnchanged: JSON.stringify(startupSummaryRows(state)) === window.__v348ExportBefore,
       errors: window.__guruErrors.slice(),
     };
   })()`);
   assert(audit.landingDomCount === 1, "Landing card is missing or duplicated in DOM");
   assert(audit.landingFollowsCard2, "Landing card does not visually follow card-2 in the product section");
-  assert(audit.landingUrl === "https://example.test/koza", "Landing UI read the legacy name mirror instead of current product binding");
+  assert(audit.landingUrl === "https://example.test/koza", `Landing UI did not show the current product URL: ${audit.landingUrl}`);
   assert(audit.scopeCount === 2 && audit.companyScopeCount === 1 && audit.productScopeCount === 1, "Two diagnostic cards must contain one matching scope each");
   assert(audit.companyCardHasProductScope === 0, "Company diagnostic rendered the product scope");
   assert(audit.productCardHasCompanyScope === 0, "Product diagnostic rendered the company scope");
   assert(
     audit.productGroupCount === 1 && audit.productGroupIds[0] === productAId,
     `Product diagnostic must render only selected product A: ${JSON.stringify(audit.productGroupIds)}`,
+  );
+  assert(
+    audit.productHeadingCount === 1 && audit.productHeadingText === "Коза" && audit.productStatusCount === 1,
+    "Selected product must have one diagnostic heading and one summary status",
   );
   assert(audit.aggregateProductGroupCount === 2, "Aggregate diagnostic model must keep all products for export");
   assert(audit.companyCounts.channels > 0, "Company subsection lost channels");
@@ -537,10 +549,13 @@ try {
   }
   assert(audit.kozaPositioning.every((status) => status === "works"), "Exact Koza positioning was not read");
   assert(audit.kozaOffer.every((status) => status === "works"), "Exact Koza offer was not read");
-  assert(audit.kozaHasResults, "Current results were not attached by exact positionId");
-  assert(audit.lisaPositioning.includes("missing"), "Lisa inherited category positioning");
-  assert(audit.lisaOffer.includes("missing"), "Lisa inherited project offer");
-  assert(!audit.lisaHasResults, "Lisa received current results belonging to Koza");
+  assert(audit.kozaResults.length > 1 && audit.kozaResults.every((status) => status === "works"),
+    "Current results were not attached by exact positionId");
+  assert(audit.lisaPositioning.join() === "works,missing", `Lisa did not read active category positioning while retaining its empty landing: ${JSON.stringify({ statuses: audit.lisaPositioning, source: audit.lisaPositioningSource })}`);
+  assert(audit.lisaOffer.every((status) => status === "works"), `Lisa did not read active project offer: ${JSON.stringify({ statuses: audit.lisaOffer, source: audit.lisaOfferSource })}`);
+  assert(audit.lisaPositioningSource.includes("Вся категория"), "Positioning source scope is not visible");
+  assert(audit.lisaOfferSource.includes("Весь проект"), "Offer source scope is not visible");
+  assert(audit.lisaResults.join() === "missing", "Lisa received current results belonging to Koza");
   assert(audit.unassignedCount === 0, "Exact current results produced an unassigned duplicate");
   assert(
     audit.summaryCardCount === 2 &&
@@ -560,13 +575,94 @@ try {
     ]),
     `Product block suffixes are wrong: ${JSON.stringify(audit.productBlockTitles)}`,
   );
-  assert(audit.productStrategicTitle === "Стратегическая основа · Продукт/Услуга", `Product strategic title is wrong: ${audit.productStrategicTitle}`);
-  assert(audit.companyStrategicTitle === "Стратегическая основа · Компания", `Company strategic title is wrong: ${audit.companyStrategicTitle}`);
   assert(audit.startupExportUnchanged, "startupSummaryRows export was changed by the new diagnostic renderer");
   assert(audit.errors.length === 0, `Runtime errors: ${audit.errors.join(" | ")}`);
 
+  const offerInput = await evaluate(page, `(() => {
+    const input = document.querySelector('[data-gate0-scope-record="offer-product-a-v348"][data-gate0-scope-record-field="offer_rational"]');
+    if (!input) return false;
+    input.value = "";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    return true;
+  })()`);
+  assert(offerInput, "Product offer input is missing in the rendered strategy");
+  await wait(250);
+  const liveOffer = await evaluate(page, `(() => ({
+    status: diag5ASelectedProductGroupV350(state)?.stages.find((stage) => stage.name === "Офферы и CTA")?.items[0]?.status,
+    text: document.querySelector('[data-gate0-diagnostic-stage="product:${productAId}:offers"]')?.textContent || "",
+  }))()`);
+  assert(liveOffer.status === "needs_improvement" && liveOffer.text.includes("Требует улучшения"),
+    `Product diagnostic did not refresh after editing the offer: ${JSON.stringify(liveOffer)}`);
+  await evaluate(page, `(() => {
+    const input = document.querySelector('[data-gate0-scope-record="offer-product-a-v348"][data-gate0-scope-record-field="offer_rational"]');
+    input.value = "Готово к вручению";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    return true;
+  })()`);
+  await wait(250);
+  const restoredOffer = await evaluate(page, `(() => ({
+    status: diag5ASelectedProductGroupV350(state)?.stages.find((stage) => stage.name === "Офферы и CTA")?.items[0]?.status,
+    text: document.querySelector('[data-gate0-diagnostic-stage="product:${productAId}:offers"]')?.textContent || "",
+  }))()`);
+  assert(restoredOffer.status === "works" && restoredOffer.text.includes("Работает"),
+    `Product diagnostic did not recover after restoring the offer: ${JSON.stringify(restoredOffer)}`);
+
+  const liveSources = await evaluate(page, `(async () => {
+    const landing = document.querySelector('[data-card-row="gate0-landing-check-v215"] [data-mega-pv2="landing"][data-mega-field="status"]');
+    const period = document.querySelector('[data-cr-meta-field="period"]');
+    const owner = document.querySelector('[data-cr-meta-field="positionId"]');
+    if (!landing || !period || !owner || owner.disabled) return { controlsReady: false };
+    const pause = () => new Promise((resolve) => setTimeout(resolve, 250));
+    const change = (input, value) => {
+      input.value = value;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+    const originalPeriod = period.value;
+    change(landing, "");
+    await pause();
+    const landingNeedsWork = diag5ASelectedProductGroupV350(state)?.stages[0]?.items.find(
+      (item) => item.text.startsWith("Посадочная страница")
+    )?.status;
+    const landingVisible = document.querySelector('[data-gate0-diagnostic-stage="product:${productAId}:positioning-landing"]')?.textContent.includes("Требует улучшения");
+    change(landing, "works");
+    await pause();
+    change(period, "");
+    await pause();
+    const periodMissing = diag5ASelectedProductGroupV350(state)?.stages.find(
+      (stage) => stage.name === "Текущие результаты"
+    )?.items[0]?.status;
+    const periodVisible = document.querySelector('[data-gate0-diagnostic-stage="product:${productAId}:results"]')?.textContent.includes("Отсутствует");
+    change(period, originalPeriod);
+    await pause();
+    change(owner, ${JSON.stringify(productBId)});
+    await pause();
+    const ownerAfterChange = state.gates.find((gate) => gate.id === "gate-0")?.cards.find(
+      (card) => isCurrentResultsCard(card)
+    )?.currentResultsMeta?.positionId;
+    const ownResultsMissing = diag5ASelectedProductGroupV350(state)?.stages.find(
+      (stage) => stage.name === "Текущие результаты"
+    )?.items[0]?.status;
+    const resultsCard = state.gates.find((gate) => gate.id === "gate-0")?.cards.find(isCurrentResultsCard);
+    const legacyProductId = resultsCard.currentResultsMeta.productId;
+    resultsCard.currentResultsMeta.productId = guruV194SelectedProduct(state)?.categoryId;
+    change(owner, "");
+    await pause();
+    gate0CurrentResultsMigrateToPosition(resultsCard, state);
+    const explicitUnassigned = resultsCard.currentResultsMeta.positionId === "";
+    resultsCard.currentResultsMeta.productId = legacyProductId;
+    change(owner, ${JSON.stringify(productAId)});
+    await pause();
+    return { controlsReady: true, landingNeedsWork, landingVisible, periodMissing, periodVisible,
+      ownerAfterChange, ownResultsMissing, explicitUnassigned };
+  })()`);
+  assert(liveSources.controlsReady && liveSources.landingNeedsWork === "needs_improvement" &&
+    liveSources.landingVisible && liveSources.periodMissing === "missing" &&
+    liveSources.periodVisible && liveSources.ownerAfterChange === productBId &&
+    liveSources.ownResultsMissing === "missing" && liveSources.explicitUnassigned,
+    `Diagnostic sources did not update live or preserve exact ownership: ${JSON.stringify(liveSources)}`);
+
   const switchedProduct = await evaluate(page, `(() => {
-    const select = document.querySelector('[data-card-row="card-2"] [data-gate0-scope-product-select]');
+    const select = document.querySelector('[data-gate0-scope-product-select="product_segment_client_task"]');
     if (!select) throw new Error("Shared Gate 0 product selector is missing");
     select.value = ${JSON.stringify(productBId)};
     select.dispatchEvent(new Event("change", { bubbles: true }));
@@ -580,6 +676,9 @@ try {
         status: stage.status,
         items: stage.items.map((item) => item.status)
       })),
+      resultOwner: state.gates.find((gate) => gate.id === "gate-0")?.cards.find(
+        (card) => isCurrentResultsCard(card)
+      )?.currentResultsMeta?.positionId || "",
       status: state.gates.find((gate) => gate.id === "gate-0").cards.find(
         (card) => card.id === "gate0-product-diagnostic"
       )?.status || ""
@@ -592,9 +691,13 @@ try {
     `Product diagnostic did not follow selector to product B: ${JSON.stringify(switchedProduct)}`,
   );
   assert(switchedProduct.status === "in_progress", `Selected product B diagnostic status is wrong: ${JSON.stringify(switchedProduct)}`);
+  assert(switchedProduct.resultOwner === productAId && switchedProduct.stageStatuses.find(
+    (stage) => stage.name === "Текущие результаты"
+  )?.items.join() === "missing",
+    `Switching the selected product reassigned the results: ${JSON.stringify(switchedProduct)}`);
 
   const switchedBack = await evaluate(page, `(() => {
-    const select = document.querySelector('[data-card-row="card-2"] [data-gate0-scope-product-select]');
+    const select = document.querySelector('[data-gate0-scope-product-select="product_segment_client_task"]');
     select.value = ${JSON.stringify(productAId)};
     select.dispatchEvent(new Event("change", { bubbles: true }));
     const productDiagnostic = document.querySelector('[data-card-row="gate0-product-diagnostic"]');
@@ -624,14 +727,19 @@ try {
       (sum, group) => sum + group.stages.filter((stage) => stage.name === "Текущие результаты").length,
       0,
     );
+    const productResultStatuses = model.productGroups.flatMap((group) => group.stages
+      .filter((stage) => stage.name === "Текущие результаты")
+      .flatMap((stage) => stage.items.map((item) => item.status)));
     currentResultsCard.currentResultsMeta.positionId = ${JSON.stringify(productAId)};
     return {
       productResultCount,
+      productResultStatuses,
       unassignedCount: model.unassignedStages.length,
       unassignedLabel: model.unassignedStages[0]?.label || "",
     };
   })()`);
-  assert(invalidBinding.productResultCount === 0, "Invalid positionId was guessed as a product");
+  assert(invalidBinding.productResultCount === 2 && invalidBinding.productResultStatuses.every((status) => status === "missing"),
+    "Invalid positionId was guessed as a product");
   assert(invalidBinding.unassignedCount === 1, "Invalid positionId must produce one explicit unassigned stage");
   assert(invalidBinding.unassignedLabel === "Не назначено продукту", "Unassigned result warning has the wrong label");
 
@@ -694,7 +802,7 @@ try {
   })()`);
   assert(persistence.saved, "Workspace was not written before reload");
   await wait(300);
-  await evaluate(page, "location.reload(); true");
+  await page.call("Page.navigate", { url: appUrl });
   await waitFor(page, 'document.querySelector("[data-open-project]")');
   await evaluate(page, 'document.querySelector("[data-open-project]").click(); true');
   await waitFor(page, 'Boolean(state) && typeof diag5AScopeModelV348 === "function"');

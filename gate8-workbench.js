@@ -120,14 +120,18 @@ function g8CompactStateV3(product = guruV194SelectedProduct(state), goal = null)
   const defaults = g8DefaultPeriodV3(goal);
   holder.compactV3 = holder.compactV3 && typeof holder.compactV3 === "object" ? holder.compactV3 : {};
   const compact = holder.compactV3;
-  compact.schemaVersion = 3;
-  compact.open = { ...GATE8_SECTION_DEFAULTS, ...(compact.open || {}), scenario: true };
+  compact.schemaVersion = 4;
+  compact.open = { ...GATE8_SECTION_DEFAULTS, ...(compact.open || {}) };
+  // Both scope levels expose all five scenarios together. Keep later choices.
+  if (!compact.scenarioVisibilityV5) {
+    compact.open.scenario = true;
+    compact.scenarioVisibilityV5 = true;
+  }
   compact.periodStart = g8DateOnlyV3(compact.periodStart) || defaults.start;
   compact.periodEnd = g8DateOnlyV3(compact.periodEnd) || defaults.end;
   compact.campaignId = g8TextV3(compact.campaignId);
-  // Сценарии больше не переключаются: все пять вариантов рассчитываются и
-  // отображаются одновременно. Старое UI-состояние не должно выбирать или
-  // скрывать один из них.
+  // При раскрытии все пять вариантов отображаются вместе. Старое UI-состояние
+  // не должно выбирать или скрывать отдельный вариант.
   compact.scenario = "base";
   compact.updatedAt = compact.updatedAt || "";
   base.migrationLog = Array.isArray(base.migrationLog) ? base.migrationLog : [];
@@ -135,7 +139,7 @@ function g8CompactStateV3(product = guruV194SelectedProduct(state), goal = null)
     base.migrationLog.push({
       id: GATE8_WORKBENCH_MIGRATION,
       appliedAt: new Date().toISOString(),
-      description: "20 legacy sections mapped to three calculation-driven workbench blocks; all five scenarios are visible together, while data details and history remain nested inside the forecast block. Existing manual values, tasks and history retained in place.",
+      description: "20 legacy sections mapped to three calculation-driven workbench blocks; all five scenarios are available together inside a collapsed section, while data details and history remain nested inside the forecast block. Existing manual values, tasks and history retained in place.",
       legacyMap: GATE8_LEGACY_SECTION_MAP,
     });
   }
@@ -157,16 +161,24 @@ ensureGate8Workspace = function (workspace = state) {
 
 function g8StrictGoalV3() {
   const project = state?.project || {};
-  const description = g8TextV3(project.goalDescription || project.goalText || (typeof project.goal === "string" ? project.goal : project.goal?.description));
-  const explicitMetric = g8TextV3(project.goalMetric || project.goal?.metric).toLowerCase();
+  const hasCompanyGoals = Array.isArray(project.companyGoalsV360);
+  const primary = hasCompanyGoals && typeof guruCompanyPrimaryGoalV360 === "function"
+    ? guruCompanyPrimaryGoalV360(state) : null;
+  const source = hasCompanyGoals ? primary || {} : project;
+  const description = g8TextV3(hasCompanyGoals
+    ? source.goalDescription
+    : project.goalDescription || project.goalText || (typeof project.goal === "string" ? project.goal : project.goal?.description));
+  const explicitMetric = g8TextV3(hasCompanyGoals
+    ? source.goalMetric
+    : project.goalMetric || project.goal?.metric).toLowerCase();
   const aliases = { заявки: "leads", лиды: "leads", продажи: "sales", выручка: "revenue", прибыль: "profit", окупаемость: "roi" };
   const metric = GATE8_RESULTS.some(([key]) => key === explicitMetric)
     ? explicitMetric
     : aliases[explicitMetric] || g8MetricFromText(description);
-  const target = g8NumericV3(project.goalTargetValue ?? project.goal?.targetValue ?? project.goal?.target);
-  const budget = g8NumericV3(project.goalBudget ?? project.goal?.budget);
-  const allowedCost = g8NumericV3(project.goalAllowedCost ?? project.goal?.allowedCost);
-  const deadline = g8DateOnlyV3(project.goalDeadline || project.goal?.deadline);
+  const target = g8NumericV3(hasCompanyGoals ? source.goalTargetValue : project.goalTargetValue ?? project.goal?.targetValue ?? project.goal?.target);
+  const budget = g8NumericV3(hasCompanyGoals ? source.goalBudget : project.goalBudget ?? project.goal?.budget);
+  const allowedCost = g8NumericV3(hasCompanyGoals ? source.goalAllowedCost : project.goalAllowedCost ?? project.goal?.allowedCost);
+  const deadline = g8DateOnlyV3(hasCompanyGoals ? source.goalDeadline : project.goalDeadline || project.goal?.deadline);
   return {
     present: Boolean(description || metric || target.present || deadline),
     valid: Boolean(metric && target.valid),
@@ -180,8 +192,39 @@ function g8StrictGoalV3() {
     allowedCost: allowedCost.valid ? allowedCost.value : NaN,
     allowedCostRecord: allowedCost,
     source: "Gate 0 → Цель проекта",
-    updatedAt: project.goalUpdatedAt || state?.updatedAt || "",
+    updatedAt: primary?.updated_at || project.goalUpdatedAt || state?.updatedAt || "",
     missing: [!metric && "измеримый показатель цели", !target.valid && "целевое значение"].filter(Boolean),
+  };
+}
+
+function g8ProductGoalV4(product) {
+  const rows = product ? g8ProductDataV3(product).projected.goals || [] : [];
+  const source = rows.slice().sort((a, b) =>
+    g8TextV3(b.updatedAt || b.createdAt).localeCompare(g8TextV3(a.updatedAt || a.createdAt)))[0] || {};
+  const description = g8TextV3(source.description || source.goalDescription || source.name || source.title);
+  const explicitMetric = g8TextV3(source.metric || source.goalMetric || source.resultMetric).toLowerCase();
+  const aliases = { заявки: "leads", лиды: "leads", продажи: "sales", выручка: "revenue", прибыль: "profit", окупаемость: "roi" };
+  const metric = GATE8_RESULTS.some(([key]) => key === explicitMetric)
+    ? explicitMetric : aliases[explicitMetric] || g8MetricFromText(description);
+  const targetRecord = g8NumericV3(source.targetValue ?? source.goalTargetValue ?? source.target);
+  const budgetRecord = g8NumericV3(source.budget ?? source.goalBudget);
+  const allowedCostRecord = g8NumericV3(source.allowedCost ?? source.goalAllowedCost);
+  return {
+    present: Boolean(description || metric || targetRecord.present),
+    valid: Boolean(metric && targetRecord.valid),
+    description,
+    metric,
+    target: targetRecord.valid ? targetRecord.value : NaN,
+    targetRecord,
+    deadline: g8DateOnlyV3(source.deadline || source.goalDeadline),
+    budget: budgetRecord.valid ? budgetRecord.value : NaN,
+    budgetRecord,
+    allowedCost: allowedCostRecord.valid ? allowedCostRecord.value : NaN,
+    allowedCostRecord,
+    source: "Gate 5 → цель выбранного продукта",
+    updatedAt: source.updatedAt || source.createdAt || "",
+    productId: product?.id || "",
+    missing: [!metric && "измеримый показатель цели продукта", !targetRecord.valid && "целевое значение продукта"].filter(Boolean),
   };
 }
 
@@ -727,8 +770,8 @@ function g8RecommendationsV3({ missing, calculation, parameters, constraints, re
 
 function g8AnalysisV3() {
   const data = ensureGate8Workspace();
-  const goal = g8StrictGoalV3();
   const product = guruV194SelectedProduct(state);
+  const goal = g8ProductGoalV4(product);
   const compact = g8CompactStateV3(product, goal);
   const context = g8CampaignContextV3(product, compact);
   const observations = g8ObservationsV3(product, context);
@@ -977,17 +1020,16 @@ function g8DeltaLabelV3(metric, delta) {
   return `${sign}${g8FormatValueV3(metric, delta)}`;
 }
 
-function g8CompactDisclosureV3(key, title, _status, body, analysis, { primary = false, lockedOpen = false } = {}) {
-  const open = lockedOpen || analysis.compact.open[key] !== false;
-  const heading = lockedOpen
-    ? `<div class="g8-workbench-section-head is-static"><span>${escapeHtml(title)}</span></div>`
-    : `<button type="button" class="g8-workbench-section-head" data-g8-v3-toggle="${escapeAttr(key)}" aria-expanded="${open}">
-      <span>${escapeHtml(title)}</span>
-      <span class="g8-workbench-section-meta"><b aria-hidden="true">${open ? "↑" : "↓"}</b></span>
-    </button>`;
+function g8CompactDisclosureV3(key, title, _status, body, analysis, { primary = false } = {}) {
+  const open = analysis.compact.open[key] !== false;
+  const bodyId = `g8-workbench-${key}-body`;
+  const content = typeof body === "function" ? (open ? body() : "") : body;
   return `<section class="g8-workbench-section ${primary ? "is-primary" : "is-secondary"} ${open ? "is-open" : "is-collapsed"}" data-g8-v3-section="${escapeAttr(key)}">
-    ${heading}
-    <div class="g8-workbench-section-body" ${open ? "" : "hidden"}>${body}</div>
+    <button type="button" class="g8-workbench-section-head" data-g8-v3-toggle="${escapeAttr(key)}" aria-expanded="${open}" aria-controls="${bodyId}">
+      <span>${escapeHtml(title)}</span>
+      <span class="g8-workbench-section-meta"><b>${open ? "Свернуть ↑" : "Открыть ↓"}</b></span>
+    </button>
+    <div class="g8-workbench-section-body" id="${bodyId}" ${typeof body === "function" && !open ? 'data-g8-v3-lazy="true"' : ""} ${open ? "" : "hidden"}>${content}</div>
   </section>`;
 }
 
@@ -1120,7 +1162,7 @@ function g8PrepareSourceV3(target) {
       if (direction) direction.open = true;
     }
   }
-  if (target.kind === "gate5-import-v3") {
+  if (target.kind === "gate5-import-v3" || target.kind === "gate5-snapshot-v1") {
     const g5 = ensureGate5State();
     g5.ui.openBlocks[target.block || "input"] = true;
     if (target.campaignId && (g5.campaignRegistry || []).some((row) => row.id === target.campaignId)) {
@@ -1129,6 +1171,15 @@ function g8PrepareSourceV3(target) {
       g5.ui.filters.periodFrom = "";
       g5.ui.filters.periodTo = "";
     }
+  }
+  if (target.kind === "gate5-goal-v1") {
+    const g5 = ensureGate5State();
+    g5.ui.openBlocks.input = true;
+  }
+  if (target.kind === "gate7-task-v1" && target.taskId) {
+    const journal = ensureGate7State();
+    const task = journal.tasks.find((row) => row.id === target.taskId);
+    if (task) journal.ui.openSections[task.sectionId || "new"] = true;
   }
 }
 
@@ -1169,6 +1220,18 @@ function g8FindSourceV3(target) {
     return document.querySelector(`[data-g4-forecast-input-v3="${esc(target.field)}"][data-g4-forecast-product-v3="${esc(target.productId)}"]`);
   if (target.kind === "gate5-import-v3")
     return document.querySelector("[data-g5-yandex-file]");
+  if (target.kind === "gate5-snapshot-v1")
+    return document.querySelector(`[data-g5-snapshot-id="${esc(target.recordId)}"]`) || document.querySelector("[data-g5-yandex-file]");
+  if (target.kind === "gate5-goal-v1")
+    return document.querySelector(target.recordId
+      ? `[data-g5-goal-record="${esc(target.recordId)}"]`
+      : `[data-g5-goal-product="${esc(target.productId)}"]`) || document.querySelector("[data-g5-goal-registry]");
+  if (target.kind === "gate7-task-v1")
+    return document.querySelector(target.taskId
+      ? `[data-g7-task="${esc(target.taskId)}"]`
+      : `[data-g7-add-task]`);
+  if (target.kind === "gate6-calendar")
+    return document.querySelector('[data-g6-context="period"], .gate6-calendar');
   if (target.kind === "gate1-unit-calculator-v3")
     return document.querySelector(`[data-uv130-item-toggle="${esc(target.itemIndex)}"]`)?.closest(".g1-card")?.querySelector("iframe[data-brown-calculator]") || null;
   return null;
@@ -1193,6 +1256,13 @@ function g8FocusSourceV3(target, attempt = 0) {
 function g8NavigateToSourceV3(target) {
   if (target.gateId === "gate-8") {
     g8FocusSourceV3(target);
+    return;
+  }
+  if (target.kind === "gate0-company-goal") {
+    g3ProductJourneyPrepareSource(target);
+    guruInvalidateGateViewCache();
+    guruNavigateToGate(target.gateId);
+    g3ProductJourneyFocusSource(target);
     return;
   }
   g8PrepareSourceV3(target);
@@ -1284,32 +1354,47 @@ document.addEventListener("toggle", (event) => {
 
 function g8InlineDetailsV3(analysis) {
   const details = [
-    ["data", "Данные и расчёт", g8DataHtmlV3(analysis)],
-    ["history", "История: прогноз и факт", g8HistoryHtmlV3(analysis)],
+    ["data", "Данные и расчёт", () => g8DataHtmlV3(analysis)],
+    ["history", "История: прогноз и факт", () => g8HistoryHtmlV3(analysis)],
   ];
-  return `<div class="g8-expect-tools">${details.map(([key, title, body]) => {
+  return `<div class="g8-expect-tools">${details.map(([key, title, renderBody]) => {
     const open = analysis.compact.open[key] === true;
     return `<div class="g8-inline-detail ${open ? "is-open" : ""}" data-g8-v3-detail="${escapeAttr(key)}">
-      <button type="button" class="secondary-btn g8-inline-detail-toggle" data-g8-v3-toggle="${escapeAttr(key)}" aria-expanded="${open}">${escapeHtml(title)} <b aria-hidden="true">${open ? "↑" : "↓"}</b></button>
-      <div class="g8-inline-detail-body" ${open ? "" : "hidden"}>${body}</div>
+      <button type="button" class="secondary-btn g8-inline-detail-toggle" data-g8-v3-toggle="${escapeAttr(key)}" aria-expanded="${open}" aria-controls="g8-inline-${key}-body">${escapeHtml(title)} <b aria-hidden="true">${open ? "↑" : "↓"}</b></button>
+      <div class="g8-inline-detail-body" id="g8-inline-${key}-body" ${open ? "" : `data-g8-v3-detail-lazy="${escapeAttr(key)}" hidden`}>${open ? renderBody() : ""}</div>
     </div>`;
   }).join("")}</div>`;
 }
 
+function g8GoalCardV5(scope, goal, options = {}) {
+  const isCompany = scope === "company";
+  const title = isCompany ? "Цель компании" : "Цель продукта / услуги";
+  const result = goal.valid
+    ? g8FinalMetricPhraseV3(goal.metric, goal.target)
+    : isCompany ? "Измеримая цель компании не задана"
+      : options.product ? "Отдельная цель продукта не задана" : "Выберите продукт";
+  const deadline = goal.deadline ? `До ${g8DateLabel(goal.deadline)}` : "Срок не указан";
+  const source = isCompany ? "Gate 0 · Цель компании" : "Gate 5 · Цель продукта";
+  if (isCompany) return `<section class="g8-goal-card is-company" data-g8-goal-scope="company" aria-label="${title}">
+    <header><h3>${title}</h3><span>${escapeHtml(g8CompanyNameV3())}</span></header>
+    <div class="g8-goal-card-result"><strong>${escapeHtml(result)}</strong><small>${escapeHtml(deadline)} · ${escapeHtml(source)}</small>${g8JumpButton("gate-0", "Уточнить цель")}</div>
+  </section>`;
+  return `<section class="g8-goal-card" data-g8-goal-scope="${scope}" aria-label="${title}">
+    <header><h3>${title}</h3></header>
+    <div class="g8-goal-card-body">
+      <div class="g8-goal-card-entity">${guruV194ProductSelectHtml("gate8-forecast", { compact: true })}</div>
+      <div class="g8-goal-card-result"><span>Результат</span><strong>${escapeHtml(result)}</strong><small>${escapeHtml(deadline)} · ${escapeHtml(source)}</small>${options.product ? g8JumpButton("gate-5", "Уточнить цель") : ""}</div>
+    </div>
+  </section>`;
+}
+
 function g8ContextPanelV3(analysis) {
-  const products = guruV194Products(state);
-  const product = analysis.context.product;
   const campaignRows = analysis.context.campaigns || [];
   const metric = analysis.data.resultMetric;
-  return `<section class="g8-context-panel" aria-label="Контекст прогноза">
-    <div class="g8-context-cell is-company"><span>Компания / продукт</span><strong>${escapeHtml(g8CompanyNameV3())}</strong>
-      <select class="g1-input" data-g8-product-pick-select aria-label="Продукт или услуга">
-        <option value="">Выберите продукт / услугу</option>${g3ProductJourneyOptions(products, product?.id || "")}
-      </select>
-    </div>
+  return `<section class="g8-context-panel" aria-label="Настройки прогноза продукта">
     <div class="g8-context-cell"><span>Период прогноза</span><div class="g8-period-inputs"><input type="date" data-g8-v3-context="periodStart" value="${escapeAttr(analysis.period.start)}" aria-label="Начало периода"><span>—</span><input type="date" data-g8-v3-context="periodEnd" value="${escapeAttr(analysis.period.end)}" aria-label="Конец периода"></div></div>
     ${analysis.parameters.budget.valid ? `<div class="g8-context-cell"><span>Бюджет продукта / кампании</span><strong>${escapeHtml(g8UnitValueV3(analysis.parameters.budget))}</strong>${g8SourceButtonV3({ key: "budget" }, analysis, "Изменить в Gate 4")}</div>` : ""}
-    <div class="g8-context-cell"><span>Цель / результат</span><select data-g8-field="resultMetric">${GATE8_RESULTS.map(([key, label]) => `<option value="${escapeAttr(key)}" ${metric === key ? "selected" : ""}>${escapeHtml(label)}</option>`).join("")}</select>${g8JumpButton("gate-0", "Изменить цель в Gate 0")}</div>
+    <div class="g8-context-cell"><span>Показатель прогноза</span><select data-g8-field="resultMetric">${GATE8_RESULTS.map(([key, label]) => `<option value="${escapeAttr(key)}" ${metric === key ? "selected" : ""}>${escapeHtml(label)}</option>`).join("")}</select></div>
     ${campaignRows.length ? `<label class="g8-context-campaign"><span>Кампания — статистика разных кампаний не смешивается</span><select data-g8-v3-context="campaignId"><option value="">${campaignRows.length > 1 ? "Выберите кампанию" : "Без отдельного выбора"}</option>${campaignRows.map((row) => `<option value="${escapeAttr(row.id)}" ${analysis.context.campaignId === row.id ? "selected" : ""}>${escapeHtml(row.name || row.campaignName || row.cabinetId || row.id)}</option>`).join("")}</select></label>` : ""}
   </section>`;
 }
@@ -1381,7 +1466,7 @@ function g8ActionsHtmlV3(analysis) {
   const other = analysis.recommendations.slice(3);
   const otherOpen = analysis.compact.open.moreRecommendations === true;
   return `<div class="g8-recommendations">${main.map((item) => g8RecommendationCardV3(item, analysis)).join("")}</div>
-    ${other.length ? `<button type="button" class="g8-more-button" data-g8-v3-toggle="moreRecommendations">${otherOpen ? "Скрыть остальные" : `Ещё ${other.length} ${other.length === 1 ? "вывод" : "вывода"}`} ${otherOpen ? "↑" : "↓"}</button><div class="g8-recommendations" ${otherOpen ? "" : "hidden"}>${other.map((item) => g8RecommendationCardV3(item, analysis)).join("")}</div>` : ""}`;
+    ${other.length ? `<button type="button" class="g8-more-button" data-g8-v3-toggle="moreRecommendations" data-g8-v3-more-count="${other.length}" aria-expanded="${otherOpen}" aria-controls="g8-more-recommendations">${otherOpen ? "Скрыть остальные" : `Ещё ${other.length} ${other.length === 1 ? "вывод" : "вывода"}`} ${otherOpen ? "↑" : "↓"}</button><div class="g8-recommendations" id="g8-more-recommendations" ${otherOpen ? "" : "hidden"}>${other.map((item) => g8RecommendationCardV3(item, analysis)).join("")}</div>` : ""}`;
 }
 
 function g8ScenarioFieldV3(key, label, unit, analysis) {
@@ -1633,19 +1718,43 @@ function g8CreateOrOpenTaskV3(recommendationId) {
   renderGate();
 }
 
+function g8FinalMetricPhraseV3(metric, value) {
+  const formatted = g8FormatValueV3(metric, value);
+  const noun = {
+    leads: ["заявка", "заявки", "заявок"],
+    sales: ["продажа", "продажи", "продаж"],
+  }[metric];
+  if (noun) {
+    const form = { one: noun[0], few: noun[1], many: noun[2], other: noun[2] }[new Intl.PluralRules("ru-RU").select(value)];
+    return `${formatted} ${form}`;
+  }
+  if (metric === "revenue") return `${formatted} выручки`;
+  if (metric === "profit") return `${formatted} прибыли после рекламы`;
+  if (metric === "roi") return `окупаемость ${formatted}`;
+  return `${g8MetricLabel(metric)}: ${formatted}`;
+}
+
 renderGate8Forecast = function () {
-  setToolbarVisible(false);
   const analysis = g8AnalysisV3();
-  const calculationState = g8CalculationStateV3(analysis);
-  els.contentArea.innerHTML = `<div class="g8-workbench" data-g8-workbench-version="${escapeAttr(GATE8_WORKBENCH_VERSION)}">
-    <header class="g8-workbench-header"><div><div class="analytics-path">Gate 8 → Прогноз и моделирование</div><h2>Прогноз, решение и проверка условий</h2><p>Факты выбранного продукта и кампании не смешиваются с допущениями.</p></div><span class="status-pill status-${escapeAttr(calculationState.systemStatus)} g8-calculation-state" data-g8-calculation-state="${escapeAttr(calculationState.key)}">${escapeHtml(calculationState.label)}</span></header>
-    ${g8ContextPanelV3(analysis)}
-    <div class="g8-primary-stack">
-      ${g8CompactDisclosureV3("expect", "Чего ожидать", "", g8ExpectHtmlV3(analysis), analysis, { primary: true })}
-      ${g8CompactDisclosureV3("action", "Что сделать", "", g8ActionsHtmlV3(analysis), analysis, { primary: true })}
-      ${g8CompactDisclosureV3("scenario", "Что изменится, если…", "", g8ScenarioHtmlV3(analysis), analysis, { primary: true, lockedOpen: true })}
-    </div>
-    ${analysis.data.message ? `<div class="g8-toast">${escapeHtml(analysis.data.message)}</div>` : ""}
+  els.contentArea.innerHTML = `<div class="g8-workbench guru-company-product-layout-v230" data-gate-scope-layout="v230" data-g8-workbench-version="${escapeAttr(GATE8_WORKBENCH_VERSION)}">
+    <section class="guru-gate-scope-v230" data-gate-scope="company"></section>
+    <section class="guru-gate-scope-v230" data-gate-scope="product">
+      ${gate0SectionHeadingHtml("Продукт-Услуга", "Цель, итоговая проверка и прогноз выбранной позиции.")}
+      <div class="guru-product-scope-body-v230">
+        ${g8GoalCardV5("product", analysis.goal, { product: analysis.context.product })}
+        ${g8AuditHtmlV1("product", analysis)}
+        <section class="g8-model" data-g8-model-scope="product" aria-label="Прогноз и моделирование продукта">
+          <header class="g8-model-heading"><h3>Прогноз и моделирование</h3></header>
+          ${g8ContextPanelV3(analysis)}
+          <div class="g8-primary-stack">
+            ${g8CompactDisclosureV3("expect", "Чего ожидать", "", g8ExpectHtmlV3(analysis), analysis, { primary: true })}
+            ${g8CompactDisclosureV3("action", "Что сделать", "", g8ActionsHtmlV3(analysis), analysis, { primary: true })}
+            ${g8CompactDisclosureV3("scenario", "Что изменится, если…", "", () => g8ScenarioHtmlV3(analysis), analysis, { primary: true })}
+          </div>
+          ${analysis.data.message ? `<div class="g8-toast">${escapeHtml(analysis.data.message)}</div>` : ""}
+        </section>
+      </div>
+    </section>
   </div>`;
 };
 
@@ -1654,18 +1763,31 @@ let g8ManualScenarioRenderTimerV4 = 0;
 function g8UpdateManualScenarioV4(input, renderImmediately = false) {
   const key = input?.dataset?.g8V3Manual;
   if (key === undefined) return;
+  const workspace = state;
+  const projectId = activeProjectId;
   const data = ensureGate8Workspace();
   data.manual[key] = input.value;
   data.message = "";
-  flashSaving();
+  els.saveStatus.textContent = "Сохраняю...";
+  els.autosaveDot.style.background = "#d4b05f";
   clearTimeout(g8ManualScenarioRenderTimerV4);
   const commit = () => {
     g8ManualScenarioRenderTimerV4 = 0;
-    saveState();
-    if (activeView !== "gate" || activeGateId !== "gate-8") return;
-    renderGate();
-    const next = document.querySelector(`[data-g8-v3-manual="${CSS.escape(key)}"]`);
-    next?.focus({ preventScroll: true });
+    guruPersistStateFast({ workspace, projectId, durable: true });
+    if (workspace !== state || projectId !== activeProjectId ||
+        activeView !== "gate" || activeGateId !== "gate-8") return;
+    const body = document.getElementById("g8-workbench-scenario-body");
+    if (!body || body.hidden || body.dataset.g8V3Lazy === "true") return;
+    const keepFocus = document.activeElement === input;
+    const selectionStart = keepFocus ? input.selectionStart : null;
+    const selectionEnd = keepFocus ? input.selectionEnd : null;
+    body.innerHTML = g8ScenarioHtmlV3(g8AnalysisV3());
+    if (keepFocus) {
+      const next = body.querySelector(`[data-g8-v3-manual="${CSS.escape(key)}"]`);
+      next?.focus({ preventScroll: true });
+      if (selectionStart !== null && selectionEnd !== null)
+        next?.setSelectionRange(selectionStart, selectionEnd);
+    }
   };
   if (renderImmediately) commit();
   else g8ManualScenarioRenderTimerV4 = setTimeout(commit, 220);
@@ -1718,10 +1840,48 @@ document.addEventListener("click", (event) => {
   if (toggle) {
     const compact = g8CompactStateV3(guruV194SelectedProduct(state), g8StrictGoalV3());
     const key = toggle.dataset.g8V3Toggle;
-    compact.open[key] = !compact.open[key];
+    const detail = toggle.closest("[data-g8-v3-detail]");
+    const section = detail || key === "moreRecommendations"
+      ? null : toggle.closest("[data-g8-v3-section]");
+    const open = detail ? !detail.classList.contains("is-open")
+      : section ? toggle.getAttribute("aria-expanded") !== "true" : !compact.open[key];
+    if (section) {
+      const body = section.querySelector(".g8-workbench-section-body");
+      if (open && body?.dataset.g8V3Lazy === "true") {
+        body.innerHTML = g8ScenarioHtmlV3(g8AnalysisV3());
+        delete body.dataset.g8V3Lazy;
+      }
+      section.classList.toggle("is-open", open);
+      section.classList.toggle("is-collapsed", !open);
+      if (body) body.hidden = !open;
+      toggle.setAttribute("aria-expanded", String(open));
+      const label = toggle.querySelector(".g8-workbench-section-meta > b");
+      if (label) label.textContent = open ? "Свернуть ↑" : "Открыть ↓";
+    } else if (detail) {
+      const body = detail.querySelector(".g8-inline-detail-body");
+      if (open && body?.dataset.g8V3DetailLazy) {
+        const current = g8AnalysisV3();
+        body.innerHTML = key === "history" ? g8HistoryHtmlV3(current) : g8DataHtmlV3(current);
+        delete body.dataset.g8V3DetailLazy;
+      }
+      detail.classList.toggle("is-open", open);
+      if (body) body.hidden = !open;
+      toggle.setAttribute("aria-expanded", String(open));
+      const arrow = toggle.querySelector("b");
+      if (arrow) arrow.textContent = open ? "↑" : "↓";
+    } else if (key === "moreRecommendations") {
+      const body = document.getElementById("g8-more-recommendations");
+      if (body) body.hidden = !open;
+      toggle.setAttribute("aria-expanded", String(open));
+      const count = Number(toggle.dataset.g8V3MoreCount || 0);
+      toggle.textContent = open
+        ? "Скрыть остальные ↑"
+        : `Ещё ${count} ${count === 1 ? "вывод" : "вывода"} ↓`;
+    }
+    compact.open[key] = open;
     compact.updatedAt = new Date().toISOString();
-    saveState();
-    renderGate();
+    guruScheduleUiPreferenceSave();
+    if (!section && !detail && key !== "moreRecommendations") renderGate();
     return;
   }
   const task = event.target?.closest?.("[data-g8-v3-task]");
@@ -1751,7 +1911,7 @@ function g8EnsureMigrationV3(workspace) {
     base.migrationLog.push({
       id: GATE8_WORKBENCH_MIGRATION,
       appliedAt: new Date().toISOString(),
-      description: "Gate 8 uses three calculation-driven blocks. All five scenarios render together, data/history are nested, missing inputs use exact source targets, and legacy manual values, task links and history are preserved.",
+      description: "Gate 8 uses three calculation-driven blocks. All five scenarios appear together when opened, data/history are nested, missing inputs use exact source targets, and legacy manual values, task links and history are preserved.",
       sourceTargets: {
         gate4: "gate4Production.forecastAssumptionsByProduct[product_id]",
         gate1: "unitV130.items[product_id] / embedded Brown calculator",

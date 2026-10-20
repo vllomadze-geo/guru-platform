@@ -2,8 +2,14 @@
 .g4-product-smm-workspace-v2 :is(button, select) { font: inherit; }
 .g4-product-smm-workspace-v2 h3, .g4-product-smm-workspace-v2 h4 { margin: 0; color: var(--smm-ink); }
 .g4-product-smm-head-v2 { padding: 15px 20px 13px; border-bottom: 1px solid var(--smm-border); }
-.g4-product-smm-head-v2 h3 { font-size: 17px; line-height: 1.25; }
-.g4-product-smm-head-v2 span { display: block; margin-top: 3px; color: var(--smm-muted); font-size: 11px; }
+.g4-product-smm-collapse-v2 { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 0; border: 0; background: transparent; color: var(--smm-ink); cursor: pointer; text-align: left; }
+.g4-product-smm-collapse-v2 > span:first-child { display: grid; gap: 3px; }
+.g4-product-smm-collapse-v2 h3 { font-size: 17px; line-height: 1.25; }
+.g4-product-smm-collapse-v2 small { color: var(--smm-muted); font-size: 11px; }
+.g4-product-smm-collapse-mark-v2 { color: var(--smm-muted); font-size: 19px; line-height: 1; transition: transform .12s ease; }
+.g4-product-smm-workspace-v2.is-collapsed .g4-product-smm-collapse-mark-v2 { transform: rotate(180deg); }
+.g4-product-smm-workspace-v2.is-collapsed > :not(.g4-product-smm-head-v2) { display: none; }
+.g4-product-smm-workspace-v2.is-collapsed > .g4-product-smm-head-v2 { border-bottom: 0; }
 .g4-product-smm-toolbar-v2 { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding: 8px 20px; border-bottom: 1px solid var(--smm-border); }
 .g4-product-smm-period-v2 { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .g4-product-smm-period-v2 strong { margin-right: 6px; font-size: 12px; white-space: nowrap; }
@@ -18,7 +24,7 @@
 .g4-product-smm-workspace-v2 progress::-webkit-progress-value { border-radius: 999px; background: #647cbd; }
 .g4-product-smm-workspace-v2 progress::-moz-progress-bar { border-radius: 999px; background: #647cbd; }
 .g4-product-smm-toolbar-progress-v2 progress { width: 76px; }
-.g4-product-smm-table-wrap-v2, .g4-product-smm-summary-scroll-v2 { min-width: 0; overflow-x: auto; }
+.g4-product-smm-table-wrap-v2, .g4-product-smm-summary-scroll-v2 { min-width: 0; overflow-x: auto; contain: paint; }
 .g4-product-smm-table-v2 { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .g4-product-smm-table-v2 th { padding: 10px 12px; border-bottom: 1px solid var(--smm-border); color: var(--smm-muted); font-size: 10px; font-weight: 800; letter-spacing: .055em; text-align: left; text-transform: uppercase; }
 .g4-product-smm-table-v2 th:nth-child(1) { width: 19%; }
@@ -51,6 +57,10 @@
 .g4-product-smm-idea-list-v2 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 5px; min-width: 0; }
 .g4-product-smm-idea-v2, .g4-product-smm-bank-v2, .g4-product-smm-signals-v2 details, .g4-product-smm-orphans-v2 details { border: 1px solid var(--smm-border); border-radius: 9px; background: #fff; }
 .g4-product-smm-idea-v2 > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: start; min-width: 0; padding: 14px 16px; cursor: pointer; list-style: none; }
+.g4-product-smm-idea-v2 > summary.has-photo-v2 { grid-template-columns: minmax(0, 1fr) 196px auto; }
+.g4-product-smm-idea-photo-v2 { display: grid; place-items: center; position: relative; overflow: hidden; width: 196px; height: 136px; border: 1px solid #dfe5ef; border-radius: 9px; background: #edf1f9; color: #5e74a6; font-size: 22px; }
+.g4-product-smm-idea-photo-v2 > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.g4-product-smm-idea-photo-v2 > img:not([src]) { display: none; }
 .g4-product-smm-idea-v2 > summary::-webkit-details-marker, .g4-product-smm-bank-v2 > summary::-webkit-details-marker, .g4-product-smm-signals-v2 summary::-webkit-details-marker { display: none; }
 .g4-product-smm-idea-summary-content-v2 { display: grid; gap: 9px; width: min(100%, 780px); min-width: 0; }
 .g4-product-smm-idea-headline-v2 { display: flex; align-items: center; gap: 9px; min-width: 0; }
@@ -106,27 +116,287 @@
 .g4-product-smm-social-media-v2 strong { font-size: 13px; }
 .g4-product-smm-social-media-v2 small { max-width: 330px; color: #63728a; font-size: 10px; }
 .g4-product-smm-social-actions-v2 { display: flex; flex-wrap: wrap; gap: 14px; padding: 10px 14px; color: #7c8594; font-size: 10px; }
+.g4-smm-pair-toggle-v529 { cursor: pointer; }
+.g4-smm-pair-toggle-v529 input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.g4-smm-pair-toggle-v529:not(:has(input:checked)) .g4-product-smm-platform-v2 { background: #fff; color: #aaa39a; opacity: .6; }
+.g4-smm-pair-toggle-v529:has(input:focus-visible) .g4-product-smm-platform-v2 { outline: 2px solid #6483c7; outline-offset: 2px; }
+.g4-smm-pair-workspace-v529 { display: grid; grid-template-columns: minmax(245px, 310px) minmax(0, 1fr); gap: 18px; align-items: start; min-width: 0; padding: 8px 0 16px; }
+.g4-smm-pair-editor-v529 { position: sticky; top: 12px; display: grid; gap: 10px; min-width: 0; padding: 15px; border: 1px solid var(--smm-border); border-radius: 12px; background: #faf9f7; }
+.g4-smm-pair-editor-v529 > h4 { font-size: 14px; }
+.g4-smm-pair-editor-v529 > small { color: var(--smm-muted); font-size: 10px; }
+.g4-smm-pair-editor-v529 label, .g4-smm-pair-overrides-v529 label { display: grid; gap: 5px; min-width: 0; color: #625c54; font-size: 11px; font-weight: 700; }
+.g4-smm-pair-editor-v529 :is(input[type=text], textarea), .g4-smm-pair-overrides-v529 :is(input[type=text], textarea) { box-sizing: border-box; width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid #e3ddd4; border-radius: 8px; background: #fff; color: var(--smm-ink); font: inherit; font-weight: 500; resize: vertical; }
+.g4-smm-pair-editor-v529 :is(input, textarea):focus-visible, .g4-smm-pair-overrides-v529 :is(input, textarea):focus-visible { outline: 2px solid #9eb4df; border-color: #748cbf; }
+.g4-smm-pair-media-label-v529 input { max-width: 100%; font-size: 10px; font-weight: 400; }
+.g4-smm-cta-suggestions-v531 { display: grid; gap: 6px; margin-top: -4px; }
+.g4-smm-cta-suggestions-v531 > small, .g4-smm-cta-empty-v531 { color: var(--smm-muted); font-size: 10px; line-height: 1.35; }
+.g4-smm-cta-suggestions-v531 > div { display: grid; gap: 5px; }
+.g4-smm-pair-editor-v529 .g4-smm-cta-suggestion-v531 { display: grid; grid-template-columns: minmax(0, 78px) minmax(0, 1fr); align-items: center; gap: 8px; width: 100%; padding: 7px 9px; border: 1px solid #e4ddd4; border-radius: 8px; background: #fff; color: #514c46; cursor: pointer; text-align: left; }
+.g4-smm-cta-suggestion-v531 > small { color: var(--smm-muted); font-size: 9px; line-height: 1.25; }
+.g4-smm-cta-suggestion-v531 > span { min-width: 0; font-size: 11px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+.g4-smm-pair-editor-v529 .g4-smm-cta-suggestion-v531:is(:hover, :focus-visible) { border-color: #9bb39f; background: #f6faf5; }
+.g4-smm-pair-editor-v529 .g4-smm-cta-suggestion-v531.is-selected { border-color: #b8d6bd; background: #e2f0e4; color: #315d39; }
+.g4-smm-pair-picker-v529 { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; padding-top: 9px; border-top: 1px solid var(--smm-border); }
+.g4-smm-pair-picker-v529 > strong { flex: 0 0 100%; font-size: 11px; }
+.g4-smm-pair-previews-v529 { min-width: 0; }
+.g4-smm-pair-toolbar-v529 { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 34px; margin-bottom: 8px; }
+.g4-smm-pair-toolbar-v529 strong { font-size: 12px; }
+.g4-smm-pair-toolbar-v529 > span { display: flex; gap: 5px; }
+.g4-smm-pair-toolbar-v529 button { width: 28px; height: 28px; border: 1px solid var(--smm-border); border-radius: 50%; background: #fff; color: #4a463f; cursor: pointer; font-size: 18px; }
+.g4-smm-pair-rail-v529 { display: flex; gap: 12px; min-width: 0; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x mandatory; scrollbar-width: thin; touch-action: pan-x pan-y; padding-bottom: 8px; }
+.g4-smm-pair-rail-v529.is-dragging-v529 { cursor: grabbing; scroll-snap-type: none; user-select: none; }
+.g4-smm-pair-card-v529 { flex: 0 0 min(100%, 340px); min-width: 0; scroll-snap-align: start; }
+.g4-smm-pair-card-v529 > header { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; margin-bottom: 7px; }
+.g4-smm-pair-card-v529 > header strong { font-size: 12px; }
+.g4-smm-pair-card-v529 > header span { grid-row: 2; color: var(--smm-muted); font-size: 10px; }
+.g4-smm-pair-card-v529 > header em { grid-column: 2; grid-row: 1 / 3; align-self: center; font-size: 10px; font-style: normal; text-align: right; }
+.g4-smm-pair-card-v529 > header em.is-ready { color: #388452; }
+.g4-smm-pair-card-v529 > header em.is-pending { color: #ad7b28; }
+.g4-smm-preview-launch-bar-v538 { display: flex; justify-content: flex-end; min-height: 25px; }
+.g4-smm-preview-launch-bar-v538 > button { padding: 2px 3px 5px; border: 0; background: transparent; color: #527397; cursor: pointer; font-size: 10px; font-weight: 700; }
+.g4-smm-preview-launch-bar-v538 > button:hover, .g4-smm-preview-launch-bar-v538 > button:focus-visible { color: #315baa; text-decoration: underline; }
+.g4-smm-preview-launch-v538 > .g4-smm-native-preview-v532 { cursor: zoom-in; }
+.g4-smm-preview-launch-v538 > .g4-smm-native-preview-v532 video { cursor: auto; }
+.g4-smm-preview-dialog-v538 { box-sizing: border-box; inset: 0; width: 100vw; max-width: none; height: 100vh; height: 100dvh; max-height: none; margin: 0; padding: 12px; overflow: hidden; border: 0; background: #1d2229f2; color: #fff; }
+.g4-smm-preview-dialog-v538::backdrop { background: #11161dbd; }
+.g4-smm-preview-dialog-v538[open] { display: grid; place-items: center; }
+.g4-smm-preview-fullscreen-v538 { display: flex; flex-direction: column; width: min(100%, 620px); height: 100%; min-height: 0; }
+.g4-smm-preview-fullscreen-bar-v538 { display: flex; align-items: center; justify-content: space-between; flex: none; gap: 12px; min-height: 44px; margin-bottom: 8px; }
+.g4-smm-preview-fullscreen-bar-v538 > strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
+.g4-smm-preview-fullscreen-close-v538 { display: grid; place-items: center; flex: none; width: 36px; height: 36px; padding: 0; border: 1px solid #ffffff69; border-radius: 50%; background: #ffffff19; color: #fff; cursor: pointer; font-size: 26px; line-height: 1; }
+.g4-smm-preview-fullscreen-close-v538:hover, .g4-smm-preview-fullscreen-close-v538:focus-visible { background: #ffffff38; }
+.g4-smm-preview-fullscreen-viewport-v538 { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 0 2px 20px; }
+.g4-smm-preview-fullscreen-card-v538 { width: min(100%, 560px); margin-inline: auto; }
+@media (max-width: 600px) { .g4-smm-preview-dialog-v538 { padding: 8px; } .g4-smm-preview-fullscreen-bar-v538 { min-height: 38px; } }
+.g4-smm-pair-card-v529 .g4-product-smm-social-post-v2 { max-width: none; }
+.g4-smm-pair-card-v529 .g4-product-smm-social-caption-v2 { min-height: 36px; max-height: 100px; overflow-y: auto; }
+.g4-smm-pair-card-v529 .g4-product-smm-social-media-v2 { overflow: hidden; min-height: 170px; padding: 0; }
+.g4-smm-pair-card-v529 .g4-product-smm-social-media-v2 :is(img, video) { width: 100%; max-height: 300px; object-fit: contain; }
+.g4-smm-pair-card-v529 .g4-smm-native-preview-v532 { position: relative; display: flex; flex-direction: column; overflow: hidden; min-height: 230px; border: 1px solid #e7e5e0; border-radius: 11px; background: #fff; color: #282521; }
+.g4-smm-native-preview-v532 .g4-product-smm-social-author-v2 { margin: 0; padding: 11px 12px; }
+.g4-smm-native-preview-v532 .g4-product-smm-social-caption-v2 { order: initial; min-height: 0; max-height: none; margin: 0; padding: 10px 12px; }
+.g4-smm-native-preview-v532 .g4-product-smm-social-heading-v2 { padding: 5px 12px 0; font-size: 13px; }
+.g4-smm-native-preview-v532 .g4-product-smm-social-media-v2 { width: 100%; min-height: 180px; aspect-ratio: 4 / 3; }
+.g4-smm-native-preview-v532 .g4-product-smm-social-media-v2 :is(img, video) { width: 100%; height: 100%; max-height: none; object-fit: cover; }
+.g4-smm-native-preview-v532 .g4-product-smm-social-actions-v2 { justify-content: space-between; gap: 5px; border-top: 1px solid #f0eeea; }
+.g4-smm-native-preview-v532 :is(.g4-smm-native-views-v532, .g4-smm-native-reactions-v532, .g4-smm-native-comments-v532) { padding: 5px 12px; color: #7c8594; font-size: 10px; }
+.g4-smm-native-preview-v532 .g4-smm-native-carousel-v532 { display: flex; justify-content: space-between; padding: 6px 12px; color: #777; font-size: 10px; }
+.g4-smm-native-preview-v532 .g4-smm-native-carousel-v532 span { color: #6280bd; }
+.g4-smm-native-preview-v532 .g4-smm-native-followup-v532 { display: flex; flex-wrap: wrap; gap: 4px 10px; padding: 5px 12px 10px; }
+.g4-smm-native-preview-v532 .g4-smm-native-followup-v532 :is(.g4-smm-pair-cta-v529, .g4-smm-pair-link-v529) { margin: 0; padding: 0; background: transparent; font-weight: 600; }
+.g4-smm-native-preview-v532.is-message { border-radius: 13px 13px 13px 4px; background: #fdfdff; }
+.g4-smm-native-preview-v532.is-message .g4-product-smm-social-caption-v2 { padding-top: 2px; }
+/* Feed and channel previews follow the actual post hierarchy: account,
+   full image, caption, then platform controls. Keep the whole uploaded image
+   visible instead of cropping every asset to the same 4:3 frame. */
+.g4-smm-pair-card-v529 .g4-smm-native-preview-v532:is(.is-feed, .is-carousel, .is-message, .is-article) .g4-product-smm-social-media-v2:has(img, video) { display: block; min-height: 0; aspect-ratio: auto; background: #f5f5f5; }
+.g4-smm-pair-card-v529 .g4-smm-native-preview-v532:is(.is-feed, .is-carousel, .is-message, .is-article) .g4-product-smm-social-media-v2 :is(img, video) { display: block; width: 100%; height: auto; max-height: 420px; object-fit: contain; }
+.g4-smm-pair-card-v529 .g4-smm-native-preview-v532:is(.is-feed, .is-carousel, .is-message, .is-article) .g4-product-smm-social-media-v2 img { max-height: none; }
+.g4-smm-native-preview-v532:is(.is-platform-vk, .is-platform-instagram) .g4-product-smm-social-author-v2 { padding: 9px 12px; }
+.g4-smm-native-preview-v532:is(.is-platform-vk, .is-platform-instagram) .g4-product-smm-social-actions-v2 { justify-content: flex-start; gap: 16px; padding: 8px 12px; border-top: 0; color: #282827; font-size: 19px; line-height: 1; }
+.g4-smm-native-preview-v532.is-platform-instagram .g4-product-smm-social-actions-v2 span:last-child { margin-left: auto; }
+.g4-smm-native-preview-v532.is-platform-instagram .g4-product-smm-social-caption-v2 { padding-top: 1px; }
+.g4-smm-caption-account-v533 { font-weight: 750; }
+.g4-smm-native-preview-v532.is-platform-vk .g4-product-smm-social-caption-v2 { padding-bottom: 2px; }
+.g4-smm-native-preview-v532.is-platform-vk .g4-product-smm-social-author-v2 small { display: none; }
+.g4-smm-native-preview-v532.is-platform-vk .g4-product-smm-social-actions-v2 { color: #778696; }
+/* VK post previews use the community feed layout. The media keeps its source
+   ratio and the caption stays below it, as on the actual community page. */
+.g4-smm-pair-card-v529 .g4-smm-vk-preview-v536 { min-height: 0; border-radius: 10px; background: #fff; color: #191d23; }
+.g4-smm-vk-appbar-v536 { display: flex; align-items: center; gap: 8px; min-height: 49px; padding: 7px 10px; color: #2787e8; }
+.g4-smm-vk-appbar-v536 svg, .g4-smm-vk-actions-v536 svg, .g4-smm-vk-bottom-v536 svg { display: block; width: 19px; height: 19px; }
+.g4-smm-vk-back-v536, .g4-smm-vk-bell-v536 { flex: none; }
+.g4-smm-vk-search-v536 { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; padding: 8px 10px; border-radius: 9px; background: #f0f2f5; color: #8793a2; font-size: 12px; }
+.g4-smm-vk-search-v536 svg { width: 15px; height: 15px; }
+.g4-smm-vk-menu-v536 { color: #2787e8; font-size: 15px; letter-spacing: 1px; }
+.g4-smm-vk-tabs-v536 { display: flex; gap: 13px; min-width: 0; overflow-x: auto; padding: 3px 10px 9px; scrollbar-width: none; white-space: nowrap; color: #8792a0; font-size: 12px; }
+.g4-smm-vk-tabs-v536::-webkit-scrollbar { display: none; }
+.g4-smm-vk-tabs-v536 > span { flex: 0 0 auto; padding: 6px 2px; }
+.g4-smm-vk-tabs-v536 > .is-active { padding-inline: 8px; border: 1px solid #e1e5eb; border-radius: 9px; box-shadow: 0 2px 7px #202d3810; color: #2685e5; }
+.g4-smm-vk-post-v536 { min-width: 0; border-block: 7px solid #f4f6f8; border-bottom-width: 0; }
+.g4-smm-vk-post-header-v536 { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 51px; padding-right: 11px; }
+.g4-smm-vk-post-header-v536 > span { flex: none; color: #8996a5; font-size: 15px; letter-spacing: 1px; }
+.g4-smm-vk-preview-v536 .g4-smm-vk-post-header-v536 .g4-product-smm-social-author-v2 { flex: 1; min-width: 0; padding: 8px 11px; }
+.g4-smm-vk-post-header-v536 .g4-product-smm-social-author-v2 > span:last-child { min-width: 0; }
+.g4-smm-vk-post-header-v536 .g4-product-smm-social-author-v2 strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #181b20; font-size: 12px; }
+.g4-smm-vk-post-header-v536 .g4-product-smm-social-avatar-v2 { width: 31px; height: 31px; border: 1px solid #edf0f3; background: #f5f1ed; color: #a13d63; }
+.g4-smm-vk-media-v536 { position: relative; min-width: 0; }
+.g4-smm-pair-card-v529 .g4-smm-vk-preview-v536 .g4-smm-vk-media-v536 .g4-product-smm-social-media-v2 { width: 100%; min-height: 0; margin: 0; border-radius: 0; }
+.g4-smm-vk-media-v536 .g4-smm-native-carousel-v532 { position: absolute; top: 9px; right: 9px; display: block; padding: 3px 8px; border-radius: 12px; background: #1f2533b8; color: #fff; }
+.g4-smm-vk-media-v536 .g4-smm-native-carousel-v532 span { display: none; }
+.g4-smm-pair-card-v529 .g4-smm-vk-preview-v536 .g4-smm-vk-post-v536 .g4-product-smm-social-caption-v2 { max-height: none; overflow: visible; padding: 10px 11px 6px; line-height: 1.4; }
+.g4-smm-vk-preview-v536 .g4-smm-vk-post-v536 .g4-smm-native-followup-v532 { display: grid; gap: 2px; padding: 0 11px 8px; }
+.g4-smm-vk-preview-v536 .g4-smm-vk-post-v536 .g4-smm-native-followup-v532 :is(.g4-smm-pair-cta-v529, .g4-smm-pair-link-v529) { margin: 0; padding: 0; background: none; color: #2685e5; font-weight: 600; }
+.g4-smm-vk-actions-v536 { display: flex; align-items: center; justify-content: space-between; min-height: 38px; padding: 4px 11px 9px; }
+.g4-smm-vk-actions-v536 > span { display: flex; align-items: center; gap: 16px; color: #28323d; }
+.g4-smm-vk-actions-v536 > time { margin-left: auto; color: #8e9baa; font-size: 11px; white-space: nowrap; }
+.g4-smm-vk-bottom-v536 { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 46px; padding: 8px 14px; border-top: 1px solid #e8ebef; background: #f8f9fb; color: #96a1ad; font-size: 19px; }
+.g4-smm-vk-bottom-v536 > span:nth-child(2) { color: #2685e5; }
+/* Instagram feed: app title, company account, edge-to-edge media, actions,
+   caption and publication date. The draft has no real likes or slide count. */
+.g4-smm-pair-card-v529 .g4-smm-instagram-preview-v537 { min-height: 0; border-radius: 10px; background: #fff; color: #171a1f; }
+.g4-smm-instagram-appbar-v537 { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: 9px; min-height: 55px; padding: 7px 10px; border-bottom: 1px solid #edf0f2; }
+.g4-smm-instagram-appbar-v537 > span:nth-child(2) { display: grid; min-width: 0; text-align: center; }
+.g4-smm-instagram-appbar-v537 strong { font-size: 14px; line-height: 1.25; }
+.g4-smm-instagram-appbar-v537 small { overflow: hidden; color: #4d5158; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.g4-smm-instagram-appbar-v537 svg, .g4-smm-instagram-actions-v537 svg { display: block; width: 20px; height: 20px; }
+.g4-smm-instagram-appbar-v537 .g4-smm-instagram-follow-v537 { padding: 6px 8px; border-radius: 7px; background: #f0f1f5; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.g4-smm-instagram-post-v537 { min-width: 0; }
+.g4-smm-instagram-post-header-v537 { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 53px; padding-right: 11px; }
+.g4-smm-instagram-post-header-v537 > span { flex: none; font-size: 15px; letter-spacing: 1px; }
+.g4-smm-instagram-preview-v537 .g4-smm-instagram-post-header-v537 .g4-product-smm-social-author-v2 { flex: 1; min-width: 0; padding: 8px 11px; }
+.g4-smm-instagram-post-header-v537 .g4-product-smm-social-author-v2 > span:last-child { min-width: 0; }
+.g4-smm-instagram-post-header-v537 .g4-product-smm-social-author-v2 strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #171a1f; font-size: 12px; }
+.g4-smm-instagram-post-header-v537 .g4-product-smm-social-author-v2 small { display: none; }
+.g4-smm-instagram-post-header-v537 .g4-product-smm-social-avatar-v2 { width: 33px; height: 33px; border: 2px solid #cf83af; background: #f7edf3; color: #9a3d72; }
+.g4-smm-instagram-media-v537 { position: relative; min-width: 0; }
+.g4-smm-pair-card-v529 .g4-smm-instagram-preview-v537 .g4-smm-instagram-media-v537 .g4-product-smm-social-media-v2 { width: 100%; min-height: 0; margin: 0; border-radius: 0; }
+.g4-smm-instagram-slide-v537 { position: absolute; top: 10px; right: 10px; padding: 5px 8px; border-radius: 14px; background: #23242ba8; color: #fff; font-size: 10px; line-height: 1; }
+.g4-smm-instagram-pager-v537 { display: flex; justify-content: center; min-height: 14px; padding-top: 7px; }
+.g4-smm-instagram-pager-v537 > span { width: 5px; height: 5px; border-radius: 50%; background: #5b68f7; }
+.g4-smm-instagram-actions-v537 { display: flex; align-items: center; justify-content: space-between; padding: 8px 11px 4px; }
+.g4-smm-instagram-actions-v537 > span { display: flex; align-items: center; gap: 13px; }
+.g4-smm-instagram-caption-v537 { min-width: 0; }
+.g4-smm-pair-card-v529 .g4-smm-instagram-preview-v537 .g4-smm-instagram-caption-v537 .g4-product-smm-social-caption-v2 { max-height: none; min-height: 0; overflow: visible; margin: 0; padding: 8px 11px 2px; line-height: 1.45; }
+.g4-smm-instagram-caption-v537 .g4-smm-native-followup-v532 { display: block; padding: 2px 11px; }
+.g4-smm-instagram-caption-v537 .g4-smm-native-followup-v532 .g4-smm-pair-cta-v529 { margin: 0; padding: 0; background: transparent; color: #171a1f; font-weight: 500; }
+.g4-smm-instagram-date-v537 { display: block; padding: 5px 11px 11px; color: #7e8792; font-size: 10px; }
+/* MAX has its own channel header, blue chat and one message bubble. */
+.g4-smm-pair-card-v529 .g4-smm-max-preview-v535 { border-radius: 12px; background: #a9d0f5; }
+.g4-smm-max-header-v535 { display: grid; grid-template-columns: 20px 34px minmax(0, 1fr) 24px; align-items: center; gap: 8px; min-height: 53px; padding: 7px 10px; background: linear-gradient(100deg, #f6f6f3, #edf7ff); color: #24272b; }
+.g4-smm-max-header-v535 > strong { min-width: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g4-smm-max-header-v535 .g4-product-smm-social-avatar-v2 { width: 32px; height: 32px; border: 2px solid #fff; background: #fff; color: #3874ac; font-size: 10px; }
+.g4-smm-max-back-v535 { font-size: 29px; line-height: 1; }
+.g4-smm-max-menu-v535 { display: grid; place-items: center; width: 23px; height: 23px; border: 1px solid #323840; border-radius: 50%; font-size: 18px; line-height: 1; }
+.g4-smm-max-chat-v535 { position: relative; display: grid; align-content: start; gap: 10px; min-height: 160px; padding: 13px 8px 44px; background-color: #a9d0f5; background-image: radial-gradient(circle at 22px 25px, transparent 14px, #72afe651 15px 16px, transparent 17px), radial-gradient(circle at 94px 76px, #72afe65c 0 2px, transparent 3px), linear-gradient(35deg, transparent 46%, #72afe634 47%, transparent 49%); background-size: 136px 122px, 108px 117px, 146px 146px; }
+.g4-smm-max-date-v535 { justify-self: center; padding: 3px 11px; border-radius: 20px; background: #5eadd8b8; color: #fff; font-size: 11px; font-weight: 700; }
+.g4-smm-max-bubble-v535 { display: grid; grid-template-columns: minmax(0, 1fr) auto; width: 82%; min-width: 0; overflow: hidden; border-radius: 12px 12px 12px 4px; background: #fff; box-shadow: 0 1px 3px #46638521; }
+.g4-smm-pair-card-v529 .g4-smm-max-preview-v535 .g4-smm-max-bubble-v535 .g4-product-smm-social-media-v2 { grid-column: 1 / -1; width: 100%; margin: 0; border-radius: 0; }
+.g4-smm-max-preview-v535 .g4-smm-max-bubble-v535 .g4-product-smm-social-caption-v2 { grid-column: 1 / -1; margin: 0; padding: 10px 12px 12px; line-height: 1.45; }
+.g4-smm-max-preview-v535 .g4-smm-max-bubble-v535 .g4-smm-native-followup-v532 { grid-column: 1 / -1; display: grid; gap: 4px; padding: 0 12px 10px; }
+.g4-smm-max-preview-v535 .g4-smm-max-bubble-v535 .g4-smm-native-followup-v532 :is(.g4-smm-pair-cta-v529, .g4-smm-pair-link-v529) { margin: 0; padding: 0; background: transparent; color: #3189bb; font-weight: 600; }
+.g4-smm-max-preview-v535 .g4-smm-max-reactions-v535 { display: flex; flex-wrap: wrap; gap: 4px; align-self: end; margin: 0; padding: 1px 0 7px 10px; background: #fff; }
+.g4-smm-max-reactions-v535 > span { padding: 3px 7px; border-radius: 15px; background: #e8f3f9; font-size: 12px; line-height: 1.3; }
+.g4-smm-max-reactions-v535 > span:last-child { color: #d56657; font-size: 16px; line-height: 1; }
+.g4-smm-max-preview-v535 .g4-smm-max-views-v535 { align-self: end; margin: 0; padding: 0 10px 8px 4px; background: #fff; color: #89949a; text-align: right; }
+.g4-smm-max-down-v535 { position: absolute; right: 9px; bottom: 10px; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #fff; color: #313b48; box-shadow: 0 1px 3px #46638530; font-size: 28px; line-height: 1; }
+.g4-smm-max-composer-v535 { display: grid; grid-template-columns: 20px minmax(0, 1fr) 19px 19px 19px; align-items: center; gap: 7px; padding: 8px 10px; background: #e9edf3; color: #59616b; font-size: 18px; }
+.g4-smm-max-composer-v535 > span:nth-child(2) { min-width: 0; padding: 6px 10px; border-radius: 15px; background: #fff; color: #959ba4; font-size: 12px; }
+.g4-smm-max-composer-v535 > svg { display: block; width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+/* Telegram uses a channel header above a chat wallpaper. The media, text,
+   optional CTA/link and reactions form one message; comments sit below it. */
+.g4-smm-pair-card-v529 .g4-smm-telegram-preview-v534 { border-radius: 12px; background: #b9d4a7; }
+.g4-smm-telegram-header-v534 { display: grid; grid-template-columns: 32px minmax(0, 1fr) 32px; align-items: center; gap: 7px; min-height: 53px; padding: 7px 11px; background: #f7fbf3; color: #232923; }
+.g4-smm-telegram-header-v534 > strong { min-width: 0; font-size: 13px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g4-smm-telegram-back-v534 { color: #273c28; font-size: 29px; line-height: 1; }
+.g4-smm-telegram-header-v534 .g4-product-smm-social-avatar-v2 { width: 31px; height: 31px; border: 2px solid #fff; background: #eaf3e7; color: #416440; font-size: 10px; }
+.g4-smm-telegram-chat-v534 { display: grid; gap: 10px; padding: 13px 8px 15px; background-color: #b9d4a7; background-image: radial-gradient(circle at 20px 24px, #83b27a55 0 2px, transparent 2.5px), radial-gradient(circle at 81px 78px, #7cab7350 0 3px, transparent 3.5px), linear-gradient(135deg, #d1e4bf55, transparent 65%); background-size: 98px 102px, 130px 121px, 100% 100%; }
+.g4-smm-telegram-date-v534 { justify-self: center; padding: 3px 10px; border-radius: 20px; background: #88ae7fba; color: #fff; font-size: 11px; font-weight: 700; }
+.g4-smm-telegram-message-v534 { position: relative; min-width: 0; padding: 0 15px 0 23px; }
+.g4-smm-telegram-bubble-v534 { min-width: 0; overflow: hidden; border-radius: 12px 12px 12px 4px; background: #fff; box-shadow: 0 1px 3px #39523520; }
+.g4-smm-pair-card-v529 .g4-smm-telegram-preview-v534 .g4-smm-telegram-bubble-v534 .g4-product-smm-social-media-v2 { width: 100%; margin: 0; border-radius: 0; }
+.g4-smm-telegram-preview-v534 .g4-smm-telegram-bubble-v534 .g4-product-smm-social-caption-v2 { margin: 0; padding: 10px 12px 8px; line-height: 1.45; }
+.g4-smm-telegram-preview-v534 .g4-smm-telegram-bubble-v534 .g4-smm-native-followup-v532 { display: grid; gap: 4px; padding: 0 12px 10px; }
+.g4-smm-telegram-preview-v534 .g4-smm-telegram-bubble-v534 .g4-smm-native-followup-v532 :is(.g4-smm-pair-cta-v529, .g4-smm-pair-link-v529) { margin: 0; padding: 0; background: transparent; color: #3285b9; font-weight: 600; }
+.g4-smm-telegram-preview-v534 .g4-smm-telegram-reactions-v534 { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 3px 10px 5px; background: #fff; }
+.g4-smm-telegram-reactions-v534 > span { padding: 3px 7px; border-radius: 15px; background: #e8f1fc; font-size: 12px; line-height: 1.3; }
+.g4-smm-telegram-preview-v534 .g4-smm-telegram-views-v534 { margin: 0; padding: 0 10px 5px; background: #fff; color: #87959b; text-align: right; }
+.g4-smm-telegram-message-avatar-v534 { position: absolute; bottom: 8px; left: 0; width: 25px; height: 25px; border: 2px solid #f8fff5; background: #fff; color: #416440; font-size: 8px; }
+.g4-smm-telegram-share-v534 { position: absolute; right: -1px; bottom: 11px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #729c71; color: #fff; font-size: 18px; }
+.g4-smm-telegram-preview-v534 .g4-smm-telegram-comments-v534 { display: flex; align-items: center; gap: 7px; min-height: 34px; margin: 0 15px 0 23px; padding: 6px 10px; border-radius: 10px; background: #fff; color: #3989df; font-size: 12px; }
+.g4-smm-telegram-comments-v534 > span:first-child { font-size: 19px; line-height: 1; }
+.g4-smm-telegram-comments-v534 > span:last-child { margin-left: auto; font-size: 22px; line-height: 1; }
+.g4-smm-native-preview-v532:is(.is-reels, .is-story, .is-shorts, .is-vertical-video) { display: grid; grid-template: 1fr auto auto / 1fr; aspect-ratio: 9 / 16; min-height: 430px; background: #1c1b1a; color: #fff; }
+.g4-smm-native-preview-v532:is(.is-reels, .is-story, .is-shorts, .is-vertical-video) .g4-product-smm-social-media-v2 { grid-area: 1 / 1 / 4 / 2; aspect-ratio: 9 / 16; min-height: 0; background: #252933; }
+.g4-smm-native-preview-v532:is(.is-reels, .is-story, .is-shorts, .is-vertical-video) .g4-product-smm-social-media-v2 :is(img, video) { height: 100%; object-fit: cover; }
+.g4-smm-native-preview-v532:is(.is-reels, .is-story, .is-shorts, .is-vertical-video) .g4-product-smm-social-author-v2 { grid-area: 2 / 1; z-index: 1; align-self: end; padding: 8px 44px 3px 12px; background: transparent; color: #fff; }
+.g4-smm-native-preview-v532:is(.is-reels, .is-story, .is-shorts, .is-vertical-video) .g4-product-smm-social-author-v2 small { color: #e3e6eb; }
+.g4-smm-native-preview-v532:is(.is-reels, .is-story, .is-shorts, .is-vertical-video) .g4-product-smm-social-caption-v2 { grid-area: 3 / 1; z-index: 1; align-self: end; padding: 3px 48px 16px 12px; background: linear-gradient(transparent, #17171799); color: #fff; }
+.g4-smm-native-preview-v532:is(.is-reels, .is-story, .is-shorts, .is-vertical-video) .g4-product-smm-social-heading-v2 { grid-area: 3 / 1; z-index: 2; align-self: start; margin-top: -25px; padding: 0 48px 0 12px; color: #fff; }
+.g4-smm-native-preview-v532 .g4-smm-native-video-controls-v532 { grid-area: 1 / 1 / 4 / 2; z-index: 2; display: flex; flex-direction: column; align-items: stretch; justify-content: space-between; padding: 13px 12px 64px; pointer-events: none; }
+.g4-smm-native-video-controls-v532 > strong { align-self: center; color: #fff; font-size: 12px; text-shadow: 0 1px 5px #0009; }
+.g4-smm-native-video-controls-v532 > div { display: flex; flex-direction: column; align-items: end; gap: 16px; color: #fff; font-size: 23px; text-shadow: 0 1px 5px #0009; }
+.g4-smm-native-preview-v532 .g4-smm-native-story-progress-v532 { grid-area: 1 / 1; z-index: 2; display: flex; flex-wrap: wrap; gap: 3px; align-self: start; padding: 9px; }
+.g4-smm-native-story-progress-v532 strong { flex-basis: 100%; margin-top: 4px; color: #fff; font-size: 11px; text-shadow: 0 1px 5px #0009; }
+.g4-smm-native-story-progress-v532 span { flex: 1; height: 2px; border-radius: 2px; background: #fff9; }
+.g4-smm-native-preview-v532.is-story .g4-smm-native-followup-v532 { grid-area: 3 / 1; z-index: 2; align-self: end; padding: 0 12px 9px; color: #fff; }
+.g4-smm-pair-card-v529.is-reels .g4-product-smm-social-media-v2, .g4-smm-pair-card-v529.is-story .g4-product-smm-social-media-v2, .g4-smm-pair-card-v529.is-shorts .g4-product-smm-social-media-v2, .g4-smm-pair-card-v529.is-vertical-video .g4-product-smm-social-media-v2 { aspect-ratio: 9 / 12; }
+.g4-smm-pair-card-v529.is-message .g4-product-smm-social-post-v2 { border-radius: 14px 14px 14px 4px; background: #fcfdff; }
+.g4-smm-pair-card-v529:is(.is-reels, .is-story, .is-shorts, .is-vertical-video) .g4-product-smm-social-post-v2 { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(54px, auto) minmax(34px, auto) auto; }
+.g4-smm-pair-card-v529:is(.is-reels, .is-story, .is-shorts, .is-vertical-video) .g4-product-smm-social-media-v2 { grid-area: 1 / 1 / 4 / 2; min-height: 420px; aspect-ratio: 9 / 12; }
+.g4-smm-pair-card-v529:is(.is-reels, .is-story, .is-shorts, .is-vertical-video) .g4-product-smm-social-media-v2 :is(img, video) { height: 420px; max-height: none; object-fit: cover; }
+.g4-smm-pair-card-v529:is(.is-reels, .is-story, .is-shorts, .is-vertical-video) .g4-product-smm-social-author-v2 { grid-area: 2 / 1; z-index: 1; align-self: end; margin: 0 9px; border-radius: 8px; background: #fffefee8; }
+.g4-smm-pair-card-v529:is(.is-reels, .is-story, .is-shorts, .is-vertical-video) .g4-product-smm-social-caption-v2 { grid-area: 3 / 1; z-index: 1; align-self: end; min-height: 0; margin: 0 9px 9px; padding: 7px 8px; border-radius: 7px; background: #fffefee8; }
+.g4-smm-pair-card-v529:is(.is-reels, .is-story, .is-shorts, .is-vertical-video) .g4-product-smm-social-heading-v2 { grid-area: 1 / 1; z-index: 1; align-self: start; margin: 9px; padding: 7px 8px; border-radius: 7px; background: #fffefee8; }
+.g4-smm-pair-card-v529.is-story .g4-product-smm-social-actions-v2 { display: none; }
+.g4-smm-pair-card-v529.is-article .g4-product-smm-social-media-v2 { min-height: 90px; }
+.g4-smm-pair-cta-v529, .g4-smm-pair-link-v529 { margin: 0 14px 9px; font-size: 10px; }
+.g4-smm-pair-cta-v529 { display: inline-block; padding: 6px 9px; border-radius: 6px; background: #eef2fb; color: #3e5f9b; font-weight: 700; }
+.g4-smm-pair-link-v529 { overflow-wrap: anywhere; color: #527397; }
+.g4-smm-pair-note-v529 { min-height: 28px; margin: 7px 0; color: var(--smm-muted); font-size: 10px; line-height: 1.4; }
+.g4-smm-pair-overrides-v529 { border-top: 1px solid var(--smm-border); }
+.g4-smm-pair-overrides-v529 > summary { padding: 8px 0; color: #527397; cursor: pointer; font-size: 10px; font-weight: 700; }
+.g4-smm-pair-overrides-v529 > div { display: grid; gap: 9px; padding-bottom: 8px; }
+.g4-smm-pair-overrides-v529 > div > small { color: var(--smm-muted); font-size: 10px; }
+.g4-smm-route-label-v529 { display: block; margin: 8px 0; font-size: 11px; }
+.g4-smm-adaptations-v529 { margin-top: 12px; padding: 9px 11px; border-radius: 8px; background: #f6f8fc; font-size: 10px; }
+.g4-smm-adaptations-v529 p { margin: 5px 0 0; }
+.g4-smm-readiness-v529 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0 12px; }
+.g4-smm-readiness-v529 > strong { flex-basis: 100%; font-size: 11px; }
+.g4-smm-readiness-v529 > span { padding: 5px 7px; border: 1px solid #e9e3da; border-radius: 6px; font-size: 10px; }
+.g4-smm-readiness-v529 > span.is-ready { border-color: #d3e8d6; background: #f1faf2; color: #448051; }
+.g4-smm-readiness-v529 > span.is-pending { border-color: #f1dfb8; background: #fff9e9; color: #936b24; }
+.g4-smm-idea-platform-picker-v529 { display: grid; gap: 5px; grid-column: 1 / -1; min-width: 0; font-size: 11px; }
+.g4-smm-idea-platform-picker-v529 > span { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; min-width: 0; }
+/* Both platform selectors use the same compact control. Flex items may wrap,
+   but a platform name must never collapse into a vertical stack of letters. */
+:is(.g4-smm-idea-platform-picker-v529, .g4-smm-pair-picker-v529) .g4-smm-platform-option-v530 {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  width: auto;
+  min-width: max-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+  cursor: pointer;
+}
+.g4-smm-platform-option-v530 > span { display: inline-block; width: auto; min-width: max-content; white-space: nowrap; word-break: normal; overflow-wrap: normal; }
+.g4-smm-platform-option-v530:has(input:disabled) { cursor: default; opacity: .65; }
+.g4-smm-media-error-v529 { color: #a43c36; font-size: 10px; }
 .g4-product-smm-empty-v2 { margin: 0; color: var(--smm-muted); font-size: 11px; }
 .g4-product-smm-calendar-navigation-v2 { display: grid; grid-template-columns: 34px minmax(0, 1fr) 34px; align-items: stretch; gap: 7px; }
 .g4-product-smm-calendar-navigation-v2 > button { align-self: center; width: 34px; height: 34px; border: 1px solid var(--smm-border); border-radius: 50%; background: #fff; color: #48443e; cursor: pointer; font-size: 23px; line-height: 1; }
 .g4-product-smm-calendar-navigation-v2 > button:hover, .g4-product-smm-calendar-navigation-v2 > button:focus-visible { border-color: #8199d4; color: #385baf; }
-.g4-product-smm-calendar-week-scroll-v2 { min-width: 0; overflow-x: auto; }
-.g4-product-smm-calendar-week-v2 { display: grid; grid-template-columns: repeat(7, minmax(76px, 1fr)); min-width: 532px; overflow: hidden; border: 1px solid var(--smm-border); border-radius: 12px; }
-.g4-product-smm-calendar-week-v2 button { display: grid; align-content: center; justify-items: start; gap: 3px; min-height: 88px; padding: 10px 12px; border: 0; border-right: 1px solid var(--smm-border); background: #fff; color: #48443e; cursor: pointer; text-align: left; }
-.g4-product-smm-calendar-week-v2 button:last-child { border-right: 0; }
-.g4-product-smm-calendar-week-v2 button:hover, .g4-product-smm-calendar-week-v2 button:focus-visible { background: #f8faff; }
-.g4-product-smm-calendar-week-v2 button.is-active-v2 { box-shadow: inset 0 -3px #537ee2; background: #f1f5ff; color: #294eaa; }
-.g4-product-smm-calendar-week-v2 button > span { font-size: 12px; font-weight: 700; }
-.g4-product-smm-calendar-week-v2 button > small { color: #817b72; font-size: 10px; white-space: nowrap; }
-.g4-product-smm-calendar-week-v2 button > strong { margin-top: 5px; color: #282521; font-size: 19px; font-variant-numeric: tabular-nums; }
-.g4-product-smm-calendar-selection-v2 { min-height: 19px; padding-top: 9px; }
+.g4-product-smm-calendar-week-scroll-v2 { min-width: 0; overflow-x: auto; contain: paint; }
+.g4-product-smm-calendar-week-v2 { display: grid; grid-template-columns: repeat(7, minmax(142px, 1fr)); min-width: 994px; border: 1px solid var(--smm-border); border-radius: 12px; }
+.g4-product-smm-calendar-day-v2 { display: flex; flex-direction: column; min-width: 0; min-height: 103px; border-right: 1px solid var(--smm-border); background: #fff; }
+.g4-product-smm-calendar-day-v2:last-child { border-right: 0; }
+.g4-product-smm-calendar-day-v2.is-past-v2 { background: #f9f8f6; }
+.g4-product-smm-calendar-day-v2.is-active-v2 { box-shadow: inset 0 -3px #537ee2; background: #f5f7fe; }
+.g4-product-smm-calendar-day-v2.is-drag-over-v2 { box-shadow: inset 0 0 0 2px #6384ce; background: #edf3ff; }
+.g4-product-smm-calendar-day-head-v2 { display: grid; align-content: start; justify-items: start; gap: 3px; width: 100%; min-height: 79px; padding: 10px 10px 7px; border: 0; background: transparent; color: #48443e; cursor: pointer; text-align: left; }
+.g4-product-smm-calendar-day-head-v2:hover, .g4-product-smm-calendar-day-head-v2:focus-visible { background: #edf2ff; }
+.g4-product-smm-calendar-day-head-v2 > span { font-size: 12px; font-weight: 700; }
+.g4-product-smm-calendar-day-head-v2 > span em { margin-left: 3px; color: #4f6fac; font-size: 9px; font-style: normal; }
+.g4-product-smm-calendar-day-head-v2 > small { color: #817b72; font-size: 10px; white-space: nowrap; }
+.g4-product-smm-calendar-day-head-v2 > strong { margin-top: 5px; color: #282521; font-size: 19px; font-variant-numeric: tabular-nums; }
+.g4-product-smm-calendar-day-v2.is-past-v2 .g4-product-smm-calendar-day-head-v2 > :is(span, small, strong) { color: #8e8880; }
+.g4-product-smm-calendar-day-ideas-v2 { display: grid; align-content: start; gap: 5px; min-width: 0; padding: 0 6px 9px; }
 .g4-product-smm-calendar-cards-v2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 0 12px 12px; }
 .g4-product-smm-calendar-cards-v2 > .g4-product-smm-empty-v2 { grid-column: 1 / -1; padding: 10px 2px; }
-.g4-product-smm-bank-section-v2 .g4-product-smm-calendar-cards-v2, .g4-product-smm-calendar-selection-v2 .g4-product-smm-calendar-cards-v2 { padding: 0; }
+.g4-product-smm-bank-section-v2 .g4-product-smm-calendar-cards-v2 { padding: 0; }
 .g4-product-smm-calendar-menu-v2 > summary::-webkit-details-marker { display: none; }
 .g4-product-smm-calendar-item-v2 { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto 27px; align-items: center; gap: 9px; min-width: 0; min-height: 62px; padding: 7px 8px; border: 1px solid var(--smm-border); border-radius: 10px; background: #fff; cursor: grab; }
 .g4-product-smm-calendar-item-v2:hover { border-color: #bdc8e2; box-shadow: 0 2px 9px #25375a0c; }
-.g4-product-smm-calendar-thumbnail-v2 { display: grid; place-items: center; width: 40px; height: 44px; border-radius: 8px; background: #edf1f9; color: #5e74a6; font-size: 19px; }
+.g4-product-smm-calendar-thumbnail-v2 { display: grid; place-items: center; position: relative; overflow: hidden; width: 40px; height: 44px; border-radius: 8px; background: #edf1f9; color: #5e74a6; font-size: 19px; }
+.g4-product-smm-calendar-thumbnail-v2 > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.g4-product-smm-calendar-thumbnail-v2 > img:not([src]) { display: none; }
+.g4-product-smm-bank-section-v2 .g4-product-smm-calendar-item-v2 { grid-template-columns: 64px minmax(0, 1fr) auto 27px; min-height: 78px; }
+.g4-product-smm-bank-section-v2 .g4-product-smm-calendar-thumbnail-v2 { width: 64px; height: 64px; }
 .g4-product-smm-calendar-idea-v2 { display: grid; gap: 4px; min-width: 0; padding: 0; border: 0; background: transparent; color: var(--smm-ink); cursor: pointer; text-align: left; }
 .g4-product-smm-calendar-idea-v2 strong, .g4-product-smm-calendar-idea-v2 small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .g4-product-smm-calendar-idea-v2 strong { font-size: 12px; }
@@ -140,6 +410,21 @@
 .g4-product-smm-calendar-menu-v2 > div { position: absolute; z-index: 11; top: 30px; right: 0; width: 185px; padding: 10px; border: 1px solid var(--smm-border); border-radius: 9px; background: #fff; box-shadow: 0 8px 25px #28252120; }
 .g4-product-smm-calendar-menu-v2 label { display: grid; gap: 6px; color: var(--smm-muted); font-size: 10px; font-weight: 700; }
 .g4-product-smm-calendar-menu-v2 select { width: 100%; min-height: 30px; padding: 4px; border: 1px solid var(--smm-border); border-radius: 6px; background: #fff; color: var(--smm-ink); font-size: 11px; }
+.g4-product-smm-calendar-item-v2.is-day-v2 { grid-template-columns: 20px minmax(0, 1fr); align-items: start; column-gap: 5px; row-gap: 0; min-height: 0; padding: 6px 24px 6px 6px; position: relative; cursor: grab; }
+.g4-product-smm-calendar-item-v2.is-day-v2 .g4-product-smm-calendar-thumbnail-v2 { width: 20px; height: 20px; border-radius: 5px; font-size: 11px; }
+.g4-product-smm-calendar-item-v2.is-day-v2 .g4-product-smm-calendar-idea-v2 strong { font-size: 10px; line-height: 1.3; overflow: visible; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
+.g4-product-smm-calendar-item-v2.is-day-v2 .g4-product-smm-calendar-idea-v2 small { display: none; }
+.g4-product-smm-calendar-item-v2.is-day-v2 .g4-product-smm-calendar-platforms-v2 { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 2px; margin-top: 5px; }
+.g4-product-smm-calendar-item-v2.is-day-v2 .g4-product-smm-calendar-platforms-v2 .g4-product-smm-platform-v2 { min-width: 18px; height: 16px; padding: 0 2px; font-size: 7px; }
+.g4-product-smm-calendar-item-v2.is-day-v2 .g4-product-smm-calendar-menu-v2 { grid-column: 1 / -1; position: static; }
+.g4-product-smm-calendar-item-v2.is-day-v2 .g4-product-smm-calendar-menu-v2 > summary { position: absolute; top: 3px; right: 2px; width: 22px; height: 22px; font-size: 16px; }
+.g4-product-smm-calendar-item-v2.is-day-v2 .g4-product-smm-calendar-menu-v2 > div { position: static; width: auto; margin-top: 7px; padding: 7px 0 0; border: 0; border-top: 1px solid var(--smm-border); border-radius: 0; box-shadow: none; }
+.g4-product-smm-calendar-item-v2.is-day-v2.has-photo-v2 { grid-template-columns: minmax(0, 1fr); gap: 5px; padding: 6px; }
+.g4-product-smm-calendar-item-v2.is-day-v2.has-photo-v2 .g4-product-smm-calendar-thumbnail-v2 { grid-column: 1; grid-row: 1; width: 100%; height: 104px; border-radius: 6px; font-size: 26px; }
+.g4-product-smm-calendar-item-v2.is-day-v2.has-photo-v2 .g4-product-smm-calendar-idea-v2 { grid-column: 1; grid-row: 2; padding-right: 17px; }
+.g4-product-smm-calendar-item-v2.is-day-v2.has-photo-v2 .g4-product-smm-calendar-platforms-v2 { grid-column: 1; grid-row: 3; margin-top: 0; }
+.g4-product-smm-calendar-item-v2.is-day-v2.has-photo-v2 .g4-product-smm-calendar-menu-v2 { grid-column: 1; grid-row: 4; }
+.g4-product-smm-calendar-item-v2.is-day-v2.has-photo-v2 .g4-product-smm-calendar-menu-v2 > summary { top: 10px; right: 10px; border-radius: 6px; background: #fffffff0; box-shadow: 0 1px 4px #27314224; }
 .g4-product-smm-bank-v2 { margin-top: 8px; }
 .g4-product-smm-bank-v2 > summary, .g4-product-smm-signals-v2 summary { display: flex; justify-content: space-between; gap: 8px; padding: 8px 10px; cursor: pointer; list-style: none; font-size: 11px; font-weight: 700; }
 .g4-product-smm-bank-v2 > .g4-product-smm-calendar-cards-v2 { padding: 2px 10px 10px; }
@@ -161,13 +446,22 @@
 .g4-product-smm-table-v2 tr.is-highlighted-v2 { background: #fff3ce; }
 @media (max-width: 1050px) { .g4-product-smm-table-v2 { min-width: 820px; } }
 @media (max-width: 700px) {
+  .g4-smm-pair-workspace-v529 { grid-template-columns: minmax(0, 1fr); }
+  .g4-smm-pair-editor-v529 { position: static; }
   .g4-product-smm-toolbar-v2 { align-items: flex-start; flex-direction: column; }
   .g4-product-smm-period-v2 { flex-wrap: wrap; }
   .g4-product-smm-calendar-cards-v2 { grid-template-columns: minmax(0, 1fr); }
+  .g4-product-smm-bank-section-v2 .g4-product-smm-calendar-item-v2 { grid-template-columns: 56px minmax(0, 1fr) 27px; gap: 4px 8px; }
+  .g4-product-smm-bank-section-v2 .g4-product-smm-calendar-thumbnail-v2 { grid-row: 1 / 3; width: 56px; height: 56px; }
+  .g4-product-smm-bank-section-v2 .g4-product-smm-calendar-platforms-v2 { grid-column: 2; grid-row: 2; flex-wrap: wrap; }
+  .g4-product-smm-bank-section-v2 .g4-product-smm-calendar-menu-v2 { grid-column: 3; grid-row: 1 / 3; }
   .g4-product-smm-calendar-navigation-v2 { grid-template-columns: 30px minmax(0, 1fr) 30px; gap: 4px; }
   .g4-product-smm-calendar-navigation-v2 > button { width: 30px; height: 30px; }
   .g4-product-smm-ideas-v2, .g4-product-smm-bank-section-v2, .g4-product-smm-calendar-v2, .g4-product-smm-summary-v2 { padding: 12px; }
   .g4-product-smm-idea-v2 > summary { gap: 8px; padding: 12px; }
+  .g4-product-smm-idea-v2 > summary.has-photo-v2 { grid-template-columns: minmax(0, 1fr) auto; }
+  .g4-product-smm-idea-v2 > summary.has-photo-v2 .g4-product-smm-idea-photo-v2 { grid-column: 1 / -1; grid-row: 2; justify-self: start; width: 160px; height: 112px; }
+  .g4-product-smm-idea-v2 > summary.has-photo-v2 .g4-product-smm-idea-controls-v2 { grid-column: 2; grid-row: 1; }
   .g4-product-smm-idea-summary-content-v2 { gap: 8px; }
   .g4-product-smm-idea-headline-v2 { align-items: flex-start; gap: 6px; }
   .g4-product-smm-idea-format-v2 { align-items: flex-start; gap: 6px; }

@@ -32,6 +32,7 @@ const G4_FIVE_A_COMPANY_V523 = Object.freeze({
 const G4_FIVE_A_PRODUCT_CHANNELS_V523 = Object.freeze({
   aware: [
     { id: "rsya", title: "Яндекс Директ / РСЯ", service: "Яндекс Директ / РСЯ", protected: true, matches: (channel) => g4IsYandexRsyaChannel(channel) },
+    { id: "master_campaign", title: "Яндекс Директ / Мастер кампаний", service: "Яндекс Директ / Мастер кампаний", matches: (channel) => /яндекс.*директ.*мастер кампаний/i.test(g4FiveChannelTextV523(channel)) },
     { id: "display", title: "Медийная реклама · Google Ads / Display", service: "Google Ads / Display", matches: (channel) => /google.*ads.*display/i.test(g4FiveChannelTextV523(channel)) },
     { id: "vk_target", title: "Таргет · VK Реклама", service: "VK Реклама", matches: (channel) => /(?:vk|вк|вконтакте).*?(?:ads|таргет|реклама)/i.test(g4FiveChannelTextV523(channel)) && !/контент/i.test(g4FiveChannelTextV523(channel)) },
     { id: "meta", title: "Таргет · Meta Ads / Feed / Reels", service: "Meta Ads / Feed / Reels", matches: (channel) => /meta.*ads|facebook.*ads/i.test(g4FiveChannelTextV523(channel)) },
@@ -48,10 +49,9 @@ const G4_FIVE_A_PRODUCT_CHANNELS_V523 = Object.freeze({
 });
 
 const G4_FIVE_A_AWARE_BLOCKS_V544 = Object.freeze([
-  { id: "yandex_media", title: "Медийная реклама · Яндекс Директ / РСЯ", toolIds: ["rsya"] },
-  { id: "google_media", title: "Медийная реклама · Google Ads / Display", toolIds: ["display"] },
-  { id: "content_smm", title: "Контентная SMM-стратегия", toolIds: ["vk_content", "telegram_content", "instagram", "youtube"] },
-  { id: "paid_social", title: "Платное продвижение", toolIds: ["vk_target", "meta", "telegram_ads"] },
+  { id: "content_smm", title: "Органический контент · Продукт/Услуга" },
+  { id: "paid_social", title: "Рекламный контент · Продукт/Услуга" },
+  { id: "media", title: "Медийная реклама" },
 ]);
 
 const __g4FivePrevProductionHtmlV523 = gate4ProductionHtml;
@@ -83,6 +83,122 @@ function g4FiveReadViewV523(render) {
   state = structuredClone(original);
   try { return render(); }
   finally { state = original; }
+}
+
+/* Disclosure clicks keep the existing Gate 4 DOM. Render an individual body
+   only on its first opening; closing and reopening reuse that body. */
+function g4FiveCampaignElementV546(button) {
+  const key = button?.dataset.g4campToggle;
+  if (!key) return null;
+  const html = g4FiveReadViewV523(() => {
+    const channels = g4LaunchChannels();
+    const campaigns = g4EnsureLaunchCampaigns();
+    const selected = g4ProductPickSelected(state);
+    const products = [...new Set([selected?.id, selected?.name,
+      campaigns[key]?.product, ...g4LaunchProducts()].filter(Boolean))];
+    for (const product of products) {
+      const channel = channels.find((item) => g4CampaignStateKey(product, item.key) === key);
+      if (!channel) continue;
+      const index = channels.filter((item) => item.launchType === channel.launchType).indexOf(channel);
+      return g4CampaignRowHtml(channel, campaigns[key] || {}, index, product);
+    }
+    return "";
+  });
+  if (!html) return null;
+  const template = document.createElement("template");
+  template.innerHTML = html;
+  return template.content.firstElementChild;
+}
+
+function g4FiveDirectBodyV546(card) {
+  return [...(card?.children || [])].find((node) =>
+    node.matches?.(".g1-card-body, .g4-campaign-row")) || null;
+}
+
+function g4FiveSetBodyOpenV546(card, body, open, button, marker) {
+  card.classList.toggle("is-open", open);
+  if (body) body.style.display = open ? "" : "none";
+  button?.setAttribute("aria-expanded", String(open));
+  if (marker) marker.textContent = open ? "свернуть ▾" : "развернуть ▸";
+}
+
+function g4FiveFastCampaignToggleV546(button, open) {
+  if (!button?.closest(".g4five-map-v523")) return false;
+  const card = button.closest(".g1-card, .g4-campaign-shell");
+  if (!card) return false;
+  let body = g4FiveDirectBodyV546(card);
+  if (open && !body) {
+    const rendered = g4FiveCampaignElementV546(button);
+    body = g4FiveDirectBodyV546(rendered);
+    if (!body) return false;
+    [...rendered.attributes].filter((attr) => attr.name.startsWith("data-")).forEach((attr) =>
+      card.setAttribute(attr.name, attr.value));
+    card.insertBefore(body, card.querySelector(":scope > .g4-aware-banners-v522"));
+  }
+  g4FiveSetBodyOpenV546(card, body, open, button);
+  const mark = button.querySelector(".g4-toggle-mark");
+  if (mark) mark.textContent = open ? "Свернуть" : "Открыть";
+  return true;
+}
+
+function g4FiveFastCampaignStepToggleV546(button, open) {
+  if (!button?.closest(".g4five-map-v523")) return false;
+  const card = button.closest(".g1-card");
+  if (!card) return false;
+  let body = g4FiveDirectBodyV546(card);
+  if (open && !body) {
+    const campaignCard = card.parentElement?.closest(".g1-card, .g4-campaign-shell");
+    const campaignButton = campaignCard?.querySelector(":scope > [data-g4camp-toggle]");
+    const rendered = g4FiveCampaignElementV546(campaignButton);
+    const attr = button.hasAttribute("data-g4sb-step") ? "data-g4sb-step" : "data-g4rsya-v453-step";
+    const key = button.getAttribute(attr);
+    const renderedButton = [...(rendered?.querySelectorAll(`[${attr}]`) || [])]
+      .find((node) => node.getAttribute(attr) === key);
+    body = g4FiveDirectBodyV546(renderedButton?.closest(".g1-card"));
+    if (!body) return false;
+    card.append(body);
+  }
+  g4FiveSetBodyOpenV546(card, body, open, button,
+    button.lastElementChild?.lastElementChild);
+  return true;
+}
+
+function g4FiveFastSearchUnitToggleV546(button, open) {
+  if (!button?.closest(".g4five-map-v523")) return false;
+  const card = button.closest(".g1-card");
+  if (!card) return false;
+  let body = g4FiveDirectBodyV546(card);
+  if (open && !body) {
+    const product = button.dataset.g4sbProduct;
+    const id = button.dataset.g4sbUnitToggle;
+    const html = g4FiveReadViewV523(() => {
+      const build = ensureGate4SearchBuild(product);
+      const index = build.groupRows.findIndex((row) => row.clusterId === id);
+      if (index < 0) return "";
+      return g4sbGroupCardHtml(product, build.groupRows[index], index,
+        build.groupRows, (build.adsRows || {})[index] || [{}]);
+    });
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    body = g4FiveDirectBodyV546(template.content.firstElementChild);
+    if (!body) return false;
+    card.append(body);
+  }
+  g4FiveSetBodyOpenV546(card, body, open, button,
+    button.lastElementChild?.lastElementChild);
+  return true;
+}
+
+function g4FiveFastSectionToggleV546(button, open) {
+  const section = button?.closest(".g4-campaign-section, .g1-section");
+  if (!section?.closest(".g4five-map-v523")) return false;
+  const body = [...section.children].find((node) =>
+    node.matches?.(".g4-campaign-list, .g1-section-body"));
+  if (open && !body) return false;
+  section.classList.toggle("is-open", open);
+  if (body) body.style.display = open ? "" : "none";
+  button.setAttribute("aria-expanded", String(open));
+  return true;
 }
 
 function g4FiveLegacyItemsV523(productId = "") {
@@ -118,7 +234,6 @@ function g4FiveToolCardHtmlV523(tool, stageKey, productId = "") {
   let serviceChannels = [];
   if (tool.channel) {
     serviceChannels = g4LaunchChannels().filter((channel) => tool.channel.test(g4FiveChannelTextV523(channel)));
-    if (serviceChannels.length && serviceChannels.every(g4FiveChannelExcludedV523)) return "";
   }
   const item = g4FiveLegacyItemV523(tool.id, stageKey, productId);
   const stored = productId
@@ -136,10 +251,12 @@ function g4FiveToolCardHtmlV523(tool, stageKey, productId = "") {
   const source = tool.id === "articles_cases"
     ? g3ExecutionGate0ExtraResultV282("Портфолио / кейсы", "Gate 0 · Портфолио / кейсы")
     : null;
-  const status = implementations.length ? g4ImplItemStatus(implementations[0]) : channelRecords.length ? "ready" : source?.target ? source.status : "no_implementation";
+  const status = serviceChannels.length && serviceChannels.every(g4FiveChannelExcludedV523)
+    ? "not_needed"
+    : implementations.length ? g4ImplItemStatus(implementations[0]) : channelRecords.length ? "ready" : source?.target ? source.status : "no_implementation";
   const title = tool.fullTitle ? tool.title : `${tool.title} · ${service}`;
   return `<article class="g1-card g4five-card-v523" data-g4five-tool-v523="${escapeAttr(tool.id)}" data-g4five-scope-v523="${productId ? "product" : "company"}" data-g4five-instance-v523="${escapeAttr(tool.instanceId || item.instanceId)}" ${productId ? `data-product-id="${escapeAttr(productId)}"` : ""}>
-    <div class="g1-card-header-static"><span class="g1-section-left"><span class="g1-card-title">${escapeHtml(title)}</span>${g4FiveServiceHtmlV523(service, tool.note)}</span><span class="status-pill status-${escapeAttr(status)}">${escapeHtml(STATUS_LABELS[status] || g3ExecutionStatusLabelV282(status))}</span></div>
+    <div class="g1-card-header-static"><span class="g1-section-left"><span class="g1-card-title">${escapeHtml(title)}</span>${g4FiveServiceHtmlV523(service, tool.note)}</span><span class="status-pill status-${escapeAttr(status)}">${escapeHtml(status === "not_needed" ? "Не требуется" : STATUS_LABELS[status] || g3ExecutionStatusLabelV282(status))}</span></div>
     ${source?.target || implementations.length || channelRecords.length || tool.chooseService ? `<div class="g4five-card-body-v523">
       ${source?.target ? g4Gate3MapTargetLinkV290(source.target) : ""}
       ${tool.chooseService ? `<label class="g1-field"><span>Сервис</span><input class="g1-input ${stored?.service ? "is-filled" : "is-empty"}" value="${escapeAttr(stored?.service || "")}" placeholder="Название выбранного сервиса" data-g4five-service-input-v523="${escapeAttr(tool.id)}" /></label>` : ""}
@@ -169,7 +286,19 @@ function g4FiveDisplayCampaignHtmlV523(html, tool) {
 function g4FiveCampaignHtmlV523(context, tool) {
   const allMatches = context.channels.filter(tool.matches);
   const channels = allMatches.filter((channel) => !g4FiveChannelExcludedV523(channel));
-  if (!channels.length) return allMatches.length ? "" : g4FiveToolCardHtmlV523({ ...tool, fullTitle: true }, "aware", context.productId);
+  if (!channels.length) {
+    const html = g4FiveToolCardHtmlV523({ ...tool, fullTitle: true }, "aware", context.productId);
+    if (!allMatches.length) return html;
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    const card = template.content.firstElementChild;
+    const pill = card?.querySelector(".status-pill");
+    if (pill) {
+      pill.className = "status-pill status-not_needed";
+      pill.textContent = "Не требуется";
+    }
+    return template.innerHTML;
+  }
   return channels.map((channel, index) => {
     const key = g4CampaignStateKey(context.productId, channel.key);
     context.renderedCampaigns.add(key);
@@ -178,25 +307,142 @@ function g4FiveCampaignHtmlV523(context, tool) {
   }).join("");
 }
 
-function g4FiveAwareBlockHtmlV544(block, number, content) {
-  return `<section class="g4five-aware-block-v544" data-g4five-aware-block-v544="${escapeAttr(block.id)}">
-    <header class="g4five-aware-block-head-v544"><span aria-hidden="true">${number}</span><h4>${escapeHtml(block.title)}</h4></header>
+function g4FiveAwareBlockHtmlV544(block, content, productId) {
+  const openBlocks = state?.gate4FiveAV523?.byProduct?.[productId]?.openBlocksV547;
+  const open = Array.isArray(openBlocks) && openBlocks.includes(block.id);
+  return `<details class="g4five-aware-block-v544" data-g4five-aware-block-v544="${escapeAttr(block.id)}"${open ? " open" : ""}>
+    <summary class="g4five-aware-block-head-v544" data-g4five-aware-summary-v547><h4>${escapeHtml(block.title)}</h4><span class="g4five-aware-chevron-v547" aria-hidden="true">›</span></summary>
     <div class="g4five-aware-block-content-v544">${content}</div>
-  </section>`;
+  </details>`;
+}
+
+function g4FivePillStatusV545(pills, fallback = "idle") {
+  const statuses = [...pills].map((pill) =>
+    [...pill.classList].find((name) => name.startsWith("status-") && name !== "status-pill")?.slice(7) || "");
+  if (!statuses.length) return fallback;
+  if (statuses.every((status) => status === "not_needed")) return "unavailable";
+  if (statuses.every((status) => status === "ready")) return "ready";
+  if (statuses.some((status) => ["ready", "in_progress", "working", "done"].includes(status))) return "active";
+  return fallback;
+}
+
+function g4FiveRowStatusV545(content, fallback = "idle") {
+  const template = document.createElement("template");
+  template.innerHTML = content;
+  return g4FivePillStatusV545(template.content.querySelectorAll(".status-pill"), fallback);
+}
+
+function g4FivePaidPlatformStatusV545(product, platform) {
+  const bucket = g4PaidSmmStoreV1(product.id);
+  const config = bucket?.platforms?.[platform];
+  if (config?.legalUnavailable) return "unavailable";
+  if (config && g4PaidSmmCanReadyV1(platform, config, bucket)) return "ready";
+  if (config && (Object.values(config.fields || {}).some((value) => value !== "" && value !== false) ||
+      (bucket.creativeCards || []).some((card) => card.platform === platform))) return "active";
+  return "idle";
+}
+
+function g4FivePaidRowStatusV545(product, platform, campaignStatus, knownWorkspaceStatus = "") {
+  const workspaceStatus = knownWorkspaceStatus || g4FivePaidPlatformStatusV545(product, platform);
+  if (workspaceStatus === "unavailable") return "unavailable";
+  if (workspaceStatus === "ready") return "ready";
+  if (workspaceStatus === "active" || ["active", "ready"].includes(campaignStatus)) return "active";
+  return campaignStatus === "unavailable" ? "unavailable" : "idle";
+}
+
+function g4FiveNavSyncPaidV545(node, knownWorkspaceStatus = "") {
+  const row = node?.closest?.("[data-g4five-nav-row-v545]");
+  const platform = node?.closest?.("[data-g4-paid-platform-v1]")?.dataset.g4PaidPlatformV1 ||
+    node?.querySelector?.("[data-g4-paid-platform-v1]")?.dataset.g4PaidPlatformV1;
+  const productId = row?.closest("[data-g4five-product-v523]")?.dataset.g4fiveProductV523;
+  const product = productId && g4SmmProductReadOnlyV299(productId);
+  if (!row || !platform || !product) return;
+  const campaignStatus = g4FivePillStatusV545(row.querySelectorAll(".g4five-nav-body-v545 .status-pill"));
+  const status = g4FivePaidRowStatusV545(product, platform, campaignStatus, knownWorkspaceStatus);
+  const pill = row.querySelector(".g4five-nav-status-v545");
+  if (pill) {
+    pill.className = "g4five-nav-status-v545 status-pill " + g4FiveNavStatusClassV545(status);
+    pill.textContent = g4FiveNavStatusLabelV545(status);
+  }
+  row.classList.toggle("is-unavailable-v545", status === "unavailable");
+}
+
+function g4FiveNavStatusClassV545(status) {
+  return status === "ready" ? "status-ready" : status === "active" ? "status-in_progress"
+    : status === "unavailable" ? "status-not_needed" : "status-not_started";
+}
+
+function g4FiveNavStatusLabelV545(status) {
+  return status === "ready" ? "Готово" : status === "active" ? "В работе"
+    : status === "unavailable" ? "Недоступно" : "Не начато";
+}
+
+function g4FiveRowHtmlV545(product, id, name, destination, format, content, status = "idle", foundation = false) {
+  const openRows = state?.gate4FiveAV523?.byProduct?.[product.id]?.openRowsV545 || [];
+  const open = Array.isArray(openRows) && openRows.includes(id);
+  return `<details class="g4five-nav-row-v545${foundation ? " is-foundation-v545" : ""}${status === "unavailable" ? " is-unavailable-v545" : ""}" data-g4five-nav-row-v545="${escapeAttr(id)}"${open ? " open" : ""}>
+    <summary data-g4five-nav-summary-v545><strong>${escapeHtml(name)}</strong><span>${escapeHtml(destination)}</span><span>${escapeHtml(format)}</span>${foundation ? "" : `<span class="g4five-nav-status-v545 status-pill ${g4FiveNavStatusClassV545(status)}">${g4FiveNavStatusLabelV545(status)}</span>`}<span class="g4five-nav-chevron-v545" aria-hidden="true">${foundation ? '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/><circle cx="12" cy="15.5" r="1"/></svg>' : "›"}</span></summary>
+    <div class="g4five-nav-body-v545">${content}</div>
+  </details>`;
+}
+
+function g4FiveExpandedOrganicHtmlV545(product) {
+  const template = document.createElement("template");
+  template.innerHTML = g4ProductSmmStrategyHtmlV523(product);
+  const workspace = template.content.querySelector(".g4-product-smm-v523");
+  workspace?.classList.remove("is-collapsed");
+  workspace?.querySelector("[data-g4-product-smm-collapse-v2]")?.setAttribute("aria-expanded", "true");
+  return template.innerHTML;
+}
+
+function g4FiveTelegramSeedingV545(channel) {
+  const text = g4FiveChannelTextV523(channel);
+  return /telegram|телеграм/i.test(text) && /посев|seeding/i.test(text) &&
+    !/ads|реклам/i.test(text);
+}
+
+function g4FiveYouTubePreRollV545(channel) {
+  const text = g4FiveChannelTextV523(channel);
+  return /youtube/i.test(text) && /pre.?roll|преролл/i.test(text);
 }
 
 function g4FiveAwareHtmlV544(context, product) {
   const tools = new Map(G4_FIVE_A_PRODUCT_CHANNELS_V523.aware.map((tool) => [tool.id, tool]));
-  const groupedIds = new Set(G4_FIVE_A_AWARE_BLOCKS_V544.flatMap((block) => block.toolIds));
-  return G4_FIVE_A_AWARE_BLOCKS_V544.map((block, index) => {
-    const toolIds = block.id === "paid_social"
-      ? [...block.toolIds, ...[...tools.keys()].filter((id) => !groupedIds.has(id))]
-      : block.toolIds;
-    const cards = toolIds.map((id) => tools.get(id))
-      .filter(Boolean).map((tool) => g4FiveCampaignHtmlV523(context, tool)).join("");
-    const content = block.id === "content_smm"
-      ? g4ProductSmmStrategyHtmlV523(product) + cards : cards;
-    return g4FiveAwareBlockHtmlV544(block, index + 1, content);
+  const campaign = (id, matches = null) => g4FiveCampaignHtmlV523(context,
+    matches ? { ...tools.get(id), matches } : tools.get(id));
+  const telegramOrganic = (channel) => tools.get("telegram_content").matches(channel) &&
+    !tools.get("telegram_ads").matches(channel);
+  const rsyaContent = campaign("rsya");
+  const masterCampaignContent = campaign("master_campaign");
+  const rows = {
+    content_smm: [
+      g4FiveRowHtmlV545(product, "organic_strategy", "SMM-стратегия продукта", "Основа, не изменяется", "",
+        g4FiveExpandedOrganicHtmlV545(product), "idle", true),
+      ["organic_vk", "VK", "Сообщество", "Пост, клип", campaign("vk_content")],
+      ["organic_telegram", "Telegram", "Канал", "Пост, видео", campaign("telegram_content", telegramOrganic)],
+      ["organic_instagram", "Instagram", "Профиль", "Reels, Stories", campaign("instagram")],
+      ["organic_youtube", "YouTube", "Канал", "Shorts, видео", campaign("youtube")],
+    ],
+    paid_social: [
+      ["paid_vk", "VK Реклама", "Лента, клипы", "Карусель, баннер, видео", g4PaidSmmPlatformRootHtmlV1(product, "vk") + campaign("vk_target"), "vk"],
+      ["paid_telegram_ads", "Telegram Ads", "Каналы", "Спонсорское сообщение", g4PaidSmmPlatformRootHtmlV1(product, "telegram") + campaign("telegram_ads"), "telegram"],
+      ["paid_telegram_seeding", "Telegram", "Посевы", "Пост", campaign("telegram_content", g4FiveTelegramSeedingV545)],
+      ["paid_meta", "Meta Ads", "Feed, Reels", "Пост, видео", g4PaidSmmPlatformRootHtmlV1(product, "meta") + campaign("meta"), "meta"],
+    ],
+    media: [
+      ["media_yandex", "Яндекс Директ", "РСЯ", "Баннер, видео",
+        rsyaContent + masterCampaignContent, null, g4FiveRowStatusV545(rsyaContent)],
+      ["media_google", "Google Ads", "Display", "Баннер", campaign("display")],
+      ["media_youtube", "YouTube", "Pre-roll", "Видео", campaign("youtube", g4FiveYouTubePreRollV545)],
+    ],
+  };
+  return G4_FIVE_A_AWARE_BLOCKS_V544.map((block) => {
+    const content = rows[block.id].map((row) => Array.isArray(row)
+      ? g4FiveRowHtmlV545(product, row[0], row[1], row[2], row[3], row[4],
+        row[6] || (row[5] ? g4FivePaidRowStatusV545(product, row[5], g4FiveRowStatusV545(row[4]))
+          : g4FiveRowStatusV545(row[4])))
+      : row).join("");
+    return g4FiveAwareBlockHtmlV544(block, content, product.id);
   }).join("");
 }
 
@@ -253,7 +499,11 @@ function g4FiveProductHtmlV523(product) {
   const rsya = channels.filter((channel) => g4IsYandexRsyaChannel(channel) && !g4FiveChannelExcludedV523(channel));
   const cards = g4ReadinessAllCardsV225(state).filter((card) =>
     ["appeal", "ask", "act"].includes(G4_FUNNEL_CARD_STAGE_V294[card.id]));
-  const preparation = `<section class="g4five-preparation-v523" data-g4five-preparation-v523 data-product-id="${escapeAttr(productId)}"><header><span>0</span><h3>Подготовка к запуску</h3></header>${g4FunnelReadinessGroupHtmlV294("preparation", cards, product, snapshot)}</section>`;
+  const preparationOpen = state?.gate4FiveAV523?.byProduct?.[productId]?.preparationOpenV523 !== false;
+  const preparation = `<details class="g4five-preparation-v523" data-g4five-preparation-v523 data-product-id="${escapeAttr(productId)}"${preparationOpen ? " open" : ""}>
+    <summary data-g4five-preparation-toggle-v523><span>0</span><h3>Подготовка к запуску</h3><span class="g4five-preparation-chevron-v523" aria-hidden="true">⌄</span></summary>
+    ${g4FunnelReadinessGroupHtmlV294("preparation", cards, product, snapshot)}
+  </details>`;
   const stages = G4_FIVE_A_STAGES_V523.map((stage, index) => {
     let content = "";
     if (stage.key === "aware") {
@@ -265,7 +515,7 @@ function g4FiveProductHtmlV523(product) {
       content += g4FiveCampaignHtmlV523(context, G4_FIVE_A_PRODUCT_CHANNELS_V523.ask[0]);
       if (g4FiveServiceRequiredV523(channels, (channel) => /яндекс.*директ|yandex.*direct/i.test(g4FiveChannelTextV523(channel)))) content += g4FiveToolCardHtmlV523({ id: "product_gallery", title: "Товарная галерея", service: "Яндекс Директ, ЕПК с товарными объявлениями", note: "Нужен товарный фид: название, ссылка, изображение, цена" }, "ask", productId);
       content += g4FiveCampaignHtmlV523(context, G4_FIVE_A_PRODUCT_CHANNELS_V523.ask[1]);
-      if (g4FiveServiceRequiredV523(channels, (channel) => /seo|вебмастер/i.test(g4FiveChannelTextV523(channel)))) content += g4FiveLinkedToolHtmlV523(context, "seo", "ask", "SEO / Страницы сайта · Яндекс Вебмастер", "Яндекс Вебмастер", "", { channels: [] });
+      content += g4FiveLinkedToolHtmlV523(context, "seo", "ask", "SEO / Страницы сайта · Яндекс Вебмастер", "Яндекс Вебмастер", "", { channels: [] });
     } else if (stage.key === "act") {
       if (rsya.length) content += g4FiveLinkedToolHtmlV523(context, "retargeting", "advocate", "Ретаргетинг · Яндекс Директ", "Яндекс Директ", "Сегменты «Брошенные корзины», «Смотрели товары, но не купили»", { channels: rsya });
       if (g4FiveServiceRequiredV523(channels, G4_FIVE_A_PRODUCT_CHANNELS_V523.aware.find((tool) => tool.id === "vk_target").matches)) content += g4FiveToolCardHtmlV523({ id: "vk_retargeting", title: "Ретаргетинг", service: "VK Реклама", note: "Пиксель VK, динамический ретаргетинг" }, "act", productId);
@@ -330,5 +580,44 @@ document.addEventListener("input", (event) => {
   input.classList.toggle("is-empty", !input.value.trim());
   input.classList.toggle("is-filled", Boolean(input.value.trim()));
   flashSaving();
+});
+document.addEventListener("click", (event) => {
+  const preparationSummary = event.target?.closest?.("[data-g4five-preparation-toggle-v523]");
+  const preparation = preparationSummary?.closest("[data-g4five-preparation-v523]");
+  const preparationProductId = preparation?.dataset.productId;
+  if (preparationProductId) {
+    const store = state.gate4FiveAV523 ||= { version: G4_FIVE_A_VERSION_V523, company: {}, byProduct: {} };
+    store.byProduct ||= {};
+    const bucket = store.byProduct[preparationProductId] ||= {};
+    bucket.preparationOpenV523 = !preparation.open;
+    guruScheduleUiPreferenceSave();
+    return;
+  }
+  const blockSummary = event.target?.closest?.("[data-g4five-aware-summary-v547]");
+  const block = blockSummary?.closest("[data-g4five-aware-block-v544]");
+  const blockProductId = block?.closest("[data-g4five-product-v523]")?.dataset.g4fiveProductV523;
+  if (blockProductId) {
+    const store = state.gate4FiveAV523 ||= { version: G4_FIVE_A_VERSION_V523, company: {}, byProduct: {} };
+    store.byProduct ||= {};
+    const bucket = store.byProduct[blockProductId] ||= {};
+    const open = new Set(Array.isArray(bucket.openBlocksV547) ? bucket.openBlocksV547 : []);
+    if (block.open) open.delete(block.dataset.g4fiveAwareBlockV544);
+    else open.add(block.dataset.g4fiveAwareBlockV544);
+    bucket.openBlocksV547 = [...open];
+    guruScheduleUiPreferenceSave();
+    return;
+  }
+  const summary = event.target?.closest?.("[data-g4five-nav-summary-v545]");
+  const row = summary?.closest("[data-g4five-nav-row-v545]");
+  const productId = row?.closest("[data-g4five-product-v523]")?.dataset.g4fiveProductV523;
+  if (!productId) return;
+  const store = state.gate4FiveAV523 ||= { version: G4_FIVE_A_VERSION_V523, company: {}, byProduct: {} };
+  store.byProduct ||= {};
+  const bucket = store.byProduct[productId] ||= {};
+  const open = new Set(Array.isArray(bucket.openRowsV545) ? bucket.openRowsV545 : []);
+  if (row.open) open.delete(row.dataset.g4fiveNavRowV545);
+  else open.add(row.dataset.g4fiveNavRowV545);
+  bucket.openRowsV545 = [...open];
+  guruScheduleUiPreferenceSave();
 });
 window.GURU_GATE4_FIVE_A_BUILD = new URL(document.currentScript?.src || "gate4-five-a.js", location.href).searchParams.get("v") || "dev";

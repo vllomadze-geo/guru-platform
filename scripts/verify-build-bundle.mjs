@@ -7,7 +7,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
 const { currentBuildVersion } = require("./build-version.cjs");
 const html = readFileSync(resolve(root, "index.html"), "utf8");
-const required = ["build-info.js", "app.js", "gate4-product-smm.js", "gate4-five-a.js", "gate4-five-a.css"];
+const required = ["build-info.js", "app.js", "gate8-workbench.js", "gate8-company.js", "gate8-audit.js", "gate2-setup-wizard.js", "gate2-setup-wizard.css", "gate4-product-smm.js", "gate4-paid-smm.js", "gate4-paid-smm.css", "gate4-five-a.js", "gate4-five-a.css"];
 const sources = [...html.matchAll(/\b(?:src|href)=["']([^"']+)["']/g)]
   .map((match) => new URL(match[1], "http://localhost/"))
   .filter(source => source.origin === "http://localhost" && /\.(?:js|css)$/.test(source.pathname));

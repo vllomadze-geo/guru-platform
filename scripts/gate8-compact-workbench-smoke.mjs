@@ -151,9 +151,10 @@ try {
       scenarioSelects: document.querySelectorAll('[data-g8-v3-context="scenario"]').length,
       scenarioToggle: document.querySelectorAll('[data-g8-v3-toggle="scenario"]').length,
       customFields: document.querySelectorAll('[data-g8-v3-scenario-card="custom"] [data-g8-v3-manual]').length,
-      customPrompt: document.querySelector('[data-g8-v3-scenario-card="custom"]')?.textContent.includes('Задайте условия') || false,
-      customEmptyErrors: document.querySelectorAll('[data-g8-v3-scenario-card="custom"] .g8-scenario-field.is-error').length,
-      customEmptyBackground: getComputedStyle(document.querySelector('[data-g8-v3-scenario-card="custom"] [data-g8-v3-manual="budget"]')).backgroundColor,
+      lazyScenario: document.querySelector('#g8-workbench-scenario-body')?.dataset.g8V3Lazy === 'true',
+      scopeHeadings: [...document.querySelectorAll('.g8-workbench [data-gate0-section-heading]')].map((node) => node.dataset.gate0SectionHeading),
+      toolbarControlsHidden: document.querySelector('#workspaceToolbar')?.dataset.guruCardControls === 'hidden',
+      finalQuestions: document.querySelectorAll('.g8-final-question-list > li').length,
       scenarioValues: Object.fromEntries(Object.entries(a.scenarioResults).map(([key, row]) => [key, row.value])),
       groundedPresets: ["favorable", "unfavorable", "stress"].every((key) => a.scenarioResults[key].definition.changes.length > 0 && a.scenarioResults[key].definition.changes.every((row) => /Gate 5/.test(row.basis))),
       sales: a.value,
@@ -175,10 +176,9 @@ try {
   assert(JSON.stringify(baseline.titles) === JSON.stringify(["Чего ожидать", "Что сделать", "Что изменится, если…"]), `Wrong primary block order: ${JSON.stringify(baseline)}`);
   assert(JSON.stringify(baseline.nestedDetails) === JSON.stringify(["Данные и расчёт", "История: прогноз и факт"]), `Data/history are not nested controls: ${JSON.stringify(baseline)}`);
   assert(baseline.blockStatusPills === 0, "Per-block status pills still exist");
-  assert(JSON.stringify(baseline.open) === JSON.stringify([true, true, true]), `Wrong disclosure defaults: ${JSON.stringify(baseline.open)}`);
-  assert(JSON.stringify(baseline.scenarioNames) === JSON.stringify(["Базовый", "Благоприятный", "Неблагоприятный", "Стрессовый", "Пользовательский"]), `Not all scenarios are simultaneously visible: ${JSON.stringify(baseline)}`);
-  assert(baseline.scenarioSelects === 0 && baseline.scenarioToggle === 0 && baseline.customFields === 7 && baseline.customPrompt, `Scenario switching or hidden custom fields remain: ${JSON.stringify(baseline)}`);
-  assert(baseline.customEmptyErrors === 0 && baseline.customEmptyBackground === "rgb(255, 255, 255)", `Empty custom fields are incorrectly presented as errors: ${JSON.stringify(baseline)}`);
+  assert(JSON.stringify(baseline.open) === JSON.stringify([true, true, false]) && baseline.lazyScenario, `Scenario must start collapsed and unmounted: ${JSON.stringify(baseline)}`);
+  assert(baseline.scenarioNames.length === 0 && baseline.scenarioToggle === 1 && baseline.customFields === 0 && baseline.scenarioSelects === 0, `Scenario controls rendered too early: ${JSON.stringify(baseline)}`);
+  assert(JSON.stringify(baseline.scopeHeadings) === JSON.stringify(["company", "product"]) && baseline.toolbarControlsHidden && baseline.finalQuestions === 4, `Gate 8 does not use the shared shell: ${JSON.stringify(baseline)}`);
   assert(baseline.scenarioValues.base === baseline.sales && ["favorable", "unfavorable", "stress"].every((key) => Number.isFinite(baseline.scenarioValues[key])) && baseline.groundedPresets, `Scenario calculations are disconnected or ungrounded: ${JSON.stringify(baseline)}`);
   assert(Math.abs(baseline.sales - 4) < 0.0001 && Math.abs(baseline.cpa - 2500) < 0.0001, `Factual CPA forecast is wrong: ${JSON.stringify(baseline)}`);
   assert(baseline.range.available && baseline.range.observations === 3, "Empirical range is missing");
@@ -220,6 +220,16 @@ try {
   const screenshot = await page.call("Page.captureScreenshot", { format: "png", fromSurface: true, captureBeyondViewport: true });
   await mkdir(new URL("../artifacts/", import.meta.url), { recursive: true });
   await writeFile(new URL("../artifacts/gate8-compact-workbench.png", import.meta.url), Buffer.from(screenshot.data, "base64"));
+  await evaluate('document.querySelector(\'[data-g8-v3-toggle="scenario"]\')?.click(); true');
+  const expanded = await evaluate(`(() => ({
+    names: [...document.querySelectorAll('[data-g8-v3-scenario-card] > header strong')].map((node) => node.textContent.trim()),
+    customFields: document.querySelectorAll('[data-g8-v3-scenario-card="custom"] [data-g8-v3-manual]').length,
+    customPrompt: document.querySelector('[data-g8-v3-scenario-card="custom"]')?.textContent.includes('Задайте условия') || false,
+    customEmptyErrors: document.querySelectorAll('[data-g8-v3-scenario-card="custom"] .g8-scenario-field.is-error').length,
+    customEmptyBackground: getComputedStyle(document.querySelector('[data-g8-v3-scenario-card="custom"] [data-g8-v3-manual="budget"]')).backgroundColor,
+  }))()`);
+  assert(JSON.stringify(expanded.names) === JSON.stringify(["Базовый", "Благоприятный", "Неблагоприятный", "Стрессовый", "Пользовательский"]), `Not all scenarios are visible after expansion: ${JSON.stringify(expanded)}`);
+  assert(expanded.customFields === 7 && expanded.customPrompt && expanded.customEmptyErrors === 0 && expanded.customEmptyBackground === "rgb(255, 255, 255)", `Custom scenario is not usable after expansion: ${JSON.stringify(expanded)}`);
   await page.call("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   await wait(150);
   const mobile = await evaluate(`(() => ({
@@ -472,15 +482,24 @@ try {
     saveState();
     const storedBeforeRender = JSON.parse(localStorage.getItem("guru-platform-workspace-v02-${projectId}")).gate8Forecast.byProduct[${JSON.stringify(goatId)}].compactV3.open.scenario;
     renderGate();
-    return {
+    const root = document.querySelector('.g8-workbench');
+    const before = {
       storedBeforeRender,
       normalized: c.open.scenario,
       visible: !document.querySelector('[data-g8-v3-section="scenario"] .g8-workbench-section-body')?.hidden,
       cards: document.querySelectorAll('[data-g8-v3-scenario-card]').length,
       toggle: document.querySelectorAll('[data-g8-v3-toggle="scenario"]').length,
     };
+    document.querySelector('[data-g8-v3-toggle="scenario"]')?.click();
+    return {
+      ...before,
+      afterOpen: c.open.scenario,
+      afterCards: document.querySelectorAll('[data-g8-v3-scenario-card]').length,
+      sameRoot: root === document.querySelector('.g8-workbench'),
+    };
   })()`);
-  assert(disclosure.storedBeforeRender === false && disclosure.normalized === true && disclosure.visible && disclosure.cards === 5 && disclosure.toggle === 0, `Stale disclosure state still hides scenarios: ${JSON.stringify(disclosure)}`);
+  assert(disclosure.storedBeforeRender === false && disclosure.normalized === false && !disclosure.visible && disclosure.cards === 0 && disclosure.toggle === 1 && disclosure.afterOpen && disclosure.afterCards === 5 && disclosure.sameRoot, `Scenario disclosure is not lazy or stable: ${JSON.stringify(disclosure)}`);
+  await wait(300);
 
   await page.call("Page.navigate", { url: `${appUrl}?gate8-persistence-smoke=${Date.now()}` });
   await wait(750);

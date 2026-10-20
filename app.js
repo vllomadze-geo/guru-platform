@@ -575,6 +575,11 @@ function flashSaving() {
   setTimeout(saveState, 120);
 }
 
+function guruSaveFocusedEditSmooth() {
+  // Platform inputs persist without replacing the focused field.
+  flashSaving();
+}
+
 function showLauncher() {
   // После ухода с рабочего экрана DOM текущего Gate больше не является
   // содержимым Gate. Кэш должен быть сброшен до отрисовки лаунчера.
@@ -2847,11 +2852,66 @@ function projectPassportOverviewHtml() {
   </div>`;
 }
 
+// These cards keep their original Gate 0 records for exports and downstream
+// calculations, but their only interactive view lives in the project passport.
+const GURU_PASSPORT_GATE0_CARD_IDS_V527 = [
+  GATE0_COMPANY_DIAGNOSTIC_CARD_ID,
+  "gate0-landing-check-v215",
+  "card-10",
+  "gate0-product-diagnostic",
+  "card-12",
+];
+const GURU_PASSPORT_GATE0_CARD_ID_SET_V527 =
+  new Set(GURU_PASSPORT_GATE0_CARD_IDS_V527);
+
+function guruPassportMovedGate0CardV527(card) {
+  return GURU_PASSPORT_GATE0_CARD_ID_SET_V527.has(card?.id);
+}
+
+function guruPassportMovedGate0HtmlV527() {
+  const gate0 = state?.gates?.find((gate) => gate.id === "gate-0");
+  const cards = GURU_PASSPORT_GATE0_CARD_IDS_V527.map((id) =>
+    gate0?.cards?.find((card) => card.id === id),
+  ).filter(Boolean);
+  if (!cards.length) return "";
+  const companyDiagnostic = cards.find((card) =>
+    card.id === GATE0_COMPANY_DIAGNOSTIC_CARD_ID);
+  const otherCards = cards.filter((card) =>
+    card.id !== GATE0_COMPANY_DIAGNOSTIC_CARD_ID);
+  state._gate0Open ||= {};
+  cards.forEach((card) => recalculateStatusForCard(card, state));
+  return `<section class="project-passport-baseline-v527" data-project-passport-baseline-v527 data-passport-project-id="${escapeAttr(activeProjectId || "")}">
+    <div class="project-passport-baseline-head-v527"><h2>Точка отсчёта</h2><p>Диагностика компании и исходные данные проекта. Для продуктовых проверок выберите продукт ниже.</p></div>
+    <div class="project-passport-baseline-cards-v527">${companyDiagnostic ? gate0CardHtml(companyDiagnostic) : ""}</div>
+    ${otherCards.length ? guruV194ProductSelectHtml("project-passport-baseline") : ""}
+    <div class="project-passport-baseline-cards-v527">${otherCards.map((card) =>
+      card.id === "gate0-landing-check-v215"
+        ? gate0ProductLandingCheckHtml(card)
+        : gate0CardHtml(card),
+    ).join("")}</div>
+  </section>`;
+}
+
+function guruPassportRememberOpenCardsV527() {
+  const baseline = els.contentArea?.querySelector("[data-project-passport-baseline-v527]");
+  if (!baseline || baseline.dataset.passportProjectId !== (activeProjectId || "")) return;
+  state._gate0Open ||= {};
+  baseline.querySelectorAll("details.gate0-card[data-card-row]").forEach((section) => {
+    state._gate0Open[section.dataset.cardRow] = section.open;
+  });
+}
+
 function setToolbarVisible(visible) {
-  els.workspaceToolbar.style.display = visible ? "flex" : "none";
+  const bar = els.workspaceToolbar;
+  bar.style.display = visible ? "flex" : "none";
+  // Search, status and table-mode controls filter legacy card lists only.
+  // Custom Gate 3–8 screens keep shared exports without dead controls.
+  bar.dataset.guruCardControls = visible && activeView === "gate" &&
+    ["gate-0", "gate-1", "gate-2"].includes(activeGateId) ? "visible" : "hidden";
 }
 
 function renderProject() {
+  guruPassportRememberOpenCardsV527();
   activeView = "project";
   setToolbarVisible(false);
   els.pageTitle.textContent = "Паспорт проекта";
@@ -2861,7 +2921,8 @@ function renderProject() {
   els.contentArea.innerHTML = "";
   els.contentArea.appendChild(tpl);
   const overview = els.contentArea.querySelector("[data-project-overview]");
-  if (overview) overview.outerHTML = projectPassportOverviewHtml();
+  if (overview) overview.outerHTML = projectPassportOverviewHtml() +
+    guruPassportMovedGate0HtmlV527();
   document.querySelectorAll("[data-project]").forEach((input) => {
     const key = input.dataset.project;
     if (key === "website") return;
@@ -2872,6 +2933,10 @@ function renderProject() {
       flashSaving();
     });
   });
+  bindCardInputs();
+  bindGate0CardTogglesV527();
+  bindGate0StatusJump();
+  bindGate0DiagnosticStages();
 }
 
 function renderGate() {
@@ -4728,7 +4793,10 @@ function updateCurrentResultMeta(e) {
     period: "",
     sources: "",
   };
-  card.currentResultsMeta[e.target.dataset.crMetaField] = e.target.value;
+  const field = e.target.dataset.crMetaField;
+  if (field === "positionId" && e.target.value && !guruV194Product(e.target.value, state)) return;
+  card.currentResultsMeta[field] = e.target.value;
+  if (field === "positionId") card.currentResultsMeta.positionIdExplicit = true;
   recalculateStatusForCard(card);
   flashSaving();
 }
@@ -8224,21 +8292,36 @@ function openAuditPageCard(cardId, context = {}) {
   const card = gate?.cards?.find((item) => item.id === cardId);
   if (!card) return false;
 
-  // Cards can live under different Gate 1 sections. A stale search/filter or
-  // cached Gate view must not hide the destination after navigation.
+  // Reveal the card's own Gate 1 scope and accordion before rendering it.
   if (els.searchInput) els.searchInput.value = "";
   if (els.statusFilter) els.statusFilter.value = "all";
   const acc = getGate1AccordionState();
-  const section = getGate1Sections(gate).find((item) =>
-    item.allInnerCards?.some((entry) => entry.id === cardId));
+  let scope = "";
+  let cardScope = "";
+  let section = null;
+  for (const entry of getGate1Sections(gate)) {
+    if (entry.type === "divider") {
+      if (entry.key === "__g1_divider_company") scope = "company";
+      else if (entry.key === "__g1_divider_product") scope = "product";
+    } else if (entry.allInnerCards?.some((item) => item.id === cardId)) {
+      section = entry;
+      cardScope = scope;
+      break;
+    }
+  }
   if (section && !section.bare) acc.subblocks[section.key] = true;
   acc.cards[cardId] = true;
+  if (cardScope) guruGateScopeOpenStateV526("gate-1")[cardScope] = true;
 
   let categoryRowId = "";
   if (context.categoryId && cardId === "card-22") {
-    guruCategoryAuditRowsV491(state);
     categoryRowId = card.pageRows?.find((row) =>
       String(row.categoryId || "") === String(context.categoryId))?.id || "";
+    if (!categoryRowId) {
+      guruCategoryAuditRowsV491(state);
+      categoryRowId = card.pageRows?.find((row) =>
+        String(row.categoryId || "") === String(context.categoryId))?.id || "";
+    }
     if (categoryRowId) guruCategoryPageSetExpandedV495(categoryRowId, true);
   }
   const productRowIndex = context.productId
@@ -8252,10 +8335,11 @@ function openAuditPageCard(cardId, context = {}) {
   const locate = () => {
     const cardNode = document.querySelector(`[data-card="${CSS.escape(cardId)}"]`);
     if (!cardNode) return null;
-    if (categoryRowId) {
-      const row = cardNode.querySelector(
-        `[data-guru-category-page-row-id-v495="${CSS.escape(categoryRowId)}"]`);
-      if (row) return row;
+    if (context.categoryId && cardId === "card-22") {
+      const rowId = categoryRowId || card.pageRows?.find((row) =>
+        String(row.categoryId || "") === String(context.categoryId))?.id;
+      return rowId ? cardNode.querySelector(
+        `[data-guru-category-page-row-id-v495="${CSS.escape(rowId)}"]`) : null;
     }
     const targetRowIndex = auditRowIndex >= 0 ? auditRowIndex : productRowIndex;
     if (targetRowIndex >= 0) {
@@ -8267,21 +8351,31 @@ function openAuditPageCard(cardId, context = {}) {
   };
   const reveal = () => {
     if (navigationToken !== auditPageNavigationToken ||
-        activeView !== "gate" || activeGateId !== "gate-1") return;
+        activeView !== "gate" || activeGateId !== "gate-1") return false;
     const node = locate();
-    if (!node) return;
+    if (!node) return false;
+    gate0RevealSectionForNode(node);
     const top = node.getBoundingClientRect().top;
     if (top < -8 || top > 80)
       node.scrollIntoView({ behavior: "instant", block: "start" });
+    return true;
   };
 
   guruInvalidateGateViewCache();
-  saveState();
   if (activeView === "gate" && activeGateId === "gate-1") renderGate();
   else guruNavigateToGate("gate-1");
-  queueMicrotask(() => requestAnimationFrame(reveal));
-  setTimeout(reveal, 120);
-  setTimeout(reveal, 350);
+  guruScheduleUiPreferenceSave();
+  let attempts = 0;
+  const revealWhenRendered = () => {
+    if (navigationToken !== auditPageNavigationToken ||
+        activeView !== "gate" || activeGateId !== "gate-1") return;
+    if (reveal()) {
+      requestAnimationFrame(reveal);
+    } else if (++attempts < 12) {
+      requestAnimationFrame(revealWhenRendered);
+    }
+  };
+  requestAnimationFrame(revealWhenRendered);
   return true;
 }
 
@@ -8520,6 +8614,20 @@ function g8MetricFromText(value) {
 
 function g8GoalCandidate() {
   const project = state?.project || {};
+  if (Array.isArray(project.companyGoalsV360)) {
+    const primary = guruCompanyPrimaryGoalV360(state);
+    const hasValue = primary && ["goalDescription", "goalMetric", "goalTargetValue", "goalDeadline", "goalBudget", "goalAllowedCost"]
+      .some((key) => g8Text(primary[key]));
+    return { raw: hasValue ? {
+      description: primary.goalDescription,
+      metric: primary.goalMetric,
+      targetValue: primary.goalTargetValue,
+      deadline: primary.goalDeadline,
+      budget: primary.goalBudget,
+      allowedCost: primary.goalAllowedCost,
+      updatedAt: primary.updated_at || project.goalUpdatedAt || "",
+    } : null, source: "Gate 0 → Цель проекта" };
+  }
   const g5Goals = Array.isArray(state?.gate5?.goals) ? state.gate5.goals : [];
   const structuredProjectGoal = g8Text(project.goalDescription || project.goalText)
     ? {
@@ -14234,7 +14342,8 @@ function g5UploadStatusHtml(meta, totalRows) {
 }
 function renderGate5Input() {
   const g5 = ensureGate5State();
-  return `${renderGate5YandexImport()}<div class="gate5-note">Типы импорта: структура кампании, перфоманс-кампании, поисковые запросы, размещение в Поиске, площадки и бизнес-данные CRM / AGBIS.</div><div class="gate5-report-list">${Object.entries(GATE5_REPORTS)
+  const goals = (g5.goals || []).map((goal, index) => `<div class="gate5-upload-row" data-g5-goal-record="${g5Attr(goal.id || index)}" data-g5-goal-product="${g5Attr(goal.product_id || "")}"><span class="gate5-upload-file">${g5Esc(goal.description || goal.goalDescription || goal.name || "Цель продукта")} · ${g5Esc(goal.product_id || "Без product_id")}</span><span class="gate5-muted">${g5Esc(goal.metric || goal.goalMetric || "Показатель не указан")} · ${g5Esc(goal.targetValue ?? goal.goalTargetValue ?? goal.target ?? "Значение не указано")} · ${g5Esc(goal.deadline || goal.goalDeadline || "Срок не указан")}</span></div>`).join("");
+  return `${renderGate5YandexImport()}<div class="gate5-card" data-g5-goal-registry><h4>Цели продуктов из данных Gate 5</h4>${goals || '<p class="gate5-muted">Отдельные цели продуктов не загружены. Цель компании из Gate 0 сюда не переносится.</p>'}</div><div class="gate5-note">Типы импорта: структура кампании, перфоманс-кампании, поисковые запросы, размещение в Поиске, площадки и бизнес-данные CRM / AGBIS.</div><div class="gate5-report-list">${Object.entries(GATE5_REPORTS)
     .map(([key, rep]) => {
       const meta = g5.imports[key];
       return `<div class="gate5-report-card"><h4>${g5Esc(rep.title)}</h4><small>${g5Esc(rep.desc)}</small>${g5UploadStatusHtml(meta, g5.reports[key]?.length)}<div class="gate5-note">Чтобы добавить или обновить данные, используйте единый блок «Импорт Яндекс Директ» выше.</div></div>`;
@@ -14245,7 +14354,7 @@ function renderGate5Snapshots() {
   const g5 = ensureGate5State();
   const rows = g5FilterSnapshots(g5.periodSnapshots).slice().reverse().map((snapshot) => {
     const campaign = g5CampaignById(snapshot.campaignId);
-    return `<tr><td>${g5Esc(snapshot.periodStart)} — ${g5Esc(snapshot.periodEnd)}</td><td>${g5Esc(campaign?.name || "Кампания не найдена")}</td><td>${g5Esc(snapshot.status)}</td><td>${g5Rub(snapshot.spend)}</td><td>${g5Int(snapshot.impressions)}</td><td>${g5Int(snapshot.clicks)}</td><td>${g5Pct(g5Num(snapshot.ctr) / 100)}</td><td>${g5Int(snapshot.leads)}</td><td>${g5Rub(snapshot.cpa || snapshot.cpl)}</td><td>${g5Esc(snapshot.source || "—")}</td></tr>`;
+    return `<tr data-g5-snapshot-id="${g5Attr(snapshot.id || "")}"><td>${g5Esc(snapshot.periodStart)} — ${g5Esc(snapshot.periodEnd)}</td><td>${g5Esc(campaign?.name || "Кампания не найдена")}</td><td>${g5Esc(snapshot.status)}</td><td>${g5Rub(snapshot.spend)}</td><td>${g5Int(snapshot.impressions)}</td><td>${g5Int(snapshot.clicks)}</td><td>${g5Pct(g5Num(snapshot.ctr) / 100)}</td><td>${g5Int(snapshot.leads)}</td><td>${g5Rub(snapshot.cpa || snapshot.cpl)}</td><td>${g5Esc(snapshot.source || "—")}</td></tr>`;
   }).join("");
   return `<div class="gate5-card" style="margin-top:12px"><h4>Снимки периодов</h4><p class="gate5-muted">Создаются автоматически после импорта статистических отчётов.</p></div><div class="gate5-table-wrap"><table class="gate5-table"><thead><tr><th>Период</th><th>Кампания</th><th>Статус</th><th>Расход</th><th>Показы</th><th>Клики</th><th>CTR</th><th>Лиды</th><th>CPA / CPL</th><th>Источник</th></tr></thead><tbody>${rows || '<tr><td colspan="10">Снимки появятся автоматически после импорта статистического отчёта.</td></tr>'}</tbody></table></div>`;
 }
@@ -19963,9 +20072,8 @@ bindCardInputs = function () {
 
 /* v1.2.0 — Gate 0 vertical layout */
 const __guruPrevRenderGateTableV120 = renderGateTable;
-/* Gate 0 визуально разделён на «Компания» и «Продукт / Услуга». Диагностика
-   имеет по одной физической карточке в конце каждого раздела; остальные
-   карточки вне списков сохраняют исходный относительный порядок. */
+/* Gate 0 визуально разделён на «Компания» и «Продукт / Услуга».
+   Диагностика и проверки точки отсчёта показаны в Паспорте проекта. */
 const GATE0_COMPANY_SECTION_TITLES = [
   "Проект: базовые сведения",
   "Цель проекта и ограничения",
@@ -19973,13 +20081,9 @@ const GATE0_COMPANY_SECTION_TITLES = [
   "Позиционирование · Компания",
   "Оффер и CTA · Компания",
   "Текущее состояние маркетинговой системы · Компания",
-  "Диагностика точки отсчёта · Компания",
 ];
 const GATE0_PRODUCT_SECTION_TITLES = [
   "Продукт, сегмент и задача клиента",
-  "Проверь — у каждого продукта должна быть своя посадочная",
-  "Текущие результаты",
-  "Диагностика точки отсчёта · Продукт/Услуга",
 ];
 function gate0CardHtml(c) {
   const isOpen = state._gate0Open[c.id] === true;
@@ -19991,6 +20095,20 @@ function gate0CardHtml(c) {
     ${instructionToggleHtml(c)}
     <div class="gate0-card-body">${cardUserFieldsHtml(c)}</div>
   </details>`;
+}
+function bindGate0CardTogglesV527() {
+  document.querySelectorAll("details.gate0-card").forEach((el) => {
+    if (el.dataset.gate0CardToggleBoundV527) return;
+    el.dataset.gate0CardToggleBoundV527 = "true";
+    el._guruRenderedOpen = el.open;
+    el.addEventListener("toggle", () => {
+      if (el._guruRenderedOpen === el.open) return;
+      el._guruRenderedOpen = el.open;
+      state._gate0Open ||= {};
+      state._gate0Open[el.dataset.cardRow] = el.open;
+      guruScheduleUiPreferenceSave();
+    });
+  });
 }
 function gate0SectionHeadingHtml(title, desc, sectionKey = "") {
   if (!sectionKey) {
@@ -20050,7 +20168,8 @@ renderGateTable = function (gate, cards) {
     guruV350NormalizeCompanyStrategyCardOrder(state);
     state._gate0Open = state._gate0Open || {};
     state._gate0SectionsOpen = state._gate0SectionsOpen || {};
-    const visible = cards.filter((c) => !isOfferPsychCard(c) && !c._merged);
+    const visible = cards.filter((c) => !isOfferPsychCard(c) && !c._merged &&
+      !guruPassportMovedGate0CardV527(c));
     const companyCards = visible.filter(
       (c) =>
         GATE0_COMPANY_SECTION_TITLES.includes(c.title) ||
@@ -20087,16 +20206,7 @@ renderGateTable = function (gate, cards) {
       ${productCardsHtml}
       ${restCards.map(gate0CardHtml).join("")}
     </div>`;
-    document.querySelectorAll("details.gate0-card").forEach((el) => {
-      el._guruRenderedOpen = el.open;
-      el.addEventListener("toggle", () => {
-        if (el._guruRenderedOpen === el.open) return;
-        el._guruRenderedOpen = el.open;
-        state._gate0Open = state._gate0Open || {};
-        state._gate0Open[el.dataset.cardRow] = el.open;
-        guruScheduleUiPreferenceSave();
-      });
-    });
+    bindGate0CardTogglesV527();
     ["company", "product"].forEach((sectionKey) => {
       gate0SetSectionOpen(sectionKey, state._gate0SectionsOpen[sectionKey] !== false);
     });
@@ -20188,6 +20298,31 @@ function gate0RefreshStatuses(options = {}) {
 }
 
 const __guruPrevFlashSavingV120 = flashSaving;
+let gate0ProductDiagnosticRefreshTimer = 0;
+function gate0ScheduleProductDiagnosticRefresh() {
+  if (activeGateId !== "gate-0") return;
+  const selector = `[data-card-row="${GATE0_PRODUCT_DIAGNOSTIC_CARD_ID}"] .diag-5a`;
+  if (!document.querySelector(selector)) return;
+  clearTimeout(gate0ProductDiagnosticRefreshTimer);
+  gate0ProductDiagnosticRefreshTimer = setTimeout(() => {
+    gate0ProductDiagnosticRefreshTimer = 0;
+    if (activeGateId !== "gate-0") return;
+    const panel = document.querySelector(selector);
+    const card = findCard(GATE0_PRODUCT_DIAGNOSTIC_CARD_ID);
+    if (!panel || !card) return;
+    recalculateStatusForCard(card, state);
+    const badge = panel.closest("[data-card-row]")?.querySelector(".gate0-card-status");
+    if (badge) {
+      badge.className = `gate0-card-status status-${card.status}`;
+      badge.textContent = STATUS_LABELS[card.status] || card.status;
+    }
+    const template = document.createElement("template");
+    template.innerHTML = gate0SummaryHtml(card);
+    const next = template.content.firstElementChild;
+    if (next) panel.replaceWith(next);
+    bindGate0DiagnosticStages();
+  }, 120);
+}
 flashSaving = function () {
   __guruPrevFlashSavingV120();
   if (activeGateId === "gate-0") gate0RefreshStatuses();
@@ -20343,13 +20478,8 @@ function diag5AContentStatusV348(values = []) {
   return filled === normalized.length ? "works" : "needs_improvement";
 }
 
-function diag5APositioningItemsV348(product, workspace = state) {
-  const records = guruV194ExactRecords(
-    "positioning",
-    "product",
-    product,
-    workspace,
-  );
+function diag5APositioningItemsV348(product, workspace = state, resolved = guruV194Resolve("positioning", product, workspace)) {
+  const records = resolved.records;
   if (!records.length)
     return [diag5AItem("Позиционирование", "missing")];
   return records.map((record, index) => {
@@ -20366,13 +20496,8 @@ function diag5APositioningItemsV348(product, workspace = state) {
   });
 }
 
-function diag5AOfferItemsV348(product, workspace = state) {
-  const records = guruV194ExactRecords(
-    "offers",
-    "product",
-    product,
-    workspace,
-  );
+function diag5AOfferItemsV348(product, workspace = state, resolved = guruV194Resolve("offers", product, workspace)) {
+  const records = resolved.records;
   if (!records.length) return [diag5AItem("Оффер + CTA", "missing")];
   return records.map((record, index) => {
     const parts = guruV194OfferParts(record);
@@ -20484,14 +20609,18 @@ function diag5AScopeModelV348(workspace = state, productId = null) {
     (product) => product.id === resultsPositionId,
   );
   const productGroups = products.map((product) => {
+    const positioning = guruV194Resolve("positioning", product, workspace);
+    const offers = guruV194Resolve("offers", product, workspace);
     const stages = [
       diag5AStageV348(
         `product:${product.id}:positioning-landing`,
         "Позиционирование и посадочная",
         "Продукт / Услуга",
-        "Точные данные выбранного продукта без наследования",
+        positioning.records.length
+          ? `Позиционирование: ${guruV194ScopeLabel(positioning.scope)}. Посадочная: этот продукт.`
+          : "Позиционирование не заполнено. Посадочная: этот продукт.",
         [
-          ...diag5APositioningItemsV348(product, workspace),
+          ...diag5APositioningItemsV348(product, workspace, positioning),
           diag5AItem(
             "Посадочная страница",
             diag5ALandingStatusV348(product, workspace),
@@ -20502,21 +20631,26 @@ function diag5AScopeModelV348(workspace = state, productId = null) {
         `product:${product.id}:offers`,
         "Офферы и CTA",
         "Продукт / Услуга",
-        "Каждый оффер относится только к этому product_id",
-        diag5AOfferItemsV348(product, workspace),
+        offers.records.length
+          ? `Актуальный источник: ${guruV194ScopeLabel(offers.scope)}.`
+          : "Офферы не заполнены.",
+        diag5AOfferItemsV348(product, workspace, offers),
       ),
     ];
-    if (resultsProduct?.id === product.id) {
-      stages.push(
-        diag5AStageV348(
-          `product:${product.id}:results`,
-          "Текущие результаты",
-          "Продукт / Услуга",
-          "Срез, привязанный через currentResultsMeta.positionId",
-          diag5ACurrentResultsItemsV348(currentResultsCard),
-        ),
-      );
-    }
+    const hasOwnResults = resultsProduct?.id === product.id;
+    stages.push(
+      diag5AStageV348(
+        `product:${product.id}:results`,
+        "Текущие результаты",
+        "Продукт / Услуга",
+        hasOwnResults
+          ? "Показатели, привязанные к этому продукту."
+          : "Для этого продукта пока нет привязанных показателей.",
+        hasOwnResults
+          ? diag5ACurrentResultsItemsV348(currentResultsCard)
+          : [diag5AItem("Показатели этого продукта", "missing")],
+      ),
+    );
     return { product, stages };
   });
 
@@ -20530,7 +20664,7 @@ function diag5AScopeModelV348(workspace = state, productId = null) {
           "product:unassigned-results",
           "Текущие результаты",
           "Не назначено продукту",
-          "Привязка допускается только по currentResultsMeta.positionId",
+          "Укажите продукт результатов в блоке «Текущие результаты».",
           [diag5AItem("Продукт результатов не назначен", "missing")],
         ),
       ]
@@ -20629,7 +20763,7 @@ function diag5AStageHtmlV348(stage, openStages) {
     <summary class="diag-stage-head">
       <span class="diag-light">${light}</span>
       <div class="diag-stage-info">
-        <div class="diag-stage-name">${escapeHtml(stage.name)} · ${escapeHtml(stage.label)}</div>
+        <div class="diag-stage-name">${escapeHtml(stage.name)}${stage.label === "Продукт / Услуга" ? "" : ` · ${escapeHtml(stage.label)}`}</div>
         <div class="diag-stage-desc">${escapeHtml(stage.desc)}</div>
       </div>
       <div class="diag-stage-bar-wrap">
@@ -20646,10 +20780,10 @@ function diag5AScopeStatusV348(stages = []) {
   return diagStageMetrics(stages.flatMap((stage) => stage.items || []));
 }
 
-function diag5AScopeHeadingHtmlV348(title, desc, stages) {
+function diag5AScopeHeadingHtmlV348(title, desc, stages, kicker = "") {
   const metrics = diag5AScopeStatusV348(stages);
   return `<div class="diag-scope-head-v348">
-    <div><h4>${escapeHtml(title)}</h4><p>${escapeHtml(desc)}</p></div>
+    <div>${kicker ? `<span class="diag-scope-kicker-v348">${escapeHtml(kicker)}</span>` : ""}<h4>${escapeHtml(title)}</h4><p>${escapeHtml(desc)}</p></div>
     <span class="status-pill status-${escapeAttr(metrics.status)}">${escapeHtml(STATUS_LABELS[metrics.status] || metrics.status)} · ${metrics.pct}%</span>
   </div>`;
 }
@@ -20682,21 +20816,18 @@ function gate0SummaryHtml(card = null) {
     ? diag5ASelectedProductGroupV350(state, model)
     : null;
   const selectedProductStages = selectedProductGroup?.stages || [];
-  const productsHtml = selectedProductGroup
-    ? `<section class="diag-product-v348" data-gate0-diagnostic-product-id="${escapeAttr(selectedProductGroup.product.id)}">
-        ${diag5AScopeHeadingHtmlV348(selectedProductGroup.product.name, "Данные только этого product_id.", selectedProductStages)}
-        <div class="diag-scope-stages-v348">${selectedProductStages
-          .map((stage) => diag5AStageHtmlV348(stage, openStages))
-          .join("")}</div>
-      </section>`
-    : '<div class="diag-ok">Выберите категорию и продукт, чтобы выполнить продуктовую диагностику.</div>';
-  const productHtml = `<section class="diag-scope-v348" data-gate0-diagnostic-scope="product">
+  const productHtml = `<section class="diag-scope-v348" data-gate0-diagnostic-scope="product" ${selectedProductGroup ? `data-gate0-diagnostic-product-id="${escapeAttr(selectedProductGroup.product.id)}"` : ""}>
     ${diag5AScopeHeadingHtmlV348(
-      "Продукт / Услуга",
-      "Позиционирование, офферы, посадочные и точно привязанные текущие результаты.",
+      selectedProductGroup?.product.name || "Продукт / Услуга",
+      selectedProductGroup
+        ? "Позиционирование и офферы из актуальной стратегии; посадочная и результаты с привязкой к продукту."
+        : "Выберите категорию и продукт для диагностики.",
       selectedProductStages,
+      selectedProductGroup ? "Продукт / Услуга" : "",
     )}
-    <div class="diag-products-v348">${productsHtml}</div>
+    ${selectedProductGroup
+      ? `<div class="diag-scope-stages-v348">${selectedProductStages.map((stage) => diag5AStageHtmlV348(stage, openStages)).join("")}</div>`
+      : '<div class="diag-ok">Выберите категорию и продукт, чтобы выполнить продуктовую диагностику.</div>'}
   </section>`;
 
   if (scope === "company") return `<div class="diag-5a">${companyHtml}</div>`;
@@ -33236,8 +33367,13 @@ document.addEventListener("click", (e) => {
     const open = g4EnsureLaunchUiState();
     const key = btn.dataset.g4launchSectionToggle;
     open[key] = open[key] === false;
-    flashSaving();
-    renderGate();
+    if (activeGateId === "gate-4" && typeof g4FiveFastSectionToggleV546 === "function" &&
+        g4FiveFastSectionToggleV546(btn, Boolean(open[key]))) {
+      guruScheduleUiPreferenceSave();
+    } else {
+      flashSaving();
+      renderGate();
+    }
     return;
   }
   if (e.target?.closest?.("[data-g4camp-toggle]")) {
@@ -33245,8 +33381,13 @@ document.addEventListener("click", (e) => {
     const open = g4EnsureLaunchUiState();
     const key = btn.dataset.g4campToggle;
     open.rows[key] = !open.rows[key];
-    flashSaving();
-    renderGate();
+    if (activeGateId === "gate-4" && typeof g4FiveFastCampaignToggleV546 === "function" &&
+        g4FiveFastCampaignToggleV546(btn, Boolean(open.rows[key]))) {
+      guruScheduleUiPreferenceSave();
+    } else {
+      flashSaving();
+      renderGate();
+    }
     return;
   }
   if (e.target?.dataset?.g4prodGroupAdd !== undefined) {
@@ -33627,83 +33768,10 @@ document.addEventListener("click", (e) => {
   }
 });
 
-/* Global field state: one visual rule for every Gate */
-function guruFieldState(el) {
-  if (!el || el.disabled) return "";
-  if (el.tagName === "SELECT") {
-    const value = String(el.value || "").trim();
-    // Красный — это призыв заполнить обязательное поле, а не оценка выбора.
-    // «Работает» — позитивный результат, «Требует улучшения» — действие,
-    // остальные выбранные значения фиксируют решение нейтральным цветом.
-    if (!value) return "empty";
-    if (value === "needs_improvement") return "empty";
-    return value === "works" ? "filled" : "selected";
-  }
-  const value = String(el.value || "").trim();
-  return value ? "filled" : "empty";
-}
-
-const GURU_FIELD_STATE_SELECTOR =
-  ".content-area input:not([type='button']):not([type='submit']):not([type='reset']):not([type='hidden']):not([data-g4sb-jtbd-search]):not([data-guru-field-neutral]), .content-area textarea:not([data-guru-field-neutral]), .content-area select:not([data-guru-field-neutral])";
-
-function guruApplyFieldStates(root = document) {
-  const scope = root.querySelector ? root : document;
-  scope.querySelectorAll(GURU_FIELD_STATE_SELECTOR).forEach(guruApplyFieldState);
-}
-
-function guruApplyFieldState(el) {
-  if (!el?.matches?.(GURU_FIELD_STATE_SELECTOR)) return;
-  const fieldClasses = [
-    "guru-field-empty",
-    "guru-field-filled",
-    "guru-field-warning",
-    "guru-field-selected",
-  ];
-  // Comparison previews and their header URL are edited in place. Global
-  // field badges turn their filled text back into grey form controls.
-  if (el.closest(".g1bp-serp-card-v569, .g1bp-landing-v575, .g1bp-head-site-v578")) {
-    el.classList.remove(...fieldClasses);
-    return;
-  }
-  const stateName = guruFieldState(el);
-  const nextClass = stateName ? "guru-field-" + stateName : "";
-  if (fieldClasses.every((name) => el.classList.contains(name) === (name === nextClass)))
-    return;
-  el.classList.remove(...fieldClasses);
-  if (nextClass) el.classList.add(nextClass);
-}
-
-const __guruPrevBindCardInputsFieldStates = bindCardInputs;
-let guruFieldStateRenderDepth = 0;
-let guruFieldStatesAppliedInRender = false;
-bindCardInputs = function () {
-  __guruPrevBindCardInputsFieldStates();
-  guruApplyFieldStates(els.contentArea || document);
-  if (guruFieldStateRenderDepth > 0) guruFieldStatesAppliedInRender = true;
-};
-
-const __guruPrevRenderGateFieldStates = renderGate;
-renderGate = function () {
-  const isOuterPass = guruFieldStateRenderDepth === 0;
-  guruFieldStateRenderDepth += 1;
-  if (isOuterPass) guruFieldStatesAppliedInRender = false;
-  try {
-    __guruPrevRenderGateFieldStates();
-    if (isOuterPass && !guruFieldStatesAppliedInRender)
-      guruApplyFieldStates(els.contentArea || document);
-  } finally {
-    guruFieldStateRenderDepth -= 1;
-  }
-};
-
-document.addEventListener("input", (event) => {
-  if (event.target?.matches?.("input, textarea, select"))
-    guruApplyFieldState(event.target);
-});
-document.addEventListener("change", (event) => {
-  if (event.target?.matches?.("input, textarea, select"))
-    guruApplyFieldState(event.target);
-});
+/* Legacy call sites may still invoke these helpers. Completion no longer
+   changes control styles or scans every field after a render. */
+function guruApplyFieldStates() {}
+function guruApplyFieldState() {}
 
 /* v1.2.2 — Защита от перезаписи данных другой вкладкой */
 // Каждая вкладка помечает свои записи. Если в localStorage лежат более свежие
@@ -36013,6 +36081,9 @@ const __guruPrevFlashSavingDirty = flashSaving;
 flashSaving = function () {
   _guruTabDirty = true;
   __guruPrevFlashSavingDirty.apply(this, arguments);
+  // The v1.21 debounced autosave replaced earlier flashSaving wrappers, so
+  // refresh the visible product diagnosis from this final save path.
+  if (activeGateId === "gate-0") gate0ScheduleProductDiagnosticRefresh();
 };
 
 /* ================================================================
@@ -40866,8 +40937,13 @@ document.addEventListener("click", (e) => {
     d.searchStepOpen = { clusters: false, check: false };
   const key = btn.dataset.g4sbStep;
   d.searchStepOpen[key] = !d.searchStepOpen[key];
-  flashSaving();
-  renderGate();
+  if (activeGateId === "gate-4" && typeof g4FiveFastCampaignStepToggleV546 === "function" &&
+      g4FiveFastCampaignStepToggleV546(btn, Boolean(d.searchStepOpen[key]))) {
+    guruScheduleUiPreferenceSave();
+  } else {
+    flashSaving();
+    renderGate();
+  }
 });
 
 /* ---- Обработчики сборки кластера. Существующие обработчики полей
@@ -41790,8 +41866,13 @@ document.addEventListener("click", (e) => {
     const d = ensureGate4SearchBuild(toggle.dataset.g4sbProduct);
     const id = toggle.dataset.g4sbUnitToggle;
     d.clusterListOpen[id] = !d.clusterListOpen[id];
-    flashSaving();
-    renderGate();
+    if (activeGateId === "gate-4" && typeof g4FiveFastSearchUnitToggleV546 === "function" &&
+        g4FiveFastSearchUnitToggleV546(toggle, Boolean(d.clusterListOpen[id]))) {
+      guruScheduleUiPreferenceSave();
+    } else {
+      flashSaving();
+      renderGate();
+    }
     return;
   }
   const t = e.target;
@@ -42164,6 +42245,48 @@ saveState = function () {
   guruRefreshReadiness({ statusesReady: true });
   return result;
 };
+
+/* Baseline cards live in the passport UI. Keep their Gate 0 records
+   as source data, while Gate 0 navigation counts only the cards shown there. */
+const __guruPassportPrevGateBlockStatusesV527 = guruGateBlockStatuses;
+guruGateBlockStatuses = function (gate) {
+  if (gate?.id !== "gate-0")
+    return __guruPassportPrevGateBlockStatusesV527(gate);
+  return __guruPassportPrevGateBlockStatusesV527({
+    ...gate,
+    cards: (gate.cards || []).filter((card) =>
+      !guruPassportMovedGate0CardV527(card)),
+  });
+};
+
+function guruPassportRefreshMovedGate0V527(cardId, refreshDiagnostic = false) {
+  if (activeView !== "project") return;
+  const baseline = els.contentArea?.querySelector("[data-project-passport-baseline-v527]");
+  if (!baseline) return;
+  const section = baseline.querySelector(`details.gate0-card[data-card-row="${cardId}"]`);
+  if (section) {
+    const card = findCard(section.dataset.cardRow);
+    if (card) {
+      recalculateStatusForCard(card, state);
+      const badge = section.querySelector(".gate0-card-status");
+      if (badge) {
+        badge.className = `gate0-card-status status-${card.status}`;
+        badge.textContent = STATUS_LABELS[card.status] || card.status;
+      }
+      if (refreshDiagnostic && isStartupSummaryCard(card)) {
+        const body = section.querySelector(".gate0-card-body");
+        if (body) body.innerHTML = `<div class="field-row">${gate0SummaryHtml(card)}</div>`;
+      }
+    }
+  }
+  if (refreshDiagnostic) bindGate0DiagnosticStages();
+}
+
+["input", "change"].forEach((type) => document.addEventListener(type, (event) => {
+  const cardId = event.target?.closest?.("[data-project-passport-baseline-v527] details.gate0-card[data-card-row]")?.dataset.cardRow;
+  if (!cardId) return;
+  queueMicrotask(() => guruPassportRefreshMovedGate0V527(cardId, type === "change"));
+}));
 
 /* Быстрый путь автосохранения.
    Пользовательский ввод сначала надёжно фиксируется как есть, без синхронной
@@ -50301,6 +50424,97 @@ const G8_PROJECT_GOAL_HELP = {
   goalAllowedCost: "Максимум за один засчитанный результат: рекламные расходы ÷ число результатов, например ₽ за заявку.",
 };
 
+// Goal entries are canonical. The six historical project fields remain a
+// projection of the active primary goal for Gate 8 and existing calculations.
+function guruCompanyLegacyGoalFieldsV360(project = {}) {
+  const legacyObject = [project.goal, project.projectGoal, project.targetGoal, project.marketingGoal]
+    .find((value) => value && typeof value === "object" && !Array.isArray(value)) || {};
+  const legacyText = [project.goal, project.projectGoal, project.targetGoal, project.marketingGoal]
+    .find((value) => typeof value === "string" && guruV185Text(value)) || "";
+  const description = String(project.goalDescription ||
+    g8ObjectValue(legacyObject, ["description", "title", "name", "goal", "result", "objective", "targetResult"]) ||
+    project.goalText || legacyText || "");
+  const rawMetric = guruV185Text(project.goalMetric ||
+    g8ObjectValue(legacyObject, ["metric", "resultMetric", "type", "kpi"])).toLowerCase();
+  const metricAliases = { заявки: "leads", лиды: "leads", продажи: "sales", выручка: "revenue", прибыль: "profit", окупаемость: "roi" };
+  const metric = GATE8_RESULTS.some(([key]) => key === rawMetric)
+    ? rawMetric : metricAliases[rawMetric] || rawMetric || (description ? g8MetricFromText(description) : "");
+  const field = (key, aliases) => String(project[key] || g8ObjectValue(legacyObject, aliases) || "");
+  return {
+    goalDescription: description,
+    goalMetric: metric,
+    goalTargetValue: field("goalTargetValue", ["targetValue", "target", "value", "quantity", "amount", "targetAmount"]),
+    goalDeadline: field("goalDeadline", ["deadline", "dueDate", "dateTo", "endDate", "term", "targetDate"]),
+    goalBudget: field("goalBudget", ["budget", "maxBudget", "allowedBudget", "adBudget"]),
+    goalAllowedCost: field("goalAllowedCost", ["maxCost", "allowedCost", "targetCpl", "cpl", "targetCpa", "cpa"]),
+  };
+}
+
+function guruCompanyGoalsV360(workspace = state) {
+  if (!workspace?.project) return [];
+  const project = workspace.project;
+  if (!Array.isArray(project.companyGoalsV360)) {
+    const legacy = guruCompanyLegacyGoalFieldsV360(project);
+    project.companyGoalsV360 = [{
+      id: makeId("company-goal"),
+      ...legacy,
+      legacy_imported_v360: G8_PROJECT_GOAL_FIELDS.some(([key]) => guruV185Text(legacy[key])),
+      is_primary: true,
+      created_at: new Date().toISOString(),
+    }];
+  }
+  // A freshly created blank entry can predate legacy fields loaded by an
+  // import. Adopt those values once instead of clearing them via the mirror.
+  if (project.companyGoalsV360.length === 1 &&
+      !project.companyGoalsV360[0]?.archived_at &&
+      !project.companyGoalsV360[0]?.legacy_imported_v360 &&
+      G8_PROJECT_GOAL_FIELDS.every(([key]) => !guruV185Text(project.companyGoalsV360[0]?.[key])) &&
+      G8_PROJECT_GOAL_FIELDS.some(([key]) => guruV185Text(guruCompanyLegacyGoalFieldsV360(project)[key]))) {
+    const legacy = guruCompanyLegacyGoalFieldsV360(project);
+    G8_PROJECT_GOAL_FIELDS.forEach(([key]) => {
+      project.companyGoalsV360[0][key] = legacy[key];
+    });
+    project.companyGoalsV360[0].legacy_imported_v360 = true;
+  }
+  project.companyGoalsV360.forEach((goal) => {
+    if (!goal.id) goal.id = makeId("company-goal");
+    G8_PROJECT_GOAL_FIELDS.forEach(([key]) => {
+      if (goal[key] === undefined || goal[key] === null) goal[key] = "";
+    });
+  });
+  const active = project.companyGoalsV360.filter((goal) => !goal.archived_at);
+  if (active.length > 3) {
+    const preferred = active.find((goal) => goal.is_primary);
+    const keep = new Set([...new Set([preferred, ...active].filter(Boolean))].slice(0, 3));
+    active.filter((goal) => !keep.has(goal)).forEach((goal) => {
+      goal.archived_at = new Date().toISOString();
+      goal.archive_reason = "Прежняя запись сверх лимита 3 активных целей";
+    });
+  }
+  const current = active.filter((goal) => !goal.archived_at);
+  const primary = current.find((goal) => goal.is_primary) || current[0];
+  current.forEach((goal) => { goal.is_primary = goal === primary; });
+  return project.companyGoalsV360;
+}
+
+function guruCompanyPrimaryGoalV360(workspace = state) {
+  return guruCompanyGoalsV360(workspace).find((goal) =>
+    !goal.archived_at && goal.is_primary) || null;
+}
+
+function guruCompanySyncPrimaryGoalV360(workspace = state) {
+  if (!workspace?.project) return;
+  const goal = guruCompanyPrimaryGoalV360(workspace);
+  G8_PROJECT_GOAL_FIELDS.forEach(([key]) => {
+    workspace.project[key] = goal ? String(goal[key] || "") : "";
+  });
+}
+
+function guruCompanyGoalCompleteV360(goal) {
+  return Boolean(goal && G8_PROJECT_GOAL_FIELDS.every(([key]) =>
+    guruV185Text(goal[key])));
+}
+
 function isG8ProjectGoalCard(card) {
   return card?.id === G8_PROJECT_GOAL_CARD_ID;
 }
@@ -50308,6 +50522,7 @@ function isG8ProjectGoalCard(card) {
 function ensureG8ProjectGoalSource(workspace = state) {
   if (!workspace) return null;
   workspace.project = workspace.project || {};
+  guruCompanySyncPrimaryGoalV360(workspace);
   const gate0 = (workspace.gates || []).find((gate) => gate.id === "gate-0");
   if (!gate0) return null;
   gate0.cards = Array.isArray(gate0.cards) ? gate0.cards : [];
@@ -50348,26 +50563,39 @@ function ensureG8ProjectGoalSource(workspace = state) {
 }
 
 function g8ProjectGoalStatus(workspace = state) {
-  const values = G8_PROJECT_GOAL_FIELDS.map(([key]) => g8Text(workspace?.project?.[key]));
+  const primary = guruCompanyPrimaryGoalV360(workspace);
+  const values = G8_PROJECT_GOAL_FIELDS.map(([key]) => g8Text(primary?.[key]));
   const filled = values.filter(Boolean).length;
-  if (!filled) return "not_started";
+  const touched = guruCompanyGoalsV360(workspace).some((goal) => !goal.archived_at &&
+    G8_PROJECT_GOAL_FIELDS.some(([key]) => g8Text(goal[key])));
+  if (!touched) return "not_started";
   return filled === values.length ? "ready" : "in_progress";
 }
 
 function g8ProjectGoalSourceHtml() {
-  const project = state.project || {};
-  return `<div class="g8-goal-source">
-    ${G8_PROJECT_GOAL_FIELDS.map(([key, label, type]) => {
+  const goals = guruCompanyGoalsV360(state);
+  const active = goals.filter((goal) => !goal.archived_at)
+    .sort((left, right) => Number(Boolean(right.is_primary)) - Number(Boolean(left.is_primary)));
+  const archived = goals.filter((goal) => goal.archived_at);
+  const goalHtml = (goal, index) => `<article class="gate0-company-entry-v360" data-g8-company-goal-entry="${escapeAttr(goal.id)}">
+    <div class="gate0-company-entry-head-v360"><strong>${goal.is_primary ? "Основная цель" : `Дополнительная цель ${index}`}</strong><span class="gate0-company-entry-actions-v360">${!goal.is_primary ? `<button type="button" class="small-btn" data-g8-company-goal-primary="${escapeAttr(goal.id)}">Сделать основной</button>` : `<span class="gate0-company-primary-v360">Основная</span>`}<button type="button" class="small-btn" data-g8-company-goal-archive="${escapeAttr(goal.id)}">Архивировать</button></span></div>
+    <div class="g8-goal-source-fields">${G8_PROJECT_GOAL_FIELDS.map(([key, label, type]) => {
       const help = `<small>${escapeHtml(G8_PROJECT_GOAL_HELP[key])}</small>`;
+      const attrs = `data-g8-company-goal-id="${escapeAttr(goal.id)}" data-g8-company-goal-field="${escapeAttr(key)}"`;
       if (type === "metric") {
-        return `<label><strong>${escapeHtml(label)}</strong><select data-g8-project-goal="${escapeAttr(key)}"><option value="">Выберите показатель</option>${GATE8_RESULTS.filter(([value]) => value !== "goal").map(([value, text]) => `<option value="${escapeAttr(value)}" ${project[key] === value ? "selected" : ""}>${escapeHtml(text)}</option>`).join("")}</select>${help}</label>`;
+        return `<label><strong>${escapeHtml(label)}</strong><select ${attrs}><option value="">Выберите показатель</option>${GATE8_RESULTS.filter(([value]) => value !== "goal").map(([value, text]) => `<option value="${escapeAttr(value)}" ${goal[key] === value ? "selected" : ""}>${escapeHtml(text)}</option>`).join("")}</select>${help}</label>`;
       }
       if (type === "text") {
-        return `<label><strong>${escapeHtml(label)}</strong><textarea rows="2" data-g8-project-goal="${escapeAttr(key)}">${escapeHtml(project[key] || "")}</textarea>${help}</label>`;
+        return `<label><strong>${escapeHtml(label)}</strong><textarea rows="2" ${attrs}>${escapeHtml(goal[key] || "")}</textarea>${help}</label>`;
       }
-      return `<label><strong>${escapeHtml(label)}</strong><input type="${type}" ${type === "number" ? 'min="0" step="any"' : ""} data-g8-project-goal="${escapeAttr(key)}" value="${escapeAttr(project[key] || "")}" />${help}</label>`;
-    }).join("")}
-    <div class="g8-goal-source-link">Единый источник цели для Gate 8. Значения бюджета и стоимости результата также сверяются с Gate 3–5.</div>
+      return `<label><strong>${escapeHtml(label)}</strong><input type="${type}" ${type === "number" ? 'min="0" step="any"' : ""} ${attrs} value="${escapeAttr(goal[key] || "")}" />${help}</label>`;
+    }).join("")}</div>
+  </article>`;
+  return `<div class="g8-goal-source gate0-company-list-v360">
+    ${active.map(goalHtml).join("")}
+    <button type="button" class="small-btn" data-g8-company-goal-add ${active.length >= 3 ? "disabled" : ""}>${active.length >= 3 ? "Максимум 3 активные цели" : "+ Добавить цель"}</button>
+    ${archived.length ? `<details class="gate0-company-archive-v360"><summary>Архив целей · ${archived.length}</summary>${archived.map((goal) => `<div class="gate0-company-archive-row-v360"><span>${escapeHtml(guruV185Text(goal.goalDescription) || "Цель без формулировки")}</span><button type="button" class="small-btn" data-g8-company-goal-restore="${escapeAttr(goal.id)}" ${active.length >= 3 ? "disabled" : ""}>Восстановить</button></div>`).join("")}</details>` : ""}
+    <div class="g8-goal-source-link">Только основная цель управляет KPI Gate 8. Дополнительные цели не меняют прогноз и бюджет.</div>
   </div>`;
 }
 
@@ -50422,19 +50650,6 @@ cardUserFieldsHtml = function (card) {
 const __guruPrevBindCardInputsV184 = bindCardInputs;
 bindCardInputs = function () {
   __guruPrevBindCardInputsV184();
-  document.querySelectorAll("[data-g8-project-goal]").forEach((input) => {
-    const update = () => {
-      const key = input.dataset.g8ProjectGoal;
-      state.project[key] = input.value;
-      state.project.goalUpdatedAt = new Date().toISOString();
-      ensureGate8Workspace().lastInputSignature = "";
-      const card = ensureG8ProjectGoalSource(state);
-      recalculateStatusForCard(card, state);
-      flashSaving();
-    };
-    input.addEventListener("input", update);
-    input.addEventListener("change", update);
-  });
 };
 
 if (state) {
@@ -50738,6 +50953,18 @@ function guruV185Binding(productId, workspace = state) {
   return binding;
 }
 
+function guruV185SyncPrimaryAudienceMirror(workspace, registry) {
+  if (!registry.length) return;
+  const audiences = guruV185Binding(registry[0].id, workspace).audiences
+    .map((item) => guruV185Text(item.text)).filter(Boolean);
+  workspace.project.targetSegment = audiences[0] || "";
+  workspace.project.targetSegmentExtra = audiences.slice(1);
+  // The old passport renderer reads sharedEvidence as a fallback. Clear it
+  // together with the binding so it cannot restore the last deleted segment.
+  workspace.sharedEvidence = workspace.sharedEvidence || {};
+  workspace.sharedEvidence["кому_продаем"] = workspace.project.targetSegment;
+}
+
 function guruV185EnsureProductBindings(workspace = state) {
   if (!workspace?.project) return [];
   const project = workspace.project;
@@ -50760,7 +50987,8 @@ function guruV185EnsureProductBindings(workspace = state) {
     project.whatSellExtra.push(product.name);
     visibleProductNames.add(product.name);
   });
-  const legacyAudience = [project.targetSegment, ...(Array.isArray(project.targetSegmentExtra) ? project.targetSegmentExtra : [])]
+  const legacyAudience = [project.targetSegment || workspace.sharedEvidence?.["кому_продаем"],
+    ...(Array.isArray(project.targetSegmentExtra) ? project.targetSegmentExtra : [])]
     .map(guruV185Text)
     .filter(Boolean);
   const offers = v121EnsureOffers(workspace);
@@ -50814,11 +51042,8 @@ function guruV185EnsureProductBindings(workspace = state) {
       };
     }
   });
-  const primaryAudiences = guruV185Binding(registry[0]?.id, workspace)
-    ?.audiences?.map((item) => guruV185Text(item.text))
-    .filter(Boolean) || [];
-  project.targetSegment = primaryAudiences[0] || project.targetSegment || "";
-  project.targetSegmentExtra = primaryAudiences.slice(1);
+  // Preserve legacy text until a category exists for initial migration.
+  guruV185SyncPrimaryAudienceMirror(workspace, registry);
   if (!project._gate0ProductIdMigrationLog?.some((entry) => entry.id === GURU_PRODUCT_ID_MIGRATION_V185)) {
     project._gate0ProductIdMigrationLog = [
       ...(project._gate0ProductIdMigrationLog || []),
@@ -51673,7 +51898,9 @@ document.addEventListener("change", (event) => {
 // что назначение ещё требуется. Неподписанный «общий итог» больше не маскируется.
 /* v2.1.6 — «Продукт результатов» переведён с уровня категории (v185
    registry, meta.productId) на уровень позиции (v194 каталог,
-   meta.positionId) и следует единому селектору guruV194Ui. Старое поле
+   meta.positionId). Текущий продукт для просмотра выбирается через
+   guruV194Ui, а владелец показателей назначается явно и сохраняется
+   отдельно. Старое поле
    meta.productId и его миграция guruV185MigrateCurrentResults не
    трогаются и не удаляются — они остаются источником для одноразового
    переноса: если категория содержала ровно одну фактическую позицию,
@@ -51683,7 +51910,8 @@ document.addEventListener("change", (event) => {
    productId/positionId не зависят). */
 function gate0CurrentResultsMigrateToPosition(card, workspace = state) {
   const meta = card.currentResultsMeta;
-  if (!meta || (meta.positionId && guruV194Product(meta.positionId, workspace))) return;
+  if (!meta || meta.positionIdExplicit ||
+      (meta.positionId && guruV194Product(meta.positionId, workspace))) return;
   if (!meta.productId) return;
   const category = guruV185ProductById(meta.productId, workspace);
   if (!category) return;
@@ -51699,7 +51927,8 @@ function gate0CurrentResultsLegacyNoteHtml(meta, workspace = state) {
   const items = guruV194Products(workspace).filter((item) =>
     megaPlatformProductCategoryIds(item, workspace).includes(category.id));
   if (items.length <= 1) return "";
-  return `<div class="gate5-note" style="margin-bottom:12px;">Требует ручной разбивки: раньше результаты были привязаны к категории «${escapeHtml(category.name)}» (${items.length} позиций). Сейчас привязка следует общему выбору продукта в блоке «Продукт, сегмент и задача клиента» — сами данные результатов не менялись.</div>`;
+  if (meta.positionIdExplicit && guruV194Product(meta.positionId, workspace)) return "";
+  return `<div class="gate5-note" style="margin-bottom:12px;">Раньше результаты были привязаны к категории «${escapeHtml(category.name)}» (${items.length} продуктов). Укажите точный продукт в поле «Продукт результатов». Значения показателей сохранены.</div>`;
 }
 
 const __guruV185PrevCurrentResultsHtml = currentResultsHtml;
@@ -51707,16 +51936,14 @@ currentResultsHtml = function (card) {
   guruV185MigrateCurrentResults(card, state);
   const meta = card.currentResultsMeta || (card.currentResultsMeta = { period: "", sources: "", productId: "" });
   gate0CurrentResultsMigrateToPosition(card, state);
-  const sharedProduct = guruV194SelectedProduct(state);
-  if (sharedProduct) meta.positionId = sharedProduct.id;
   const selected = guruV194Product(meta.positionId, state);
   const positions = guruV194Products(state);
-  const scope = `<label class="cr-meta-field"><span class="cr-meta-label">Продукт результатов</span><select disabled title="Продукт определяется общим селектором раздела «Продукт / услуга»" data-cr-meta-card-id="${escapeAttr(card.id)}" data-cr-meta-field="positionId"><option value="">Не назначено — не считать общим итогом</option>${positions.map((product) => `<option value="${escapeAttr(product.id)}" ${product.id === meta.positionId ? "selected" : ""}>${escapeHtml(product.name)}</option>`).join("")}</select></label>`;
+  const scope = `<label class="cr-meta-field"><span class="cr-meta-label">Продукт результатов</span><select data-cr-meta-card-id="${escapeAttr(card.id)}" data-cr-meta-field="positionId"><option value="">Не назначено — не считать общим итогом</option>${positions.map((product) => `<option value="${escapeAttr(product.id)}" ${product.id === meta.positionId ? "selected" : ""}>${escapeHtml(product.name)}</option>`).join("")}</select><small>Показатели относятся только к выбранному здесь продукту.</small></label>`;
   let html = __guruV185PrevCurrentResultsHtml(card);
   html = html.replace('<div class="cr-meta">', `<div class="cr-meta">${scope}`);
   const legacyNote = gate0CurrentResultsLegacyNoteHtml(meta, state);
   if (legacyNote) html = `${legacyNote}${html}`;
-  else if (!selected) html = `<div class="gate5-note" style="margin-bottom:12px;">Результаты не назначены продукту и не используются как общий итог проекта. Выберите продукт в блоке «Продукт, сегмент и задача клиента».</div>${html}`;
+  else if (!selected) html = `<div class="gate5-note" style="margin-bottom:12px;">Результаты пока не назначены продукту. Укажите его в поле «Продукт результатов».</div>${html}`;
   return html;
 };
 
@@ -52253,9 +52480,31 @@ const GURU_GATE0_SCOPE_FIELDS_V194 = [
 // enter the product field catalogue: product inheritance, the common-meta
 // editor and legacy projections intentionally iterate only V194 above.
 const GURU_GATE0_COMPANY_SCOPE_FIELDS_V347 = [
-  ["company_offer", "Оффер и CTA · Компания", "Первый шаг к знакомству с брендом"],
+  ["company_offer", "Оффер и CTA · Компания", "Предложения по целевым сегментам"],
   ["brand_purpose", "Цель бренда", "Функциональная, высшая и единая цель бренда"],
 ];
+const GATE0_STRATEGY_LIMITS = Object.freeze({
+  jtbd: 4,
+  segments: 5,
+  positioning: 1,
+  usp: 1,
+  offers: 3,
+  companyBrandPurpose: 1,
+  companySegmentation: 5,
+  companyPositioning: 1,
+  companyOffer: 5,
+});
+const GATE0_STRATEGY_REPEATABLE = Object.freeze({
+  jtbd: { add: "+ Добавить JTBD", count: "JTBD", limit: "4 JTBD" },
+  segments: { add: "+ Добавить сегмент", count: "Сегменты", limit: "5 сегментов" },
+  offers: { add: "+ Добавить оффер", count: "Офферы", limit: "3 оффера" },
+});
+const GATE0_STRATEGY_COMPANY_FIELDS = Object.freeze({
+  companyBrandPurpose: "brand_purpose",
+  companySegmentation: "segments",
+  companyPositioning: "positioning",
+  companyOffer: "company_offer",
+});
 const GURU_GATE0_SCOPES_V194 = [
   ["product", "Только этот продукт"],
   ["category", "Вся категория"],
@@ -52290,7 +52539,7 @@ function guruV247KeywordEntry(keyword, defaults = {}) {
   const source = ["manual", "generated", "imported"].includes(current.source)
     ? current.source
     : ["generated", "imported"].includes(defaults.source) ? defaults.source : "manual";
-  const status = ["draft", "confirmed"].includes(current.status)
+  const status = ["draft", "confirmed", "rejected"].includes(current.status)
     ? current.status
     : defaults.status === "draft" || source === "generated" || source === "imported"
       ? "draft"
@@ -52369,6 +52618,17 @@ function guruV194Records(workspace = state) {
         created_at: record.created_at || new Date().toISOString(),
         updated_at: record.updated_at || record.created_at || new Date().toISOString(),
       };
+      if (record.field === "segments" && scope === "project") {
+        // The stable record.id is the segment_id used by relationships.
+        // Existing records gain only a separate, initially blank display name.
+        normalized.segment_name = record.segment_name == null
+          ? ""
+          : String(record.segment_name);
+      }
+      if (record.field === "company_offer" && scope === "project") {
+        // The offer's stable record.id remains its technical offer ID.
+        normalized.segment_id = guruV185Text(record.segment_id);
+      }
       if (record.field === "keyword_foundation") {
         normalized.scope = scope;
         normalized.product_id = scope === "product"
@@ -52383,7 +52643,9 @@ function guruV194Records(workspace = state) {
             }))
           : [];
       }
-      return normalized;
+      // Keep record identity stable across reads. Replacing every object on
+      // each access detached open editors from their persisted records.
+      return Object.assign(record, normalized);
     });
   // Product records retain historical category_id only as old data. Readers
   // see the live Platform relation without persisting another copy of it.
@@ -52417,12 +52679,54 @@ function guruV194RecordLocation(scope, product) {
 }
 
 function guruV194ExactRecords(field, scope, product, workspace = state) {
-  return guruV194Records(workspace).filter((record) => {
-    if (record.field !== field || record.scope !== scope) return false;
+  const records = guruV194Records(workspace).filter((record) => {
+    if (record.field !== field || record.scope !== scope || record.archived_at) return false;
     if (scope === "project") return true;
     if (scope === "category") return Boolean(product?.categoryId) && record.category_id === product.categoryId;
     return Boolean(product?.id) && record.product_id === product.id;
   });
+  return field === "segments" && scope === "project"
+    ? records.sort((left, right) => Number(Boolean(right.is_primary)) - Number(Boolean(left.is_primary)))
+    : records;
+}
+
+function guruV194StrategyLimit(field, scope, limitKey = field) {
+  const limit = GATE0_STRATEGY_LIMITS[limitKey];
+  // The project scope is the company's audience store and has its own limit.
+  return field === "segments" && scope === "project"
+    ? Math.min(limit, GATE0_STRATEGY_LIMITS.companySegmentation)
+    : limit;
+}
+
+function guruV194CanCreateStrategyRecords(field, scope, product, workspace = state, limitKey = field, count = 1) {
+  const limit = guruV194StrategyLimit(field, scope, limitKey);
+  if (!workspace?.project) return false;
+  if (!Number.isInteger(limit) || !Number.isInteger(count) || count < 1) return false;
+  if (!GURU_GATE0_SCOPES_V194.some(([value]) => value === scope)) return false;
+  const companyField = GATE0_STRATEGY_COMPANY_FIELDS[limitKey];
+  if (companyField) {
+    if (field !== companyField || scope !== "project") return false;
+  } else if (field !== limitKey || !product?.id) return false;
+  if (scope === "product" && !product?.id) return false;
+  if (scope === "category" && !product?.categoryId) return false;
+  return guruV194ExactRecords(field, scope, product, workspace).length + count <= limit;
+}
+
+function guruV194InsertStrategyRecords(newRecords, product, workspace = state, limitKey = newRecords?.[0]?.field) {
+  if (!Array.isArray(newRecords) || !newRecords.length) return false;
+  const { field, scope } = newRecords[0];
+  if (newRecords.some((record) => record.field !== field || record.scope !== scope)) return false;
+  if (newRecords.some((record) =>
+    (scope === "product" && String(record.product_id || "") !== String(product?.id || "")) ||
+    (scope === "category" && String(record.category_id || "") !== String(product?.categoryId || "")) ||
+    (scope === "project" && (record.product_id || record.category_id)))) return false;
+  if (!guruV194CanCreateStrategyRecords(field, scope, product, workspace, limitKey, newRecords.length)) return false;
+  if (field === "segments" && scope === "project") {
+    const hasPrimary = guruV194ExactRecords("segments", "project", null, workspace).length > 0;
+    newRecords.forEach((record, index) => { record.is_primary = !hasPrimary && index === 0; });
+  }
+  guruV194Records(workspace).push(...newRecords);
+  return true;
 }
 
 function guruV194Resolve(field, product, workspace = state) {
@@ -52442,6 +52746,8 @@ function guruV194Resolve(field, product, workspace = state) {
 }
 
 function guruV194AppendLegacy(field, value, scope, product, legacyPath, workspace = state) {
+  // Import existing legacy data without applying limits for new user entries.
+  // Historical rows above a limit must remain available and unmodified.
   const text = guruV185Text(value);
   if (!text) return;
   const location = {
@@ -52549,6 +52855,8 @@ function guruV194MigrateOfferCtas(workspace = state) {
       created_at: ctaRecord.created_at,
       updated_at: new Date().toISOString(),
     };
+    // The archived CTA is existing user data; migration must preserve it even
+    // when the destination scope already contains the new maximum of offers.
     records.push(offerRecord);
     candidates.push(offerRecord);
     offersByLocation.set(key, candidates);
@@ -52558,6 +52866,29 @@ function guruV194MigrateOfferCtas(workspace = state) {
     at: new Date().toISOString(),
     status: "completed_preserved_legacy_ctas",
     note: "Самостоятельные CTA сохранены и добавлены в карточки офферов без удаления прежних записей.",
+  });
+}
+
+// CTA levels live on the existing offer record. Keep the previous CTA text
+// intact so old workspaces and archived readers can still inspect it.
+function guruV194MigrateOfferCtaV2Part(offer) {
+  if (offer.ctaV2Migrated) return offer;
+  const current = offer.ctaV2 && typeof offer.ctaV2 === "object" ? offer.ctaV2 : {};
+  offer.ctaV2 = {
+    ...current,
+    primary: guruV185Text(current.primary) || guruV185Text(offer.cta),
+    secondary: guruV185Text(current.secondary),
+    alternative: guruV185Text(current.alternative),
+  };
+  offer.ctaV2Migrated = true;
+  return offer;
+}
+
+function guruV194MigrateOfferCtaV2(workspace = state) {
+  guruV194Records(workspace).forEach((record) => {
+    if (record.field !== "offers") return;
+    const offer = record.offer && typeof record.offer === "object" ? record.offer : {};
+    record.offer = guruV194MigrateOfferCtaV2Part(offer);
   });
 }
 
@@ -52612,6 +52943,7 @@ function guruV194SyncLegacy(workspace = state) {
       cta: guruV185Text(binding.cta),
     };
   });
+  guruV185SyncPrimaryAudienceMirror(workspace, categories);
 
   products.forEach((product) => {
     const previousOverrides = project.productScopedOverridesV194[product.id] || {};
@@ -52658,6 +52990,7 @@ function guruV194Ensure(workspace = state) {
   guruV189EnsureCatalog(workspace);
   guruV194Migrate(workspace);
   guruV194MigrateOfferCtas(workspace);
+  guruV194MigrateOfferCtaV2(workspace);
   guruV194Records(workspace);
   guruV194SyncLegacy(workspace);
   return guruV194Products(workspace);
@@ -52669,7 +53002,9 @@ function guruV194Ensure(workspace = state) {
    «Продукт результатов»): guruV194Ui — ЕДИНСТВЕННЫЙ выбор текущего
    продукта/услуги на весь проект (selectedCategoryId/selectedProductId,
    уровень ПОЗИЦИИ — конкретный item из guruV194Products, а не категория
-   из guruV185Registry).
+   из guruV185Registry). currentResultsMeta.positionId отдельно хранит
+   владельца уже введённых показателей и не меняется при просмотре
+   другого продукта.
 
    Любой новый экран, которому нужно «для какого продукта показываем
    данные» — ОБЯЗАН читать guruV194SelectedProduct(state) / писать через
@@ -52716,7 +53051,7 @@ function guruV194SelectedProduct(workspace = state) {
   return guruV194Product(guruV194Ui(workspace).selectedProductId, workspace);
 }
 
-function guruV194ProductSelectHtml(blockKey) {
+function guruV194ProductSelectHtml(blockKey, options = {}) {
   const products = guruV194Ensure(state);
   const ui = guruV194Ui(state);
   const selected = guruV194SelectedProduct(state);
@@ -52760,7 +53095,7 @@ function guruV194ProductSelectHtml(blockKey) {
   </section>`;
   return `<div class="guru-product-context-shell-v237" data-guru-product-context="${escapeAttr(blockKey)}">
     ${selectorHtml}
-    ${selected && !["gate3-product-journey", "gate4-launch"].includes(blockKey)
+    ${selected && !options.compact && !["gate3-product-journey", "gate4-launch", "project-passport-baseline"].includes(blockKey)
       ? guruStrategicFoundationHtmlV237(selected)
       : ""}
   </div>`;
@@ -52846,7 +53181,7 @@ function guruV194SegmentRecordHtml(record, product) {
   const parts = guruV194SegmentParts(record);
   const unified = guruV185Text(record.value);
   return `<article class="gate0-scope-value-v194 gate0-segment-value-v194" data-gate0-scope-record-row="${escapeAttr(record.id)}">
-    <button type="button" class="small-btn danger-mini gate0-scope-value-remove-v194" data-gate0-scope-record-remove="${escapeAttr(record.id)}" title="Удалить сегмент">×</button>
+    <button type="button" class="small-btn ${record.scope === "project" ? "" : "danger-mini"} gate0-scope-value-remove-v194" data-gate0-scope-record-remove="${escapeAttr(record.id)}" title="${record.scope === "project" ? "Архивировать сегмент компании" : "Удалить сегмент"}">${record.scope === "project" ? "Архивировать" : "×"}</button>
     <div class="gate0-segment-parts-v194">${GURU_GATE0_SEGMENT_PART_FIELDS_V309.map(([key, title, hint, placeholder]) => `<label><small>${escapeHtml(hint)}</small><strong>${escapeHtml(title)}</strong><textarea class="passport-v116-input passport-v116-autosize ${parts[key] ? "is-filled" : "is-empty"}" data-gate0-scope-record="${escapeAttr(record.id)}" data-gate0-scope-record-field="segment_${key}" rows="1" placeholder="${escapeAttr(placeholder)}">${escapeHtml(parts[key])}</textarea></label>`).join("")}</div>
     <label class="gate0-segment-unified-v239"><strong>Единая формулировка сегмента</strong><small>Связный портрет покупателя, 2-3 предложения. Не список, не ярлыки полей — проза.</small><span class="gate0-unified-example-v246">Пример структуры (иллюстрация, не цитата бренда): «Городские мамы 28-40 лет, ценят время больше цены, выбирают вечером через приложение».</span><textarea class="passport-v116-input passport-v116-autosize ${unified ? "is-filled" : "is-empty"}" data-gate0-scope-record="${escapeAttr(record.id)}" data-gate0-scope-record-field="segment_unified" rows="1" placeholder="Опишите сегмент связным текстом">${escapeHtml(unified)}</textarea></label>
   </article>`;
@@ -52876,11 +53211,11 @@ function guruV194PositioningParts(record = {}) {
   };
 }
 
-function guruV194PositioningRecordHtml(record, product) {
+function guruV194PositioningRecordHtml(record, product, draft = false) {
   const parts = guruV194PositioningParts(record);
   const unified = guruV185Text(record.value);
-  return `<article class="gate0-scope-value-v194 gate0-positioning-value-v194" data-gate0-scope-record-row="${escapeAttr(record.id)}">
-    <button type="button" class="small-btn danger-mini gate0-scope-value-remove-v194" data-gate0-scope-record-remove="${escapeAttr(record.id)}" title="Удалить позиционирование">×</button>
+  return `<article class="gate0-scope-value-v194 gate0-positioning-value-v194" data-gate0-scope-record-row="${escapeAttr(record.id)}" ${draft ? 'data-gate0-scope-draft="positioning"' : ""}>
+    ${draft || record.scope === "project" ? "" : `<button type="button" class="small-btn danger-mini gate0-scope-value-remove-v194" data-gate0-scope-record-remove="${escapeAttr(record.id)}" title="Удалить позиционирование">×</button>`}
     <div class="gate0-positioning-parts-v194">
       <label><small>С чем клиент сравнивает продукт.</small><strong>Категория</strong><textarea class="passport-v116-input passport-v116-autosize ${parts.category ? "is-filled" : "is-empty"}" data-gate0-scope-record="${escapeAttr(record.id)}" data-gate0-scope-record-field="positioning_category" rows="1" placeholder="Например: авторская одежда и подарки">${escapeHtml(parts.category)}</textarea></label>
       <label><small>Чем продукт отличается от конкурентов или альтернатив.</small><strong>Ключевое отличие</strong><textarea class="passport-v116-input passport-v116-autosize ${parts.key_difference ? "is-filled" : "is-empty"}" data-gate0-scope-record="${escapeAttr(record.id)}" data-gate0-scope-record-field="positioning_key_difference" rows="1" placeholder="Например: превращаем винтажные материалы в уникальные вещи">${escapeHtml(parts.key_difference)}</textarea></label>
@@ -52905,11 +53240,17 @@ function guruV194UpdatePositioningPart(record, field, value) {
 
 function guruV194OfferParts(record = {}) {
   const raw = record.offer && typeof record.offer === "object" ? record.offer : {};
+  const ctaV2 = raw.ctaV2 && typeof raw.ctaV2 === "object" ? raw.ctaV2 : null;
   return {
     rational: guruV185Text(raw.rational),
     irrational: guruV185Text(raw.irrational),
     social: guruV185Text(raw.social),
-    cta: guruV185Text(raw.cta),
+    cta: ctaV2 ? guruV185Text(ctaV2.primary) : guruV185Text(raw.cta),
+    ctaV2: {
+      primary: ctaV2 ? guruV185Text(ctaV2.primary) : guruV185Text(raw.cta),
+      secondary: guruV185Text(ctaV2?.secondary),
+      alternative: guruV185Text(ctaV2?.alternative),
+    },
     legacy_value: guruV185Text(raw.legacy_value),
   };
 }
@@ -52934,19 +53275,27 @@ const GURU_GATE0_OFFER_LENS_FIELDS_V349 = Object.freeze([
   Object.freeze(["social", "Социальное", "Какой социальный фактор усиливает выбор: мнение группы, авторитет, экспертность, репутация, социальная норма, статусная среда, подтверждение другими.", "Например: выбор подтверждён отзывами покупателей"]),
 ]);
 
+const GURU_GATE0_CTA_LEVELS_V2 = Object.freeze([
+  Object.freeze(["primary", "Основной CTA", "Главное действие к целевому результату. Пример: Купить.", "Купить"]),
+  Object.freeze(["secondary", "Вторичный CTA", "Более лёгкий шаг для клиента, который ещё не готов к основному действию. Пример: Узнать подробнее.", "Узнать подробнее"]),
+  Object.freeze(["alternative", "Альтернативный CTA", "Другой путь продолжить взаимодействие. Пример: Связаться.", "Связаться"]),
+]);
+
 function guruV349OfferPartsHtml(record, { company = false } = {}) {
   const parts = guruV194OfferParts(record);
   const unified = guruV185Text(record.value);
   const inputAttributes = (key) => company
-    ? `data-gate0-company-offer-field="${escapeAttr(key)}"`
+    ? `data-gate0-company-offer-field="${escapeAttr(key)}" data-gate0-company-offer-id="${escapeAttr(record.id || "")}"`
     : `data-gate0-scope-record="${escapeAttr(record.id)}" data-gate0-scope-record-field="offer_${escapeAttr(key === "offer" ? "unified" : key)}"`;
   const lensHtml = GURU_GATE0_OFFER_LENS_FIELDS_V349.map(
     ([key, title, hint, placeholder]) => `<label><small>${escapeHtml(hint)}</small><strong>${escapeHtml(title)}</strong><textarea class="passport-v116-input passport-v116-autosize ${parts[key] ? "is-filled" : "is-empty"}" ${inputAttributes(key)} rows="3" placeholder="${escapeAttr(placeholder)}">${escapeHtml(parts[key])}</textarea><i class="gate0-offer-arrow-v194" aria-hidden="true">↓</i></label>`,
   ).join("");
   const unifiedTitle = company ? "Единый оффер компании" : "Единый оффер";
-  const ctaTitle = company ? "CTA компании" : "CTA";
   const unifiedHtml = `<label class="gate0-offer-unified-v237"><strong>${unifiedTitle}</strong><small>Одно предложение, синтез трёх линз выше. Ориентир: 12-20 слов, ~80-140 символов.</small><span class="gate0-unified-example-v246">Пример (Sears, розничная торговля по каталогу, XIX век): «Удовлетворение гарантировано — или вернём деньги».</span><textarea class="passport-v116-input passport-v116-autosize ${unified ? "is-filled" : "is-empty"}" ${inputAttributes("offer")} rows="3" placeholder="Сформулируйте единый оффер одним предложением">${escapeHtml(unified)}</textarea><i class="gate0-offer-arrow-v194" aria-hidden="true">↓</i></label>`;
-  const ctaHtml = `<label><small>Какое конкретное действие должен совершить человек после оффера.</small><strong>${ctaTitle}</strong><textarea class="passport-v116-input passport-v116-autosize ${parts.cta ? "is-filled" : "is-empty"}" ${inputAttributes("cta")} rows="3" placeholder="Например: Смотреть подарок">${escapeHtml(parts.cta)}</textarea></label>`;
+  const ctaHtml = `<div class="gate0-cta-levels-v2">${GURU_GATE0_CTA_LEVELS_V2.map(([key, title, hint, example]) => {
+        const value = parts.ctaV2[key];
+        return `<div class="gate0-cta-level-v2"><label><strong>${escapeHtml(title)}</strong><small>${escapeHtml(hint)}</small><input class="passport-v116-input ${value ? "is-filled" : "is-empty"}" ${inputAttributes(`cta_${key}`)} value="${escapeAttr(value)}" placeholder="${escapeAttr(example)}" autocomplete="off"></label><span class="gate0-cta-preview-row-v2"><span class="gate0-cta-preview-label-v2">Превью</span><button type="button" class="gate0-cta-preview-v2 is-${key}" data-gate0-cta-preview="${key}">${escapeHtml(value || example)}</button></span></div>`;
+      }).join("")}</div>`;
   return `<div class="gate0-offer-parts-v194">${lensHtml}${unifiedHtml}${ctaHtml}</div>`;
 }
 
@@ -52963,10 +53312,16 @@ function guruV194UpdateOfferPart(record, field, value) {
     return;
   }
   const hadStructuredParts = Boolean(record.offer && typeof record.offer === "object");
-  const parts = guruV194OfferParts(record);
-  if (!hadStructuredParts && !parts.legacy_value && guruV185Text(record.value)) parts.legacy_value = record.value;
-  parts[field.replace("offer_", "")] = value;
-  record.offer = parts;
+  const offer = hadStructuredParts ? record.offer : {};
+  if (!hadStructuredParts && !offer.legacy_value && guruV185Text(record.value))
+    offer.legacy_value = record.value;
+  const key = field.replace("offer_", "");
+  if (["cta_primary", "cta_secondary", "cta_alternative"].includes(key)) {
+    guruV194MigrateOfferCtaV2Part(offer).ctaV2[key.replace("cta_", "")] = value;
+  } else {
+    offer[key] = value;
+  }
+  record.offer = offer;
 }
 
 const GURU_GATE0_KEYWORD_STOP_WORDS_V247 = new Set(`
@@ -53427,15 +53782,15 @@ function guruKeywordFoundationRowsHtmlV257(
       ? options.indexes[index]
       : index;
     const entry = guruV247KeywordEntry(keyword);
-    const isDraft = entry.status === "draft";
-    const isStale = isDraft && entry.source === "generated" &&
+    const isDraft = entry.status !== "confirmed";
+    const isStale = entry.status === "draft" && entry.source === "generated" &&
       guruV185Text(entry.strategy_fingerprint) &&
       entry.strategy_fingerprint !== snapshot.fingerprint;
     return `<div class="gate0-keyword-foundation-row-v247${isDraft ? " is-draft" : " is-confirmed"}${isStale ? " is-stale" : ""}" data-keyword-foundation-row-v257="${escapeAttr(entry.id)}" ${rowAttr}="${escapeAttr(entry.id)}">
       <textarea class="passport-v116-input passport-v116-autosize ${guruV247KeywordText(entry) ? "is-filled" : "is-empty"}" ${inputAttr}="${sourceIndex}" rows="1" placeholder="Введите ключевую фразу">${escapeHtml(guruV247KeywordText(entry))}</textarea>
       <div class="gate0-keyword-foundation-meta-v247">
         <span class="gate0-keyword-source-v247">${guruV248KeywordSourceLabel(entry.source)}</span>
-        <span class="gate0-keyword-status-v247">${isDraft ? "Черновик" : "Подтверждено"}</span>
+        <span class="gate0-keyword-status-v247">${entry.status === "rejected" ? "Отклонено" : isDraft ? "Черновик" : "Подтверждено"}</span>
         ${isDraft ? `<button type="button" class="small-btn gate0-keyword-confirm-v247" ${confirmAttr}="${sourceIndex}">✓ Подтвердить</button>` : ""}
         <button type="button" class="small-btn danger-mini" ${removeAttr}="${sourceIndex}" aria-label="Удалить ключевую фразу">×</button>
       </div>
@@ -53584,7 +53939,7 @@ function guruV194UspParts(record = {}) {
   };
 }
 
-function guruV194UspRecordHtml(record, product) {
+function guruV194UspRecordHtml(record, product, draft = false) {
   const parts = guruV194UspParts(record);
   const unified = guruV185Text(record.value);
   const fields = [
@@ -53595,8 +53950,8 @@ function guruV194UspRecordHtml(record, product) {
   ];
   const fieldsHtml = fields.map(([key, title, hint, placeholder]) => `<label><small>${escapeHtml(hint)}</small><strong>${escapeHtml(title)}</strong><textarea class="passport-v116-input passport-v116-autosize ${parts[key] ? "is-filled" : "is-empty"}" data-gate0-scope-record="${escapeAttr(record.id)}" data-gate0-scope-record-field="usp_${key}" rows="3" placeholder="${escapeAttr(placeholder)}">${escapeHtml(parts[key])}</textarea><i class="gate0-offer-arrow-v194" aria-hidden="true">↓</i></label>`).join("");
   const unifiedHtml = `<label class="gate0-usp-unified-v237"><strong>Единая формулировка УТП</strong><small>Одно предложение, синтез 4 полей выше. Ориентир: 8-15 слов, ~50-100 символов.</small><span class="gate0-unified-example-v246">Пример (Domino's, доставка пиццы, 1979): «Пицца за 30 минут — или бесплатно». (Позже отменили из-за аварий курьеров — обещание должно быть реально выполнимым.)</span><textarea class="passport-v116-input passport-v116-autosize ${unified ? "is-filled" : "is-empty"}" data-gate0-scope-record="${escapeAttr(record.id)}" data-gate0-scope-record-field="usp_unified" rows="3" placeholder="Сформулируйте УТП одним предложением">${escapeHtml(unified)}</textarea></label>`;
-  return `<article class="gate0-scope-value-v194 gate0-usp-value-v194" data-gate0-scope-record-row="${escapeAttr(record.id)}">
-    <button type="button" class="small-btn danger-mini gate0-scope-value-remove-v194" data-gate0-scope-record-remove="${escapeAttr(record.id)}" title="Удалить УТП">×</button>
+  return `<article class="gate0-scope-value-v194 gate0-usp-value-v194" data-gate0-scope-record-row="${escapeAttr(record.id)}" ${draft ? 'data-gate0-scope-draft="usp"' : ""}>
+    ${draft ? "" : `<button type="button" class="small-btn danger-mini gate0-scope-value-remove-v194" data-gate0-scope-record-remove="${escapeAttr(record.id)}" title="Удалить УТП">×</button>`}
     <div class="gate0-usp-parts-v194">${fieldsHtml}${unifiedHtml}</div>
   </article>`;
 }
@@ -53613,11 +53968,11 @@ function guruV194UpdateUspPart(record, field, value) {
   record.usp = parts;
 }
 
-function guruV194RecordHtml(record, product) {
+function guruV194RecordHtml(record, product, draft = false) {
   if (record.field === "jtbd") return guruV194JtbdRecordHtml(record, product);
   if (record.field === "segments") return guruV194SegmentRecordHtml(record, product);
-  if (record.field === "positioning") return guruV194PositioningRecordHtml(record, product);
-  if (record.field === "usp") return guruV194UspRecordHtml(record, product);
+  if (record.field === "positioning") return guruV194PositioningRecordHtml(record, product, draft);
+  if (record.field === "usp") return guruV194UspRecordHtml(record, product, draft);
   if (record.field === "offers") return guruV194OfferRecordHtml(record, product);
   return `<article class="gate0-scope-value-v194" data-gate0-scope-record-row="${escapeAttr(record.id)}">
     <button type="button" class="small-btn danger-mini gate0-scope-value-remove-v194" data-gate0-scope-record-remove="${escapeAttr(record.id)}" title="Удалить значение">×</button>
@@ -53649,7 +54004,7 @@ function guruV194CommonMeta(product, workspace = state) {
 function guruV194CommonMetaHtml(product) {
   const meta = guruV194CommonMeta(product, state);
   return `<section class="gate0-common-meta-v194">
-    <div class="gate0-common-meta-head-v194"><strong>Общие параметры данных</strong><small>Применяются ко всем значениям, которые вы фиксируете для выбранных категории и продукта.</small></div>
+    <div class="gate0-common-meta-head-v194"><strong>Общие параметры данных</strong><small>Применяются к записям выбранной области. Более точные записи сохраняют свои параметры.</small></div>
     <div class="gate0-common-meta-grid-v194">
       <label><span>Область применения</span><select data-gate0-common-meta-field="scope">${guruV194ScopeOptions(meta.scope, product)}</select></label>
       <label><span>Источник значения</span><input data-gate0-common-meta-field="source" value="${escapeAttr(meta.source)}" placeholder="Бриф, интервью, сайт…" /></label>
@@ -53667,13 +54022,31 @@ function guruV194FieldHtml(field, product) {
   const resolved = guruV194Resolve(field, product, state);
   const chosenScope = commonMeta.scope;
   const exact = guruV194ExactRecords(field, chosenScope, product, state);
-  const inherited = !exact.length && resolved.records.length ? resolved : null;
+  const scopeRank = (scope) => scope === "product" ? 0 : scope === "category" ? 1 : 2;
+  const activeIsMoreSpecific = resolved.records.length &&
+    scopeRank(resolved.scope) < scopeRank(chosenScope);
+  const inherited = !exact.length && resolved.records.length && !activeIsMoreSpecific
+    ? resolved : null;
   const categoryName = guruV185ProductById(product.categoryId, state)?.name || "без категории";
+  const repeatable = GATE0_STRATEGY_REPEATABLE[field];
+  const limit = guruV194StrategyLimit(field, chosenScope);
+  const canOverride = inherited && chosenScope === "product" &&
+    guruV194CanCreateStrategyRecords(field, "product", product, state, field, inherited.records.length);
+  const draft = !exact.length && (field === "positioning" || field === "usp")
+    ? guruV194RecordHtml({ id: `gate0-draft-${field}`, field, value: "" }, product, true)
+    : "";
+  const addControl = repeatable
+    ? exact.length < limit
+      ? `<div class="gate0-strategy-add-v194"><button type="button" class="v116-multi-add" data-gate0-scope-add="${escapeAttr(field)}" data-gate0-scope-add-level="${escapeAttr(chosenScope)}">${escapeHtml(repeatable.add)}</button>${field !== "jtbd" && exact.length ? `<small>${escapeHtml(repeatable.count)} · ${exact.length} из ${limit}</small>` : ""}</div>`
+      : `<small class="gate0-strategy-limit-v194">${field === "segments" && chosenScope === "project" ? "Максимум 5 активных сегментов" : `Лимит: ${escapeHtml(repeatable.limit)}`}</small>`
+    : "";
   return `<section class="gate0-scope-field-v194" data-gate0-scope-field-row="${escapeAttr(field)}">
-    <div class="gate0-scope-field-head-v194"><div><strong>${escapeHtml(label)}</strong><small>${escapeHtml(hint)}</small></div></div>
-    ${inherited ? `<div class="gate0-inherited-v194"><div><strong>Унаследовано: ${escapeHtml(guruV194ScopeLabel(inherited.scope))}</strong><span>${inherited.records.map((record) => escapeHtml(record.value)).join(" · ")}</span><small>${inherited.scope === "category" ? `Категория «${escapeHtml(categoryName)}»` : "Общее значение проекта"}</small></div>${chosenScope === "product" ? `<button type="button" class="small-btn" data-gate0-scope-override="${escapeAttr(field)}">Переопределить для продукта</button>` : ""}</div>` : ""}
-    <div class="gate0-scope-values-v194">${exact.map((record) => guruV194RecordHtml(record, product)).join("")}</div>
-    <button type="button" class="v116-multi-add" data-gate0-scope-add="${escapeAttr(field)}" data-gate0-scope-add-level="${escapeAttr(chosenScope)}">+ добавить значение · ${escapeHtml(guruV194ScopeLabel(chosenScope))}</button>
+    <div class="gate0-scope-field-head-v194"><div><strong>${escapeHtml(label)}</strong><small>${escapeHtml(hint)}</small></div>${field === "jtbd" ? `<small>JTBD · ${resolved.records.length} из ${GATE0_STRATEGY_LIMITS.jtbd}</small>` : ""}</div>
+    ${activeIsMoreSpecific ? `<div class="gate0-active-source-v528"><div class="gate0-active-source-head-v528"><strong>Сейчас используется · ${escapeHtml(guruV194ScopeLabel(resolved.scope))}</strong><small>Эти записи определяют значение в «Стратегической основе». Записи выбранной ниже области не заменят их, пока они существуют.</small></div><div class="gate0-scope-values-v194">${resolved.records.map((record) => guruV194RecordHtml(record, product)).join("")}</div></div>` : ""}
+    ${inherited ? `<div class="gate0-inherited-v194"><div><strong>Унаследовано: ${escapeHtml(guruV194ScopeLabel(inherited.scope))}</strong><span>${inherited.records.map((record) => escapeHtml(record.value)).join(" · ")}</span><small>${inherited.scope === "category" ? `Категория «${escapeHtml(categoryName)}»` : "Общее значение проекта"}</small></div>${canOverride ? `<button type="button" class="small-btn" data-gate0-scope-override="${escapeAttr(field)}">Переопределить для продукта</button>` : ""}</div>` : ""}
+    ${activeIsMoreSpecific ? `<small class="gate0-selected-source-label-v528">Записи выбранной области · ${escapeHtml(guruV194ScopeLabel(chosenScope))}</small>` : ""}
+    <div class="gate0-scope-values-v194">${exact.map((record) => guruV194RecordHtml(record, product)).join("")}${draft}</div>
+    ${addControl}
   </section>`;
 }
 
@@ -53684,9 +54057,11 @@ function guruV194FieldsHtml(fields, blockKey, includeContext = true) {
     : '<div class="guru-catalog-empty">Добавьте продукт и выберите его, чтобы фиксировать связанные данные.</div>'}`;
 }
 
-function guruV194RefreshFieldHtml(field, product) {
+function guruV194RefreshFieldHtml(field, product, currentField = null) {
   if (!field || !product) return;
-  const current = document.querySelector(`[data-gate0-scope-field-row="${CSS.escape(field)}"]`);
+  const current = currentField?.isConnected
+    ? currentField
+    : document.querySelector(`[data-gate0-scope-field-row="${CSS.escape(field)}"]`);
   if (!current) return;
   const template = document.createElement("template");
   template.innerHTML = guruV194FieldHtml(field, product);
@@ -53730,8 +54105,7 @@ function guruV308ProjectPositioningRecord(workspace = state, create = false) {
     created_at: now,
     updated_at: now,
   };
-  guruV194Records(workspace).push(record);
-  return record;
+  return guruV194InsertStrategyRecords([record], null, workspace, "companyPositioning") ? record : null;
 }
 
 function guruV308CompanyPositioningStatus(workspace = state) {
@@ -53847,8 +54221,7 @@ function guruV349ProjectBrandPurposeRecord(workspace = state, create = false) {
     created_at: now,
     updated_at: now,
   };
-  guruV194Records(workspace).push(record);
-  return record;
+  return guruV194InsertStrategyRecords([record], null, workspace, "companyBrandPurpose") ? record : null;
 }
 
 function guruV349UpdateBrandPurposePart(record, field, value) {
@@ -53919,17 +54292,115 @@ function guruV349CompanyBrandPurposeHtml() {
 
 const GURU_GATE0_COMPANY_OFFER_CARD_ID_V347 = "gate0-company-offer";
 
+function guruCompanySegmentsV360(workspace = state) {
+  const records = guruV194ExactRecords("segments", "project", null, workspace);
+  return records.sort((left, right) => Number(Boolean(right.is_primary)) - Number(Boolean(left.is_primary)));
+}
+
+function guruCompanySegmentNameKeyV360(value) {
+  return guruV185Text(value).normalize("NFC").replace(/\s+/g, " ").toLocaleLowerCase("ru-RU");
+}
+
+function guruCompanySegmentNameConflictV360(name, segmentId, workspace = state) {
+  const key = guruCompanySegmentNameKeyV360(name);
+  if (!key) return null;
+  return guruV194Records(workspace).find((record) =>
+    record.field === "segments" && record.scope === "project" && !record.archived_at &&
+    record.id !== segmentId && guruCompanySegmentNameKeyV360(record.segment_name) === key) || null;
+}
+
+function guruCompanyOffersV360(workspace = state) {
+  return guruV194ExactRecords("company_offer", "project", null, workspace);
+}
+
+function guruCompanySegmentDisplayNameV360(segment, workspace = state) {
+  const name = guruV185Text(segment?.segment_name);
+  if (name) return name;
+  const segments = guruCompanySegmentsV360(workspace);
+  const index = segments.findIndex((item) => item.id === segment?.id);
+  if (index < 0) return "Сегмент не выбран";
+  if (segment.is_primary) return "Основной сегмент";
+  const additionalIndex = segments.slice(0, index + 1)
+    .filter((item) => !item.is_primary).length;
+  return `Дополнительный сегмент ${additionalIndex}`;
+}
+
+// A single legacy ID is unambiguous, including when the segment is archived.
+// Multiple former links cannot safely become one live relation: keep the
+// source IDs in a project migration archive and leave the offer unlinked.
+function guruCompanyOfferMigrateSegmentV360(record, workspace = state) {
+  if (!record || record.field !== "company_offer" || record.scope !== "project") return;
+  const legacyIds = Array.isArray(record.segment_ids)
+    ? [...new Set(record.segment_ids.map(guruV185Text).filter(Boolean))]
+    : [];
+  const explicitId = guruV185Text(record.segment_id);
+  if (legacyIds.length > 1 || (explicitId && legacyIds.some((id) => id !== explicitId))) {
+    const project = workspace?.project;
+    if (project) {
+      project.gate0CompanyOfferLinkArchiveV361 = Array.isArray(project.gate0CompanyOfferLinkArchiveV361)
+        ? project.gate0CompanyOfferLinkArchiveV361 : [];
+      if (!project.gate0CompanyOfferLinkArchiveV361.some((entry) => entry.offer_id === record.id)) {
+        project.gate0CompanyOfferLinkArchiveV361.push({
+          offer_id: record.id,
+          legacy_segment_ids: legacyIds,
+          migrated_at: new Date().toISOString(),
+        });
+      }
+    }
+  }
+  record.segment_id = explicitId || (legacyIds.length === 1 ? legacyIds[0] : "");
+  delete record.segment_ids;
+}
+
+// Idempotent migration of existing scoped records. Original offer IDs and
+// content remain in place; the old multi-link field becomes one segment_id.
+function guruCompanyStrategyMigrateV360(workspace = state) {
+  if (!workspace?.project) return;
+  const records = guruV194Records(workspace);
+  ["brand_purpose", "positioning"].forEach((field) => {
+    const active = records.filter((record) =>
+      record.field === field && record.scope === "project" && !record.archived_at);
+    active.slice(1).forEach((record) => {
+      record.archived_at = new Date().toISOString();
+      record.archive_reason = "Сохранённая прежняя версия единой стратегии компании";
+    });
+  });
+  const activeSegments = records.filter((record) =>
+    record.field === "segments" && record.scope === "project" && !record.archived_at);
+  const hadSegmentOverflow = activeSegments.length > 5;
+  if (hadSegmentOverflow) {
+    const preferred = activeSegments.find((record) => record.is_primary);
+    const keep = new Set([...new Set([preferred, ...activeSegments].filter(Boolean))].slice(0, 5));
+    activeSegments.filter((record) => !keep.has(record)).forEach((record) => {
+      record.archived_at = new Date().toISOString();
+      record.archive_reason = "Прежняя запись сверх лимита 5 активных сегментов";
+    });
+  }
+  const currentSegments = activeSegments.filter((record) => !record.archived_at);
+  const primary = currentSegments.find((record) => record.is_primary) || currentSegments[0];
+  currentSegments.forEach((record) => { record.is_primary = record === primary; });
+  const activeOffers = records.filter((record) =>
+    record.field === "company_offer" && record.scope === "project" && !record.archived_at);
+  activeOffers.slice(5).forEach((record) => {
+    record.archived_at = new Date().toISOString();
+    record.archive_reason = "Прежняя запись сверх лимита 5 активных офферов";
+  });
+  records.filter((record) => record.field === "company_offer" && record.scope === "project")
+    .forEach((record) => {
+      const offer = record.offer && typeof record.offer === "object" ? record.offer : {};
+      record.offer = guruV194MigrateOfferCtaV2Part(offer);
+      guruCompanyOfferMigrateSegmentV360(record, workspace);
+    });
+  guruCompanySyncPrimaryGoalV360(workspace);
+  if (hadSegmentOverflow) guruV194SyncLegacy(workspace);
+}
+
 function guruV347IsCompanyOfferCard(card) {
   return card?.id === GURU_GATE0_COMPANY_OFFER_CARD_ID_V347;
 }
 
 function guruV347ProjectCompanyOfferRecord(workspace = state, create = false) {
-  const existing = guruV194ExactRecords(
-    "company_offer",
-    "project",
-    null,
-    workspace,
-  )[0];
+  const existing = guruCompanyOffersV360(workspace)[0];
   if (existing || !create) return existing || null;
   const now = new Date().toISOString();
   const record = {
@@ -53940,6 +54411,7 @@ function guruV347ProjectCompanyOfferRecord(workspace = state, create = false) {
     scope: "project",
     field: "company_offer",
     value: "",
+    segment_id: "",
     offer: {
       rational: "",
       irrational: "",
@@ -53952,24 +54424,29 @@ function guruV347ProjectCompanyOfferRecord(workspace = state, create = false) {
     created_at: now,
     updated_at: now,
   };
-  guruV194Records(workspace).push(record);
-  return record;
+  return guruV194InsertStrategyRecords([record], null, workspace, "companyOffer") ? record : null;
+}
+
+function guruCompanyOfferCompleteV360(record, activeSegmentIds) {
+  const parts = guruV194OfferParts(record);
+  return [parts.rational, parts.irrational, parts.social, record.value, parts.ctaV2.primary]
+    .every((value) => guruV185Text(value)) &&
+    activeSegmentIds.has(record.segment_id);
 }
 
 function guruV347CompanyOfferStatus(workspace = state) {
-  const record = guruV347ProjectCompanyOfferRecord(workspace, false);
-  if (!record) return "not_started";
-  const parts = guruV194OfferParts(record);
-  const values = [
-    parts.rational,
-    parts.irrational,
-    parts.social,
-    record.value,
-    parts.cta,
-  ].map(guruV185Text);
-  const filled = values.filter(Boolean).length;
-  if (!filled) return "not_started";
-  return filled === values.length ? "ready" : "in_progress";
+  const records = guruCompanyOffersV360(workspace);
+  if (!records.length) return "not_started";
+  const activeSegmentIds = new Set(guruCompanySegmentsV360(workspace).map((segment) => segment.id));
+  const touched = records.some((record) => {
+    const parts = guruV194OfferParts(record);
+    return [record.segment_id, parts.rational, parts.irrational, parts.social, record.value,
+      ...Object.values(parts.ctaV2)].some((value) => guruV185Text(value));
+  });
+  if (!touched) return "not_started";
+  const complete = records.every((record) =>
+    guruCompanyOfferCompleteV360(record, activeSegmentIds));
+  return complete ? "ready" : "in_progress";
 }
 
 function guruV347EnsureCompanyOfferCard(workspace = state) {
@@ -53982,7 +54459,7 @@ function guruV347EnsureCompanyOfferCard(workspace = state) {
       id: GURU_GATE0_COMPANY_OFFER_CARD_ID_V347,
       title: "Оффер и CTA · Компания",
       instruction:
-        "Зафиксируйте первый шаг к знакомству с брендом — без продажи конкретного товара. Оффер объясняет пользу этого шага, CTA называет одно понятное действие.",
+        "Сформулируйте предложение, укажите основной CTA и свяжите оффер с сегментом. До пяти активных офферов.",
       status: "not_started",
       evidence: "",
       pages: "",
@@ -53993,6 +54470,7 @@ function guruV347EnsureCompanyOfferCard(workspace = state) {
     gate0.cards.push(card);
   }
   card.title = "Оффер и CTA · Компания";
+  card.instruction = "Сформулируйте предложение, укажите основной CTA и свяжите оффер с сегментом. До пяти активных офферов.";
   card.status = guruV347CompanyOfferStatus(workspace);
 
   const currentIndex = gate0.cards.indexOf(card);
@@ -54010,10 +54488,30 @@ function guruV347EnsureCompanyOfferCard(workspace = state) {
 }
 
 function guruV347CompanyOfferHtml() {
-  const record = guruV347ProjectCompanyOfferRecord(state, false);
+  const records = guruCompanyOffersV360(state);
+  const segments = guruCompanySegmentsV360(state);
+  const activeSegmentIds = new Set(segments.map((segment) => segment.id));
+  const archivedSegmentIds = new Set(guruV194Records(state).filter((segment) =>
+    segment.field === "segments" && segment.scope === "project" && segment.archived_at)
+    .map((segment) => segment.id));
+  const openById = state._gate0CompanyOfferOpenV361 || {};
+  const archived = guruV194Records(state).filter((record) =>
+    record.field === "company_offer" && record.scope === "project" && record.archived_at);
   return `<div class="field-row passport-v116-row gate0-company-offer-v347"><div class="passport-v116">
-    <div class="gate0-scope-field-head-v194"><div><strong>Весь проект</strong><small>Единый company-only источник: project.gate0ScopedValuesV194 · field: company_offer · scope: project.</small></div></div>
-    ${guruV349OfferPartsHtml(record || {}, { company: true })}
+    <div class="gate0-scope-field-head-v194"><div><strong>Офферы компании</strong><small>${records.length} из 5 активных</small></div></div>
+    <div class="gate0-company-list-v360">${records.map((record, index) => {
+      const open = Object.prototype.hasOwnProperty.call(openById, record.id)
+        ? openById[record.id]
+        : index === 0;
+      const archivedLink = Boolean(record.segment_id && !activeSegmentIds.has(record.segment_id) &&
+        archivedSegmentIds.has(record.segment_id));
+      return `<details class="gate0-company-entry-v360 gate0-company-offer-entry-v361" data-gate0-company-offer-entry="${escapeAttr(record.id)}" ${open ? "open" : ""}>
+        <summary class="gate0-company-offer-summary-v361"><strong>Оффер ${index + 1}</strong>${archivedLink ? '<span class="gate0-company-offer-archived-status-v361">Сегмент архивирован</span>' : ""}<label class="gate0-company-offer-target-v361" data-gate0-company-offer-select-wrap><span>Для сегмента:</span><select data-gate0-company-offer-segment-id data-gate0-company-offer-id="${escapeAttr(record.id)}" aria-label="Для сегмента · Оффер ${index + 1}" ${!segments.length ? "disabled" : ""}><option value="">${archivedLink ? "Выберите другой активный сегмент" : "Выберите сегмент"}</option>${segments.map((segment) => `<option value="${escapeAttr(segment.id)}" ${record.segment_id === segment.id ? "selected" : ""}>${escapeHtml(guruCompanySegmentDisplayNameV360(segment, state))}</option>`).join("")}</select></label></summary>
+        <div class="gate0-company-offer-body-v361">${guruV349OfferPartsHtml(record, { company: true })}</div>
+      </details>`;
+    }).join("")}
+    <button type="button" class="small-btn" data-gate0-company-offer-add ${records.length >= 5 ? "disabled" : ""}>${records.length >= 5 ? "Максимум 5 активных офферов" : "+ Добавить оффер"}</button>
+    ${archived.length ? `<details class="gate0-company-archive-v360"><summary>Архив офферов · ${archived.length}</summary>${archived.map((record) => `<div class="gate0-company-archive-row-v360"><span>${escapeHtml(guruV185Text(record.value) || "Оффер без формулировки")}</span><button type="button" class="small-btn" data-gate0-company-offer-restore="${escapeAttr(record.id)}" ${records.length >= 5 ? "disabled" : ""}>Восстановить</button></div>`).join("")}</details>` : ""}</div>
   </div></div>`;
 }
 
@@ -54025,12 +54523,7 @@ function guruV309IsCompanySegmentationCard(card) {
 }
 
 function guruV309ProjectSegmentRecord(workspace = state, create = false) {
-  const existing = guruV194ExactRecords(
-    "segments",
-    "project",
-    null,
-    workspace,
-  )[0];
+  const existing = guruCompanySegmentsV360(workspace)[0];
   if (existing || !create) return existing || null;
   const now = new Date().toISOString();
   const record = {
@@ -54041,6 +54534,8 @@ function guruV309ProjectSegmentRecord(workspace = state, create = false) {
     scope: "project",
     field: "segments",
     value: "",
+    segment_name: "",
+    is_primary: true,
     segment: {
       geography: "",
       demographics: "",
@@ -54054,23 +54549,63 @@ function guruV309ProjectSegmentRecord(workspace = state, create = false) {
     created_at: now,
     updated_at: now,
   };
-  guruV194Records(workspace).push(record);
-  return record;
+  return guruV194InsertStrategyRecords([record], null, workspace, "companySegmentation") ? record : null;
+}
+
+function guruCompanySegmentCompleteV360(record, workspace = state) {
+  const parts = guruV194SegmentParts(record);
+  return [record.segment_name,
+    ...GURU_GATE0_SEGMENT_PART_FIELDS_V309.map(([key]) => parts[key]),
+    record.value].every((value) => guruV185Text(value)) &&
+    !guruCompanySegmentNameConflictV360(record.segment_name, record.id, workspace);
 }
 
 function guruV309CompanySegmentationStatus(workspace = state) {
-  const record = guruV309ProjectSegmentRecord(workspace, false);
-  if (!record) return "not_started";
-  const parts = guruV194SegmentParts(record);
-  const values = [
-    ...GURU_GATE0_SEGMENT_PART_FIELDS_V309.map(([key]) => parts[key]),
-    record.value,
-  ].map(guruV185Text);
-  const filled = values.filter(Boolean).length;
-  if (!filled) return "not_started";
-  return filled === values.length
-    ? "ready"
-    : "in_progress";
+  const records = guruCompanySegmentsV360(workspace);
+  if (!records.length) return "not_started";
+  const touched = records.some((item) => guruV185Text(item.segment_name) || guruV185Text(item.value) ||
+    GURU_GATE0_SEGMENT_PART_FIELDS_V309.some(([key]) =>
+      guruV185Text(guruV194SegmentParts(item)[key])));
+  if (!touched) return "not_started";
+  const complete = records.every((item) => guruCompanySegmentCompleteV360(item, workspace));
+  return complete ? "ready" : "in_progress";
+}
+
+function guruCompanyStrategyStatusV360(workspace = state) {
+  const segments = guruCompanySegmentsV360(workspace);
+  const activeSegmentIds = new Set(segments.map((record) => record.id));
+  const linkedOffer = guruCompanyOffersV360(workspace).some((record) => {
+    return Boolean(guruV185Text(record.value) &&
+      guruV185Text(guruV194OfferParts(record).ctaV2.primary) &&
+      activeSegmentIds.has(record.segment_id));
+  });
+  if (segments.length && linkedOffer) return "ready";
+  return [guruV349CompanyBrandPurposeStatus(workspace),
+    guruV309CompanySegmentationStatus(workspace),
+    guruV308CompanyPositioningStatus(workspace),
+    guruV347CompanyOfferStatus(workspace),
+    g8ProjectGoalStatus(workspace),
+    guruCompanyKeywordFoundationStatsV351(workspace).total,
+  ].some((status) => status !== "not_started" && status !== 0)
+    ? "in_progress"
+    : "not_started";
+}
+
+// Gate 1 keeps its established full-chain prerequisite. The read-only Gate 0
+// foundation badge uses the smaller Segment -> Offer -> CTA minimum above.
+function guruCompanyFullChainReadyV360(workspace = state) {
+  const segments = guruCompanySegmentsV360(workspace);
+  const activeSegmentIds = new Set(segments.filter((record) => guruV185Text(record.value))
+    .map((record) => record.id));
+  const linkedOffer = guruCompanyOffersV360(workspace).some((record) =>
+    guruV185Text(record.value) &&
+    guruV185Text(guruV194OfferParts(record).ctaV2.primary) &&
+    activeSegmentIds.has(record.segment_id));
+  return Boolean(guruV185Text(guruV349ProjectBrandPurposeRecord(workspace, false)?.value) &&
+    guruCompanyGoalCompleteV360(guruCompanyPrimaryGoalV360(workspace)) &&
+    guruV185Text(segments.find((record) => record.is_primary)?.value) &&
+    guruV185Text(guruV308ProjectPositioningRecord(workspace, false)?.value) &&
+    linkedOffer && guruCompanyKeywordConfirmedModelV351(workspace).entries.length);
 }
 
 function guruV309EnsureCompanySegmentationCard(workspace = state) {
@@ -54083,7 +54618,7 @@ function guruV309EnsureCompanySegmentationCard(workspace = state) {
       id: GURU_GATE0_COMPANY_SEGMENTATION_CARD_ID_V309,
       title: "Сегментация · Компания",
       instruction:
-        "Зафиксируйте единую целевую аудиторию компании по фундаментальным основаниям Kotler. Эти же данные остаются доступны в продуктовом входе при выборе области «Весь проект».",
+        "Зафиксируйте основной сегмент компании и при необходимости до четырёх дополнительных. Активные сегменты доступны продуктовым блокам через область «Весь проект».",
       status: "not_started",
       evidence: "",
       pages: "",
@@ -54111,22 +54646,36 @@ function guruV309EnsureCompanySegmentationCard(workspace = state) {
 }
 
 function guruV309CompanySegmentationHtml() {
-  const record = guruV309ProjectSegmentRecord(state, false);
-  const parts = guruV194SegmentParts(record || {});
-  const unified = guruV185Text(record?.value);
-  const migration = record?.company_segment_unified_migration_v352;
-  const migrationWarning = migration?.status === "cleared_legacy_autotext" && !unified
-    ? `<div class="gate5-note" data-gate0-company-segment-migration-warning><strong>Нужна ручная единая формулировка.</strong><br>Прежняя автоматическая сборка из пяти полей очищена и сохранена в архиве записи.</div>`
-    : migration?.status === "needs_review"
-      ? `<div class="gate5-note" data-gate0-company-segment-migration-warning><strong>Похоже на старый автоматический текст.</strong><br>Проверьте единую формулировку: до подтверждения она не участвует в генерации ключевых фраз.<div style="margin-top:8px"><button type="button" class="small-btn" data-gate0-company-segment-accept-unified>Подтвердить как ручную формулировку</button></div></div>`
-      : "";
+  const records = guruCompanySegmentsV360(state);
+  const archived = guruV194Records(state).filter((record) =>
+    record.field === "segments" && record.scope === "project" && record.archived_at);
   return `<div class="field-row passport-v116-row gate0-company-segmentation-v309"><div class="passport-v116">
-    <div class="gate0-scope-field-head-v194"><div><strong>Весь проект</strong><small>Единый источник: project.gate0ScopedValuesV194 · field: segments · scope: project.</small></div></div>
-    ${migrationWarning}
-    <div class="gate0-segment-parts-v194">
-      ${GURU_GATE0_SEGMENT_PART_FIELDS_V309.map(([key, title, hint, placeholder]) => `<label><small>${escapeHtml(hint)}</small><strong>${escapeHtml(title)}</strong><textarea class="passport-v116-input passport-v116-autosize ${parts[key] ? "is-filled" : "is-empty"}" data-gate0-company-segmentation-field="${escapeAttr(key)}" rows="1" placeholder="${escapeAttr(placeholder)}">${escapeHtml(parts[key])}</textarea></label>`).join("")}
-    </div>
-    <label class="gate0-positioning-unified-v244"><strong>Единая формулировка сегмента</strong><small>Самостоятельная формулировка — пять полей выше автоматически не склеиваются.</small><textarea class="passport-v116-input passport-v116-autosize ${unified ? "is-filled" : "is-empty"}" data-gate0-company-segmentation-field="unified" rows="2" placeholder="Сформулируйте целевой сегмент одним предложением">${escapeHtml(unified)}</textarea></label>
+    <div class="gate0-scope-field-head-v194"><div><strong>Сегменты компании</strong><small>${records.length} из 5 активных · один основной сегмент.</small></div></div>
+    <div class="gate0-company-list-v360">${records.map((record, index) => {
+      const parts = guruV194SegmentParts(record);
+      const unified = guruV185Text(record.value);
+      const segmentName = guruV185Text(record.segment_name);
+      const fallbackTitle = record.is_primary ? "Основной сегмент" : `Дополнительный сегмент ${index}`;
+      const nameConflict = guruCompanySegmentNameConflictV360(segmentName, record.id, state);
+      const migration = record.company_segment_unified_migration_v352;
+      const migrationWarning = migration?.status === "cleared_legacy_autotext" && !unified
+        ? '<div class="gate5-note" data-gate0-company-segment-migration-warning>Нужна ручная единая формулировка. Прежний текст сохранён в записи.</div>'
+        : migration?.status === "needs_review"
+          ? `<div class="gate5-note" data-gate0-company-segment-migration-warning>Проверьте прежнюю единую формулировку: до подтверждения она не участвует в генерации ключевых фраз. <button type="button" class="small-btn" data-gate0-company-segment-accept-unified="${escapeAttr(record.id)}">Подтвердить</button></div>`
+          : "";
+      return `<article class="gate0-company-entry-v360" data-gate0-company-segment-entry="${escapeAttr(record.id)}">
+        <div class="gate0-company-entry-head-v360"><strong data-gate0-company-segment-title data-fallback-title="${escapeAttr(fallbackTitle)}">${escapeHtml(segmentName || fallbackTitle)}</strong><span class="gate0-company-entry-actions-v360"><span class="gate0-company-primary-v360">${record.is_primary ? "Основной" : "Дополнительный"}</span>${record.is_primary ? "" : `<button type="button" class="small-btn" data-gate0-company-segment-primary="${escapeAttr(record.id)}">Сделать основным</button>`}<button type="button" class="small-btn" data-gate0-company-segment-archive="${escapeAttr(record.id)}">Архивировать</button></span></div>
+        ${migrationWarning}
+        <label class="gate0-company-segment-name-v360"><strong>Название сегмента</strong><small>Короткое понятное название. Например: ${record.is_primary ? "Частные покупатели" : "Корпоративные клиенты"}</small><input class="passport-v116-input ${segmentName ? "is-filled" : "is-empty"}" type="text" data-gate0-company-segmentation-id="${escapeAttr(record.id)}" data-gate0-company-segmentation-field="segment_name" value="${escapeAttr(record.segment_name || "")}" placeholder="${record.is_primary ? "Частные покупатели" : "Корпоративные клиенты"}" autocomplete="off" required ${nameConflict ? 'aria-invalid="true"' : ""}><small class="gate0-company-segment-name-error-v360" aria-live="polite" ${nameConflict ? "" : "hidden"}>Название сегмента уже используется в этом проекте.</small></label>
+        <div class="gate0-segment-parts-v194">${GURU_GATE0_SEGMENT_PART_FIELDS_V309.map(([key, title, hint, placeholder]) => `<label><small>${escapeHtml(hint)}</small><strong>${escapeHtml(title)}</strong><textarea class="passport-v116-input passport-v116-autosize ${parts[key] ? "is-filled" : "is-empty"}" data-gate0-company-segmentation-id="${escapeAttr(record.id)}" data-gate0-company-segmentation-field="${escapeAttr(key)}" rows="1" placeholder="${escapeAttr(placeholder)}">${escapeHtml(parts[key])}</textarea></label>`).join("")}</div>
+        <label class="gate0-positioning-unified-v244"><strong>Единая формулировка сегмента</strong><small>Самостоятельная формулировка — пять полей выше автоматически не склеиваются.</small><textarea class="passport-v116-input passport-v116-autosize ${unified ? "is-filled" : "is-empty"}" data-gate0-company-segmentation-id="${escapeAttr(record.id)}" data-gate0-company-segmentation-field="unified" rows="2" placeholder="Сформулируйте целевой сегмент одним предложением">${escapeHtml(unified)}</textarea></label>
+      </article>`;
+    }).join("")}
+    <button type="button" class="small-btn" data-gate0-company-segment-add ${records.length >= 5 ? "disabled" : ""}>${records.length >= 5 ? "Максимум 5 активных сегментов" : "+ Добавить сегмент"}</button>
+    ${archived.length ? `<details class="gate0-company-archive-v360"><summary>Архив сегментов · ${archived.length}</summary>${archived.map((record) => {
+      const nameConflict = guruCompanySegmentNameConflictV360(record.segment_name, record.id, state);
+      return `<div class="gate0-company-archive-row-v360"><span>${escapeHtml(guruV185Text(record.value) || "Сегмент без формулировки")}<small data-gate0-company-archived-name-conflict ${nameConflict ? "" : "hidden"}>Название уже занято активным сегментом</small></span><button type="button" class="small-btn" data-gate0-company-segment-restore="${escapeAttr(record.id)}" ${records.length >= 5 || nameConflict ? "disabled" : ""}>Восстановить</button></div>`;
+    }).join("")}</details>` : ""}</div>
   </div></div>`;
 }
 
@@ -54170,16 +54719,17 @@ function guruCompanyKeywordFoundationRecordV351(
 
 function guruCompanyKeywordSourceSnapshotV351(workspace = state) {
   const records = {
-    segments: guruV309ProjectSegmentRecord(workspace, false),
-    positioning: guruV308ProjectPositioningRecord(workspace, false),
-    brand_purpose: guruV349ProjectBrandPurposeRecord(workspace, false),
-    company_offer: guruV347ProjectCompanyOfferRecord(workspace, false),
+    segments: guruCompanySegmentsV360(workspace),
+    positioning: [guruV308ProjectPositioningRecord(workspace, false)].filter(Boolean),
+    brand_purpose: [guruV349ProjectBrandPurposeRecord(workspace, false)].filter(Boolean),
+    company_offer: guruCompanyOffersV360(workspace),
   };
   const fields = GURU_GATE0_COMPANY_KEYWORD_SOURCE_FIELDS_V351.map((field) => {
-    const segmentNeedsReview = field === "segments" &&
-      records.segments?.company_segment_unified_migration_v352?.status === "needs_review";
-    const value = segmentNeedsReview ? "" : guruV185Text(records[field]?.value);
-    return { field, values: value ? [value] : [] };
+    const values = records[field].filter((record) =>
+      field !== "segments" ||
+      record.company_segment_unified_migration_v352?.status !== "needs_review")
+      .map((record) => guruV185Text(record.value)).filter(Boolean);
+    return { field, values };
   });
   const canonical = fields
     .map(({ field, values }) => `${field}\u241f${values.join("\u241e")}`)
@@ -54453,7 +55003,10 @@ function guruCompanyKeywordConfirmedModelV351(workspace = state) {
   const seen = new Set();
   const entries = [];
   const duplicates = [];
+  if (record?.archived_at) return { entries, duplicates };
   (record?.keywords || []).forEach((keyword, sourceIndex) => {
+    if (keyword && typeof keyword === "object" &&
+        Object.hasOwn(keyword, "status") && keyword.status !== "confirmed") return;
     const entry = guruV247KeywordEntry(keyword);
     const text = guruV247KeywordText(entry);
     const key = guruV247KeywordNormalize(text);
@@ -54762,6 +55315,7 @@ prepareSystemCards = function (workspace) {
   __guruV194PrevPrepareSystemCards(workspace);
   guruV194Ensure(workspace);
   guruMigrateCompanySegmentUnifiedV352(workspace);
+  guruCompanyStrategyMigrateV360(workspace);
   guruV308EnsureCompanyPositioningCard(workspace);
   guruV309EnsureCompanySegmentationCard(workspace);
   guruV349EnsureCompanyBrandPurposeCard(workspace);
@@ -54866,6 +55420,13 @@ document.addEventListener("change", (event) => {
   const recordInput = event.target?.closest?.("[data-gate0-scope-record]");
   const commonMetaInput = event.target?.closest?.("[data-gate0-common-meta-field]");
   if (!categorySelect && !productSelect && !scopeView && !recordInput && !commonMetaInput) return;
+  // Text fields have already been written by the input handler. A change
+  // event fires again on blur; rebuilding all of Gate 0 here detaches the
+  // focused field and shifts the viewport after textarea autosizing.
+  if (recordInput && !["scope", "confirmation_status"].includes(
+    recordInput.dataset.gate0ScopeRecordField,
+  )) return;
+  if (commonMetaInput?.dataset.gate0CommonMetaField === "source") return;
   const ui = guruV194Ui(state);
   if (categorySelect) {
     ui.selectedCategoryId = categorySelect.value;
@@ -54908,6 +55469,10 @@ document.addEventListener("change", (event) => {
     const record = guruV194Records(state).find((item) => item.id === recordInput.dataset.gate0ScopeRecord);
     const field = recordInput.dataset.gate0ScopeRecordField;
     if (record && field === "scope") {
+      if (record.scope === "project" && ["segments", "positioning"].includes(record.field) && recordInput.value !== "project") {
+        recordInput.value = "project";
+        return;
+      }
       Object.assign(record, guruV194RecordLocation(recordInput.value, product));
       record.updated_at = new Date().toISOString();
       ui.scopeByProductField[`${product.id}:${record.field}`] = recordInput.value;
@@ -54919,6 +55484,17 @@ document.addEventListener("change", (event) => {
   }
   guruV194SyncLegacy(state);
   flashSaving();
+  if (activeView === "project" && (categorySelect || productSelect) &&
+      event.target.closest("[data-project-passport-baseline-v527]")) {
+    guruPassportRememberOpenCardsV527();
+    const baseline = els.contentArea.querySelector("[data-project-passport-baseline-v527]");
+    if (baseline) baseline.outerHTML = guruPassportMovedGate0HtmlV527();
+    bindCardInputs();
+    bindGate0CardTogglesV527();
+    bindGate0StatusJump();
+    bindGate0DiagnosticStages();
+    return;
+  }
   renderGate();
 }, true);
 
@@ -54960,13 +55536,16 @@ document.addEventListener("input", (event) => {
     "[data-gate0-company-offer-field]",
   );
   if (companyOfferInput) {
-    const record = guruV347ProjectCompanyOfferRecord(state, true);
+    const record = guruCompanyOffersV360(state).find((item) =>
+      item.id === companyOfferInput.dataset.gate0CompanyOfferId);
+    if (!record) return;
     const key = companyOfferInput.dataset.gate0CompanyOfferField;
     guruV194UpdateOfferPart(
       record,
       `offer_${key === "offer" ? "unified" : key}`,
       companyOfferInput.value,
     );
+    if (key === "cta_primary") record.offer.cta = companyOfferInput.value;
     record.updated_at = new Date().toISOString();
     companyOfferInput.classList.toggle(
       "is-filled",
@@ -54976,6 +55555,10 @@ document.addEventListener("input", (event) => {
       "is-empty",
       !guruV185Text(companyOfferInput.value),
     );
+    if (key.startsWith("cta_")) {
+      const preview = companyOfferInput.closest(".gate0-cta-level-v2")?.querySelector("[data-gate0-cta-preview]");
+      if (preview) preview.textContent = companyOfferInput.value.trim() || companyOfferInput.placeholder;
+    }
     const card = guruV347EnsureCompanyOfferCard(state);
     const badge = document.querySelector(
       `[data-card-row="${GURU_GATE0_COMPANY_OFFER_CARD_ID_V347}"] .gate0-card-status`,
@@ -54993,13 +55576,56 @@ document.addEventListener("input", (event) => {
     "[data-gate0-company-segmentation-field]",
   );
   if (companySegmentationInput) {
-    const record = guruV309ProjectSegmentRecord(state, true);
+    const record = guruCompanySegmentsV360(state).find((item) =>
+      item.id === companySegmentationInput.dataset.gate0CompanySegmentationId);
+    if (!record) return;
     const key = companySegmentationInput.dataset.gate0CompanySegmentationField;
-    guruV194UpdateSegmentPart(
-      record,
-      `segment_${key}`,
-      companySegmentationInput.value,
-    );
+    if (key === "segment_name") {
+      const name = guruV185Text(companySegmentationInput.value).replace(/\s+/g, " ");
+      const conflict = guruCompanySegmentNameConflictV360(name, record.id, state);
+      const error = companySegmentationInput.closest("label")
+        ?.querySelector(".gate0-company-segment-name-error-v360");
+      const message = conflict ? "Название сегмента уже используется в этом проекте."
+        : name ? "" : "Укажите название сегмента.";
+      companySegmentationInput.setCustomValidity(message);
+      if (message) companySegmentationInput.setAttribute("aria-invalid", "true");
+      else companySegmentationInput.removeAttribute("aria-invalid");
+      if (error) {
+        error.textContent = message;
+        error.hidden = !message;
+      }
+      if (conflict) return;
+      record.segment_name = name;
+      const heading = companySegmentationInput.closest("[data-gate0-company-segment-entry]")
+        ?.querySelector("[data-gate0-company-segment-title]");
+      if (heading) heading.textContent = name || heading.dataset.fallbackTitle;
+      const displayName = guruCompanySegmentDisplayNameV360(record, state);
+      document.querySelectorAll("[data-gate0-company-offer-segment-id] option").forEach((option) => {
+        if (option.value === record.id) option.textContent = displayName;
+      });
+      document.querySelectorAll("[data-guru-company-offer-segment-id]").forEach((label) => {
+        if (label.dataset.guruCompanyOfferSegmentId === record.id)
+          label.textContent = displayName;
+      });
+      document.querySelectorAll("[data-gate0-company-segment-restore]").forEach((button) => {
+        const archived = guruV194Records(state).find((item) =>
+          item.id === button.dataset.gate0CompanySegmentRestore &&
+          item.field === "segments" && item.archived_at);
+        if (!archived) return;
+        const archivedNameConflict = guruCompanySegmentNameConflictV360(
+          archived.segment_name, archived.id, state);
+        button.disabled = guruCompanySegmentsV360(state).length >= 5 || Boolean(archivedNameConflict);
+        const warning = button.closest(".gate0-company-archive-row-v360")
+          ?.querySelector("[data-gate0-company-archived-name-conflict]");
+        if (warning) warning.hidden = !archivedNameConflict;
+      });
+    } else {
+      guruV194UpdateSegmentPart(
+        record,
+        `segment_${key}`,
+        companySegmentationInput.value,
+      );
+    }
     if (key === "unified" && guruV185Text(companySegmentationInput.value)) {
       record.company_segment_unified_migration_v352 = {
         ...(record.company_segment_unified_migration_v352 || {}),
@@ -55025,12 +55651,14 @@ document.addEventListener("input", (event) => {
       badge.className = `gate0-card-status status-${card.status}`;
       badge.textContent = STATUS_LABELS[card.status] || card.status;
     }
-    guruV194SyncLegacy(state);
+    if (key !== "segment_name") guruV194SyncLegacy(state);
     flashSaving();
-    guruStrategicFoundationCompanyRefreshV310();
-    guruCompanyKeywordFoundationRefreshV351();
-    const product = guruV194SelectedProduct(state);
-    if (product) guruStrategicFoundationRefreshV245(product.id);
+    if (key !== "segment_name") {
+      guruStrategicFoundationCompanyRefreshV310();
+      guruCompanyKeywordFoundationRefreshV351();
+      const product = guruV194SelectedProduct(state);
+      if (product) guruStrategicFoundationRefreshV245(product.id);
+    }
     return;
   }
   const companyPositioningInput = event.target?.closest?.(
@@ -55092,6 +55720,31 @@ document.addEventListener("input", (event) => {
   // guruV194SelectedProduct нормализует записи, поэтому определяем продукт
   // до получения изменяемой записи, иначе ссылка на неё станет устаревшей.
   const product = guruV194SelectedProduct(state);
+  if (!product) return;
+  const draft = input.closest("[data-gate0-scope-draft]");
+  if (draft) {
+    const draftField = draft.dataset.gate0ScopeDraft;
+    if (!["positioning", "usp"].includes(draftField) || !guruV185Text(input.value)) return;
+    const commonMeta = guruV194CommonMeta(product, state);
+    const now = new Date().toISOString();
+    const newRecord = {
+      id: makeId("gate0-value"),
+      ...guruV194RecordLocation(commonMeta.scope, product),
+      field: draftField,
+      value: "",
+      source: { type: "manual", label: commonMeta.source },
+      confirmation_status: commonMeta.confirmation_status,
+      created_at: now,
+      updated_at: now,
+    };
+    if (!guruV194InsertStrategyRecords([newRecord], product, state)) return;
+    draft.querySelectorAll("[data-gate0-scope-record]").forEach((fieldInput) => {
+      fieldInput.dataset.gate0ScopeRecord = newRecord.id;
+    });
+    draft.dataset.gate0ScopeRecordRow = newRecord.id;
+    delete draft.dataset.gate0ScopeDraft;
+    draft.insertAdjacentHTML("afterbegin", `<button type="button" class="small-btn danger-mini gate0-scope-value-remove-v194" data-gate0-scope-record-remove="${escapeAttr(newRecord.id)}" title="Удалить ${draftField === "usp" ? "УТП" : "позиционирование"}">×</button>`);
+  }
   const record = guruV194Records(state).find((item) => item.id === input.dataset.gate0ScopeRecord);
   if (!record) return;
   const field = input.dataset.gate0ScopeRecordField;
@@ -55109,6 +55762,14 @@ document.addEventListener("input", (event) => {
   }
   if (["segment_geography", "segment_demographics", "segment_psychographics", "segment_behavior", "segment_need_response", "segment_unified"].includes(field)) {
     guruV194UpdateSegmentPart(record, field, input.value);
+    if (record.scope === "project" && field === "segment_unified" && guruV185Text(input.value)) {
+      record.company_segment_unified_migration_v352 = {
+        ...(record.company_segment_unified_migration_v352 || {}),
+        id: GURU_GATE0_COMPANY_SEGMENT_UNIFIED_MIGRATION_V352,
+        status: "reviewed_manual",
+        reviewed_at: new Date().toISOString(),
+      };
+    }
   }
   if (["positioning_category", "positioning_key_difference", "positioning_basis", "positioning_unified"].includes(field)) {
     guruV194UpdatePositioningPart(record, field, input.value);
@@ -55116,8 +55777,12 @@ document.addEventListener("input", (event) => {
   if (["usp_client_gets", "usp_client_change", "usp_uniqueness", "usp_strength", "usp_unified"].includes(field)) {
     guruV194UpdateUspPart(record, field, input.value);
   }
-  if (["offer_rational", "offer_irrational", "offer_social", "offer_unified", "offer_cta"].includes(field)) {
+  if (["offer_rational", "offer_irrational", "offer_social", "offer_unified", "offer_cta", "offer_cta_primary", "offer_cta_secondary", "offer_cta_alternative"].includes(field)) {
     guruV194UpdateOfferPart(record, field, input.value);
+  }
+  if (field?.startsWith("offer_cta_")) {
+    const preview = input.closest(".gate0-cta-level-v2")?.querySelector("[data-gate0-cta-preview]");
+    if (preview) preview.textContent = input.value.trim() || input.placeholder;
   }
   if (field === "source") record.source = { ...(record.source || {}), type: record.source?.type || "manual", label: input.value };
   record.updated_at = new Date().toISOString();
@@ -55126,6 +55791,17 @@ document.addEventListener("input", (event) => {
   guruV194SyncLegacy(state);
   flashSaving();
   guruStrategicFoundationRefreshV245(product.id);
+  if (record.scope === "project" && ["segments", "positioning"].includes(record.field)) {
+    const card = record.field === "segments"
+      ? guruV309EnsureCompanySegmentationCard(state)
+      : guruV308EnsureCompanyPositioningCard(state);
+    document.querySelectorAll(`[data-card-row="${card.id}"] .gate0-card-status`).forEach((badge) => {
+      badge.className = `gate0-card-status status-${card.status}`;
+      badge.textContent = STATUS_LABELS[card.status] || card.status;
+    });
+    guruStrategicFoundationCompanyRefreshV310();
+    guruCompanyKeywordFoundationRefreshV351();
+  }
 }, true);
 
 document.addEventListener("click", (event) => {
@@ -55135,7 +55811,8 @@ document.addEventListener("click", (event) => {
   if (!accept) return;
   event.preventDefault();
   event.stopPropagation();
-  const record = guruV309ProjectSegmentRecord(state, false);
+  const record = guruCompanySegmentsV360(state).find((item) =>
+    item.id === accept.dataset.gate0CompanySegmentAcceptUnified);
   if (!record || !guruV185Text(record.value)) return;
   record.company_segment_unified_migration_v352 = {
     ...(record.company_segment_unified_migration_v352 || {}),
@@ -55149,43 +55826,210 @@ document.addEventListener("click", (event) => {
   renderGate();
 }, true);
 
+function guruCompanyStrategyRefreshV360() {
+  const sections = [
+    [".gate0-company-segmentation-v309", guruV309CompanySegmentationHtml],
+    [".gate0-company-offer-v347", guruV347CompanyOfferHtml],
+    [".g8-goal-source-row", () => `<div class="field-row g8-goal-source-row">${g8ProjectGoalSourceHtml()}</div>`],
+  ];
+  sections.forEach(([selector, html]) => {
+    document.querySelectorAll(selector).forEach((node) => { node.outerHTML = html(); });
+  });
+  [
+    GURU_GATE0_COMPANY_SEGMENTATION_CARD_ID_V309,
+    GURU_GATE0_COMPANY_OFFER_CARD_ID_V347,
+    G8_PROJECT_GOAL_CARD_ID,
+  ].forEach((id) => {
+    const card = state?.gates?.find((gate) => gate.id === "gate-0")?.cards?.find((item) => item.id === id);
+    if (!card) return;
+    recalculateStatusForCard(card, state);
+    document.querySelectorAll(`[data-card-row="${id}"] .gate0-card-status`).forEach((badge) => {
+      badge.className = `gate0-card-status status-${card.status}`;
+      badge.textContent = STATUS_LABELS[card.status] || card.status;
+    });
+  });
+  guruV194SyncLegacy(state);
+  guruInvalidateGateViewCache();
+  flashSaving();
+  guruStrategicFoundationCompanyRefreshV310();
+  guruCompanyKeywordFoundationRefreshV351();
+  const product = guruV194SelectedProduct(state);
+  if (product) guruStrategicFoundationRefreshV245(product.id);
+  renderGateNav();
+}
+
+document.addEventListener("change", (event) => {
+  const input = event.target?.closest?.("[data-gate0-company-offer-segment-id]");
+  if (!input) return;
+  const record = guruCompanyOffersV360(state).find((item) =>
+    item.id === input.dataset.gate0CompanyOfferId);
+  const segmentId = input.value;
+  if (!record || (segmentId && !guruCompanySegmentsV360(state).some((item) => item.id === segmentId))) return;
+  record.segment_id = segmentId;
+  record.updated_at = new Date().toISOString();
+  guruCompanyStrategyRefreshV360();
+}, true);
+
+document.addEventListener("input", (event) => {
+  const input = event.target?.closest?.("[data-g8-company-goal-id][data-g8-company-goal-field]");
+  if (!input) return;
+  const goal = guruCompanyGoalsV360(state).find((item) =>
+    item.id === input.dataset.g8CompanyGoalId && !item.archived_at);
+  const key = input.dataset.g8CompanyGoalField;
+  if (!goal || !G8_PROJECT_GOAL_FIELDS.some(([field]) => field === key)) return;
+  goal[key] = input.value;
+  goal.updated_at = new Date().toISOString();
+  guruCompanySyncPrimaryGoalV360(state);
+  state.project.goalUpdatedAt = goal.updated_at;
+  ensureGate8Workspace().lastInputSignature = "";
+  const card = ensureG8ProjectGoalSource(state);
+  recalculateStatusForCard(card, state);
+  document.querySelectorAll(`[data-card-row="${G8_PROJECT_GOAL_CARD_ID}"] .gate0-card-status`).forEach((badge) => {
+    badge.className = `gate0-card-status status-${card.status}`;
+    badge.textContent = STATUS_LABELS[card.status] || card.status;
+  });
+  flashSaving();
+  guruStrategicFoundationCompanyRefreshV310();
+}, true);
+
+document.addEventListener("click", (event) => {
+  const action = event.target?.closest?.(
+    "[data-gate0-company-segment-add], [data-gate0-company-segment-primary], [data-gate0-company-segment-archive], [data-gate0-company-segment-restore], [data-gate0-company-offer-add], [data-gate0-company-offer-restore], [data-g8-company-goal-add], [data-g8-company-goal-primary], [data-g8-company-goal-archive], [data-g8-company-goal-restore]",
+  );
+  if (!action || action.disabled) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const now = new Date().toISOString();
+  const segments = guruCompanySegmentsV360(state);
+  const offers = guruCompanyOffersV360(state);
+  const goals = guruCompanyGoalsV360(state);
+  const activeGoals = goals.filter((goal) => !goal.archived_at);
+  const recordById = (id, field) => guruV194Records(state).find((record) =>
+    record.id === id && record.field === field && record.scope === "project");
+  let changed = false;
+  if (action.hasAttribute("data-gate0-company-segment-add") && segments.length < 5) {
+    changed = guruV194InsertStrategyRecords([{
+      id: makeId("gate0-value"), project_id: guruV194ProjectId(state),
+      category_id: "", product_id: "", scope: "project", field: "segments", value: "", segment_name: "",
+      is_primary: !segments.length,
+      segment: { geography: "", demographics: "", psychographics: "", behavior: "", need_response: "", legacy_value: "" },
+      source: { type: "manual", label: "Введено вручную" }, confirmation_status: "draft",
+      created_at: now, updated_at: now,
+    }], null, state, "companySegmentation");
+  } else if (action.dataset.gate0CompanySegmentPrimary) {
+    const record = segments.find((item) => item.id === action.dataset.gate0CompanySegmentPrimary);
+    if (record) { segments.forEach((item) => { item.is_primary = item === record; }); changed = true; }
+  } else if (action.dataset.gate0CompanySegmentArchive) {
+    const record = segments.find((item) => item.id === action.dataset.gate0CompanySegmentArchive);
+    if (record) { record.archived_at = now; changed = true; }
+  } else if (action.dataset.gate0CompanySegmentRestore && segments.length < 5) {
+    const record = recordById(action.dataset.gate0CompanySegmentRestore, "segments");
+    if (record?.archived_at && !guruCompanySegmentNameConflictV360(record.segment_name, record.id, state)) {
+      delete record.archived_at; record.is_primary = !segments.length; changed = true;
+    }
+  } else if (action.hasAttribute("data-gate0-company-offer-add") && offers.length < 5) {
+    changed = guruV194InsertStrategyRecords([{
+      id: makeId("gate0-value"), project_id: guruV194ProjectId(state),
+      category_id: "", product_id: "", scope: "project", field: "company_offer", value: "",
+      segment_id: "",
+      offer: { rational: "", irrational: "", social: "", cta: "", ctaV2: { primary: "", secondary: "", alternative: "" }, ctaV2Migrated: true, legacy_value: "" },
+      source: { type: "manual", label: "Введено вручную" }, confirmation_status: "draft",
+      created_at: now, updated_at: now,
+    }], null, state, "companyOffer");
+  } else if (action.dataset.gate0CompanyOfferRestore && offers.length < 5) {
+    const record = recordById(action.dataset.gate0CompanyOfferRestore, "company_offer");
+    if (record?.archived_at) { delete record.archived_at; changed = true; }
+  } else if (action.hasAttribute("data-g8-company-goal-add") && activeGoals.length < 3) {
+    goals.push({
+      id: makeId("company-goal"),
+      ...Object.fromEntries(G8_PROJECT_GOAL_FIELDS.map(([key]) => [key, ""])),
+      is_primary: !activeGoals.length, created_at: now, updated_at: now,
+    });
+    changed = true;
+  } else if (action.dataset.g8CompanyGoalPrimary) {
+    const goal = activeGoals.find((item) => item.id === action.dataset.g8CompanyGoalPrimary);
+    if (goal) { activeGoals.forEach((item) => { item.is_primary = item === goal; }); changed = true; }
+  } else if (action.dataset.g8CompanyGoalArchive) {
+    const goal = activeGoals.find((item) => item.id === action.dataset.g8CompanyGoalArchive);
+    if (goal) { goal.archived_at = now; changed = true; }
+  } else if (action.dataset.g8CompanyGoalRestore && activeGoals.length < 3) {
+    const goal = goals.find((item) => item.id === action.dataset.g8CompanyGoalRestore);
+    if (goal?.archived_at) { delete goal.archived_at; goal.is_primary = !activeGoals.length; changed = true; }
+  }
+  if (!changed) return;
+  guruCompanyStrategyMigrateV360(state);
+  guruCompanySyncPrimaryGoalV360(state);
+  state.project.goalUpdatedAt = now;
+  ensureGate8Workspace().lastInputSignature = "";
+  guruCompanyStrategyRefreshV360();
+}, true);
+
+document.addEventListener("toggle", (event) => {
+  const entry = event.target;
+  if (!(entry instanceof HTMLDetailsElement) ||
+    !entry.matches("[data-gate0-company-offer-entry]")) return;
+  state._gate0CompanyOfferOpenV361 ||= {};
+  state._gate0CompanyOfferOpenV361[entry.dataset.gate0CompanyOfferEntry] = entry.open;
+  guruScheduleUiPreferenceSave();
+}, true);
+
 document.addEventListener("click", (event) => {
   const add = event.target?.closest?.("[data-gate0-scope-add]");
   const override = event.target?.closest?.("[data-gate0-scope-override]");
   const remove = event.target?.closest?.("[data-gate0-scope-record-remove]");
   if (!add && !override && !remove) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const currentField = (add || override || remove).closest("[data-gate0-scope-field-row]");
+  const currentCard = currentField?.closest("[data-card-row]");
   const product = guruV194SelectedProduct(state);
   if (!product) return;
   let changedField = add?.dataset.gate0ScopeAdd || override?.dataset.gate0ScopeOverride || "";
+  let companySegmentChanged = false;
   if (remove) {
     const records = guruV194Records(state);
     const index = records.findIndex((record) => record.id === remove.dataset.gate0ScopeRecordRemove);
-    if (index >= 0) {
-      changedField = records[index].field;
+    if (index < 0) return;
+    changedField = records[index].field;
+    if (records[index].scope === "project" && records[index].field === "segments") {
+      records[index].archived_at = new Date().toISOString();
+      companySegmentChanged = true;
+    } else if (records[index].scope === "project" && records[index].field === "positioning") {
+      return;
+    } else {
       records.splice(index, 1);
     }
   }
   if (add) {
-    const records = guruV194Records(state);
+    const field = add.dataset.gate0ScopeAdd;
+    if (!Object.hasOwn(GATE0_STRATEGY_REPEATABLE, field)) return;
     const commonMeta = guruV194CommonMeta(product, state);
     const scope = commonMeta.scope;
-    records.push({
+    if (add.dataset.gate0ScopeAddLevel !== scope) return;
+    const now = new Date().toISOString();
+    if (!guruV194InsertStrategyRecords([{
       id: makeId("gate0-value"),
       ...guruV194RecordLocation(scope, product),
-      field: add.dataset.gate0ScopeAdd,
+      field,
       value: "",
       source: { type: "manual", label: commonMeta.source },
       confirmation_status: commonMeta.confirmation_status,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
+      created_at: now,
+      updated_at: now,
+    }], product, state)) {
+      guruV194RefreshFieldHtml(field, product, currentField);
+      return;
+    }
+    if (scope === "project" && field === "segments") companySegmentChanged = true;
   }
   if (override) {
     const field = override.dataset.gate0ScopeOverride;
+    if (!Object.hasOwn(GATE0_STRATEGY_LIMITS, field)) return;
     const inherited = guruV194Resolve(field, product, state);
-    const records = guruV194Records(state);
+    if (!inherited.records.length || inherited.scope === "product") return;
     const commonMeta = guruV194CommonMeta(product, state);
-    inherited.records.forEach((sourceRecord) => records.push({
+    const now = new Date().toISOString();
+    const copies = inherited.records.map((sourceRecord) => ({
       id: makeId("gate0-value"),
       ...guruV194RecordLocation("product", product),
       field,
@@ -55201,17 +56045,35 @@ document.addEventListener("click", (event) => {
         inherited_from_id: sourceRecord.id,
       },
       confirmation_status: commonMeta.confirmation_status,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      created_at: now,
+      updated_at: now,
     }));
+    if (!guruV194InsertStrategyRecords(copies, product, state)) {
+      guruV194RefreshFieldHtml(field, product, currentField);
+      return;
+    }
     guruV194Ui(state).scopeByProductField[`${product.id}:${field}`] = "product";
   }
+  if (companySegmentChanged) guruCompanyStrategyMigrateV360(state);
   guruV194SyncLegacy(state);
   flashSaving();
   guruInvalidateGateViewCache();
-  renderGate();
-  guruV194RefreshFieldHtml(changedField, product);
-  if (add) setTimeout(() => document.querySelector(`[data-gate0-scope-field-row="${CSS.escape(add.dataset.gate0ScopeAdd)}"] .gate0-scope-value-v194:last-child textarea`)?.focus(), 0);
+  guruV194RefreshFieldHtml(changedField, product, currentField);
+  if (currentCard) {
+    const card = findCard(currentCard.dataset.cardRow);
+    if (card) {
+      recalculateStatusForCard(card, state);
+      const badge = currentCard.querySelector(".gate0-card-status");
+      if (badge) {
+        badge.className = `gate0-card-status status-${card.status}`;
+        badge.textContent = STATUS_LABELS[card.status] || card.status;
+      }
+    }
+  }
+  renderGateNav();
+  guruStrategicFoundationRefreshV245(product.id);
+  if (companySegmentChanged) guruCompanyStrategyRefreshV360();
+  if (add) setTimeout(() => document.querySelector(`[data-gate0-scope-field-row="${CSS.escape(add.dataset.gate0ScopeAdd)}"] > .gate0-scope-values-v194 > .gate0-scope-value-v194:last-child textarea`)?.focus(), 0);
 }, true);
 
 /* Gate 0 / Фундамент ключевых слов: самостоятельный product-scoped список.
@@ -56329,7 +57191,9 @@ function g3ProductJourneyPrepareSource(target) {
     target.kind === "gate0-company-brand-purpose" ||
     target.kind === "gate0-company-positioning" ||
     target.kind === "gate0-company-offer" ||
-    target.kind === "gate0-company-keyword-foundation"
+    target.kind === "gate0-company-goal" ||
+    target.kind === "gate0-company-keyword-foundation" ||
+    target.kind === "gate0-project-field"
   ) {
     state._gate0Open = state._gate0Open || {};
     if (target.cardId) state._gate0Open[target.cardId] = true;
@@ -56418,13 +57282,26 @@ function g3ProductJourneyFindSource(target) {
     .find(Boolean) || null;
   if (target.kind === "gate0-scoped") {
     return first(
+      target.recordId && target.recordField &&
+        `[data-gate0-scope-record="${esc(target.recordId)}"][data-gate0-scope-record-field="${esc(target.recordField)}"]`,
       target.recordId && `[data-gate0-scope-record="${esc(target.recordId)}"]`,
       `[data-gate0-scope-add="${esc(target.field)}"]`,
       `[data-gate0-scope-field-row="${esc(target.field)}"]`,
     );
   }
+  if (target.kind === "gate0-project-field") {
+    return first(
+      target.field && `[data-project-inline="${esc(target.field)}"]`,
+      target.cardId && `[data-card-row="${esc(target.cardId)}"]`,
+    );
+  }
+  if (target.kind === "gate0-catalog") {
+    return first(`[data-guru-catalog-add]`, `[data-gate0-section-heading="product"]`);
+  }
   if (target.kind === "gate0-company-segmentation") {
     return first(
+      target.recordId && target.field &&
+        `[data-gate0-company-segmentation-id="${esc(target.recordId)}"][data-gate0-company-segmentation-field="${esc(target.field)}"]`,
       target.field &&
         `[data-gate0-company-segmentation-field="${esc(target.field)}"]`,
       target.cardId && `[data-card-row="${esc(target.cardId)}"]`,
@@ -56446,8 +57323,17 @@ function g3ProductJourneyFindSource(target) {
   }
   if (target.kind === "gate0-company-offer") {
     return first(
+      target.recordId && target.field &&
+        `[data-gate0-company-offer-id="${esc(target.recordId)}"][data-gate0-company-offer-field="${esc(target.field)}"]`,
       target.field &&
         `[data-gate0-company-offer-field="${esc(target.field)}"]`,
+      target.cardId && `[data-card-row="${esc(target.cardId)}"]`,
+    );
+  }
+  if (target.kind === "gate0-company-goal") {
+    return first(
+      target.goalId && target.field &&
+        `[data-g8-company-goal-id="${esc(target.goalId)}"][data-g8-company-goal-field="${esc(target.field)}"]`,
       target.cardId && `[data-card-row="${esc(target.cardId)}"]`,
     );
   }
@@ -57082,6 +57968,14 @@ function guruStrategicScopedRecordTargetV286(snapshot, field, record) {
   };
 }
 
+function guruStrategicOfferCtasV286(parts) {
+  return GURU_GATE0_CTA_LEVELS_V2.map(([key, label]) => ({
+    key,
+    label,
+    value: guruV185Text(parts?.ctaV2?.[key]),
+  })).filter((entry) => entry.value);
+}
+
 function guruStrategicCurrentRecordV286(snapshot, field) {
   const records = snapshot?.scoped?.[field]?.records || [];
   if (field === "segments") {
@@ -57092,6 +57986,13 @@ function guruStrategicCurrentRecordV286(snapshot, field) {
       if (linked) return linked;
     }
   }
+  if (field === "offers") return records.find((record) =>
+    guruV185Text(record?.value) && guruV194OfferParts(record).cta,
+  ) || records.find((record) =>
+    guruV185Text(record?.value) && guruStrategicOfferCtasV286(guruV194OfferParts(record)).length,
+  ) || records.find((record) =>
+    guruV185Text(record?.value) || guruStrategicOfferCtasV286(guruV194OfferParts(record)).length,
+  ) || records[0] || null;
   return records[0] || null;
 }
 
@@ -57138,9 +58039,53 @@ function guruStrategicFinalEntriesV286(itemData) {
 function guruStrategicJtbdDescriptorsV286(product, snapshot, painContext) {
   const descriptors = [];
   const gate0Records = snapshot?.scoped?.jtbd?.records || [];
+  const sourceRecords = new Map(gate0Records.map((record) => [
+    guruV185Text(record?.id), record,
+  ]));
+  const mirroredRecords = new Set();
+  const itemData = painContext?.itemData;
+  const additional = Array.isArray(itemData?.semL4Model?.additionalJtbds)
+    ? itemData.semL4Model.additionalJtbds : [];
+  const additionalDescriptors = [];
+  additional.forEach((entry) => {
+    const sourceId = guruV185Text(entry?.id);
+    const text = guruV185Text(guruV194JtbdSentence(entry) ||
+      guruGate1AdditionalJtbdTextV268(entry));
+    if (!sourceId) return;
+    const linkedId = guruV185Text(entry?.gate0_record_id) ||
+      (sourceRecords.has(sourceId) ? sourceId : "");
+    const linkedRecord = sourceRecords.get(linkedId) ||
+      (!linkedId && text ? gate0Records.slice(1).find((record) =>
+        !mirroredRecords.has(record.id) &&
+        guruV247KeywordNormalize(guruStrategicRecordValueV286("jtbd", record)) ===
+          guruV247KeywordNormalize(text),
+      ) : null);
+    // Gate 1 keeps a projection of Gate 0 records after the first.
+    // Render each source JTBD once while preserving its Gate 1 keyword links.
+    if (linkedRecord && linkedRecord === gate0Records[0]) return;
+    if (linkedRecord && mirroredRecords.has(linkedRecord.id)) return;
+    const sourceText = linkedRecord
+      ? guruStrategicRecordValueV286("jtbd", linkedRecord) : text;
+    if (!sourceText) return;
+    if (linkedRecord) mirroredRecords.add(linkedRecord.id);
+    additionalDescriptors.push({
+      id: `gate1:${sourceId}`,
+      sourceType: "additional",
+      sourceId,
+      text: sourceText,
+      entry,
+      record: linkedRecord || null,
+      target: guruStrategicGate1TargetV286(
+        product,
+        painContext,
+        "additional",
+        sourceId,
+      ),
+    });
+  });
   gate0Records.forEach((record) => {
     const text = guruStrategicRecordValueV286("jtbd", record);
-    if (!text || !guruV185Text(record?.id)) return;
+    if (!text || !guruV185Text(record?.id) || mirroredRecords.has(record.id)) return;
     descriptors.push({
       id: `gate0:${record.id}`,
       sourceType: "gate0",
@@ -57150,7 +58095,7 @@ function guruStrategicJtbdDescriptorsV286(product, snapshot, painContext) {
       target: guruStrategicScopedRecordTargetV286(snapshot, "jtbd", record),
     });
   });
-  if (!descriptors.length && guruV185Text(snapshot?.jtbd)) {
+  if (!gate0Records.length && guruV185Text(snapshot?.jtbd)) {
     descriptors.push({
       id: `gate0-legacy:${product.id}`,
       sourceType: "gate0",
@@ -57161,32 +58106,10 @@ function guruStrategicJtbdDescriptorsV286(product, snapshot, painContext) {
     });
   }
 
-  const itemData = painContext?.itemData;
-  const additional = Array.isArray(itemData?.semL4Model?.additionalJtbds)
-    ? itemData.semL4Model.additionalJtbds : [];
-  additional.forEach((entry) => {
-    const sourceId = guruV185Text(entry?.id);
-    const text = guruV194JtbdSentence(entry) ||
-      guruGate1AdditionalJtbdTextV268(entry);
-    if (!sourceId || !guruV185Text(text)) return;
-    descriptors.push({
-      id: `gate1:${sourceId}`,
-      sourceType: "additional",
-      sourceId,
-      text: guruV185Text(text),
-      entry,
-      target: guruStrategicGate1TargetV286(
-        product,
-        painContext,
-        "additional",
-        sourceId,
-      ),
-    });
-  });
-  return descriptors;
+  return descriptors.concat(additionalDescriptors);
 }
 
-function guruStrategicJtbdKeywordModelV286(product, painContext, descriptors) {
+function guruStrategicJtbdKeywordModelV286(product, painContext, descriptors, primaryId) {
   const itemData = painContext?.itemData;
   const finalEntries = guruStrategicFinalEntriesV286(itemData);
   const result = new Map(descriptors.map((descriptor) => [descriptor.id, []]));
@@ -57195,14 +58118,11 @@ function guruStrategicJtbdKeywordModelV286(product, painContext, descriptors) {
 
   const primary = guruGate1PrimaryJtbdMatchV267(product.id, itemData);
   const forms = guruGate1GroupJtbdsV267(itemData);
-  const sourcePrimary = descriptors.filter((descriptor) =>
-    descriptor.sourceType === "gate0",
-  );
   finalEntries.forEach((entry) => {
     const assignment = guruGate1JtbdAssignmentV274(itemData, entry.key);
     const linked = new Set();
-    if (assignment?.target === "primary" && sourcePrimary.length === 1) {
-      linked.add(sourcePrimary[0].id);
+    if (assignment?.target === "primary" && result.has(primaryId)) {
+      linked.add(primaryId);
     } else if (assignment?.target === "additional") {
       const descriptor = descriptors.find((candidate) =>
         candidate.sourceType === "additional" &&
@@ -57210,8 +58130,8 @@ function guruStrategicJtbdKeywordModelV286(product, painContext, descriptors) {
       );
       if (descriptor) linked.add(descriptor.id);
     } else if (!assignment) {
-      if (primary.phraseKeys.has(entry.key) && sourcePrimary.length === 1)
-        linked.add(sourcePrimary[0].id);
+      if (primary.phraseKeys.has(entry.key) && result.has(primaryId))
+        linked.add(primaryId);
       /* Одна и та же фраза может быть явно включена в несколько смысловых
          групп. Сохраняем каждую такую связь, но ниже всё равно дедуплицируем
          её внутри одной JTBD-карточки. */
@@ -57289,18 +58209,28 @@ function guruStrategicAssignedOfferV286(descriptor, snapshot) {
   return {
     offer: guruV185Text(record.value),
     cta: parts.cta,
+    ctas: guruStrategicOfferCtasV286(parts),
     target: guruStrategicScopedRecordTargetV286(snapshot, "offers", record),
   };
 }
 
-function guruStrategicFoundationModelV286(product) {
-  const snapshot = g3ProductJourneySnapshot(product);
+function guruStrategicFoundationModelV286(product, options = {}) {
+  const snapshot = options.snapshot || g3ProductJourneySnapshot(product);
   const segmentRecord = guruStrategicCurrentRecordV286(snapshot, "segments");
+  const segmentRows = (snapshot.scoped.segments.records || [])
+    .filter((record) => guruV185Text(record.value))
+    .map((record) => ({
+      id: guruV185Text(record.id),
+      value: guruV185Text(record.value),
+      target: guruStrategicScopedRecordTargetV286(snapshot, "segments", record),
+      source: `Gate 0 · ${g3ProductJourneyScopeLabel(record.scope || snapshot.scoped.segments.scope)}`,
+    }));
   const positioningRecord = guruStrategicCurrentRecordV286(snapshot, "positioning");
   const uspRecord = guruStrategicCurrentRecordV286(snapshot, "usp");
   const offerRecord = guruStrategicCurrentRecordV286(snapshot, "offers");
-  const ctaRecord = guruStrategicCurrentRecordV286(snapshot, "cta");
-  const painContext = guruGate1FinalPainContextV259(product, false);
+  const painContext = guruGate1FinalPainContextV259(product, false, {
+    readOnly: Boolean(options.readOnly),
+  });
   const descriptors = guruStrategicJtbdDescriptorsV286(
     product,
     snapshot,
@@ -57311,20 +58241,18 @@ function guruStrategicFoundationModelV286(product) {
     snapshot,
     segmentRecord,
   );
-  const ui = guruStrategicFoundationUiV286(state, false);
-  const savedPrimaryId = guruV185Text(ui.primaryByContext?.[contextKey]);
-  const sourceMainId = descriptors.filter((descriptor) =>
-    descriptor.sourceType === "gate0",
-  ).length === 1
-    ? descriptors.find((descriptor) => descriptor.sourceType === "gate0")?.id || ""
-    : "";
-  const primaryId = descriptors.some((descriptor) => descriptor.id === savedPrimaryId)
-    ? savedPrimaryId
-    : sourceMainId;
+  const firstSourceId = guruV185Text(snapshot?.scoped?.jtbd?.records?.[0]?.id);
+  const sourceMainId = firstSourceId
+    ? `gate0:${firstSourceId}`
+    : descriptors.find((descriptor) => descriptor.id ===
+      `gate0-legacy:${product.id}`)?.id || "";
+  const primaryId = descriptors.some((descriptor) => descriptor.id === sourceMainId)
+    ? sourceMainId : "";
   const keywordModel = guruStrategicJtbdKeywordModelV286(
     product,
     painContext,
     descriptors,
+    primaryId,
   );
   const offerParts = guruV194OfferParts(offerRecord || {});
   const ordered = descriptors.slice().sort((left, right) => {
@@ -57350,6 +58278,7 @@ function guruStrategicFoundationModelV286(product) {
     contextKey,
     primaryId,
     descriptors: ordered,
+    segmentRows,
     keywordModel,
     fields: {
       landing: {
@@ -57395,20 +58324,16 @@ function guruStrategicFoundationModelV286(product) {
           : "Gate 0",
       },
       offer: {
-        value: guruV185Text(offerRecord?.value) || guruV185Text(snapshot.offer),
-        cta: offerParts.cta || guruV185Text(ctaRecord?.value) ||
-          guruV185Text(snapshot.cta),
-        target: offerRecord
-          ? guruStrategicScopedRecordTargetV286(snapshot, "offers", offerRecord)
-          : guruStrategicScopedRecordTargetV286(snapshot, "cta", ctaRecord),
-        ctaTarget: offerParts.cta && offerRecord
-          ? guruStrategicScopedRecordTargetV286(snapshot, "offers", offerRecord)
-          : ctaRecord
-            ? guruStrategicScopedRecordTargetV286(snapshot, "cta", ctaRecord)
-            : null,
-        source: (offerRecord || ctaRecord)?.scope
-          ? `Gate 0 · ${g3ProductJourneyScopeLabel((offerRecord || ctaRecord).scope)}`
-          : "Gate 0–1",
+        // The foundation mirrors the editable Gate 0 offer record. Legacy
+        // Gate 1/3 text and archived standalone CTAs stay stored, but cannot
+        // make an empty offer form appear complete or point to a false source.
+        value: guruV185Text(offerRecord?.value),
+        cta: offerParts.cta,
+        ctas: guruStrategicOfferCtasV286(offerParts),
+        target: guruStrategicScopedRecordTargetV286(snapshot, "offers", offerRecord),
+        source: offerRecord?.scope
+          ? `Gate 0 · ${g3ProductJourneyScopeLabel(offerRecord.scope)}`
+          : "Gate 0",
       },
     },
   };
@@ -57430,21 +58355,26 @@ function guruStrategicSourceButtonV286(target, label = "Открыть исто�
 
 function guruStrategicRowV286(label, field) {
   const value = guruV185Text(field?.value);
-  const hasCta = field?.cta !== undefined;
+  const hasCta = field?.cta !== undefined || Array.isArray(field?.ctas);
   const cta = hasCta ? guruV185Text(field.cta) : "";
-  const hasAny = Boolean(value || cta);
-  const complete = hasCta ? Boolean(value && cta) : Boolean(value);
+  const ctas = Array.isArray(field?.ctas)
+    ? field.ctas
+    : cta ? [{ key: "primary", label: "CTA", value: cta }] : [];
+  const hasAny = Boolean(value || ctas.some(({ value: ctaValue }) => guruV185Text(ctaValue)) || field?.touched);
+  const complete = field?.complete === undefined
+    ? hasCta ? Boolean(value && cta) : Boolean(value)
+    : Boolean(field.complete);
   const status = complete ? "ready" : hasAny ? "in_progress" : "not_started";
   const statusLabel = complete ? "Готово" : hasAny ? "В работе" : "Не начато";
   const hasSeparateCtaTarget = hasCta && field?.ctaTarget &&
     JSON.stringify(field.ctaTarget) !== JSON.stringify(field?.target);
   return `<article class="passport-v116-input guru-strategic-row-v286 ${complete ? "is-filled" : hasAny ? "is-partial" : "is-empty"}">
     <div class="guru-strategic-row-copy-v286">
+      ${field?.segmentLabel ? `<span class="guru-company-offer-segment-label-v360" data-guru-company-offer-segment-label data-guru-company-offer-segment-id="${escapeAttr(field.segmentId || "")}">${escapeHtml(field.segmentLabel)}</span>` : ""}
       <strong>${escapeHtml(label)}</strong>
       <span>${value ? escapeHtml(value) : hasCta ? "Оффер не заполнен в источнике" : "Не заполнено в источнике"}</span>
-      ${hasCta
-        ? `<span class="guru-strategic-offer-cta-v286"><small>CTA</small>${escapeHtml(cta || "CTA не заполнен в источнике")}</span>`
-        : ""}
+      ${Array.isArray(field?.extras) ? `<div class="guru-strategic-extras-v360">${field.extras.map(({ label: extraLabel, value: extraValue }) => `<span class="guru-strategic-extra-v360"><small>${escapeHtml(extraLabel)}</small>${escapeHtml(guruV185Text(extraValue) || "Не заполнено")}</span>`).join("")}</div>` : ""}
+      ${ctas.map(({ key, label: ctaLabel, value: ctaValue }) => `<span class="guru-strategic-offer-cta-v286" data-guru-strategic-cta-v286="${escapeAttr(key)}"><small>${escapeHtml(ctaLabel)}</small>${escapeHtml(guruV185Text(ctaValue) || "Не заполнено")}</span>`).join("")}
     </div>
     <div class="guru-strategic-row-meta-v286">
       <span class="status-pill status-${status}">${statusLabel}</span>
@@ -57495,7 +58425,7 @@ function guruStrategicJtbdCardV286(model, descriptor, number) {
       ${assigned ? `<section class="guru-strategic-assigned-offer-v286">
         <strong>Оффер для этого JTBD</strong>
         ${assigned.offer ? `<span>${escapeHtml(assigned.offer)}</span>` : ""}
-        ${assigned.cta ? `<span><small>CTA</small>${escapeHtml(assigned.cta)}</span>` : ""}
+        ${assigned.ctas.map(({ key, label, value }) => `<span data-guru-strategic-cta-v286="${escapeAttr(key)}"><small>${escapeHtml(label)}</small>${escapeHtml(value)}</span>`).join("")}
         ${guruStrategicSourceButtonV286(assigned.target)}
       </section>` : ""}
       <div class="guru-strategic-jtbd-links-v286">
@@ -57506,48 +58436,75 @@ function guruStrategicJtbdCardV286(model, descriptor, number) {
   </details>`;
 }
 
-function guruStrategicFoundationHtmlV237(product) {
-  if (!product) return "";
-  const model = guruStrategicFoundationModelV286(product);
-  const noPrimary = model.descriptors.length && !model.primaryId;
+function guruStrategicStepV529(number, key, label, content, showHeading = false) {
+  return `<section class="guru-strategic-step-v529" data-guru-strategic-step="${escapeAttr(key)}" aria-label="Шаг ${number}. ${escapeAttr(label)}">
+    <span class="guru-strategic-step-index-v529" aria-hidden="true">${number}</span>
+    <div class="guru-strategic-step-content-v529">
+      ${showHeading ? `<h3 class="guru-strategic-step-title-v529">${escapeHtml(label)}</h3>` : ""}
+      ${content}
+    </div>
+  </section>`;
+}
+
+function guruStrategicFoundationFlowHtmlV529(model) {
   const finalNotice = !model.keywordModel.finalEntries.length
     ? `<div class="guru-strategic-final-notice-v286">Финальные ключевые слова не сформированы</div>`
     : !model.descriptors.some((descriptor) => descriptor.entries.length)
       ? `<div class="guru-strategic-final-notice-v286">Свяжите финальные ключевые слова с JTBD</div>`
       : "";
   const pendingTarget = guruStrategicGate1TargetV286(
-    product,
+    model.snapshot.product,
     model.painContext,
     "pending",
   );
+  const jtbdHtml = `${!model.primaryId
+    ? `<div class="guru-strategic-primary-notice-v286">Выберите основной JTBD</div>`
+    : ""}
+    ${model.descriptors.map((descriptor, index) =>
+      guruStrategicJtbdCardV286(model, descriptor, index + 1),
+    ).join("")}
+    ${finalNotice}
+    ${model.keywordModel.unlinked.length
+      ? `<button type="button" class="guru-strategic-unlinked-v286" data-g4-jump-target="${escapeAttr(JSON.stringify(pendingTarget))}">Без связи с JTBD: <strong>${model.keywordModel.unlinked.length}</strong><span>→ Открыть в Gate 1</span></button>`
+      : ""}`;
+  const segmentHtml = model.segmentRows.length
+    ? model.segmentRows.map((field, index) => `<div class="guru-strategic-segment-entry-v530" data-guru-strategic-segment-id="${escapeAttr(field.id)}">
+        ${guruStrategicRowV286(model.segmentRows.length === 1 ? "Сегмент" : `Сегмент ${index + 1}`, field)}
+      </div>`).join("")
+    : guruStrategicRowV286("Сегмент", model.fields.segment);
+  return `${guruStrategicStepV529(1, "jtbd", "JTBD", jtbdHtml, true)}
+    ${guruStrategicStepV529(2, "segment", "Сегмент", segmentHtml)}
+    ${guruStrategicStepV529(3, "positioning", "Позиционирование", guruStrategicRowV286("Позиционирование", model.fields.positioning))}
+    ${guruStrategicStepV529(4, "usp", "УТП", guruStrategicRowV286("УТП", model.fields.usp))}
+    ${guruStrategicStepV529(5, "offer", "Оффер + CTA", guruStrategicRowV286("Оффер + CTA", model.fields.offer))}
+    ${guruStrategicStepV529(6, "landing", "Посадочная страница", guruStrategicRowV286("Посадочная страница", model.fields.landing))}`;
+}
+
+function guruStrategicFoundationHtmlV237(product) {
+  if (!product) return "";
+  const model = guruStrategicFoundationModelV286(product);
   return `<section class="guru-product-context-surface-v246 guru-strategic-foundation-v237" data-guru-strategic-foundation data-product-id="${escapeAttr(product.id)}">
     <strong class="guru-strategic-foundation-title-v246">Стратегическая основа · Продукт/Услуга</strong>
-    <div class="guru-strategic-flow-v286">
-      ${guruStrategicRowV286("Посадочная страница", model.fields.landing)}
-      ${guruStrategicRowV286("Сегмент", model.fields.segment)}
-      ${guruStrategicRowV286("Позиционирование", model.fields.positioning)}
-      ${guruStrategicRowV286("УТП", model.fields.usp)}
-      ${guruStrategicRowV286("Оффер + CTA", model.fields.offer)}
-      ${noPrimary ? `<div class="guru-strategic-primary-notice-v286">Выберите основной JTBD</div>` : ""}
-      ${model.descriptors.map((descriptor, index) =>
-        guruStrategicJtbdCardV286(model, descriptor, index + 1),
-      ).join("")}
-      ${!model.descriptors.length
-        ? `<div class="guru-strategic-primary-notice-v286">Выберите основной JTBD</div>`
-        : ""}
-      ${finalNotice}
-      ${model.keywordModel.unlinked.length
-        ? `<button type="button" class="guru-strategic-unlinked-v286" data-g4-jump-target="${escapeAttr(JSON.stringify(pendingTarget))}">Без связи с JTBD: <strong>${model.keywordModel.unlinked.length}</strong><span>→ Открыть в Gate 1</span></button>`
-        : ""}
+    <div class="guru-strategic-flow-v286" data-guru-strategic-product-flow>
+      ${guruStrategicFoundationFlowHtmlV529(model)}
     </div>
   </section>`;
 }
 
 function guruStrategicFoundationContextCompanyV310(workspace = state) {
-  const segmentRecord = guruV309ProjectSegmentRecord(workspace, false);
+  const segmentRecords = guruCompanySegmentsV360(workspace);
+  const segmentRecord = segmentRecords[0];
+  const segmentsById = new Map(segmentRecords.map((record) => [record.id, record]));
+  const activeSegmentIds = new Set(segmentsById.keys());
+  const archivedSegmentIds = new Set(guruV194Records(workspace).filter((record) =>
+    record.field === "segments" && record.scope === "project" && record.archived_at)
+    .map((record) => record.id));
   const positioningRecord = guruV308ProjectPositioningRecord(workspace, false);
   const brandPurposeRecord = guruV349ProjectBrandPurposeRecord(workspace, false);
-  const companyOfferRecord = guruV347ProjectCompanyOfferRecord(workspace, false);
+  const companyOfferRecords = guruCompanyOffersV360(workspace);
+  const companyOfferRecord = companyOfferRecords[0] || null;
+  const goals = guruCompanyGoalsV360(workspace).filter((goal) => !goal.archived_at)
+    .sort((left, right) => Number(Boolean(right.is_primary)) - Number(Boolean(left.is_primary)));
   const keywordFoundation = guruCompanyKeywordConfirmedModelV351(workspace);
   const projectId = guruV194ProjectId(workspace);
   const keywordFoundationItemId =
@@ -57559,12 +58516,13 @@ function guruStrategicFoundationContextCompanyV310(workspace = state) {
   const keywordFoundationUi = guruStrategicFoundationUiV286(workspace, false);
   const keywordFoundationOpenByItem =
     keywordFoundationUi.openByContext?.[keywordFoundationContextKey];
-  const segmentationTarget = {
+  const segmentationTarget = (recordId) => ({
     gateId: "gate-0",
     kind: "gate0-company-segmentation",
     cardId: GURU_GATE0_COMPANY_SEGMENTATION_CARD_ID_V309,
+    recordId,
     field: "unified",
-  };
+  });
   const positioningTarget = (field) => ({
     gateId: "gate-0",
     kind: "gate0-company-positioning",
@@ -57577,12 +58535,20 @@ function guruStrategicFoundationContextCompanyV310(workspace = state) {
     cardId: GURU_GATE0_COMPANY_BRAND_PURPOSE_CARD_ID_V349,
     field: "unified",
   };
-  const companyOfferTarget = {
+  const companyOfferTarget = (recordId) => ({
     gateId: "gate-0",
     kind: "gate0-company-offer",
     cardId: GURU_GATE0_COMPANY_OFFER_CARD_ID_V347,
+    recordId,
     field: "offer",
-  };
+  });
+  const goalTarget = (goalId) => ({
+    gateId: "gate-0",
+    kind: "gate0-company-goal",
+    cardId: G8_PROJECT_GOAL_CARD_ID,
+    goalId,
+    field: "goalDescription",
+  });
   const keywordFoundationTarget = {
     gateId: "gate-0",
     kind: "gate0-company-keyword-foundation",
@@ -57594,25 +58560,94 @@ function guruStrategicFoundationContextCompanyV310(workspace = state) {
     fields: {
       brandPurpose: {
         value: guruV185Text(brandPurposeRecord?.value),
+        touched: guruV349CompanyBrandPurposeStatus(workspace) !== "not_started",
+        complete: Boolean(guruV185Text(brandPurposeRecord?.value)),
         target: brandPurposeTarget,
         source: "Gate 0 · Цель бренда",
       },
       targetAudience: {
         value: guruV185Text(segmentRecord?.value),
-        target: segmentationTarget,
+        touched: guruV309CompanySegmentationStatus(workspace) !== "not_started",
+        complete: Boolean(guruV185Text(segmentRecord?.value)),
+        target: segmentationTarget(segmentRecord?.id),
         source: "Gate 0 · Сегментация · Компания",
       },
       positioning: {
         value: guruV185Text(positioningRecord?.value),
+        touched: guruV308CompanyPositioningStatus(workspace) !== "not_started",
+        complete: Boolean(guruV185Text(positioningRecord?.value)),
         target: positioningTarget("unified"),
         source: "Gate 0 · Позиционирование · Компания",
       },
       companyOffer: {
         value: guruV185Text(companyOfferRecord?.value),
-        target: companyOfferTarget,
+        touched: guruV347CompanyOfferStatus(workspace) !== "not_started",
+        complete: false,
+        target: companyOfferTarget(companyOfferRecord?.id),
         source: "Gate 0 · Оффер и CTA · Компания",
       },
     },
+    segmentRows: segmentRecords.map((record) => ({
+      id: record.id,
+      primary: Boolean(record.is_primary),
+      value: guruV185Text(record.value),
+      touched: Boolean(guruV185Text(record.segment_name) || guruV185Text(record.value) || GURU_GATE0_SEGMENT_PART_FIELDS_V309.some(([key]) =>
+        guruV185Text(guruV194SegmentParts(record)[key]))),
+      complete: guruCompanySegmentCompleteV360(record, workspace),
+      target: segmentationTarget(record.id),
+      source: "Открыть сегмент в Gate 0",
+    })),
+    offerRows: companyOfferRecords.map((record, originalIndex) => {
+      const parts = guruV194OfferParts(record);
+      const linkedSegment = segmentsById.get(record.segment_id);
+      const linkedSegments = linkedSegment && guruV185Text(linkedSegment.value)
+        ? [linkedSegment] : [];
+      const segmentLabel = linkedSegment
+        ? guruCompanySegmentDisplayNameV360(linkedSegment, workspace)
+        : archivedSegmentIds.has(record.segment_id)
+          ? "Сегмент архивирован"
+          : "Сегмент не выбран";
+      return {
+        id: record.id,
+        segmentLabel,
+        segmentId: record.segment_id,
+        segmentOrder: linkedSegment ? linkedSegment.is_primary ? 0 : 1 : 2,
+        createdAt: guruV185Text(record.created_at),
+        originalIndex,
+        value: guruV185Text(record.value),
+        cta: parts.ctaV2.primary,
+        touched: Boolean(guruV185Text(record.value) || linkedSegments.length ||
+          [parts.rational, parts.irrational, parts.social, ...Object.values(parts.ctaV2)].some(guruV185Text)),
+        complete: guruCompanyOfferCompleteV360(record, activeSegmentIds),
+        ctas: [{ key: "primary", label: "Основной CTA", value: parts.ctaV2.primary }],
+        target: companyOfferTarget(record.id),
+        source: "Открыть оффер в Gate 0",
+      };
+    }).sort((left, right) => left.segmentOrder - right.segmentOrder ||
+      (left.createdAt && right.createdAt ? left.createdAt.localeCompare(right.createdAt) : 0) ||
+      left.originalIndex - right.originalIndex),
+    goalRows: goals.map((goal) => ({
+      id: goal.id,
+      primary: Boolean(goal.is_primary),
+      value: guruV185Text(goal.goalDescription),
+      metric: guruV185Text(goal.goalMetric),
+      targetValue: guruV185Text(goal.goalTargetValue),
+      deadline: guruV185Text(goal.goalDeadline),
+      budget: guruV185Text(goal.goalBudget),
+      allowedCost: guruV185Text(goal.goalAllowedCost),
+      extras: [
+        { label: "Основной показатель", value: GATE8_RESULTS.find(([key]) => key === goal.goalMetric)?.[1] || guruV185Text(goal.goalMetric) },
+        { label: "Целевое значение", value: goal.goalTargetValue },
+        { label: "Срок", value: goal.goalDeadline },
+        { label: "Допустимый бюджет, ₽", value: goal.goalBudget },
+        { label: "Допустимая стоимость результата, ₽", value: goal.goalAllowedCost },
+      ],
+      touched: G8_PROJECT_GOAL_FIELDS.some(([key]) => guruV185Text(goal[key])),
+      complete: guruCompanyGoalCompleteV360(goal),
+      target: goalTarget(goal.id),
+      source: "Открыть цель в Gate 0",
+    })),
+    status: guruCompanyStrategyStatusV360(workspace),
     keywordFoundation: {
       entries: keywordFoundation.entries,
       count: keywordFoundation.entries.length,
@@ -57632,13 +58667,20 @@ function guruStrategicFoundationCompanyHtmlV310(workspace = state) {
     .map((entry) => `<span>${escapeHtml(entry.value)}</span>`)
     .join("");
   return `<section class="guru-product-context-surface-v246 guru-strategic-foundation-v237" data-guru-strategic-foundation-company data-project-id="${escapeAttr(context.projectId)}">
-    <strong class="guru-strategic-foundation-title-v246">Стратегическая основа · Компания</strong>
-    <div class="guru-strategic-flow-v286">
-      ${guruStrategicRowV286("Цель бренда", context.fields.brandPurpose)}
-      ${guruStrategicRowV286("Целевая аудитория", context.fields.targetAudience)}
-      ${guruStrategicRowV286("Позиционирование", context.fields.positioning)}
-      ${guruStrategicRowV286("Оффер компании", context.fields.companyOffer)}
-      <details class="guru-strategic-jtbd-v286" data-guru-strategic-jtbd-v286="${escapeAttr(keywordFoundation.itemId)}" data-guru-strategic-context-v286="${escapeAttr(keywordFoundation.contextKey)}" data-guru-strategic-company-keyword-foundation ${keywordFoundation.open ? "open" : ""}>
+    <div class="gate0-company-foundation-head-v360"><strong class="guru-strategic-foundation-title-v246">Стратегическая основа · Компания</strong><span class="status-pill status-${context.status}">${STATUS_LABELS[context.status] || context.status}</span></div>
+    <div class="guru-strategic-flow-v286 gate0-company-foundation-flow-v360">
+      ${guruStrategicStepV529(1, "brand-purpose", "Цель бренда", guruStrategicRowV286("Цель бренда", context.fields.brandPurpose), true)}
+      ${guruStrategicStepV529(2, "goals", "Цели проекта", `<div class="gate0-company-foundation-group-v360">${context.goalRows.length
+        ? context.goalRows.map((row, index) => `<div class="gate0-company-foundation-goal-v360">${guruStrategicRowV286(row.primary ? "Основная цель" : `Дополнительная цель ${index}`, row)}</div>`).join("")
+        : guruStrategicRowV286("Основная цель", { value: "", target: { gateId: "gate-0", kind: "gate0-company-goal", cardId: G8_PROJECT_GOAL_CARD_ID } })}</div>`, true)}
+      ${guruStrategicStepV529(3, "segments", "Сегменты компании", `<div class="gate0-company-foundation-group-v360">${context.segmentRows.length
+        ? context.segmentRows.map((row, index) => guruStrategicRowV286(row.primary ? "Основной сегмент" : `Дополнительный сегмент ${index}`, row)).join("")
+        : guruStrategicRowV286("Основной сегмент", context.fields.targetAudience)}</div>`, true)}
+      ${guruStrategicStepV529(4, "positioning", "Позиционирование компании", guruStrategicRowV286("Позиционирование", context.fields.positioning), true)}
+      ${guruStrategicStepV529(5, "offers", "Офферы + CTA", `<div class="gate0-company-foundation-group-v360">${context.offerRows.length
+        ? context.offerRows.map((row) => `<div class="gate0-company-foundation-offer-v360">${guruStrategicRowV286("Единый оффер", row)}</div>`).join("")
+        : guruStrategicRowV286("Оффер 1", context.fields.companyOffer)}</div>`, true)}
+      ${guruStrategicStepV529(6, "keywords", "Фундамент ключевых слов", `<div class="gate0-company-foundation-keywords-v360"><details class="guru-strategic-jtbd-v286" data-guru-strategic-jtbd-v286="${escapeAttr(keywordFoundation.itemId)}" data-guru-strategic-context-v286="${escapeAttr(keywordFoundation.contextKey)}" data-guru-strategic-company-keyword-foundation ${keywordFoundation.open ? "open" : ""}>
         <summary>
           <span class="guru-strategic-jtbd-number-v286">Фундамент ключевых слов</span>
           <strong>${keywordFoundation.count ? "Подтверждённые фразы" : "Подтверждённых фраз пока нет"}</strong>
@@ -57649,11 +58691,8 @@ function guruStrategicFoundationCompanyHtmlV310(workspace = state) {
           ${keywordRows
             ? `<section class="guru-strategic-keyword-group-v286"><strong>Подтверждённые фразы</strong><div>${keywordRows}</div></section>`
             : '<p class="guru-strategic-jtbd-empty-v286">Подтверждённых фраз пока нет.</p>'}
-          <div class="guru-strategic-jtbd-links-v286">
-            ${guruStrategicSourceButtonV286(keywordFoundation.target, keywordFoundation.source)}
-          </div>
         </div>
-      </details>
+      </details>${guruStrategicSourceButtonV286(keywordFoundation.target, keywordFoundation.source)}</div>`, true)}
     </div>
   </section>`;
 }
@@ -57891,7 +58930,7 @@ function gate0ProductLandingCheckHtml(card = null) {
   const isOpen = state._gate0Open[cardIdValue] === true;
   const body = (() => {
     if (!product) {
-      return `<div class="g3-product-journey-empty"><strong>Продукт не выбран</strong><span>Выберите категорию и позицию выше, в блоке «Продукт, сегмент и задача клиента».</span></div>`;
+      return `<div class="g3-product-journey-empty"><strong>Продукт не выбран</strong><span>Выберите категорию и продукт в селекторе выше.</span></div>`;
     }
     const mega = state?.gates?.find((g) => g.id === "gate-0")?.cards?.find(isMegaMarketingCard);
     const cardId = mega?.id || "";
@@ -58355,9 +59394,10 @@ function gate1CompanyDemandPositioningCompletionV357(workspace = state) {
     guruV185Text(guruV309ProjectSegmentRecord(workspace, false)?.value),
     guruV185Text(guruV308ProjectPositioningRecord(workspace, false)?.value),
     guruV185Text(guruV347ProjectCompanyOfferRecord(workspace, false)?.value),
+    guruV185Text(guruCompanyPrimaryGoalV360(workspace)?.goalDescription),
   ];
   const strategicFoundationTouched = strategicValues.some(Boolean);
-  const strategicFoundationReady = strategicValues.every(Boolean);
+  const strategicFoundationReady = guruCompanyFullChainReadyV360(workspace);
 
   const keywordStats = guruCompanyKeywordFoundationStatsV351(workspace);
   const keywordModel = guruCompanyKeywordConfirmedModelV351(workspace);
@@ -60665,12 +61705,13 @@ function guruExportGate1CompanyValuesV359(workspace) {
             (record?.scope === "project" ||
               (!record?.product_id && !record?.category_id)),
         );
+        const active = matching.filter((record) => !record.archived_at);
         const data = {
           field,
           value:
             name === "keywordFoundation"
-              ? matching[0]?.value || ""
-              : displayValues[name] || matching[0]?.value || "",
+              ? active[0]?.value || ""
+              : displayValues[name] || active[0]?.value || "",
           records: guruExportDiagnosticCloneV223(matching),
         };
         if (name === "keywordFoundation") {
@@ -64519,6 +65560,20 @@ function gate8ProductGate4PlanV230(productId) {
    подменяет её локальной целью периода. */
 g8GoalCandidate = function () {
   const project = state?.project || {};
+  if (Array.isArray(project.companyGoalsV360)) {
+    const primary = guruCompanyPrimaryGoalV360(state);
+    const hasValue = primary && ["goalDescription", "goalMetric", "goalTargetValue", "goalDeadline", "goalBudget", "goalAllowedCost"]
+      .some((key) => g8Text(primary[key]));
+    return { raw: hasValue ? {
+      description: primary.goalDescription,
+      metric: primary.goalMetric,
+      targetValue: primary.goalTargetValue,
+      deadline: primary.goalDeadline,
+      budget: primary.goalBudget,
+      allowedCost: primary.goalAllowedCost,
+      updatedAt: primary.updated_at || project.goalUpdatedAt || "",
+    } : null, source: "Gate 0 → Цель проекта" };
+  }
   const structured = g8Text(project.goalDescription || project.goalText)
     ? {
         description: project.goalDescription || project.goalText,
@@ -67702,9 +68757,11 @@ if (state) {
 const GATE1_FINAL_KEYWORD_FOUNDATION_V259 =
   "gate1-final-keyword-foundation-v259";
 
-function guruGate1FinalPainContextV259(product, create = false) {
+function guruGate1FinalPainContextV259(product, create = false, options = {}) {
   if (!product?.id) return null;
-  const maps = pv140EnsureProductMaps();
+  const maps = options.readOnly
+    ? Array.isArray(state?.painV130?.productMaps) ? state.painV130.productMaps : []
+    : pv140EnsureProductMaps();
   const direct = maps.map((row, index) => ({ row, index }))
     .filter(({ row }) => Object.prototype.hasOwnProperty.call(
       row?.items || {}, product.id));
@@ -68604,14 +69661,14 @@ function guruGate1FinalKeywordPickerV259(
 }
 
 function guruGate1ResolvedMainJtbdV259(itemId) {
+  if (!state?.project) return { value: "", scope: "product", records: [] };
   const product = guruV194Product(guruV185Text(itemId), state);
-  if (!product) return { value: "", scope: "product" };
+  if (!product) return { value: "", scope: "product", records: [] };
   const resolved = guruV194Resolve("jtbd", product, state);
   return {
-    value: g3ProductJourneyJoin(
-      resolved.records.map((record) => guruV185Text(record.value)),
-    ),
+    value: guruV185Text(resolved.records[0]?.value),
     scope: resolved.scope,
+    records: resolved.records,
   };
 }
 
@@ -68621,18 +69678,13 @@ function guruGate1ResolvedMainJtbdV259(itemId) {
 pv181JtbdModelHtml = function (mapIndex, itemId, itemData, level) {
   if (g4sbV560SyncGate1PhraseGroups(itemId, itemData))
     guruScheduleUiPreferenceSave();
+  guruGate1SyncJtbdSourceV594(itemId, itemData);
   const model = itemData.semL4Model;
   const main = guruGate1ResolvedMainJtbdV259(itemId);
   const additional = model.additionalJtbds.map((value) =>
     guruGate1AdditionalJtbdEntryV268(value),
   );
   model.additionalJtbds = additional;
-  const filledIds = new Set(additional.filter((entry) =>
-    guruV185Text(guruV194JtbdSentence(entry) ||
-      guruGate1AdditionalJtbdTextV268(entry)),
-  ).map((entry) => guruV185Text(entry.id)));
-  const recoveredCount = guruGate1SavedAdditionalJtbdsV520(itemId, itemData)
-    .filter((entry) => !filledIds.has(entry.id)).length;
   const duplicates = guruGate1DuplicatePhrasesV562(itemId, itemData);
   const duplicateKeys = new Set(duplicates.map((entry) => entry.key));
   const scopeNote = main.scope === "product"
@@ -68644,7 +69696,7 @@ pv181JtbdModelHtml = function (mapIndex, itemId, itemData, level) {
         <div class="pv181-query-level-title">${escapeHtml(level.title)}</div>
         ${level.hints.map((hint) => `<small>${escapeHtml(hint)}</small>`).join("")}
       </div>
-      <span class="pv181-query-level-count">${main.value ? 1 : 0} основной · ${additional.length + recoveredCount} из 3 дополнительных</span>
+      <span class="pv181-query-level-count">JTBD · ${main.records.length} из ${GATE0_STRATEGY_LIMITS.jtbd}<small>${main.records.length ? 1 : 0} основной · ${additional.length} дополнительных</small></span>
     </div>
     <section class="pv181-jtbd-model">
       <label class="g1-field pv181-main-query">
@@ -69963,8 +71015,11 @@ function guruGate1GroupingDraftsHtmlV266(mapIndex, itemId, itemData) {
   const drafts = guruGate1GroupingDraftsV266(itemData);
   if (!drafts.length) return "";
   const meta = itemData.semL3GroupingMetaV266 || {};
-  const noJtbdSlots = typeof guruGate1EnsureAdditionalJtbdsV268 === "function" &&
-    guruGate1EnsureAdditionalJtbdsV268(itemData).length >= 3;
+  const canonical = Boolean(guruV194Product(itemId, state));
+  const sourceJtbds = canonical ? guruGate1ResolvedMainJtbdV259(itemId).records : [];
+  const noJtbdSlots = canonical
+    ? !sourceJtbds.length || sourceJtbds.length >= GATE0_STRATEGY_LIMITS.jtbd
+    : guruGate1EnsureAdditionalJtbdsV268(itemData).length >= 3;
   return `<section class="pv181-grouping-drafts-v266" data-pv181-grouping-drafts-v266>
     <header class="pv181-grouping-drafts-head-v266">
       <div><strong>Предложенная группировка</strong><small>Черновики не входят в активные группы до подтверждения.</small></div>
@@ -69987,11 +71042,14 @@ function guruGate1GroupingDraftsHtmlV266(mapIndex, itemId, itemData) {
   </section>`;
 }
 
-function guruGate1ConfirmGroupingDraftV266(itemData, draft) {
+function guruGate1ConfirmGroupingDraftV266(itemId, itemData, draft) {
   if (!draft) return false;
   guruGate1EnsureAdditionalJtbdsV268(itemData);
   const additional = itemData.semL4Model.additionalJtbds;
-  if (additional.length >= 3) return false;
+  const canonical = Boolean(guruV194Product(itemId, state));
+  if (canonical
+    ? guruGate1ResolvedMainJtbdV259(itemId).records.length >= GATE0_STRATEGY_LIMITS.jtbd
+    : additional.length >= 3) return false;
   const used = guruGate1GroupingUsedKeysV266(itemData);
   const available = (draft.phrases || [])
     .map((phrase) => ({
@@ -70008,6 +71066,7 @@ function guruGate1ConfirmGroupingDraftV266(itemData, draft) {
   const linkedJtbd = guruGate1AdditionalJtbdEntryV268(null, {
     source: "confirmed-demand-group",
   });
+  if (canonical && !guruGate1CreateCanonicalAdditionalV594(itemId, linkedJtbd)) return false;
   const groupId = makeId("query-group");
   linkedJtbd.linked_group_id = groupId;
   additional.push(linkedJtbd);
@@ -70098,7 +71157,7 @@ document.addEventListener("click", (event) => {
         );
     const requestedIds = new Set();
     requested.forEach((draft) => {
-      if (guruGate1ConfirmGroupingDraftV266(context.itemData, draft))
+      if (guruGate1ConfirmGroupingDraftV266(context.itemId, context.itemData, draft))
         requestedIds.add(draft.id);
     });
     context.itemData.semL3GroupingDraftsV266 = drafts.filter(
@@ -70237,7 +71296,7 @@ function guruGate1SavedAdditionalJtbdsV520(itemId, itemData = null) {
     ? source.semL4Model.additionalJtbds : [])
     .map((entry) => ({
       id: guruV185Text(entry?.id),
-      text: guruV185Text(guruV194JtbdSentence(entry) ||
+      text: guruV185Text(entry?.gate0_value || guruV194JtbdSentence(entry) ||
         guruGate1AdditionalJtbdTextV268(entry)),
     }))
     .filter((entry) => entry.id && entry.text);
@@ -71373,6 +72432,7 @@ function guruGate1AdditionalJtbdEntryV268(value, defaults = {}) {
 
 function guruGate1AdditionalJtbdTextV268(value) {
   const entry = guruGate1AdditionalJtbdEntryV268(value);
+  if (guruV185Text(entry.gate0_value)) return guruV185Text(entry.gate0_value);
   return [entry.situation, entry.desired_action, entry.result]
     .map(guruV185Text)
     .filter(Boolean)
@@ -71406,7 +72466,7 @@ function guruGate1EnsureAdditionalJtbdsV268(itemData, audit = null) {
       candidate.id === guruV185Text(group.additionalJtbdIdV268) ||
       candidate.linked_group_id === guruV185Text(group.id),
     );
-    if (!entry && additional.length < 3) {
+    if (!entry && additional.length < 3 && !itemData.gate0JtbdSourceV594) {
       entry = guruGate1AdditionalJtbdEntryV268(oldLinked, {
         source: "confirmed-demand-group",
         linked_group_id: group.id,
@@ -71426,6 +72486,190 @@ function guruGate1EnsureAdditionalJtbdsV268(itemData, audit = null) {
   itemData.semL4Model.additionalJtbds = additional;
   pv181SyncJtbdModel(itemData);
   return itemData.semL4Model.additionalJtbds;
+}
+
+/* Gate 0 owns the JTBD text and the 1+3 limit. Gate 1 keeps its existing
+   keyword-group ids and assignments, but its visible forms mirror the
+   resolved Gate 0 records. Legacy Gate 1 text is imported once; unused drafts
+   remain in an archive instead of silently becoming extra strategic JTBD. */
+function guruGate1JtbdLegacyTextV594(entry) {
+  return guruV185Text(entry?.migrated_from_flat
+    ? entry.desired_action
+    : guruV194JtbdSentence(entry) || guruGate1AdditionalJtbdTextV268(entry));
+}
+
+function guruGate1JtbdLinkedV594(itemId, itemData, entry) {
+  const id = guruV185Text(entry?.id);
+  return (itemData.semL3Groups || []).some((group) =>
+    guruV185Text(group?.additionalJtbdIdV268) === id &&
+    (guruV185Text(group?.mainQuery) ||
+      (group?.keywords || []).some((keyword) => guruV185Text(pv181KeywordText(keyword))))) ||
+    Object.values(itemData.jtbdKeywordAssignmentsV274 || {}).some((assignment) =>
+      guruV185Text(assignment?.additional_jtbd_id) === id) ||
+    Boolean(id && JSON.stringify(state.gate4SearchBuild?.[normalizeAspectKey(itemId)] || {})
+      .includes(JSON.stringify(id)));
+}
+
+function guruGate1CreateCanonicalAdditionalV594(itemId, entry) {
+  const product = guruV194Product(guruV185Text(itemId), state);
+  if (!product) return false;
+  let resolved = guruV194Resolve("jtbd", product, state);
+  if (!resolved.records.length || resolved.records.length >= GATE0_STRATEGY_LIMITS.jtbd)
+    return false;
+  const now = new Date().toISOString();
+  if (resolved.scope !== "product") {
+    resolved.records.forEach((record) => guruV194Records(state).push({
+      ...record,
+      id: makeId("gate0-value"),
+      ...guruV194RecordLocation("product", product),
+      jtbd: record.jtbd && typeof record.jtbd === "object"
+        ? { ...record.jtbd } : undefined,
+      source: { type: "inheritance_override", label: "JTBD для группы запросов", inherited_from_id: record.id },
+      created_at: now,
+      updated_at: now,
+    }));
+    resolved = guruV194Resolve("jtbd", product, state);
+  }
+  if (resolved.records.length >= GATE0_STRATEGY_LIMITS.jtbd) return false;
+  const id = guruV194Records(state).some((record) => record.id === entry.id)
+    ? makeId("gate0-value") : entry.id;
+  guruV194Records(state).push({
+    id,
+    ...guruV194RecordLocation("product", product),
+    field: "jtbd",
+    value: "",
+    jtbd: { situation: "", desired_action: "", result: "" },
+    source: { type: "manual", label: "Gate 1 · группа запросов" },
+    confirmation_status: "draft",
+    created_at: now,
+    updated_at: now,
+  });
+  entry.gate0_record_id = id;
+  guruV194Ui(state).scopeByProductField[`${product.id}:jtbd`] = "product";
+  guruV194SyncLegacy(state);
+  return true;
+}
+
+function guruGate1SyncJtbdSourceV594(itemId, itemData) {
+  if (!state?.project || !itemData) return false;
+  const product = guruV194Product(guruV185Text(itemId), state);
+  if (!product || !itemData) return false;
+  const before = guruGate1EnsureAdditionalJtbdsV268(itemData);
+  const archived = Array.isArray(itemData.gate0JtbdLegacyArchiveV594)
+    ? itemData.gate0JtbdLegacyArchiveV594 : [];
+  let changed = false;
+  let sourceChanged = false;
+  let resolved = guruV194Resolve("jtbd", product, state);
+  const textKey = (value) => guruV247KeywordNormalize(value);
+
+  if (!itemData.gate0JtbdSourceV594) {
+    const pending = before.filter((entry) => {
+      const text = guruGate1JtbdLegacyTextV594(entry);
+      return (text || guruGate1JtbdLinkedV594(itemId, itemData, entry)) &&
+        !resolved.records.some((record) =>
+          text && textKey(record.value) === textKey(text));
+    });
+    if (pending.length) {
+      const now = new Date().toISOString();
+      if (resolved.scope !== "product" && resolved.records.length) {
+        resolved.records.forEach((record) => guruV194Records(state).push({
+          ...record,
+          id: makeId("gate0-value"),
+          ...guruV194RecordLocation("product", product),
+          jtbd: record.jtbd && typeof record.jtbd === "object"
+            ? { ...record.jtbd } : undefined,
+          source: { type: "inheritance_override", label: "Перенос JTBD из Gate 1", inherited_from_id: record.id },
+          created_at: now,
+          updated_at: now,
+        }));
+        changed = true;
+        sourceChanged = true;
+      }
+      resolved = guruV194Resolve("jtbd", product, state);
+      if (!resolved.records.length) {
+        const legacyMain = guruV185Text(itemData.semL4Model?.mainJtbd);
+        guruV194Records(state).push({
+          id: makeId("gate0-value"),
+          ...guruV194RecordLocation("product", product),
+          field: "jtbd",
+          value: legacyMain,
+          source: { type: "migration", label: "Основной JTBD из Gate 1" },
+          confirmation_status: "draft",
+          created_at: now,
+          updated_at: now,
+        });
+        changed = true;
+        sourceChanged = true;
+      }
+      resolved = guruV194Resolve("jtbd", product, state);
+      pending.forEach((entry) => {
+        if (resolved.records.length >= GATE0_STRATEGY_LIMITS.jtbd) return;
+        const text = guruGate1JtbdLegacyTextV594(entry);
+        const id = guruV194Records(state).some((record) => record.id === entry.id)
+          ? makeId("gate0-value") : entry.id;
+        guruV194Records(state).push({
+          id,
+          ...guruV194RecordLocation("product", product),
+          field: "jtbd",
+          value: text,
+          jtbd: {
+            situation: guruV185Text(entry.situation),
+            desired_action: guruV185Text(entry.desired_action),
+            result: guruV185Text(entry.result),
+          },
+          source: { type: "migration", label: "Дополнительный JTBD из Gate 1", legacy_id: entry.id },
+          confirmation_status: "draft",
+          created_at: now,
+          updated_at: now,
+        });
+        entry.gate0_record_id = id;
+        changed = true;
+        sourceChanged = true;
+        resolved = guruV194Resolve("jtbd", product, state);
+      });
+      guruV194Ui(state).scopeByProductField[`${product.id}:jtbd`] = "product";
+    }
+    itemData.gate0JtbdSourceV594 = true;
+    changed = true;
+  }
+
+  resolved = guruV194Resolve("jtbd", product, state);
+  const unused = new Set(before);
+  const active = resolved.records.slice(1).map((record) => {
+    const recordText = guruV185Text(record.value);
+    const entry = before.find((candidate) => unused.has(candidate) &&
+      (candidate.gate0_record_id === record.id || candidate.id === record.id ||
+        (recordText && textKey(guruGate1JtbdLegacyTextV594(candidate)) === textKey(recordText)))) ||
+      guruGate1AdditionalJtbdEntryV268({ id: record.id, source: "gate0" });
+    unused.delete(entry);
+    const parts = guruV194JtbdParts(record);
+    if (entry.gate0_record_id !== record.id ||
+        entry.situation !== parts.situation ||
+        entry.desired_action !== parts.desired_action ||
+        entry.result !== parts.result || entry.gate0_value !== recordText) changed = true;
+    entry.gate0_record_id = record.id;
+    entry.gate0_value = recordText;
+    entry.situation = parts.situation;
+    entry.desired_action = parts.desired_action;
+    entry.result = parts.result;
+    return entry;
+  });
+  unused.forEach((entry) => {
+    if (!archived.some((saved) => saved.id === entry.id)) {
+      archived.push({ ...entry });
+      changed = true;
+    }
+  });
+  if (before.length !== active.length ||
+      before.some((entry, index) => entry !== active[index])) changed = true;
+  itemData.gate0JtbdLegacyArchiveV594 = archived;
+  itemData.semL4Model.additionalJtbds = active;
+  pv181SyncJtbdModel(itemData);
+  if (changed) {
+    if (sourceChanged) guruV194SyncLegacy(state);
+    guruScheduleUiPreferenceSave();
+  }
+  return changed;
 }
 
 function guruGate1AdditionalJtbdGroupV268(itemData, entry) {
@@ -71568,16 +72812,19 @@ function guruGate1AdditionalJtbdsHtmlV268(mapIndex, itemId, itemData, duplicates
   duplicates ||= guruGate1DuplicatePhrasesV562(itemId, itemData);
   const duplicateKeys = new Set(duplicates.map((entry) => entry.key));
   const additional = guruGate1EnsureAdditionalJtbdsV268(itemData);
-  const filledIds = new Set(additional.filter((entry) =>
-    guruV185Text(guruV194JtbdSentence(entry) ||
-      guruGate1AdditionalJtbdTextV268(entry)),
-  ).map((entry) => guruV185Text(entry.id)));
-  const savedIds = new Set(guruGate1SavedAdditionalJtbdsV520(itemId, itemData)
-    .filter((entry) => !filledIds.has(entry.id)).map((entry) => entry.id));
-  const savedHtml = guruGate1SavedJtbdsHtmlV520(
-    mapIndex, itemId, itemData, additional, "", duplicateKeys);
-  const totalCount = new Set([...additional.map((entry) =>
-    guruV185Text(entry.id)), ...savedIds]).size;
+  const product = guruV194Product(itemId, state);
+  const canonical = Boolean(product);
+  const resolved = canonical ? guruV194Resolve("jtbd", product, state) : null;
+  const sourceTarget = canonical ? escapeAttr(JSON.stringify({
+    gateId: "gate-0", kind: "gate0-scoped", productId: product.id,
+    field: "jtbd", scope: resolved.scope,
+  })) : "";
+  const savedIds = canonical ? new Set() : new Set(
+    guruGate1SavedAdditionalJtbdsV520(itemId, itemData).map((entry) => entry.id));
+  const totalCount = canonical ? additional.length :
+    new Set([...additional.map((entry) => entry.id), ...savedIds]).size;
+  const archivedTexts = (itemData.gate0JtbdLegacyArchiveV594 || [])
+    .map(guruGate1JtbdLegacyTextV594).filter(Boolean);
   const fields = [
     ["situation", "В какой ситуации", "В какой ситуации у клиента возникает потребность"],
     ["desired_action", "Какой клиент хочет", "Что клиент хочет сделать или получить"],
@@ -71587,11 +72834,12 @@ function guruGate1AdditionalJtbdsHtmlV268(mapIndex, itemId, itemData, duplicates
     <div class="pv181-keyword-list-title">Дополнительные JTBD · ${totalCount} из 3</div>
     ${additional.length ? additional.map((entry, index) => {
       const group = guruGate1AdditionalJtbdGroupV268(itemData, entry);
-      const sentence = guruV194JtbdSentence(entry, { placeholders: true });
+      const sentence = guruV185Text(entry.gate0_value) ||
+        guruV194JtbdSentence(entry, { placeholders: true });
       return `<article class="pv181-group-jtbd-v267" data-pv181-additional-jtbd-v268="${escapeAttr(entry.id)}" data-pv181-jtbd-drop-target-v274="additional" data-pv181-additional-jtbd-id-v274="${escapeAttr(entry.id)}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}">
-        <header><span>Дополнительный - JTBD №${index + 2}</span>${group ? `<strong>${escapeHtml(guruV185Text(group.mainQuery) || `Группа запросов ${index + 1}`)}</strong>` : ""}</header>
+        <header><span>Дополнительный JTBD №${index + 2}</span>${group ? `<strong>${escapeHtml(guruV185Text(group.mainQuery) || `Группа запросов ${index + 1}`)}</strong>` : ""}${canonical ? "<small>Источник: Gate 0 · только чтение</small>" : ""}</header>
         <div class="gate0-jtbd-parts-v194">
-          ${fields.map(([field, label, hint]) => `<label><small>${escapeHtml(hint)}</small><strong>${escapeHtml(label)}</strong><textarea class="g1-input passport-v116-autosize ${guruV185Text(entry[field]) ? "is-filled" : "is-empty"}" data-pv181-map="${mapIndex}" data-pv181-item="${escapeAttr(itemId)}" data-pv181-jtbd-part-v268 data-pv181-jtbd-additional-index-v268="${index}" data-pv181-jtbd-field-v268="${escapeAttr(field)}" rows="1">${escapeHtml(entry[field])}</textarea></label>`).join("")}
+          ${fields.map(([field, label, hint]) => `<label><small>${escapeHtml(hint)}</small><strong>${escapeHtml(label)}</strong>${canonical ? `<div class="g1-input ${guruV185Text(entry[field]) ? "is-filled" : "is-empty"}">${escapeHtml(entry[field] || "—")}</div>` : `<textarea class="g1-input passport-v116-autosize ${guruV185Text(entry[field]) ? "is-filled" : "is-empty"}" data-pv181-map="${mapIndex}" data-pv181-item="${escapeAttr(itemId)}" data-pv181-jtbd-part-v268 data-pv181-jtbd-additional-index-v268="${index}" data-pv181-jtbd-field-v268="${escapeAttr(field)}" rows="1">${escapeHtml(entry[field])}</textarea>`}</label>`).join("")}
         </div>
         <div class="gate0-jtbd-sentence-v194">
           <small>Единая формулировка JTBD</small>
@@ -71599,18 +72847,19 @@ function guruGate1AdditionalJtbdsHtmlV268(mapIndex, itemId, itemData, duplicates
           <span class="gate0-unified-example-v246">Пример (Christensen, кейс McDonald's, фастфуд): по утрам коктейль «нанимали» не за вкус, а чтобы занять свободную руку в скучной дороге на работу.</span>
           <strong data-pv181-additional-jtbd-sentence-v269 aria-live="polite">${escapeHtml(sentence)}</strong>
         </div>
-        ${savedIds.has(guruV185Text(entry.id)) ? "" : guruGate1AdditionalJtbdKeywordsHtmlV274(
+        ${guruGate1AdditionalJtbdKeywordsHtmlV274(
           mapIndex,
           itemId,
           itemData,
           entry.id,
           duplicateKeys,
         )}
-        <button type="button" class="small-btn danger-mini" data-pv181-jtbd-remove="${index}" data-pv181-jtbd-remove-id="${escapeAttr(entry.id)}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" aria-label="Удалить дополнительный JTBD">×</button>
+        ${canonical ? "" : `<button type="button" class="small-btn danger-mini" data-pv181-jtbd-remove="${index}" data-pv181-jtbd-remove-id="${escapeAttr(entry.id)}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" aria-label="Удалить дополнительный JTBD">×</button>`}
       </article>`;
-    }).join("") : savedIds.size ? "" : '<div class="pv181-keyword-empty">Дополнительные JTBD пока не добавлены.</div>'}
-    ${savedHtml}
-    <button type="button" class="small-btn add-inline-btn" data-pv181-jtbd-add data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" ${totalCount >= 3 ? "disabled" : ""}>+ Добавить дополнительный JTBD</button>
+    }).join("") : '<div class="pv181-keyword-empty">Дополнительные JTBD пока не добавлены.</div>'}
+    ${canonical ? "" : guruGate1SavedJtbdsHtmlV520(mapIndex, itemId, itemData, additional, "", duplicateKeys)}
+    ${canonical ? `<div class="guru-jtbd-source"><small>Добавляйте и редактируйте JTBD в стратегической основе Gate 0.</small><button type="button" class="small-btn" data-g4-jump-target="${sourceTarget}">Открыть JTBD в Gate 0 →</button></div>` : `<button type="button" class="small-btn add-inline-btn" data-pv181-jtbd-add data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" ${totalCount >= 3 ? "disabled" : ""}>+ Добавить дополнительный JTBD</button>`}
+    ${archivedTexts.length ? `<details class="guru-jtbd-legacy-archive-v594"><summary>Прежние записи вне стратегии · ${archivedTexts.length}</summary><small>Сохранены без изменений и не входят в счётчик JTBD.</small><ul>${archivedTexts.map((value) => `<li>${escapeHtml(value)}</li>`).join("")}</ul></details>` : ""}
     ${guruGate1DuplicateDecisionsHtmlV562(mapIndex, itemId, itemData, duplicates)}
   </div>`;
 }
@@ -71619,6 +72868,8 @@ const __gate1JtbdPrevItemDataV268 = pv181ItemData;
 pv181ItemData = function (row, itemId) {
   const itemData = __gate1JtbdPrevItemDataV268(row, itemId);
   guruGate1EnsureAdditionalJtbdsV268(itemData);
+  if (state?.painV130?.productMaps?.includes(row))
+    guruGate1SyncJtbdSourceV594(itemId, itemData);
   return itemData;
 };
 
@@ -77964,8 +79215,10 @@ document.addEventListener("click", (event) => {
     ? d.ui.workflowStepOpenV453 : { groups: true, launch: false };
   const key = button.dataset.g4rsyaV453Step;
   d.ui.workflowStepOpenV453[key] = !d.ui.workflowStepOpenV453[key];
+  if (activeGateId !== "gate-4" || typeof g4FiveFastCampaignStepToggleV546 !== "function" ||
+      !g4FiveFastCampaignStepToggleV546(button, Boolean(d.ui.workflowStepOpenV453[key])))
+    renderGate();
   guruScheduleUiPreferenceSave();
-  renderGate();
 });
 
 document.addEventListener("change", (event) => {
@@ -78598,7 +79851,7 @@ document.addEventListener("click", (event) => {
   button.setAttribute("aria-label", `${open ? "Свернуть" : "Развернуть"} группу`);
   if (editor) editor.hidden = !open;
   if (label) label.textContent = open ? "свернуть ↑" : "развернуть ↓";
-  flashSaving();
+  guruScheduleUiPreferenceSave();
 });
 
 document.addEventListener("click", (event) => {
@@ -84494,7 +85747,15 @@ v22TemplateForCard = function (card) {
   const template = __guruCategoryPrevTemplateV511.apply(this, arguments);
   if (card?.id !== GURU_CATEGORY_CARD_ID_V510) return template;
   return { ...template, sections: template.sections.map((section) =>
-    section.key === "catalog_trust_v493"
+    section.key === "catalog_filters"
+      ? { ...section,
+        title: "2. Товары · список",
+        task: "Показать товары в том же порядке и формате, что на странице категории.",
+        checklist: ["Строка товара: фото, название, описание, цена при наличии и две кнопки",
+          "Порядок товаров совпадает с Платформой; данные карточек проверены по сайту"],
+        standard: "Посетитель видит товары и сразу может перейти к заказу или подробностям.",
+        fields: [] }
+      : section.key === "catalog_trust_v493"
       ? { ...section,
         checklist: ["Отзывы/кейсы по категории: да / нет", "Три карточки отзывов"],
         standard: "Tilda: TS203",
@@ -84506,23 +85767,63 @@ function guruCategoryProductsV510(row, workspace = state) {
   const categoryId = guruV185Text(row?.categoryId);
   if (!categoryId) return [];
   const cards = workspace?.gates?.find((gate) => gate.id === "gate-1")?.cards || [];
-  const pageRows = cards.flatMap((card) => (card.pageRows || []).map((page) => ({ card, page })));
+  const pagesByProductId = new Map();
+  const pagesBySource = new Map();
+  cards.forEach((card) => (card.pageRows || []).forEach((page) => {
+    if (page.catalogItemIdV189 &&
+        (!pagesByProductId.has(String(page.catalogItemIdV189)) ||
+          card.id === "card-23" || card.id === "card-24"))
+      pagesByProductId.set(String(page.catalogItemIdV189), page);
+    if (page.id) pagesBySource.set(`${card.id}:${page.id}`, page);
+  }));
+  const savedCards = row?.contextFields?.catalogProductCardsV516 || {};
   return megaPlatformOrderedProductsInCategory(categoryId,
     guruV194Products(workspace).filter((item) =>
       megaPlatformProductCategoryIds(item, workspace).includes(categoryId)), workspace)
     .map((item) => {
     const source = item.source || {};
-    const entry = pageRows.find(({ card, page }) =>
-      guruV185Text(page.catalogItemIdV189) === guruV185Text(item.id) ||
-      (source.cardId === card.id && source.rowId && source.rowId === page.id));
-    const productPage = entry?.page;
+    const productPage = pagesByProductId.get(String(item.id)) ||
+      pagesBySource.get(`${source.cardId}:${source.rowId}`);
     const photos = Array.isArray(productPage?.productGalleryPhotos)
       ? productPage.productGalleryPhotos : [];
     const main = photos.find((photo) => photo.id === productPage.productGalleryMainPhotoId)
       || photos[0];
+    const saved = savedCards[item.id] || {};
+    const context = productPage?.contextFields || {};
     return { id: item.id, name: item.name, url: megaPlatformProductUrl(item, workspace),
-      image: guruHubImageSrcV502(main?.dataUrl || "") };
+      image: [saved.image, main?.dataUrl, main?.url, item.imageUrl]
+        .map(guruHubImageSrcV502).find(Boolean) || "",
+      description: guruV185Text(saved.description || context.productHeroShortDescriptionV254 ||
+        context.productDescription || item.description),
+      price: guruV185Text(saved.price || context.productPrice || item.price),
+      orderLabel: guruV185Text(saved.orderLabel) || "Оформить заказ",
+      detailsLabel: guruV185Text(saved.detailsLabel) || "Посмотреть подробнее" };
   });
+}
+
+function guruCategoryProductCardV516(product, row) {
+  const attrs = `data-guru-category-card-row-v516="${escapeAttr(row.id)}" data-guru-category-card-product-v516="${escapeAttr(product.id)}"`;
+  const input = (key, label, value, placeholder = "") =>
+    `<label><span>${escapeHtml(label)}</span><input type="text" ${attrs} data-guru-category-card-field-v516="${key}" value="${escapeAttr(value)}" placeholder="${escapeAttr(placeholder)}" /></label>`;
+  return `<article class="guru-category-product-v516" data-guru-category-product-id-v510="${escapeAttr(product.id)}">
+    <div class="guru-category-product-image-v516">${product.image
+      ? `<img src="${escapeAttr(product.image)}" alt="${escapeAttr(product.name)}" loading="lazy" decoding="async" />`
+      : "<span>Фото не добавлено в аудит</span>"}</div>
+    <div class="guru-category-product-copy-v516"><h3>${escapeHtml(product.name)}</h3>
+      <p data-guru-category-card-preview-v516="description">${escapeHtml(product.description || "Описание карточки не заполнено")}</p>
+      ${product.price ? `<strong data-guru-category-card-preview-v516="price">${escapeHtml(product.price)}</strong>`
+        : '<strong data-guru-category-card-preview-v516="price" hidden></strong>'}</div>
+    <div class="guru-category-product-actions-v516"><span data-guru-category-card-preview-v516="orderLabel">${escapeHtml(product.orderLabel)}</span>
+      <span data-guru-category-card-preview-v516="detailsLabel">${escapeHtml(product.detailsLabel)}</span></div>
+    <details class="guru-category-product-edit-v516"><summary>Данные строки каталога</summary>
+      <div>${input("image", "Прямая ссылка на фото", row.contextFields?.catalogProductCardsV516?.[product.id]?.image || "", "https://...")}
+        ${input("description", "Описание", row.contextFields?.catalogProductCardsV516?.[product.id]?.description || "", product.description || "Описание товара")}
+        ${input("price", "Цена", row.contextFields?.catalogProductCardsV516?.[product.id]?.price || "", product.price || "Если указана на сайте")}
+        ${input("orderLabel", "Кнопка заказа", row.contextFields?.catalogProductCardsV516?.[product.id]?.orderLabel || "", product.orderLabel)}
+        ${input("detailsLabel", "Кнопка подробностей", row.contextFields?.catalogProductCardsV516?.[product.id]?.detailsLabel || "", product.detailsLabel)}</div>
+      <small>Название и порядок берутся из Платформы. Адрес страницы товара: ${escapeHtml(product.url || "не указан в Платформе")}. Фото также можно добавить в карточке товара.</small>
+    </details>
+  </article>`;
 }
 
 function guruCategoryFieldV510(card, row, pageIndex, section, key, options = {}) {
@@ -84593,16 +85894,9 @@ function guruCategorySectionContentV510(card, row, pageIndex, section) {
   if (section.key === "catalog_filters") {
     const products = guruCategoryProductsV510(row);
     return { visual: `<section class="guru-hub-preview-categories-v504 guru-category-products-v510">
-      <h2><span class="guru-hub-inline-edit-v507"><small class="guru-hub-inline-hint-v507">Заголовок раздела · Не заполнять: дублирует H1 и Intro из героя (TL03A). В ST340 шапка пустая</small></span></h2>
-      <p><span class="guru-hub-inline-edit-v507"><small class="guru-hub-inline-hint-v507">Описание раздела · Не заполнять: дублирует H1 и Intro из героя (TL03A). В ST340 шапка пустая</small></span></p>
-      <div class="guru-hub-inline-edit-v507"><small class="guru-hub-inline-hint-v507">Хлебные крошки: Не выводить (крошки уже есть в ME605)</small></div>
-      <div class="guru-hub-preview-grid-v504 guru-category-product-grid-v510">${products.length
-        ? products.map((product) => `<article class="guru-hub-preview-category-v504 guru-category-product-v510" data-guru-category-product-id-v510="${escapeAttr(product.id)}">
-          <div class="guru-hub-preview-image-v504">${product.image
-            ? `<img src="${escapeAttr(product.image)}" alt="${escapeAttr(product.name)}" />`
-            : "<span>Нет изображения</span>"}</div>
-          <div class="guru-hub-preview-category-copy-v504"><h3>${escapeHtml(product.name)}</h3>
-            <small>${escapeHtml(product.url || "URL товара не указан")}</small></div></article>`).join("")
+      <p class="guru-category-product-note-v516">Заголовок, вводный текст и хлебные крошки находятся в первом экране. Ниже товары показаны списком, как на странице.</p>
+      <div class="guru-category-product-list-v516">${products.length
+        ? products.map((product) => guruCategoryProductCardV516(product, row)).join("")
         : '<div class="guru-hub-preview-empty-v504">В этой категории пока нет товаров или услуг.</div>'}</div>
       ${v22IsFilled(fields.catalogCards) ? `<details class="guru-category-legacy-v510"><summary>Ранее сохранённое описание карточек</summary><p>${escapeHtml(fields.catalogCards)}</p></details>` : ""}
     </section>`, controls: "" };
@@ -84634,7 +85928,7 @@ function guruCategorySectionContentV510(card, row, pageIndex, section) {
       <h2>${field("catalogRelatedHeadingV512", { label: "H2: Заголовок", hint: "TL04, до 40 символов, ключевые слова в начале", placeholder: "Заголовок не заполнен" })}</h2>
       ${field("catalogRelated", { label: "Ссылки перелинковки", hint: "О нас, Блог или смежные категории — по одной ссылке в строке", multiline: true,
         rows: 5, placeholder: guruCategoryRelatedHintV510(row) || "Добавьте ссылки на другие разделы" })}
-      <small>Пролистывание товаров уже встроено в блок сетки выше; отдельная настройка пагинации не нужна.</small>
+      <small>Пролистывание товаров уже встроено в список выше; отдельная настройка пагинации не нужна.</small>
       ${v22IsFilled(fields.catalogPagination) ? `<details class="guru-category-legacy-v510"><summary>Ранее сохранённая заметка о пагинации</summary><p>${escapeHtml(fields.catalogPagination)}</p></details>` : ""}
     </section>`, controls: "" };
   return {
@@ -84738,10 +86032,71 @@ v22SectionStatus = function (row, section) {
   if (!guruV185Text(row?.categoryId) || section?.key !== "catalog_filters")
     return __guruCategoryPrevSectionStatusV510.apply(this, arguments);
   const prior = __guruCategoryPrevSectionStatusV510.apply(this, arguments);
-  if (prior === "ready" || v22SectionMode(row, section) === "not_needed") return prior;
+  if (v22SectionMode(row, section) === "not_needed" || prior === "problem") return prior;
   const products = guruCategoryProductsV510(row);
-  return products.length ? "ready" : prior;
+  if (!products.length) return prior;
+  return products.every((product) => product.image && product.description && product.url)
+    ? "ready" : "in_progress";
 };
+
+document.addEventListener("input", (event) => {
+  const input = event.target?.closest?.("[data-guru-category-card-field-v516]");
+  if (!input) return;
+  const card = findCard(GURU_CATEGORY_CARD_ID_V510);
+  const row = card?.pageRows?.find((page) =>
+    page.id === input.dataset.guruCategoryCardRowV516);
+  const productId = input.dataset.guruCategoryCardProductV516;
+  const key = input.dataset.guruCategoryCardFieldV516;
+  if (!row || !productId || !["image", "description", "price", "orderLabel", "detailsLabel"].includes(key)) return;
+  const saved = ((row.contextFields ||= {}).catalogProductCardsV516 ||= {});
+  const values = (saved[productId] ||= {});
+  if (input.value.trim()) values[key] = input.value.trim();
+  else delete values[key];
+  const article = input.closest("[data-guru-category-product-id-v510]");
+  if (key !== "image" && article) {
+    const product = input.value.trim() ? null
+      : guruCategoryProductsV510(row).find((item) => item.id === productId);
+    const preview = article.querySelector(`[data-guru-category-card-preview-v516="${key}"]`);
+    if (preview) {
+      const value = input.value.trim() || product?.[key] || "";
+      preview.textContent = value || (key === "description" ? "Описание карточки не заполнено" : "");
+      if (key === "price") preview.hidden = !value;
+    }
+  }
+  gate1ScheduleDurablePersist();
+});
+
+document.addEventListener("change", (event) => {
+  const input = event.target?.closest?.("[data-guru-category-card-field-v516]");
+  if (!input) return;
+  const card = findCard(GURU_CATEGORY_CARD_ID_V510);
+  const row = card?.pageRows?.find((page) =>
+    page.id === input.dataset.guruCategoryCardRowV516);
+  const section = input.closest('[data-v22-site-section="catalog_filters"]');
+  const badge = section?.querySelector(":scope > summary .v22-section-status");
+  if (!row || !badge) return;
+  if (input.dataset.guruCategoryCardFieldV516 === "image") {
+    const product = guruCategoryProductsV510(row).find((item) =>
+      item.id === input.dataset.guruCategoryCardProductV516);
+    const image = input.closest("[data-guru-category-product-id-v510]")
+      ?.querySelector(".guru-category-product-image-v516");
+    if (image && product?.image) {
+      const element = document.createElement("img");
+      element.src = product.image;
+      element.alt = product.name;
+      element.loading = "lazy";
+      element.decoding = "async";
+      element.onerror = () => image.replaceChildren(document.createTextNode("Не удалось загрузить фото"));
+      image.replaceChildren(element);
+    } else if (image) image.replaceChildren(document.createTextNode("Фото не добавлено в аудит"));
+  }
+  const definition = v22TemplateForCard(card)
+    .sections.find((item) => item.key === "catalog_filters");
+  const status = v22SectionStatus(row, definition);
+  badge.className = `v22-section-status status-pill status-${status}`;
+  badge.textContent = STATUS_LABELS[status] || status;
+  guruPersistStateFast({ durable: true, cloud: false });
+});
 
 // Every audit page URL is displayed from Platform, including category and
 // product cards. Legacy pageRows.url remains in saved data for migration only.
@@ -84783,6 +86138,7 @@ updateGate1PageRow = function (event) {
    never the visible heading, so editing copy does not reset a block. */
 const GURU_OWNED_DETAILS_V512 = [
   ".gate0-card",
+  "[data-gate0-company-offer-entry]",
   "[data-g4-product-smm-workspace-v2] details",
   "[data-gate0-diagnostic-stage]",
   "[data-g6-event-detail]",
@@ -84792,6 +86148,8 @@ const GURU_OWNED_DETAILS_V512 = [
   ".g4-v166-jtbd:not(.is-orphaned)",
   "[data-g1-competitor-step-v539]",
   "[data-gate1-demand-level-product-v556]",
+  "[data-g8-company-section]",
+  "[data-g8-company-subdetail]",
 ].join(",");
 
 function guruDisclosureKeyV512(node) {
@@ -85910,9 +87268,124 @@ document.addEventListener("click", (event) => {
   const heading = button.closest("[data-gate0-section-heading]");
   const scope = button.dataset.gate0SectionToggle;
   const open = button.getAttribute("aria-expanded") !== "true";
-  guruGateScopeSetInnerV526(activeGateId, scope, open, guruGateScopeItemsV526(heading));
+  if (activeGateId !== "gate-8")
+    guruGateScopeSetInnerV526(activeGateId, scope, open, guruGateScopeItemsV526(heading));
   guruGateScopeOpenStateV526()[scope] = open;
-  guruInvalidateGateViewCache();
-  renderGate();
+  if (activeGateId === "gate-2" || activeGateId === "gate-4" || activeGateId === "gate-8")
+    gate0SetSectionOpen(scope, open);
+  else {
+    guruInvalidateGateViewCache();
+    renderGate();
+  }
   guruScheduleUiPreferenceSave();
 }, true);
+
+/* Gate 0 has long forms. Some structural actions still rebuild its DOM; keep
+   the control (or a surviving neighbour when a row is removed) at the same
+   viewport position through that rebuild and the deferred textarea sizing. */
+let guruGate0LastInteraction = null;
+let guruGate0AnchorEpoch = 0;
+
+function guruGate0ViewIsStable() {
+  return activeView === "gate" && activeGateId === "gate-0" &&
+    guruRenderedGateId === "gate-0" && !guruGateNavigationInProgress;
+}
+
+function guruGate0CaptureAnchor(target) {
+  const root = els.contentArea;
+  if (!root?.contains(target)) return null;
+  let anchor = target;
+  const row = target.closest?.("[data-gate0-scope-record-row]");
+  if (target.closest?.("[data-gate0-scope-record-remove]") && row) {
+    anchor = (row.nextElementSibling?.matches?.("[data-gate0-scope-record-row]")
+      ? row.nextElementSibling : null) ||
+      (row.previousElementSibling?.matches?.("[data-gate0-scope-record-row]")
+        ? row.previousElementSibling : null) ||
+      row.closest("[data-gate0-scope-field-row]") || row;
+  } else if (target.closest?.("[data-gate0-scope-add]")) {
+    anchor = target.closest("[data-gate0-scope-field-row]") || target;
+  }
+  const card = anchor.closest?.("[data-card-row]");
+  const cardSelector = card?.dataset.cardRow
+    ? `[data-card-row="${CSS.escape(card.dataset.cardRow)}"]`
+    : "";
+  const candidates = [];
+  for (let node = anchor; node && node !== root; node = node.parentElement) {
+    const attributes = [...(node.attributes || [])].filter((attribute) =>
+      attribute.name.startsWith("data-") && attribute.value &&
+      !/autosized|bound|expected|rendered|guru-view-cache/.test(attribute.name),
+    );
+    if (!attributes.length) continue;
+    const selector = `${node.tagName.toLowerCase()}${attributes.map((attribute) =>
+      `[${attribute.name}="${CSS.escape(attribute.value)}"]`,
+    ).join("")}`;
+    candidates.push({
+      selector: cardSelector && node !== card ? `${cardSelector} ${selector}` : selector,
+      top: node.getBoundingClientRect().top,
+    });
+  }
+  if (!candidates.length) return null;
+  return { candidates, scroller: guruStableScrollContainer(anchor) };
+}
+
+function guruGate0RestoreAnchor(snapshot) {
+  if (!snapshot || !guruGate0ViewIsStable()) return;
+  for (const candidate of snapshot.candidates) {
+    const node = els.contentArea?.querySelector(candidate.selector);
+    if (!node) continue;
+    guruRestoreToggleAnchor({
+      locate: () => node,
+      scroller: snapshot.scroller,
+      viewportTop: candidate.top,
+    });
+    return;
+  }
+}
+
+["input", "change", "click"].forEach((type) => {
+  window.addEventListener(type, (event) => {
+    if (!guruGate0ViewIsStable() || !els.contentArea?.contains(event.target)) return;
+    guruGate0LastInteraction = { target: event.target, at: performance.now() };
+    if (type === "click" && !event.target.closest?.([
+      "[data-gate0-scope-add]", "[data-gate0-scope-record-remove]",
+      "[data-gate0-scope-override]", "[data-gate0-keyword-foundation-add]",
+      "[data-gate0-keyword-foundation-remove]", "[data-gate0-company-keyword-add]",
+      "[data-gate0-company-keyword-remove]", "[data-guru-catalog-add]",
+      "[data-guru-catalog-remove]", "[data-v116-multi-add]",
+      "[data-v116-multi-remove]",
+    ].join(","))) return;
+    const snapshot = guruGate0CaptureAnchor(event.target);
+    const epoch = ++guruGate0AnchorEpoch;
+    queueMicrotask(() => {
+      if (epoch === guruGate0AnchorEpoch) guruGate0RestoreAnchor(snapshot);
+    });
+    requestAnimationFrame(() => {
+      if (epoch === guruGate0AnchorEpoch) guruGate0RestoreAnchor(snapshot);
+    });
+  }, true);
+});
+
+const __guruGate0PrevRenderGateStableViewport = renderGate;
+renderGate = function () {
+  // The shared input guard above intentionally skips DOM rebuilding. Keep the
+  // input event's anchor alive until its inline updates have finished.
+  if (guruUserEditDispatchActive && guruUserEditEventType === "input")
+    return __guruGate0PrevRenderGateStableViewport.apply(this, arguments);
+  const recent = guruGate0LastInteraction;
+  const snapshot = guruGate0ViewIsStable() && recent &&
+    performance.now() - recent.at < 500 && recent.target.isConnected
+    ? guruGate0CaptureAnchor(recent.target)
+    : null;
+  const epoch = ++guruGate0AnchorEpoch;
+  const result = __guruGate0PrevRenderGateStableViewport.apply(this, arguments);
+  if (!snapshot) return result;
+  const restore = () => {
+    if (epoch === guruGate0AnchorEpoch) guruGate0RestoreAnchor(snapshot);
+  };
+  restore();
+  // Older wrappers restore absolute scroll coordinates in rAF; this final
+  // wrapper restores the user's actual field after those callbacks run.
+  requestAnimationFrame(restore);
+  setTimeout(restore, 0);
+  return result;
+};

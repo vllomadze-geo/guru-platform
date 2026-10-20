@@ -758,6 +758,36 @@ document.addEventListener("change", (event) => {
   renderGate();
 });
 
+function gate1WebmasterFocusSourceV295(scope, attempt = 0) {
+  if (activeGateId !== "gate-1") return;
+  const node = document.querySelector(
+    `[data-g1-webmaster-scope-v295="${CSS.escape(scope)}"]`,
+  );
+  if (!node) {
+    if (attempt < 30) setTimeout(() => gate1WebmasterFocusSourceV295(scope, attempt + 1), 50);
+    return;
+  }
+  g3ProductJourneyRevealSource(node);
+  node.scrollIntoView({ behavior: "instant", block: node.getBoundingClientRect().height > window.innerHeight - 144 ? "start" : "center" });
+  let revealed = node;
+  [80, 300, 550, 900].forEach((delay) => setTimeout(() => {
+    if (activeGateId !== "gate-1") return;
+    const current = document.querySelector(
+      `[data-g1-webmaster-scope-v295="${CSS.escape(scope)}"]`,
+    );
+    if (!current) return;
+    if (current !== revealed) {
+      g3ProductJourneyRevealSource(current);
+      current.scrollIntoView({ behavior: "instant", block: current.getBoundingClientRect().height > window.innerHeight - 144 ? "start" : "center" });
+      revealed = current;
+    }
+    const box = current.getBoundingClientRect();
+    const tall = box.height > window.innerHeight - 144;
+    if (box.top < (tall ? 0 : 72) || box.top > window.innerHeight - 120)
+      current.scrollIntoView({ behavior: "instant", block: tall ? "start" : "center" });
+  }, delay));
+}
+
 document.addEventListener("click", (event) => {
   const link = event.target?.closest?.("[data-g1-webmaster-open-v295]");
   if (!link) return;
@@ -765,12 +795,7 @@ document.addEventListener("click", (event) => {
   event.stopPropagation();
   guruInvalidateGateViewCache();
   guruNavigateToGate("gate-1");
-  setTimeout(() => {
-    const node = document.querySelector(
-      `[data-g1-webmaster-scope-v295="${CSS.escape(link.dataset.g1WebmasterOpenV295 || "company")}"]`,
-    );
-    if (node) g3ProductJourneyRevealSource(node);
-  }, 0);
+  gate1WebmasterFocusSourceV295(link.dataset.g1WebmasterOpenV295 || "company");
 }, true);
 
 if (typeof GURU_EXPORT_CODE_REFERENCES_V223 !== "undefined") {

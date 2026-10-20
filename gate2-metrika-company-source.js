@@ -147,7 +147,7 @@ function g2MetrikaCompanyMigrateV374(gate) {
     const oldEnabled = oldWebvisorCard.fields?.[G2_METRIKA_COMPANY_FIELD_V374]?.enabled;
     if (!counter.webvisorEnabled && ["yes", "no"].includes(oldEnabled)) counter.webvisorEnabled = oldEnabled;
     counter.legacyWebvisorCardV379 ||= oldWebvisorCard;
-    cards.splice(oldWebvisorIndex, 1);
+    // Keep the original card and its answers available in additional settings.
   }
   if (!counter.webvisorSettingMigratedV379) {
     const values = [...new Set(productRows("g2-metrika-product-webvisor")
@@ -216,9 +216,8 @@ function g2MetrikaCompanyMigrateV374(gate) {
       goalId: "", state: counter.thankYouGoalState || "",
     };
     catalog.archivedOtherGoalsV382 = catalog.goals.filter((goal) => goal !== selected);
-    delete catalog.goals;
-    delete catalog.nextGoalSequence;
-    delete counter.thankYouGoalState;
+    // Retain historical goal rows and the old counter answer. The primary
+    // register is authoritative, while exports can still recover old entries.
     catalog.singleGoalMigratedV382 = true;
   }
 

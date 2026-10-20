@@ -215,12 +215,9 @@ try {
     let ideaCard = document.querySelector('[data-g4-smm-idea-card-v299]');
     const initialMaterial = ideaCard.textContent;
     const materialFoundation = ideaCard.querySelector('[data-g4-smm-idea-foundation-v313]');
-    const materialOrder = [...materialFoundation.children].slice(0, 8).map((node) =>
-      node.matches('details')
-        ? node.querySelector('.guru-strategic-jtbd-number-v286')?.textContent.trim()
-        : node.querySelector('.guru-strategic-row-copy-v286 > strong')?.textContent.trim()
-    );
-    const jtbdCards = [...materialFoundation.querySelectorAll(':scope > details[data-guru-strategic-jtbd-v286]')];
+    const materialOrder = [...materialFoundation.querySelectorAll(':scope > [data-guru-strategic-step]')]
+      .map((node) => node.dataset.guruStrategicStep);
+    const jtbdCards = [...materialFoundation.querySelectorAll('[data-guru-strategic-step="jtbd"] details[data-guru-strategic-jtbd-v286]')];
     const jtbdLabels = jtbdCards.map((node) => node.querySelector('.guru-strategic-jtbd-number-v286')?.textContent.trim());
     const primaryInitiallyOpen = jtbdCards[0]?.open === true;
     const additionalInitiallyClosed = jtbdCards.slice(1).every((node) => node.open === false);
@@ -734,7 +731,7 @@ try {
         strategyFormatExcluded: !initialMaterial.includes("Общее · живьём из SMM-стратегии") && !initialMaterial.includes("Короткое вертикальное видео"),
         strategyTopicExcluded: !initialMaterial.includes("Темы") && !initialMaterial.includes("Проблема → решение"),
         sourceCaptionGateOnly: initialMaterial.includes("Только live read-only: Gate 0–3") && !initialMaterial.includes("Gate 0–3 и SMM-стратегия"),
-        exactOrder: JSON.stringify(materialOrder) === JSON.stringify(["Сегмент", "Позиционирование", "УТП", "Оффер", "Как создаётся", "№1 · Основной JTBD", "№2 · Дополнительный JTBD", "№3 · Дополнительный JTBD"]),
+        exactOrder: JSON.stringify(materialOrder) === JSON.stringify(["jtbd", "segment", "positioning", "usp", "offer", "landing"]),
         jtbdLabels: JSON.stringify(jtbdLabels) === JSON.stringify(["№1 · Основной JTBD", "№2 · Дополнительный JTBD", "№3 · Дополнительный JTBD"]),
         primaryInitiallyOpen,
         additionalInitiallyClosed,

@@ -183,6 +183,7 @@ function gate1BlogLiveValuesV304(field, product) {
   const categoryId = megaPlatformProductCategoryId(product, state);
   const valuesAt = (scope) => records.filter((record) => {
     if (record?.field !== field || record?.scope !== scope) return false;
+    if (field === "segments" && scope === "project" && record.archived_at) return false;
     if (scope === "product") return record.product_id === product.id;
     if (scope === "category") return Boolean(categoryId) && record.category_id === categoryId;
     return scope === "project";

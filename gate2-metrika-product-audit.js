@@ -98,13 +98,11 @@ ensureGate2Structure = function (gate) {
       if (!gate.archivedMetrikaProductCardsV383.some((entry) => entry.id === card.id))
         gate.archivedMetrikaProductCardsV383.push(card);
     });
-    for (let index = gate.cards.length - 1; index >= 0; index -= 1)
-      if (G2_METRIKA_PRODUCT_RETIRED_V383.has(gate.cards[index].id)) gate.cards.splice(index, 1);
   }
-  // The per-step checklist was removed from the UI; discard its stored data too.
-  for (const card of gate.cards) {
-    if (G2_METRIKA_PRODUCT_BY_ID_V367.has(card.id) && card.fields)
-      delete card.fields.metrikaGuideChecklistV368;
+  // Keep archived cards and historical checklist answers. The new wizard can
+  // ignore retired checks without deleting evidence saved by earlier versions.
+  for (const card of gate.archivedMetrikaProductCardsV383 || []) {
+    if (!gate.cards.some((entry) => entry.id === card.id)) gate.cards.push(card);
   }
   const existing = new Set(gate.cards.map((card) => card.id));
   const added = G2_METRIKA_PRODUCT_CARDS_V367.filter((guide) => !existing.has(guide.id))
