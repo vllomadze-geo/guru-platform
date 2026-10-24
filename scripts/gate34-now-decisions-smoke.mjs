@@ -158,7 +158,21 @@ try {
   evidence.audit=[];
   const ids=['pr_publications','articles_cases','yandex_organization','google_organization','online_chat','online_payment','abandoned_cart','email_crm','review_collection','referral','loyalty','платная_реклама_яндекс_директ_рся_1','promo_landing','платная_реклама_яндекс_директ_поиск_0','product_gallery','vk_retargeting','buyer_retargeting'];
   for(const id of ids){
-    console.log('Проверка',id);await select('gate-4',id);
+    console.log('Проверка',id);
+    const deferred=await evaluate(page,`(()=>{const item=nowGuideDisplayedAllBlocks.find(i=>i.gateId==='gate-4'&&i.id===${JSON.stringify(id)});return item&&!nowGuideIsPreflight(item)})()`);
+    if(deferred){
+      const row=await evaluate(page,`nowGuideWithReadPass(()=>{const item=nowGuideDisplayedAllBlocks.find(i=>i.gateId==='gate-4'&&i.id===${JSON.stringify(id)}),details=nowGuideMissingDetails(item);window.__decisionAfterTarget=item;window.__decisionAfterChecks=details.items;return {id:item.id,title:item.title,status:item.status,phase:'after-launch',excludedFromPreflight:!nowGuideDisplayedPath.some(i=>i.key===item.key),controls:nowGuideGate4Controls(item),details,text:details.text||details.items.map(c=>c.label).join('; ')}})`);
+      assert(row.excludedFromPreflight);assert(!row.text.includes('Заполните блок'));
+      await evaluate(page,'nowGuideOpen(window.__decisionAfterTarget);true');
+      await waitFor(page,'nowGuideFindNode(window.__decisionAfterTarget)?.classList.contains("now-guide-highlight")');
+      if(!row.controls.length)assert.equal(row.text,'Нет поля для заполнения: нужно решение');
+      for(let index=0;index<Math.min(3,row.details.items.length);index++){
+        await evaluate(page,`nowGuideOpen(window.__decisionAfterTarget,window.__decisionAfterChecks[${index}]);true`);
+        await waitFor(page,`document.activeElement===nowGuideMissingNode(window.__decisionAfterChecks[${index}])&&document.activeElement?.classList.contains('now-guide-highlight')`);
+      }
+      row.focused=row.controls.length>0;evidence.audit.push(row);continue;
+    }
+    await select('gate-4',id);
     const row=await evaluate(page,'nowGuideWithReadPass(()=>{const item=nowGuideCurrent(nowGuideDisplayedPath);return {id:item.id,title:item.title,status:item.status,controls:nowGuideGate4Controls(item),details:nowGuideMissingDetails(item),text:document.querySelector("#nowGuide .now-guide-missing").innerText,nextEnabled:!document.querySelector("[data-now-next]").disabled,nextHighlighted:document.querySelector("[data-now-next]").classList.contains("is-ready")}})');
     assert(!row.text.includes('Заполните блок'),id);
     if(!row.controls.length){assert.equal(row.text,'Нет поля для заполнения: нужно решение');assert(row.details.needsDecision&&row.nextEnabled&&row.nextHighlighted,id)}

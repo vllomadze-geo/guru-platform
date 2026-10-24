@@ -5,6 +5,7 @@ let nowGuideNavigationTicket = 0;
 let nowGuideHighlightedNode = null;
 let nowGuideHighlightTimer = 0;
 let nowGuideDisplayedPath = [];
+let nowGuideDisplayedAllBlocks = [];
 let nowGuideDisplayedMissing = [];
 let nowGuideGate1NavigationPending = false;
 let nowGuideGate1PassiveCalculators = false;
@@ -560,7 +561,7 @@ g3ProductJourneyStages = function (...args) {
 };
 function nowGuideSourceHint(target, label) {
   if (!target) return null;
-  const path = nowGuideDisplayedPath;
+  const path = nowGuideDisplayedAllBlocks.length ? nowGuideDisplayedAllBlocks : nowGuideDisplayedPath;
   const owner = target.gateId === "gate-0" ? path.find(item => item.gateId === target.gateId &&
     item.id === (target.cardId || (target.kind === "gate0-scoped" ? "card-2" : "card-7")))
     : target.kind === "gate1-unit" ? path.find(item => item.gateId === "gate-1" && item.kind === "unit")
@@ -663,7 +664,8 @@ function nowGuideGate4Items() {
         : kind === 'gate4-readiness' ? `[data-g4-readiness-card="${CSS.escape(id)}"] > summary`
         : `[data-g4five-${scope === 'company' ? 'company' : 'product'}-v523] [data-g4five-tool-v523="${CSS.escape(id)}"]${linked ? ' > .g1-card' : ''} > .g1-card-header-static`;
       result.push({ id, title, kind, scope, productId: scope === 'product' ? productId : '', status,
-        selector, pageBadge: badge.textContent.trim(), rawStatus: raw });
+        selector, pageBadge: badge.textContent.trim(), rawStatus: raw,
+        preflightGroup: node.closest("[data-g4five-preparation-v523]") ? "preparation" : channel && scope === "product" ? "campaigns" : "" });
     }
     return result;
   }) || [];
@@ -921,9 +923,9 @@ function nowGuideDescriptors(gate, statuses) {
   return [];
 }
 
-function nowGuideBuildPath() {
+function nowGuideBuildAllBlocks() {
   if (!state?.gates) return [];
-  return nowGuideWithReadPass(() => [...state.gates].sort((a, b) =>
+  return nowGuidePlainRead(() => [...state.gates].sort((a, b) =>
     Number(a.id.replace("gate-", "")) - Number(b.id.replace("gate-", "")))
     .flatMap((gate) => {
       const statuses = guruGateBlockStatuses(gate);
@@ -935,6 +937,33 @@ function nowGuideBuildPath() {
           status: guruNormBlockStatus(item.status) }));
     }));
 }
+
+// The registry still covers every visible block. The preflight journey is a
+// projection of that registry, without changing any gate's readiness units.
+function nowGuideIsPreflight(item) {
+  if (!item) return false;
+  const number = Number(item.gateId.replace("gate-", ""));
+  return number >= 0 && number <= 3 || item.gateId === "gate-4" &&
+    item.scope === "product" && ["preparation", "campaigns"].includes(item.preflightGroup);
+}
+function nowGuidePreflightPath(all = nowGuideBuildAllBlocks()) {
+  const beforeGate4 = all.filter(item => item.gateId !== "gate-4" && nowGuideIsPreflight(item));
+  const gate4 = all.filter(item => item.gateId === "gate-4" && nowGuideIsPreflight(item));
+  return [...beforeGate4, ...gate4.filter(item => item.kind === "gate4-readiness"),
+    ...gate4.filter(item => item.kind === "channel")];
+}
+function nowGuideBuildPath() {
+  return nowGuidePreflightPath();
+}
+function nowGuideAfterLaunch(all = nowGuideBuildAllBlocks()) {
+  return all.filter(item => !nowGuideIsPreflight(item));
+}
+function nowGuideLaunchReadiness(path = nowGuideBuildPath()) {
+  return guruReadinessFromStatuses(path.map(item => item.status));
+}
+// Public project readiness and the guide share the same product_id projection
+// and the same status weighting used in the gate menu.
+guruProjectReadiness = function () { return nowGuideLaunchReadiness(); };
 
 function nowGuideCurrent(path) {
   const context = `${activeProjectId || ""}:${state?.project?.gate0ScopeUiV194?.selectedProductId || ""}`;
@@ -954,33 +983,42 @@ function nowGuideStatusText(status) {
     problem: "Проблема", not_started: "Не начато" }[status] || "Не начато";
 }
 
-function nowGuideRender(path = nowGuideBuildPath()) {
+function nowGuideRender(path, registry) {
   const panel = document.getElementById("nowGuide");
   if (!panel || !state?.gates) return;
+  return nowGuideWithReadPass(() => {
+  const all = registry || nowGuideBuildAllBlocks();
+  path = path || nowGuidePreflightPath(all);
+  nowGuideDisplayedAllBlocks = all;
   nowGuideDisplayedPath = path;
   const current = nowGuideCurrent(path);
-  const done = path.filter((item) => item.status === "ready" || item.status === "not_required").length;
-  const finished = !path.length || done === path.length;
+  const summary = nowGuideLaunchReadiness(path);
+  const finished = summary.total > 0 && summary.done === summary.total;
+  const after = nowGuideAfterLaunch(all).filter(item => !["ready", "not_required"].includes(item.status));
   const index = current ? path.findIndex((item) => item.key === current.key) : -1;
   const ready = current && ["ready", "not_required"].includes(current.status);
-  const missingDetails = current ? nowGuideMissingDetails(current) : null;
+  const missingDetails = current && !finished ? nowGuideMissingDetails(current) : null;
   const canAdvance = ready || missingDetails?.needsDecision;
-  panel.innerHTML = finished
-    ? `<h2>Сейчас</h2><strong class="now-guide-finished">Проект готов к запуску</strong><button type="button" class="now-guide-link" data-now-launch>Перейти к Gate 4</button>`
-    : `<h2>Сейчас</h2>
-       <div class="now-guide-meta"><span>Шаг ${index + 1} из ${path.length}</span><span class="now-guide-status is-${current.status}">${escapeHtml(current.gateId === "gate-4" && current.pageBadge ? nowGuideSafeText(current.pageBadge) : nowGuideStatusText(current.status))}</span></div>
-       <div class="now-guide-track" role="progressbar" aria-valuenow="${done}" aria-valuemin="0" aria-valuemax="${path.length}" aria-label="Готово ${done} из ${path.length}"><span style="width:${(done / path.length) * 100}%"></span></div>
-       <div class="now-guide-block">${escapeHtml(nowGuideSafeText(current.title))}</div>
+  nowGuideDisplayedMissing = [];
+  const progress = `<div class="now-guide-gate" data-now-readiness>Готовность к запуску: ${summary.percent}%</div>
+       <div class="now-guide-gate" data-now-count>готово ${summary.done} из ${summary.total}</div>
+       <div class="now-guide-track" role="progressbar" aria-valuenow="${summary.percent}" aria-valuemin="0" aria-valuemax="100" aria-label="Готовность к запуску: ${summary.percent}%"><span style="width:${summary.percent}%"></span></div>`;
+  panel.innerHTML = `<h2>Сейчас</h2>${current ? `<div class="now-guide-meta"><span>Шаг ${index + 1} из ${path.length}</span><span class="now-guide-status is-${current.status}">${escapeHtml(current.gateId === "gate-4" && current.pageBadge ? nowGuideSafeText(current.pageBadge) : nowGuideStatusText(current.status))}</span></div>` : ""}
+       ${progress}${finished
+    ? `<strong class="now-guide-finished">Можно запускать рекламу</strong><button type="button" class="now-guide-link" data-now-launch>К кампаниям выбранного продукта</button>
+       <div class="now-guide-gate">После запуска: ${after.length} блоков не готово</div>${after.length ? `<button type="button" class="now-guide-link" data-now-after>К первому неготовому после запуска</button>` : ""}`
+    : current ? `<div class="now-guide-block">${escapeHtml(nowGuideSafeText(current.title))}</div>
        ${nowGuideMissingHtml(current, missingDetails)}
-       <div class="now-guide-gate">Gate ${current.gateId.replace("gate-", "")} · ${escapeHtml(NOW_GATE_NAMES[current.gateId] || "")}</div>
-       <div class="now-guide-actions"><button type="button" data-now-prev ${index === 0 ? "disabled" : ""}>◀ Назад</button><button type="button" data-now-next class="${canAdvance ? "is-ready" : ""}" ${index + 1 >= path.length ? "disabled" : ""} title="${ready ? "Следующий блок" : missingDetails?.needsDecision ? "Перейти к следующему блоку, статус не изменится" : "Сначала заполните этот блок"}">Далее ▶</button></div>
-       <button type="button" class="now-guide-link" data-now-current>К текущему</button>`;
+       <div class="now-guide-gate">Gate ${current.gateId.replace("gate-", "")} · ${escapeHtml(NOW_GATE_NAMES[current.gateId] || "")}</div>`
+    : `<div class="now-guide-block">Предполётный путь пока пуст</div>`}
+       ${current ? `<div class="now-guide-actions"><button type="button" data-now-prev ${index === 0 ? "disabled" : ""}>◀ Назад</button><button type="button" data-now-next class="${canAdvance ? "is-ready" : ""}" ${index + 1 >= path.length ? "disabled" : ""} title="${ready ? "Следующий блок" : missingDetails?.needsDecision ? "Перейти к следующему блоку, статус не изменится" : "Сначала заполните этот блок"}">Далее ▶</button></div>
+       <button type="button" class="now-guide-link" data-now-current>К текущему</button>` : ""}`;
   const nav = document.getElementById("gateNav");
   if (!nav) return;
   nav.querySelectorAll("[data-now-children]").forEach((node) => node.remove());
   nav.querySelectorAll(".gate-btn[data-gate-id]").forEach((button) => {
     const gateId = button.dataset.gateId;
-    const children = path.filter((item) => item.gateId === gateId);
+    const children = all.filter((item) => item.gateId === gateId);
     if (!children.length) return;
     button.classList.toggle("now-guide-gate-current",
       children.some((item) => item.key === current?.key));
@@ -990,8 +1028,9 @@ function nowGuideRender(path = nowGuideBuildPath()) {
     list.className = "now-guide-children";
     list.dataset.nowChildren = gateId;
     list.hidden = !expanded;
-    list.innerHTML = children.map((item) => `<button type="button" class="now-guide-child ${item.key === current?.key ? "is-current" : ""}" data-now-step="${escapeAttr(item.key)}" title="${escapeAttr(nowGuideSafeText(item.title))}"><span class="now-guide-dot ${item.status === "ready" || item.status === "not_required" ? "is-done" : ""}"></span><span>${escapeHtml(nowGuideSafeText(item.title))}</span></button>`).join("");
+    list.innerHTML = children.map((item) => `<button type="button" class="now-guide-child ${item.key === current?.key ? "is-current" : ""}" data-now-step="${escapeAttr(item.key)}" title="${escapeAttr(nowGuideSafeText(item.title))}"><span class="now-guide-dot ${item.status === "ready" || item.status === "not_required" ? "is-done" : ""}"></span><span>${escapeHtml(nowGuideSafeText(item.title))}${nowGuideIsPreflight(item) ? "" : " · После запуска"}</span></button>`).join("");
     button.insertAdjacentElement("afterend", list);
+  });
   });
 }
 
@@ -999,7 +1038,7 @@ function nowGuideSelect(item, path = nowGuideBuildPath()) {
   if (!item) return;
   nowGuideReviewKey = item.key;
   nowGuideExpanded.add(item.gateId);
-  nowGuideRender(path);
+  nowGuideRender(path, path === nowGuideDisplayedPath ? nowGuideDisplayedAllBlocks : undefined);
   nowGuideOpen(item);
 }
 
@@ -1212,7 +1251,12 @@ document.getElementById("nowGuide")?.addEventListener("click", (event) => {
     nowGuideOpen(current, nowGuideDisplayedMissing[Number(button.dataset.nowMissing)]);
     return;
   }
-  if (button.hasAttribute("data-now-launch")) { guruNavigateToGate("gate-4"); return; }
+  if (button.hasAttribute("data-now-launch")) {
+    nowGuideOpen(path.find(item => item.gateId === "gate-4" && item.kind === "channel")); return;
+  }
+  if (button.hasAttribute("data-now-after")) {
+    nowGuideOpen(nowGuideAfterLaunch(nowGuideDisplayedAllBlocks).find(item => !["ready", "not_required"].includes(item.status))); return;
+  }
   if (button.hasAttribute("data-now-current")) {
     nowGuideSelect(path.find((item) => !["ready", "not_required"].includes(item.status)) || path[0], path);
   } else if (button.hasAttribute("data-now-prev")) {
@@ -1346,7 +1390,9 @@ document.getElementById("gateNav")?.addEventListener("click", (event) => {
   const child = event.target.closest("[data-now-step]");
   if (child) {
     const path = nowGuideDisplayedPath;
-    nowGuideSelect(path.find((item) => item.key === child.dataset.nowStep), path);
+    const item = nowGuideDisplayedAllBlocks.find(item => item.key === child.dataset.nowStep);
+    if (nowGuideIsPreflight(item)) nowGuideSelect(item, path);
+    else nowGuideOpen(item);
     return;
   }
   const gate = event.target.closest(".gate-btn[data-gate-id]");

@@ -146,6 +146,7 @@ try {
       }
       const initial = await evaluate(page, `(() => {
         const path = nowGuideBuildPath();
+        const all = nowGuideBuildAllBlocks();
         const diagnostics = ${process.env.GURU_NOW_SKIP_DIAG === "1"
           ? "Object.fromEntries(state.gates.map(gate => [gate.id, { navigationReadiness: { summary: guruGateReadiness(gate) } }]))"
           : "guruExportAllGateDiagnosticsFreshV223(state)"};
@@ -159,6 +160,7 @@ try {
           id, total: gate.navigationReadiness.summary.total,
           done: gate.navigationReadiness.summary.done,
           path: path.filter(item => item.gateId === id).length,
+          all: all.filter(item => item.gateId === id).length,
         }));
         const gate0Path = path.filter(item => item.gateId === "gate-0");
         const gate0Cards = state.gates.find(gate => gate.id === "gate-0")?.cards || [];
@@ -169,6 +171,8 @@ try {
         const hiddenGate1InPath = path.some(item => item.gateId === "gate-1" && item.id === "demand-route");
         return { project: state.project.name, pathTotal: path.length, pathDone: done,
           diagnosticTotal: summary.total, diagnosticDone: summary.done,
+          registryTotal: all.length, registryDone: all.filter(item => ["ready", "not_required"].includes(item.status)).length,
+          launchReadiness: guruProjectReadiness(),
           perGate, hiddenGate0InPath, hiddenGate1InPath,
           card: document.querySelector("#nowGuide")?.innerText,
           errors: window.__nowErrors,
@@ -177,8 +181,12 @@ try {
         };
       })()`);
       console.log(label, JSON.stringify(initial.perGate));
-      assert.equal(initial.pathTotal, initial.diagnosticTotal, `${label}: M differs from diagnostics`);
-      assert.equal(initial.pathDone, initial.diagnosticDone, `${label}: done differs from diagnostics`);
+      assert.equal(initial.registryTotal, initial.diagnosticTotal, `${label}: registry total differs from diagnostics`);
+      assert.equal(initial.pathTotal, initial.launchReadiness.total);
+      assert.equal(initial.pathDone, initial.launchReadiness.done);
+      assert(initial.perGate.filter(item => Number(item.id.slice(5)) < 4).every(item => item.path === item.total));
+      assert(initial.perGate.filter(item => Number(item.id.slice(5)) > 4).every(item => item.path === 0));
+      assert.equal(initial.registryDone, initial.diagnosticDone, `${label}: registry done differs from diagnostics`);
       assert.deepEqual(initial.hiddenGate0InPath, [], `${label}: hidden Gate 0 card in path`);
       assert.equal(initial.hiddenGate1InPath, false, `${label}: hidden Gate 1 route in path`);
       if (label === "korichnoe-yabloko")
@@ -235,8 +243,8 @@ try {
       })()`);
       const tenTransitions = [];
       const actions = label === "icleaning" ? [
-        "gate0-second", "next", "prev", "current", "gate7-middle",
-        "prev", "next", "current", "gate7-last", "prev",
+        "gate0-second", "next", "prev", "current", "gate4-first",
+        "prev", "next", "current", "gate4-last", "prev",
       ] : [
         "gate2-first", "next", "prev", "next", "next",
         "prev", "next", "next", "prev", "next",
@@ -250,8 +258,8 @@ try {
             nowGuideSelect(path.filter(item => item.gateId === "gate-0")[1], path);
           else if (action === "gate2-first")
             nowGuideSelect(path.find(item => item.gateId === "gate-2"), path);
-          else if (action === "gate7-middle" || action === "gate7-last")
-            nowGuideSelect(path.filter(item => item.gateId === "gate-7")[action === "gate7-middle" ? 1 : 2], path);
+          else if (action === "gate4-first" || action === "gate4-last")
+            nowGuideSelect(path.filter(item => item.gateId === "gate-4")[action === "gate4-first" ? 0 : path.filter(item => item.gateId === "gate-4").length - 1], path);
           else document.querySelector('[data-now-' + action + ']')?.click();
           const item = path.find(entry => entry.key === nowGuideReviewKey);
           window.__nowSmokeTarget = item;
@@ -291,7 +299,7 @@ try {
           `${label}: transition ${index + 1} changed exported workspace`);
         console.log(`${label}: transition ${index + 1} ${action} ${evidence.gate} top=${evidence.headingTop}`);
         if (label === "icleaning" && (index === 0 || index === 8)) {
-          const gate = index === 0 ? "gate0" : "gate7";
+          const gate = index === 0 ? "gate0" : "gate4";
           const shot = await page.call("Page.captureScreenshot", {
             format: "png", captureBeyondViewport: false,
           });
@@ -439,9 +447,9 @@ try {
         for (const gateId of ["gate-1", "gate-2", "gate-3", "gate-4", "gate-5", "gate-6", "gate-8"]) {
           const selected = await evaluate(page, `(() => {
             const path = nowGuideBuildPath();
-            const item = path.find(entry => entry.gateId === ${JSON.stringify(gateId)});
+            const item = nowGuideBuildAllBlocks().find(entry => entry.gateId === ${JSON.stringify(gateId)});
             window.__nowRouteTarget = item;
-            nowGuideSelect(item, path);
+            if(nowGuideIsPreflight(item)) nowGuideSelect(item, path); else nowGuideOpen(item);
             return { key: item.key, gateId: item.gateId, kind: item.kind };
           })()`);
           try { await waitFor(page, `(() => {
@@ -538,22 +546,23 @@ try {
           const title = row.querySelector('[data-g7-task-field="task"]');
           title.value = "Проверка путеводителя";
           title.dispatchEvent(new Event("input", { bubbles: true }));
-          const item = nowGuideBuildPath().find(entry => entry.gateId === "gate-7" && entry.id === taskId);
-          nowGuideReviewKey = item.key;
+          const item = nowGuideBuildAllBlocks().find(entry => entry.gateId === "gate-7" && entry.id === taskId);
+          if(nowGuideBuildPath().some(entry=>entry.key===item.key))throw Error("Gate 7 entered preflight");
           nowGuideRender();
-          const before = { status: item.status,
+          const before = { status: item.status, launch: guruProjectReadiness(),
             nextReady: document.querySelector("[data-now-next]").classList.contains("is-ready") };
           const select = row.querySelector("[data-g7-status-select]");
           select.value = "ready";
           select.dispatchEvent(new Event("change", { bubbles: true }));
-          const updated = nowGuideBuildPath().find(entry => entry.gateId === "gate-7" && entry.id === taskId);
+          const updated = nowGuideBuildAllBlocks().find(entry => entry.gateId === "gate-7" && entry.id === taskId);
           nowGuideRender();
-          return { before, after: { status: updated.status,
+          return { before, after: { status: updated.status, launch: guruProjectReadiness(),
             nextReady: document.querySelector("[data-now-next]").classList.contains("is-ready") } };
         })()`);
-        assert.equal(filledBlock.before.nextReady, false);
+        assert.notEqual(filledBlock.before.status, "ready");
+        assert.deepEqual(filledBlock.after.launch, filledBlock.before.launch);
         assert.equal(filledBlock.after.status, "ready");
-        assert.equal(filledBlock.after.nextReady, true);
+        assert.equal(filledBlock.after.nextReady, filledBlock.before.nextReady);
       }
 
       results.push({ label, ...initial, navigation, disclosure, routeMatrix,

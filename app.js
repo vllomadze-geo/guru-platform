@@ -2876,7 +2876,7 @@ function projectPassportOverviewFields() {
     { key: "averageCheck", label: "Средний чек", hint: "Средняя стоимость заказа на уровне компании.", value: project.averageCheck || "", source: "вводится в паспорте · уровень компании" },
     { key: "targetCpa", label: "Целевой CPA", hint: "Сколько компания готова заплатить за одного клиента.", value: project.targetCpa || "", source: "вводится в паспорте · уровень компании" },
     { label: "Каналы привлечения", hint: "Откуда приходят клиенты.", value: textList(project.promotionChannels, project.marketingChannels, project.channels), source: "Gate 0 / Gate 4 · каналы" },
-    { label: "Готовность проекта", hint: "Насколько проект готов.", value: `${progress}% · ${ready} из ${cards.length} блоков готовы`, source: "автоматический расчёт по всем Gate" },
+    { label: "Карточек заполнено", hint: "Доля сохранённых карточек со статусом «Готово».", value: `${progress}% · ${ready} из ${cards.length} карточек`, source: "сохранённые карточки всех Gate; готовность к запуску показана в «Сейчас»" },
     { label: "Последнее обновление", hint: "Когда данные обновлялись последний раз.", value: updatedAt, source: "автосохранение" },
   ];
 }
@@ -5286,7 +5286,7 @@ function renderScheme() {
             (g, i) => `
           <div class="flow-node">
             <div class="flow-title">${escapeHtml(g.title)}</div>
-            <div class="flow-meta">${guruProgressCardsV468(g.cards).length} блоков, готово ${getProgress(g.cards)}%</div>
+            <div class="flow-meta">${guruProgressCardsV468(g.cards).length} карточек, заполнено ${getProgress(g.cards)}%</div>
             <div class="progress-line"><div class="progress-fill" style="width:${getProgress(g.cards)}%"></div></div>
           </div>${i < state.gates.length - 1 ? '<div class="flow-arrow">→</div>' : ""}
         `,
@@ -5294,7 +5294,7 @@ function renderScheme() {
           .join("")}
       </div>
       <div class="chart-card">
-        <h3>Прогресс по Gate</h3>
+        <h3>Заполнение карточек по Gate</h3>
         <div class="bar-chart">
           ${state.gates
             .map(
