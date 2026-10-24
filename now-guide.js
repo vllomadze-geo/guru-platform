@@ -709,6 +709,39 @@ function nowGuideGate4Missing(item) {
 }
 
 let nowGuideProtectedGate = "";
+let nowGuideDestinationReadDepth = 0;
+
+// Legacy render readers initialise data and disclosure preferences.
+// A guide visit only needs their values, never those writes.
+const nowGuidePreviousLandingView = gate1ApplyLandingViewV234;
+gate1ApplyLandingViewV234 = function (gate) {
+  if (!nowGuideDestinationReadDepth) return nowGuidePreviousLandingView.apply(this, arguments);
+  return nowGuidePlainRead(view => nowGuidePreviousLandingView.call(this,
+    view.gates.find(source => source.id === gate.id)));
+};
+const nowGuidePreviousCategoryAudit = guruCategoryAuditRowsV491;
+guruCategoryAuditRowsV491 = function (workspace = state) {
+  if (!nowGuideDestinationReadDepth || workspace !== state)
+    return nowGuidePreviousCategoryAudit.apply(this, arguments);
+  return nowGuidePlainRead(view => nowGuidePreviousCategoryAudit.call(this, view));
+};
+const nowGuidePreviousApplyDisclosures = guruApplyDisclosureStateV512;
+guruApplyDisclosureStateV512 = function (...args) {
+  if (activeView !== "gate" || activeGateId !== nowGuideProtectedGate || guruUserEditDispatchActive)
+    return nowGuidePreviousApplyDisclosures.apply(this, args);
+  return nowGuidePlainRead(() => nowGuidePreviousApplyDisclosures.apply(this, args));
+};
+const nowGuidePreviousRenderDestination = renderGate;
+renderGate = function (...args) {
+  if (activeView !== "gate" || activeGateId !== nowGuideProtectedGate || guruUserEditDispatchActive)
+    return nowGuidePreviousRenderDestination.apply(this, args);
+  nowGuideDestinationReadDepth += 1;
+  try {
+    return guruExportWithoutPersistenceV223(() => nowGuideGate12WithView(
+      () => nowGuidePreviousRenderDestination.apply(this, args), state));
+  }
+  finally { nowGuideDestinationReadDepth -= 1; }
+};
 function nowGuideOpenAncestors(node) {
   for (let parent = node?.parentElement; parent && parent !== els.contentArea; parent = parent.parentElement) {
     if (parent.matches("details") && !parent.open) {
@@ -840,7 +873,7 @@ function nowGuideGate4RevealMissing(item, missing) {
 // retained, while all normalisation stays on a private workspace.
 const nowGuidePreviousRenderGateTable34 = renderGateTable;
 renderGateTable = function (gate, cards) {
-  if (gate.id !== nowGuideProtectedGate || !["gate-3", "gate-4"].includes(gate.id))
+  if (gate.id !== nowGuideProtectedGate || !["gate-0", "gate-2", "gate-3", "gate-4"].includes(gate.id))
     return nowGuidePreviousRenderGateTable34.apply(this, arguments);
   return nowGuidePlainRead(view => {
     const source = view.gates.find(source => source.id === gate.id);

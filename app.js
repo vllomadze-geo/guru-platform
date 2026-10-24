@@ -20284,6 +20284,8 @@ renderGateTable = function (gate, cards) {
       button.addEventListener("click", () => {
         const sectionKey = button.dataset.gate0SectionToggle;
         const open = button.getAttribute("aria-expanded") !== "true";
+        state._gate0Open ||= {};
+        state._gate0SectionsOpen ||= {};
         gate0SetSectionOpen(sectionKey, open, true);
         state._gate0SectionsOpen[sectionKey] = open;
         guruScheduleUiPreferenceSave();
