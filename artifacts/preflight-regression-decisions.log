@@ -1,0 +1,19 @@
+Коричное яблоко: тестовая копия загружена
+Проверка pr_publications
+Проверка articles_cases
+Проверка yandex_organization
+Проверка google_organization
+Проверка online_chat
+Проверка online_payment
+Проверка abandoned_cart
+Проверка email_crm
+Проверка review_collection
+Проверка referral
+Проверка loyalty
+Проверка платная_реклама_яндекс_директ_рся_1
+Проверка promo_landing
+Проверка платная_реклама_яндекс_директ_поиск_0
+Проверка product_gallery
+Проверка vk_retargeting
+Проверка buyer_retargeting
+Gate 3-4 decisions: PASS {"identical":true,"beforeSha256":"1758c56ff99bd6ff7fc010332b22d647b4b1aaac0c3194360e8a156b13dbfefd","afterSha256":"1758c56ff99bd6ff7fc010332b22d647b4b1aaac0c3194360e8a156b13dbfefd","bytes":28081553,"updatedAtFields":259,"uiPreferenceWrites":0}

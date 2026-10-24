@@ -1,0 +1,7 @@
+{
+  "head": "6df79cc4fde9a6e458235f0baf41ee6ce68fdacc",
+  "version": "2.3.526+863cd49d9312",
+  "sha256": "863cd49d93124bc2767fbbb77a6956545a8f6ec3252854eb3b6f92121eb848b8",
+  "copy": "/private/tmp/guru-step3-build-CNvJOx",
+  "log": "\n> guru-platform@1.2.0 build\n> node scripts/stamp-build.mjs && node scripts/verify-build-bundle.mjs\n\nStamped interface build 2.3.526+863cd49d9312\nInterface build: 2.3.526+863cd49d9312 (42 matching assets)\n"
+}

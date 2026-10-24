@@ -1,0 +1,1979 @@
+{
+  "passed": true,
+  "matrices": {},
+  "transitions": [],
+  "screenshots": [
+    "artifacts/gate34-now-decisions-advocate.png"
+  ],
+  "products": [],
+  "statusesBefore": [
+    {
+      "gate": "gate-3",
+      "id": "aware",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-3",
+      "id": "appeal",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-3",
+      "id": "ask",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-3",
+      "id": "act",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-3",
+      "id": "advocate",
+      "status": "problem"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-148",
+      "status": "not_started"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-151",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-152",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-153",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-154",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-155",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-156",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-157",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-158",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-159",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-160",
+      "status": "not_started"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-161",
+      "status": "not_started"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-162",
+      "status": "not_started"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-163",
+      "status": "not_started"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-164",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-165",
+      "status": "not_started"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-166",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-167",
+      "status": "not_started"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-168",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-169",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "smm_vk_контент_11",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "smm_telegram_контент_посевы_12",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "smm_instagram_reels_stories_13",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "smm_youtube_shorts_pre_roll_14",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "платная_реклама_vk_ads_таргет_5",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "платная_реклама_telegram_ads_посевы_ads_7",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "платная_реклама_meta_ads_feed_reels_6",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "платная_реклама_яндекс_директ_рся_1",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "платная_реклама_яндекс_директ_мастер_кампаний_2",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "платная_реклама_google_ads_display_4",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "платная_реклама_яндекс_директ_поиск_0",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "платная_реклама_google_ads_search_3",
+      "status": "in_progress"
+    }
+  ],
+  "summaryBefore": {
+    "gate-3": {
+      "total": 5,
+      "done": 4,
+      "ready": 4,
+      "notRequired": 0,
+      "inProgress": 0,
+      "problem": 1,
+      "notStarted": 0,
+      "percent": 90
+    },
+    "gate-4": {
+      "total": 50,
+      "done": 11,
+      "ready": 11,
+      "notRequired": 0,
+      "inProgress": 18,
+      "problem": 0,
+      "notStarted": 21,
+      "percent": 40
+    }
+  },
+  "advocate": {
+    "details": {
+      "items": [
+        {
+          "informational": true,
+          "label": "Результат клиента: источник удалён"
+        },
+        {
+          "informational": true,
+          "label": "Повтор / LTV: Gate 1 · юнит-экономика. Нет поля для заполнения: нужно решение"
+        },
+        {
+          "informational": true,
+          "label": "Основания рекомендовать: источник удалён"
+        }
+      ],
+      "needsDecision": true,
+      "unresolved": [
+        "advocate"
+      ]
+    },
+    "text": "Не хватает:\nРезультат клиента: источник удалён\nПовтор / LTV: Gate 1 · юнит-экономика. Нет поля для заполнения: нужно решение\nОснования рекомендовать: источник удалён",
+    "nextEnabled": true,
+    "nextHighlighted": true
+  },
+  "audit": [
+    {
+      "id": "pr_publications",
+      "title": "PR-публикации · Сервис требует выбора",
+      "status": "not_started",
+      "phase": "after-launch",
+      "excludedFromPreflight": true,
+      "controls": [
+        {
+          "selector": "[data-g4five-company-v523] [data-g4five-tool-v523=\"pr_publications\"] input[data-g4five-service-input-v523=\"pr_publications\"]",
+          "label": "Сервис",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        }
+      ],
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g4five-company-v523] [data-g4five-tool-v523=\"pr_publications\"] input[data-g4five-service-input-v523=\"pr_publications\"]",
+            "label": "Заполните поле «Сервис»",
+            "value": "",
+            "tag": "INPUT",
+            "statusControl": false,
+            "options": [],
+            "campaignStepAttribute": "data-g4sb-step"
+          }
+        ],
+        "unresolved": []
+      },
+      "text": "Заполните поле «Сервис»",
+      "focused": true
+    },
+    {
+      "id": "articles_cases",
+      "title": "Статьи / кейсы · Tilda Потоки",
+      "status": "not_started",
+      "phase": "after-launch",
+      "excludedFromPreflight": true,
+      "controls": [],
+      "details": {
+        "text": "Нет поля для заполнения: нужно решение",
+        "items": [],
+        "needsDecision": true,
+        "unresolved": [
+          "articles_cases"
+        ]
+      },
+      "text": "Нет поля для заполнения: нужно решение",
+      "focused": false
+    },
+    {
+      "id": "yandex_organization",
+      "title": "Карточка организации · Яндекс Бизнес / Яндекс Карты",
+      "status": "not_started",
+      "phase": "after-launch",
+      "excludedFromPreflight": true,
+      "controls": [],
+      "details": {
+        "text": "Нет поля для заполнения: нужно решение",
+        "items": [],
+        "needsDecision": true,
+        "unresolved": [
+          "yandex_organization"
+        ]
+      },
+      "text": "Нет поля для заполнения: нужно решение",
+      "focused": false
+    },
+    {
+      "id": "google_organization",
+      "title": "Карточка организации · Google Business Profile",
+      "status": "not_started",
+      "phase": "after-launch",
+      "excludedFromPreflight": true,
+      "controls": [],
+      "details": {
+        "text": "Нет поля для заполнения: нужно решение",
+        "items": [],
+        "needsDecision": true,
+        "unresolved": [
+          "google_organization"
+        ]
+      },
+      "text": "Нет поля для заполнения: нужно решение",
+      "focused": false
+    },
+    {
+      "id": "online_chat",
+      "title": "Онлайн-чат · JivoChat (виджет Tilda)",
+      "status": "not_started",
+      "phase": "after-launch",
+      "excludedFromPreflight": true,
+      "controls": [],
+      "details": {
+        "text": "Нет поля для заполнения: нужно решение",
+        "items": [],
+        "needsDecision": true,
+        "unresolved": [
+          "online_chat"
+        ]
+      },
+      "text": "Нет поля для заполнения: нужно решение",
+      "focused": false
+    },
+    {
+      "id": "online_payment",
+      "title": "Онлайн-оплата · ЮKassa / CloudPayments / Т-Банк / Робокасса",
+      "status": "not_started",
+      "phase": "after-launch",
+      "excludedFromPreflight": true,
+      "controls": [],
+      "details": {
+        "text": "Нет поля для заполнения: нужно решение",
+        "items": [],
+        "needsDecision": true,
+        "unresolved": [
+          "online_payment"
+        ]
+      },
+      "text": "Нет поля для заполнения: нужно решение",
+      "focused": false
+    },
+    {
+      "id": "abandoned_cart",
+      "title": "Письма о брошенной корзине · Внешний сервис — требует выбора",
+      "status": "not_started",
+      "phase": "after-launch",
+      "excludedFromPreflight": true,
+      "controls": [
+        {
+          "selector": "[data-g4five-company-v523] [data-g4five-tool-v523=\"abandoned_cart\"] input[data-g4five-service-input-v523=\"abandoned_cart\"]",
+          "label": "Сервис",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        }
+      ],
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g4five-company-v523] [data-g4five-tool-v523=\"abandoned_cart\"] input[data-g4five-service-input-v523=\"abandoned_cart\"]",
+            "label": "Заполните поле «Сервис»",
+            "value": "",
+            "tag": "INPUT",
+            "statusControl": false,
+            "options": [],
+            "campaignStepAttribute": "data-g4sb-step"
+          }
+        ],
+        "unresolved": []
+      },
+      "text": "Заполните поле «Сервис»",
+      "focused": true
+    },
+    {
+      "id": "email_crm",
+      "title": "Email-рассылки · Unisender",
+      "status": "not_started",
+      "phase": "after-launch",
+      "excludedFromPreflight": true,
+      "controls": [],
+      "details": {
+        "text": "Нет поля для заполнения: нужно решение",
+        "items": [],
+        "needsDecision": true,
+        "unresolved": [
+          "email_crm"
+        ]
+      },
+      "text": "Нет поля для заполнения: нужно решение",
+      "focused": false
+    },
+    {
+      "id": "review_collection",
+      "title": "Сбор отзывов · Яндекс Отзывы и Яндекс Карты",
+      "status": "not_started",
+      "phase": "after-launch",
+      "excludedFromPreflight": true,
+      "controls": [],
+      "details": {
+        "text": "Нет поля для заполнения: нужно решение",
+        "items": [],
+        "needsDecision": true,
+        "unresolved": [
+          "review_collection"
+        ]
+      },
+      "text": "Нет поля для заполнения: нужно решение",
+      "focused": false
+    },
+    {
+      "id": "referral",
+      "title": "Реферальная программа · Промокоды Tilda",
+      "status": "in_progress",
+      "phase": "after-launch",
+      "excludedFromPreflight": true,
+      "controls": [
+        {
+          "selector": "[data-g4five-company-v523] [data-g4five-tool-v523=\"referral\"] input[data-g4-map-impl-v290=\"g4-map-g3-5a-advocate-referral\"][data-g4-map-impl-field-v290=\"channel\"]",
+          "label": "Канал / площадка",
+          "value": "Реферальная программа",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": "[data-g4five-company-v523] [data-g4five-tool-v523=\"referral\"] select[data-g4-map-impl-v290=\"g4-map-g3-5a-advocate-referral\"][data-g4-map-impl-field-v290=\"type\"]",
+          "label": "Тип реализации",
+          "value": "other",
+          "tag": "SELECT",
+          "statusControl": false,
+          "options": [
+            {
+              "value": "",
+              "label": "- тип реализации -"
+            },
+            {
+              "value": "search_campaign",
+              "label": "Поисковая кампания"
+            },
+            {
+              "value": "media_campaign",
+              "label": "Медийная / РСЯ / баннерная"
+            },
+            {
+              "value": "smm",
+              "label": "SMM / соцсети"
+            },
+            {
+              "value": "telegram",
+              "label": "Telegram (канал / посевы / Ads)"
+            },
+            {
+              "value": "video",
+              "label": "Видео / Shorts / Reels"
+            },
+            {
+              "value": "seo_content",
+              "label": "SEO / контент"
+            },
+            {
+              "value": "maps_reviews",
+              "label": "Карты и отзывы"
+            },
+            {
+              "value": "email_messengers",
+              "label": "Email / мессенджер-рассылки"
+            },
+            {
+              "value": "pr_collab",
+              "label": "PR / коллаборации"
+            },
+            {
+              "value": "retargeting",
+              "label": "Ретаргетинг"
+            },
+            {
+              "value": "other",
+              "label": "Другое"
+            }
+          ],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": "[data-g4five-company-v523] [data-g4five-tool-v523=\"referral\"] input[data-g4-map-impl-v290=\"g4-map-g3-5a-advocate-referral\"][data-g4-map-impl-field-v290=\"name\"]",
+          "label": "Название кампании / активности",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": "[data-g4five-company-v523] [data-g4five-tool-v523=\"referral\"] textarea[data-g4-map-impl-v290=\"g4-map-g3-5a-advocate-referral\"][data-g4-map-impl-field-v290=\"message\"]",
+          "label": "Сообщение / креатив",
+          "value": "",
+          "tag": "TEXTAREA",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": "[data-g4five-company-v523] [data-g4five-tool-v523=\"referral\"] select[data-mega-platform-page-ref=\"\"][data-mega-platform-ref-kind=\"g4-implementation\"][data-mega-platform-id=\"g4-map-g3-5a-advocate-referral\"]",
+          "label": "Посадочная · из Платформы",
+          "value": "",
+          "tag": "SELECT",
+          "statusControl": false,
+          "options": [
+            {
+              "value": "",
+              "label": "Страница не выбрана"
+            },
+            {
+              "value": "fixed:home",
+              "label": "Главная страница"
+            },
+            {
+              "value": "fixed:catalog",
+              "label": "Каталог (Хаб)"
+            },
+            {
+              "value": "fixed:contacts",
+              "label": "Контакты"
+            },
+            {
+              "value": "fixed:delivery",
+              "label": "Доставка и оплата"
+            },
+            {
+              "value": "fixed:about",
+              "label": "О нас / история бренда"
+            },
+            {
+              "value": "fixed:blog",
+              "label": "Блог"
+            },
+            {
+              "value": "fixed:not_found",
+              "label": "Страница 404"
+            },
+            {
+              "value": "fixed:thank_you",
+              "label": "Страница «Спасибо»"
+            },
+            {
+              "value": "fixed:company_details",
+              "label": "Реквизиты компании"
+            },
+            {
+              "value": "fixed:privacy",
+              "label": "Политика конфиденциальности"
+            },
+            {
+              "value": "fixed:data_consent",
+              "label": "Согласие на обработку данных"
+            },
+            {
+              "value": "fixed:offer",
+              "label": "Публичная оферта"
+            },
+            {
+              "value": "fixed:returns",
+              "label": "Условия возврата"
+            },
+            {
+              "value": "categories:product-1786401011698-231009",
+              "label": "Авторская одежда"
+            },
+            {
+              "value": "categories:product-1786401011698-981bb3",
+              "label": "Живопись и графика"
+            },
+            {
+              "value": "categories:product-1786401011698-9e81ee",
+              "label": "Дизайнерские подарки"
+            },
+            {
+              "value": "categories:product-1786401011698-96355e",
+              "label": "Дом и сервировка"
+            },
+            {
+              "value": "categories:product-1786401011698-bd5754",
+              "label": "Украшение дома"
+            },
+            {
+              "value": "categories:product-1786401011698-bf5af0",
+              "label": "На заказ"
+            },
+            {
+              "value": "categories:platform-page-1790858796945-b73ebf",
+              "label": "Новогодние подарки 2027"
+            },
+            {
+              "value": "products:catalog-item-1790860377305-388c56",
+              "label": "Коза & Ёлка"
+            },
+            {
+              "value": "products:catalog-item-1786792591872-c8b1e9",
+              "label": "Рубашка Upcycling с кружевом"
+            },
+            {
+              "value": "products:catalog-item-1786792591872-98358d",
+              "label": "Летнее платье «Исландка»"
+            },
+            {
+              "value": "products:catalog-item-1786792591872-5f848a",
+              "label": "Платье из льна"
+            },
+            {
+              "value": "products:catalog-item-1786792591872-3be8f9",
+              "label": "Лонгслив «Мак» с аппликацией"
+            },
+            {
+              "value": "products:catalog-item-1786792591872-1d1d3c",
+              "label": "Свитшот с медведем для Михаила"
+            },
+            {
+              "value": "products:catalog-item-1786792591872-c45ce3",
+              "label": "Свитшот «Яра» с авторской аппликацией"
+            },
+            {
+              "value": "products:catalog-item-1786792591872-52046c",
+              "label": "Льняное демисезонное пальто"
+            },
+            {
+              "value": "products:catalog-item-1786792591872-51f503",
+              "label": "Символ 2027 года «Коза»"
+            },
+            {
+              "value": "products:catalog-item-1790936932674-197964",
+              "label": "Шапка Коза"
+            },
+            {
+              "value": "products:catalog-item-1790937546522-78edcc",
+              "label": "ТЕРМОС в свитере"
+            },
+            {
+              "value": "products:catalog-item-1790937556174-6ad07b",
+              "label": "ТЕРМОС в чехле"
+            },
+            {
+              "value": "products:catalog-item-1790937575672-8f423f",
+              "label": "Текстильная ёлочка"
+            },
+            {
+              "value": "products:catalog-item-1790937587589-b751ba",
+              "label": "Новогодние подарочные наборы"
+            },
+            {
+              "value": "custom:audit:page-1783247727726-7eaea2",
+              "label": "ЛЕНДИНГ"
+            }
+          ],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": "[data-g4five-company-v523] [data-g4five-tool-v523=\"referral\"] input[data-g4-map-impl-v290=\"g4-map-g3-5a-advocate-referral\"][data-g4-map-impl-field-v290=\"budget\"]",
+          "label": "Бюджет",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": "[data-g4five-company-v523] [data-g4five-tool-v523=\"referral\"] select[data-g4-map-impl-v290=\"g4-map-g3-5a-advocate-referral\"][data-g4-map-impl-field-v290=\"status\"]",
+          "label": "Статус",
+          "value": "not_started",
+          "tag": "SELECT",
+          "statusControl": true,
+          "options": [
+            {
+              "value": "not_started",
+              "label": "Не начато"
+            },
+            {
+              "value": "in_progress",
+              "label": "В работе"
+            },
+            {
+              "value": "ready",
+              "label": "Готово"
+            },
+            {
+              "value": "not_required",
+              "label": "Не требуется"
+            }
+          ],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": "[data-g4five-company-v523] [data-g4five-tool-v523=\"referral\"] input[data-g4-map-impl-v290=\"g4-map-g3-5a-advocate-referral\"][data-g4-map-impl-field-v290=\"source\"]",
+          "label": "Источник / ссылка / скрин / отчёт",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        }
+      ],
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g4five-company-v523] [data-g4five-tool-v523=\"referral\"] select[data-g4-map-impl-v290=\"g4-map-g3-5a-advocate-referral\"][data-g4-map-impl-field-v290=\"status\"]",
+            "label": "Выберите статус реализации",
+            "value": "not_started",
+            "tag": "SELECT",
+            "statusControl": true,
+            "options": [
+              {
+                "value": "not_started",
+                "label": "Не начато"
+              },
+              {
+                "value": "in_progress",
+                "label": "В работе"
+              },
+              {
+                "value": "ready",
+                "label": "Готово"
+              },
+              {
+                "value": "not_required",
+                "label": "Не требуется"
+              }
+            ],
+            "campaignStepAttribute": "data-g4sb-step"
+          }
+        ],
+        "unresolved": []
+      },
+      "text": "Выберите статус реализации",
+      "focused": true
+    },
+    {
+      "id": "loyalty",
+      "title": "Программа лояльности · Внешний сервис — требует выбора",
+      "status": "not_started",
+      "phase": "after-launch",
+      "excludedFromPreflight": true,
+      "controls": [
+        {
+          "selector": "[data-g4five-company-v523] [data-g4five-tool-v523=\"loyalty\"] input[data-g4five-service-input-v523=\"loyalty\"]",
+          "label": "Сервис",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        }
+      ],
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g4five-company-v523] [data-g4five-tool-v523=\"loyalty\"] input[data-g4five-service-input-v523=\"loyalty\"]",
+            "label": "Заполните поле «Сервис»",
+            "value": "",
+            "tag": "INPUT",
+            "statusControl": false,
+            "options": [],
+            "campaignStepAttribute": "data-g4sb-step"
+          }
+        ],
+        "unresolved": []
+      },
+      "text": "Заполните поле «Сервис»",
+      "focused": true
+    },
+    {
+      "id": "платная_реклама_яндекс_директ_рся_1",
+      "title": "Яндекс Директ / РСЯ",
+      "status": "in_progress",
+      "controls": [
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"campaignCommon\"][data-g4rsya-v289-field=\"campaignName\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\31 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+          "label": "Название для Директа",
+          "value": "РСЯ - Символ 2027 года «Коза» - Яндекс Директ",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4rsya-v453-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"startMethodV532\"][data-g4rsya-v289-field=\"expectedCpaManualRub\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\31 \"]",
+          "label": "Своя оценка цены заявки, ₽",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4rsya-v453-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"conversionVolumeCheck\"][data-g4rsya-v289-field=\"from\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+          "label": "Начало периода",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4rsya-v453-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"conversionVolumeCheck\"][data-g4rsya-v289-field=\"to\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+          "label": "Конец периода",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4rsya-v453-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"conversionVolumeCheck\"][data-g4rsya-v289-field=\"count\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+          "label": "Достижений выбранной цели",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4rsya-v453-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"conversionVolumeCheck\"][data-g4rsya-v289-field=\"evidenceUrl\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"url\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+          "label": "Ссылка на отчёт Метрики0/1024",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4rsya-v453-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"campaign\"][data-g4rsya-v289-field=\"launchDateV541\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+          "label": "Дата начала",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4rsya-v453-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) textarea[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"campaignCommon\"][data-g4rsya-v289-field=\"utmTemplate\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+          "label": "UTM-шаблон РСЯ",
+          "value": "utm_source=yandex&utm_medium=cpc&utm_campaign={campaign_id}&utm_content={ad_id}&utm_term={source}",
+          "tag": "TEXTAREA",
+          "statusControl": false,
+          "options": [],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4rsya-v453-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) select[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"promotion\"][data-g4rsya-v289-field=\"type\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"]",
+          "label": "Тип промоакции",
+          "value": "",
+          "tag": "SELECT",
+          "statusControl": false,
+          "options": [
+            {
+              "value": "",
+              "label": "- без промоакции -"
+            },
+            {
+              "value": "скидка",
+              "label": "Скидка"
+            },
+            {
+              "value": "выгода",
+              "label": "Выгода"
+            },
+            {
+              "value": "кешбэк",
+              "label": "Кешбэк"
+            },
+            {
+              "value": "подарок",
+              "label": "Подарок"
+            }
+          ],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4rsya-v453-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"promotion\"][data-g4rsya-v289-field=\"discountValue\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+          "label": "Размер скидки / выгоды / кешбэка",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4rsya-v453-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) textarea[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"promotion\"][data-g4rsya-v289-field=\"description\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+          "label": "Описание промоакции",
+          "value": "",
+          "tag": "TEXTAREA",
+          "statusControl": false,
+          "options": [],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4rsya-v453-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"promotion\"][data-g4rsya-v289-field=\"promoCode\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+          "label": "Промокод",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4rsya-v453-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"promotion\"][data-g4rsya-v289-field=\"dateFrom\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+          "label": "Дата начала",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4rsya-v453-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"promotion\"][data-g4rsya-v289-field=\"dateTo\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+          "label": "Дата окончания",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4rsya-v453-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) select[data-g4rsya-platform-page-ref=\"\"][data-g4rsya-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-store=\"promotion\"][data-g4rsya-group-id=\"\"][data-g4rsya-ad-id=\"\"][data-g4rsya-item-id=\"\"]",
+          "label": "Отдельная страница акциииз Платформы",
+          "value": "",
+          "tag": "SELECT",
+          "statusControl": false,
+          "options": [
+            {
+              "value": "",
+              "label": "Страница не выбрана"
+            },
+            {
+              "value": "fixed:home",
+              "label": "Главная страница"
+            },
+            {
+              "value": "fixed:catalog",
+              "label": "Каталог (Хаб)"
+            },
+            {
+              "value": "fixed:contacts",
+              "label": "Контакты"
+            },
+            {
+              "value": "fixed:delivery",
+              "label": "Доставка и оплата"
+            },
+            {
+              "value": "fixed:about",
+              "label": "О нас / история бренда"
+            },
+            {
+              "value": "fixed:blog",
+              "label": "Блог"
+            },
+            {
+              "value": "fixed:not_found",
+              "label": "Страница 404"
+            },
+            {
+              "value": "fixed:thank_you",
+              "label": "Страница «Спасибо»"
+            },
+            {
+              "value": "fixed:company_details",
+              "label": "Реквизиты компании"
+            },
+            {
+              "value": "fixed:privacy",
+              "label": "Политика конфиденциальности"
+            },
+            {
+              "value": "fixed:data_consent",
+              "label": "Согласие на обработку данных"
+            },
+            {
+              "value": "fixed:offer",
+              "label": "Публичная оферта"
+            },
+            {
+              "value": "fixed:returns",
+              "label": "Условия возврата"
+            },
+            {
+              "value": "categories:product-1786401011698-231009",
+              "label": "Авторская одежда"
+            },
+            {
+              "value": "categories:product-1786401011698-981bb3",
+              "label": "Живопись и графика"
+            },
+            {
+              "value": "categories:product-1786401011698-9e81ee",
+              "label": "Дизайнерские подарки"
+            },
+            {
+              "value": "categories:product-1786401011698-96355e",
+              "label": "Дом и сервировка"
+            },
+            {
+              "value": "categories:product-1786401011698-bd5754",
+              "label": "Украшение дома"
+            },
+            {
+              "value": "categories:product-1786401011698-bf5af0",
+              "label": "На заказ"
+            },
+            {
+              "value": "categories:platform-page-1790858796945-b73ebf",
+              "label": "Новогодние подарки 2027"
+            },
+            {
+              "value": "products:catalog-item-1790860377305-388c56",
+              "label": "Коза & Ёлка"
+            },
+            {
+              "value": "products:catalog-item-1786792591872-c8b1e9",
+              "label": "Рубашка Upcycling с кружевом"
+            },
+            {
+              "value": "products:catalog-item-1786792591872-98358d",
+              "label": "Летнее платье «Исландка»"
+            },
+            {
+              "value": "products:catalog-item-1786792591872-5f848a",
+              "label": "Платье из льна"
+            },
+            {
+              "value": "products:catalog-item-1786792591872-3be8f9",
+              "label": "Лонгслив «Мак» с аппликацией"
+            },
+            {
+              "value": "products:catalog-item-1786792591872-1d1d3c",
+              "label": "Свитшот с медведем для Михаила"
+            },
+            {
+              "value": "products:catalog-item-1786792591872-c45ce3",
+              "label": "Свитшот «Яра» с авторской аппликацией"
+            },
+            {
+              "value": "products:catalog-item-1786792591872-52046c",
+              "label": "Льняное демисезонное пальто"
+            },
+            {
+              "value": "products:catalog-item-1786792591872-51f503",
+              "label": "Символ 2027 года «Коза»"
+            },
+            {
+              "value": "products:catalog-item-1790936932674-197964",
+              "label": "Шапка Коза"
+            },
+            {
+              "value": "products:catalog-item-1790937546522-78edcc",
+              "label": "ТЕРМОС в свитере"
+            },
+            {
+              "value": "products:catalog-item-1790937556174-6ad07b",
+              "label": "ТЕРМОС в чехле"
+            },
+            {
+              "value": "products:catalog-item-1790937575672-8f423f",
+              "label": "Текстильная ёлочка"
+            },
+            {
+              "value": "products:catalog-item-1790937587589-b751ba",
+              "label": "Новогодние подарочные наборы"
+            },
+            {
+              "value": "custom:audit:page-1783247727726-7eaea2",
+              "label": "ЛЕНДИНГ"
+            }
+          ],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4rsya-v453-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"campaign\"][data-g4rsya-v289-field=\"geography\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\31 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+          "label": "География для всех групп",
+          "value": "",
+          "tag": "INPUT",
+          "statusControl": false,
+          "options": [],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4rsya-v453-step"
+        }
+      ],
+      "details": {
+        "items": [
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"startMethodV532\"][data-g4rsya-v289-field=\"expectedCpaManualRub\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\31 \"]",
+            "label": "Заполните поле «Своя оценка цены заявки, ₽»",
+            "value": "",
+            "tag": "INPUT",
+            "statusControl": false,
+            "options": [],
+            "campaignStep": "launch",
+            "campaignStepAttribute": "data-g4rsya-v453-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"conversionVolumeCheck\"][data-g4rsya-v289-field=\"from\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+            "label": "Заполните поле «Начало периода»",
+            "value": "",
+            "tag": "INPUT",
+            "statusControl": false,
+            "options": [],
+            "campaignStep": "launch",
+            "campaignStepAttribute": "data-g4rsya-v453-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"conversionVolumeCheck\"][data-g4rsya-v289-field=\"to\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+            "label": "Заполните поле «Конец периода»",
+            "value": "",
+            "tag": "INPUT",
+            "statusControl": false,
+            "options": [],
+            "campaignStep": "launch",
+            "campaignStepAttribute": "data-g4rsya-v453-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"conversionVolumeCheck\"][data-g4rsya-v289-field=\"count\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+            "label": "Заполните поле «Достижений выбранной цели»",
+            "value": "",
+            "tag": "INPUT",
+            "statusControl": false,
+            "options": [],
+            "campaignStep": "launch",
+            "campaignStepAttribute": "data-g4rsya-v453-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"conversionVolumeCheck\"][data-g4rsya-v289-field=\"evidenceUrl\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"url\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+            "label": "Заполните поле «Ссылка на отчёт Метрики0/1024»",
+            "value": "",
+            "tag": "INPUT",
+            "statusControl": false,
+            "options": [],
+            "campaignStep": "launch",
+            "campaignStepAttribute": "data-g4rsya-v453-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"campaign\"][data-g4rsya-v289-field=\"launchDateV541\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+            "label": "Заполните поле «Дата начала»",
+            "value": "",
+            "tag": "INPUT",
+            "statusControl": false,
+            "options": [],
+            "campaignStep": "launch",
+            "campaignStepAttribute": "data-g4rsya-v453-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) select[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"promotion\"][data-g4rsya-v289-field=\"type\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"]",
+            "label": "Выберите «Тип промоакции»",
+            "value": "",
+            "tag": "SELECT",
+            "statusControl": false,
+            "options": [
+              {
+                "value": "",
+                "label": "- без промоакции -"
+              },
+              {
+                "value": "скидка",
+                "label": "Скидка"
+              },
+              {
+                "value": "выгода",
+                "label": "Выгода"
+              },
+              {
+                "value": "кешбэк",
+                "label": "Кешбэк"
+              },
+              {
+                "value": "подарок",
+                "label": "Подарок"
+              }
+            ],
+            "campaignStep": "launch",
+            "campaignStepAttribute": "data-g4rsya-v453-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"promotion\"][data-g4rsya-v289-field=\"discountValue\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+            "label": "Заполните поле «Размер скидки / выгоды / кешбэка»",
+            "value": "",
+            "tag": "INPUT",
+            "statusControl": false,
+            "options": [],
+            "campaignStep": "launch",
+            "campaignStepAttribute": "data-g4rsya-v453-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) textarea[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"promotion\"][data-g4rsya-v289-field=\"description\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+            "label": "Заполните поле «Описание промоакции»",
+            "value": "",
+            "tag": "TEXTAREA",
+            "statusControl": false,
+            "options": [],
+            "campaignStep": "launch",
+            "campaignStepAttribute": "data-g4rsya-v453-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"promotion\"][data-g4rsya-v289-field=\"promoCode\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+            "label": "Заполните поле «Промокод»",
+            "value": "",
+            "tag": "INPUT",
+            "statusControl": false,
+            "options": [],
+            "campaignStep": "launch",
+            "campaignStepAttribute": "data-g4rsya-v453-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"promotion\"][data-g4rsya-v289-field=\"dateFrom\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+            "label": "Заполните поле «Дата начала»",
+            "value": "",
+            "tag": "INPUT",
+            "statusControl": false,
+            "options": [],
+            "campaignStep": "launch",
+            "campaignStepAttribute": "data-g4rsya-v453-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"promotion\"][data-g4rsya-v289-field=\"dateTo\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\30 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+            "label": "Заполните поле «Дата окончания»",
+            "value": "",
+            "tag": "INPUT",
+            "statusControl": false,
+            "options": [],
+            "campaignStep": "launch",
+            "campaignStepAttribute": "data-g4rsya-v453-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) select[data-g4rsya-platform-page-ref=\"\"][data-g4rsya-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-store=\"promotion\"][data-g4rsya-group-id=\"\"][data-g4rsya-ad-id=\"\"][data-g4rsya-item-id=\"\"]",
+            "label": "Выберите «Отдельная страница акциииз Платформы»",
+            "value": "",
+            "tag": "SELECT",
+            "statusControl": false,
+            "options": [
+              {
+                "value": "",
+                "label": "Страница не выбрана"
+              },
+              {
+                "value": "fixed:home",
+                "label": "Главная страница"
+              },
+              {
+                "value": "fixed:catalog",
+                "label": "Каталог (Хаб)"
+              },
+              {
+                "value": "fixed:contacts",
+                "label": "Контакты"
+              },
+              {
+                "value": "fixed:delivery",
+                "label": "Доставка и оплата"
+              },
+              {
+                "value": "fixed:about",
+                "label": "О нас / история бренда"
+              },
+              {
+                "value": "fixed:blog",
+                "label": "Блог"
+              },
+              {
+                "value": "fixed:not_found",
+                "label": "Страница 404"
+              },
+              {
+                "value": "fixed:thank_you",
+                "label": "Страница «Спасибо»"
+              },
+              {
+                "value": "fixed:company_details",
+                "label": "Реквизиты компании"
+              },
+              {
+                "value": "fixed:privacy",
+                "label": "Политика конфиденциальности"
+              },
+              {
+                "value": "fixed:data_consent",
+                "label": "Согласие на обработку данных"
+              },
+              {
+                "value": "fixed:offer",
+                "label": "Публичная оферта"
+              },
+              {
+                "value": "fixed:returns",
+                "label": "Условия возврата"
+              },
+              {
+                "value": "categories:product-1786401011698-231009",
+                "label": "Авторская одежда"
+              },
+              {
+                "value": "categories:product-1786401011698-981bb3",
+                "label": "Живопись и графика"
+              },
+              {
+                "value": "categories:product-1786401011698-9e81ee",
+                "label": "Дизайнерские подарки"
+              },
+              {
+                "value": "categories:product-1786401011698-96355e",
+                "label": "Дом и сервировка"
+              },
+              {
+                "value": "categories:product-1786401011698-bd5754",
+                "label": "Украшение дома"
+              },
+              {
+                "value": "categories:product-1786401011698-bf5af0",
+                "label": "На заказ"
+              },
+              {
+                "value": "categories:platform-page-1790858796945-b73ebf",
+                "label": "Новогодние подарки 2027"
+              },
+              {
+                "value": "products:catalog-item-1790860377305-388c56",
+                "label": "Коза & Ёлка"
+              },
+              {
+                "value": "products:catalog-item-1786792591872-c8b1e9",
+                "label": "Рубашка Upcycling с кружевом"
+              },
+              {
+                "value": "products:catalog-item-1786792591872-98358d",
+                "label": "Летнее платье «Исландка»"
+              },
+              {
+                "value": "products:catalog-item-1786792591872-5f848a",
+                "label": "Платье из льна"
+              },
+              {
+                "value": "products:catalog-item-1786792591872-3be8f9",
+                "label": "Лонгслив «Мак» с аппликацией"
+              },
+              {
+                "value": "products:catalog-item-1786792591872-1d1d3c",
+                "label": "Свитшот с медведем для Михаила"
+              },
+              {
+                "value": "products:catalog-item-1786792591872-c45ce3",
+                "label": "Свитшот «Яра» с авторской аппликацией"
+              },
+              {
+                "value": "products:catalog-item-1786792591872-52046c",
+                "label": "Льняное демисезонное пальто"
+              },
+              {
+                "value": "products:catalog-item-1786792591872-51f503",
+                "label": "Символ 2027 года «Коза»"
+              },
+              {
+                "value": "products:catalog-item-1790936932674-197964",
+                "label": "Шапка Коза"
+              },
+              {
+                "value": "products:catalog-item-1790937546522-78edcc",
+                "label": "ТЕРМОС в свитере"
+              },
+              {
+                "value": "products:catalog-item-1790937556174-6ad07b",
+                "label": "ТЕРМОС в чехле"
+              },
+              {
+                "value": "products:catalog-item-1790937575672-8f423f",
+                "label": "Текстильная ёлочка"
+              },
+              {
+                "value": "products:catalog-item-1790937587589-b751ba",
+                "label": "Новогодние подарочные наборы"
+              },
+              {
+                "value": "custom:audit:page-1783247727726-7eaea2",
+                "label": "ЛЕНДИНГ"
+              }
+            ],
+            "campaignStep": "launch",
+            "campaignStepAttribute": "data-g4rsya-v453-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_рся_1\"]) input[data-g4rsya-v289-bind=\"\"][data-g4rsya-v289-product=\"catalog-item-1786792591872-51f503\"][data-g4rsya-v289-channel=\"платная_реклама_яндекс_директ_рся_1\"][data-g4rsya-v289-store=\"campaign\"][data-g4rsya-v289-field=\"geography\"][data-g4rsya-v289-group-id=\"\"][data-g4rsya-v289-ad-id=\"\"][data-g4rsya-v289-item-id=\"\"][data-g4rsya-v289-kind=\"\"][data-g4rsya-v289-required=\"\\31 \"][data-g4rsya-v482-optional-empty=\"\\30 \"]",
+            "label": "Заполните поле «География для всех групп»",
+            "value": "",
+            "tag": "INPUT",
+            "statusControl": false,
+            "options": [],
+            "campaignStep": "launch",
+            "campaignStepAttribute": "data-g4rsya-v453-step"
+          }
+        ],
+        "unresolved": []
+      },
+      "text": "Не хватает:\nЗаполните поле «Своя оценка цены заявки, ₽»\nЗаполните поле «Начало периода»\nЗаполните поле «Конец периода»\nи ещё 11 групп",
+      "nextEnabled": true,
+      "nextHighlighted": false,
+      "focused": true
+    },
+    {
+      "id": "promo_landing",
+      "title": "ПромоСтраница / контентная посадочная · Tilda",
+      "status": "not_started",
+      "phase": "after-launch",
+      "excludedFromPreflight": true,
+      "controls": [],
+      "details": {
+        "text": "Нет поля для заполнения: нужно решение",
+        "items": [],
+        "needsDecision": true,
+        "unresolved": [
+          "promo_landing"
+        ]
+      },
+      "text": "Нет поля для заполнения: нужно решение",
+      "focused": false
+    },
+    {
+      "id": "платная_реклама_яндекс_директ_поиск_0",
+      "title": "Яндекс Директ / Поиск",
+      "status": "in_progress",
+      "controls": [
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) select[data-campaign-audience-product=\"catalog-item-1786792591872-51f503\"][data-campaign-audience-channel=\"платная_реклама_яндекс_директ_поиск_0\"]",
+          "label": "Сегмент аудитории",
+          "value": "audience-segment-1784668055238-ec419c",
+          "tag": "SELECT",
+          "statusControl": false,
+          "options": [
+            {
+              "value": "",
+              "label": "- выбрать сегмент из Этапа 01 -"
+            },
+            {
+              "value": "audience-segment-1784668055238-ec419c",
+              "label": "Женщины 30+, которые ищут необычные подарки для близких"
+            }
+          ],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) select[data-campaign-audience-jtbd-product=\"catalog-item-1786792591872-51f503\"][data-campaign-audience-jtbd-channel=\"платная_реклама_яндекс_директ_поиск_0\"]",
+          "label": "JTBD выбранного товара для этого сегмента",
+          "value": "primary:catalog-item-1786792591872-51f503",
+          "tag": "SELECT",
+          "statusControl": false,
+          "options": [
+            {
+              "value": "",
+              "label": "- выберите один JTBD -"
+            },
+            {
+              "value": "primary:catalog-item-1786792591872-51f503",
+              "label": "Когда Нужно выбрать подарок к Новому году, клиент хочет Найти необычный подарок, связанный с символом 2027 года, чтобы Порадовать получателя и не ошибиться с выбором."
+            },
+            {
+              "value": "additional-jtbd-1788609074828-88a3f1",
+              "label": "Когда Хочется подарить что-то действительно личное, клиент хочет Найти авторский подарок ручной работы, чтобы Выразить внимание и тепло к получателю."
+            },
+            {
+              "value": "additional-jtbd-1788615285799-9a35ef",
+              "label": "Когда хочется добавить в дом необычный декор, клиент хочет найти интерьерную Козу, чтобы привнести в интерьер характер и тепло ручной работы."
+            }
+          ],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"geography\"]",
+          "label": "География",
+          "value": "",
+          "tag": "TEXTAREA",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"age\"]",
+          "label": "Возраст",
+          "value": "",
+          "tag": "TEXTAREA",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"gender\"]",
+          "label": "Пол",
+          "value": "",
+          "tag": "TEXTAREA",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"searchQueries\"]",
+          "label": "Поисковые запросы",
+          "value": "",
+          "tag": "TEXTAREA",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"interests\"]",
+          "label": "Интересы",
+          "value": "",
+          "tag": "TEXTAREA",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"communities\"]",
+          "label": "Сообщества",
+          "value": "",
+          "tag": "TEXTAREA",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"customerBases\"]",
+          "label": "Клиентские базы",
+          "value": "",
+          "tag": "TEXTAREA",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"siteVisitors\"]",
+          "label": "Посетители сайта",
+          "value": "",
+          "tag": "TEXTAREA",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"lookalikes\"]",
+          "label": "Похожие аудитории",
+          "value": "",
+          "tag": "TEXTAREA",
+          "statusControl": false,
+          "options": [],
+          "campaignStepAttribute": "data-g4sb-step"
+        },
+        {
+          "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-g4camp-key=\"платная_реклама_яндекс_директ_поиск_0\"][data-g4camp-field=\"utm\"][data-g4sb-v488-utm-template=\"\"]",
+          "label": "UTM-шаблон кампании",
+          "value": "",
+          "tag": "TEXTAREA",
+          "statusControl": false,
+          "options": [],
+          "campaignStep": "launch",
+          "campaignStepAttribute": "data-g4sb-step"
+        }
+      ],
+      "details": {
+        "items": [
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"geography\"]",
+            "label": "Заполните поле «География»",
+            "value": "",
+            "tag": "TEXTAREA",
+            "statusControl": false,
+            "options": [],
+            "campaignStepAttribute": "data-g4sb-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"age\"]",
+            "label": "Заполните поле «Возраст»",
+            "value": "",
+            "tag": "TEXTAREA",
+            "statusControl": false,
+            "options": [],
+            "campaignStepAttribute": "data-g4sb-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"gender\"]",
+            "label": "Заполните поле «Пол»",
+            "value": "",
+            "tag": "TEXTAREA",
+            "statusControl": false,
+            "options": [],
+            "campaignStepAttribute": "data-g4sb-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"searchQueries\"]",
+            "label": "Заполните поле «Поисковые запросы»",
+            "value": "",
+            "tag": "TEXTAREA",
+            "statusControl": false,
+            "options": [],
+            "campaignStepAttribute": "data-g4sb-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"interests\"]",
+            "label": "Заполните поле «Интересы»",
+            "value": "",
+            "tag": "TEXTAREA",
+            "statusControl": false,
+            "options": [],
+            "campaignStepAttribute": "data-g4sb-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"communities\"]",
+            "label": "Заполните поле «Сообщества»",
+            "value": "",
+            "tag": "TEXTAREA",
+            "statusControl": false,
+            "options": [],
+            "campaignStepAttribute": "data-g4sb-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"customerBases\"]",
+            "label": "Заполните поле «Клиентские базы»",
+            "value": "",
+            "tag": "TEXTAREA",
+            "statusControl": false,
+            "options": [],
+            "campaignStepAttribute": "data-g4sb-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"siteVisitors\"]",
+            "label": "Заполните поле «Посетители сайта»",
+            "value": "",
+            "tag": "TEXTAREA",
+            "statusControl": false,
+            "options": [],
+            "campaignStepAttribute": "data-g4sb-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-campaign-targeting-product=\"catalog-item-1786792591872-51f503\"][data-campaign-targeting-channel=\"платная_реклама_яндекс_директ_поиск_0\"][data-campaign-targeting-field=\"lookalikes\"]",
+            "label": "Заполните поле «Похожие аудитории»",
+            "value": "",
+            "tag": "TEXTAREA",
+            "statusControl": false,
+            "options": [],
+            "campaignStepAttribute": "data-g4sb-step"
+          },
+          {
+            "selector": ":is(.g1-card,.g4-campaign-shell):has(> [data-g4camp-toggle=\"catalog_item_1786792591872_51f503_платная_реклама_яндекс_директ_поиск_0\"]) textarea[data-g4camp-key=\"платная_реклама_яндекс_директ_поиск_0\"][data-g4camp-field=\"utm\"][data-g4sb-v488-utm-template=\"\"]",
+            "label": "Заполните поле «UTM-шаблон кампании»",
+            "value": "",
+            "tag": "TEXTAREA",
+            "statusControl": false,
+            "options": [],
+            "campaignStep": "launch",
+            "campaignStepAttribute": "data-g4sb-step"
+          }
+        ],
+        "unresolved": []
+      },
+      "text": "Не хватает:\nЗаполните поле «География»\nЗаполните поле «Возраст»\nЗаполните поле «Пол»\nи ещё 7 групп",
+      "nextEnabled": true,
+      "nextHighlighted": false,
+      "focused": true
+    },
+    {
+      "id": "product_gallery",
+      "title": "Товарная галерея · Яндекс Директ, ЕПК с товарными объявлениями",
+      "status": "not_started",
+      "phase": "after-launch",
+      "excludedFromPreflight": true,
+      "controls": [],
+      "details": {
+        "text": "Нет поля для заполнения: нужно решение",
+        "items": [],
+        "needsDecision": true,
+        "unresolved": [
+          "product_gallery"
+        ]
+      },
+      "text": "Нет поля для заполнения: нужно решение",
+      "focused": false
+    },
+    {
+      "id": "vk_retargeting",
+      "title": "Ретаргетинг · VK Реклама",
+      "status": "not_started",
+      "phase": "after-launch",
+      "excludedFromPreflight": true,
+      "controls": [],
+      "details": {
+        "text": "Нет поля для заполнения: нужно решение",
+        "items": [],
+        "needsDecision": true,
+        "unresolved": [
+          "vk_retargeting"
+        ]
+      },
+      "text": "Нет поля для заполнения: нужно решение",
+      "focused": false
+    },
+    {
+      "id": "buyer_retargeting",
+      "title": "Ретаргетинг на покупателей · Яндекс Директ / VK Реклама",
+      "status": "not_started",
+      "phase": "after-launch",
+      "excludedFromPreflight": true,
+      "controls": [],
+      "details": {
+        "text": "Нет поля для заполнения: нужно решение",
+        "items": [],
+        "needsDecision": true,
+        "unresolved": [
+          "buyer_retargeting"
+        ]
+      },
+      "text": "Нет поля для заполнения: нужно решение",
+      "focused": false
+    }
+  ],
+  "statusesAfter": [
+    {
+      "gate": "gate-3",
+      "id": "aware",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-3",
+      "id": "appeal",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-3",
+      "id": "ask",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-3",
+      "id": "act",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-3",
+      "id": "advocate",
+      "status": "problem"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-148",
+      "status": "not_started"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-151",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-152",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-153",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-154",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-155",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-156",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-157",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-158",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-159",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-160",
+      "status": "not_started"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-161",
+      "status": "not_started"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-162",
+      "status": "not_started"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-163",
+      "status": "not_started"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-164",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-165",
+      "status": "not_started"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-166",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-167",
+      "status": "not_started"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-168",
+      "status": "ready"
+    },
+    {
+      "gate": "gate-4",
+      "id": "card-169",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "smm_vk_контент_11",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "smm_telegram_контент_посевы_12",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "smm_instagram_reels_stories_13",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "smm_youtube_shorts_pre_roll_14",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "платная_реклама_vk_ads_таргет_5",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "платная_реклама_telegram_ads_посевы_ads_7",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "платная_реклама_meta_ads_feed_reels_6",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "платная_реклама_яндекс_директ_рся_1",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "платная_реклама_яндекс_директ_мастер_кампаний_2",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "платная_реклама_google_ads_display_4",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "платная_реклама_яндекс_директ_поиск_0",
+      "status": "in_progress"
+    },
+    {
+      "gate": "gate-4",
+      "id": "платная_реклама_google_ads_search_3",
+      "status": "in_progress"
+    }
+  ],
+  "summaryAfter": {
+    "gate-3": {
+      "total": 5,
+      "done": 4,
+      "ready": 4,
+      "notRequired": 0,
+      "inProgress": 0,
+      "problem": 1,
+      "notStarted": 0,
+      "percent": 90
+    },
+    "gate-4": {
+      "total": 50,
+      "done": 11,
+      "ready": 11,
+      "notRequired": 0,
+      "inProgress": 18,
+      "problem": 0,
+      "notStarted": 21,
+      "percent": 40
+    }
+  },
+  "comparison": {
+    "identical": true,
+    "beforeSha256": "1758c56ff99bd6ff7fc010332b22d647b4b1aaac0c3194360e8a156b13dbfefd",
+    "afterSha256": "1758c56ff99bd6ff7fc010332b22d647b4b1aaac0c3194360e8a156b13dbfefd",
+    "bytes": 28081553,
+    "updatedAtFields": 259,
+    "uiPreferenceWrites": 0
+  },
+  "build": "2.3.526+863cd49d9312",
+  "errors": []
+}

@@ -1,0 +1,285 @@
+{
+  "head": "6df79cc4fde9a6e458235f0baf41ee6ce68fdacc",
+  "version": "2.3.526+863cd49d9312",
+  "sha256": "863cd49d93124bc2767fbbb77a6956545a8f6ec3252854eb3b6f92121eb848b8",
+  "copy": "/private/tmp/guru-step3-build-CNvJOx",
+  "log": "\n> guru-platform@1.2.0 build\n> node scripts/stamp-build.mjs && node scripts/verify-build-bundle.mjs\n\nStamped interface build 2.3.526+863cd49d9312\nInterface build: 2.3.526+863cd49d9312 (42 matching assets)\n",
+  "checkpoint": "b5bfecb66f814c4abd750256d8e34d8deead9897",
+  "changedCodeFiles": [
+    "app.js",
+    "now-guide.js",
+    "scripts/preflight-now-guide-smoke.mjs",
+    "scripts/now-guide-smoke.mjs",
+    "scripts/gate34-now-readiness-smoke.mjs",
+    "scripts/gate34-now-decisions-smoke.mjs"
+  ],
+  "exportComparison": {
+    "identical": true,
+    "differences": [],
+    "beforeSha256": "eb1645faed6aaec7d13356bc8e9a1516754f8469b09e402bb8e4b3385df2aaf3",
+    "afterSha256": "eb1645faed6aaec7d13356bc8e9a1516754f8469b09e402bb8e4b3385df2aaf3",
+    "bytes": 28081385,
+    "updatedAtFields": 259,
+    "uiPreferenceWrites": 0
+  },
+  "products": [
+    {
+      "product_id": "catalog-item-1786792591872-51f503",
+      "name": "Символ 2027 года «Коза»",
+      "summary": {
+        "total": 95,
+        "done": 29,
+        "ready": 25,
+        "notRequired": 4,
+        "inProgress": 25,
+        "problem": 5,
+        "notStarted": 36,
+        "percent": 46
+      },
+      "gates": [
+        {
+          "id": "gate-0",
+          "total": 9,
+          "done": 8,
+          "ready": 8,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 0,
+          "percent": 94,
+          "fullNavigationReadiness": {
+            "total": 9,
+            "done": 8,
+            "ready": 8,
+            "notRequired": 0,
+            "inProgress": 1,
+            "problem": 0,
+            "notStarted": 0,
+            "percent": 94
+          }
+        },
+        {
+          "id": "gate-1",
+          "total": 30,
+          "done": 5,
+          "ready": 5,
+          "notRequired": 0,
+          "inProgress": 6,
+          "problem": 4,
+          "notStarted": 15,
+          "percent": 33,
+          "fullNavigationReadiness": {
+            "total": 30,
+            "done": 5,
+            "ready": 5,
+            "notRequired": 0,
+            "inProgress": 6,
+            "problem": 4,
+            "notStarted": 15,
+            "percent": 33
+          }
+        },
+        {
+          "id": "gate-2",
+          "total": 19,
+          "done": 4,
+          "ready": 0,
+          "notRequired": 4,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 24,
+          "fullNavigationReadiness": {
+            "total": 19,
+            "done": 4,
+            "ready": 0,
+            "notRequired": 4,
+            "inProgress": 1,
+            "problem": 0,
+            "notStarted": 14,
+            "percent": 24
+          }
+        },
+        {
+          "id": "gate-3",
+          "total": 5,
+          "done": 4,
+          "ready": 4,
+          "notRequired": 0,
+          "inProgress": 0,
+          "problem": 1,
+          "notStarted": 0,
+          "percent": 90,
+          "fullNavigationReadiness": {
+            "total": 5,
+            "done": 4,
+            "ready": 4,
+            "notRequired": 0,
+            "inProgress": 0,
+            "problem": 1,
+            "notStarted": 0,
+            "percent": 90
+          }
+        },
+        {
+          "id": "gate-4",
+          "total": 32,
+          "done": 8,
+          "ready": 8,
+          "notRequired": 0,
+          "inProgress": 17,
+          "problem": 0,
+          "notStarted": 7,
+          "percent": 52,
+          "fullNavigationReadiness": {
+            "total": 50,
+            "done": 11,
+            "ready": 11,
+            "notRequired": 0,
+            "inProgress": 18,
+            "problem": 0,
+            "notStarted": 21,
+            "percent": 40
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "catalog-item-1786792591872-c8b1e9",
+      "name": "Рубашка Upcycling с кружевом",
+      "summary": {
+        "total": 95,
+        "done": 26,
+        "ready": 22,
+        "notRequired": 4,
+        "inProgress": 28,
+        "problem": 4,
+        "notStarted": 37,
+        "percent": 44
+      },
+      "gates": [
+        {
+          "id": "gate-0",
+          "total": 9,
+          "done": 7,
+          "ready": 7,
+          "notRequired": 0,
+          "inProgress": 2,
+          "problem": 0,
+          "notStarted": 0,
+          "percent": 89,
+          "fullNavigationReadiness": {
+            "total": 9,
+            "done": 7,
+            "ready": 7,
+            "notRequired": 0,
+            "inProgress": 2,
+            "problem": 0,
+            "notStarted": 0,
+            "percent": 89
+          }
+        },
+        {
+          "id": "gate-1",
+          "total": 30,
+          "done": 4,
+          "ready": 4,
+          "notRequired": 0,
+          "inProgress": 7,
+          "problem": 3,
+          "notStarted": 16,
+          "percent": 30,
+          "fullNavigationReadiness": {
+            "total": 30,
+            "done": 4,
+            "ready": 4,
+            "notRequired": 0,
+            "inProgress": 7,
+            "problem": 3,
+            "notStarted": 16,
+            "percent": 30
+          }
+        },
+        {
+          "id": "gate-2",
+          "total": 19,
+          "done": 4,
+          "ready": 0,
+          "notRequired": 4,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 24,
+          "fullNavigationReadiness": {
+            "total": 19,
+            "done": 4,
+            "ready": 0,
+            "notRequired": 4,
+            "inProgress": 1,
+            "problem": 0,
+            "notStarted": 14,
+            "percent": 24
+          }
+        },
+        {
+          "id": "gate-3",
+          "total": 5,
+          "done": 3,
+          "ready": 3,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 1,
+          "notStarted": 0,
+          "percent": 80,
+          "fullNavigationReadiness": {
+            "total": 5,
+            "done": 3,
+            "ready": 3,
+            "notRequired": 0,
+            "inProgress": 1,
+            "problem": 1,
+            "notStarted": 0,
+            "percent": 80
+          }
+        },
+        {
+          "id": "gate-4",
+          "total": 32,
+          "done": 8,
+          "ready": 8,
+          "notRequired": 0,
+          "inProgress": 17,
+          "problem": 0,
+          "notStarted": 7,
+          "percent": 52,
+          "fullNavigationReadiness": {
+            "total": 50,
+            "done": 11,
+            "ready": 11,
+            "notRequired": 0,
+            "inProgress": 18,
+            "problem": 0,
+            "notStarted": 21,
+            "percent": 40
+          }
+        }
+      ]
+    }
+  ],
+  "smokeTests": [
+    "scripts/preflight-now-guide-smoke.mjs",
+    "scripts/gate34-now-readiness-smoke.mjs",
+    "scripts/gate34-now-decisions-smoke.mjs",
+    "scripts/now-guide-smoke.mjs (GURU_NOW_ONLY=korichnoe-yabloko GURU_NOW_DIAG_ONLY=1)"
+  ],
+  "screenshots": [
+    {
+      "path": "artifacts/preflight-now-guide-readiness.png",
+      "sha256": "2ba803843b44c8658a8b4e8364af4313691fcd64b74e459390ce44311720cafe"
+    },
+    {
+      "path": "artifacts/preflight-now-guide-can-launch.png",
+      "sha256": "40cd0048a848cdff69c6aa9136afb0b56bda51a26b23ee5705fc8d9b477da665"
+    }
+  ]
+}

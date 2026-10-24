@@ -1,0 +1,135 @@
+Коричное яблоко: тестовая копия загружена
+Переход gate-3 aware
+Переход gate-3 appeal
+Переход gate-3 ask
+Переход gate-3 act
+Переход gate-3 advocate
+Матрица PASS gate-3 {
+  total: 5,
+  done: 4,
+  ready: 4,
+  notRequired: 0,
+  inProgress: 0,
+  problem: 1,
+  notStarted: 0,
+  percent: 90
+}
+Переход gate-4 pr_publications
+Переход gate-4 articles_cases
+Переход gate-4 yandex_organization
+Переход gate-4 google_organization
+Переход gate-4 online_chat
+Переход gate-4 online_payment
+Переход gate-4 abandoned_cart
+Переход gate-4 email_crm
+Переход gate-4 review_collection
+Переход gate-4 referral
+Переход gate-4 loyalty
+Переход gate-4 card-148
+Переход gate-4 card-151
+Переход gate-4 card-152
+Переход gate-4 card-153
+Переход gate-4 card-154
+Переход gate-4 card-155
+Переход gate-4 card-156
+Переход gate-4 card-157
+Переход gate-4 card-158
+Переход gate-4 card-159
+Переход gate-4 card-160
+Переход gate-4 card-161
+Переход gate-4 card-162
+Переход gate-4 card-163
+Переход gate-4 card-164
+Переход gate-4 card-165
+Переход gate-4 card-166
+Переход gate-4 card-167
+Переход gate-4 card-168
+Переход gate-4 card-169
+Переход gate-4 smm_vk_контент_11
+Переход gate-4 smm_telegram_контент_посевы_12
+Переход gate-4 smm_instagram_reels_stories_13
+Переход gate-4 smm_youtube_shorts_pre_roll_14
+Переход gate-4 платная_реклама_vk_ads_таргет_5
+Переход gate-4 платная_реклама_telegram_ads_посевы_ads_7
+Переход gate-4 платная_реклама_meta_ads_feed_reels_6
+Переход gate-4 платная_реклама_яндекс_директ_рся_1
+Переход gate-4 платная_реклама_яндекс_директ_мастер_кампаний_2
+Переход gate-4 платная_реклама_google_ads_display_4
+Переход gate-4 content_creatives
+Переход gate-4 promo_landing
+Переход gate-4 платная_реклама_яндекс_директ_поиск_0
+Переход gate-4 product_gallery
+Переход gate-4 платная_реклама_google_ads_search_3
+Переход gate-4 seo
+Переход gate-4 retargeting
+Переход gate-4 vk_retargeting
+Переход gate-4 buyer_retargeting
+Матрица PASS gate-4 {
+  total: 50,
+  done: 11,
+  ready: 11,
+  notRequired: 0,
+  inProgress: 18,
+  problem: 0,
+  notStarted: 21,
+  percent: 40
+}
+Продукт catalog-item-1786792591872-51f503 [
+  {
+    id: 'gate-3',
+    total: 5,
+    done: 4,
+    ready: 4,
+    notRequired: 0,
+    inProgress: 0,
+    problem: 1,
+    notStarted: 0,
+    percent: 90
+  },
+  {
+    id: 'gate-4',
+    total: 50,
+    done: 11,
+    ready: 11,
+    notRequired: 0,
+    inProgress: 18,
+    problem: 0,
+    notStarted: 21,
+    percent: 40
+  }
+]
+Продукт catalog-item-1786792591872-c8b1e9 [
+  {
+    id: 'gate-3',
+    total: 5,
+    done: 3,
+    ready: 3,
+    notRequired: 0,
+    inProgress: 1,
+    problem: 1,
+    notStarted: 0,
+    percent: 80
+  },
+  {
+    id: 'gate-4',
+    total: 50,
+    done: 11,
+    ready: 11,
+    notRequired: 0,
+    inProgress: 18,
+    problem: 0,
+    notStarted: 21,
+    percent: 40
+  }
+]
+Экспорт {"identical":true,"differences":[],"beforeSha256":"a455d381297f2b8168843db467e54cc195f8193f89ba6f4ba69830950df1d2cf","afterSha256":"a455d381297f2b8168843db467e54cc195f8193f89ba6f4ba69830950df1d2cf","bytes":28081553,"updatedAtFields":259,"uiPreferenceWrites":0}
+Ввод gate-0 card-7
+Ввод PASS gate-0 card-7
+Ввод gate-1 company_demand_positioning
+Ввод PASS gate-1 company_demand_positioning
+Ввод gate-4 card-148
+Ввод PASS gate-4 card-148
+Ввод gate-4 smm_telegram_контент_посевы_12
+Ввод PASS gate-4 smm_telegram_контент_посевы_12
+Errors []
+Gate 3-4 readiness: PASS
