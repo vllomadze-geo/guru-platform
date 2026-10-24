@@ -243,7 +243,32 @@ function nowGuideGate12WithView(calculate, view) {
   }
 }
 function nowGuideGate12Read(calculate, workspace = state) {
-  return guruReadinessInspect(workspace, (view) => nowGuideGate12WithView(calculate, view));
+  const previous = guruReadinessCollector;
+  const missing = [];
+  try {
+    return nowGuideWithReadPass(() => {
+      // A proxy per block defeated the render cache and normalised the same
+      // scoped records repeatedly. Share one private view for this pass.
+      let views = nowGuideReadPass.get("gate12-views");
+      if (!views) nowGuideReadPass.set("gate12-views", views = new WeakMap());
+      const ui = workspace?.project?.gate0ScopeUiV194;
+      const context = `${ui?.selectedProductId || ""}:${ui?.selectedCategoryId || ""}`;
+      let entry = views.get(workspace);
+      if (!entry || entry.context !== context) {
+        entry = { context, view: guruExportDiagnosticCloneV223(workspace) };
+        views.set(workspace, entry);
+        views.set(entry.view, entry);
+      }
+      const status = guruExportWithoutPersistenceV223(() =>
+        nowGuideGate12WithView((view) => {
+          guruReadinessCollector = missing;
+          return calculate(view);
+        }, entry.view));
+      return { status, missing };
+    });
+  } catch (_) {
+    return { status: null, missing: [], unresolved: true };
+  } finally { guruReadinessCollector = previous; }
 }
 
 function nowGuideGate1Items(gate) {
@@ -481,6 +506,15 @@ function nowGuideGate1Reveal(item) {
 // A read pass shares the existing render cache. Its results never survive a
 // render/input cycle and are never written to the workspace.
 let nowGuideReadPass = null;
+let nowGuideRegistryCache = null;
+// Product selection or input inside a temporary projection also invalidates
+// its private view before the next assessment in the same read pass.
+for (const type of ["input", "change"]) document.addEventListener(type, (event) => {
+  if (event.target?.closest?.("#contentArea")) {
+    nowGuideReadPass?.delete("gate12-views");
+    nowGuideReadPass?.delete("data-versions");
+  }
+}, true);
 function nowGuideWithReadPass(calculate) {
   if (nowGuideReadPass) return calculate();
   const previousCache = guruRenderReadCacheV470;
@@ -505,6 +539,18 @@ function nowGuidePlainAssessment(calculate) {
     });
   } finally { guruReadinessCollector = previous; }
   return { status, missing };
+}
+
+function nowGuideDataVersion() {
+  let versions = nowGuideReadPass?.get("data-versions");
+  if (!versions && nowGuideReadPass) nowGuideReadPass.set("data-versions", versions = new WeakMap());
+  const ui = state?.project?.gate0ScopeUiV194;
+  const context = `${activeProjectId || ""}:${ui?.selectedProductId || ""}:${ui?.selectedCategoryId || ""}:${state?.updatedAt || ""}`;
+  const previous = versions?.get(state);
+  if (previous?.context === context && previous.readinessCache === guruGateReadinessCache) return previous.version;
+  const version = `${activeProjectId || ""}:${JSON.stringify(state)}`;
+  versions?.set(state, { context, version, readinessCache: guruGateReadinessCache });
+  return version;
 }
 
 function nowGuideGroupMissing(items) {
@@ -733,14 +779,19 @@ guruApplyDisclosureStateV512 = function (...args) {
 };
 const nowGuidePreviousRenderDestination = renderGate;
 renderGate = function (...args) {
-  if (activeView !== "gate" || activeGateId !== nowGuideProtectedGate || guruUserEditDispatchActive)
-    return nowGuidePreviousRenderDestination.apply(this, args);
-  nowGuideDestinationReadDepth += 1;
-  try {
-    return guruExportWithoutPersistenceV223(() => nowGuideGate12WithView(
-      () => nowGuidePreviousRenderDestination.apply(this, args), state));
-  }
-  finally { nowGuideDestinationReadDepth -= 1; }
+  return nowGuideWithReadPass(() => {
+    // Capture the data version before legacy readers temporarily project
+    // Gate 5/6 for the selected product. Those projections are not edits.
+    if (activeGateId === "gate-8") nowGuideDataVersion();
+    if (activeView !== "gate" || activeGateId !== nowGuideProtectedGate || guruUserEditDispatchActive)
+      return nowGuidePreviousRenderDestination.apply(this, args);
+    nowGuideDestinationReadDepth += 1;
+    try {
+      return guruExportWithoutPersistenceV223(() => nowGuideGate12WithView(
+        () => nowGuidePreviousRenderDestination.apply(this, args), state));
+    }
+    finally { nowGuideDestinationReadDepth -= 1; }
+  });
 };
 function nowGuideOpenAncestors(node) {
   for (let parent = node?.parentElement; parent && parent !== els.contentArea; parent = parent.parentElement) {
@@ -898,6 +949,11 @@ renderGate3Redesign = function (gate, cards) {
 // calculator for the product selected by the shared product_id control.
 const nowGuidePreviousGateBlockStatuses = guruGateBlockStatuses;
 guruGateBlockStatuses = function (gate) {
+  // Gate 8 also reads these aggregates. Reuse their canonical assessment
+  // instead of rendering Gate 4 or recalculating every Gate 1 editor again.
+  if (nowGuideRegistryCache && ["gate-0", "gate-1", "gate-3", "gate-4"].includes(gate?.id) &&
+      nowGuideRegistryCache.version === nowGuideDataVersion())
+    return nowGuideRegistryCache.items.filter(item => item.gateId === gate.id).map(item => item.status);
   if (gate?.id === "gate-0") {
     const cards = nowGuideGate0Cards(gate);
     return cards.map((card) => guruGate0BlockReadiness(card).status || card.status);
@@ -958,7 +1014,12 @@ function nowGuideDescriptors(gate, statuses) {
 
 function nowGuideBuildAllBlocks() {
   if (!state?.gates) return [];
-  return nowGuidePlainRead(() => [...state.gates].sort((a, b) =>
+  // The complete snapshot is the data version, including unsaved edits and
+  // product_id. No revision field is written to the project. Keep one entry.
+  const version = nowGuideDataVersion();
+  if (nowGuideRegistryCache?.version === version)
+    return nowGuideRegistryCache.items.map(item => ({ ...item }));
+  const items = nowGuidePlainRead(() => [...state.gates].sort((a, b) =>
     Number(a.id.replace("gate-", "")) - Number(b.id.replace("gate-", "")))
     .flatMap((gate) => {
       const statuses = guruGateBlockStatuses(gate);
@@ -969,6 +1030,8 @@ function nowGuideBuildAllBlocks() {
           key: `${gate.id}:${item.kind}:${item.productId || ""}:${item.id}`,
           status: guruNormBlockStatus(item.status) }));
     }));
+  nowGuideRegistryCache = { version, items };
+  return items.map(item => ({ ...item }));
 }
 
 // The registry still covers every visible block. The preflight journey is a
