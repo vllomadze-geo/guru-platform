@@ -210,13 +210,12 @@ function nowGuideMissingDetails(item) {
   return { ...details, items: nowGuideGroupMissing(details.items) };
 }
 
-function nowGuideMissingHtml(item) {
-  const details = nowGuideMissingDetails(item);
+function nowGuideMissingHtml(item, details = nowGuideMissingDetails(item)) {
   nowGuideDisplayedMissing = details?.items || [];
   if (!details) return "";
   if (details.text) return `<div class="now-guide-missing" aria-live="polite">${details.text}</div>`;
   return `<div class="now-guide-missing" aria-live="polite"><span>Не хватает:</span><ul>${details.items.slice(0, 3)
-    .map((check, index) => `<li><button type="button" data-now-missing="${index}">${escapeHtml(check.label)}</button></li>`).join("")}</ul>${details.items.length > 3
+    .map((check, index) => `<li>${check.informational ? escapeHtml(check.label) : `<button type="button" data-now-missing="${index}">${escapeHtml(check.label)}</button>`}</li>`).join("")}</ul>${details.items.length > 3
     ? `<span>и ещё ${details.items.length - 3} групп</span>` : ""}</div>`;
 }
 
@@ -599,10 +598,18 @@ function nowGuideGate3Missing(item) {
     if (guruV185Text(cell.value)) continue;
     const check = nowGuideSourceHint(cell.target, cell.label);
     if (check) items.push(check);
-    else unresolved.push(cell.label);
+    else if (item.id === "advocate") {
+      // Describe the source already shown by this cell. A retired editor
+      // cannot be made actionable by linking to an unrelated product field.
+      const removed = /источник удалён/i.test(cell.source || "");
+      items.push({ informational: true, label: `${cell.label}: ${removed ? "источник удалён" :
+        `${nowGuideSafeText(cell.source)}. Нет поля для заполнения: нужно решение`}` });
+      unresolved.push(cell.label);
+    } else unresolved.push(cell.label);
   }
-  if (unresolved.length || !items.length) items.push({ fallback: true, label: "Заполните блок" });
-  return { items, unresolved: unresolved.length ? [item.id] : [] };
+  if (item.id !== "advocate" && (unresolved.length || !items.length)) items.push({ fallback: true, label: "Заполните блок" });
+  return { items, needsDecision: item.id === "advocate" && items.length > 0 && items.every(check => check.informational),
+    unresolved: unresolved.length ? [item.id] : [] };
 }
 
 let nowGuideGate4Trace = null;
@@ -676,7 +683,7 @@ function nowGuideGate4Missing(item) {
       const checks = assessment.missing.filter(check => check?.selector?.includes(`data-g4-readiness-card-id="${item.id}"`));
       if (checks.length) return { items: checks, unresolved: [] };
     }
-    return { items: [{ fallback: true, label: "Заполните блок" }], unresolved: [item.id] };
+    return nowGuideGate4ControlHints(item);
   }
   const assessment = nowGuidePlainAssessment(() => {
     const channel = g4LaunchChannels().find(channel => channel.key === item.id);
@@ -696,7 +703,7 @@ function nowGuideGate4Missing(item) {
     const label = check.label || node?.closest('label')?.querySelector('span')?.textContent.trim() || check.field;
     return node ? { ...check, label: nowGuideSafeText(label) } : null;
   }).filter(Boolean);
-  return items.length ? { items, unresolved: [] } : { items: [{ fallback: true, label: "Заполните блок" }], unresolved: [item.id] };
+  return items.length ? { items, unresolved: [] } : nowGuideGate4ControlHints(item);
 }
 
 let nowGuideProtectedGate = "";
@@ -738,18 +745,81 @@ function nowGuideReveal34(item) {
   }
   nowGuideOpenAncestors(header);
 }
-function nowGuideGate4EditorTemplate(item) {
+function nowGuideGate4EditorTemplate(item, revealSteps = false) {
   const html = nowGuidePlainRead(() => {
     const channel = g4LaunchChannels().find(channel => channel.key === item.id);
     const campaign = g4EnsureLaunchCampaigns()[g4CampaignStateKey(item.productId, item.id)] || {};
     g4EnsureLaunchUiState().rows[g4CampaignStateKey(item.productId, item.id)] = true;
+    if (revealSteps && g4IsYandexRsyaChannel(channel)) {
+      const data = ensureGate4RsyaV289(item.productId);
+      data.ui.workflowStepOpenV453 = { ...data.ui.workflowStepOpenV453, groups: true, launch: true };
+    }
+    if (revealSteps && g4IsYandexSearchChannel(channel)) {
+      const data = ensureGate4SearchBuild(item.productId);
+      data.searchStepOpen = { ...data.searchStepOpen, clusters: true, launch: true };
+    }
     return g4CampaignRowHtml(channel, campaign, 0, item.productId);
   });
   const template = document.createElement("template");
   template.innerHTML = html || "";
   return template.content;
 }
+// Guidance about existing controls is deliberately separate from readiness.
+// It neither adds required fields nor changes the block's status calculator.
+function nowGuideGate4Controls(item) {
+  let root;
+  if (item.kind === "channel") root = nowGuideGate4EditorTemplate(item, true);
+  else {
+    const key = `gate4-editors:${item.productId || "company"}`;
+    root = nowGuideReadPass?.get(key);
+    if (!root) {
+      const template = document.createElement("template");
+      template.innerHTML = nowGuidePlainRead(() => gate4ProductionHtml());
+      root = template.content;
+      nowGuideReadPass?.set(key, root);
+    }
+    root = root.querySelector(item.selector)?.parentElement;
+  }
+  if (!root) return [];
+  return [...root.querySelectorAll("input,textarea,select")].filter(node =>
+    !node.disabled && !node.readOnly && !["hidden", "file", "checkbox", "radio"].includes(node.type) &&
+    (node.tagName !== "SELECT" || [...node.options].some(option => option.value))).map(node => {
+    const attributes = [...node.attributes].filter(attribute => attribute.name.startsWith("data-"));
+    if (!attributes.length) return null;
+    const owner = item.kind === "channel" ?
+      `:is(.g1-card,.g4-campaign-shell):has(> ${item.selector})` : item.selector.replace(/ > \.g1-card-header-static$/, "");
+    const selector = `${owner} ${node.tagName.toLowerCase()}${attributes.map(attribute =>
+      `[${attribute.name}="${CSS.escape(attribute.value)}"]`).join("")}`;
+    const label = nowGuideSafeText(node.closest("label")?.querySelector("span")?.textContent ||
+      node.getAttribute("aria-label") || node.getAttribute("placeholder"));
+    if (!label) return null;
+    const step = node.closest(".g1-card")?.querySelector(":scope > [data-g4rsya-v453-step], :scope > [data-g4sb-step]");
+    return { selector, label, value: node.value, tag: node.tagName,
+      statusControl: attributes.some(attribute => /field/.test(attribute.name) && attribute.value === "status"),
+      options: node.options ? [...node.options].map(option => ({ value: option.value, label: nowGuideSafeText(option.textContent) })) : [],
+      campaignStep: step?.dataset.g4rsyaV453Step || step?.dataset.g4sbStep,
+      campaignStepAttribute: step?.hasAttribute("data-g4rsya-v453-step") ? "data-g4rsya-v453-step" : "data-g4sb-step" };
+  }).filter(Boolean);
+}
+function nowGuideGate4ControlHints(item) {
+  const controls = nowGuideGate4Controls(item);
+  const status = controls.find(control => control.statusControl);
+  const candidates = status ? [status] : controls.filter(control => !String(control.value || "").trim());
+  if (!controls.length) return { text: "Нет поля для заполнения: нужно решение", items: [], needsDecision: true, unresolved: [item.id] };
+  const items = (candidates.length ? candidates : controls.slice(0, 1)).map(control => ({ ...control,
+    label: control.statusControl ? "Выберите статус реализации" :
+      `${control.tag === "SELECT" ? "Выберите" : control.value ? "Проверьте поле" : "Заполните поле"} «${control.label}»` }));
+  return { items, unresolved: [] };
+}
 function nowGuideGate4RevealMissing(item, missing) {
+  if (missing.campaignStep) nowGuidePlainRead(() => {
+    const rsya = missing.campaignStepAttribute === "data-g4rsya-v453-step";
+    const data = rsya ? ensureGate4RsyaV289(item.productId) : ensureGate4SearchBuild(item.productId);
+    if (rsya) data.ui.workflowStepOpenV453 = { ...data.ui.workflowStepOpenV453, [missing.campaignStep]: true };
+    else data.searchStepOpen = { ...data.searchStepOpen, [missing.campaignStep]: true };
+    const step = nowGuideFindNode(item)?.parentElement.querySelector(`[${missing.campaignStepAttribute}="${CSS.escape(missing.campaignStep)}"]`);
+    if (step) g4FiveFastCampaignStepToggleV546(step, true);
+  });
   if (!missing.searchGroup) return;
   const header = nowGuideFindNode(item);
   nowGuidePlainRead(() => {
@@ -893,15 +963,17 @@ function nowGuideRender(path = nowGuideBuildPath()) {
   const finished = !path.length || done === path.length;
   const index = current ? path.findIndex((item) => item.key === current.key) : -1;
   const ready = current && ["ready", "not_required"].includes(current.status);
+  const missingDetails = current ? nowGuideMissingDetails(current) : null;
+  const canAdvance = ready || missingDetails?.needsDecision;
   panel.innerHTML = finished
     ? `<h2>Сейчас</h2><strong class="now-guide-finished">Проект готов к запуску</strong><button type="button" class="now-guide-link" data-now-launch>Перейти к Gate 4</button>`
     : `<h2>Сейчас</h2>
        <div class="now-guide-meta"><span>Шаг ${index + 1} из ${path.length}</span><span class="now-guide-status is-${current.status}">${escapeHtml(current.gateId === "gate-4" && current.pageBadge ? nowGuideSafeText(current.pageBadge) : nowGuideStatusText(current.status))}</span></div>
        <div class="now-guide-track" role="progressbar" aria-valuenow="${done}" aria-valuemin="0" aria-valuemax="${path.length}" aria-label="Готово ${done} из ${path.length}"><span style="width:${(done / path.length) * 100}%"></span></div>
        <div class="now-guide-block">${escapeHtml(nowGuideSafeText(current.title))}</div>
-       ${nowGuideMissingHtml(current)}
+       ${nowGuideMissingHtml(current, missingDetails)}
        <div class="now-guide-gate">Gate ${current.gateId.replace("gate-", "")} · ${escapeHtml(NOW_GATE_NAMES[current.gateId] || "")}</div>
-       <div class="now-guide-actions"><button type="button" data-now-prev ${index === 0 ? "disabled" : ""}>◀ Назад</button><button type="button" data-now-next class="${ready ? "is-ready" : ""}" ${index + 1 >= path.length ? "disabled" : ""} title="${ready ? "Следующий блок" : "Сначала заполните этот блок"}">Далее ▶</button></div>
+       <div class="now-guide-actions"><button type="button" data-now-prev ${index === 0 ? "disabled" : ""}>◀ Назад</button><button type="button" data-now-next class="${canAdvance ? "is-ready" : ""}" ${index + 1 >= path.length ? "disabled" : ""} title="${ready ? "Следующий блок" : missingDetails?.needsDecision ? "Перейти к следующему блоку, статус не изменится" : "Сначала заполните этот блок"}">Далее ▶</button></div>
        <button type="button" class="now-guide-link" data-now-current>К текущему</button>`;
   const nav = document.getElementById("gateNav");
   if (!nav) return;
