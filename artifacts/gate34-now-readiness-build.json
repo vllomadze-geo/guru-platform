@@ -1,0 +1,60 @@
+{
+  "head": "c626eeaa8e80a5c114729ec4f828294317be9187",
+  "version": "2.3.526+bba012a2f063",
+  "sha256": "bba012a2f063549b8b286d09f38020ef554d644456be74754143270b6b4dd2f0",
+  "copy": "/private/tmp/guru-step3-build-4IIANX",
+  "log": "\n> guru-platform@1.2.0 build\n> node scripts/stamp-build.mjs && node scripts/verify-build-bundle.mjs\n\nStamped interface build 2.3.526+bba012a2f063\nInterface build: 2.3.526+bba012a2f063 (42 matching assets)\n",
+  "checkpoint": "73a9e240de8e7bb6ba3265225c5639fd44cfbb8c",
+  "testedBuild": "2.3.526+bba012a2f063",
+  "changedCodeFiles": [
+    "app.js",
+    "gate4-funnel-readiness.js",
+    "now-guide.js",
+    "scripts/gate12-now-readiness-smoke.mjs",
+    "scripts/gate34-now-readiness-smoke.mjs",
+    "styles.css"
+  ],
+  "exportComparison": {
+    "identical": true,
+    "differences": [],
+    "beforeSha256": "2326bb5896d1491087fb309f9f54c59c2e29df5349e1e7c68c16ed1c3a1c5389",
+    "afterSha256": "2326bb5896d1491087fb309f9f54c59c2e29df5349e1e7c68c16ed1c3a1c5389",
+    "bytes": 28081553,
+    "updatedAtFields": 259,
+    "uiPreferenceWrites": 0
+  },
+  "pathTotal": 147,
+  "pathDone": 32,
+  "screenshots": [
+    {
+      "path": "artifacts/gate34-now-readiness-gate3-field.png",
+      "bytes": 202783,
+      "sha256": "fedaea17ac22142f522056eda3db8640447165f1be7d918dc11393c22c19787e"
+    },
+    {
+      "path": "artifacts/gate34-now-readiness-gate4-field.png",
+      "bytes": 234894,
+      "sha256": "00824dca4d5b3a38dacc4f82a57702b417b2fb9d0f56816289a2189512e9847a"
+    },
+    {
+      "path": "artifacts/gate34-now-readiness-gate4-funnel.png",
+      "bytes": 174536,
+      "sha256": "402f54e1ea230f1a6f944054063659d951ec1e2bf47f7236a75b5f3e413d3b2f"
+    },
+    {
+      "path": "artifacts/gate34-now-readiness-gate1-group.png",
+      "bytes": 256465,
+      "sha256": "b8fb95aa11ab2362a61df2cfb58311e4c007a1c6bc14e7109889ebf5d9befa83"
+    },
+    {
+      "path": "artifacts/gate34-now-readiness-gate0-group.png",
+      "bytes": 292830,
+      "sha256": "5b4b629de697063599fe43e589b37672c336b0be4f39e9200caeb00325115305"
+    },
+    {
+      "path": "artifacts/gate34-now-readiness-gate3-source.png",
+      "bytes": 246693,
+      "sha256": "140c87ff7e2a1e1e82c402ed722f06d9ea95edf9fc766b70abe390e1775b1107"
+    }
+  ]
+}

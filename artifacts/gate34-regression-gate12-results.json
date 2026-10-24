@@ -1,0 +1,3338 @@
+{
+  "passed": true,
+  "matrices": {
+    "gate-1": {
+      "rows": [
+        {
+          "id": "company_demand_positioning",
+          "kind": "gate1-section",
+          "title": "Спрос, ценность, позиционирование · Компания",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "headerFound": true
+        },
+        {
+          "id": "card-14",
+          "kind": "card",
+          "title": "Robots.txt: доступ поисковых роботов",
+          "pageBadge": "Проблема",
+          "pageStatus": "problem",
+          "pathStatus": "problem",
+          "headerFound": true
+        },
+        {
+          "id": "card-16",
+          "kind": "card",
+          "title": "Канонический URL и редиректы",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "headerFound": true
+        },
+        {
+          "id": "card-20",
+          "kind": "card",
+          "title": "SSL / HTTPS: безопасность домена",
+          "pageBadge": "Проблема",
+          "pageStatus": "problem",
+          "pathStatus": "problem",
+          "headerFound": true
+        },
+        {
+          "id": "project-comparison",
+          "kind": "comparison",
+          "title": "Сравнение проекта",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "headerFound": true
+        },
+        {
+          "id": "gate1-seo-v300-company-webmaster",
+          "kind": "gate1-section",
+          "title": "Яндекс Вебмастер · Компания",
+          "pageBadge": "Проблема",
+          "pageStatus": "problem",
+          "pathStatus": "problem",
+          "headerFound": true
+        },
+        {
+          "id": "interactive-tool",
+          "kind": "gate1-tool",
+          "title": "Собственный интерактивный инструмент",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "card-21",
+          "kind": "card",
+          "title": "ГЛАВНАЯ",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "headerFound": true
+        },
+        {
+          "id": "card-22-hub",
+          "kind": "card",
+          "title": "КАТАЛОГ (ХАБ)",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "headerFound": true
+        },
+        {
+          "id": "card-22",
+          "kind": "card",
+          "title": "КАТЕГОРИЯ",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "headerFound": true
+        },
+        {
+          "id": "card-25",
+          "kind": "card",
+          "title": "СТАТЬЯ БЛОГА",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "headerFound": true
+        },
+        {
+          "id": "card-26",
+          "kind": "card",
+          "title": "О НАС",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "card-27",
+          "kind": "card",
+          "title": "КОНТАКТЫ",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "card-28",
+          "kind": "card",
+          "title": "ДОСТАВКА / ГАРАНТИИ",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "card-30",
+          "kind": "card",
+          "title": "404",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "card-31",
+          "kind": "card",
+          "title": "THANK YOU PAGE ⚠️",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "card-32",
+          "kind": "card",
+          "title": "ЛЕНДИНГ",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "card-site-header-v497",
+          "kind": "card",
+          "title": "ХЕДЕР",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "card-site-footer-v497",
+          "kind": "card",
+          "title": "Футер: навигация, доверие и юридическая база",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "card-29",
+          "kind": "card",
+          "title": "ПОЛИТИКА",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "card-35",
+          "kind": "card",
+          "title": "Cookie-баннер: уведомление и согласие",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "card-36",
+          "kind": "card",
+          "title": "Футер: навигация, доверие и юридическая база",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "card-37",
+          "kind": "card",
+          "title": "Согласие в формах",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "target-audience",
+          "kind": "audience",
+          "title": "Целевая аудитория",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "headerFound": true
+        },
+        {
+          "id": "gate1-blog-v304-company",
+          "kind": "gate1-section",
+          "title": "Блог · Компания",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "headerFound": true
+        },
+        {
+          "id": "card-24",
+          "kind": "card",
+          "title": "КАРТОЧКА ТОВАРА",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "headerFound": true
+        },
+        {
+          "id": "gate1-seo-v300-product-webmaster",
+          "kind": "gate1-section",
+          "title": "Яндекс Вебмастер · Продукт/Услуга",
+          "pageBadge": "Проблема",
+          "pageStatus": "problem",
+          "pathStatus": "problem",
+          "headerFound": true
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "kind": "gate1-section",
+          "title": "Спрос, ценность, позиционирование · Продукт/Услуга",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "headerFound": true
+        },
+        {
+          "id": "gate1-blog-v304-product",
+          "kind": "gate1-section",
+          "title": "Блог · Продукт/Услуга",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "unit-economics",
+          "kind": "unit",
+          "title": "Юнит-экономика",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        }
+      ],
+      "summary": {
+        "total": 30,
+        "done": 5,
+        "ready": 5,
+        "notRequired": 0,
+        "inProgress": 6,
+        "problem": 4,
+        "notStarted": 15,
+        "percent": 33
+      },
+      "navigationReadiness": {
+        "total": 30,
+        "done": 5,
+        "ready": 5,
+        "notRequired": 0,
+        "inProgress": 6,
+        "problem": 4,
+        "notStarted": 15,
+        "percent": 33
+      },
+      "menu": "30 блоков, прогресс 33%"
+    },
+    "gate-2": {
+      "rows": [
+        {
+          "id": "company-domain",
+          "kind": "service",
+          "title": "Домен и HTTPS",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "company-counter",
+          "kind": "wizard",
+          "title": "Яндекс Метрика · счётчик",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "company-goal",
+          "kind": "wizard",
+          "title": "Яндекс Метрика · конверсионная цель",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "company-webmaster",
+          "kind": "service",
+          "title": "Яндекс Вебмастер",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "company-yandex-business",
+          "kind": "service",
+          "title": "Яндекс Бизнес",
+          "pageBadge": "Не требуется по Gate 0",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required",
+          "headerFound": true
+        },
+        {
+          "id": "company-yandex-direct",
+          "kind": "service",
+          "title": "Яндекс Директ · кабинет",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "company-vk",
+          "kind": "service",
+          "title": "VK Реклама и пиксель",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "headerFound": true
+        },
+        {
+          "id": "company-telegram-ads",
+          "kind": "service",
+          "title": "Telegram Ads · кабинет",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "company-meta-ads",
+          "kind": "service",
+          "title": "Meta Ads · кабинет и пиксель",
+          "pageBadge": "Не требуется: все каналы отмечены «Не требуется» в Gate 0",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required",
+          "headerFound": true
+        },
+        {
+          "id": "company-ga4",
+          "kind": "service",
+          "title": "Google Analytics 4",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "company-gsc",
+          "kind": "service",
+          "title": "Google Search Console",
+          "pageBadge": "Не требуется по Gate 0",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required",
+          "headerFound": true
+        },
+        {
+          "id": "company-google-ads",
+          "kind": "service",
+          "title": "Google Ads · конверсии",
+          "pageBadge": "Не требуется: все каналы отмечены «Не требуется» в Gate 0",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required",
+          "headerFound": true
+        },
+        {
+          "id": "company-leads",
+          "kind": "service",
+          "title": "Приём заявок",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "company-safety",
+          "kind": "service",
+          "title": "Юридическая защита",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "product-landing",
+          "kind": "service",
+          "title": "Посадочная товара",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "product-counter",
+          "kind": "service",
+          "title": "Метрика продукта · визит",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "product-goal",
+          "kind": "service",
+          "title": "Метрика продукта · цель",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "product-vk",
+          "kind": "service",
+          "title": "События VK Рекламы",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        },
+        {
+          "id": "product-lead",
+          "kind": "service",
+          "title": "Сквозная проверка заявки",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "headerFound": true
+        }
+      ],
+      "summary": {
+        "total": 19,
+        "done": 4,
+        "ready": 0,
+        "notRequired": 4,
+        "inProgress": 1,
+        "problem": 0,
+        "notStarted": 14,
+        "percent": 24
+      },
+      "navigationReadiness": {
+        "total": 19,
+        "done": 4,
+        "ready": 0,
+        "notRequired": 4,
+        "inProgress": 1,
+        "problem": 0,
+        "notStarted": 14,
+        "percent": 24
+      },
+      "menu": "19 блоков, прогресс 24%"
+    }
+  },
+  "transitions": [
+    {
+      "gate": "gate-1",
+      "id": "company_demand_positioning",
+      "title": "Спрос, ценность, позиционирование · Компания",
+      "status": "in_progress",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14fhqch\"][data-pv181-company-demand-field-v345=\"vol\"]",
+            "label": "Спрос: у 9 из 16 слов нет метрик",
+            "group": {
+              "key": "company-demand-metrics",
+              "label": "Спрос: нет метрик",
+              "row": "brand-demand-14fhqch",
+              "total": 16,
+              "noun": "слов"
+            },
+            "groupedCount": 9,
+            "members": [
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14fhqch\"][data-pv181-company-demand-field-v345=\"vol\"]",
+                "label": "Спрос: авторские изделия ручной работы, Объём показов/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-14fhqch",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14fhqch\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+                "label": "Спрос: авторские изделия ручной работы, Примерное количество запросов",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-14fhqch",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14fhqch\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+                "label": "Спрос: авторские изделия ручной работы, Переходы/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-14fhqch",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14fhqch\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+                "label": "Спрос: авторские изделия ручной работы, Цена клика, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-14fhqch",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14fhqch\"][data-pv181-company-demand-field-v345=\"bid\"]",
+                "label": "Спрос: авторские изделия ручной работы, Ставка, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-14fhqch",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14fhqch\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+                "label": "Спрос: авторские изделия ручной работы, Примерный бюджет, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-14fhqch",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1514tof\"][data-pv181-company-demand-field-v345=\"vol\"]",
+                "label": "Спрос: авторские изделия на заказ, Объём показов/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-1514tof",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1514tof\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+                "label": "Спрос: авторские изделия на заказ, Примерное количество запросов",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-1514tof",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1514tof\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+                "label": "Спрос: авторские изделия на заказ, Переходы/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-1514tof",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1514tof\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+                "label": "Спрос: авторские изделия на заказ, Цена клика, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-1514tof",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1514tof\"][data-pv181-company-demand-field-v345=\"bid\"]",
+                "label": "Спрос: авторские изделия на заказ, Ставка, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-1514tof",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1514tof\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+                "label": "Спрос: авторские изделия на заказ, Примерный бюджет, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-1514tof",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1h43ipg\"][data-pv181-company-demand-field-v345=\"vol\"]",
+                "label": "Спрос: изделия ручной работы на заказ, Объём показов/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-1h43ipg",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1h43ipg\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+                "label": "Спрос: изделия ручной работы на заказ, Примерное количество запросов",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-1h43ipg",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1h43ipg\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+                "label": "Спрос: изделия ручной работы на заказ, Переходы/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-1h43ipg",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1h43ipg\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+                "label": "Спрос: изделия ручной работы на заказ, Цена клика, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-1h43ipg",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1h43ipg\"][data-pv181-company-demand-field-v345=\"bid\"]",
+                "label": "Спрос: изделия ручной работы на заказ, Ставка, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-1h43ipg",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1h43ipg\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+                "label": "Спрос: изделия ручной работы на заказ, Примерный бюджет, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-1h43ipg",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-u8rrhk\"][data-pv181-company-demand-field-v345=\"vol\"]",
+                "label": "Спрос: авторские подарки на заказ, Объём показов/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-u8rrhk",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-u8rrhk\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+                "label": "Спрос: авторские подарки на заказ, Примерное количество запросов",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-u8rrhk",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-u8rrhk\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+                "label": "Спрос: авторские подарки на заказ, Переходы/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-u8rrhk",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-u8rrhk\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+                "label": "Спрос: авторские подарки на заказ, Цена клика, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-u8rrhk",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-u8rrhk\"][data-pv181-company-demand-field-v345=\"bid\"]",
+                "label": "Спрос: авторские подарки на заказ, Ставка, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-u8rrhk",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-u8rrhk\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+                "label": "Спрос: авторские подарки на заказ, Примерный бюджет, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-u8rrhk",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14s1g6j\"][data-pv181-company-demand-field-v345=\"vol\"]",
+                "label": "Спрос: подарки ручной работы на заказ, Объём показов/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-14s1g6j",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14s1g6j\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+                "label": "Спрос: подарки ручной работы на заказ, Примерное количество запросов",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-14s1g6j",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14s1g6j\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+                "label": "Спрос: подарки ручной работы на заказ, Переходы/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-14s1g6j",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14s1g6j\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+                "label": "Спрос: подарки ручной работы на заказ, Цена клика, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-14s1g6j",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14s1g6j\"][data-pv181-company-demand-field-v345=\"bid\"]",
+                "label": "Спрос: подарки ручной работы на заказ, Ставка, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-14s1g6j",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14s1g6j\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+                "label": "Спрос: подарки ручной работы на заказ, Примерный бюджет, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-14s1g6j",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-15bcfwr\"][data-pv181-company-demand-field-v345=\"vol\"]",
+                "label": "Спрос: авторские изделия Москва, Объём показов/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-15bcfwr",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-15bcfwr\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+                "label": "Спрос: авторские изделия Москва, Примерное количество запросов",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-15bcfwr",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-15bcfwr\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+                "label": "Спрос: авторские изделия Москва, Переходы/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-15bcfwr",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-15bcfwr\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+                "label": "Спрос: авторские изделия Москва, Цена клика, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-15bcfwr",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-15bcfwr\"][data-pv181-company-demand-field-v345=\"bid\"]",
+                "label": "Спрос: авторские изделия Москва, Ставка, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-15bcfwr",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-15bcfwr\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+                "label": "Спрос: авторские изделия Москва, Примерный бюджет, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-15bcfwr",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-zfbgfq\"][data-pv181-company-demand-field-v345=\"vol\"]",
+                "label": "Спрос: изделия ручной работы Москва, Объём показов/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-zfbgfq",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-zfbgfq\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+                "label": "Спрос: изделия ручной работы Москва, Примерное количество запросов",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-zfbgfq",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-zfbgfq\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+                "label": "Спрос: изделия ручной работы Москва, Переходы/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-zfbgfq",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-zfbgfq\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+                "label": "Спрос: изделия ручной работы Москва, Цена клика, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-zfbgfq",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-zfbgfq\"][data-pv181-company-demand-field-v345=\"bid\"]",
+                "label": "Спрос: изделия ручной работы Москва, Ставка, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-zfbgfq",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-zfbgfq\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+                "label": "Спрос: изделия ручной работы Москва, Примерный бюджет, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-zfbgfq",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-3748j6\"][data-pv181-company-demand-field-v345=\"vol\"]",
+                "label": "Спрос: авторские предметы для дома, Объём показов/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-3748j6",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-3748j6\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+                "label": "Спрос: авторские предметы для дома, Примерное количество запросов",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-3748j6",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-3748j6\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+                "label": "Спрос: авторские предметы для дома, Переходы/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-3748j6",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-3748j6\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+                "label": "Спрос: авторские предметы для дома, Цена клика, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-3748j6",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-3748j6\"][data-pv181-company-demand-field-v345=\"bid\"]",
+                "label": "Спрос: авторские предметы для дома, Ставка, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-3748j6",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-3748j6\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+                "label": "Спрос: авторские предметы для дома, Примерный бюджет, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-3748j6",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-l8vecz\"][data-pv181-company-demand-field-v345=\"vol\"]",
+                "label": "Спрос: предметы для дома ручной работы, Объём показов/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-l8vecz",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-l8vecz\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+                "label": "Спрос: предметы для дома ручной работы, Примерное количество запросов",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-l8vecz",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-l8vecz\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+                "label": "Спрос: предметы для дома ручной работы, Переходы/мес",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-l8vecz",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-l8vecz\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+                "label": "Спрос: предметы для дома ручной работы, Цена клика, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-l8vecz",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-l8vecz\"][data-pv181-company-demand-field-v345=\"bid\"]",
+                "label": "Спрос: предметы для дома ручной работы, Ставка, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-l8vecz",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              },
+              {
+                "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-l8vecz\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+                "label": "Спрос: предметы для дома ручной работы, Примерный бюджет, руб.",
+                "group": {
+                  "key": "company-demand-metrics",
+                  "label": "Спрос: нет метрик",
+                  "row": "brand-demand-l8vecz",
+                  "total": 16,
+                  "noun": "слов"
+                }
+              }
+            ]
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-14",
+      "title": "Robots.txt: доступ поисковых роботов",
+      "status": "problem",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "card-14"
+        ]
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-16",
+      "title": "Канонический URL и редиректы",
+      "status": "ready",
+      "highlighted": true,
+      "details": {
+        "text": "Всё заполнено",
+        "items": [],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-20",
+      "title": "SSL / HTTPS: безопасность домена",
+      "status": "problem",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-ssl-v130-field=\"domain\"]",
+            "label": "Проверяемый домен"
+          },
+          {
+            "selector": "[data-ssl-v130-field=\"httpsWorks\"]",
+            "label": "HTTPS работает"
+          },
+          {
+            "selector": "[data-ssl-v130-field=\"httpCode\"]",
+            "label": "HTTP-код"
+          },
+          {
+            "selector": "[data-ssl-v130-field=\"certValid\"]",
+            "label": "SSL-сертификат валиден"
+          },
+          {
+            "selector": "[data-ssl-v130-field=\"domainMatch\"]",
+            "label": "Домен совпадает"
+          },
+          {
+            "selector": "[data-ssl-v130-field=\"expiresIn\"]",
+            "label": "Истекает через (дней)"
+          },
+          {
+            "selector": "[data-ssl-v130-field=\"chain\"]",
+            "label": "Цепочка сертификата"
+          },
+          {
+            "selector": "[data-ssl-v130-field=\"evidence\"]",
+            "label": "Доказательство"
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "project-comparison",
+      "title": "Сравнение проекта",
+      "status": "in_progress",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-project-comparison-cell=\"comparison-criterion-1784665599648-121a7f\"][data-project-comparison-owner=\"comparison-competitor-1784665599648-35445a\"][data-project-comparison-field=\"text\"]",
+            "label": "Удалить: не заполнено у 7 из 7 записей",
+            "groupedCount": 7,
+            "members": [
+              {
+                "selector": "[data-project-comparison-cell=\"comparison-criterion-1784665599648-121a7f\"][data-project-comparison-owner=\"comparison-competitor-1784665599648-35445a\"][data-project-comparison-field=\"text\"]",
+                "label": "Конкурент 1: Целевая аудитория"
+              },
+              {
+                "selector": "[data-project-comparison-cell=\"comparison-criterion-1784665599648-0c225b\"][data-project-comparison-owner=\"comparison-competitor-1784665599648-35445a\"][data-project-comparison-field=\"text\"]",
+                "label": "Конкурент 1: Ассортимент"
+              },
+              {
+                "selector": "[data-project-comparison-cell=\"comparison-criterion-1784665599648-cc3008\"][data-project-comparison-owner=\"comparison-competitor-1784665599648-35445a\"][data-project-comparison-field=\"text\"]",
+                "label": "Конкурент 1: Цена"
+              },
+              {
+                "selector": "[data-project-comparison-cell=\"comparison-criterion-1784665599648-6b1620\"][data-project-comparison-owner=\"comparison-competitor-1784665599648-35445a\"][data-project-comparison-field=\"text\"]",
+                "label": "Конкурент 1: Каналы продаж"
+              },
+              {
+                "selector": "[data-project-comparison-cell=\"comparison-criterion-1784665599648-f979b8\"][data-project-comparison-owner=\"comparison-competitor-1784665599648-35445a\"][data-project-comparison-field=\"text\"]",
+                "label": "Конкурент 1: Продвижение"
+              },
+              {
+                "selector": "[data-project-comparison-cell=\"comparison-criterion-1784665599648-8fa35f\"][data-project-comparison-owner=\"comparison-competitor-1784665599648-35445a\"][data-project-comparison-field=\"text\"]",
+                "label": "Конкурент 1: Сильные стороны"
+              },
+              {
+                "selector": "[data-project-comparison-cell=\"comparison-criterion-1784665599648-1b90af\"][data-project-comparison-owner=\"comparison-competitor-1784665599648-35445a\"][data-project-comparison-field=\"text\"]",
+                "label": "Конкурент 1: Слабые стороны"
+              }
+            ]
+          },
+          {
+            "selector": "[data-project-comparison-summary=\"marketStronger\"]",
+            "label": "В чём рынок сильнее нас"
+          },
+          {
+            "selector": "[data-project-comparison-summary=\"ourStronger\"]",
+            "label": "В чём мы сильнее рынка"
+          },
+          {
+            "selector": "[data-project-comparison-summary=\"same\"]",
+            "label": "В чём мы одинаковы"
+          },
+          {
+            "selector": "[data-project-comparison-cell=\"comparison-criterion-1784665599648-cc3008\"][data-project-comparison-owner=\"our-project\"][data-project-comparison-field=\"text\"]",
+            "label": "Наш проект: цена"
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "gate1-seo-v300-company-webmaster",
+      "title": "Яндекс Вебмастер · Компания",
+      "status": "problem",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g1-webmaster-company-v295=\"verificationStatus\"]",
+            "label": "Подтверждение сайта: Статус"
+          },
+          {
+            "selector": "[data-g1-webmaster-company-v295=\"crawlErrorsStatus\"]",
+            "label": "Ошибки обхода: Результат диагностики"
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "interactive-tool",
+      "title": "Собственный интерактивный инструмент",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g1-seo-interactive-tool-field-v305=\"exists_now\"]",
+            "label": "Есть ли у бизнеса такой инструмент сейчас?"
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-21",
+      "title": "ГЛАВНАЯ",
+      "status": "ready",
+      "highlighted": true,
+      "details": {
+        "text": "Всё заполнено",
+        "items": [],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-22-hub",
+      "title": "КАТАЛОГ (ХАБ)",
+      "status": "in_progress",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "card-22-hub"
+        ]
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-22",
+      "title": "КАТЕГОРИЯ",
+      "status": "in_progress",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"0\"][data-page-context-key=\"catalogLeadMagnetTitle\"]",
+            "label": "Заголовок врезки: не заполнено у 6 записей",
+            "groupedCount": 6,
+            "members": [
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"0\"][data-page-context-key=\"catalogLeadMagnetTitle\"]",
+                "label": "Авторская одежда: H2: Заголовок врезки"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"1\"][data-page-context-key=\"catalogLeadMagnetTitle\"]",
+                "label": "Живопись и графика: H2: Заголовок врезки"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"2\"][data-page-context-key=\"catalogLeadMagnetTitle\"]",
+                "label": "Дизайнерские подарки: H2: Заголовок врезки"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"3\"][data-page-context-key=\"catalogLeadMagnetTitle\"]",
+                "label": "Дом и сервировка: H2: Заголовок врезки"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"4\"][data-page-context-key=\"catalogLeadMagnetTitle\"]",
+                "label": "Украшение дома: H2: Заголовок врезки"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"5\"][data-page-context-key=\"catalogLeadMagnetTitle\"]",
+                "label": "На заказ: H2: Заголовок врезки"
+              }
+            ]
+          },
+          {
+            "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"0\"][data-page-context-key=\"catalogLeadMagnetButton\"]",
+            "label": "Кнопка: не заполнено у 6 записей",
+            "groupedCount": 6,
+            "members": [
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"0\"][data-page-context-key=\"catalogLeadMagnetButton\"]",
+                "label": "Авторская одежда: Кнопка"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"1\"][data-page-context-key=\"catalogLeadMagnetButton\"]",
+                "label": "Живопись и графика: Кнопка"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"2\"][data-page-context-key=\"catalogLeadMagnetButton\"]",
+                "label": "Дизайнерские подарки: Кнопка"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"3\"][data-page-context-key=\"catalogLeadMagnetButton\"]",
+                "label": "Дом и сервировка: Кнопка"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"4\"][data-page-context-key=\"catalogLeadMagnetButton\"]",
+                "label": "Украшение дома: Кнопка"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"5\"][data-page-context-key=\"catalogLeadMagnetButton\"]",
+                "label": "На заказ: Кнопка"
+              }
+            ]
+          },
+          {
+            "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"0\"][data-page-context-key=\"catalogRelated\"]",
+            "label": "Смотрите также: не заполнено у 6 записей",
+            "groupedCount": 6,
+            "members": [
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"0\"][data-page-context-key=\"catalogRelated\"]",
+                "label": "Авторская одежда: Смотрите также"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"1\"][data-page-context-key=\"catalogRelated\"]",
+                "label": "Живопись и графика: Смотрите также"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"2\"][data-page-context-key=\"catalogRelated\"]",
+                "label": "Дизайнерские подарки: Смотрите также"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"3\"][data-page-context-key=\"catalogRelated\"]",
+                "label": "Дом и сервировка: Смотрите также"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"4\"][data-page-context-key=\"catalogRelated\"]",
+                "label": "Украшение дома: Смотрите также"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"5\"][data-page-context-key=\"catalogRelated\"]",
+                "label": "На заказ: Смотрите также"
+              }
+            ]
+          },
+          {
+            "selector": "[data-gate1-page-card-id=\"card-22\"][data-gate1-page-index=\"0\"][data-gate1-page-field=\"title\"]",
+            "label": "Title: не заполнено у 6 записей",
+            "groupedCount": 6,
+            "members": [
+              {
+                "selector": "[data-gate1-page-card-id=\"card-22\"][data-gate1-page-index=\"0\"][data-gate1-page-field=\"title\"]",
+                "label": "Авторская одежда: Title"
+              },
+              {
+                "selector": "[data-gate1-page-card-id=\"card-22\"][data-gate1-page-index=\"1\"][data-gate1-page-field=\"title\"]",
+                "label": "Живопись и графика: Title"
+              },
+              {
+                "selector": "[data-gate1-page-card-id=\"card-22\"][data-gate1-page-index=\"2\"][data-gate1-page-field=\"title\"]",
+                "label": "Дизайнерские подарки: Title"
+              },
+              {
+                "selector": "[data-gate1-page-card-id=\"card-22\"][data-gate1-page-index=\"3\"][data-gate1-page-field=\"title\"]",
+                "label": "Дом и сервировка: Title"
+              },
+              {
+                "selector": "[data-gate1-page-card-id=\"card-22\"][data-gate1-page-index=\"4\"][data-gate1-page-field=\"title\"]",
+                "label": "Украшение дома: Title"
+              },
+              {
+                "selector": "[data-gate1-page-card-id=\"card-22\"][data-gate1-page-index=\"5\"][data-gate1-page-field=\"title\"]",
+                "label": "На заказ: Title"
+              }
+            ]
+          },
+          {
+            "selector": "[data-gate1-page-card-id=\"card-22\"][data-gate1-page-index=\"0\"][data-gate1-page-field=\"description\"]",
+            "label": "Description: не заполнено у 6 записей",
+            "groupedCount": 6,
+            "members": [
+              {
+                "selector": "[data-gate1-page-card-id=\"card-22\"][data-gate1-page-index=\"0\"][data-gate1-page-field=\"description\"]",
+                "label": "Авторская одежда: Description"
+              },
+              {
+                "selector": "[data-gate1-page-card-id=\"card-22\"][data-gate1-page-index=\"1\"][data-gate1-page-field=\"description\"]",
+                "label": "Живопись и графика: Description"
+              },
+              {
+                "selector": "[data-gate1-page-card-id=\"card-22\"][data-gate1-page-index=\"2\"][data-gate1-page-field=\"description\"]",
+                "label": "Дизайнерские подарки: Description"
+              },
+              {
+                "selector": "[data-gate1-page-card-id=\"card-22\"][data-gate1-page-index=\"3\"][data-gate1-page-field=\"description\"]",
+                "label": "Дом и сервировка: Description"
+              },
+              {
+                "selector": "[data-gate1-page-card-id=\"card-22\"][data-gate1-page-index=\"4\"][data-gate1-page-field=\"description\"]",
+                "label": "Украшение дома: Description"
+              },
+              {
+                "selector": "[data-gate1-page-card-id=\"card-22\"][data-gate1-page-index=\"5\"][data-gate1-page-field=\"description\"]",
+                "label": "На заказ: Description"
+              }
+            ]
+          },
+          {
+            "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"0\"][data-page-context-key=\"seoKeywords\"]",
+            "label": "Ключевые слова: не заполнено у 6 записей",
+            "groupedCount": 6,
+            "members": [
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"0\"][data-page-context-key=\"seoKeywords\"]",
+                "label": "Авторская одежда: Ключевые слова"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"1\"][data-page-context-key=\"seoKeywords\"]",
+                "label": "Живопись и графика: Ключевые слова"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"2\"][data-page-context-key=\"seoKeywords\"]",
+                "label": "Дизайнерские подарки: Ключевые слова"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"3\"][data-page-context-key=\"seoKeywords\"]",
+                "label": "Дом и сервировка: Ключевые слова"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"4\"][data-page-context-key=\"seoKeywords\"]",
+                "label": "Украшение дома: Ключевые слова"
+              },
+              {
+                "selector": "[data-page-context-card-id=\"card-22\"][data-page-context-index=\"5\"][data-page-context-key=\"seoKeywords\"]",
+                "label": "На заказ: Ключевые слова"
+              }
+            ]
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-25",
+      "title": "СТАТЬЯ БЛОГА",
+      "status": "in_progress",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "card-25"
+        ]
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-26",
+      "title": "О НАС",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "card-26"
+        ]
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-27",
+      "title": "КОНТАКТЫ",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "card-27"
+        ]
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-28",
+      "title": "ДОСТАВКА / ГАРАНТИИ",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "card-28"
+        ]
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-30",
+      "title": "404",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "card-30"
+        ]
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-31",
+      "title": "THANK YOU PAGE ⚠️",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "card-31"
+        ]
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-32",
+      "title": "ЛЕНДИНГ",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "card-32"
+        ]
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-site-header-v497",
+      "title": "ХЕДЕР",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "card-site-header-v497"
+        ]
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-site-footer-v497",
+      "title": "Футер: навигация, доверие и юридическая база",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "card-site-footer-v497"
+        ]
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-29",
+      "title": "ПОЛИТИКА",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "card-29"
+        ]
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-35",
+      "title": "Cookie-баннер: уведомление и согласие",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "card-35"
+        ]
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-36",
+      "title": "Футер: навигация, доверие и юридическая база",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "card-36"
+        ]
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-37",
+      "title": "Согласие в формах",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-consent-v130-place=\"home\"][data-consent-v130-col=\"status\"]",
+            "label": "Главная: Статус"
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "target-audience",
+      "title": "Целевая аудитория",
+      "status": "ready",
+      "highlighted": true,
+      "details": {
+        "text": "Всё заполнено",
+        "items": [],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "gate1-blog-v304-company",
+      "title": "Блог · Компания",
+      "status": "in_progress",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-gate1-blog-article-id-v304=\"gate1-blog-article-1789069674650-bab623\"][data-gate1-blog-article-field-v304=\"title\"]",
+            "label": "Статья: Заголовок"
+          },
+          {
+            "selector": "[data-gate1-blog-article-id-v304=\"gate1-blog-article-1789069674650-bab623\"][data-gate1-blog-article-field-v304=\"summary\"]",
+            "label": "Статья: Краткое описание для списка хаба"
+          },
+          {
+            "selector": "[data-gate1-blog-article-id-v304=\"gate1-blog-article-1789069674650-bab623\"][data-gate1-blog-article-field-v304=\"publication_date\"]",
+            "label": "Статья: Дата публикации"
+          },
+          {
+            "selector": "[data-gate1-blog-article-id-v304=\"gate1-blog-article-1789069674650-bab623\"][data-gate1-blog-article-field-v304=\"reading_minutes\"]",
+            "label": "Статья: Время чтения, мин."
+          },
+          {
+            "selector": "[data-gate1-blog-article-id-v304=\"gate1-blog-article-1789069674650-bab623\"][data-gate1-blog-toc-index-v304=\"0\"]",
+            "label": "Статья: Оглавление"
+          },
+          {
+            "selector": "[data-gate1-blog-article-id-v304=\"gate1-blog-article-1789069674650-bab623\"][data-gate1-blog-faq-field-v304=\"question\"][data-gate1-blog-faq-index-v304=\"0\"]",
+            "label": "Статья: FAQ: Вопрос"
+          },
+          {
+            "selector": "[data-gate1-blog-article-id-v304=\"gate1-blog-article-1789069674650-bab623\"][data-gate1-blog-faq-field-v304=\"answer\"][data-gate1-blog-faq-index-v304=\"0\"]",
+            "label": "Статья: FAQ: Ответ"
+          },
+          {
+            "selector": "[data-gate1-blog-article-id-v304=\"gate1-blog-article-1789069674650-bab623\"][data-gate1-blog-author-field-v304=\"name\"]",
+            "label": "Статья: Имя"
+          },
+          {
+            "selector": "[data-gate1-blog-article-id-v304=\"gate1-blog-article-1789069674650-bab623\"][data-gate1-blog-author-field-v304=\"role\"]",
+            "label": "Статья: Должность"
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-24",
+      "title": "КАРТОЧКА ТОВАРА",
+      "status": "ready",
+      "highlighted": true,
+      "details": {
+        "text": "Всё заполнено",
+        "items": [],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "gate1-seo-v300-product-webmaster",
+      "title": "Яндекс Вебмастер · Продукт/Услуга",
+      "status": "problem",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "gate1-seo-v300-product-webmaster"
+        ]
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "pain_jtbd_offer",
+      "title": "Спрос, ценность, позиционирование · Продукт/Услуга",
+      "status": "ready",
+      "highlighted": true,
+      "details": {
+        "text": "Всё заполнено",
+        "items": [],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "gate1-blog-v304-product",
+      "title": "Блог · Продукт/Услуга",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-gate1-blog-link-select-v304]",
+            "label": "Статьи для продукта: выберите существующую статью"
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-1",
+      "id": "unit-economics",
+      "title": "Юнит-экономика",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "unit-economics"
+        ]
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "company-domain",
+      "title": "Домен и HTTPS",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g2sb-id=\"company-domain\"] [data-g2sb-step-id=\"address\"]",
+            "label": "Шаг 01: Укажите основной адрес сайта.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-domain\"] [data-g2sb-step-id=\"platform\"]",
+            "label": "Шаг 02: Выберите платформу сайта.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-domain\"] [data-g2sb-step-id=\"provider\"]",
+            "label": "Шаг 03: Укажите регистратора домена и провайдера размещения.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-domain\"] [data-g2sb-step-id=\"dns_source\"]",
+            "label": "Шаг 04: Откройте настройки домена у провайдера и получите его DNS-записи.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-domain\"] [data-g2sb-step-id=\"dns_set\"]",
+            "label": "Шаг 05: Добавьте полученные записи в панели DNS. Не используйте чужой IP или шаблон.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-domain\"] [data-g2sb-step-id=\"open\"]",
+            "label": "Шаг 06: Проверьте открытие основного адреса.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-domain\"] [data-g2sb-step-id=\"https\"]",
+            "label": "Шаг 07: Проверьте HTTPS и сертификат в браузере.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-domain\"] [data-g2sb-step-id=\"redirect\"]",
+            "label": "Шаг 08: Проверьте перенаправления на основной адрес.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-domain\"] .g2w-verify",
+            "label": "Проверка результата: подтвердите работу настройки",
+            "step": true
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "company-counter",
+      "title": "Яндекс Метрика · счётчик",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g2w-card-view=\"counter\"] .g2w-step:nth-child(1)",
+            "label": "Шаг 01: Откройте Метрику и создайте или выберите существующий счётчик.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2w-card-view=\"counter\"] .g2w-step:nth-child(2)",
+            "label": "Шаг 02: Скопируйте ID счётчика в GURU.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2w-card-view=\"counter\"] .g2w-step:nth-child(3)",
+            "label": "Шаг 03: Установите код на сайт и опубликуйте изменения.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2w-card-view=\"counter\"] .g2w-step:nth-child(4)",
+            "label": "Шаг 04: В Метрике проверьте наличие счётчика на рабочем URL.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2w-card-view=\"counter\"] .g2w-step:nth-child(5)",
+            "label": "Шаг 05: Откройте сайт с _ym_debug=2 и убедитесь, что контрольный визит зарегистрирован.",
+            "step": true
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "company-goal",
+      "title": "Яндекс Метрика · конверсионная цель",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g2w-card-view=\"goal\"] .g2w-step:nth-child(1)",
+            "label": "Шаг 01: Определите действие клиента: отправка заявки, заказ или другое событие.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2w-card-view=\"goal\"] .g2w-step:nth-child(2)",
+            "label": "Шаг 02: Откройте Метрика → Цели → Добавить цель.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2w-card-view=\"goal\"] .g2w-step:nth-child(3)",
+            "label": "Шаг 03: Выберите тип, который соответствует фактическому действию.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2w-card-view=\"goal\"] .g2w-step:nth-child(4)",
+            "label": "Шаг 04: Сохраните название цели.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2w-card-view=\"goal\"] .g2w-step:nth-child(5)",
+            "label": "Шаг 05: Сохраните ID цели.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2w-card-view=\"goal\"] .g2w-step:nth-child(6)",
+            "label": "Шаг 06: Выполните реальное действие на сайте.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2w-card-view=\"goal\"] .g2w-step:nth-child(7)",
+            "label": "Шаг 07: Проверьте срабатывание цели в отладке и отчёте Метрики.",
+            "step": true
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "company-webmaster",
+      "title": "Яндекс Вебмастер",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g2sb-id=\"company-webmaster\"] [data-g2sb-step-id=\"open\"]",
+            "label": "Шаг 01: Добавьте сайт (только сайт с собственным доменом; адрес с http или https, с www или без).",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-webmaster\"] [data-g2sb-step-id=\"rights\"]",
+            "label": "Шаг 02: Подтвердите права. Рекомендуемый способ: HTML-файл в корне сайта. Другие: метатег в head главной, TXT-запись в DNS, менеджер тегов, регистратор, конструктор сайтов. Адрес с www и без www считаются разными сайтами.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-webmaster\"] [data-g2sb-step-id=\"robots\"]",
+            "label": "Шаг 03: Проверьте robots.txt.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-webmaster\"] [data-g2sb-step-id=\"sitemap\"]",
+            "label": "Шаг 04: Передайте sitemap.xml.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-webmaster\"] [data-g2sb-step-id=\"pages\"]",
+            "label": "Шаг 05: Проверьте, что важные коммерческие страницы разрешены роботу.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-webmaster\"] [data-g2sb-step-id=\"advice\"]",
+            "label": "Шаг 06: Откройте рекомендации по оптимизации.",
+            "step": true
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "company-yandex-business",
+      "title": "Яндекс Бизнес",
+      "status": "not_required",
+      "highlighted": true,
+      "details": {
+        "text": "Не требуется",
+        "items": [],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "company-yandex-direct",
+      "title": "Яндекс Директ · кабинет",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g2sb-id=\"company-yandex-direct\"] [data-g2sb-step-id=\"account\"]",
+            "label": "Шаг 01: Войдите в Директ под рабочим Яндекс ID.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-yandex-direct\"] [data-g2sb-step-id=\"counter\"]",
+            "label": "Шаг 02: Убедитесь, что счётчик и цели созданы в блоке «Яндекс Метрика · Компания» этого же Gate 2.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-yandex-direct\"] [data-g2sb-step-id=\"link\"]",
+            "label": "Шаг 03: В параметрах кампании заполните поле «Счётчики Метрики». Для многих кампаний укажите номер в поле «Счётчик Метрики для новых кампаний» в настройках пользователя.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-yandex-direct\"] [data-g2sb-step-id=\"access\"]",
+            "label": "Шаг 04: Если счётчика нет в списке, нажмите «Запросить доступ». Чтобы агентству не открывать весь счётчик, в Метрике на странице «Цели» включите «Разрешить в кампаниях оптимизацию по целям без доступа к счетчику».",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-yandex-direct\"] [data-g2sb-step-id=\"yclid\"]",
+            "label": "Шаг 05: Проверьте, что сайт не теряет метку yclid, в том числе при редиректах.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-yandex-direct\"] [data-g2sb-step-id=\"payment\"]",
+            "label": "Шаг 06: Проверьте оплату и баланс.",
+            "step": true
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "company-vk",
+      "title": "VK Реклама и пиксель",
+      "status": "in_progress",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g2sb-id=\"company-vk\"] [data-g2sb-step-id=\"existing\"]",
+            "label": "Шаг 02: Сначала найдите пиксель для домена из Gate 0. Сверьте домен и ID; если он принадлежит другому кабинету, запросите доступ у владельца.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-vk\"] [data-g2sb-step-id=\"pixel\"]",
+            "label": "Шаг 03: Используйте пиксель найденного домена. Создайте новый только если подходящего пикселя нет; при чужом пикселе сначала запросите доступ.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-vk\"] [data-g2sb-step-id=\"id\"]",
+            "label": "Шаг 04: Откройте выбранный пиксель и скопируйте только числовой ID счётчика top.mail.ru из кода пикселя.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-vk\"] [data-g2sb-step-id=\"install\"]",
+            "label": "Шаг 05: В Tilda вставьте сохранённый числовой ID в поле счётчика и нажмите «Сохранить». Не вставляйте весь код пикселя в поле ID.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-vk\"] [data-g2sb-step-id=\"publish\"]",
+            "label": "Шаг 06: После сохранения ID опубликуйте все страницы сайта.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-vk\"] [data-g2sb-step-id=\"visit\"]",
+            "label": "Шаг 07: Откройте опубликованный сайт в браузере и проверьте поступление тестового посещения. Запишите увиденный статус и время визита.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-vk\"] .g2w-verify",
+            "label": "Проверка результата: подтвердите работу настройки",
+            "step": true
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "company-telegram-ads",
+      "title": "Telegram Ads · кабинет",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g2sb-id=\"company-telegram-ads\"] [data-g2sb-step-id=\"auth\"]",
+            "label": "Шаг 01: Войдите по номеру телефона в международном формате и подтвердите вход в Telegram.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-telegram-ads\"] [data-g2sb-step-id=\"channels\"]",
+            "label": "Шаг 02: Убедитесь, что есть подходящие тематике публичные каналы: объявления показываются в публичных каналах от 1000 подписчиков, каналы выбираются вручную.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-telegram-ads\"] [data-g2sb-step-id=\"ad\"]",
+            "label": "Шаг 03: Создайте тестовое объявление: текст до 160 символов, ссылка на Telegram, список каналов.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-telegram-ads\"] [data-g2sb-step-id=\"payment\"]",
+            "label": "Шаг 04: Проверьте доступный в вашем кабинете способ пополнения и баланс перед запуском.",
+            "step": true
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "company-meta-ads",
+      "title": "Meta Ads · кабинет и пиксель",
+      "status": "not_required",
+      "highlighted": true,
+      "details": {
+        "text": "Не требуется",
+        "items": [],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "company-ga4",
+      "title": "Google Analytics 4",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g2sb-id=\"company-ga4\"] [data-g2sb-step-id=\"account\"]",
+            "label": "Шаг 01: Создайте аккаунт.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-ga4\"] [data-g2sb-step-id=\"property\"]",
+            "label": "Шаг 02: Создайте ресурс: название, часовой пояс, валюта, отрасль, размер бизнеса, цели.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-ga4\"] [data-g2sb-step-id=\"stream\"]",
+            "label": "Шаг 03: Добавьте веб-поток: URL сайта, название, включите расширенное измерение.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-ga4\"] [data-g2sb-step-id=\"install\"]",
+            "label": "Шаг 04: В Tilda вставьте идентификатор потока G- в поле Google Analytics, сохраните и опубликуйте все страницы.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-ga4\"] [data-g2sb-step-id=\"check\"]",
+            "label": "Шаг 05: Откройте отчёт «Реальное время» и зайдите на сайт.",
+            "step": true
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "company-gsc",
+      "title": "Google Search Console",
+      "status": "not_required",
+      "highlighted": true,
+      "details": {
+        "text": "Не требуется",
+        "items": [],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "company-google-ads",
+      "title": "Google Ads · конверсии",
+      "status": "not_required",
+      "highlighted": true,
+      "details": {
+        "text": "Не требуется",
+        "items": [],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "company-leads",
+      "title": "Приём заявок",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g2sb-id=\"company-leads\"] [data-g2sb-step-id=\"system\"]",
+            "label": "Шаг 01: Определите, куда приходят заявки: раздел «Заявки» Tilda, Email, Telegram, amoCRM или Битрикс24. Сервисы работают только при активной подписке.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-leads\"] [data-g2sb-step-id=\"connect\"]",
+            "label": "Шаг 02: Подключите сервис и привяжите его к форме.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-leads\"] [data-g2sb-step-id=\"fields\"]",
+            "label": "Шаг 03: Проверьте передачу имени, контакта, источника и страницы обращения.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-leads\"] [data-g2sb-step-id=\"utm\"]",
+            "label": "Шаг 04: Проверьте UTM и привязку к продукту, если данные доступны.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-leads\"] [data-g2sb-step-id=\"send\"]",
+            "label": "Шаг 05: Опубликуйте страницу и отправьте тестовую заявку.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-leads\"] [data-g2sb-step-id=\"receive\"]",
+            "label": "Шаг 06: Убедитесь, что заявка пришла в сервис и есть в разделе «Заявки».",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-leads\"] [data-g2sb-step-id=\"storage\"]",
+            "label": "Шаг 07: Проверьте срок хранения заявок. По умолчанию один месяц.",
+            "step": true
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "company-safety",
+      "title": "Юридическая защита",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g2sb-id=\"company-safety\"] [data-g2sb-step-id=\"https\"]",
+            "label": "Шаг 01: Проверьте HTTPS на рабочем сайте.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-safety\"] [data-g2sb-step-id=\"policy\"]",
+            "label": "Шаг 02: Откройте опубликованную политику обработки данных.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-safety\"] [data-g2sb-step-id=\"consent\"]",
+            "label": "Шаг 03: Проверьте необходимые согласия и уведомления в формах.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-safety\"] [data-g2sb-step-id=\"spam\"]",
+            "label": "Шаг 04: Проверьте защиту форм от спама.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"company-safety\"] [data-g2sb-step-id=\"test\"]",
+            "label": "Шаг 05: Отправьте тестовую заявку и проверьте получение.",
+            "step": true
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "product-landing",
+      "title": "Посадочная товара",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g2sb-id=\"product-landing\"] [data-g2sb-step-id=\"route\"]",
+            "label": "Шаг 01: Выберите маршрут трафика: сайт, мессенджер или нативная лид-форма.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-landing\"] [data-g2sb-step-id=\"url\"]",
+            "label": "Шаг 02: Адрес маршрута берётся из «Платформы» Gate 0.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-landing\"] [data-g2sb-step-id=\"open\"]",
+            "label": "Шаг 03: Откройте адрес в браузере.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-landing\"] [data-g2sb-step-id=\"mobile\"]",
+            "label": "Шаг 04: Откройте страницу на телефоне или в режиме эмуляции браузера.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-landing\"] [data-g2sb-step-id=\"cta\"]",
+            "label": "Шаг 05: Проверьте основной призыв к действию.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-landing\"] [data-g2sb-step-id=\"action\"]",
+            "label": "Шаг 06: Выполните действие клиента: отправьте форму или нажмите кнопку.",
+            "step": true
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "product-counter",
+      "title": "Метрика продукта · визит",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g2sb-id=\"product-counter\"] [data-g2sb-step-id=\"inherit\"]",
+            "label": "Шаг 01: Сверьте ID общего счётчика с блоком «Яндекс Метрика · Компания».",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-counter\"] [data-g2sb-step-id=\"open\"]",
+            "label": "Шаг 02: Откройте страницу выбранного продукта.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-counter\"] [data-g2sb-step-id=\"code\"]",
+            "label": "Шаг 03: Проверьте, что счётчик установлен на странице.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-counter\"] [data-g2sb-step-id=\"visit\"]",
+            "label": "Шаг 04: Выполните контрольный визит.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-counter\"] [data-g2sb-step-id=\"report\"]",
+            "label": "Шаг 05: Подтвердите регистрацию визита.",
+            "step": true
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "product-goal",
+      "title": "Метрика продукта · цель",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g2sb-id=\"product-goal\"] [data-g2sb-step-id=\"action\"]",
+            "label": "Шаг 01: Укажите основное целевое действие продукта.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-goal\"] [data-g2sb-step-id=\"select\"]",
+            "label": "Шаг 02: Выберите цель компании, которая соответствует действию.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-goal\"] [data-g2sb-step-id=\"id\"]",
+            "label": "Шаг 03: Сверьте ID выбранной цели с Метрикой.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-goal\"] [data-g2sb-step-id=\"test\"]",
+            "label": "Шаг 04: Выполните реальное тестовое действие на странице продукта.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-goal\"] [data-g2sb-step-id=\"report\"]",
+            "label": "Шаг 05: Проверьте регистрацию конверсии.",
+            "step": true
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "product-vk",
+      "title": "События VK Рекламы",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g2sb-id=\"product-vk\"] [data-g2sb-step-id=\"inherit\"]",
+            "label": "Шаг 01: Сверьте пиксель с блоком «VK Реклама и пиксель».",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-vk\"] [data-g2sb-step-id=\"event\"]",
+            "label": "Шаг 02: Выберите целевое событие продукта: отправка формы, покупка или другое действие.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-vk\"] [data-g2sb-step-id=\"install\"]",
+            "label": "Шаг 03: Настройте передачу события. Для форм и корзины на Tilda используйте события установленного счётчика; для другого действия настройте событие в пикселе VK.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-vk\"] [data-g2sb-step-id=\"test\"]",
+            "label": "Шаг 04: На опубликованной странице продукта выполните целевое действие.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-vk\"] [data-g2sb-step-id=\"report\"]",
+            "label": "Шаг 05: Проверьте регистрацию события в кабинете VK.",
+            "step": true
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "gate": "gate-2",
+      "id": "product-lead",
+      "title": "Сквозная проверка заявки",
+      "status": "not_started",
+      "highlighted": true,
+      "details": {
+        "items": [
+          {
+            "selector": "[data-g2sb-id=\"product-lead\"] [data-g2sb-step-id=\"open\"]",
+            "label": "Шаг 01: Откройте страницу продукта.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-lead\"] [data-g2sb-step-id=\"action\"]",
+            "label": "Шаг 02: Отправьте форму или совершите действие клиента.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-lead\"] [data-g2sb-step-id=\"receive\"]",
+            "label": "Шаг 03: Проверьте получение обращения в сервисе из блока «Приём заявок».",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-lead\"] [data-g2sb-step-id=\"source\"]",
+            "label": "Шаг 04: Проверьте, что в обращении указаны источник и выбранный продукт.",
+            "step": true
+          },
+          {
+            "selector": "[data-g2sb-id=\"product-lead\"] [data-g2sb-step-id=\"compare\"]",
+            "label": "Шаг 05: Сверьте событие в Метрике с фактическим обращением.",
+            "step": true
+          }
+        ],
+        "unresolved": []
+      }
+    }
+  ],
+  "hints": {
+    "gate1": {
+      "items": [
+        {
+          "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14fhqch\"][data-pv181-company-demand-field-v345=\"vol\"]",
+          "label": "Спрос: у 9 из 16 слов нет метрик",
+          "group": {
+            "key": "company-demand-metrics",
+            "label": "Спрос: нет метрик",
+            "row": "brand-demand-14fhqch",
+            "total": 16,
+            "noun": "слов"
+          },
+          "groupedCount": 9,
+          "members": [
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14fhqch\"][data-pv181-company-demand-field-v345=\"vol\"]",
+              "label": "Спрос: авторские изделия ручной работы, Объём показов/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-14fhqch",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14fhqch\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+              "label": "Спрос: авторские изделия ручной работы, Примерное количество запросов",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-14fhqch",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14fhqch\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+              "label": "Спрос: авторские изделия ручной работы, Переходы/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-14fhqch",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14fhqch\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+              "label": "Спрос: авторские изделия ручной работы, Цена клика, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-14fhqch",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14fhqch\"][data-pv181-company-demand-field-v345=\"bid\"]",
+              "label": "Спрос: авторские изделия ручной работы, Ставка, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-14fhqch",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14fhqch\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+              "label": "Спрос: авторские изделия ручной работы, Примерный бюджет, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-14fhqch",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1514tof\"][data-pv181-company-demand-field-v345=\"vol\"]",
+              "label": "Спрос: авторские изделия на заказ, Объём показов/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-1514tof",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1514tof\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+              "label": "Спрос: авторские изделия на заказ, Примерное количество запросов",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-1514tof",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1514tof\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+              "label": "Спрос: авторские изделия на заказ, Переходы/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-1514tof",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1514tof\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+              "label": "Спрос: авторские изделия на заказ, Цена клика, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-1514tof",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1514tof\"][data-pv181-company-demand-field-v345=\"bid\"]",
+              "label": "Спрос: авторские изделия на заказ, Ставка, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-1514tof",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1514tof\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+              "label": "Спрос: авторские изделия на заказ, Примерный бюджет, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-1514tof",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1h43ipg\"][data-pv181-company-demand-field-v345=\"vol\"]",
+              "label": "Спрос: изделия ручной работы на заказ, Объём показов/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-1h43ipg",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1h43ipg\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+              "label": "Спрос: изделия ручной работы на заказ, Примерное количество запросов",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-1h43ipg",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1h43ipg\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+              "label": "Спрос: изделия ручной работы на заказ, Переходы/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-1h43ipg",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1h43ipg\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+              "label": "Спрос: изделия ручной работы на заказ, Цена клика, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-1h43ipg",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1h43ipg\"][data-pv181-company-demand-field-v345=\"bid\"]",
+              "label": "Спрос: изделия ручной работы на заказ, Ставка, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-1h43ipg",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-1h43ipg\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+              "label": "Спрос: изделия ручной работы на заказ, Примерный бюджет, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-1h43ipg",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-u8rrhk\"][data-pv181-company-demand-field-v345=\"vol\"]",
+              "label": "Спрос: авторские подарки на заказ, Объём показов/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-u8rrhk",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-u8rrhk\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+              "label": "Спрос: авторские подарки на заказ, Примерное количество запросов",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-u8rrhk",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-u8rrhk\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+              "label": "Спрос: авторские подарки на заказ, Переходы/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-u8rrhk",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-u8rrhk\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+              "label": "Спрос: авторские подарки на заказ, Цена клика, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-u8rrhk",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-u8rrhk\"][data-pv181-company-demand-field-v345=\"bid\"]",
+              "label": "Спрос: авторские подарки на заказ, Ставка, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-u8rrhk",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-u8rrhk\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+              "label": "Спрос: авторские подарки на заказ, Примерный бюджет, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-u8rrhk",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14s1g6j\"][data-pv181-company-demand-field-v345=\"vol\"]",
+              "label": "Спрос: подарки ручной работы на заказ, Объём показов/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-14s1g6j",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14s1g6j\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+              "label": "Спрос: подарки ручной работы на заказ, Примерное количество запросов",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-14s1g6j",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14s1g6j\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+              "label": "Спрос: подарки ручной работы на заказ, Переходы/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-14s1g6j",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14s1g6j\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+              "label": "Спрос: подарки ручной работы на заказ, Цена клика, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-14s1g6j",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14s1g6j\"][data-pv181-company-demand-field-v345=\"bid\"]",
+              "label": "Спрос: подарки ручной работы на заказ, Ставка, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-14s1g6j",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-14s1g6j\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+              "label": "Спрос: подарки ручной работы на заказ, Примерный бюджет, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-14s1g6j",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-15bcfwr\"][data-pv181-company-demand-field-v345=\"vol\"]",
+              "label": "Спрос: авторские изделия Москва, Объём показов/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-15bcfwr",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-15bcfwr\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+              "label": "Спрос: авторские изделия Москва, Примерное количество запросов",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-15bcfwr",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-15bcfwr\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+              "label": "Спрос: авторские изделия Москва, Переходы/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-15bcfwr",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-15bcfwr\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+              "label": "Спрос: авторские изделия Москва, Цена клика, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-15bcfwr",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-15bcfwr\"][data-pv181-company-demand-field-v345=\"bid\"]",
+              "label": "Спрос: авторские изделия Москва, Ставка, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-15bcfwr",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-15bcfwr\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+              "label": "Спрос: авторские изделия Москва, Примерный бюджет, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-15bcfwr",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-zfbgfq\"][data-pv181-company-demand-field-v345=\"vol\"]",
+              "label": "Спрос: изделия ручной работы Москва, Объём показов/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-zfbgfq",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-zfbgfq\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+              "label": "Спрос: изделия ручной работы Москва, Примерное количество запросов",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-zfbgfq",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-zfbgfq\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+              "label": "Спрос: изделия ручной работы Москва, Переходы/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-zfbgfq",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-zfbgfq\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+              "label": "Спрос: изделия ручной работы Москва, Цена клика, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-zfbgfq",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-zfbgfq\"][data-pv181-company-demand-field-v345=\"bid\"]",
+              "label": "Спрос: изделия ручной работы Москва, Ставка, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-zfbgfq",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-zfbgfq\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+              "label": "Спрос: изделия ручной работы Москва, Примерный бюджет, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-zfbgfq",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-3748j6\"][data-pv181-company-demand-field-v345=\"vol\"]",
+              "label": "Спрос: авторские предметы для дома, Объём показов/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-3748j6",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-3748j6\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+              "label": "Спрос: авторские предметы для дома, Примерное количество запросов",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-3748j6",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-3748j6\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+              "label": "Спрос: авторские предметы для дома, Переходы/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-3748j6",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-3748j6\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+              "label": "Спрос: авторские предметы для дома, Цена клика, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-3748j6",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-3748j6\"][data-pv181-company-demand-field-v345=\"bid\"]",
+              "label": "Спрос: авторские предметы для дома, Ставка, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-3748j6",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-3748j6\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+              "label": "Спрос: авторские предметы для дома, Примерный бюджет, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-3748j6",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-l8vecz\"][data-pv181-company-demand-field-v345=\"vol\"]",
+              "label": "Спрос: предметы для дома ручной работы, Объём показов/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-l8vecz",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-l8vecz\"][data-pv181-company-demand-field-v345=\"queryCount\"]",
+              "label": "Спрос: предметы для дома ручной работы, Примерное количество запросов",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-l8vecz",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-l8vecz\"][data-pv181-company-demand-field-v345=\"forecastClicks\"]",
+              "label": "Спрос: предметы для дома ручной работы, Переходы/мес",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-l8vecz",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-l8vecz\"][data-pv181-company-demand-field-v345=\"clickPrice\"]",
+              "label": "Спрос: предметы для дома ручной работы, Цена клика, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-l8vecz",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-l8vecz\"][data-pv181-company-demand-field-v345=\"bid\"]",
+              "label": "Спрос: предметы для дома ручной работы, Ставка, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-l8vecz",
+                "total": 16,
+                "noun": "слов"
+              }
+            },
+            {
+              "selector": "[data-pv181-company-demand-row-id-v345=\"brand-demand-l8vecz\"][data-pv181-company-demand-field-v345=\"forecastBudget\"]",
+              "label": "Спрос: предметы для дома ручной работы, Примерный бюджет, руб.",
+              "group": {
+                "key": "company-demand-metrics",
+                "label": "Спрос: нет метрик",
+                "row": "brand-demand-l8vecz",
+                "total": 16,
+                "noun": "слов"
+              }
+            }
+          ]
+        }
+      ],
+      "focused": true
+    },
+    "gate2": [
+      {
+        "selector": "[data-g2sb-id=\"company-domain\"] [data-g2sb-step-id=\"address\"]",
+        "label": "Шаг 01: Укажите основной адрес сайта.",
+        "step": true
+      },
+      {
+        "selector": "[data-g2sb-id=\"company-domain\"] [data-g2sb-step-id=\"platform\"]",
+        "label": "Шаг 02: Выберите платформу сайта.",
+        "step": true
+      },
+      {
+        "selector": "[data-g2sb-id=\"company-domain\"] [data-g2sb-step-id=\"provider\"]",
+        "label": "Шаг 03: Укажите регистратора домена и провайдера размещения.",
+        "step": true
+      },
+      {
+        "selector": "[data-g2sb-id=\"company-domain\"] [data-g2sb-step-id=\"dns_source\"]",
+        "label": "Шаг 04: Откройте настройки домена у провайдера и получите его DNS-записи.",
+        "step": true
+      },
+      {
+        "selector": "[data-g2sb-id=\"company-domain\"] [data-g2sb-step-id=\"dns_set\"]",
+        "label": "Шаг 05: Добавьте полученные записи в панели DNS. Не используйте чужой IP или шаблон.",
+        "step": true
+      },
+      {
+        "selector": "[data-g2sb-id=\"company-domain\"] [data-g2sb-step-id=\"open\"]",
+        "label": "Шаг 06: Проверьте открытие основного адреса.",
+        "step": true
+      },
+      {
+        "selector": "[data-g2sb-id=\"company-domain\"] [data-g2sb-step-id=\"https\"]",
+        "label": "Шаг 07: Проверьте HTTPS и сертификат в браузере.",
+        "step": true
+      },
+      {
+        "selector": "[data-g2sb-id=\"company-domain\"] [data-g2sb-step-id=\"redirect\"]",
+        "label": "Шаг 08: Проверьте перенаправления на основной адрес.",
+        "step": true
+      },
+      {
+        "selector": "[data-g2sb-id=\"company-domain\"] .g2w-verify",
+        "label": "Проверка результата: подтвердите работу настройки",
+        "step": true
+      }
+    ]
+  },
+  "screenshots": [
+    "artifacts/gate34-regression-gate12-gate1-field.png",
+    "artifacts/gate34-regression-gate12-gate2-step03.png",
+    "artifacts/gate34-regression-gate12-gate2-not-required.png"
+  ],
+  "noOldGate2": {
+    "count": 19,
+    "legacyCards": [],
+    "allVisible": true
+  },
+  "laterGatesHidden": [
+    {
+      "gateId": "gate-5",
+      "hidden": true
+    },
+    {
+      "gateId": "gate-6",
+      "hidden": true
+    },
+    {
+      "gateId": "gate-8",
+      "hidden": true
+    }
+  ],
+  "exportComparison": {
+    "identical": true,
+    "differences": [],
+    "beforeBytes": 28081553,
+    "afterBytes": 28081553,
+    "beforeSha256": "0e2131517925c883881d39bfd8a54252447983264c987994d6fc91f33c28cbea",
+    "afterSha256": "0e2131517925c883881d39bfd8a54252447983264c987994d6fc91f33c28cbea",
+    "updatedAtFields": 259,
+    "uiPreferenceWrites": 0,
+    "passiveCalculators": true
+  },
+  "inputRefresh": {
+    "passed": true,
+    "removed": "Спрос: у 9 из 16 слов нет метрик"
+  },
+  "calculatorEdit": {
+    "passed": true,
+    "originalRestored": true
+  },
+  "fallbackBlocks": [
+    {
+      "gate": "gate-1",
+      "id": "card-14",
+      "title": "Robots.txt: доступ поисковых роботов"
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-22-hub",
+      "title": "КАТАЛОГ (ХАБ)"
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-25",
+      "title": "СТАТЬЯ БЛОГА"
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-26",
+      "title": "О НАС"
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-27",
+      "title": "КОНТАКТЫ"
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-28",
+      "title": "ДОСТАВКА / ГАРАНТИИ"
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-30",
+      "title": "404"
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-31",
+      "title": "THANK YOU PAGE ⚠️"
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-32",
+      "title": "ЛЕНДИНГ"
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-site-header-v497",
+      "title": "ХЕДЕР"
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-site-footer-v497",
+      "title": "Футер: навигация, доверие и юридическая база"
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-29",
+      "title": "ПОЛИТИКА"
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-35",
+      "title": "Cookie-баннер: уведомление и согласие"
+    },
+    {
+      "gate": "gate-1",
+      "id": "card-36",
+      "title": "Футер: навигация, доверие и юридическая база"
+    },
+    {
+      "gate": "gate-1",
+      "id": "gate1-seo-v300-product-webmaster",
+      "title": "Яндекс Вебмастер · Продукт/Услуга"
+    },
+    {
+      "gate": "gate-1",
+      "id": "unit-economics",
+      "title": "Юнит-экономика"
+    }
+  ],
+  "build": "2.3.526+bba012a2f063"
+}

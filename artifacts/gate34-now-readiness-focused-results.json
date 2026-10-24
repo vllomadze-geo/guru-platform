@@ -1,0 +1,602 @@
+{
+  "passed": true,
+  "matrices": {
+    "gate-3": {
+      "rows": [
+        {
+          "id": "aware",
+          "title": "Узнал (Aware)",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "found": true
+        },
+        {
+          "id": "appeal",
+          "title": "Понравился (Appeal)",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "found": true
+        },
+        {
+          "id": "ask",
+          "title": "Изучает (Ask)",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "found": true
+        },
+        {
+          "id": "act",
+          "title": "Покупает (Act)",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "found": true
+        },
+        {
+          "id": "advocate",
+          "title": "Рекомендует (Advocate)",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Проблема",
+          "pageStatus": "problem",
+          "pathStatus": "problem",
+          "found": true
+        }
+      ],
+      "summary": {
+        "total": 5,
+        "done": 4,
+        "ready": 4,
+        "notRequired": 0,
+        "inProgress": 0,
+        "problem": 1,
+        "notStarted": 0,
+        "percent": 90
+      },
+      "navigationReadiness": {
+        "total": 5,
+        "done": 4,
+        "ready": 4,
+        "notRequired": 0,
+        "inProgress": 0,
+        "problem": 1,
+        "notStarted": 0,
+        "percent": 90
+      },
+      "menu": "5 блоков, прогресс 90%"
+    },
+    "gate-4": {
+      "rows": [
+        {
+          "id": "pr_publications",
+          "title": "PR-публикации · Сервис требует выбора",
+          "product_id": null,
+          "pageBadge": "Нет реализации",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "articles_cases",
+          "title": "Статьи / кейсы · Tilda Потоки",
+          "product_id": null,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "yandex_organization",
+          "title": "Карточка организации · Яндекс Бизнес / Яндекс Карты",
+          "product_id": null,
+          "pageBadge": "Нет реализации",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "google_organization",
+          "title": "Карточка организации · Google Business Profile",
+          "product_id": null,
+          "pageBadge": "Нет реализации",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "online_chat",
+          "title": "Онлайн-чат · JivoChat (виджет Tilda)",
+          "product_id": null,
+          "pageBadge": "Нет реализации",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "online_payment",
+          "title": "Онлайн-оплата · ЮKassa / CloudPayments / Т-Банк / Робокасса",
+          "product_id": null,
+          "pageBadge": "Нет реализации",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "abandoned_cart",
+          "title": "Письма о брошенной корзине · Внешний сервис — требует выбора",
+          "product_id": null,
+          "pageBadge": "Нет реализации",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "email_crm",
+          "title": "Email-рассылки · Unisender",
+          "product_id": null,
+          "pageBadge": "Нет реализации",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "review_collection",
+          "title": "Сбор отзывов · Яндекс Отзывы и Яндекс Карты",
+          "product_id": null,
+          "pageBadge": "Нет реализации",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "referral",
+          "title": "Реферальная программа · Промокоды Tilda",
+          "product_id": null,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "loyalty",
+          "title": "Программа лояльности · Внешний сервис — требует выбора",
+          "product_id": null,
+          "pageBadge": "Нет реализации",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "card-148",
+          "title": "Единая карта запуска",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "card-151",
+          "title": "Целевое действие выбрано",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "card-152",
+          "title": "Посадочная страница собрана под сегмент",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "found": true
+        },
+        {
+          "id": "card-153",
+          "title": "Смысловой каркас страницы собран",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "found": true
+        },
+        {
+          "id": "card-154",
+          "title": "Архитектура психослоев на посадочной",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "found": true
+        },
+        {
+          "id": "card-155",
+          "title": "Формы и контакты работают",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "found": true
+        },
+        {
+          "id": "card-156",
+          "title": "Мобильная версия не ломает конверсию",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "found": true
+        },
+        {
+          "id": "card-157",
+          "title": "Метрика и базовые цели подключены",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "found": true
+        },
+        {
+          "id": "card-158",
+          "title": "UTM и разметка готовы",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "card-159",
+          "title": "Передача лидов и статусов не теряется",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "found": true
+        },
+        {
+          "id": "card-160",
+          "title": "Креативная рамка зафиксирована",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "card-161",
+          "title": "Креативная матрица 3×3",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "card-162",
+          "title": "Собран минимальный пакет креативов",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "card-163",
+          "title": "Креативы связаны со страницей",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "card-164",
+          "title": "Стартовые рекламные сущности собраны",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "card-165",
+          "title": "Посадки привязаны к типу спроса",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "card-166",
+          "title": "Бюджет и критерий остановки заданы",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "card-167",
+          "title": "Предзапусковый QA пройден",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "card-168",
+          "title": "Менеджерская обработка готова",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready",
+          "found": true
+        },
+        {
+          "id": "card-169",
+          "title": "Запусковая готовность подтверждена",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "smm_vk_контент_11",
+          "title": "Контент · VK",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "smm_telegram_контент_посевы_12",
+          "title": "Канал и посевы · Telegram",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "smm_instagram_reels_stories_13",
+          "title": "Контент · Instagram / Reels / Stories",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "smm_youtube_shorts_pre_roll_14",
+          "title": "Видео · YouTube / Shorts / Pre-roll",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "платная_реклама_vk_ads_таргет_5",
+          "title": "Таргет · VK Реклама",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "платная_реклама_telegram_ads_посевы_ads_7",
+          "title": "Telegram Ads · Telegram Ads",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "платная_реклама_meta_ads_feed_reels_6",
+          "title": "Таргет · Meta Ads / Feed / Reels",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "платная_реклама_яндекс_директ_рся_1",
+          "title": "Яндекс Директ / РСЯ",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "платная_реклама_яндекс_директ_мастер_кампаний_2",
+          "title": "Яндекс Директ / Мастер кампаний",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "платная_реклама_google_ads_display_4",
+          "title": "Медийная реклама · Google Ads / Display",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "promo_landing",
+          "title": "ПромоСтраница / контентная посадочная · Tilda",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Нет реализации",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "платная_реклама_яндекс_директ_поиск_0",
+          "title": "Яндекс Директ / Поиск",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "product_gallery",
+          "title": "Товарная галерея · Яндекс Директ, ЕПК с товарными объявлениями",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Нет реализации",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "платная_реклама_google_ads_search_3",
+          "title": "Поисковая реклама · Google Ads / Search",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress",
+          "found": true
+        },
+        {
+          "id": "vk_retargeting",
+          "title": "Ретаргетинг · VK Реклама",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Нет реализации",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        },
+        {
+          "id": "buyer_retargeting",
+          "title": "Ретаргетинг на покупателей · Яндекс Директ / VK Реклама",
+          "product_id": "catalog-item-1786792591872-51f503",
+          "pageBadge": "Нет реализации",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started",
+          "found": true
+        }
+      ],
+      "summary": {
+        "total": 47,
+        "done": 8,
+        "ready": 8,
+        "notRequired": 0,
+        "inProgress": 18,
+        "problem": 0,
+        "notStarted": 21,
+        "percent": 36
+      },
+      "navigationReadiness": {
+        "total": 47,
+        "done": 8,
+        "ready": 8,
+        "notRequired": 0,
+        "inProgress": 18,
+        "problem": 0,
+        "notStarted": 21,
+        "percent": 36
+      },
+      "menu": "47 блоков, прогресс 36%"
+    }
+  },
+  "transitions": [
+    {
+      "gate": "gate-3",
+      "id": "aware",
+      "details": {
+        "text": "Всё заполнено",
+        "items": [],
+        "unresolved": []
+      },
+      "highlight": true,
+      "expanded": true
+    },
+    {
+      "gate": "gate-4",
+      "id": "pr_publications",
+      "details": {
+        "items": [
+          {
+            "fallback": true,
+            "label": "Заполните блок"
+          }
+        ],
+        "unresolved": [
+          "pr_publications"
+        ]
+      },
+      "highlight": true,
+      "expanded": true
+    }
+  ],
+  "screenshots": [
+    "artifacts/gate34-now-readiness-gate3-field.png",
+    "artifacts/gate34-now-readiness-gate4-field.png",
+    "artifacts/gate34-now-readiness-gate4-funnel.png",
+    "artifacts/gate34-now-readiness-gate1-group.png",
+    "artifacts/gate34-now-readiness-gate0-group.png",
+    "artifacts/gate34-now-readiness-gate3-source.png"
+  ],
+  "products": [],
+  "comparison": {
+    "identical": true,
+    "differences": [],
+    "beforeSha256": "d74aa4e5089bbd85310d4e7a2a931a676a66eab751aa88a30a491eb16cb019f9",
+    "afterSha256": "d74aa4e5089bbd85310d4e7a2a931a676a66eab751aa88a30a491eb16cb019f9",
+    "bytes": 28081553,
+    "updatedAtFields": 259,
+    "uiPreferenceWrites": 0
+  },
+  "inputRefresh": [
+    {
+      "gateId": "gate-0",
+      "id": "card-7",
+      "updated": true
+    },
+    {
+      "gateId": "gate-1",
+      "id": "company_demand_positioning",
+      "updated": true
+    },
+    {
+      "gateId": "gate-4",
+      "id": "card-148",
+      "updated": true
+    }
+  ],
+  "sourceNavigation": {
+    "passed": true,
+    "gate": "gate-3",
+    "targetGate": "gate-0"
+  },
+  "fallbackBlocks": [
+    {
+      "gate": "gate-4",
+      "id": "pr_publications",
+      "title": "PR-публикации · Сервис требует выбора"
+    }
+  ],
+  "interim": true,
+  "supersededBy": "artifacts/gate34-now-readiness-results.json"
+}
