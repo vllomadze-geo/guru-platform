@@ -109,30 +109,39 @@ function gate1BlogStatusLabelV304(status) {
 }
 
 function gate1BlogArticleReadyV304(article) {
-  return Boolean(
-    gate1BlogTextV304(article?.title) &&
-    gate1BlogTextV304(article?.summary) &&
-    gate1BlogTextV304(article?.publication_date) &&
-    gate1BlogTextV304(article?.reading_minutes) &&
-    article?.toc?.some((entry) => gate1BlogTextV304(entry.title)) &&
-    article?.faq?.some((entry) =>
-      gate1BlogTextV304(entry.question) && gate1BlogTextV304(entry.answer),
-    ) &&
-    gate1BlogTextV304(article?.author?.name) &&
-    gate1BlogTextV304(article?.author?.role)
-  );
+  const check = (value, key, label, extra = "") => guruReadinessValue(gate1BlogTextV304(value), {
+    selector: `[data-gate1-blog-article-id-v304="${CSS.escape(article.id)}"][${key}]${extra}`,
+    label: `${article.title || "Статья"}: ${label}`,
+  });
+  const values = [
+    check(article?.title, 'data-gate1-blog-article-field-v304="title"', "Заголовок"),
+    check(article?.summary, 'data-gate1-blog-article-field-v304="summary"', "Краткое описание для списка хаба"),
+    check(article?.publication_date, 'data-gate1-blog-article-field-v304="publication_date"', "Дата публикации"),
+    check(article?.reading_minutes, 'data-gate1-blog-article-field-v304="reading_minutes"', "Время чтения, мин."),
+    article?.toc?.some((entry) => gate1BlogTextV304(entry.title)) ||
+      check("", 'data-gate1-blog-toc-index-v304="0"', "Оглавление"),
+    article?.faq?.some((entry) => gate1BlogTextV304(entry.question) && gate1BlogTextV304(entry.answer)) ||
+      [check(article?.faq?.[0]?.question, 'data-gate1-blog-faq-field-v304="question"', "FAQ: Вопрос", '[data-gate1-blog-faq-index-v304="0"]'),
+        check(article?.faq?.[0]?.answer, 'data-gate1-blog-faq-field-v304="answer"', "FAQ: Ответ", '[data-gate1-blog-faq-index-v304="0"]')].every(Boolean),
+    check(article?.author?.name, 'data-gate1-blog-author-field-v304="name"', "Имя"),
+    check(article?.author?.role, 'data-gate1-blog-author-field-v304="role"', "Должность"),
+  ];
+  return values.every(Boolean);
 }
 
 function gate1BlogCompanyStatusV304(store) {
   if (!store?.articles.length) return "not_started";
-  return store.articles.every(gate1BlogArticleReadyV304) ? "ready" : "in_progress";
+  return store.articles.map(gate1BlogArticleReadyV304).every(Boolean) ? "ready" : "in_progress";
 }
 
 function gate1BlogProductStatusV304(articles, productId) {
   const statuses = articles
     .map((article) => article.product_links.find((link) => link.product_id === productId)?.status)
     .filter(Boolean);
-  if (!statuses.length) return "not_started";
+  if (!statuses.length) {
+    guruReadinessValue(false, { selector: '[data-gate1-blog-link-select-v304]', label: "Статьи для продукта: выберите существующую статью" });
+    return "not_started";
+  }
   return statuses.every((status) => status === "ready" || status === "published")
     ? "ready"
     : "in_progress";

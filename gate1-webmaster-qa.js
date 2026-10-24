@@ -100,8 +100,10 @@ function gate1WebmasterStatusFromGuruV295(rawStatus) {
 
 function gate1WebmasterVerificationStatusV295(workspace = state) {
   const company = gate1WebmasterStoreV295(workspace)?.company || {};
-  const status = gate1WebmasterStatusFromGuruV295(company.verificationStatus);
-  if (status === "ready" && !String(company.verificationMethod || "").trim())
+  const status = gate1WebmasterStatusFromGuruV295(guruReadinessValue(company.verificationStatus,
+    { selector: '[data-g1-webmaster-company-v295="verificationStatus"]', label: "Подтверждение сайта: Статус" }));
+  if (status === "ready" && !guruReadinessValue(String(company.verificationMethod || "").trim(),
+      { selector: '[data-g1-webmaster-company-v295="verificationMethod"]', label: "Способ подтверждения" }))
     return "in_progress";
   return status;
 }
@@ -125,7 +127,8 @@ function gate1WebmasterRobotsStatusV295(workspace = state) {
 function gate1WebmasterErrorsStatusV295(workspace = state) {
   const company = gate1WebmasterStoreV295(workspace)?.company || {};
   if (String(company.crawlErrors || "").trim()) return "problem";
-  return gate1WebmasterStatusFromGuruV295(company.crawlErrorsStatus);
+  return gate1WebmasterStatusFromGuruV295(guruReadinessValue(company.crawlErrorsStatus,
+    { selector: '[data-g1-webmaster-company-v295="crawlErrorsStatus"]', label: "Ошибки обхода: Результат диагностики" }));
 }
 
 function gate1WebmasterIndexAggregateV295(workspace = state) {

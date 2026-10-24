@@ -40,13 +40,16 @@ function gate1SeoInteractiveToolStoreV305(workspace = state) {
 }
 
 function gate1SeoInteractiveToolStatusV305(store) {
-  if (!store?.exists_now) return "not_started";
-  if (store.exists_now === "yes")
-    return gate1SeoInteractiveToolTextV305(store.tool_name) &&
-      gate1SeoInteractiveToolTextV305(store.tool_url)
-      ? "ready"
-      : "in_progress";
-  return store.should_build ? "ready" : "in_progress";
+  const check = (key, label) => guruReadinessValue(store?.[key], {
+    selector: `[data-g1-seo-interactive-tool-field-v305="${key}"]`, label,
+  });
+  if (!check("exists_now", "Есть ли у бизнеса такой инструмент сейчас?")) return "not_started";
+  if (store.exists_now === "yes") {
+    const name = gate1SeoInteractiveToolTextV305(check("tool_name", "Что это?"));
+    const url = gate1SeoInteractiveToolTextV305(check("tool_url", "Ссылка"));
+    return name && url ? "ready" : "in_progress";
+  }
+  return check("should_build", "Стоит ли его сделать?") ? "ready" : "in_progress";
 }
 
 function gate1SeoInteractiveToolOptionV305(value, current, label) {

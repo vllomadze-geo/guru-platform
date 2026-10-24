@@ -260,28 +260,55 @@ function g2wUpstreamIds(def) {
     productVk: ["vk"], lead: ["crm"],
   }[def.id] || [];
 }
+// The visible service workflow and the wizard share the same completion
+// checks. Configuration describes existing controls; no result is persisted.
+function g2wStepChecks(def, productId = "", workspace = state) {
+  const config = typeof G2_SERVICE_BLOCK_CONFIGS !== "undefined"
+    ? [...G2_SERVICE_BLOCK_CONFIGS.values()].find((config) => config.wizardUnitId === def.id && config.scope === def.scope)
+    : null;
+  const record = g2wRecord(def, productId, false, workspace);
+  const visibleSteps = config?.steps || def.steps;
+  const fieldOwners = new Map();
+  for (const source of def.steps.filter((step) => step[2])) {
+    const owner = config?.steps.find((step) => step.existingFields?.includes(source[2]) ||
+      (step.existingField && step.step_id === source[0])) ||
+      config?.steps.find((step) => step.step_id === source[0]);
+    fieldOwners.set(source[2], owner?.step_id || source[0]);
+  }
+  return visibleSteps.map((step) => {
+    const id = config ? step.step_id : step[0];
+    const done = config ? g2ServiceBlockStepDone(config, step, record, productId, workspace)
+      : record?.steps?.[id]?.result === "done";
+    const keys = [...fieldOwners].filter(([, owner]) => owner === id).map(([key]) => key);
+    const valid = keys.every((key) => g2wFieldValid(def, productId, key, workspace));
+    return { id, done, valid, serviceId: config?.id || "" };
+  });
+}
 function g2wCanConfirm(def, productId = "", workspace = state) {
   if (g2wApplicability(def, productId, workspace) !== "required") return false;
   const record = g2wRecord(def, productId, false, workspace);
   if (record?.auto?.result === "failed" && record.auto.fingerprint === g2wInputs(def, productId, workspace)) return false;
-  return def.steps.every((step) => record?.steps?.[step[0]]?.result === "done" &&
-      (!step[2] || g2wFieldValid(def, productId, step[2], workspace))) &&
+  return g2wStepChecks(def, productId, workspace).every((step) => step.done && step.valid) &&
     g2wUpstreamIds(def).every((id) => g2wStatus(G2W_CARDS.find((item) => item.id === id), "", workspace) === "ready");
 }
 function g2wStatus(def, productId = "", workspace = state) {
   const applicability = g2wApplicability(def, productId, workspace);
   if (applicability === "not_needed") return "not_needed";
   const record = g2wRecord(def, productId, false, workspace);
+  const stepChecks = g2wStepChecks(def, productId, workspace);
+  stepChecks.forEach((step) => guruReadinessValue(step.done && step.valid,
+    { wizardId: def.id, serviceId: step.serviceId, stepId: step.id }));
   if (!record) return "not_started";
-  const steps = record.steps || {};
-  const checked = def.steps.filter((step) => steps[step[0]]?.result === "done").length;
-  const valid = def.steps.every((step) => !step[2] || g2wFieldValid(def, productId, step[2], workspace));
+  const checked = stepChecks.filter((step) => step.done).length;
+  const valid = stepChecks.every((step) => step.valid);
   const verification = record.verification;
   const current = verification?.fingerprint === g2wInputs(def, productId, workspace);
   const upstream = g2wUpstreamIds(def);
   const inheritedReady = upstream.every((id) => g2wStatus(G2W_CARDS.find((item) => item.id === id), "", workspace) === "ready");
+  guruReadinessValue(verification?.result === "passed" && current && inheritedReady,
+    { wizardId: def.id, verification: true });
   if (record.auto?.result === "failed" && record.auto.fingerprint === g2wInputs(def, productId, workspace)) return "problem";
-  if (applicability === "required" && checked === def.steps.length && valid &&
+  if (applicability === "required" && checked === stepChecks.length && valid &&
       verification?.result === "passed" && current && inheritedReady) return "ready";
   if (verification?.result === "failed" && current) return "problem";
   return checked || verification || Object.values(record.values || {}).some(Boolean) ? "in_progress" : "not_started";

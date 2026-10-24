@@ -1,0 +1,242 @@
+{
+  "passed": true,
+  "gate1Delta": {
+    "added": [
+      {
+        "id": "company_demand_positioning",
+        "title": "Спрос, ценность, позиционирование · Компания",
+        "kind": "gate1-section",
+        "calculate": "company-demand",
+        "status": "in_progress",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "gate1-seo-v300-company-webmaster",
+        "title": "Яндекс Вебмастер · Компания",
+        "kind": "gate1-section",
+        "calculate": "webmaster-company",
+        "status": "problem",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "interactive-tool",
+        "title": "Собственный интерактивный инструмент",
+        "kind": "gate1-tool",
+        "status": "not_started",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-21",
+        "title": "ГЛАВНАЯ",
+        "kind": "card",
+        "status": "ready",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-22-hub",
+        "title": "КАТАЛОГ (ХАБ)",
+        "kind": "card",
+        "status": "in_progress",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-22",
+        "title": "КАТЕГОРИЯ",
+        "kind": "card",
+        "status": "in_progress",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-25",
+        "title": "СТАТЬЯ БЛОГА",
+        "kind": "card",
+        "status": "in_progress",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-26",
+        "title": "О НАС",
+        "kind": "card",
+        "status": "not_started",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-27",
+        "title": "КОНТАКТЫ",
+        "kind": "card",
+        "status": "not_started",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-28",
+        "title": "ДОСТАВКА / ГАРАНТИИ",
+        "kind": "card",
+        "status": "not_started",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-30",
+        "title": "404",
+        "kind": "card",
+        "status": "not_started",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-31",
+        "title": "THANK YOU PAGE ⚠️",
+        "kind": "card",
+        "status": "not_started",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-32",
+        "title": "ЛЕНДИНГ",
+        "kind": "card",
+        "status": "not_started",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-site-header-v497",
+        "title": "ХЕДЕР",
+        "kind": "card",
+        "status": "not_started",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-29",
+        "title": "ПОЛИТИКА",
+        "kind": "card",
+        "status": "not_started",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "gate1-blog-v304-company",
+        "title": "Блог · Компания",
+        "kind": "gate1-section",
+        "calculate": "blog-company",
+        "status": "in_progress",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-24",
+        "title": "КАРТОЧКА ТОВАРА",
+        "kind": "card",
+        "status": "ready",
+        "product": true,
+        "product_id": "catalog-item-1786792591872-51f503"
+      },
+      {
+        "id": "gate1-seo-v300-product-webmaster",
+        "title": "Яндекс Вебмастер · Продукт/Услуга",
+        "kind": "gate1-section",
+        "calculate": "webmaster-product",
+        "status": "problem",
+        "product": true,
+        "product_id": "catalog-item-1786792591872-51f503"
+      },
+      {
+        "id": "pain_jtbd_offer",
+        "title": "Спрос, ценность, позиционирование · Продукт/Услуга",
+        "kind": "gate1-section",
+        "calculate": "product-demand",
+        "status": "ready",
+        "product": true,
+        "product_id": "catalog-item-1786792591872-51f503"
+      },
+      {
+        "id": "gate1-blog-v304-product",
+        "title": "Блог · Продукт/Услуга",
+        "kind": "gate1-section",
+        "calculate": "blog-product",
+        "status": "not_started",
+        "product": true,
+        "product_id": "catalog-item-1786792591872-51f503"
+      }
+    ],
+    "removed": [
+      {
+        "id": "card-17",
+        "title": "Meta Robots SEO META in 1 CLICK",
+        "kind": "card",
+        "status": "in_progress",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-18",
+        "title": "CWV PageSpeed Insights",
+        "kind": "card",
+        "status": "in_progress",
+        "product": false,
+        "product_id": null
+      }
+    ]
+  },
+  "gate2Delta": {
+    "added": [
+      {
+        "id": "company-yandex-business",
+        "title": "Яндекс Бизнес",
+        "kind": "service",
+        "wizardId": "",
+        "status": "not_required",
+        "scope": "company",
+        "productId": "",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "company-meta-ads",
+        "title": "Meta Ads · кабинет и пиксель",
+        "kind": "service",
+        "wizardId": "",
+        "status": "not_required",
+        "scope": "company",
+        "productId": "",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "company-gsc",
+        "title": "Google Search Console",
+        "kind": "service",
+        "wizardId": "",
+        "status": "not_required",
+        "scope": "company",
+        "productId": "",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "company-google-ads",
+        "title": "Google Ads · конверсии",
+        "kind": "service",
+        "wizardId": "",
+        "status": "not_required",
+        "scope": "company",
+        "productId": "",
+        "product": false,
+        "product_id": null
+      }
+    ],
+    "removed": []
+  },
+  "otherGateChanges": [],
+  "build": "2.3.526+bda55d5fcf45"
+}

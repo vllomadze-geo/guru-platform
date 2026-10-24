@@ -342,11 +342,21 @@ function g2s4Units(workspace = state) {
     .map((config) => ({ id: config.id, title: config.title, scope: config.scope,
       productId: config.scope === "product" ? productId : "", cardId: g2ServiceBlockCardId(config),
       status: g2ServiceBlockStatus(config, config.scope === "product" ? productId : "", workspace), config }));
-  return [...companyMetrika, ...services];
+  const ordered = [];
+  for (const unit of companyMetrika) {
+    ordered.push(...services.filter((service) => service.config.beforeUnit === unit.def.id));
+    ordered.push(unit);
+    ordered.push(...services.filter((service) => service.config.afterUnit === unit.def.id));
+  }
+  ordered.push(...services.filter((service) => !ordered.includes(service) && service.scope === "company"));
+  ordered.push(...services.filter((service) => service.scope === "product"));
+  return ordered;
 }
 function g2s4Readiness(workspace = state) {
-  const allUnits = g2s4Units(workspace);
-  const units = allUnits.filter((unit) => unit.status !== "not_needed");
+  const allUnits = typeof nowGuideGate12Read === "function"
+    ? nowGuideGate12Read((view) => g2s4Units(view), workspace).status || []
+    : g2s4Units(workspace);
+  const units = allUnits;
   const excluded = allUnits.filter((unit) => unit.status === "not_needed");
   return { allUnits, units, excluded,
     summary: guruReadinessFromStatuses(units.map((unit) => unit.status)) };
@@ -364,8 +374,8 @@ g2wUpdateNav = function () {
   if (activeGateId !== "gate-2") return;
   const label = els.gateNav?.querySelector('[data-gate-id="gate-2"] .small');
   if (!label) return;
-  const { ready, total, percent } = g2s4Readiness().summary;
-  label.textContent = `${ready} из ${total} блоков готово · ${percent}%`;
+  const { total, percent } = g2s4Readiness().summary;
+  label.textContent = `${total} блоков, прогресс ${percent}%`;
 };
 
 function g2s4UpdateScopeSummaries() {
@@ -378,7 +388,7 @@ function g2s4UpdateScopeSummaries() {
     const skipped = subset.length - counted.length;
     const label = document.querySelector(`[data-g2w-scope="${scope}"] .g2w-scope-summary > span`);
     if (label) label.textContent = scope === "company"
-      ? `${summary.ready} из ${summary.total} блоков готово · ${summary.percent}%`
+      ? `${summary.done} из ${summary.total} блоков готово · ${summary.percent}%`
       : `${ready} из ${counted.length} готово${skipped ? ` · ${skipped} не требуется` : ""}`;
   }
 }
@@ -417,7 +427,7 @@ guruExportRuntimeModelV223 = function (gateId) {
       gateId, title: item.title, status: item.status,
       sourceType: item.config ? "gate2_service_block" : "gate2_setup_wizard",
       path: `state.gates[gate-2].cards[${item.cardId}].fields.g2SetupWizardV1.${item.productId ? `byProduct[${item.productId}]` : "company"}`,
-      includedInGateReadiness: item.status !== "not_needed", includedInDisplayedOverall: item.status !== "not_needed",
+      includedInGateReadiness: true, includedInDisplayedOverall: true,
       readinessRole: item.status === "not_needed" ? "not_required" : "direct",
       details: { scope: item.scope, product_id: item.productId, sourceCardId: item.cardId,
         serviceUrl: item.config ? g2ServiceBlockSafeHref(g2ServiceBlockValue(
@@ -443,10 +453,10 @@ guruExportRuntimeModelV223 = function (gateId) {
   const readiness = g2s4Readiness().summary;
   return { ...model, model: "gate2_service_readiness", units,
     displayedStatus: guruExportDiagnosticOverallV223(g2s4CountedUnits().map((unit) => unit.status)),
-    readinessFormula: { numerator: readiness.ready + 0.5 * (readiness.inProgress + readiness.problem),
+    readinessFormula: { numerator: readiness.done + 0.5 * (readiness.inProgress + readiness.problem),
       denominator: readiness.total, ready: readiness.ready, inProgress: readiness.inProgress,
       problem: readiness.problem, notStarted: readiness.notStarted,
-      excludedNotRequired: items.filter((item) => item.status === "not_needed").map((item) => item.id) } };
+      excludedNotRequired: [] } };
 };
 const g2s4PreviousCardDiagnostic = guruExportGate2CardDiagnosticV223;
 guruExportGate2CardDiagnosticV223 = function (card, rawStatus) {

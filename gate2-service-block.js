@@ -86,7 +86,9 @@ function g2ServiceBlockStatus(config, productId = "", workspace = state) {
   if (typeof config.statusResolver === "function")
     return config.statusResolver({ config, product_id: productId, workspace });
   const record = g2ServiceBlockRecord(config, productId, false, workspace);
-  const done = config.steps.filter((step) => g2ServiceBlockStepDone(config, step, record, productId, workspace)).length;
+  const done = config.steps.filter((step) => guruReadinessValue(
+    g2ServiceBlockStepDone(config, step, record, productId, workspace),
+    { serviceId: config.id, stepId: step.step_id })).length;
   return done === config.steps.length ? "ready" : done ? "in_progress" : "not_started";
 }
 

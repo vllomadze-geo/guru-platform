@@ -10925,9 +10925,10 @@ function v22IsFilled(value) {
 }
 
 function v22GetFieldValue(row, field) {
-  if (field.kind === "row") return row[field.field];
-  row.contextFields = row.contextFields || {};
-  return row.contextFields[field.key];
+  if (field.kind !== "row") row.contextFields = row.contextFields || {};
+  const value = field.kind === "row" ? row[field.field] : row.contextFields[field.key];
+  return guruReadinessValue(value, typeof nowGuideGate1PageTarget === "function"
+    ? nowGuideGate1PageTarget(row, field) : undefined);
 }
 
 function v22SectionMode(row, section) {
@@ -25560,7 +25561,7 @@ function sslV130Input(name, label, value, placeholder, valid, type = "text") {
 function sslV130Checks(card) {
   const f = ensureSslV130(card);
   const days = Number(f.expiresIn);
-  return {
+  const checks = {
     domain: Boolean(String(f.domain || "").trim()),
     httpsWorks: f.httpsWorks === "yes",
     httpCode: String(f.httpCode || "").trim() === "200",
@@ -25570,6 +25571,11 @@ function sslV130Checks(card) {
     chain: f.chain === "trusted",
     evidence: sslV130EvidenceValid(f.evidence),
   };
+  Object.entries(checks).forEach(([key, valid]) => {
+    if (!valid && !String(f[key] || "").trim()) guruReadinessValue(f[key],
+      { selector: `[data-ssl-v130-field="${key}"]` });
+  });
+  return checks;
 }
 
 function sslV130IsCorrect(card) {
@@ -26622,7 +26628,14 @@ function consentV130BlockStatus(card) {
   const active = rows.filter(
     (r) => guruStatusIsSet(r.status) && guruCanonStatus(r.status) !== "not_needed",
   );
-  if (!active.length && !rows.some((r) => r.status)) return "not_started";
+  if (!active.length && !rows.some((r) => r.status)) {
+    const place = CONSENT_V130_PLACES[0];
+    guruReadinessValue(rows[0]?.status, {
+      selector: `[data-consent-v130-place="${place.key}"][data-consent-v130-col="status"]`,
+      label: `${place.place}: Статус`,
+    });
+    return "not_started";
+  }
   if (active.some((r) => guruStatusIsBad(r.status))) return "problem";
   if (active.some((r) => r.pdn === "no" || r.policy === "no")) return "problem";
   if (active.some((r) => guruCanonStatus(r.status) === "needs_improvement"))
@@ -29046,7 +29059,8 @@ function ensureUnitV130() {
 function uv130StepStatus(data, step) {
   const requiredFields = guruRequiredFields(step.fields || []);
   const filled = requiredFields.filter((f) =>
-    String(data[f.k] || "").trim(),
+    guruReadinessValue(String(data[f.k] || "").trim(), typeof nowGuideGate1UnitTarget === "function"
+      ? nowGuideGate1UnitTarget(data, step, f) : undefined),
   ).length;
   if (!filled) return "not_started";
   if (filled === requiredFields.length) return "ready";
@@ -44373,19 +44387,24 @@ function projectComparisonStatus(model = ensureProjectComparison()) {
   );
   const summaryKeys = ["marketStronger", "ourStronger", "same"];
   const cells = competitors.flatMap((competitor) =>
-    criteria.map((criterion) => projectComparisonCell(criterion, competitor.id).text),
+    criteria.map((criterion) => guruReadinessValue(projectComparisonCell(criterion, competitor.id).text,
+      { selector: `[data-project-comparison-cell="${CSS.escape(criterion.id)}"][data-project-comparison-owner="${CSS.escape(competitor.id)}"][data-project-comparison-field="text"]`,
+        label: `${competitor.name || "Конкурент"}: ${criterion.name || "Критерий"}` })),
   );
   const values = [
     ...competitors.map((competitor) =>
       /^конкурент\s+\d+$/i.test(String(competitor.name || "").trim())
         ? ""
-        : competitor.name,
+        : guruReadinessValue(competitor.name, { selector: `[data-project-comparison-competitor="${CSS.escape(competitor.id)}"][data-project-comparison-competitor-field="name"]`, label: "Название конкурента" }),
     ),
     ...cells,
-    ...summaryKeys.map((key) => model.summary?.[key]),
+    ...summaryKeys.map((key) => guruReadinessValue(model.summary?.[key], {
+      selector: `[data-project-comparison-summary="${key}"]`,
+      label: { marketStronger: "В чём рынок сильнее нас", ourStronger: "В чём мы сильнее рынка", same: "В чём мы одинаковы" }[key] })),
     projectComparisonCompanyKeyDifference(),
     companyPrice
-      ? projectComparisonCell(companyPrice, PROJECT_COMPARISON_OWN_ID).text
+      ? guruReadinessValue(projectComparisonCell(companyPrice, PROJECT_COMPARISON_OWN_ID).text,
+        { selector: `[data-project-comparison-cell="${CSS.escape(companyPrice.id)}"][data-project-comparison-owner="${CSS.escape(PROJECT_COMPARISON_OWN_ID)}"][data-project-comparison-field="text"]`, label: "Наш проект: цена" })
       : "",
   ];
   const total = values.length;
@@ -48250,7 +48269,9 @@ function ensureTargetAudience() {
 }
 
 function targetAudienceSegmentProgress(segment) {
-  return TARGET_AUDIENCE_FIELDS.filter(([key]) => targetAudienceResolvedValue(segment, key).trim()).length;
+  return TARGET_AUDIENCE_FIELDS.filter(([key, label]) => guruReadinessValue(targetAudienceResolvedValue(segment, key).trim(), {
+    selector: `[data-target-audience-segment="${CSS.escape(segment.id)}"][data-target-audience-field="${key}"]`,
+    label: `${segment.name || "Сегмент"}: ${label}` })).length;
 }
 
 function targetAudienceStatus(model) {
@@ -59615,9 +59636,11 @@ function gate1CompanyDemandPositioningCompletionV357(workspace = state) {
   const demandTouched = demandRows.some((row) =>
     demandMetricFields.some((field) => guruV185Text(row?.[field]))
   );
-  const demandReady = demandRows.length > 0 && demandRows.every((row) =>
-    PV181_DEMAND_FIELDS_V272.every(([field]) => guruV185Text(row?.[field]))
-  );
+  const demandReady = demandRows.length > 0 && demandRows.map((row) =>
+    PV181_DEMAND_FIELDS_V272.map(([field, label]) => guruReadinessValue(guruV185Text(row?.[field]), {
+      selector: `[data-pv181-company-demand-row-id-v345="${CSS.escape(row.id)}"][data-pv181-company-demand-field-v345="${field}"]`,
+      label: `Спрос: ${row.kw}, ${label}` })).every(Boolean)
+  ).every(Boolean);
 
   const completed = [
     strategicFoundationReady,

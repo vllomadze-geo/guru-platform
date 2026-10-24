@@ -1,0 +1,1080 @@
+{
+  "passed": true,
+  "inventory": {
+    "build": "2.3.526+1cae4d4dd537",
+    "selected": "catalog-item-1786792591872-51f503",
+    "products": [
+      {
+        "id": "catalog-item-1790860377305-388c56",
+        "name": "Коза & Ёлка",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1786792591872-c8b1e9",
+        "name": "Рубашка Upcycling с кружевом",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-98358d",
+        "name": "Летнее платье «Исландка»",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-5f848a",
+        "name": "Платье из льна",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-3be8f9",
+        "name": "Лонгслив «Мак» с аппликацией",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-1d1d3c",
+        "name": "Свитшот с медведем для Михаила",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-c45ce3",
+        "name": "Свитшот «Яра» с авторской аппликацией",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-52046c",
+        "name": "Льняное демисезонное пальто",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-51f503",
+        "name": "Символ 2027 года «Коза»",
+        "categoryId": "product-1786401011698-9e81ee"
+      },
+      {
+        "id": "catalog-item-1790936932674-197964",
+        "name": "Шапка Коза",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1790937546522-78edcc",
+        "name": "ТЕРМОС в свитере",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1790937556174-6ad07b",
+        "name": "ТЕРМОС в чехле",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1790937575672-8f423f",
+        "name": "Текстильная ёлочка",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1790937587589-b751ba",
+        "name": "Новогодние подарочные наборы",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      }
+    ],
+    "gate1": [
+      {
+        "id": "card-14",
+        "title": "Robots.txt: доступ поисковых роботов",
+        "kind": "card",
+        "status": "problem",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-16",
+        "title": "Канонический URL и редиректы",
+        "kind": "card",
+        "status": "ready",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-17",
+        "title": "Meta Robots SEO META in 1 CLICK",
+        "kind": "card",
+        "status": "in_progress",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-18",
+        "title": "CWV PageSpeed Insights",
+        "kind": "card",
+        "status": "in_progress",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-20",
+        "title": "SSL / HTTPS: безопасность домена",
+        "kind": "card",
+        "status": "problem",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "project-comparison",
+        "title": "Сравнение проекта",
+        "kind": "comparison",
+        "status": "in_progress",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-site-footer-v497",
+        "title": "Футер: навигация, доверие и юридическая база",
+        "kind": "card",
+        "status": "not_started",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-35",
+        "title": "Cookie-баннер: уведомление и согласие",
+        "kind": "card",
+        "status": "not_started",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-36",
+        "title": "Футер: навигация, доверие и юридическая база",
+        "kind": "card",
+        "status": "not_started",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "card-37",
+        "title": "Согласие в формах",
+        "kind": "card",
+        "status": "not_started",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "target-audience",
+        "title": "Целевая аудитория",
+        "kind": "audience",
+        "status": "ready",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "unit-economics",
+        "title": "Юнит-экономика",
+        "kind": "unit",
+        "status": "in_progress",
+        "product": true,
+        "product_id": "all_products"
+      }
+    ],
+    "gate2": [
+      {
+        "id": "company-counter",
+        "title": "Яндекс Метрика · счётчик",
+        "kind": "wizard",
+        "wizardId": "counter",
+        "status": "not_started",
+        "scope": "company",
+        "productId": "",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "company-goal",
+        "title": "Яндекс Метрика · конверсионная цель",
+        "kind": "wizard",
+        "wizardId": "goal",
+        "status": "not_started",
+        "scope": "company",
+        "productId": "",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "company-domain",
+        "title": "Домен и HTTPS",
+        "kind": "service",
+        "wizardId": "",
+        "status": "not_started",
+        "scope": "company",
+        "productId": "",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "company-webmaster",
+        "title": "Яндекс Вебмастер",
+        "kind": "service",
+        "wizardId": "",
+        "status": "not_started",
+        "scope": "company",
+        "productId": "",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "company-yandex-direct",
+        "title": "Яндекс Директ · кабинет",
+        "kind": "service",
+        "wizardId": "",
+        "status": "not_started",
+        "scope": "company",
+        "productId": "",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "company-vk",
+        "title": "VK Реклама и пиксель",
+        "kind": "service",
+        "wizardId": "",
+        "status": "in_progress",
+        "scope": "company",
+        "productId": "",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "company-telegram-ads",
+        "title": "Telegram Ads · кабинет",
+        "kind": "service",
+        "wizardId": "",
+        "status": "not_started",
+        "scope": "company",
+        "productId": "",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "company-ga4",
+        "title": "Google Analytics 4",
+        "kind": "service",
+        "wizardId": "",
+        "status": "not_started",
+        "scope": "company",
+        "productId": "",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "company-leads",
+        "title": "Приём заявок",
+        "kind": "service",
+        "wizardId": "",
+        "status": "not_started",
+        "scope": "company",
+        "productId": "",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "company-safety",
+        "title": "Юридическая защита",
+        "kind": "service",
+        "wizardId": "",
+        "status": "not_started",
+        "scope": "company",
+        "productId": "",
+        "product": false,
+        "product_id": null
+      },
+      {
+        "id": "product-landing",
+        "title": "Посадочная товара",
+        "kind": "service",
+        "wizardId": "",
+        "status": "not_started",
+        "scope": "product",
+        "productId": "catalog-item-1786792591872-51f503",
+        "product": true,
+        "product_id": "catalog-item-1786792591872-51f503"
+      },
+      {
+        "id": "product-counter",
+        "title": "Метрика продукта · визит",
+        "kind": "service",
+        "wizardId": "",
+        "status": "not_started",
+        "scope": "product",
+        "productId": "catalog-item-1786792591872-51f503",
+        "product": true,
+        "product_id": "catalog-item-1786792591872-51f503"
+      },
+      {
+        "id": "product-goal",
+        "title": "Метрика продукта · цель",
+        "kind": "service",
+        "wizardId": "",
+        "status": "not_started",
+        "scope": "product",
+        "productId": "catalog-item-1786792591872-51f503",
+        "product": true,
+        "product_id": "catalog-item-1786792591872-51f503"
+      },
+      {
+        "id": "product-vk",
+        "title": "События VK Рекламы",
+        "kind": "service",
+        "wizardId": "",
+        "status": "not_started",
+        "scope": "product",
+        "productId": "catalog-item-1786792591872-51f503",
+        "product": true,
+        "product_id": "catalog-item-1786792591872-51f503"
+      },
+      {
+        "id": "product-lead",
+        "title": "Сквозная проверка заявки",
+        "kind": "service",
+        "wizardId": "",
+        "status": "not_started",
+        "scope": "product",
+        "productId": "catalog-item-1786792591872-51f503",
+        "product": true,
+        "product_id": "catalog-item-1786792591872-51f503"
+      }
+    ],
+    "gates": [
+      {
+        "id": "gate-0",
+        "total": 9,
+        "done": 8,
+        "ready": 8,
+        "notRequired": 0,
+        "inProgress": 1,
+        "problem": 0,
+        "notStarted": 0,
+        "percent": 94
+      },
+      {
+        "id": "gate-1",
+        "total": 12,
+        "done": 2,
+        "ready": 2,
+        "notRequired": 0,
+        "inProgress": 4,
+        "problem": 2,
+        "notStarted": 4,
+        "percent": 42
+      },
+      {
+        "id": "gate-2",
+        "total": 15,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 1,
+        "problem": 0,
+        "notStarted": 14,
+        "percent": 3
+      },
+      {
+        "id": "gate-3",
+        "total": 5,
+        "done": 4,
+        "ready": 4,
+        "notRequired": 0,
+        "inProgress": 0,
+        "problem": 1,
+        "notStarted": 0,
+        "percent": 90
+      },
+      {
+        "id": "gate-4",
+        "total": 15,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 15,
+        "problem": 0,
+        "notStarted": 0,
+        "percent": 50
+      },
+      {
+        "id": "gate-5",
+        "total": 6,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 0,
+        "problem": 0,
+        "notStarted": 6,
+        "percent": 0
+      },
+      {
+        "id": "gate-6",
+        "total": 27,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 0,
+        "problem": 0,
+        "notStarted": 27,
+        "percent": 0
+      },
+      {
+        "id": "gate-7",
+        "total": 0,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 0,
+        "problem": 0,
+        "notStarted": 0,
+        "percent": 0
+      },
+      {
+        "id": "gate-8",
+        "total": 1,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 1,
+        "problem": 0,
+        "notStarted": 0,
+        "percent": 50
+      }
+    ],
+    "project": {
+      "total": 90,
+      "done": 14,
+      "ready": 14,
+      "notRequired": 0,
+      "inProgress": 22,
+      "problem": 3,
+      "notStarted": 51,
+      "percent": 29
+    },
+    "passport": {
+      "label": "Готовность проекта",
+      "hint": "Насколько проект готов.",
+      "value": "4% · 11 из 269 блоков готовы",
+      "source": "автоматический расчёт по всем Gate"
+    }
+  },
+  "dom": [
+    {
+      "id": "card-14",
+      "kind": "card",
+      "found": true,
+      "hidden": [],
+      "cardId": "card-14",
+      "editorKinds": [
+        "rv2",
+        "rv2Sys",
+        "rv2Field",
+        "rv2SitemapField",
+        "rv2SitemapIdx",
+        "rv2Table",
+        "rv2Idx"
+      ]
+    },
+    {
+      "id": "card-16",
+      "kind": "card",
+      "found": true,
+      "hidden": [],
+      "cardId": "card-16",
+      "editorKinds": [
+        "rdrV130Field",
+        "rdrV130Index",
+        "rdrV130Col",
+        "rdrV130Verdict"
+      ]
+    },
+    {
+      "id": "card-17",
+      "kind": "card",
+      "found": true,
+      "hidden": [],
+      "cardId": "card-17",
+      "editorKinds": []
+    },
+    {
+      "id": "card-18",
+      "kind": "card",
+      "found": true,
+      "hidden": [],
+      "cardId": "card-18",
+      "editorKinds": []
+    },
+    {
+      "id": "card-20",
+      "kind": "card",
+      "found": true,
+      "hidden": [],
+      "cardId": "card-20",
+      "editorKinds": [
+        "sslV130Field"
+      ]
+    },
+    {
+      "id": "project-comparison",
+      "kind": "comparison",
+      "found": true,
+      "hidden": [],
+      "editorKinds": []
+    },
+    {
+      "id": "card-site-footer-v497",
+      "kind": "card",
+      "found": true,
+      "hidden": [],
+      "cardId": "card-site-footer-v497",
+      "editorKinds": []
+    },
+    {
+      "id": "card-35",
+      "kind": "card",
+      "found": true,
+      "hidden": [
+        {
+          "tag": "DIV",
+          "cls": "g1-section-body g1-seo-central-body-v298",
+          "hidden": true,
+          "collapsible": true
+        }
+      ],
+      "cardId": "card-35",
+      "editorKinds": [
+        "megaPlatformPageRef",
+        "megaPlatformRefKind",
+        "megaPlatformCard",
+        "megaPlatformCheck",
+        "cookieV130Field"
+      ]
+    },
+    {
+      "id": "card-36",
+      "kind": "card",
+      "found": true,
+      "hidden": [
+        {
+          "tag": "DIV",
+          "cls": "g1-section-body g1-seo-central-body-v298",
+          "hidden": true,
+          "collapsible": true
+        }
+      ],
+      "cardId": "card-36",
+      "editorKinds": [
+        "megaPlatformPageRef",
+        "megaPlatformRefKind",
+        "megaPlatformCard",
+        "megaPlatformCheck",
+        "footerV130Field"
+      ]
+    },
+    {
+      "id": "card-37",
+      "kind": "card",
+      "found": true,
+      "hidden": [
+        {
+          "tag": "DIV",
+          "cls": "g1-section-body g1-seo-central-body-v298",
+          "hidden": true,
+          "collapsible": true
+        }
+      ],
+      "cardId": "card-37",
+      "editorKinds": [
+        "consentV130Field",
+        "consentV130Place",
+        "consentV130Col"
+      ]
+    },
+    {
+      "id": "target-audience",
+      "kind": "audience",
+      "found": true,
+      "hidden": [],
+      "editorKinds": []
+    },
+    {
+      "id": "unit-economics",
+      "kind": "unit",
+      "found": true,
+      "hidden": [],
+      "editorKinds": []
+    }
+  ],
+  "products": [
+    {
+      "product_id": "catalog-item-1790860377305-388c56",
+      "name": "Коза & Ёлка",
+      "viaUi": true,
+      "gates": [
+        {
+          "id": "gate-1",
+          "total": 12,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 4,
+          "problem": 2,
+          "notStarted": 4,
+          "percent": 42
+        },
+        {
+          "id": "gate-2",
+          "total": 15,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 3
+        }
+      ],
+      "missingHeaders": []
+    },
+    {
+      "product_id": "catalog-item-1786792591872-c8b1e9",
+      "name": "Рубашка Upcycling с кружевом",
+      "viaUi": true,
+      "gates": [
+        {
+          "id": "gate-1",
+          "total": 12,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 4,
+          "problem": 2,
+          "notStarted": 4,
+          "percent": 42
+        },
+        {
+          "id": "gate-2",
+          "total": 15,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 3
+        }
+      ],
+      "missingHeaders": []
+    },
+    {
+      "product_id": "catalog-item-1786792591872-98358d",
+      "name": "Летнее платье «Исландка»",
+      "viaUi": true,
+      "gates": [
+        {
+          "id": "gate-1",
+          "total": 12,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 4,
+          "problem": 2,
+          "notStarted": 4,
+          "percent": 42
+        },
+        {
+          "id": "gate-2",
+          "total": 15,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 3
+        }
+      ],
+      "missingHeaders": []
+    },
+    {
+      "product_id": "catalog-item-1786792591872-5f848a",
+      "name": "Платье из льна",
+      "viaUi": true,
+      "gates": [
+        {
+          "id": "gate-1",
+          "total": 12,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 4,
+          "problem": 2,
+          "notStarted": 4,
+          "percent": 42
+        },
+        {
+          "id": "gate-2",
+          "total": 15,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 3
+        }
+      ],
+      "missingHeaders": []
+    },
+    {
+      "product_id": "catalog-item-1786792591872-3be8f9",
+      "name": "Лонгслив «Мак» с аппликацией",
+      "viaUi": true,
+      "gates": [
+        {
+          "id": "gate-1",
+          "total": 12,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 4,
+          "problem": 2,
+          "notStarted": 4,
+          "percent": 42
+        },
+        {
+          "id": "gate-2",
+          "total": 15,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 3
+        }
+      ],
+      "missingHeaders": []
+    },
+    {
+      "product_id": "catalog-item-1786792591872-1d1d3c",
+      "name": "Свитшот с медведем для Михаила",
+      "viaUi": true,
+      "gates": [
+        {
+          "id": "gate-1",
+          "total": 12,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 4,
+          "problem": 2,
+          "notStarted": 4,
+          "percent": 42
+        },
+        {
+          "id": "gate-2",
+          "total": 15,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 3
+        }
+      ],
+      "missingHeaders": []
+    },
+    {
+      "product_id": "catalog-item-1786792591872-c45ce3",
+      "name": "Свитшот «Яра» с авторской аппликацией",
+      "viaUi": true,
+      "gates": [
+        {
+          "id": "gate-1",
+          "total": 12,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 4,
+          "problem": 2,
+          "notStarted": 4,
+          "percent": 42
+        },
+        {
+          "id": "gate-2",
+          "total": 15,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 3
+        }
+      ],
+      "missingHeaders": []
+    },
+    {
+      "product_id": "catalog-item-1786792591872-52046c",
+      "name": "Льняное демисезонное пальто",
+      "viaUi": true,
+      "gates": [
+        {
+          "id": "gate-1",
+          "total": 12,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 4,
+          "problem": 2,
+          "notStarted": 4,
+          "percent": 42
+        },
+        {
+          "id": "gate-2",
+          "total": 15,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 3
+        }
+      ],
+      "missingHeaders": []
+    },
+    {
+      "product_id": "catalog-item-1786792591872-51f503",
+      "name": "Символ 2027 года «Коза»",
+      "viaUi": true,
+      "gates": [
+        {
+          "id": "gate-1",
+          "total": 12,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 4,
+          "problem": 2,
+          "notStarted": 4,
+          "percent": 42
+        },
+        {
+          "id": "gate-2",
+          "total": 15,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 3
+        }
+      ],
+      "missingHeaders": []
+    },
+    {
+      "product_id": "catalog-item-1790936932674-197964",
+      "name": "Шапка Коза",
+      "viaUi": true,
+      "gates": [
+        {
+          "id": "gate-1",
+          "total": 12,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 4,
+          "problem": 2,
+          "notStarted": 4,
+          "percent": 42
+        },
+        {
+          "id": "gate-2",
+          "total": 15,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 3
+        }
+      ],
+      "missingHeaders": []
+    },
+    {
+      "product_id": "catalog-item-1790937546522-78edcc",
+      "name": "ТЕРМОС в свитере",
+      "viaUi": true,
+      "gates": [
+        {
+          "id": "gate-1",
+          "total": 12,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 4,
+          "problem": 2,
+          "notStarted": 4,
+          "percent": 42
+        },
+        {
+          "id": "gate-2",
+          "total": 15,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 3
+        }
+      ],
+      "missingHeaders": []
+    },
+    {
+      "product_id": "catalog-item-1790937556174-6ad07b",
+      "name": "ТЕРМОС в чехле",
+      "viaUi": true,
+      "gates": [
+        {
+          "id": "gate-1",
+          "total": 12,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 4,
+          "problem": 2,
+          "notStarted": 4,
+          "percent": 42
+        },
+        {
+          "id": "gate-2",
+          "total": 15,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 3
+        }
+      ],
+      "missingHeaders": []
+    },
+    {
+      "product_id": "catalog-item-1790937575672-8f423f",
+      "name": "Текстильная ёлочка",
+      "viaUi": true,
+      "gates": [
+        {
+          "id": "gate-1",
+          "total": 12,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 4,
+          "problem": 2,
+          "notStarted": 4,
+          "percent": 42
+        },
+        {
+          "id": "gate-2",
+          "total": 15,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 3
+        }
+      ],
+      "missingHeaders": []
+    },
+    {
+      "product_id": "catalog-item-1790937587589-b751ba",
+      "name": "Новогодние подарочные наборы",
+      "viaUi": true,
+      "gates": [
+        {
+          "id": "gate-1",
+          "total": 12,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 4,
+          "problem": 2,
+          "notStarted": 4,
+          "percent": 42
+        },
+        {
+          "id": "gate-2",
+          "total": 15,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 3
+        }
+      ],
+      "missingHeaders": []
+    }
+  ],
+  "menu": {
+    "gates": [
+      {
+        "id": "gate-0",
+        "text": "0. Точка отсчёта9 блоков, прогресс 94%"
+      },
+      {
+        "id": "gate-1",
+        "text": "1. Аналитика12 блоков, прогресс 42%"
+      },
+      {
+        "id": "gate-2",
+        "text": "2. Готовность к трафику15 блоков, прогресс 3%"
+      },
+      {
+        "id": "gate-3",
+        "text": "3. Стратегия5 блоков, прогресс 90%"
+      },
+      {
+        "id": "gate-4",
+        "text": "4. Реализация15 блоков, прогресс 50%"
+      },
+      {
+        "id": "gate-5",
+        "text": "5. Оценка и оптимизация (постоянная петля)6 блоков, прогресс 0%"
+      },
+      {
+        "id": "gate-6",
+        "text": "6. Маркетинговый календарь событий27 блоков, прогресс 0%"
+      },
+      {
+        "id": "gate-7",
+        "text": "7. Отчёты и журнал выполнения0 блоков, прогресс 0%"
+      },
+      {
+        "id": "gate-8",
+        "text": "8. Прогноз и моделированиеРасчёт по допущениям"
+      }
+    ],
+    "passport": "4% · 11 из 269 блоков готовы"
+  },
+  "comparison": {
+    "identical": true,
+    "differences": [],
+    "beforeBytes": 28082088,
+    "afterBytes": 28082088,
+    "beforeSha256": "575e6ea39f26d36511b0bbbf282a22c585c766635d391fe00e4631a4d5ceef88",
+    "afterSha256": "575e6ea39f26d36511b0bbbf282a22c585c766635d391fe00e4631a4d5ceef88",
+    "updatedAtFields": 259
+  }
+}
