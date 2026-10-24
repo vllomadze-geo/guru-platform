@@ -149,6 +149,10 @@ try {
     const ids=await evaluate(page,`nowGuideDisplayedPath.filter(i=>i.gateId===${JSON.stringify(gateId)}).map(i=>i.id)`);
     for(const id of (process.env.GURU_STEP4_QUICK === "1" ? ids.slice(0,1) : ids)){console.log("Переход",gateId,id);await select(gateId,id);evidence.transitions.push(await evaluate(page,`(()=>{const i=nowGuideCurrent(nowGuideDisplayedPath),n=nowGuideFindNode(i);return {gate:activeGateId,id:i.id,details:nowGuideMissingDetails(i),highlight:n.classList.contains("now-guide-highlight"),expanded:!n.closest("details")||n.closest("details").open}})()`));}
     evidence.matrices[gateId]=await evaluate(page,`(()=>{const id=${JSON.stringify(gateId)},gate=state.gates.find(g=>g.id===id);const rows=nowGuideDisplayedPath.filter(i=>i.gateId===id).map(i=>{const n=nowGuideFindNode(i),b=n?.querySelector(".status-pill"),raw=[...(b?.classList||[])].find(n=>n!=="status-pill"&&n.startsWith("status-"))?.slice(7);return {id:i.id,title:i.title,product_id:i.productId||null,pageBadge:b?.textContent.trim(),pageStatus:guruNormBlockStatus(raw),pathStatus:i.status,found:!!n}});const diagnostic=nowGuidePlainRead(()=>guruExportGateDiagnosticsCurrentV223(id,guruExportRawCardStatusesV223(state)));return {rows,summary:guruGateReadiness(gate),navigationReadiness:diagnostic.navigationReadiness.summary,menu:document.querySelector('[data-gate-id="'+id+'"] .small').textContent}})()`);
+    if(gateId==="gate-4"){
+      const absent=await evaluate(page,`(()=>{const path=nowGuideDisplayedPath.filter(i=>i.gateId==="gate-4");return [...document.querySelectorAll('[data-g4five-linked-tool-v523], .g4five-linked-tool-v523[data-g4five-tool-v523]')].filter(node=>node.querySelector('.status-pill')&&!path.some(item=>item.id===node.dataset.g4fiveToolV523)).map(node=>node.dataset.g4fiveToolV523)})()`);
+      assert.deepEqual(absent,[],"Все видимые карточки источников должны входить в путь");
+    }
     const m=evidence.matrices[gateId];for(const r of m.rows){assert(r.found,r.id);assert.equal(r.pageStatus,r.pathStatus,r.id)}assert(m.rows.length>0);assert.equal(m.rows.length,m.summary.total);assert.equal(m.rows.filter(r=>["ready","not_required"].includes(r.pathStatus)).length,m.summary.done);assert.equal(m.summary.total,m.navigationReadiness.total);assert.equal(m.summary.done,m.navigationReadiness.done);console.log("Матрица PASS",gateId,m.summary);
   }
   await select("gate-3","advocate");
@@ -194,7 +198,10 @@ try {
             rows.push({gateId,id:item.id,product_id:item.productId||null,pageBadge:badge?.textContent.trim(),pageStatus:guruNormBlockStatus(raw),pathStatus:item.status,found:!!node});
           }
         }
-        return {product_id:product.id,name:product.name,viaUi:true,gates,rows};
+        const fallbackBlocks=path.filter(item=>["gate-3","gate-4"].includes(item.gateId)&&!["ready","not_required"].includes(item.status)&&
+          (item.gateId==="gate-3"||["content_creatives","seo","retargeting"].includes(item.id))).filter(item=>nowGuideMissingDetails(item)?.items?.some(check=>check.fallback))
+          .map(item=>({gate:item.gateId,id:item.id,title:item.title,product_id:product.id}));
+        return {product_id:product.id,name:product.name,viaUi:true,gates,rows,fallbackBlocks};
       } finally {guruFastGateNavigation=fast;guruGateNavigationInProgress=navigating}
     }))`);
     for(const row of product.rows){assert(row.found,row.id);assert.equal(row.pageStatus,row.pathStatus,row.id)}

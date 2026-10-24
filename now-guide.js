@@ -636,7 +636,9 @@ function nowGuideGate4Items() {
       // A host and its inner card may carry the same tool marker. Campaign
       // hosts are represented by their own existing header, once per key.
       if (node.matches('[data-g4five-tool-v523]') && (node.matches('.g4five-campaign-host-v523') || node.querySelector('[data-g4camp-toggle]'))) continue;
-      const header = node.matches('[data-g4camp-toggle]') ? node : node.querySelector(':scope > .g1-card-header-static, :scope > summary, :scope > .g1-card-header');
+      const linked = node.classList.contains('g4five-linked-tool-v523');
+      const header = node.matches('[data-g4camp-toggle]') ? node : node.querySelector(':scope > .g1-card-header-static, :scope > summary, :scope > .g1-card-header') ||
+        (linked ? node.querySelector(':scope > .g1-card > .g1-card-header-static') : null);
       const badge = header?.querySelector('.status-pill');
       if (!badge) continue;
       const channel = node.matches('[data-g4camp-toggle]') ? channels.find(channel => g4CampaignStateKey(productId, channel.key) === node.dataset.g4campToggle) : null;
@@ -652,7 +654,7 @@ function nowGuideGate4Items() {
       const title = header.querySelector('.g1-card-title')?.textContent.trim() || id;
       const selector = channel ? `[data-g4camp-toggle="${CSS.escape(node.dataset.g4campToggle)}"]`
         : kind === 'gate4-readiness' ? `[data-g4-readiness-card="${CSS.escape(id)}"] > summary`
-        : `[data-g4five-${scope === 'company' ? 'company' : 'product'}-v523] [data-g4five-tool-v523="${CSS.escape(id)}"] > .g1-card-header-static`;
+        : `[data-g4five-${scope === 'company' ? 'company' : 'product'}-v523] [data-g4five-tool-v523="${CSS.escape(id)}"]${linked ? ' > .g1-card' : ''} > .g1-card-header-static`;
       result.push({ id, title, kind, scope, productId: scope === 'product' ? productId : '', status,
         selector, pageBadge: badge.textContent.trim(), rawStatus: raw });
     }
