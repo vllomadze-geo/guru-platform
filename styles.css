@@ -24141,3 +24141,7 @@ html body .content-area .g4-rsya-direct-fallback-v533 input.g1-input.is-optional
     overflow-x: auto;
   }
 }
+
+/* Gate 3: empty source previews stay neutral. Readiness badges keep their status. */
+.g3-product-journey-cell.is-empty { background: #f4f3f0; border-left-color: #aaa69e; }
+.g3-product-journey-cell.is-empty > b { color: #68645e; }

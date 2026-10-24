@@ -3585,9 +3585,16 @@ function g4FunnelCardStatusV294(card, product, snapshot) {
     if (source) return source.status;
     const values =
       g4ReadinessProductRowV225(product.id, card.id, row.key, state) || {};
+    const target = field => ({
+      selector: `[data-g4-readiness-product-id="${CSS.escape(product.id)}"][data-g4-readiness-card-id="${CSS.escape(card.id)}"][data-g4-readiness-row-key="${CSS.escape(row.key)}"][data-g4-readiness-row-field="${field}"]`,
+      label: `${row.element}: ${field === "status" ? "Статус" : "Результат"}`,
+      group: { key: `${card.id}-${field}`, label: `${field === "status" ? "Статус" : "Результат"}: не заполнено`, row: row.key, total: rows.length },
+    });
+    const checked = guruReadinessValue(guruStatusIsOk(values.status), target("status"));
+    const result = guruReadinessValue(guruV185Text(values.result), target("result"));
     if (!g4ReadinessRowHasValueV225(values)) return "not_started";
     if (guruStatusIsBad(values.status)) return "problem";
-    if (guruStatusIsOk(values.status) && guruV185Text(values.result)) return "ready";
+    if (checked && result) return "ready";
     return "in_progress";
   });
   if (statuses.some((status) => status === "problem")) return "problem";

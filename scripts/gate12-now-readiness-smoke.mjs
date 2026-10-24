@@ -251,7 +251,7 @@ try {
   assert(evidence.noOldGate2.allVisible);
   evidence.laterGatesHidden = await evaluate(page, `(() => {
     const old=nowGuideReviewKey, path=nowGuideDisplayedPath;
-    const result=[...new Set(path.filter(item=>Number(item.gateId.slice(5))>=3).map(item=>item.gateId))].map(gateId=>{
+    const result=[...new Set(path.filter(item=>Number(item.gateId.slice(5))>=5).map(item=>item.gateId))].map(gateId=>{
       nowGuideReviewKey=path.find(item=>item.gateId===gateId).key; nowGuideRender(path);
       return { gateId, hidden:!document.querySelector("#nowGuide .now-guide-missing") };
     }); nowGuideReviewKey=old; nowGuideRender(path); return result;

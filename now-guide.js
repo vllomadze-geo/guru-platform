@@ -146,6 +146,17 @@ function nowGuideGate0Inspect(card) {
 
 function nowGuideMissingNode(check, root = document.getElementById("contentArea")) {
   if (!root) return null;
+  if (check.members?.length) {
+    const candidates = check.members.map(member => ({ member, node: nowGuideMissingNode(member, root) })).filter(entry => entry.node);
+    candidates.sort((a, b) => a.node === b.node ? 0 : a.node.compareDocumentPosition(b.node) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
+    if (candidates.length) {
+      // Only transient guide metadata changes. The group follows the first
+      // missing cell in the table's current visible order, including sorting.
+      const { label, groupedCount, members } = check;
+      Object.assign(check, candidates[0].member, { label, groupedCount, members });
+      return candidates[0].node;
+    }
+  }
   if (check.scopeField) return [...root.querySelectorAll(
     `[data-gate0-scope-field-row="${CSS.escape(check.scopeField)}"] [data-gate0-scope-record]`,
   )].find((node) => !node.disabled && !String(node.value || "").trim()) || null;
@@ -189,13 +200,14 @@ function nowGuideGate0Missing(item) {
 }
 
 // Other gates can register a provider without changing rendering or focus.
-const nowGuideMissingProviders = new Map([["gate-0", nowGuideGate0Missing], ["gate-1", nowGuideGate1Missing], ["gate-2", nowGuideGate2Missing]]);
+const nowGuideMissingProviders = new Map([["gate-0", nowGuideGate0Missing], ["gate-1", nowGuideGate1Missing], ["gate-2", nowGuideGate2Missing], ["gate-3", nowGuideGate3Missing], ["gate-4", nowGuideGate4Missing]]);
 function nowGuideMissingDetails(item) {
   const provider = item && nowGuideMissingProviders.get(item.gateId);
   if (!provider) return null;
   if (item.status === "not_required") return { text: "Не требуется", items: [], unresolved: [] };
   if (item.status === "ready") return { text: "Всё заполнено", items: [], unresolved: [] };
-  return provider(item);
+  const details = provider(item);
+  return { ...details, items: nowGuideGroupMissing(details.items) };
 }
 
 function nowGuideMissingHtml(item) {
@@ -205,7 +217,7 @@ function nowGuideMissingHtml(item) {
   if (details.text) return `<div class="now-guide-missing" aria-live="polite">${details.text}</div>`;
   return `<div class="now-guide-missing" aria-live="polite"><span>Не хватает:</span><ul>${details.items.slice(0, 3)
     .map((check, index) => `<li><button type="button" data-now-missing="${index}">${escapeHtml(check.label)}</button></li>`).join("")}</ul>${details.items.length > 3
-    ? `<span>и ещё ${details.items.length - 3}</span>` : ""}</div>`;
+    ? `<span>и ещё ${details.items.length - 3} групп</span>` : ""}</div>`;
 }
 
 // Gate 1 and Gate 2 readers also isolate legacy calculators which read the
@@ -466,6 +478,312 @@ function nowGuideGate1Reveal(item) {
   return true;
 }
 
+// A read pass shares the existing render cache. Its results never survive a
+// render/input cycle and are never written to the workspace.
+let nowGuideReadPass = null;
+function nowGuideWithReadPass(calculate) {
+  if (nowGuideReadPass) return calculate();
+  const previousCache = guruRenderReadCacheV470;
+  nowGuideReadPass = new Map();
+  guruRenderReadCacheV470 ||= guruCreateRenderReadCacheV470();
+  try { return calculate(); }
+  finally { nowGuideReadPass = null; guruRenderReadCacheV470 = previousCache; }
+}
+function nowGuidePlainRead(calculate) {
+  return nowGuideWithReadPass(() => guruExportWithoutPersistenceV223(() => nowGuideGate12WithView(calculate,
+    guruExportDiagnosticCloneV223(state))));
+}
+
+function nowGuidePlainAssessment(calculate) {
+  const missing = [];
+  const previous = guruReadinessCollector;
+  let status;
+  try {
+    status = nowGuidePlainRead(() => {
+      guruReadinessCollector = missing;
+      return calculate();
+    });
+  } finally { guruReadinessCollector = previous; }
+  return { status, missing };
+}
+
+function nowGuideGroupMissing(items) {
+  const groups = new Map();
+  const unique = [...new Map((items || []).map(check => [check.selector || check.scopeField || check.label, check])).values()];
+  let tables;
+  for (const check of unique) {
+    let group = check.group;
+    if (!group && check.selector) {
+      const node = nowGuideMissingNode(check);
+      const row = node?.closest("tr");
+      const table = row?.closest("table");
+      const cell = node?.closest("td");
+      if (table && cell) {
+        tables ||= [...document.querySelectorAll("#contentArea table")];
+        const column = [...row.children].indexOf(cell);
+        const label = table.querySelector("thead tr")?.children[column]?.textContent.trim();
+        if (label) group = { key: `table-${tables.indexOf(table)}-${column}`, label: `${label}: не заполнено`,
+          row: [...table.rows].indexOf(row), total: table.querySelectorAll("tbody tr").length };
+      }
+      // Structured list editors expose stable field and record identifiers.
+      if (!group) {
+        const field = check.selector.match(/\[data-([^\]]*(?:field|key|col))="([^"]+)"\]/g)?.at(-1);
+        const record = check.selector.match(/\[data-([^\]]*(?:record|row-id|index|item))="([^"]+)"\]/)?.[0];
+        if (field && record) group = { key: check.selector.replace(record, "[row]").replace(/index="\d+"/g, 'index="row"'),
+          row: record, label: check.label.replace(/^(?:.*: запись \d+, |.*: |.*?, )/, "") + ": не заполнено" };
+      }
+    }
+    const key = group?.key || Symbol();
+    if (!groups.has(key)) groups.set(key, { first: check, group, rows: new Set(), members: [] });
+    groups.get(key).rows.add(group?.row ?? check.selector ?? check.scopeField ?? key);
+    groups.get(key).members.push(check);
+  }
+  return [...groups.values()].map(({ first, group, rows, members }) => {
+    if (!group || rows.size === 1) return first;
+    const count = rows.size;
+    const label = group.noun === "слов" ? `Спрос: у ${count} из ${group.total} слов нет метрик`
+      : group.key === "catalog-url-products" ? `Каталог: URL не указан у ${count} товаров`
+      : `${group.label} у ${count}${group.total ? ` из ${group.total}` : ""} записей`;
+    return { ...first, label, groupedCount: count, members };
+  });
+}
+
+function nowGuideGate3Stages() {
+  return nowGuidePlainRead(() => {
+    const product = g3ProductJourneySelected(state);
+    return product ? g3ProductJourneyStages(g3ProductJourneySnapshot(product)) : [];
+  }) || [];
+}
+const nowGuidePreviousJourneyStages = g3ProductJourneyStages;
+g3ProductJourneyStages = function (...args) {
+  return nowGuidePreviousJourneyStages.apply(this, args).map(stage => ({ ...stage,
+    title: activeGateId === "gate-3" ? NOW_STAGE_NAMES[stage.key] || stage.title : stage.title }));
+};
+function nowGuideSourceHint(target, label) {
+  if (!target) return null;
+  const path = nowGuideDisplayedPath;
+  const owner = target.gateId === "gate-0" ? path.find(item => item.gateId === target.gateId &&
+    item.id === (target.cardId || (target.kind === "gate0-scoped" ? "card-2" : "card-7")))
+    : target.kind === "gate1-unit" ? path.find(item => item.gateId === "gate-1" && item.kind === "unit")
+    : target.kind === "gate1-page" ? path.find(item => item.gateId === "gate-1" && item.id === target.cardId)
+    : target.kind === "gate1-analysis" ? path.find(item => item.gateId === "gate-1" && item.calculate === "product-demand")
+    : target.kind === "gate4-campaign" ? path.find(item => item.gateId === "gate-4" && item.id === target.channelKey) : null;
+  if (!owner) return null;
+  let checks = owner.gateId === "gate-0" ? guruGate0BlockReadiness(findCard(owner.id)).missing
+    : owner.gateId === "gate-1" ? nowGuideGate1Assessment(owner).missing : [];
+  if (target.kind === "gate0-landing") checks = checks.filter(check => check?.selector?.includes(`data-mega-url-id="${CSS.escape(target.productId)}"`) || check?.selector?.includes(`data-mega-product-id="${CSS.escape(target.productId)}"`));
+  if (target.kind === "gate0-channel") checks = checks.filter(check => check?.selector?.includes(`data-mega-section="channels"`) && check.selector.includes(`data-mega-idx="${target.channelIndex || 0}"`));
+  if (target.kind === "gate1-page") checks = checks.filter(check => check?.selector?.includes(`index="${target.rowIndex}"`) &&
+    (!(target.contextKey || target.rowField) || check.selector.includes(`="${CSS.escape(target.contextKey || target.rowField)}"`)));
+  if (target.kind === "gate1-unit") checks = checks.filter(check => check?.selector?.includes(`data-uv130-step="${target.step || "ltv"}"`));
+  if (target.kind === "gate0-scoped") checks = checks.filter(check => check?.selector?.includes(target.recordId) || check?.scopeField === target.field);
+  const editor = document.createElement("template");
+  editor.innerHTML = owner.gateId === "gate-1" ? nowGuideGate1EditorHtml(owner)
+    : owner.gateId === "gate-0" ? nowGuidePlainRead(() => cardUserFieldsHtml(findCard(owner.id))) : "";
+  const check = checks.find(check => {
+    if (!check?.selector && !check?.scopeField) return false;
+    const node = editor ? nowGuideMissingNode(check, editor.content) : nowGuideMissingNode(check);
+    return node && !node.disabled && !node.readOnly && node.matches("input,textarea,select,button");
+  });
+  if (!check) return null;
+  const name = nowGuideSafeText(check.label);
+  return { ...check, label: name.startsWith(label) ? name : `${label}: ${name}`, sourceItem: owner };
+}
+function nowGuideGate3Missing(item) {
+  const stage = nowGuideGate3Stages().find(stage => stage.key === item.id);
+  const items = [], unresolved = [];
+  for (const cell of stage?.cells || []) {
+    if (guruV185Text(cell.value)) continue;
+    const check = nowGuideSourceHint(cell.target, cell.label);
+    if (check) items.push(check);
+    else unresolved.push(cell.label);
+  }
+  if (unresolved.length || !items.length) items.push({ fallback: true, label: "Заполните блок" });
+  return { items, unresolved: unresolved.length ? [item.id] : [] };
+}
+
+let nowGuideGate4Trace = null;
+function nowGuideGate4CampaignTarget(field, label = "") {
+  const item = nowGuideGate4Trace;
+  if (!item) return undefined;
+  return { selector: `[data-g4c2-product="${CSS.escape(item.productId)}"][data-g4c2-key="${CSS.escape(item.id)}"][data-g4c2-field="${field}"]`, field, label };
+}
+function nowGuideGate4SearchTarget(product, row, index, field) {
+  const prefix = `[data-g4sb-product="${CSS.escape(product)}"]`;
+  return { selector: ["col2", "col3", "col4"].includes(field)
+    ? `${prefix}[data-g4sb-group="${index}"][data-g4sb-col="${field}"]`
+    : `${prefix}[data-g4sb-unit-toggle="${CSS.escape(row.clusterId || "")}"]`,
+    searchGroup: row.clusterId || "", step: !field.startsWith("col"),
+    label: field === "phrases" ? "Кластер-группа: добавьте ключевые фразы" : field === "ad0" ? "Кластер-группа: добавьте объявление" :
+      ({ col2: "Прогноз показов", col3: "Прогноз кликов", col4: "Бюджет без НДС" })[field],
+    group: { key: `search-${field}`, label: ({ col2: "Прогноз показов", col3: "Прогноз кликов", col4: "Бюджет без НДС", phrases: "Ключевые фразы", ad0: "Объявление" })[field] + ": не заполнено", row: index } };
+}
+// The actual page renderer is also the registry: no hidden legacy card or
+// duplicate presentation of a campaign can create another navigation unit.
+function nowGuideGate4Items() {
+  const key = `gate4:${state?.project?.gate0ScopeUiV194?.selectedProductId || ""}`;
+  if (nowGuideReadPass?.has(key)) return nowGuideReadPass.get(key);
+  const items = nowGuidePlainRead(() => {
+    const template = document.createElement("template");
+    template.innerHTML = gate4ProductionHtml();
+    const productId = state?.project?.gate0ScopeUiV194?.selectedProductId || "";
+    const channels = g4LaunchChannels();
+    const seen = new Set(), result = [];
+    for (const node of template.content.querySelectorAll('[data-g4five-tool-v523], [data-g4-readiness-card], [data-g4camp-toggle]')) {
+      // A host and its inner card may carry the same tool marker. Campaign
+      // hosts are represented by their own existing header, once per key.
+      if (node.matches('[data-g4five-tool-v523]') && (node.matches('.g4five-campaign-host-v523') || node.querySelector('[data-g4camp-toggle]'))) continue;
+      const header = node.matches('[data-g4camp-toggle]') ? node : node.querySelector(':scope > .g1-card-header-static, :scope > summary, :scope > .g1-card-header');
+      const badge = header?.querySelector('.status-pill');
+      if (!badge) continue;
+      const channel = node.matches('[data-g4camp-toggle]') ? channels.find(channel => g4CampaignStateKey(productId, channel.key) === node.dataset.g4campToggle) : null;
+      if (node.matches('[data-g4camp-toggle]') && !channel) continue;
+      const scope = node.closest('[data-g4five-company-v523]') ? 'company' : 'product';
+      const kind = channel ? 'channel' : node.hasAttribute('data-g4-readiness-card') ? 'gate4-readiness' : 'gate4-tool';
+      const id = channel?.key || node.dataset.g4ReadinessCard || node.dataset.g4fiveToolV523;
+      const identity = `${scope}:${kind}:${id}`;
+      if (seen.has(identity)) continue;
+      seen.add(identity);
+      const raw = [...badge.classList].find(name => name.startsWith('status-') && name !== 'status-pill')?.slice(7);
+      const status = guruNormBlockStatus(raw);
+      const title = header.querySelector('.g1-card-title')?.textContent.trim() || id;
+      const selector = channel ? `[data-g4camp-toggle="${CSS.escape(node.dataset.g4campToggle)}"]`
+        : kind === 'gate4-readiness' ? `[data-g4-readiness-card="${CSS.escape(id)}"] > summary`
+        : `[data-g4five-${scope === 'company' ? 'company' : 'product'}-v523] [data-g4five-tool-v523="${CSS.escape(id)}"] > .g1-card-header-static`;
+      result.push({ id, title, kind, scope, productId: scope === 'product' ? productId : '', status,
+        selector, pageBadge: badge.textContent.trim(), rawStatus: raw });
+    }
+    return result;
+  }) || [];
+  nowGuideReadPass?.set(key, items);
+  return items;
+}
+function nowGuideGate4Missing(item) {
+  if (item.kind !== 'channel') {
+    // These source blocks already own their status calculators. Manual
+    // readiness rows emit targets in that same calculator below.
+    if (item.kind === 'gate4-readiness') {
+      const assessment = nowGuidePlainAssessment(() => {
+        const product = g3ProductJourneySelected(state);
+        const card = g4ReadinessAllCardsV225(state).find(card => card.id === item.id);
+        return card && product ? g4FunnelCardStatusV294(card, product, g3ProductJourneySnapshot(product)) : null;
+      });
+      const checks = assessment.missing.filter(check => check?.selector?.includes(`data-g4-readiness-card-id="${item.id}"`));
+      if (checks.length) return { items: checks, unresolved: [] };
+    }
+    return { items: [{ fallback: true, label: "Заполните блок" }], unresolved: [item.id] };
+  }
+  const assessment = nowGuidePlainAssessment(() => {
+    const channel = g4LaunchChannels().find(channel => channel.key === item.id);
+    const campaign = g4EnsureLaunchCampaigns()[g4CampaignStateKey(item.productId, item.id)] || {};
+    const build = g4IsYandexSearchChannel(channel) ? ensureGate4SearchBuild(item.productId) : null;
+    guruReadinessCollector.length = 0;
+    const previous = nowGuideGate4Trace;
+    nowGuideGate4Trace = item;
+    try {
+      return build ? g4sbCampaignStatus(item.productId, campaign, build) : g4CampaignStatus(campaign);
+    } finally { nowGuideGate4Trace = previous; }
+  });
+  const editor = nowGuideGate4EditorTemplate(item);
+  const items = assessment.missing.filter(check => check?.selector &&
+    (check.selector.includes(`data-g4c2-key="${CSS.escape(item.id)}"`) || check.selector.includes(`data-g4sb-product="${CSS.escape(item.productId)}"`))).map(check => {
+    const node = nowGuideMissingNode(check) || nowGuideMissingNode(check, editor);
+    const label = check.label || node?.closest('label')?.querySelector('span')?.textContent.trim() || check.field;
+    return node ? { ...check, label: nowGuideSafeText(label) } : null;
+  }).filter(Boolean);
+  return items.length ? { items, unresolved: [] } : { items: [{ fallback: true, label: "Заполните блок" }], unresolved: [item.id] };
+}
+
+let nowGuideProtectedGate = "";
+function nowGuideOpenAncestors(node) {
+  for (let parent = node?.parentElement; parent && parent !== els.contentArea; parent = parent.parentElement) {
+    if (parent.matches("details") && !parent.open) {
+      parent._guruRenderedOpen = true;
+      parent.dataset.guruDisclosureExpectedV512 = "1";
+      parent.open = true;
+    }
+    if (parent.hidden) parent.hidden = false;
+    if (parent.matches(".g1-section, .g1-card")) parent.classList.add("is-open");
+    parent.classList.remove("is-collapsed", "gate0-section-content-hidden");
+  }
+}
+function nowGuideReveal34(item) {
+  const header = nowGuideFindNode(item);
+  if (!header) return;
+  if (item.gateId === "gate-3") {
+    const article = header.closest("[data-g3-product-stage]");
+    if (!article.querySelector(":scope > .g1-card-body")) {
+      const stage = nowGuideGate3Stages().find(stage => stage.key === item.id);
+      if (stage) {
+        const html = nowGuidePlainRead(() => `<div class="g1-card-body">${g3ProductJourneyStageExplanationHtmlV296(stage.key)}<p class="g1-task">${escapeHtml(stage.subtitle)}</p><div class="g3-product-journey-grid">${stage.cells.map((cell,index) => g3ProductJourneyCellHtml(cell,index,stage)).join("")}</div>${g3ExecutionBlockHtmlV282(stage)}</div>`);
+        article.insertAdjacentHTML("beforeend", html);
+      }
+    }
+    article.classList.add("is-open");
+    article.querySelectorAll("select option").forEach(option => {
+      if (NOW_STAGE_NAMES[option.value]) option.textContent = NOW_STAGE_NAMES[option.value];
+    });
+    const toggle = header.querySelector(".g1-section-toggle");
+    if (toggle) toggle.textContent = "Свернуть";
+  } else if (item.kind === "channel") {
+    nowGuidePlainRead(() => {
+      g4EnsureLaunchUiState().rows[g4CampaignStateKey(item.productId, item.id)] = true;
+      g4FiveFastCampaignToggleV546(header, true);
+    });
+  }
+  nowGuideOpenAncestors(header);
+}
+function nowGuideGate4EditorTemplate(item) {
+  const html = nowGuidePlainRead(() => {
+    const channel = g4LaunchChannels().find(channel => channel.key === item.id);
+    const campaign = g4EnsureLaunchCampaigns()[g4CampaignStateKey(item.productId, item.id)] || {};
+    g4EnsureLaunchUiState().rows[g4CampaignStateKey(item.productId, item.id)] = true;
+    return g4CampaignRowHtml(channel, campaign, 0, item.productId);
+  });
+  const template = document.createElement("template");
+  template.innerHTML = html || "";
+  return template.content;
+}
+function nowGuideGate4RevealMissing(item, missing) {
+  if (!missing.searchGroup) return;
+  const header = nowGuideFindNode(item);
+  nowGuidePlainRead(() => {
+    const build = ensureGate4SearchBuild(item.productId);
+    build.searchStepOpen ||= {};
+    build.searchStepOpen.clusters = true;
+    const step = header?.parentElement.querySelector('[data-g4sb-step="clusters"]');
+    if (step) g4FiveFastCampaignStepToggleV546(step, true);
+    build.clusterListOpen ||= {};
+    build.clusterListOpen[missing.searchGroup] = true;
+    const group = els.contentArea.querySelector(`[data-g4sb-product="${CSS.escape(item.productId)}"][data-g4sb-unit-toggle="${CSS.escape(missing.searchGroup)}"]`);
+    if (group) g4FiveFastSearchUnitToggleV546(group, true);
+  });
+}
+// Rendering a guide destination can call legacy ensure helpers. The DOM is
+// retained, while all normalisation stays on a private workspace.
+const nowGuidePreviousRenderGateTable34 = renderGateTable;
+renderGateTable = function (gate, cards) {
+  if (gate.id !== nowGuideProtectedGate || !["gate-3", "gate-4"].includes(gate.id))
+    return nowGuidePreviousRenderGateTable34.apply(this, arguments);
+  return nowGuidePlainRead(view => {
+    const source = view.gates.find(source => source.id === gate.id);
+    return nowGuidePreviousRenderGateTable34.call(this, source, source.cards);
+  });
+};
+const nowGuidePreviousStageOptions = g3Gate4StageOptionsV290;
+g3Gate4StageOptionsV290 = function (selected, model) {
+  if (activeGateId !== "gate-3") return nowGuidePreviousStageOptions.apply(this, arguments);
+  return (model?.stageOrder || []).map(key => `<option value="${escapeAttr(key)}" ${key === selected ? "selected" : ""}>${escapeHtml(NOW_STAGE_NAMES[key] || model.stages[key]?.title || key)}</option>`).join("");
+};
+const nowGuidePreviousRenderJourney = renderGate3Redesign;
+renderGate3Redesign = function (gate, cards) {
+  if (nowGuideProtectedGate !== "gate-3") return nowGuidePreviousRenderJourney.apply(this, arguments);
+  return nowGuidePlainRead(view => {
+    const source = view.gates.find(source => source.id === "gate-3");
+    return nowGuidePreviousRenderJourney.call(this, source, source.cards);
+  });
+};
+
 // The existing Gate 4 menu counted every product. Use the same campaign
 // calculator for the product selected by the shared product_id control.
 const nowGuidePreviousGateBlockStatuses = guruGateBlockStatuses;
@@ -476,16 +794,9 @@ guruGateBlockStatuses = function (gate) {
   }
   if (gate?.id === "gate-1") return nowGuideGate1Items(gate)
     .map((item) => nowGuideGate1Assessment(item).status || "not_started");
-  if (gate?.id !== "gate-4") return nowGuidePreviousGateBlockStatuses(gate);
-  const productId = state?.project?.gate0ScopeUiV194?.selectedProductId || "";
-  if (!productId) return [];
-  const campaigns = g4EnsureLaunchCampaigns();
-  return g4LaunchChannels().map((channel) => {
-    const campaign = campaigns[g4CampaignStateKey(productId, channel.key)] || {};
-    return g4IsYandexSearchChannel(channel)
-      ? g4sbCampaignStatus(productId, campaign, ensureGate4SearchBuild(productId))
-      : g4CampaignStatus(campaign);
-  });
+  if (gate?.id === "gate-3") return nowGuideGate3Stages().map(g3ProductJourneyStageStatus);
+  if (gate?.id === "gate-4") return nowGuideWithReadPass(() => nowGuideGate4Items().map(item => item.status));
+  return nowGuidePreviousGateBlockStatuses(gate);
 };
 
 function nowGuideSafeText(value) {
@@ -507,18 +818,12 @@ function nowGuideDescriptors(gate, statuses) {
       scope: unit.scope, productId: unit.productId }));
   }
   if (id === "gate-3") {
-    const keys = ["aware", "appeal", "ask", "act", "advocate"];
+    const keys = nowGuideGate3Stages().map(stage => stage.key);
     const productId = state?.project?.gate0ScopeUiV194?.selectedProductId || "";
     return keys.map((key, index) => ({ id: key, title: NOW_STAGE_NAMES[key],
       kind: "stage", productId, status: statuses[index] }));
   }
-  if (id === "gate-4") {
-    const productId = state?.project?.gate0ScopeUiV194?.selectedProductId || "";
-    return productId ? g4LaunchChannels().map((channel, index) => ({
-      id: channel.key, title: g4LaunchChannelLabel(channel), kind: "channel",
-      productId, status: statuses[index],
-    })) : [];
-  }
+  if (id === "gate-4") return nowGuideGate4Items().map((item, index) => ({ ...item, status: statuses[index] }));
   if (id === "gate-5") return NOW_GATE5_BLOCKS.map(([key, title], index) =>
     ({ id: key, title, kind: "gate5", status: statuses[index] }));
   if (id === "gate-6") return GATE6_QUARTERS.flatMap((quarter) => quarter.events.map((event) => ({
@@ -543,7 +848,7 @@ function nowGuideDescriptors(gate, statuses) {
 
 function nowGuideBuildPath() {
   if (!state?.gates) return [];
-  return [...state.gates].sort((a, b) =>
+  return nowGuideWithReadPass(() => [...state.gates].sort((a, b) =>
     Number(a.id.replace("gate-", "")) - Number(b.id.replace("gate-", "")))
     .flatMap((gate) => {
       const statuses = guruGateBlockStatuses(gate);
@@ -553,7 +858,7 @@ function nowGuideBuildPath() {
         .map((item) => ({ ...item, gateId: gate.id,
           key: `${gate.id}:${item.kind}:${item.productId || ""}:${item.id}`,
           status: guruNormBlockStatus(item.status) }));
-    });
+    }));
 }
 
 function nowGuideCurrent(path) {
@@ -586,7 +891,7 @@ function nowGuideRender(path = nowGuideBuildPath()) {
   panel.innerHTML = finished
     ? `<h2>Сейчас</h2><strong class="now-guide-finished">Проект готов к запуску</strong><button type="button" class="now-guide-link" data-now-launch>Перейти к Gate 4</button>`
     : `<h2>Сейчас</h2>
-       <div class="now-guide-meta"><span>Шаг ${index + 1} из ${path.length}</span><span class="now-guide-status is-${current.status}">${nowGuideStatusText(current.status)}</span></div>
+       <div class="now-guide-meta"><span>Шаг ${index + 1} из ${path.length}</span><span class="now-guide-status is-${current.status}">${escapeHtml(current.gateId === "gate-4" && current.pageBadge ? nowGuideSafeText(current.pageBadge) : nowGuideStatusText(current.status))}</span></div>
        <div class="now-guide-track" role="progressbar" aria-valuenow="${done}" aria-valuemin="0" aria-valuemax="${path.length}" aria-label="Готово ${done} из ${path.length}"><span style="width:${(done / path.length) * 100}%"></span></div>
        <div class="now-guide-block">${escapeHtml(nowGuideSafeText(current.title))}</div>
        ${nowGuideMissingHtml(current)}
@@ -626,6 +931,7 @@ function nowGuideFindNode(item) {
   if (!root) return null;
   const attr = (value) => CSS.escape(String(value));
   if (item.gateId === "gate-1") return nowGuideGate1Node(item);
+  if (item.gateId === "gate-4" && item.selector) return root.querySelector(item.selector);
   if (item.kind === "card") {
     const card = root.querySelector(`[data-card="${attr(item.id)}"], [data-card-row="${attr(item.id)}"]`);
     return card?.matches("details.gate0-card")
@@ -665,6 +971,7 @@ function nowGuideReveal(item) {
   const root = document.getElementById("contentArea");
   if (!root) return false;
   if (item.gateId === "gate-1") nowGuideGate1Reveal(item);
+  if (item.gateId === "gate-3" || item.gateId === "gate-4") nowGuideReveal34(item);
   let node = nowGuideFindNode(item);
   if (node) {
     const closedSection = node.closest(".g1-section:not(.is-open), .analytics-subblock:not(.is-open)");
@@ -734,6 +1041,8 @@ function nowGuideReveal(item) {
 
 function nowGuideOpen(item, missing = null) {
   if (!item) return;
+  if (missing?.sourceItem) return nowGuideOpen(missing.sourceItem, { ...missing, sourceItem: null });
+  nowGuideProtectedGate = item.gateId;
   const ticket = ++nowGuideNavigationTicket;
   nowGuideGate1NavigationPending = item.gateId === "gate-1";
   if (nowGuideGate1NavigationPending) nowGuideGate1PassiveCalculators = true;
@@ -753,10 +1062,11 @@ function nowGuideOpen(item, missing = null) {
     if (renderedAt && nowGuideReveal(item)) {
       nowGuideGate1NavigationPending = false;
       if (missing && !missing.fallback) {
+        if (item.gateId === "gate-4") nowGuideGate4RevealMissing(item, missing);
         const field = nowGuideMissingNode(missing);
         if (field) {
           for (let parent = field.parentElement; parent && parent !== els.contentArea; parent = parent.parentElement) {
-            if (["gate-1", "gate-2"].includes(item.gateId)) {
+            if (["gate-1", "gate-2", "gate-3", "gate-4"].includes(item.gateId)) {
               if (parent.hidden) parent.hidden = false;
               if (parent.matches(".target-audience-card, .uv130-item, .g1-card, .unit-direction-group")) {
                 parent.classList.add("is-open"); parent.classList.remove("is-collapsed");
@@ -764,7 +1074,7 @@ function nowGuideOpen(item, missing = null) {
             }
             if (parent.matches("details") && !parent.open) {
               parent._guruRenderedOpen = true;
-              if (["gate-1", "gate-2"].includes(item.gateId)) parent.dataset.guruDisclosureExpectedV512 = "1";
+              if (["gate-1", "gate-2", "gate-3", "gate-4"].includes(item.gateId)) parent.dataset.guruDisclosureExpectedV512 = "1";
               parent.open = true;
             }
           }
@@ -810,9 +1120,9 @@ renderGateNav = function (...args) {
   };
   // Navigation in these two gates reads legacy derived statuses through a
   // private view. A menu render must not synchronise other gates' evidence.
-  if (["gate-1", "gate-2"].includes(activeGateId) && !guruUserEditDispatchActive)
-    return nowGuideGate12Read(renderNavigation).status;
-  return renderNavigation();
+  if (["gate-1", "gate-2", "gate-3", "gate-4"].includes(activeGateId) && !guruUserEditDispatchActive)
+    return nowGuideWithReadPass(() => nowGuidePlainRead(renderNavigation));
+  return nowGuideWithReadPass(renderNavigation);
 };
 
 document.getElementById("nowGuide")?.addEventListener("click", (event) => {
@@ -873,24 +1183,49 @@ function nowGuideScheduleMissingRefresh(event) {
 }
 let nowGuideGate12RefreshQueued = false;
 function nowGuideScheduleGate12Refresh(event) {
-  if (!event.target?.closest?.("#contentArea") || !["gate-1", "gate-2"].includes(activeGateId)) return;
+  if (!event.target?.closest?.("#contentArea") ||
+      (!["gate-1", "gate-2", "gate-3", "gate-4"].includes(activeGateId) &&
+       !(activeGateId === "gate-0" && nowGuideCurrent(nowGuideDisplayedPath)?.gateId === "gate-3"))) return;
   if (nowGuideGate12RefreshQueued) return;
   nowGuideGate12RefreshQueued = true;
   queueMicrotask(() => {
     nowGuideGate12RefreshQueued = false;
     const gate = state.gates.find((gate) => gate.id === activeGateId);
-    if (!gate || !["gate-1", "gate-2"].includes(gate.id)) return;
-    const statuses = guruGateBlockStatuses(gate);
-    const descriptors = nowGuideDescriptors(gate, statuses);
-    const byId = new Map(descriptors.map((item) => [`${item.kind}:${item.id}`, guruNormBlockStatus(item.status)]));
-    const path = nowGuideDisplayedPath.map((item) => item.gateId === gate.id
-      ? { ...item, status: byId.get(`${item.kind}:${item.id}`) || item.status } : item);
+    if (!gate || !["gate-0", "gate-1", "gate-2", "gate-3", "gate-4"].includes(gate.id)) return;
+    const { statuses, descriptors } = nowGuideWithReadPass(() => {
+      const statuses = guruGateBlockStatuses(gate);
+      return { statuses, descriptors: nowGuideDescriptors(gate, statuses) };
+    });
+    const identity = item => `${item.kind}:${item.productId || ""}:${item.id}`;
+    const byId = new Map(descriptors.map(item => [identity(item), { ...item, status: guruNormBlockStatus(item.status) }]));
+    const path = nowGuideDisplayedPath.map(item => item.gateId === gate.id
+      ? { ...item, ...byId.get(identity(item)) } : item);
     const summary = guruReadinessFromStatuses(statuses);
     guruGateReadinessCache.set(gate.id, summary);
     const menu = document.querySelector(`[data-gate-id="${gate.id}"] .small`);
     if (menu) menu.textContent = `${summary.total} блоков, прогресс ${summary.percent}%`;
     if (gate.id === "gate-1") nowGuideGate1Refresh();
-    nowGuideRender(path);
+    if (gate.id === "gate-4") descriptors.forEach(item => {
+      // A canonical campaign can be shown in two funnel rows. Both views
+      // display the same assessment; the path still contains it only once.
+      els.contentArea.querySelectorAll(item.selector).forEach(header => {
+        const badge = header.querySelector(".status-pill");
+        if (!badge) return;
+        [...badge.classList].filter(name => name !== "status-pill" && name.startsWith("status-")).forEach(name => badge.classList.remove(name));
+        badge.classList.add(`status-${item.rawStatus || item.status}`);
+        badge.textContent = item.pageBadge;
+      });
+    });
+    const journey = state.gates.find(gate => gate.id === "gate-3");
+    const journeyStatuses = guruGateBlockStatuses(journey);
+    const journeySummary = guruReadinessFromStatuses(journeyStatuses);
+    guruGateReadinessCache.set(journey.id, journeySummary);
+    const journeyMenu = document.querySelector('[data-gate-id="gate-3"] .small');
+    if (journeyMenu) journeyMenu.textContent = `${journeySummary.total} блоков, прогресс ${journeySummary.percent}%`;
+    const journeyById = new Map(nowGuideGate3Stages().map((stage, index) => [stage.key, guruNormBlockStatus(journeyStatuses[index])]));
+    const updated = path.map(item => item.gateId === "gate-3"
+      ? { ...item, status: journeyById.get(item.id) || item.status } : item);
+    nowGuideRender(updated);
   });
 }
 document.addEventListener("input", nowGuideScheduleGate12Refresh);

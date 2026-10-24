@@ -2210,7 +2210,7 @@ function guruRequiredFields(fields = []) {
 // Optional read-only diagnostics emitted by the readiness calculators themselves.
 let guruReadinessCollector = null;
 function guruReadinessValue(value, target) {
-  if (guruReadinessCollector && (!value || (typeof value === "string" && !value.trim())))
+  if (guruReadinessCollector && target && (!value || (typeof value === "string" && !value.trim())))
     guruReadinessCollector.push(target);
   return value;
 }
@@ -23743,19 +23743,22 @@ function megaMarketingStatus(card, workspace = state) {
   if (!m) return "not_started";
   const pv2 = m.platformV2 || {};
   const auto = megaPlatformAutoRows(workspace);
-  const autoItems = [...auto.required, ...auto.conversion].map((item) => ({
+  const autoRows = [...auto.required, ...auto.conversion];
+  const autoTotals = autoRows.reduce((totals, item) => ({ ...totals, [item.urlGroup]: (totals[item.urlGroup] || 0) + 1 }), {});
+  const autoItems = autoRows.map((item) => ({
     status: guruReadinessValue(megaPlatformUrl(item.urlGroup, item.urlId, workspace),
       { label: `${item.name || item.title || item.urlId}: URL`,
+        group: { key: `catalog-url-${item.urlGroup}`, label: item.urlGroup === "products" ? "Каталог: URL не указан" : "Страницы: URL не указан", row: item.urlId, total: autoTotals[item.urlGroup] },
         selector: `[data-mega-url-group="${item.urlGroup}"][data-mega-url-id="${item.urlId}"]` }) ? "works" : "",
   }));
   const legalItems = (Array.isArray(pv2.legal) ? pv2.legal : []).map((item) => ({
     status: guruReadinessValue(megaPlatformUrl("fixed", MEGA_PLATFORM_LEGAL_KEYS[item.name], workspace),
-      { label: `${item.name}: URL`, selector: `[data-mega-url-group="fixed"][data-mega-url-id="${MEGA_PLATFORM_LEGAL_KEYS[item.name]}"]` }) ? "works" : "",
+      { label: `${item.name}: URL`, group: { key: "legal-url", label: "Юридические страницы: URL не указан", row: item.name, total: pv2.legal.length }, selector: `[data-mega-url-group="fixed"][data-mega-url-id="${MEGA_PLATFORM_LEGAL_KEYS[item.name]}"]` }) ? "works" : "",
   }));
   const extraItems = (Array.isArray(pv2.extra) ? pv2.extra : []).filter((item) =>
     !item.promotedV2 && !megaPlatformHiddenLegacyExtra(item))
     .map((item) => ({ status: guruReadinessValue(megaPlatformUrl("custom", item.id, workspace),
-      { label: `${item.name}: URL`, selector: `[data-mega-url-group="custom"][data-mega-url-id="${item.id}"]` }) ? "works" : "" }));
+      { label: `${item.name}: URL`, group: { key: "extra-url", label: "Дополнительные страницы: URL не указан", row: item.id, total: pv2.extra.filter(row => !row.promotedV2 && !megaPlatformHiddenLegacyExtra(row)).length }, selector: `[data-mega-url-group="custom"][data-mega-url-id="${item.id}"]` }) ? "works" : "" }));
   const allItems = [
     ...autoItems,
     ...legalItems,
@@ -23766,6 +23769,7 @@ function megaMarketingStatus(card, workspace = state) {
   const filled = allItems.filter((item) => {
     const section = (m.infra || []).includes(item) ? "infra" : (m.channels || []).includes(item) ? "channels" : "";
     return section ? guruReadinessValue(item.status, { label: `${item.name || item.platform || item.channel}: Статус`,
+      group: { key: `marketing-${section}-status`, label: section === "infra" ? "Инфраструктура: статус не указан" : "Каналы: статус не указан", row: m[section].indexOf(item), total: m[section].length },
       selector: `[data-mega-section="${section}"][data-mega-idx="${m[section].indexOf(item)}"][data-mega-field="status"]` }) : item.status;
   });
   if (!filled.length) return "not_started";
@@ -32998,16 +33002,20 @@ function g4CampaignStatus(campaign) {
   ];
   if (!operational.some((value) => String(value || "").trim())) return "not_started";
   const required = [
-    campaign.decision,
-    campaign.product,
-    campaign.campaignName,
-    campaign.objective,
-    landingUrl,
-    campaign.budget,
-    campaign.utm,
-    campaign.launchStatus,
-  ];
-  const filled = required.filter((value) => String(value || "").trim()).length;
+    ["decision", campaign.decision],
+    ["product", campaign.product],
+    ["campaignName", campaign.campaignName],
+    ["objective", campaign.objective],
+    ["landing", landingUrl],
+    ["budget", campaign.budget],
+    ["utm", campaign.utm],
+    ["launchStatus", campaign.launchStatus],
+  ].map(([field, value]) => guruReadinessValue(String(value || "").trim(),
+    typeof nowGuideGate4CampaignTarget === "function" ? nowGuideGate4CampaignTarget(field) : undefined));
+  const filled = required.filter(Boolean).length;
+  if (campaign.launchStatus && campaign.launchStatus !== "ready")
+    guruReadinessValue(false, typeof nowGuideGate4CampaignTarget === "function"
+      ? nowGuideGate4CampaignTarget("launchStatus", "Статус запуска: подтвердите готовность к запуску") : undefined);
   if (!filled) return "not_started";
   if (filled === required.length && campaign.launchStatus === "ready") return "ready";
   return "in_progress";
@@ -48834,9 +48842,11 @@ g4sbCampaignStatus = function (product, campaign, d) {
     const ads = (d.adsRows || {})[index] || [];
     const phraseCount = g4sbGroupPhrases(product, row).length;
     return {
-      hasPhrases: phraseCount > 0,
-      hasForecast: Boolean(String(row.col2 || "").trim() && String(row.col3 || "").trim() && String(row.col4 || "").trim()),
-      hasAd: ads.some((ad) => String(ad.ad0 || "").trim()),
+      hasPhrases: guruReadinessValue(phraseCount > 0, typeof nowGuideGate4SearchTarget === "function" ? nowGuideGate4SearchTarget(product, row, index, "phrases") : undefined),
+      hasForecast: ["col2", "col3", "col4"].map(field => guruReadinessValue(String(row[field] || "").trim(),
+        typeof nowGuideGate4SearchTarget === "function" ? nowGuideGate4SearchTarget(product, row, index, field) : undefined)).every(Boolean),
+      hasAd: guruReadinessValue(ads.some((ad) => String(ad.ad0 || "").trim()),
+        typeof nowGuideGate4SearchTarget === "function" ? nowGuideGate4SearchTarget(product, row, index, "ad0") : undefined),
       readiness: g4sbGroupReadiness(row, phraseCount, ads),
     };
   });
@@ -59639,7 +59649,8 @@ function gate1CompanyDemandPositioningCompletionV357(workspace = state) {
   const demandReady = demandRows.length > 0 && demandRows.map((row) =>
     PV181_DEMAND_FIELDS_V272.map(([field, label]) => guruReadinessValue(guruV185Text(row?.[field]), {
       selector: `[data-pv181-company-demand-row-id-v345="${CSS.escape(row.id)}"][data-pv181-company-demand-field-v345="${field}"]`,
-      label: `Спрос: ${row.kw}, ${label}` })).every(Boolean)
+      label: `Спрос: ${row.kw}, ${label}`,
+      group: { key: "company-demand-metrics", label: "Спрос: нет метрик", row: row.id, total: demandRows.length, noun: "слов" } })).every(Boolean)
   ).every(Boolean);
 
   const completed = [
