@@ -229,6 +229,7 @@ try {
     for(const record of state.project.gate0ScopedValuesV194)if(record.field==="positioning"&&record.product_id===id)record.value="";
     guruInvalidateGateViewCache();guruGateReadinessCache=new Map();renderGateNav({recalculate:false});nowGuideRender();return true;
   })()`);
+  assert(await evaluate(page,'nowGuideSourceHint({gateId:"gate-0",kind:"gate0-scoped",field:"jtbd",recordId:""},"JTBD")===null'),"Пустой ID не должен адресовать постороннее поле");
   await select("gate-3","appeal");
   const sourceHint=await evaluate(page,'nowGuideDisplayedMissing.findIndex(c=>c.sourceItem)');assert(sourceHint>=0,"Gate 3: нет ссылки на редактор источника");
   await evaluate(page,`document.querySelector('[data-now-missing="${sourceHint}"]').click();true`);
@@ -241,6 +242,7 @@ try {
   await evaluate(page,`(()=>{state=window.__step4Live;flashSaving=window.__step4Flash;saveState=window.__step4Save;guruCancelDerivedRefresh();guruDiscardUiPreferenceSave(${JSON.stringify(copyId)});return true})()`);
   evidence.inputCopyRestored=await evaluate(page,'JSON.stringify({workspace:guruExportDiagnosticCloneV223(state)})===window.__step4Before');assert(evidence.inputCopyRestored);
   console.log("Errors",page.errors);assert.equal(page.errors.length,0);
+  evidence.build=await evaluate(page,'GURU_BUILD_INFO.version');
   evidence.fallbackBlocks=evidence.transitions.filter(t=>t.details?.items?.some(c=>c.fallback)).map(({gate,id})=>({gate,id,title:evidence.matrices[gate].rows.find(r=>r.id===id).title}));
   writeFileSync(process.env.GURU_STEP4_QUICK === "1" ? "artifacts/gate34-now-readiness-focused-results.json" : "artifacts/gate34-now-readiness-results.json",JSON.stringify({passed:true,...evidence},null,2));console.log("Gate 3-4 readiness: PASS");
 } finally {await browser.call("Target.disposeBrowserContext",{browserContextId});page.close();browser.close()}

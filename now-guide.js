@@ -576,7 +576,10 @@ function nowGuideSourceHint(target, label) {
   if (target.kind === "gate1-page") checks = checks.filter(check => check?.selector?.includes(`index="${target.rowIndex}"`) &&
     (!(target.contextKey || target.rowField) || check.selector.includes(`="${CSS.escape(target.contextKey || target.rowField)}"`)));
   if (target.kind === "gate1-unit") checks = checks.filter(check => check?.selector?.includes(`data-uv130-step="${target.step || "ltv"}"`));
-  if (target.kind === "gate0-scoped") checks = checks.filter(check => check?.selector?.includes(target.recordId) || check?.scopeField === target.field);
+  if (target.kind === "gate0-scoped") checks = checks.filter(check =>
+    (target.recordId && check?.selector?.includes(CSS.escape(target.recordId))) || check?.scopeField === target.field ||
+    check?.selector?.includes(`data-gate0-scope-add="${CSS.escape(target.field)}"`) ||
+    check?.selector?.includes(`data-gate0-scope-draft="${CSS.escape(target.field)}"`));
   const editor = document.createElement("template");
   editor.innerHTML = owner.gateId === "gate-1" ? nowGuideGate1EditorHtml(owner)
     : owner.gateId === "gate-0" ? nowGuidePlainRead(() => cardUserFieldsHtml(findCard(owner.id))) : "";
