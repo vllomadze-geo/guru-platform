@@ -110,8 +110,8 @@ function g8DefaultPeriodV3(goal) {
   return { start: today, end: deadline && deadline >= today ? deadline : monthEnd };
 }
 
-function g8CompactStateV3(product = guruV194SelectedProduct(state), goal = null) {
-  const root = ensureGate8Workspace();
+function g8CompactStateV3(product = guruV194SelectedProduct(state), goal = null,
+  root = ensureGate8Workspace()) {
   if (!root) return null;
   const base = state.gate8Forecast;
   const holder = product
@@ -150,9 +150,10 @@ const __g8WorkbenchPreviousEnsureWorkspace = ensureGate8Workspace;
 ensureGate8Workspace = function (workspace = state) {
   const result = __g8WorkbenchPreviousEnsureWorkspace(workspace);
   if (workspace === state && result && state?.gate8Forecast) {
-    const product = guruV194SelectedProduct(state);
-    const holder = product
-      ? gate8EnsureProductStateV230(state.gate8Forecast, product.id)
+    // The previous wrapper already resolved the selected product and exposes
+    // its id on the view. Resolving it again repeats all Gate 0 migrations.
+    const holder = result.product_id
+      ? gate8EnsureProductStateV230(state.gate8Forecast, result.product_id)
       : state.gate8Forecast;
     holder.compactV3 = holder.compactV3 && typeof holder.compactV3 === "object" ? holder.compactV3 : {};
   }
@@ -772,7 +773,7 @@ function g8AnalysisV3() {
   const data = ensureGate8Workspace();
   const product = guruV194SelectedProduct(state);
   const goal = g8ProductGoalV4(product);
-  const compact = g8CompactStateV3(product, goal);
+  const compact = g8CompactStateV3(product, goal, data);
   const context = g8CampaignContextV3(product, compact);
   const observations = g8ObservationsV3(product, context);
   const parameterBundle = g8ParameterBundleV3(product, context, observations);

@@ -815,6 +815,16 @@ document.addEventListener("input", (event) => {
     return;
   }
   const data = target.dataset;
+  const scenarioField = data.g4ProductSmmScenarioFieldV548;
+  if (scenarioField) {
+    const { record } = g4ProductSmmRecordV523(root, "idea", data.g4ProductSmmScenarioIdeaV548);
+    const format = bucket.strategy.formats.find((row) => row.id === data.g4ProductSmmScenarioFormatV548);
+    if (!g4ProductSmmIdeaCanEditV523(bucket, record) || !g4SmmScenarioSetFieldV548(record,
+      format, data.g4ProductSmmScenarioRowV548, scenarioField, target.value,
+      data.g4ProductSmmScenarioExtraV548 === "true")) return;
+    g4ProductSmmPersistV523(bucket, record);
+    return;
+  }
   const ideaField = data.g4ProductSmmIdeaFieldV299;
   if (["name", "digestionNotes", "insight"].includes(ideaField)) {
     const { record } = g4ProductSmmRecordV523(root, "idea", data.g4ProductSmmIdeaIdV299);
@@ -1148,6 +1158,20 @@ document.addEventListener("click", (event) => {
   }
   const productId = root.dataset.g4ProductSmmProductIdV523;
   const bucket = g4ProductSmmStoreV523(productId);
+  if (button.matches("[data-g4-product-smm-scenario-add-v548], [data-g4-product-smm-scenario-remove-v548]")) {
+    event.preventDefault();
+    const idea = bucket.content.ideas.find((row) => row.id === data.g4ProductSmmScenarioIdeaV548);
+    const formatId = data.g4ProductSmmScenarioFormatV548 || data.g4ProductSmmScenarioAddV548;
+    const format = bucket.strategy.formats.find((row) => row.id === formatId);
+    if (!g4ProductSmmIdeaCanEditV523(bucket, idea)) return;
+    const changed = data.g4ProductSmmScenarioAddV548
+      ? g4SmmScenarioAddRowV548(idea, format)
+      : g4SmmScenarioRemoveRowV548(idea, format, data.g4ProductSmmScenarioRemoveV548);
+    if (!changed) return;
+    g4ProductSmmPersistV523(bucket, idea);
+    g4ProductSmmRefreshV523(root);
+    return;
+  }
   if (button.matches("[data-g4-product-smm-delete-idea-v2]")) {
     event.preventDefault();
     const menuToggle = button.closest(".g4-product-smm-idea-menu-v2")

@@ -1,0 +1,103 @@
+{
+  "project": "Коричное яблоко",
+  "build": "2.3.526+84bcd752a74c",
+  "productId": "catalog-item-1786792591872-51f503",
+  "rows": [
+    {
+      "id": "card-1",
+      "title": "Проект: базовые сведения",
+      "status": "ready",
+      "done": true
+    },
+    {
+      "id": "gate0-project-goal",
+      "title": "Цель проекта и ограничения",
+      "status": "ready",
+      "done": true
+    },
+    {
+      "id": "gate0-company-brand-purpose",
+      "title": "Цель бренда",
+      "status": "ready",
+      "done": true
+    },
+    {
+      "id": "gate0-company-segmentation",
+      "title": "Сегментация · Компания",
+      "status": "ready",
+      "done": true
+    },
+    {
+      "id": "gate0-company-positioning",
+      "title": "Позиционирование · Компания",
+      "status": "ready",
+      "done": true
+    },
+    {
+      "id": "gate0-company-offer",
+      "title": "Оффер и CTA · Компания",
+      "status": "ready",
+      "done": true
+    },
+    {
+      "id": "gate0-company-keyword-foundation",
+      "title": "Фундамент ключевых слов · Компания",
+      "status": "ready",
+      "done": true
+    },
+    {
+      "id": "card-7",
+      "title": "Текущее состояние маркетинговой системы · Компания",
+      "status": "in_progress",
+      "done": false
+    },
+    {
+      "id": "card-2",
+      "title": "Продукт, сегмент и задача клиента",
+      "status": "ready",
+      "done": true
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "done": 8,
+    "ready": 8,
+    "notRequired": 0,
+    "inProgress": 1,
+    "problem": 0,
+    "notStarted": 0,
+    "percent": 94
+  },
+  "merged": [
+    {
+      "id": "card-4",
+      "status": "in_progress",
+      "merged": true,
+      "mergedInto": "card-2"
+    },
+    {
+      "id": "card-5",
+      "status": "not_started",
+      "merged": true,
+      "mergedInto": ""
+    },
+    {
+      "id": "card-6",
+      "status": "not_started",
+      "merged": true,
+      "mergedInto": ""
+    },
+    {
+      "id": "card-8",
+      "status": "not_started",
+      "merged": true,
+      "mergedInto": ""
+    },
+    {
+      "id": "card-9",
+      "status": "not_started",
+      "merged": true,
+      "mergedInto": ""
+    }
+  ]
+}

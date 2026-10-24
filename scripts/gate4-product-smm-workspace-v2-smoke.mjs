@@ -932,7 +932,7 @@ try {
     caption.dispatchEvent(new Event('input', { bubbles: true }));
     const previewLive = previewStage.querySelector('[data-g4-product-smm-social-preview-v2]')?.textContent.includes('Текст для предпросмотра');
     const date = root().querySelector('[data-g4-product-smm-publication-id-v299="' + publicationId + '"][data-g4-product-smm-publication-field-v299="date"]');
-    date.value = ${JSON.stringify('2026-10-12')};
+    date.value = g4SmmIsoDateV322(new Date());
     date.dispatchEvent(new Event('input', { bubbles: true }));
     date.dispatchEvent(new Event('change', { bubbles: true }));
     const status = root().querySelector('[data-g4-product-smm-publication-id-v299="' + publicationId + '"][data-g4-product-smm-publication-field-v299="status"]');

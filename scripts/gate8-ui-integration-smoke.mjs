@@ -369,6 +369,11 @@ try {
   assert.equal(twoProducts.selection.productSales, 12);
   assert.equal(twoProducts.selection.productGoalValid, false);
   assert.equal(twoProducts.selection.selectedId, 'g8-b');
+  const readinessB = await evaluate(`(() => ({
+    fast: g8BlockStatuses()[0],
+    detailed: g8CombinedStatusV4(g8CompanyAnalysisV4(), g8AnalysisV3()).systemStatus,
+  }))()`);
+  assert.equal(readinessB.fast, readinessB.detailed);
   assert.equal(twoProducts.changed.companySales, 20);
   assert.equal(twoProducts.changed.spend, 30000);
   assert.equal(twoProducts.factualHistory.value, 12);
@@ -468,6 +473,11 @@ try {
   assert.equal(missingSource.partial, true);
   assert.equal(missingSource.remainingSales, 4);
   assert.equal(missingSource.status, 'Частичный прогноз');
+  const readinessPartial = await evaluate(`(() => ({
+    fast: g8BlockStatuses()[0],
+    detailed: g8CombinedStatusV4(g8CompanyAnalysisV4(), g8AnalysisV3()).systemStatus,
+  }))()`);
+  assert.equal(readinessPartial.fast, readinessPartial.detailed);
   assert.match(missingSource.productBudgetAnswer, /Бюджет продукта: не указан/);
   assert.doesNotMatch(missingSource.productBudgetAnswer, /10 000/);
   assert(missingSource.missingKeys.includes('leadToSale'));
@@ -528,7 +538,27 @@ try {
     return document.querySelector('#workspaceToolbar')?.dataset.guruCardControls;
   })()`);
   assert.equal(otherGate, "visible");
-  console.log(JSON.stringify({ initial, gateExport, scope, details, moreRecommendations, expanded, mobile, edit, afterEdit, rerendered, twoProducts, conflictingGoals, companyDisclosure, selector, twoProductMobile, missingSource, goalSource, auditGoalLink, comparisonLink, otherGate }, null, 2));
+  const largeProject = await evaluate(`(() => {
+    const catalog = guruV189CatalogItems(state);
+    for (let index = 0; index < 60; index++)
+      catalog.push({ id: 'g8-performance-' + index, name: 'Проверочный продукт ' + index, continuum: 'product' });
+    guruV194Ensure(state);
+    const startedStatus = performance.now();
+    const status = g8BlockStatuses()[0];
+    const statusMs = performance.now() - startedStatus;
+    state.project.description = 'Проверка сохранения большого проекта';
+    const startedSave = performance.now();
+    const saved = saveState();
+    const saveMs = performance.now() - startedSave;
+    const stored = JSON.parse(localStorage.getItem(WORKSPACE_STORAGE_PREFIX + activeProjectId));
+    return { products: guruV194Products(state).length, status, statusMs: Math.round(statusMs),
+      saveMs: Math.round(saveMs), saved, persisted: stored.project.description === state.project.description };
+  })()`);
+  assert.equal(largeProject.products, 62);
+  assert.ok(largeProject.statusMs < 3000, `Gate 8 readiness stalled: ${largeProject.statusMs} ms`);
+  assert.ok(largeProject.saveMs < 5000, `Workspace save stalled: ${largeProject.saveMs} ms`);
+  assert.equal(largeProject.persisted, true);
+  console.log(JSON.stringify({ initial, gateExport, scope, details, moreRecommendations, expanded, mobile, edit, afterEdit, rerendered, twoProducts, conflictingGoals, companyDisclosure, selector, twoProductMobile, missingSource, goalSource, auditGoalLink, comparisonLink, otherGate, largeProject }, null, 2));
 } finally {
   if (page) page.close();
   if (browser && targetId) await browser.call("Target.closeTarget", { targetId }).catch(() => {});

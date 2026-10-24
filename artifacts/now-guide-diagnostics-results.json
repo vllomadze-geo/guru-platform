@@ -1,0 +1,524 @@
+[
+  {
+    "label": "icleaning",
+    "project": "iCleaning",
+    "pathTotal": 91,
+    "pathDone": 6,
+    "diagnosticTotal": 91,
+    "diagnosticDone": 6,
+    "perGate": [
+      {
+        "id": "gate-0",
+        "total": 9,
+        "done": 5,
+        "path": 9
+      },
+      {
+        "id": "gate-1",
+        "total": 12,
+        "done": 0,
+        "path": 12
+      },
+      {
+        "id": "gate-2",
+        "total": 16,
+        "done": 0,
+        "path": 16
+      },
+      {
+        "id": "gate-3",
+        "total": 5,
+        "done": 1,
+        "path": 5
+      },
+      {
+        "id": "gate-4",
+        "total": 15,
+        "done": 0,
+        "path": 15
+      },
+      {
+        "id": "gate-5",
+        "total": 6,
+        "done": 0,
+        "path": 6
+      },
+      {
+        "id": "gate-6",
+        "total": 27,
+        "done": 0,
+        "path": 27
+      },
+      {
+        "id": "gate-7",
+        "total": 0,
+        "done": 0,
+        "path": 0
+      },
+      {
+        "id": "gate-8",
+        "total": 1,
+        "done": 0,
+        "path": 1
+      }
+    ],
+    "hiddenGate0InPath": [],
+    "hiddenGate1InPath": false,
+    "card": "Сейчас\nШаг 4 из 91\nВ работе\nСегментация · Компания\nGate 0 · Компания\n◀ Назад\nДалее ▶\nК текущему",
+    "errors": [],
+    "productId": "catalog-item-1786885522654-b659e1",
+    "products": [
+      {
+        "id": "catalog-item-1786885522653-759ff6",
+        "name": "Трикотажная и художественная штопка",
+        "categoryId": "product-1786885522612-eb869c"
+      },
+      {
+        "id": "catalog-item-1786885522654-b659e1",
+        "name": "Кроссовки",
+        "categoryId": "product-1786885522612-2fc8c8"
+      },
+      {
+        "id": "catalog-item-1786885522654-a3955f",
+        "name": "Сумки (Флагманская услуга)",
+        "categoryId": "product-1786885522612-b45894"
+      },
+      {
+        "id": "catalog-item-1791795838306-e3efa9",
+        "name": "Туфли",
+        "categoryId": "product-1786885522612-2fc8c8"
+      },
+      {
+        "id": "catalog-item-1791795863764-0a7367",
+        "name": "Кеды",
+        "categoryId": "product-1786885522612-2fc8c8"
+      },
+      {
+        "id": "catalog-item-1791795891287-d68548",
+        "name": "Мокасины и лоферы",
+        "categoryId": "product-1786885522612-2fc8c8"
+      },
+      {
+        "id": "catalog-item-1791795940783-f0b873",
+        "name": "Ботинки и дезерты",
+        "categoryId": "product-1786885522612-2fc8c8"
+      },
+      {
+        "id": "catalog-item-1791795962239-3a0d56",
+        "name": "Угги",
+        "categoryId": "product-1786885522612-2fc8c8"
+      },
+      {
+        "id": "catalog-item-1791795992984-69ae3b",
+        "name": "Высокие сапоги",
+        "categoryId": "product-1786885522612-2fc8c8"
+      },
+      {
+        "id": "catalog-item-1791796480256-7b46a7",
+        "name": "Ремни",
+        "categoryId": "product-1786885522612-b45894"
+      },
+      {
+        "id": "catalog-item-1791796494666-95e8a3",
+        "name": "Галстуки",
+        "categoryId": "product-1786885522612-b45894"
+      },
+      {
+        "id": "catalog-item-1791796511964-d6cacc",
+        "name": "Платки (Деликатный шелк)",
+        "categoryId": "product-1786885522612-b45894"
+      },
+      {
+        "id": "catalog-item-1791796540029-66b281",
+        "name": "Шапки",
+        "categoryId": "product-1786885522612-b45894"
+      },
+      {
+        "id": "catalog-item-1791796553837-453349",
+        "name": "Перчатки",
+        "categoryId": "product-1786885522612-b45894"
+      },
+      {
+        "id": "catalog-item-1791796583833-d8b41f",
+        "name": "Шарфы",
+        "categoryId": "product-1786885522612-b45894"
+      },
+      {
+        "id": "catalog-item-1791797646692-96fd3b",
+        "name": "Горнолыжный комбинезон",
+        "categoryId": "product-1786885522612-002f88"
+      },
+      {
+        "id": "catalog-item-1791798635728-43ba32",
+        "name": "Ветровка (Влагозащита и Легкость)",
+        "categoryId": "product-1786885522612-002f88"
+      },
+      {
+        "id": "catalog-item-1791798667187-d33afc",
+        "name": "Куртка горнолыжная",
+        "categoryId": "product-1786885522612-002f88"
+      },
+      {
+        "id": "catalog-item-1791798693160-2b3264",
+        "name": "Горнолыжные брюки (Сложная конструкция)",
+        "categoryId": "product-1786885522612-002f88"
+      },
+      {
+        "id": "catalog-item-1791798724672-1afdb0",
+        "name": "Мотоэкипировка (Сложная конструкция)",
+        "categoryId": "product-1786885522612-002f88"
+      },
+      {
+        "id": "catalog-item-1791798739348-db2994",
+        "name": "Купальники и плавки",
+        "categoryId": "product-1786885522612-002f88"
+      },
+      {
+        "id": "catalog-item-1791798757524-a2a1bd",
+        "name": "Спортивное кимоно (Плотная ткань)",
+        "categoryId": "product-1786885522612-002f88"
+      },
+      {
+        "id": "catalog-item-1791798917639-07f3ce",
+        "name": "Спальный мешок (Объёмный утеплитель)",
+        "categoryId": "product-1786885522612-002f88"
+      },
+      {
+        "id": "catalog-item-1791798951324-56475a",
+        "name": "Шлем (Гигиена и внутренняя отделка)",
+        "categoryId": "product-1786885522612-002f88"
+      },
+      {
+        "id": "catalog-item-1791799770332-c9deb7",
+        "name": "Толстовки",
+        "categoryId": "product-1786885522612-d392d6"
+      },
+      {
+        "id": "catalog-item-1791799814042-57f3cf",
+        "name": "Джинсы и деним",
+        "categoryId": "product-1786885522612-d392d6"
+      },
+      {
+        "id": "catalog-item-1791799830215-6f474b",
+        "name": "Футболки и тонкий трикотаж",
+        "categoryId": "product-1786885522612-d392d6"
+      },
+      {
+        "id": "catalog-item-1791799879433-c6fff1",
+        "name": "Джемперы и трикотаж",
+        "categoryId": "product-1786885522612-d392d6"
+      },
+      {
+        "id": "catalog-item-1791799894154-e9e94c",
+        "name": "Платья и сложные ткани",
+        "categoryId": "product-1786885522612-d392d6"
+      },
+      {
+        "id": "catalog-item-1791799919704-b8358f",
+        "name": "Юбки и изделия со сложным кроем",
+        "categoryId": "product-1786885522612-d392d6"
+      },
+      {
+        "id": "catalog-item-1791799937106-163395",
+        "name": "Кофты и кардиганы",
+        "categoryId": "product-1786885522612-d392d6"
+      },
+      {
+        "id": "catalog-item-1791799952603-edfafb",
+        "name": "Шорты и лёгкая повседневная одежда",
+        "categoryId": "product-1786885522612-d392d6"
+      },
+      {
+        "id": "catalog-item-1791800043848-d01b39",
+        "name": "Пиджаки и жакеты",
+        "categoryId": "product-1786885522612-3bf39c"
+      },
+      {
+        "id": "catalog-item-1791800152003-750f8e",
+        "name": "Брюки",
+        "categoryId": "product-1786885522612-3bf39c"
+      },
+      {
+        "id": "catalog-item-1791800167770-511312",
+        "name": "Сорочки",
+        "categoryId": "product-1786885522612-3bf39c"
+      },
+      {
+        "id": "catalog-item-1791800181831-d678a7",
+        "name": "Платья и сложный крой",
+        "categoryId": "product-1786885522612-3bf39c"
+      },
+      {
+        "id": "catalog-item-1791800201558-ed34b7",
+        "name": "Блузы",
+        "categoryId": "product-1786885522612-3bf39c"
+      },
+      {
+        "id": "catalog-item-1791800223207-9e599b",
+        "name": "Пальто и верхняя классика",
+        "categoryId": "product-1786885522612-3bf39c"
+      },
+      {
+        "id": "catalog-item-1791800236868-6bbf75",
+        "name": "Юбки",
+        "categoryId": "product-1786885522612-3bf39c"
+      },
+      {
+        "id": "catalog-item-1791800913433-7c0121",
+        "name": "Шторы и тюли",
+        "categoryId": "product-1786885522612-15ddd2"
+      },
+      {
+        "id": "catalog-item-1791800928720-79448b",
+        "name": "Постельное бельё",
+        "categoryId": "product-1786885522612-15ddd2"
+      },
+      {
+        "id": "catalog-item-1791800943707-a2b29f",
+        "name": "Подушки",
+        "categoryId": "product-1786885522612-15ddd2"
+      },
+      {
+        "id": "catalog-item-1791800969336-4a629b",
+        "name": "Одеяла",
+        "categoryId": "product-1786885522612-15ddd2"
+      },
+      {
+        "id": "catalog-item-1791800989269-ec375a",
+        "name": "Полотенца и ошибори",
+        "categoryId": "product-1786885522612-15ddd2"
+      },
+      {
+        "id": "catalog-item-1791801004136-4f5f68",
+        "name": "Махровые халаты",
+        "categoryId": "product-1786885522612-15ddd2"
+      },
+      {
+        "id": "catalog-item-1791801018423-8ce0e5",
+        "name": "Чехлы на подушки, кресла и диваны",
+        "categoryId": "product-1786885522612-15ddd2"
+      },
+      {
+        "id": "catalog-item-1791801032256-50c193",
+        "name": "Мягкие домики для питомцев",
+        "categoryId": "product-1786885522612-15ddd2"
+      },
+      {
+        "id": "catalog-item-1791801051713-3ac469",
+        "name": "Попоны",
+        "categoryId": "product-1786885522612-15ddd2"
+      },
+      {
+        "id": "catalog-item-1791801066420-f639da",
+        "name": "Ковры",
+        "categoryId": "product-1786885522612-15ddd2"
+      },
+      {
+        "id": "catalog-item-1791801686948-11d082",
+        "name": "Свадебные платья",
+        "categoryId": "product-1786885522612-6fe565"
+      },
+      {
+        "id": "catalog-item-1791801703516-c45a00",
+        "name": "Смокинги",
+        "categoryId": "product-1786885522612-6fe565"
+      },
+      {
+        "id": "catalog-item-1791801718005-8d8e4e",
+        "name": "Шубы и меховые изделия",
+        "categoryId": "product-1786885522612-6fe565"
+      },
+      {
+        "id": "catalog-item-1791801734029-771438",
+        "name": "Бальные платья",
+        "categoryId": "product-1786885522612-6fe565"
+      },
+      {
+        "id": "catalog-item-1791801747772-4524f2",
+        "name": "Сценические костюмы",
+        "categoryId": "product-1786885522612-6fe565"
+      },
+      {
+        "id": "catalog-item-1791801762752-9dac1d",
+        "name": "Вечерние платья",
+        "categoryId": "product-1786885522612-6fe565"
+      },
+      {
+        "id": "catalog-item-1791801778568-58d715",
+        "name": "Корсетные изделия",
+        "categoryId": "product-1786885522612-6fe565"
+      },
+      {
+        "id": "catalog-item-1791802125053-ffa0d3",
+        "name": "Подгонка нового изделия по фигуре",
+        "categoryId": "product-1786885522612-eb869c"
+      },
+      {
+        "id": "catalog-item-1791802140635-d76747",
+        "name": "Восстановление декора",
+        "categoryId": "product-1786885522612-eb869c"
+      },
+      {
+        "id": "catalog-item-1791802155718-0f786f",
+        "name": "Ремонт швов",
+        "categoryId": "product-1786885522612-eb869c"
+      },
+      {
+        "id": "catalog-item-1791802169347-c363b9",
+        "name": "Работа с фурнитурой",
+        "categoryId": "product-1786885522612-eb869c"
+      },
+      {
+        "id": "catalog-item-1791802184928-7d4afc",
+        "name": "Замена подкладки",
+        "categoryId": "product-1786885522612-eb869c"
+      },
+      {
+        "id": "catalog-item-1791802199493-152d11",
+        "name": "Разбор и сборка изделий",
+        "categoryId": "product-1786885522612-eb869c"
+      }
+    ]
+  },
+  {
+    "label": "korichnoe-yabloko",
+    "project": "Коричное яблоко",
+    "pathTotal": 90,
+    "pathDone": 14,
+    "diagnosticTotal": 90,
+    "diagnosticDone": 14,
+    "perGate": [
+      {
+        "id": "gate-0",
+        "total": 9,
+        "done": 8,
+        "path": 9
+      },
+      {
+        "id": "gate-1",
+        "total": 12,
+        "done": 2,
+        "path": 12
+      },
+      {
+        "id": "gate-2",
+        "total": 15,
+        "done": 0,
+        "path": 15
+      },
+      {
+        "id": "gate-3",
+        "total": 5,
+        "done": 4,
+        "path": 5
+      },
+      {
+        "id": "gate-4",
+        "total": 15,
+        "done": 0,
+        "path": 15
+      },
+      {
+        "id": "gate-5",
+        "total": 6,
+        "done": 0,
+        "path": 6
+      },
+      {
+        "id": "gate-6",
+        "total": 27,
+        "done": 0,
+        "path": 27
+      },
+      {
+        "id": "gate-7",
+        "total": 0,
+        "done": 0,
+        "path": 0
+      },
+      {
+        "id": "gate-8",
+        "total": 1,
+        "done": 0,
+        "path": 1
+      }
+    ],
+    "hiddenGate0InPath": [],
+    "hiddenGate1InPath": false,
+    "card": "Сейчас\nШаг 8 из 90\nВ работе\nТекущее состояние маркетинговой системы · Компания\nGate 0 · Компания\n◀ Назад\nДалее ▶\nК текущему",
+    "errors": [],
+    "productId": "catalog-item-1786792591872-51f503",
+    "products": [
+      {
+        "id": "catalog-item-1790860377305-388c56",
+        "name": "Коза & Ёлка",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1786792591872-c8b1e9",
+        "name": "Рубашка Upcycling с кружевом",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-98358d",
+        "name": "Летнее платье «Исландка»",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-5f848a",
+        "name": "Платье из льна",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-3be8f9",
+        "name": "Лонгслив «Мак» с аппликацией",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-1d1d3c",
+        "name": "Свитшот с медведем для Михаила",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-c45ce3",
+        "name": "Свитшот «Яра» с авторской аппликацией",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-52046c",
+        "name": "Льняное демисезонное пальто",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-51f503",
+        "name": "Символ 2027 года «Коза»",
+        "categoryId": "product-1786401011698-9e81ee"
+      },
+      {
+        "id": "catalog-item-1790936932674-197964",
+        "name": "Шапка Коза",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1790937546522-78edcc",
+        "name": "ТЕРМОС в свитере",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1790937556174-6ad07b",
+        "name": "ТЕРМОС в чехле",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1790937575672-8f423f",
+        "name": "Текстильная ёлочка",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1790937587589-b751ba",
+        "name": "Новогодние подарочные наборы",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      }
+    ]
+  }
+]

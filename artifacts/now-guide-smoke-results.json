@@ -1,0 +1,280 @@
+[
+  {
+    "label": "korichnoe-yabloko",
+    "project": "Коричное яблоко",
+    "pathTotal": 90,
+    "pathDone": 14,
+    "diagnosticTotal": 90,
+    "diagnosticDone": 14,
+    "perGate": [
+      {
+        "id": "gate-0",
+        "total": 9,
+        "done": 8,
+        "path": 9
+      },
+      {
+        "id": "gate-1",
+        "total": 12,
+        "done": 2,
+        "path": 12
+      },
+      {
+        "id": "gate-2",
+        "total": 15,
+        "done": 0,
+        "path": 15
+      },
+      {
+        "id": "gate-3",
+        "total": 5,
+        "done": 4,
+        "path": 5
+      },
+      {
+        "id": "gate-4",
+        "total": 15,
+        "done": 0,
+        "path": 15
+      },
+      {
+        "id": "gate-5",
+        "total": 6,
+        "done": 0,
+        "path": 6
+      },
+      {
+        "id": "gate-6",
+        "total": 27,
+        "done": 0,
+        "path": 27
+      },
+      {
+        "id": "gate-7",
+        "total": 0,
+        "done": 0,
+        "path": 0
+      },
+      {
+        "id": "gate-8",
+        "total": 1,
+        "done": 0,
+        "path": 1
+      }
+    ],
+    "hiddenGate0InPath": [],
+    "hiddenGate1InPath": false,
+    "card": "Сейчас\nШаг 8 из 90\nВ работе\nТекущее состояние маркетинговой системы · Компания\nGate 0 · Компания\n◀ Назад\nДалее ▶\nК текущему",
+    "errors": [],
+    "productId": "catalog-item-1786792591872-51f503",
+    "products": [
+      {
+        "id": "catalog-item-1790860377305-388c56",
+        "name": "Коза & Ёлка",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1786792591872-c8b1e9",
+        "name": "Рубашка Upcycling с кружевом",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-98358d",
+        "name": "Летнее платье «Исландка»",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-5f848a",
+        "name": "Платье из льна",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-3be8f9",
+        "name": "Лонгслив «Мак» с аппликацией",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-1d1d3c",
+        "name": "Свитшот с медведем для Михаила",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-c45ce3",
+        "name": "Свитшот «Яра» с авторской аппликацией",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-52046c",
+        "name": "Льняное демисезонное пальто",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-51f503",
+        "name": "Символ 2027 года «Коза»",
+        "categoryId": "product-1786401011698-9e81ee"
+      },
+      {
+        "id": "catalog-item-1790936932674-197964",
+        "name": "Шапка Коза",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1790937546522-78edcc",
+        "name": "ТЕРМОС в свитере",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1790937556174-6ad07b",
+        "name": "ТЕРМОС в чехле",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1790937575672-8f423f",
+        "name": "Текстильная ёлочка",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1790937587589-b751ba",
+        "name": "Новогодние подарочные наборы",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      }
+    ],
+    "navigation": {
+      "key": "gate-0:card::card-2",
+      "gate": "gate-0",
+      "headingTop": 90,
+      "headingBottom": 116,
+      "viewportHeight": 900,
+      "scrollY": 4212,
+      "expanded": true,
+      "highlighted": true
+    },
+    "tenTransitions": [
+      {
+        "action": "gate2-first",
+        "gate": "gate-2",
+        "title": "Яндекс Метрика · счётчик",
+        "expanded": true,
+        "headingVisible": true,
+        "highlighted": true,
+        "headingTop": 90,
+        "exportUnchanged": null
+      },
+      {
+        "action": "next",
+        "gate": "gate-2",
+        "title": "Яндекс Метрика · конверсионная цель",
+        "expanded": true,
+        "headingVisible": true,
+        "highlighted": true,
+        "headingTop": 90,
+        "exportUnchanged": null
+      },
+      {
+        "action": "prev",
+        "gate": "gate-2",
+        "title": "Яндекс Метрика · счётчик",
+        "expanded": true,
+        "headingVisible": true,
+        "highlighted": true,
+        "headingTop": 90,
+        "exportUnchanged": null
+      },
+      {
+        "action": "next",
+        "gate": "gate-2",
+        "title": "Яндекс Метрика · конверсионная цель",
+        "expanded": true,
+        "headingVisible": true,
+        "highlighted": true,
+        "headingTop": 90,
+        "exportUnchanged": null
+      },
+      {
+        "action": "next",
+        "gate": "gate-2",
+        "title": "Домен и HTTPS",
+        "expanded": true,
+        "headingVisible": true,
+        "highlighted": true,
+        "headingTop": 90,
+        "exportUnchanged": null
+      },
+      {
+        "action": "prev",
+        "gate": "gate-2",
+        "title": "Яндекс Метрика · конверсионная цель",
+        "expanded": true,
+        "headingVisible": true,
+        "highlighted": true,
+        "headingTop": 90,
+        "exportUnchanged": null
+      },
+      {
+        "action": "next",
+        "gate": "gate-2",
+        "title": "Домен и HTTPS",
+        "expanded": true,
+        "headingVisible": true,
+        "highlighted": true,
+        "headingTop": 90,
+        "exportUnchanged": null
+      },
+      {
+        "action": "next",
+        "gate": "gate-2",
+        "title": "Яндекс Вебмастер",
+        "expanded": true,
+        "headingVisible": true,
+        "highlighted": true,
+        "headingTop": 90,
+        "exportUnchanged": null
+      },
+      {
+        "action": "prev",
+        "gate": "gate-2",
+        "title": "Домен и HTTPS",
+        "expanded": true,
+        "headingVisible": true,
+        "highlighted": true,
+        "headingTop": 90,
+        "exportUnchanged": null
+      },
+      {
+        "action": "next",
+        "gate": "gate-2",
+        "title": "Яндекс Вебмастер",
+        "expanded": true,
+        "headingVisible": true,
+        "highlighted": true,
+        "headingTop": 90,
+        "exportUnchanged": null
+      }
+    ],
+    "tenTransitionExportComparison": {
+      "same": true,
+      "beforeBytes": 22258055,
+      "afterBytes": 22258055,
+      "beforeSha256": "1b12d010e512d393ea377c2edc931b95d9b8fe1eacf193e3158f49617bd6ccab",
+      "afterSha256": "1b12d010e512d393ea377c2edc931b95d9b8fe1eacf193e3158f49617bd6ccab"
+    },
+    "productSwitch": null,
+    "exportComparison": {
+      "same": true,
+      "beforeBytes": 22258055,
+      "afterBytes": 22258055,
+      "firstDifferentByte": -1,
+      "beforeExcerpt": "",
+      "afterExcerpt": ""
+    },
+    "navigationExportComparison": {
+      "same": true,
+      "beforeBytes": 22258055,
+      "afterBytes": 22258055,
+      "beforeSha256": "1b12d010e512d393ea377c2edc931b95d9b8fe1eacf193e3158f49617bd6ccab",
+      "afterSha256": "1b12d010e512d393ea377c2edc931b95d9b8fe1eacf193e3158f49617bd6ccab"
+    },
+    "filledBlock": null,
+    "screenshot": "artifacts/now-guide-korichnoe-yabloko.png"
+  }
+]

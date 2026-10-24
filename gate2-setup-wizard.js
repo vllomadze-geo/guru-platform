@@ -3,14 +3,14 @@
 const G2W_DOC = Object.freeze({
   tildaDomain: "https://help-ru.tilda.cc/customdomain",
   tildaMetrika: "https://help-ru.tilda.cc/statistics/yandex-metrika",
-  tildaVk: "https://help-ru.tilda.cc/vk-pixel",
+  tildaVk: "https://help-ru.tilda.cc/statistics/mail-ru",
   vercelDomain: "https://vercel.com/docs/domains/working-with-domains/add-a-domain",
   wordpress: "https://wordpress.org/documentation/article/settings-general-screen/",
   metrika: "https://metrika.yandex.ru/",
   metrikaCheck: "https://yandex.ru/support/metrica/ru/general/check-counter",
   metrikaGoal: "https://yandex.ru/support/metrica/ru/general/check-goal.html",
   metrikaEvent: "https://www.yandex.ru/support/metrica/ru/general/goal-js-event",
-  vk: "https://ads.vk.com/",
+  vk: "https://object2-ac.vk-apps.com/vk-education-0554ff56-27eb-4093-a702-685722cef6d9/media/ad/79ad8eafc5324d46a3c153cd5e9a2a32.pdf",
   webmaster: "https://webmaster.yandex.ru/",
   robots: "https://yandex.ru/support/webmaster/ru/indexing-options/robots-txt-analyzer",
   sitemap: "https://yandex.ru/support/webmaster/ru/controlling-robot/sitemap",
@@ -47,10 +47,12 @@ const G2W_CARDS = [
   ] },
   { id: "vk", scope: "company", cardId: "g2-marketing-vk-ads", title: "VK Реклама и пиксель", purpose: "Проверяется только если используется VK Реклама.", optional: "vk", steps: [
     ["account", "Откройте VK Рекламу и выберите рекламный кабинет.", "vkAccount", "Название или ID кабинета", "text", G2W_DOC.vk],
-    ["pixel", "Добавьте пиксель для домена в разделе сайтов.", "pixelId", "ID пикселя / Top.Mail.ru", "text", G2W_DOC.vk],
-    ["install", "Установите код на сайт через поддерживаемую интеграцию.", null, null, null, "platformVk"],
-    ["publish", "Опубликуйте изменения сайта."],
-    ["visit", "Проверьте тестовое посещение в кабинете VK.", null, null, null, G2W_DOC.vk],
+    ["existing", "Проверьте, есть ли пиксель для выбранного домена.", null, null, null, G2W_DOC.vk],
+    ["pixel", "Используйте найденный пиксель или создайте новый только при его отсутствии.", null, null, null, G2W_DOC.vk],
+    ["id", "Получите ID выбранного пикселя.", "pixelId", "ID пикселя / Top.Mail.ru", "text", G2W_DOC.tildaVk],
+    ["install", "Tilda: Настройки сайта → Аналитика → MAIL.RU COUNTER ID (VK PIXEL) → вставьте ID и сохраните.", null, null, null, "platformVk"],
+    ["publish", "Tilda: список страниц → «Опубликовать все страницы».", null, null, null, "https://help-ru.tilda.cc/folders"],
+    ["visit", "Проверьте тестовый визит: top.mail.ru → Мои счётчики → Real-Time → Обзор.", null, null, null, "https://help-ru.tilda.cc/statistics/mail-ru"],
   ] },
   { id: "crm", scope: "company", cardId: "card-122", title: "CRM и получение обращений", purpose: "Тестовая заявка доходит до используемой системы.", steps: [
     ["system", "Выберите CRM или фактически используемый способ получения заявок.", "crmName", "Система приёма заявок", "crm"],
@@ -59,6 +61,7 @@ const G2W_CARDS = [
     ["utm", "Проверьте UTM и привязку к продукту, если эти данные доступны."],
     ["send", "Отправьте тестовую заявку."],
     ["receive", "Убедитесь, что обращение получено и сохранено."],
+    ["storage", "Проверьте срок хранения заявок."],
   ] },
   { id: "webmaster", scope: "company", cardId: "card-107", title: "Яндекс Вебмастер", purpose: "Поисковые страницы доступны роботу, если используется SEO.", optional: "seo", steps: [
     ["open", "Откройте Яндекс Вебмастер и добавьте сайт или выберите существующий.", null, null, null, G2W_DOC.webmaster],
@@ -66,6 +69,7 @@ const G2W_CARDS = [
     ["robots", "Проверьте robots.txt в анализаторе.", null, null, null, G2W_DOC.robots],
     ["sitemap", "Найдите sitemap.xml и передайте его в Вебмастер, если используется.", null, null, null, G2W_DOC.sitemap],
     ["pages", "Проверьте доступность важных коммерческих страниц для робота.", null, null, null, G2W_DOC.webmaster],
+    ["advice", "Откройте рекомендации по оптимизации.", null, null, null, "https://yandex.ru/support/webmaster/ru/service/quick-start"],
   ] },
   { id: "safety", scope: "company", cardId: "card-134", title: "Безопасность и персональные данные", purpose: "Формы защищены, необходимые документы опубликованы.", steps: [
     ["https", "Проверьте HTTPS на рабочем сайте."],
@@ -242,7 +246,7 @@ function g2wInputs(def, productId = "", workspace = state) {
 function g2wFieldValid(def, productId, key, workspace = state) {
   const value = g2wText(g2wValue(def, productId, key, workspace));
   if (!value) return false;
-  if (["counterId", "goalId"].includes(key)) return /^\d+$/.test(value);
+  if (["counterId", "goalId", "pixelId"].includes(key)) return /^\d+$/.test(value);
   if (["homeUrl", "privacyUrl", "productUrl"].includes(key)) {
     try { return new URL(value).protocol === "https:"; } catch { return false; }
   }
@@ -360,7 +364,7 @@ function g2wSelectOptions(kind, current) {
       .map((goal) => [goal.entryId, `${goal.name || "Цель"} · ${goal.goalId}`])];
   return options.map(([value, label]) => `<option value="${escapeAttr(value)}" ${current === value ? "selected" : ""}>${escapeHtml(label)}</option>`).join("");
 }
-function g2wFieldHtml(def, productId, step) {
+function g2wFieldHtml(def, productId, step, options = {}) {
   const [,, key, label, type] = step;
   if (!key) return "";
   const value = g2wValue(def, productId, key);
@@ -370,7 +374,7 @@ function g2wFieldHtml(def, productId, step) {
     : `<input ${attr} type="${type === "url" ? "url" : "text"}" value="${escapeAttr(value)}" ${type === "digits" ? 'inputmode="numeric" pattern="[0-9]*"' : ""} placeholder="${escapeAttr(label)}">`;
   const extra = def.id === "crm" && key === "crmName" && value && !["bitrix24", "amocrm"].includes(value)
     ? `${value === "other" ? `<label class="g2w-field"><span>Название системы</span><input data-g2w-field="crmServiceName" data-g2w-card="crm" data-g2w-product="" value="${escapeAttr(g2wValue(def, "", "crmServiceName"))}" placeholder="Название"></label>` : ""}<label class="g2w-field"><span>Официальная инструкция сервиса</span><input data-g2w-field="crmDocsUrl" data-g2w-card="crm" data-g2w-product="" type="url" value="${escapeAttr(g2wValue(def, "", "crmDocsUrl"))}" placeholder="https://"></label>` : "";
-  const provider = def.id === "domain" && key === "registrar" && ["custom", "other"].includes(g2wPlatform())
+  const provider = !options.suppressProviderDocs && def.id === "domain" && key === "registrar" && ["custom", "other"].includes(g2wPlatform())
     ? `<label class="g2w-field"><span>Официальная инструкция провайдера</span><input data-g2w-field="hostingDocsUrl" data-g2w-card="domain" data-g2w-product="" type="url" value="${escapeAttr(g2wValue(def, "", "hostingDocsUrl"))}" placeholder="https://"></label>` : "";
   return `<label class="g2w-field"><span>${escapeHtml(label)}</span>${control}${value && !g2wFieldValid(def, productId, key) ? `<small>${type === "url" ? "Нужен рабочий адрес https://" : "Проверьте значение"}</small>` : ""}</label>${extra}${provider}`;
 }
@@ -422,6 +426,22 @@ function g2wOpenHash() {
   let id = "";
   try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
   if (!id) return;
+  // Historic card links must land on the service block that now owns the
+  // workflow, including when its product scope and disclosure are closed.
+  const service = typeof G2_SERVICE_BLOCK_CONFIGS !== "undefined" &&
+    typeof g2ServiceBlockCardId === "function"
+    ? [...G2_SERVICE_BLOCK_CONFIGS.values()].find((config) =>
+      g2ServiceBlockCardId(config) === id)
+    : null;
+  const serviceBlock = service && els.contentArea.querySelector(
+    `[data-g2sb-id="${CSS.escape(service.id)}"]`);
+  if (serviceBlock) {
+    gate0RevealSectionForNode(serviceBlock);
+    guruDisclosureOpenStateV512()[guruDisclosureKeyV512(serviceBlock)] = true;
+    serviceBlock.open = true;
+    requestAnimationFrame(() => serviceBlock.scrollIntoView({ block: "start" }));
+    return;
+  }
   const target = document.getElementById(id) ||
     els.contentArea.querySelector(`[data-card="${CSS.escape(id)}"]`);
   if (!target) return;

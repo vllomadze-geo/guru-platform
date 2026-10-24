@@ -61,14 +61,15 @@ const pointerClick = async (selector) => {
   const point = await evaluate(`(async () => {
     const node = document.querySelector(${JSON.stringify(selector)});
     if (!node) throw new Error('Missing pointer target: ' + ${JSON.stringify(selector)});
-    node.scrollIntoView({ block: 'center', behavior: 'instant' });
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    const rect = node.getBoundingClientRect();
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
-    if (!node.contains(document.elementFromPoint(x, y)))
-      throw new Error('Pointer target is obscured: ' + ${JSON.stringify(selector)});
-    return { x, y };
+    for (let attempt = 0; attempt < 3; attempt++) {
+      node.scrollIntoView({ block: 'center', behavior: 'instant' });
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const rect = node.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      if (node.contains(document.elementFromPoint(x, y))) return { x, y };
+    }
+    throw new Error('Pointer target is obscured: ' + ${JSON.stringify(selector)});
   })()`);
   await page.call("Input.dispatchMouseEvent", { type: "mousePressed", x: point.x, y: point.y, button: "left", clickCount: 1 });
   await page.call("Input.dispatchMouseEvent", { type: "mouseReleased", x: point.x, y: point.y, button: "left", clickCount: 1 });
@@ -125,13 +126,13 @@ try {
     company: document.querySelectorAll('[data-g2w-scope="company"] .g2w-card').length,
     product: document.querySelectorAll('[data-g2w-scope="product"] .g2w-card').length,
     legacy: document.querySelectorAll('.g2w-legacy-list [data-card]').length,
-    docs: [...document.querySelectorAll('.g2w-card a[href]')].every((link) => link.href.startsWith('https://')),
+    docs: [...document.querySelectorAll('.g2w-card [data-g2w-doc-step][href]')].every((link) => link.href.startsWith('https://')),
     selector: document.querySelectorAll('[data-gate0-scope-product-select="gate2-product"]').length,
     firstProduct: guruV194SelectedProduct(state)?.id,
   }))()`);
   assert.deepEqual(initial.scopes, ["company", "product"]);
-  assert.equal(initial.company, 7);
-  assert.equal(initial.product, 5);
+  assert.equal(initial.company, 2);
+  assert.equal(initial.product, 0);
   assert.ok(initial.legacy > 0);
   assert.equal(initial.docs, true);
   assert.equal(initial.selector, 1);
@@ -162,27 +163,30 @@ try {
     return result;
   })()`);
   assert.deepEqual(scopeRestored, { expanded: 'true', hidden: false, renders: 0 });
-  const beforePointer = await evaluate(`(() => ({ open: document.querySelector('[data-g2w-card-view="domain"]').open,
+  const beforePointer = await evaluate(`(() => ({ open: document.querySelector('[data-g2w-card-view="counter"]').open,
     done: Boolean(g2wRecord(G2W_CARDS[0])?.steps?.address?.result === 'done') }))()`);
-  await pointerClick('[data-g2w-card-view="domain"] > summary');
+  await pointerClick('[data-g2w-card-view="counter"] > summary');
   await wait(100);
-  const afterSummaryPointer = await evaluate(`document.querySelector('[data-g2w-card-view="domain"]').open`);
+  const afterSummaryPointer = await evaluate(`document.querySelector('[data-g2w-card-view="counter"]').open`);
   assert.equal(afterSummaryPointer, !beforePointer.open, 'summary must respond to a real pointer click');
-  const openAfterRender = await evaluate(`(() => { renderGate(); return document.querySelector('[data-g2w-card-view="domain"]').open; })()`);
+  const openAfterRender = await evaluate(`(() => { renderGate(); return document.querySelector('[data-g2w-card-view="counter"]').open; })()`);
   assert.equal(openAfterRender, true, 'open wizard card must survive a Gate 2 render');
   await evaluate(`window.__g2wNavButton = document.querySelector('[data-gate-id="gate-2"]')`);
-  await pointerClick('[data-g2w-card-view="domain"] [data-g2w-step="address"]');
+  await pointerClick('[data-g2sb-id="company-domain"] > summary .g2sb-title');
+  await pointerClick('[data-g2sb-id="company-domain"] [data-g2sb-step="address"]');
   const afterStepPointer = await evaluate(`g2wRecord(G2W_CARDS[0])?.steps?.address?.result || ''`);
   assert.equal(afterStepPointer, 'done', 'step must respond to a real pointer click');
   const navAfterStep = await evaluate(`(() => ({
     sameButton: window.__g2wNavButton === document.querySelector('[data-gate-id="gate-2"]'),
     text: document.querySelector('[data-gate-id="gate-2"] .small')?.textContent,
-    expected: guruGateReadiness(g2wGate()).percent,
+    expected: guruReadinessFromStatuses(guruGateBlockStatuses(g2wGate())).percent,
+    total: guruReadinessFromStatuses(guruGateBlockStatuses(g2wGate())).total,
   }))()`);
   assert.equal(navAfterStep.sameButton, true, 'step must update Gate 2 progress without rebuilding the sidebar');
-  assert.equal(navAfterStep.text, `12 блоков, прогресс ${navAfterStep.expected}%`);
-  await pointerClick('[data-g2w-card-view="domain"] [data-g2w-step="address"]');
-  for (const cardId of ['counter', 'goal', 'crm', 'safety', 'landing', 'productCounter', 'productGoal', 'lead']) {
+  assert.ok(navAfterStep.text.includes(`${navAfterStep.total} блоков`) &&
+    navAfterStep.text.endsWith(`${navAfterStep.expected}%`));
+  await pointerClick('[data-g2sb-id="company-domain"] [data-g2sb-step="address"]');
+  for (const cardId of ['counter', 'goal']) {
     const summary = `[data-g2w-card-view="${cardId}"] > summary`;
     const cardBefore = await evaluate(`document.querySelector(${JSON.stringify(`[data-g2w-card-view="${cardId}"]`)})?.open`);
     if (!cardBefore) await pointerClick(summary);
@@ -200,8 +204,21 @@ try {
     assert.equal(result, 'done', `${cardId} step must respond by pointer`);
     await pointerClick(stepSelector);
   }
+  for (const [blockId, unitId] of [['product-landing', 'landing'],
+    ['product-counter', 'productCounter'], ['product-goal', 'productGoal'], ['product-lead', 'lead']]) {
+    const blockSelector = `[data-g2sb-id="${blockId}"]`;
+    const blockOpen = await evaluate(`document.querySelector(${JSON.stringify(blockSelector)})?.open`);
+    if (!blockOpen) await pointerClick(`${blockSelector} > summary .g2sb-title`);
+    const stepSelector = `[data-g2sb-id="${blockId}"] [data-g2sb-step]`;
+    const stepId = await evaluate(`document.querySelector(${JSON.stringify(stepSelector)})?.dataset.g2sbStep || ''`);
+    assert.ok(stepId, `${blockId} must have a step`);
+    await pointerClick(stepSelector);
+    const result = await evaluate(`g2wRecord(g2wDef(${JSON.stringify(unitId)}), guruV194SelectedProduct(state)?.id)?.steps?.[${JSON.stringify(stepId)}]?.result || ''`);
+    assert.equal(result, 'done', `${blockId} step must respond by pointer`);
+    await pointerClick(stepSelector);
+  }
   if (process.env.GURU_GATE2_SCREENSHOT) {
-    await evaluate(`(() => { document.querySelector('[data-g2w-card-view="domain"]').open = true; return true; })()`);
+    await evaluate(`(() => { document.querySelector('[data-g2sb-id="company-domain"]').scrollIntoView(); return true; })()`);
     await wait(100);
     const screenshot = await page.call("Page.captureScreenshot", { format: "png", captureBeyondViewport: false });
     writeFileSync(process.env.GURU_GATE2_SCREENSHOT, Buffer.from(screenshot.data, "base64"));
@@ -209,9 +226,9 @@ try {
   const deepLink = await evaluate(`(() => {
     history.replaceState(null, '', '#g2-metrika-product-counter');
     g2wOpenHash();
-    const target = document.querySelector('[data-card="g2-metrika-product-counter"]');
-    const opened = target?.closest('.g2w-additional')?.open &&
-      !target?.closest('.g2-open-section')?.querySelector(':scope > .g2-section-body')?.hidden;
+    const target = document.querySelector('[data-g2sb-id="product-counter"]');
+    const opened = target?.open &&
+      !target?.closest('[data-g2w-scope="product"]')?.classList.contains('gate0-section-content-hidden');
     history.replaceState(null, '', location.pathname);
     return Boolean(opened);
   })()`);
@@ -219,11 +236,11 @@ try {
 
   const edited = await evaluate(`(() => {
     const set = (card, key, value) => {
-      const input = document.querySelector('[data-g2w-card-view="' + card + '"] [data-g2w-field="' + key + '"]');
+      const input = document.querySelector('[data-g2sb-id="company-domain"] [data-g2w-field="' + key + '"]');
       input.value = value;
       input.dispatchEvent(new Event(input.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true }));
     };
-    set('domain', 'homeUrl', 'https://example.org/');
+    megaPlatformSetUrl('fixed', 'home', 'https://example.org/');
     set('domain', 'platform', 'tilda');
     set('domain', 'registrar', 'Тестовый регистратор');
     set('domain', 'hosting', 'Tilda');
@@ -235,9 +252,9 @@ try {
   assert.equal(edited.platform, "tilda");
   const progress = await evaluate(`(() => {
     for (const step of G2W_CARDS[0].steps) {
-      document.querySelector('[data-g2w-card-view="domain"] [data-g2w-step="' + step[0] + '"]').click();
+      document.querySelector('[data-g2sb-id="company-domain"] [data-g2sb-step="' + step[0] + '"]').click();
     }
-    const card = document.querySelector('[data-g2w-card-view="domain"]');
+    const card = document.querySelector('[data-g2sb-id="company-domain"]');
     const input = card.querySelector('[data-g2w-source]');
     input.value = 'Проверено в браузере и панели Tilda';
     card.querySelector('[data-g2w-verify="passed"]').click();
@@ -249,12 +266,11 @@ try {
   assert.equal(progress.source, "Проверено в браузере и панели Tilda");
 
   const stale = await evaluate(`(() => {
-    const input = document.querySelector('[data-g2w-card-view="domain"] [data-g2w-field="homeUrl"]');
-    input.value = 'https://example.com/'; input.dispatchEvent(new Event('input', { bubbles: true }));
+    megaPlatformSetUrl('fixed', 'home', 'https://example.com/');
     const status = g2wStatus(G2W_CARDS[0]);
     const historyStillPresent = Boolean(g2wRecord(G2W_CARDS[0]).verification);
-    document.querySelector('[data-g2w-use="vk"]').value = 'no';
-    document.querySelector('[data-g2w-use="vk"]').dispatchEvent(new Event('change', { bubbles: true }));
+    g2wRecord(g2wDef('vk'), '', true).values.used = 'no';
+    g2c2Marketing().infra.find((row) => row.name === 'VK Ads').status = 'not_needed';
     return { status, historyStillPresent, vk: g2wStatus(G2W_CARDS[3]), productVk: g2wStatus(G2W_CARDS[10], guruV194SelectedProduct(state).id) };
   })()`);
   assert.equal(stale.status, "in_progress");
@@ -264,7 +280,7 @@ try {
   const automatic = await evaluate(`(async () => {
     const originalFetch = window.fetch;
     window.fetch = async () => new Response('ok', { status: 200 });
-    document.querySelector('[data-g2w-card-view="domain"] [data-g2w-auto]').click();
+    document.querySelector('[data-g2sb-id="company-domain"] [data-g2w-auto]').click();
     for (let i = 0; i < 20 && !g2wRecord(G2W_CARDS[0]).auto; i++)
       await new Promise((resolve) => setTimeout(resolve, 20));
     window.fetch = originalFetch;
@@ -275,7 +291,7 @@ try {
 
   const isolation = await evaluate(`(() => {
     const first = guruV194SelectedProduct(state).id;
-    document.querySelector('[data-g2w-card-view="landing"] [data-g2w-step="route"]').click();
+    document.querySelector('[data-g2sb-id="product-landing"] [data-g2sb-step="route"]').click();
     const second = guruV194Products(state).find((item) => item.id !== first);
     state.project.gate0ScopeUiV194.selectedCategoryId = megaPlatformProductCategoryIds(second)[0] || '__uncategorized__';
     state.project.gate0ScopeUiV194.selectedProductId = second.id;
@@ -309,8 +325,8 @@ try {
   assert.equal(inheritance.verified, "ready");
   assert.equal(inheritance.stale, "in_progress");
   assert.equal(inheritance.counterCheck, "");
-  assert.equal(inheritance.model, "gate2_setup_wizard");
-  assert.equal(inheritance.units, 12);
+  assert.equal(inheritance.model, "gate2_service_readiness");
+  assert.equal(inheritance.units, 19);
   assert.equal(inheritance.wizardCardInExport, true);
   assert.equal(inheritance.oldChecklistInExport, true);
   await wait(800);
@@ -323,28 +339,22 @@ try {
       productStep: cards.find((card) => card.id === 'card-90').fields.g2SetupWizardV1.byProduct[${JSON.stringify(seeded.first)}].steps.route.result };
   })()`);
   assert.deepEqual(persisted, { domainSteps: 8, counterId: "67890", archivedChecklist: "historical answer", productStep: "done" });
-  const providerLinks = await evaluate(`(() => {
-    const select = () => document.querySelector('[data-g2w-card-view="crm"] [data-g2w-field="crmName"]');
-    select().value = 'bitrix24'; select().dispatchEvent(new Event('change', { bubbles: true }));
-    const official = document.querySelector('[data-g2w-card-view="crm"] [data-g2w-doc-step="connect"]')?.href;
-    const service = document.querySelector('[data-g2w-card-view="crm"] [data-g2w-open-step="system"]')?.href;
-    select().value = 'other'; select().dispatchEvent(new Event('change', { bubbles: true }));
-    const name = document.querySelector('[data-g2w-card-view="crm"] [data-g2w-field="crmServiceName"]');
-    name.value = 'Система проекта'; name.dispatchEvent(new Event('input', { bubbles: true }));
-    const docs = document.querySelector('[data-g2w-card-view="crm"] [data-g2w-field="crmDocsUrl"]');
-    docs.value = 'https://example.org/help'; docs.dispatchEvent(new Event('input', { bubbles: true }));
-    return { official, service, customDoc: document.querySelector('[data-g2w-card-view="crm"] [data-g2w-doc-step="connect"]')?.href,
-      customName: g2wValue(G2W_CARDS[4], '', 'crmServiceName') };
+  const crmSource = await evaluate(`(() => {
+    g2c2Marketing().infra.find((row) => row.name === 'CRM').comment = 'Система проекта';
+    renderGate();
+    const block = document.querySelector('[data-g2sb-id="company-leads"]');
+    return { source: block.querySelector('[data-g2sb-step-id="system"] .g2sb-context')?.textContent,
+      duplicateFields: block.querySelectorAll('[data-g2w-field="crmName"]').length,
+      help: block.querySelector('[data-g2sb-step-id="connect"] .g2sb-help')?.href };
   })()`);
-  assert.equal(providerLinks.official, "https://helpdesk.bitrix24.ru/");
-  assert.equal(providerLinks.service, "https://www.bitrix24.ru/");
-  assert.equal(providerLinks.customDoc, "https://example.org/help");
-  assert.equal(providerLinks.customName, "Система проекта");
+  assert.ok(crmSource.source.includes('Система проекта'));
+  assert.equal(crmSource.duplicateFields, 0);
+  assert.equal(crmSource.help, 'https://help-ru.tilda.cc/forms');
   console.log(JSON.stringify({ ok: true, fixture: fixture ? "iCleaning Gate 2 export" : "generated portable workspace", cards: seeded.cards,
     wizard: [initial.company, initial.product], legacy: initial.legacy,
     canonicalUrl: edited.url, progress: progress.checked, stale: stale.status,
     optional: stale.vk, autoSeparated: true, productIsolation: true, inheritedMetrika: inheritance.verified,
-    staleMetrika: inheritance.stale, exportUnits: inheritance.units, saved: true, providerDocs: true }));
+    staleMetrika: inheritance.stale, exportUnits: inheritance.units, saved: true, crmGate0Source: true }));
 } finally {
   if (page) page.close();
   if (browser && browserContextId) {

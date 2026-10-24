@@ -1,0 +1,127 @@
+<section class="g1-section is-open g2-open-section g2-metrika-section-v360" data-g2-accordion-key-v362="company:metrika_goal_quality_company" data-g2-metrika-quality-section-v360="company">
+    <button type="button" class="g1-section-header g2-open-header" data-g2-toggle-section="company:metrika_goal_quality_company" aria-expanded="true" aria-controls="g2-section-company-metrika_goal_quality_company"><span class="g1-section-left"><span class="g1-section-title">Яндекс Метрика · Компания</span><span class="g1-section-progress">0 из 4 готово</span></span><span class="status-pill status-not_started">Не начато</span><span class="g2-section-chevron-v362" aria-hidden="true"></span></button>
+    <div id="g2-section-company-metrika_goal_quality_company" class="g1-section-body g2-section-body"><p class="g2-metrika-intro-v360">Общие настройки счётчика для всего проекта. Товарные проверки читают данные отсюда.</p><article id="g2-metrika-company-counter" class="g2-check-row g2-mp-card-v367 g2-mc-card-v374" data-card="g2-metrika-company-counter" data-g2-scope-kind="company">
+    <div class="g2-check-title"><span>Счётчик проекта</span><span class="status-pill status-not_started">Не начато</span></div>
+    <div class="g2-mc-fields-v374">
+      <label class="g2-mp-field-v367"><span>Номер счётчика проекта</span><input type="text" data-g2-mc-card="g2-metrika-company-counter" data-g2-mc-field="counterId" value=""></label>
+      <section class="g2-mc-settings-v376" aria-label="Настройки счётчика">
+    <h3>Настройки счётчика</h3>
+    <div id="g2-mc-setting-automatic-goals" class="g2-mc-setting-v376" data-g2-mc-setting-row="automatic-goals">
+      <div class="g2-mc-setting-copy-v376">
+        <strong>Автоматические цели</strong>
+        <p class="g2-mc-setting-explanation-v376">Метрика сама создаёт цели на клики по телефону, email и подобные действия, без ручной настройки.</p>
+      </div>
+      <label class="g2-mp-field-v367"><span>Состояние</span><select data-g2-mc-card="g2-metrika-company-counter" data-g2-mc-field="automaticGoals"><option value="" selected="">Не указано</option><option value="yes">Вкл</option><option value="no">Откл</option></select></label>
+      
+    </div>
+    <div id="g2-mc-setting-webvisor" class="g2-mc-setting-v376" data-g2-mc-setting-row="webvisor">
+      <div class="g2-mc-setting-copy-v376">
+        <strong>Вебвизор сайта</strong>
+        <p class="g2-mc-setting-explanation-v376">Запись движений мыши, скролла и кликов посетителя. Нужно для диагностики поведения на карточках товара.</p>
+      </div>
+      <label class="g2-mp-field-v367"><span>Состояние</span><select data-g2-mc-card="g2-metrika-company-counter" data-g2-mc-field="webvisorEnabled"><option value="" selected="">Не указано</option><option value="yes">Вкл</option><option value="no">Откл</option></select></label>
+      
+    </div>
+    <div id="g2-mc-setting-ecommerce" class="g2-mc-setting-v376" data-g2-mc-setting-row="ecommerce">
+      <div class="g2-mc-setting-copy-v376">
+        <strong>Электронная коммерция</strong>
+        <div class="g2-mc-setting-explanation-v376">
+    <p class="g2-mc-instruction-heading-v377">Настройка:</p>
+    <ol>
+      <li>Метрика → Настройки → Счётчик → Электронная коммерция → Вкл, контейнер <code>dataLayer</code>.</li>
+      <li>Карточка товара подключена к блоку «Каталог товаров».</li>
+      <li>Блок корзины (ST100) → Доп. настройки → галочка «Отправлять данные о добавлении в корзину».</li>
+      <li>Опубликовать все страницы Tilda.</li>
+    </ol>
+    <p class="g2-mc-instruction-heading-v377">Проверка:</p>
+    <ul>
+      <li>URL товара + <code>?_ym_debug=1</code>, консоль (Cmd+Option+J), выполнить действие.</li>
+      <li>Просмотр карточки → событие <code>detail</code> с ID товара. Нет → карточка не подключена к каталогу.</li>
+      <li>В корзину → событие <code>add</code>. Нет → не включена галочка в ST100.</li>
+      <li>Оформление заказа → событие <code>purchase</code> с суммой и ID. Нет → не опубликованы страницы после включения опции.</li>
+    </ul>
+    <p class="g2-mc-instruction-heading-v377">Сверка:</p>
+    <p>Метрика → Отчёты → Электронная коммерция, тестовый заказ должен появиться там с задержкой до нескольких минут.</p></div>
+      </div>
+      <label class="g2-mp-field-v367"><span>Состояние</span><select data-g2-mc-card="g2-metrika-company-counter" data-g2-mc-field="ecommerceEnabled"><option value="" selected="">Не указано</option><option value="yes">Вкл</option><option value="no">Откл</option></select></label>
+      <div class="g2-mc-setting-extra-v376"><label class="g2-mp-field-v367"><span>Имя контейнера данных</span><input type="text" data-g2-mc-card="g2-metrika-company-counter" data-g2-mc-field="ecommerceContainer" value=""></label></div>
+    </div>
+    <div id="g2-mc-setting-content-analytics" class="g2-mc-setting-v376" data-g2-mc-setting-row="content-analytics">
+      <div class="g2-mc-setting-copy-v376">
+        <strong>Контентная аналитика</strong>
+        <p class="g2-mc-setting-explanation-v376">Отчёты по текстовым материалам сайта — какой контент вовлекает аудиторию.</p>
+      </div>
+      <label class="g2-mp-field-v367"><span>Состояние</span><select data-g2-mc-card="g2-metrika-company-counter" data-g2-mc-field="contentAnalytics"><option value="" selected="">Не указано</option><option value="yes">Вкл</option><option value="no">Откл</option></select></label>
+      
+    </div>
+    <div id="g2-mc-setting-tag-manager" class="g2-mc-setting-v376" data-g2-mc-setting-row="tag-manager">
+      <div class="g2-mc-setting-copy-v376">
+        <strong>Тег менеджер</strong>
+        <p class="g2-mc-setting-explanation-v376">Нужен для правил, которых нет в панели «Аналитика» конструктора (там только вставка номеров счётчиков). Пример: показать пиксель ретаргетинга не всем, а только тем, кто провёл на странице больше 30 сек, или тем, кто дошёл до оплаты и не завершил (брошенная корзина). Если тумблер «Вкл», но пользовательский код не добавлен — функционально ничего не делает.</p>
+      </div>
+      <label class="g2-mp-field-v367"><span>Состояние</span><select data-g2-mc-card="g2-metrika-company-counter" data-g2-mc-field="tagManagerEnabled"><option value="" selected="">Не указано</option><option value="yes">Вкл</option><option value="no">Откл</option></select></label>
+      <div class="g2-mc-setting-extra-v376"><label class="g2-mc-checkbox-v376">
+    <input type="checkbox" data-g2-mc-card="g2-metrika-company-counter" data-g2-mc-field="tagManagerCustomHtml">
+    <span>Пользовательский HTML</span>
+  </label></div>
+    </div>
+    <div id="g2-mc-setting-counter-check" class="g2-mc-setting-v376" data-g2-mc-setting-row="counter-check">
+      <div class="g2-mc-setting-copy-v376">
+        <strong>Проверка счётчика</strong>
+        <div class="g2-mc-setting-explanation-v376">
+      <p>Настройки → указать адрес страницы → «Проверить»)</p>
+      <p>Если код счётчика установлен корректно появится зелёное уведомление.</p>
+      <p>Если счётчик не найден уведомления не будет вообще (частые причины: блокировщик рекламы, счётчик удалён со страницы, редирект без передачи URL-параметров).</p></div>
+      </div>
+      <label class="g2-mp-field-v367"><span>Состояние</span><select data-g2-mc-card="g2-metrika-company-counter" data-g2-mc-field="counterCheck"><option value="" selected="">Не указано</option><option value="found">Найден</option><option value="not_found">Не найден</option></select></label>
+      
+    </div>
+  </section>
+      
+    </div>
+  </article><article id="g2-metrika-company-goals" class="g2-check-row g2-mp-card-v367 g2-mc-card-v374" data-card="g2-metrika-company-goals" data-g2-scope-kind="company">
+    <div class="g2-check-title"><span>Главная цель конверсии (Спасибо-страница)</span><span class="status-pill status-not_started">Не начато</span></div>
+    <div class="g2-mc-fields-v374">
+      <div class="g2-mc-setting-v376" data-g2-mc-setting-row="thank-you-goal">
+      <div class="g2-mc-setting-copy-v376"><div class="g2-mc-setting-explanation-v376">
+  <p class="g2-mc-instruction-heading-v377">Настройка:</p>
+  <ol>
+    <li>Метрика → Цели → Добавить цель → тип «Посещение страниц».</li>
+    <li>Условие: URL «Содержит» + адрес страницы благодарности, <strong>без протокола</strong> (<code>http://</code>/<code>https://</code> ломают совпадение).</li>
+    <li>Все формы и корзина сайта должны вести на одну и ту же страницу благодарности после отправки.</li>
+  </ol>
+  <p class="g2-mc-instruction-heading-v377">Проверка:</p>
+  <ul>
+    <li>Отправить тестовую заявку или заказ с реального устройства.</li>
+    <li>Дождаться редиректа на страницу благодарности.</li>
+    <li>Через 15-30 минут открыть Метрика → Конверсии, проверить прирост «Достижения цели».</li>
+  </ul>
+  <p class="g2-mc-instruction-heading-v377">Сверка:</p>
+  <p>Метрика → Конверсии → цель по названию, прирост должен совпадать с числом тестовых отправок.</p></div></div>
+      <div class="g2-mc-setting-extra-v376"><span>URL страницы «Спасибо» · из Платформы</span><span class="mega-platform-source-value">URL не указан</span></div>
+      <label class="g2-mp-field-v367"><span>Состояние</span><select data-g2-mc-card="g2-metrika-company-goals" data-g2-mc-field="state" data-g2-mc-goal="primary"><option value="" selected="">Выберите состояние</option><option value="works">Работает</option><option value="not_works">Не работает</option></select></label>
+      <div class="g2-mc-setting-extra-v376 g2-mc-primary-goal-fields-v382">
+        <label class="g2-mp-field-v367"><span>Название цели</span><input type="text" data-g2-mc-card="g2-metrika-company-goals" data-g2-mc-field="name" data-g2-mc-goal="primary" value=""></label>
+        <label class="g2-mp-field-v367"><span>Тип цели</span><select data-g2-mc-card="g2-metrika-company-goals" data-g2-mc-field="type" data-g2-mc-goal="primary"><option value="">Не выбран</option><option value="page_visit" selected="">Посещение страниц</option><option value="js_event">JS-событие</option><option value="form_submit">Отправка формы</option><option value="compound">Составная</option><option value="multi">Мультицель</option></select></label>
+        <label class="g2-mp-field-v367"><span>ID цели</span><input type="text" data-g2-mc-card="g2-metrika-company-goals" data-g2-mc-field="goalId" data-g2-mc-goal="primary" value=""></label>
+      </div>
+    </div>
+      
+    </div>
+  </article><article id="g2-metrika-company-internal-filter" class="g2-check-row g2-mp-card-v367 g2-mc-card-v374" data-card="g2-metrika-company-internal-filter" data-g2-scope-kind="company">
+    <div class="g2-check-title"><span>Фильтр внутренних визитов</span><span class="status-pill status-not_started">Не начато</span></div>
+    <div class="g2-mc-fields-v374">
+      <label class="g2-mp-field-v367"><span>Режим фильтра внутренних визитов</span><select data-g2-mc-card="g2-metrika-company-internal-filter" data-g2-mc-field="mode"><option value="" selected="">Не указан</option><option value="ip">По IP</option><option value="cookie">По cookie</option><option value="off">Выключен</option></select></label>
+      
+    </div>
+  </article><article id="g2-metrika-company-robots" class="g2-check-row g2-mp-card-v367 g2-mc-card-v374" data-card="g2-metrika-company-robots" data-g2-scope-kind="company">
+    <div class="g2-check-title"><span>Учёт роботов</span><span class="status-pill status-not_started">Не начато</span></div>
+    <div class="g2-mc-fields-v374">
+      <label class="g2-mp-field-v367"><span>Режим учёта роботов</span><select data-g2-mc-card="g2-metrika-company-robots" data-g2-mc-field="mode"><option value="" selected="">Не указан</option><option value="without_robots">Без роботов</option><option value="with_robots">С роботами</option></select></label>
+      <label class="g2-mp-field-v367"><span>Строгая фильтрация</span><select data-g2-mc-card="g2-metrika-company-robots" data-g2-mc-field="strictFiltering"><option value="" selected="">Не указано</option><option value="yes">Включено</option><option value="no">Выключено</option></select></label>
+      
+      
+    </div>
+  </article>
+    </div>
+  </section>

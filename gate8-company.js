@@ -10,8 +10,7 @@ const G8_COMPANY_LABELS_V4 = {
   leadToSale: "Заявка → продажа", averageCheck: "Средний чек",
 };
 
-function g8CompanyStateV4() {
-  ensureGate8Workspace();
+function g8CompanyStateV4(root = ensureGate8Workspace()) {
   const base = state.gate8Forecast;
   base.companyForecast = base.companyForecast && typeof base.companyForecast === "object"
     ? base.companyForecast : {};
@@ -26,9 +25,10 @@ function g8CompanyStateV4() {
   return company;
 }
 
-function g8CompanyContributionV4(product, period) {
-  ensureGate8Workspace();
-  const base = state.gate8Forecast;
+function g8CompanyContributionV4(product, period, base) {
+  // The company analysis normalizes Gate 8 once before iterating products.
+  // Repeating that migration here also rebuilds the entire product catalogue
+  // for every product, making an unrelated autosave block the main thread.
   const data = gate8EnsureProductStateV230(base, product.id);
   // A product-wide budget is counted once. With several campaigns there is no
   // implicit choice of one campaign's facts or allocation of the total budget.
@@ -124,13 +124,14 @@ function g8CompanyTotalsV4(contributions, scenarioKey) {
   return totals;
 }
 
-function g8CompanyAnalysisV4() {
-  const data = g8CompanyStateV4();
+function g8CompanyAnalysisV4(root = ensureGate8Workspace()) {
+  const data = g8CompanyStateV4(root);
   const goal = g8StrictGoalV3();
   const period = { start: data.periodStart, end: data.periodEnd };
   const metric = g8ResolvedMetric(data.resultMetric, goal) || goal.metric || "sales";
   const products = guruV194Products(state);
-  const contributions = products.map((product) => g8CompanyContributionV4(product, period));
+  const contributions = products.map((product) =>
+    g8CompanyContributionV4(product, period, state.gate8Forecast));
   const scenarioResults = Object.fromEntries(G8_COMPANY_SCENARIOS_V4.map((key) =>
     [key, g8CompanyTotalsV4(contributions, key)]));
   const totals = scenarioResults.base;
@@ -379,8 +380,31 @@ function g8CombinedStatusV4(company = g8CompanyAnalysisV4(), product = g8Analysi
   return { key: "missing", label: "Не хватает данных", systemStatus: "not_started" };
 }
 
+// The navigation only needs the selected product's base result. Keep its
+// inputs and calculation identical to g8AnalysisV3, without collecting the
+// entire Gate 0–7 fact report and all five presentation scenarios.
+function g8ProductStatusV4(data = ensureGate8Workspace()) {
+  const product = data?.product_id
+    ? guruV194Product(data.product_id, state)
+    : null;
+  const goal = g8ProductGoalV4(product);
+  const compact = g8CompactStateV3(product, goal, data);
+  const context = g8CampaignContextV3(product, compact);
+  const observations = g8ObservationsV3(product, context);
+  const parameters = g8ParameterBundleV3(product, context, observations).parameters;
+  const period = { start: compact.periodStart, end: compact.periodEnd };
+  const periodValid = Boolean(period.start && period.end && period.start <= period.end);
+  const actual = periodValid
+    ? g8ActualForPeriodV3(observations, period.start, period.end)
+    : g8ActualForPeriodV3([], "", "");
+  const base = g8PresetParametersV3("base", parameters, observations);
+  const metric = g8ResolvedMetric(data.resultMetric, goal) || goal.metric || "sales";
+  return { value: g8ComputeV3(base.parameters, actual, period).values[metric] };
+}
+
 g8BlockStatuses = function (analysis = null) {
-  return [g8CombinedStatusV4(g8CompanyAnalysisV4(), analysis || g8AnalysisV3()).systemStatus];
+  const root = ensureGate8Workspace();
+  return [g8CombinedStatusV4(g8CompanyAnalysisV4(root), analysis || g8ProductStatusV4(root)).systemStatus];
 };
 
 const __g8CompanyPreviousRenderForecastV4 = renderGate8Forecast;

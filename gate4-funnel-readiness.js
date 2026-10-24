@@ -700,6 +700,8 @@ function g4SmmContentEnsureV299(workspace = state) {
     primaryTaskFormatId: guruV185Text(idea?.primaryTaskFormatId),
     topicId: guruV185Text(idea?.topicId),
     insight: String(idea?.insight || ""),
+    scenarioByFormatV548: idea?.scenarioByFormatV548 && typeof idea.scenarioByFormatV548 === "object" &&
+      !Array.isArray(idea.scenarioByFormatV548) ? { ...idea.scenarioByFormatV548 } : {},
     selectedPlatformIds: Array.isArray(idea?.selectedPlatformIds)
       ? g3ProductJourneyUnique(idea.selectedPlatformIds.map(g4SmmPlatformIdV529))
       : Array.isArray(idea?.platforms) ? g3ProductJourneyUnique(idea.platforms.map(g4SmmPlatformIdV529)) : null,
@@ -1721,6 +1723,148 @@ function g4SmmIdeaDisplayTitleV333(idea, index, content, strategy) {
   return g4SmmIdeaNameV332(idea, index);
 }
 
+/* A scenario is a working outline, not a platform-imposed duration or a completion gate.
+   Drafts are keyed by the strategy format ID so switching formats preserves both drafts. */
+const G4_SMM_SCENARIOS_V548 = Object.freeze({
+  "g4-smm-format-v298-1": {
+    title: "Сценарий короткого видео", marker: "Время", visual: "Кадр и текст на экране", support: "Звук / озвучка", add: "Добавить кадр",
+    source: "https://ads.tiktok.com/business/en/creative-codes",
+    rows: [
+      ["hook", "0–3 сек", "Хук", "Что зритель увидит сразу?", "Первая фраза или звук"],
+      ["promise", "3–6 сек", "Обещание", "Почему стоит досмотреть?", "Обещание пользы"],
+      ["body", "6–20 сек", "Раскрытие", "Действия, детали и титры", "Реплики и звуки"],
+      ["proof", "20–26 сек", "Результат", "Доказательство или итог", "Что подтверждает результат?"],
+      ["cta", "26–30 сек", "Действие", "Финальный кадр и призыв", "Одна следующая реплика"],
+    ],
+  },
+  "g4-smm-format-v298-2": {
+    title: "Сценарий фото / кейса", marker: "Блок", visual: "Кадр / доказательство", support: "Подпись / смысл", add: "Добавить блок",
+    source: "https://ads.tiktok.com/business/library/Image_Ads_Carousel_Ads_Playbook.pdf",
+    rows: [
+      ["focus", "1", "Главный кадр", "Какое фото покажет суть?", "Короткий тезис"],
+      ["context", "2", "Контекст", "Что было до или какая была задача?", "Факт без преувеличения"],
+      ["process", "3", "Решение", "Что сделали? Как это показать?", "Важная деталь процесса"],
+      ["result", "4", "Результат", "Проверяемое подтверждение", "Итог и следующее действие"],
+    ],
+  },
+  "g4-smm-format-v298-3": {
+    title: "Сценарий карусели", marker: "Слайд", visual: "Изображение и текст", support: "Смысл слайда", add: "Добавить слайд",
+    source: "https://ads.tiktok.com/business/library/Image_Ads_Carousel_Ads_Playbook.pdf",
+    rows: [
+      ["cover", "1", "Обложка", "Первый визуал и короткий заголовок", "Причина листать дальше"],
+      ["problem", "2", "Контекст", "Проблема или исходная ситуация", "Один понятный тезис"],
+      ["detail", "3", "Объяснение", "Шаг, пример или сравнение", "Что нового узнаёт зритель?"],
+      ["proof", "4", "Доказательство", "Факт, результат или деталь", "Почему этому можно доверять?"],
+      ["cta", "5", "Финал", "Вывод и призыв", "Одно следующее действие"],
+    ],
+  },
+  "g4-smm-format-v298-4": {
+    title: "План экспертного текста", marker: "Раздел", visual: "Заголовок и содержание", support: "Факт / пример", add: "Добавить раздел",
+    source: "https://developers.google.com/search/docs/fundamentals/creating-helpful-content",
+    rows: [
+      ["question", "1", "Вопрос", "Какую задачу решает текст?", "Для кого это важно?"],
+      ["answer", "2", "Короткий ответ", "Главный вывод в начале", "На чём основан вывод?"],
+      ["explain", "3", "Разбор", "Шаги, нюансы и ограничения", "Собственный опыт или источник"],
+      ["example", "4", "Пример", "Конкретная ситуация или кейс", "Проверяемые данные"],
+      ["finish", "5", "Итог", "Что читатель может сделать дальше?", "Один ясный вывод"],
+    ],
+  },
+  "g4-smm-format-v298-5": {
+    title: "Сценарий Stories", marker: "Экран", visual: "Кадр и текст", support: "Интерактив / действие", add: "Добавить экран",
+    rows: [
+      ["start", "1", "Зацепка", "Первый экран и вопрос", "Повод смотреть дальше"],
+      ["context", "2", "Контекст", "Деталь из процесса или ситуации", "Опрос или реакция, если уместно"],
+      ["value", "3", "Польза", "Результат или полезное наблюдение", "Что зритель узнал?"],
+      ["action", "4", "Действие", "Финальный экран", "Ответ, переход или другая цель"],
+    ],
+  },
+  "g4-smm-format-v298-6": {
+    title: "Сценарий длинного видео", marker: "Таймкод", visual: "Кадр / содержание", support: "Тезис / озвучка", add: "Добавить главу",
+    source: "https://support.google.com/youtube/answer/9884579?hl=ru",
+    rows: [
+      ["intro", "00:00", "Вступление", "Вопрос и обещание выпуска", "Зачем смотреть?"],
+      ["context", "", "Контекст", "Исходная ситуация и план", "Что нужно знать зрителю?"],
+      ["part", "", "Основная часть", "Процесс, этапы и детали", "Ключевые объяснения"],
+      ["proof", "", "Результат", "Покажите итог и ограничения", "Чем подтверждается вывод?"],
+      ["finish", "", "Завершение", "Короткое резюме", "Следующее действие"],
+    ],
+  },
+});
+
+function g4SmmScenarioDraftV548(idea, formatId) {
+  if (!idea.scenarioByFormatV548 || typeof idea.scenarioByFormatV548 !== "object" ||
+    Array.isArray(idea.scenarioByFormatV548)) idea.scenarioByFormatV548 = {};
+  const drafts = idea.scenarioByFormatV548;
+  if (!drafts[formatId] || typeof drafts[formatId] !== "object" || Array.isArray(drafts[formatId]))
+    drafts[formatId] = { rows: {}, extraRows: [] };
+  if (!drafts[formatId].rows || typeof drafts[formatId].rows !== "object") drafts[formatId].rows = {};
+  if (!Array.isArray(drafts[formatId].extraRows)) drafts[formatId].extraRows = [];
+  return drafts[formatId];
+}
+
+function g4SmmScenarioConfigV548(format) {
+  return G4_SMM_SCENARIOS_V548[format.id] || {
+    title: `План: ${format.format || "Свой формат"}`, marker: "Блок", visual: "Что показать или рассказать", support: "Ключевой смысл", add: "Добавить блок",
+    rows: [["start", "1", "Начало", "Как начнётся материал?", "Зачем смотреть дальше?"], ["main", "2", "Основная часть", "Главная мысль и детали", "Чем подтвердить?"], ["finish", "3", "Финал", "Как завершить?", "Следующее действие"]],
+  };
+}
+
+function g4SmmScenarioSetFieldV548(idea, format, rowId, field, value, extra) {
+  if (!idea || !format || idea.primaryTaskFormatId !== format.id ||
+    !["marker", "label", "visual", "support"].includes(field)) return false;
+  const draft = g4SmmScenarioDraftV548(idea, format.id);
+  let row;
+  if (extra) row = draft.extraRows.find((item) => item?.id === rowId);
+  else if (field !== "label" && g4SmmScenarioConfigV548(format).rows.some(([id]) => id === rowId))
+    row = draft.rows[rowId] ||= {};
+  if (!row) return false;
+  row[field] = String(value);
+  return true;
+}
+
+function g4SmmScenarioAddRowV548(idea, format) {
+  if (!idea || !format || idea.primaryTaskFormatId !== format.id) return false;
+  g4SmmScenarioDraftV548(idea, format.id).extraRows.push({
+    id: makeId("g4-smm-scenario-row"), marker: "", label: "", visual: "", support: "",
+  });
+  return true;
+}
+
+function g4SmmScenarioRemoveRowV548(idea, format, rowId) {
+  if (!idea || !format || idea.primaryTaskFormatId !== format.id) return false;
+  const rows = g4SmmScenarioDraftV548(idea, format.id).extraRows;
+  const index = rows.findIndex((row) => row?.id === rowId);
+  if (index < 0) return false;
+  rows.splice(index, 1);
+  return true;
+}
+
+function g4SmmScenarioHtmlV548(idea, strategy, locked) {
+  const format = (strategy?.formats || []).find((row) => row.id === idea.primaryTaskFormatId);
+  if (!format) return '<p class="g4-smm-scenario-empty-v548">Выберите формат в «Переваривании» — здесь появится подходящий сценарий.</p>';
+  const config = g4SmmScenarioConfigV548(format);
+  const draft = idea.scenarioByFormatV548?.[format.id] || {};
+  const savedRows = draft.rows && typeof draft.rows === "object" ? draft.rows : {};
+  const extras = Array.isArray(draft.extraRows) ? draft.extraRows.filter((row) => row && typeof row === "object" && guruV185Text(row.id)) : [];
+  const disabled = locked ? "disabled" : "";
+  const attributes = (rowId, field, extra = false) => `data-g4-smm-scenario-field-v548="${field}" data-g4-smm-scenario-idea-v548="${escapeAttr(idea.id)}" data-g4-smm-scenario-format-v548="${escapeAttr(format.id)}" data-g4-smm-scenario-row-v548="${escapeAttr(rowId)}" ${extra ? 'data-g4-smm-scenario-extra-v548="true"' : ""}`;
+  const rowHtml = (rowId, defaults, saved, extra = false) => {
+    const [marker, label, visual, support] = defaults;
+    const current = saved && typeof saved === "object" ? saved : {};
+    return `<tr data-g4-smm-scenario-item-v548="${escapeAttr(rowId)}">
+      <td data-label="${escapeAttr(config.marker)}"><input type="text" value="${escapeAttr(current.marker ?? marker)}" placeholder="${escapeAttr(config.marker)}" aria-label="${escapeAttr(config.marker)}: ${escapeAttr(current.label ?? label)}" ${attributes(rowId, "marker", extra)} ${disabled}></td>
+      <th scope="row" data-label="Часть и назначение">${extra ? `<input type="text" value="${escapeAttr(current.label ?? label)}" placeholder="Название блока" aria-label="Название блока" ${attributes(rowId, "label", true)} ${disabled}>` : escapeHtml(label)}</th>
+      <td data-label="${escapeAttr(config.visual)}"><textarea rows="2" placeholder="${escapeAttr(visual)}" aria-label="${escapeAttr(config.visual)}: ${escapeAttr(current.label ?? label)}" ${attributes(rowId, "visual", extra)} ${disabled}>${escapeHtml(current.visual || "")}</textarea></td>
+      <td data-label="${escapeAttr(config.support)}"><textarea rows="2" placeholder="${escapeAttr(support)}" aria-label="${escapeAttr(config.support)}: ${escapeAttr(current.label ?? label)}" ${attributes(rowId, "support", extra)} ${disabled}>${escapeHtml(current.support || "")}</textarea>${extra && !locked ? `<button type="button" class="g4-smm-scenario-remove-v548" data-g4-smm-scenario-remove-v548="${escapeAttr(rowId)}" data-g4-smm-scenario-idea-v548="${escapeAttr(idea.id)}" data-g4-smm-scenario-format-v548="${escapeAttr(format.id)}" aria-label="Удалить блок">Удалить</button>` : ""}</td>
+    </tr>`;
+  };
+  return `<section class="g4-smm-scenario-v548" data-g4-smm-scenario-v548="${escapeAttr(format.id)}">
+    <div class="g4-smm-scenario-head-v548"><div><strong>${escapeHtml(config.title)}</strong><small>Редактируемый план · добавляйте нужные блоки</small></div>${config.source ? `<a href="${escapeAttr(config.source)}" target="_blank" rel="noopener noreferrer">Источник ↗</a>` : ""}</div>
+    <div class="g4-smm-scenario-table-wrap-v548"><table><thead><tr><th>${escapeHtml(config.marker)}</th><th>Часть и назначение</th><th>${escapeHtml(config.visual)}</th><th>${escapeHtml(config.support)}</th></tr></thead><tbody>${config.rows.map(([id, ...defaults]) => rowHtml(id, defaults, savedRows[id])).join("")}${extras.map((row) => rowHtml(row.id, ["", "Новый блок", "Опишите содержание", "Укажите смысл"], row, true)).join("")}</tbody></table></div>
+    ${locked ? "" : `<button type="button" class="small-btn g4-smm-scenario-add-v548" data-g4-smm-scenario-add-v548="${escapeAttr(format.id)}" data-g4-smm-scenario-idea-v548="${escapeAttr(idea.id)}">+ ${escapeHtml(config.add)}</button>`}
+  </section>`;
+}
+
 function g4SmmIdeaHtmlV299(idea, index, content, strategy) {
   const product = g4SmmProductReadOnlyV299(idea.productId);
   const publication = g4SmmPublicationForIdeaV324(idea, content);
@@ -1766,10 +1910,11 @@ function g4SmmIdeaHtmlV299(idea, index, content, strategy) {
       </section>
 
       <section class="g4-smm-idea-stage-v299" data-g4-smm-idea-stage-view-v299="insight">
-        <div class="g4-smm-idea-stage-head-v299"><strong>4. Озарение</strong><small>Короткая формулировка сути контента</small></div>
+        <div class="g4-smm-idea-stage-head-v299"><strong>4. Озарение</strong><small>Суть идеи и сценарий выбранного формата</small></div>
         ${g3ProductJourneyStageExplanationHtmlV296("insight", "gate4-idea", G4_SMM_IDEA_STAGE_EXPLANATIONS_V311.insight)}
         <label class="g1-field"><span>Название идеи</span><small>Короткое имя исходной идеи; название публикации задаётся отдельно.</small><input class="g1-input ${guruV185Text(idea.name) ? "is-filled" : "is-empty"}" type="text" value="${escapeAttr(idea.name || "")}" data-g4-smm-idea-field-v299="name" data-g4-smm-idea-id-v299="${escapeAttr(idea.id)}" placeholder="Например: Коза из ткани" ${locked ? "disabled" : ""} /></label>
         <label class="g1-field"><span>Идея</span><textarea class="g1-input ${guruV185Text(idea.insight) ? "is-filled" : "is-empty"}" rows="2" data-g4-smm-idea-field-v299="insight" data-g4-smm-idea-id-v299="${escapeAttr(idea.id)}" placeholder="Суть будущей публикации" ${locked ? "disabled" : ""}>${escapeHtml(idea.insight)}</textarea></label>
+        ${g4SmmScenarioHtmlV548(idea, strategy, locked)}
       </section>
 
       <section class="g4-smm-idea-stage-v299" data-g4-smm-idea-stage-view-v299="verification">
@@ -2304,6 +2449,7 @@ function g4SmmCreateIdeaV299(productId = "", seed = {}) {
     primaryTaskFormatId: guruV185Text(seed?.primaryTaskFormatId),
     topicId: guruV185Text(seed?.topicId),
     insight: "",
+    scenarioByFormatV548: {},
     selectedPlatformIds: sourceFormat ? g4SmmFormatPlatformsV299(sourceFormat).map(g4SmmPlatformIdV529) : [],
     legacyPlatforms: [],
     base: { title: "", text: "", media: null, cta: "", link: "" },
@@ -2421,6 +2567,17 @@ document.addEventListener("input", (event) => {
   }
   const ideaField = target?.dataset?.g4SmmIdeaFieldV299;
   const ideaId = target?.dataset?.g4SmmIdeaIdV299;
+  const scenarioField = target?.dataset?.g4SmmScenarioFieldV548;
+  if (scenarioField) {
+    const { content, record } = g4SmmContentRecordV299("idea", target.dataset.g4SmmScenarioIdeaV548);
+    const format = g4SmmStrategyEnsureV298()?.formats.find((row) => row.id === target.dataset.g4SmmScenarioFormatV548);
+    if (!g4SmmIdeaCanEditV330(record, content) || !g4SmmScenarioSetFieldV548(record,
+      format, target.dataset.g4SmmScenarioRowV548, scenarioField, target.value,
+      target.dataset.g4SmmScenarioExtraV548 === "true")) return;
+    g4SmmContentTouchV299(record);
+    if (typeof guruPersistStateFast === "function") guruPersistStateFast({ quiet: true, cloud: false });
+    return;
+  }
   if (ideaField && ideaId && ["name", "digestionNotes", "insight"].includes(ideaField)) {
     const { content, record } = g4SmmContentRecordV299("idea", ideaId);
     if (!record || !g4SmmIdeaCanEditV330(record, content)) return;
@@ -2752,6 +2909,21 @@ document.addEventListener("drop", (event) => {
 document.addEventListener("dragend", g4SmmCalendarDragCleanupV339);
 
 document.addEventListener("click", (event) => {
+  const scenarioButton = event.target?.closest?.("[data-g4-smm-scenario-add-v548], [data-g4-smm-scenario-remove-v548]");
+  if (scenarioButton) {
+    const { content, record } = g4SmmContentRecordV299("idea", scenarioButton.dataset.g4SmmScenarioIdeaV548);
+    const format = g4SmmStrategyEnsureV298()?.formats.find((row) => row.id === scenarioButton.dataset.g4SmmScenarioFormatV548 || row.id === scenarioButton.dataset.g4SmmScenarioAddV548);
+    if (!g4SmmIdeaCanEditV330(record, content)) return;
+    const changed = scenarioButton.dataset.g4SmmScenarioAddV548
+      ? g4SmmScenarioAddRowV548(record, format)
+      : g4SmmScenarioRemoveRowV548(record, format, scenarioButton.dataset.g4SmmScenarioRemoveV548);
+    if (!changed) return;
+    g4SmmContentTouchV299(record);
+    saveState();
+    renderGate();
+    g4SmmContentSystemRefreshV310();
+    return;
+  }
   const workflowModeButton = event.target?.closest?.("[data-g4-smm-workflow-mode-v342]");
   if (workflowModeButton) {
     event.preventDefault();

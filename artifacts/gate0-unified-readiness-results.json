@@ -1,0 +1,478 @@
+{
+  "passed": true,
+  "defaultProduct": {
+    "productId": "catalog-item-1786792591872-51f503",
+    "rows": [
+      {
+        "id": "card-1",
+        "title": "Проект: базовые сведения",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-project-goal",
+        "title": "Цель проекта и ограничения",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-company-brand-purpose",
+        "title": "Цель бренда",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-company-segmentation",
+        "title": "Сегментация · Компания",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-company-positioning",
+        "title": "Позиционирование · Компания",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-company-offer",
+        "title": "Оффер и CTA · Компания",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-company-keyword-foundation",
+        "title": "Фундамент ключевых слов · Компания",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "card-7",
+        "title": "Текущее состояние маркетинговой системы · Компания",
+        "pageStatus": "in_progress",
+        "pageBadge": "В работе",
+        "pathStatus": "in_progress"
+      },
+      {
+        "id": "card-2",
+        "title": "Продукт, сегмент и задача клиента",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      }
+    ],
+    "summary": {
+      "total": 9,
+      "done": 8,
+      "ready": 8,
+      "notRequired": 0,
+      "inProgress": 1,
+      "problem": 0,
+      "notStarted": 0,
+      "percent": 94
+    },
+    "menu": "0. Точка отсчёта\n9 блоков, прогресс 94%"
+  },
+  "keyword": {
+    "text": "Сейчас\nШаг 7 из 90\nГотово\nФундамент ключевых слов · Компания\nВсё заполнено\nGate 0 · Компания\n◀ Назад\nДалее ▶\nК текущему",
+    "badge": "Готово",
+    "stats": {
+      "record": {
+        "id": "gate0-value-1790700954534-541753",
+        "project_id": "gate0-unified-readiness-smoke",
+        "category_id": "",
+        "product_id": "",
+        "scope": "project",
+        "field": "keyword_foundation",
+        "value": "",
+        "keywords": [
+          {
+            "value": "авторские изделия ручной работы",
+            "source": "manual",
+            "status": "confirmed",
+            "id": "gate0-keyword-1792154017037-4d0ece"
+          },
+          {
+            "value": "авторские изделия на заказ",
+            "source": "manual",
+            "status": "confirmed",
+            "id": "gate0-keyword-1792154017037-ed14fb"
+          },
+          {
+            "value": "изделия ручной работы на заказ",
+            "source": "manual",
+            "status": "confirmed",
+            "id": "gate0-keyword-1792154017037-2610a2"
+          },
+          {
+            "value": "авторская мастерская подарков",
+            "source": "manual",
+            "status": "confirmed",
+            "id": "gate0-keyword-1792154017037-da3efd"
+          },
+          {
+            "value": "мастерская подарков ручной работы",
+            "source": "manual",
+            "status": "confirmed",
+            "id": "gate0-keyword-1792154017037-7541d4"
+          },
+          {
+            "value": "авторские подарки ручной работы",
+            "source": "manual",
+            "status": "confirmed",
+            "id": "gate0-keyword-1792154017037-c51c09"
+          },
+          {
+            "value": "подарки ручной работы",
+            "source": "manual",
+            "status": "confirmed",
+            "id": "gate0-keyword-1792154017037-e32768"
+          },
+          {
+            "value": "авторские подарки на заказ",
+            "source": "manual",
+            "status": "confirmed",
+            "id": "gate0-keyword-1792154017037-fef95d"
+          },
+          {
+            "value": "подарки ручной работы на заказ",
+            "source": "manual",
+            "status": "confirmed",
+            "id": "gate0-keyword-1792154017037-23f7df"
+          },
+          {
+            "value": "авторский подарок Москва",
+            "source": "manual",
+            "status": "confirmed",
+            "id": "gate0-keyword-1792154017037-640e8c"
+          },
+          {
+            "value": "авторские подарки Москва",
+            "source": "manual",
+            "status": "confirmed",
+            "id": "gate0-keyword-1792154017037-e71e14"
+          },
+          {
+            "value": "подарки ручной работы Москва",
+            "source": "manual",
+            "status": "confirmed",
+            "id": "gate0-keyword-1792154017037-e95a54"
+          },
+          {
+            "value": "авторские изделия Москва",
+            "source": "manual",
+            "status": "confirmed",
+            "id": "gate0-keyword-1792154017037-0a593d"
+          },
+          {
+            "value": "изделия ручной работы Москва",
+            "source": "manual",
+            "status": "confirmed",
+            "id": "gate0-keyword-1792154017037-6e8e10"
+          },
+          {
+            "value": "авторские предметы для дома",
+            "source": "manual",
+            "status": "confirmed",
+            "id": "gate0-keyword-1792154017037-418d36"
+          },
+          {
+            "value": "предметы для дома ручной работы",
+            "source": "manual",
+            "status": "confirmed",
+            "id": "gate0-keyword-1792154017037-0b83a8"
+          }
+        ],
+        "source": {
+          "type": "manual",
+          "label": "Gate 0 · стратегия компании"
+        },
+        "confirmation_status": "draft",
+        "created_at": "2026-09-29T16:55:54.534Z",
+        "updated_at": "2026-10-16T12:33:39.994Z",
+        "last_import": {
+          "at": "2026-10-16T12:33:39.994Z",
+          "mode": "replace",
+          "format": "phrase,source,status",
+          "file_name": "keyword-foundation-company.csv",
+          "parsed": 16,
+          "added": 16
+        }
+      },
+      "total": 16,
+      "confirmed": 16,
+      "draft": 0
+    },
+    "headerVisible": true
+  },
+  "hidden": [
+    {
+      "id": "card-4",
+      "status": "in_progress",
+      "ownEditor": false,
+      "ignored": true
+    },
+    {
+      "id": "card-5",
+      "status": "not_started",
+      "ownEditor": false,
+      "ignored": true
+    },
+    {
+      "id": "card-6",
+      "status": "not_started",
+      "ownEditor": false,
+      "ignored": true
+    },
+    {
+      "id": "card-8",
+      "status": "not_started",
+      "ownEditor": false,
+      "ignored": true
+    },
+    {
+      "id": "card-9",
+      "status": "not_started",
+      "ownEditor": false,
+      "ignored": true
+    }
+  ],
+  "readOnlyDefault": {
+    "schedules": [],
+    "linkWrites": [],
+    "differences": [],
+    "identical": true,
+    "beforeBytes": 28082270,
+    "afterBytes": 28082270,
+    "beforeSha256": "326d3c70912d3b71ce45ccd4160aeb552a29ee6a6e9b0426d8fa5fd765c8d378",
+    "afterSha256": "326d3c70912d3b71ce45ccd4160aeb552a29ee6a6e9b0426d8fa5fd765c8d378",
+    "updatedAtFields": 259,
+    "uiPreferenceWrites": 0
+  },
+  "productSelection": {
+    "id": "catalog-item-1786792591872-c8b1e9",
+    "name": "Рубашка Upcycling с кружевом"
+  },
+  "incompleteProduct": {
+    "productId": "catalog-item-1786792591872-c8b1e9",
+    "rows": [
+      {
+        "id": "card-1",
+        "title": "Проект: базовые сведения",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-project-goal",
+        "title": "Цель проекта и ограничения",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-company-brand-purpose",
+        "title": "Цель бренда",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-company-segmentation",
+        "title": "Сегментация · Компания",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-company-positioning",
+        "title": "Позиционирование · Компания",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-company-offer",
+        "title": "Оффер и CTA · Компания",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-company-keyword-foundation",
+        "title": "Фундамент ключевых слов · Компания",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "card-7",
+        "title": "Текущее состояние маркетинговой системы · Компания",
+        "pageStatus": "in_progress",
+        "pageBadge": "В работе",
+        "pathStatus": "in_progress"
+      },
+      {
+        "id": "card-2",
+        "title": "Продукт, сегмент и задача клиента",
+        "pageStatus": "in_progress",
+        "pageBadge": "В работе",
+        "pathStatus": "in_progress"
+      }
+    ],
+    "summary": {
+      "total": 9,
+      "done": 7,
+      "ready": 7,
+      "notRequired": 0,
+      "inProgress": 2,
+      "problem": 0,
+      "notStarted": 0,
+      "percent": 89
+    },
+    "menu": "0. Точка отсчёта\n9 блоков, прогресс 89%"
+  },
+  "productHint": {
+    "missing": [
+      {
+        "selector": "[data-gate0-scope-record=\"gate0-value-1788260458156-37cf76\"][data-gate0-scope-record-field=\"jtbd_desired_action\"]",
+        "label": "JTBD: запись 1, Какой клиент хочет",
+        "cardId": "card-2"
+      },
+      {
+        "selector": "[data-gate0-scope-record=\"gate0-value-1788260458156-37cf76\"][data-gate0-scope-record-field=\"jtbd_result\"]",
+        "label": "JTBD: запись 1, Получить результат",
+        "cardId": "card-2"
+      }
+    ],
+    "text": "Сейчас\nШаг 9 из 90\nВ работе\nПродукт, сегмент и задача клиента\nНе хватает:\nJTBD: запись 1, Какой клиент хочет\nJTBD: запись 1, Получить результат\nGate 0 · Компания\n◀ Назад\nДалее ▶\nК текущему",
+    "focused": true,
+    "highlighted": true,
+    "expanded": true
+  },
+  "readOnlyIncomplete": {
+    "schedules": [],
+    "linkWrites": [],
+    "differences": [],
+    "identical": true,
+    "beforeBytes": 28094804,
+    "afterBytes": 28094804,
+    "beforeSha256": "b9a84a7140e4b58843a25aed8ddc375b81095bf14446fdadeac22dc4e5a56cec",
+    "afterSha256": "b9a84a7140e4b58843a25aed8ddc375b81095bf14446fdadeac22dc4e5a56cec",
+    "updatedAtFields": 259,
+    "uiPreferenceWrites": 0
+  },
+  "edits": [
+    {
+      "label": "JTBD: запись 1, Какой клиент хочет",
+      "selector": "[data-gate0-scope-record=\"gate0-value-1788260458156-37cf76\"][data-gate0-scope-record-field=\"jtbd_desired_action\"]"
+    },
+    {
+      "label": "JTBD: запись 1, Получить результат",
+      "selector": "[data-gate0-scope-record=\"gate0-value-1788260458156-37cf76\"][data-gate0-scope-record-field=\"jtbd_result\"]"
+    }
+  ],
+  "afterInput": {
+    "productId": "catalog-item-1786792591872-c8b1e9",
+    "rows": [
+      {
+        "id": "card-1",
+        "title": "Проект: базовые сведения",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-project-goal",
+        "title": "Цель проекта и ограничения",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-company-brand-purpose",
+        "title": "Цель бренда",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-company-segmentation",
+        "title": "Сегментация · Компания",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-company-positioning",
+        "title": "Позиционирование · Компания",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-company-offer",
+        "title": "Оффер и CTA · Компания",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "gate0-company-keyword-foundation",
+        "title": "Фундамент ключевых слов · Компания",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      },
+      {
+        "id": "card-7",
+        "title": "Текущее состояние маркетинговой системы · Компания",
+        "pageStatus": "in_progress",
+        "pageBadge": "В работе",
+        "pathStatus": "in_progress"
+      },
+      {
+        "id": "card-2",
+        "title": "Продукт, сегмент и задача клиента",
+        "pageStatus": "ready",
+        "pageBadge": "Готово",
+        "pathStatus": "ready"
+      }
+    ],
+    "summary": {
+      "total": 9,
+      "done": 8,
+      "ready": 8,
+      "notRequired": 0,
+      "inProgress": 1,
+      "problem": 0,
+      "notStarted": 0,
+      "percent": 94
+    },
+    "menu": "0. Точка отсчёта\n9 блоков, прогресс 94%"
+  },
+  "offerHint": [
+    {
+      "selector": "[data-gate0-scope-record=\"gate0-value-1788262115042-791390\"][data-gate0-scope-record-field=\"offer_cta_primary\"]",
+      "label": "Оффер и CTA · Продукт/Услуга: запись 1, Основной CTA",
+      "cardId": "card-2"
+    }
+  ],
+  "beforeCorrection": {
+    "total": 9,
+    "done": 6,
+    "ready": 6,
+    "notRequired": 0,
+    "inProgress": 3,
+    "problem": 0,
+    "notStarted": 0,
+    "percent": 83
+  },
+  "build": "2.3.526+1cae4d4dd537"
+}

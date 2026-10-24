@@ -473,3 +473,58 @@
   .g4-product-smm-stage-v2 > summary small { flex-basis: 100%; order: 2; }
   .g4-product-smm-quarter-v2 { flex-wrap: wrap; }
 }
+
+/* The bank is a compact collection of square ideas; calendar cards keep their layout. */
+.g4-product-smm-bank-section-v2 { container-type: inline-size; }
+.g4-product-smm-bank-section-v2 .g4-product-smm-calendar-cards-v2 {
+  grid-template-columns: repeat(auto-fill, 216px);
+  gap: 10px;
+}
+.g4-product-smm-bank-section-v2 .g4-product-smm-calendar-item-v2 {
+  box-sizing: border-box;
+  width: 216px;
+  height: 216px;
+  min-height: 0;
+  padding: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 8px;
+  row-gap: 10px;
+}
+.g4-product-smm-bank-section-v2 .g4-product-smm-calendar-thumbnail-v2 {
+  grid-column: 1;
+  grid-row: 1;
+}
+.g4-product-smm-bank-section-v2 .g4-product-smm-calendar-idea-v2 {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+.g4-product-smm-bank-section-v2 .g4-product-smm-calendar-idea-v2 strong,
+.g4-product-smm-bank-section-v2 .g4-product-smm-calendar-idea-v2 small {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.g4-product-smm-bank-section-v2 .g4-product-smm-calendar-platforms-v2 {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  flex-wrap: wrap;
+}
+.g4-product-smm-bank-section-v2 .g4-product-smm-calendar-menu-v2 {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+}
+@container (max-width: 215px) {
+  .g4-product-smm-bank-section-v2 .g4-product-smm-calendar-cards-v2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .g4-product-smm-bank-section-v2 .g4-product-smm-calendar-item-v2 {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+}

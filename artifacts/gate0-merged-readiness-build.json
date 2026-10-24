@@ -1,0 +1,8 @@
+{
+  "directory": "/private/tmp/guru-gate0-build-31unzmtp",
+  "exitCode": 0,
+  "output": "\n> guru-platform@1.2.0 build\n> node scripts/stamp-build.mjs && node scripts/verify-build-bundle.mjs\n\nStamped interface build 2.3.526+7778869e68df\nInterface build: 2.3.526+7778869e68df (42 matching assets)\n",
+  "build": "2.3.526+7778869e68df",
+  "sha256": "7778869e68df3b6263be09f8affad59a56956b6111e73881d96ac8a24bd1a7c1",
+  "gitHead": "bc42b5b058983ae74231649be035c5e066c80b1d"
+}

@@ -1,0 +1,263 @@
+{
+  "project": "Коричное яблоко",
+  "build": "2.3.526+1cae4d4dd537",
+  "productId": "catalog-item-1786792591872-51f503",
+  "rows": [
+    {
+      "id": "card-1",
+      "title": "Проект: базовые сведения",
+      "status": "ready",
+      "done": true
+    },
+    {
+      "id": "gate0-project-goal",
+      "title": "Цель проекта и ограничения",
+      "status": "ready",
+      "done": true
+    },
+    {
+      "id": "gate0-company-brand-purpose",
+      "title": "Цель бренда",
+      "status": "ready",
+      "done": true
+    },
+    {
+      "id": "gate0-company-segmentation",
+      "title": "Сегментация · Компания",
+      "status": "ready",
+      "done": true
+    },
+    {
+      "id": "gate0-company-positioning",
+      "title": "Позиционирование · Компания",
+      "status": "ready",
+      "done": true
+    },
+    {
+      "id": "gate0-company-offer",
+      "title": "Оффер и CTA · Компания",
+      "status": "ready",
+      "done": true
+    },
+    {
+      "id": "gate0-company-keyword-foundation",
+      "title": "Фундамент ключевых слов · Компания",
+      "status": "ready",
+      "done": true
+    },
+    {
+      "id": "card-7",
+      "title": "Текущее состояние маркетинговой системы · Компания",
+      "status": "in_progress",
+      "done": false
+    },
+    {
+      "id": "card-2",
+      "title": "Продукт, сегмент и задача клиента",
+      "status": "ready",
+      "done": true
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "done": 8,
+    "ready": 8,
+    "notRequired": 0,
+    "inProgress": 1,
+    "problem": 0,
+    "notStarted": 0,
+    "percent": 94
+  },
+  "merged": [
+    {
+      "id": "card-4",
+      "status": "in_progress",
+      "merged": true,
+      "mergedInto": "card-2"
+    },
+    {
+      "id": "card-5",
+      "status": "not_started",
+      "merged": true,
+      "mergedInto": ""
+    },
+    {
+      "id": "card-6",
+      "status": "not_started",
+      "merged": true,
+      "mergedInto": ""
+    },
+    {
+      "id": "card-8",
+      "status": "not_started",
+      "merged": true,
+      "mergedInto": ""
+    },
+    {
+      "id": "card-9",
+      "status": "not_started",
+      "merged": true,
+      "mergedInto": ""
+    }
+  ],
+  "cases": [
+    {
+      "id": "card-4",
+      "empty": "ready"
+    },
+    {
+      "id": "card-4",
+      "complete": "ready"
+    },
+    {
+      "id": "card-4",
+      "notRequired": "ready"
+    },
+    {
+      "id": "card-4",
+      "problem": "ready"
+    },
+    {
+      "id": "card-4",
+      "separate": "ready"
+    },
+    {
+      "id": "card-5",
+      "empty": "ready"
+    },
+    {
+      "id": "card-5",
+      "complete": "ready"
+    },
+    {
+      "id": "card-5",
+      "notRequired": "ready"
+    },
+    {
+      "id": "card-5",
+      "problem": "ready"
+    },
+    {
+      "id": "card-5",
+      "separate": "ready"
+    },
+    {
+      "id": "card-6",
+      "empty": "ready"
+    },
+    {
+      "id": "card-6",
+      "complete": "ready"
+    },
+    {
+      "id": "card-6",
+      "notRequired": "ready"
+    },
+    {
+      "id": "card-6",
+      "problem": "ready"
+    },
+    {
+      "id": "card-6",
+      "separate": "ready"
+    },
+    {
+      "id": "card-8",
+      "empty": "ready"
+    },
+    {
+      "id": "card-8",
+      "complete": "ready"
+    },
+    {
+      "id": "card-8",
+      "notRequired": "ready"
+    },
+    {
+      "id": "card-8",
+      "problem": "ready"
+    },
+    {
+      "id": "card-8",
+      "separate": "ready"
+    },
+    {
+      "id": "card-9",
+      "empty": "ready"
+    },
+    {
+      "id": "card-9",
+      "complete": "ready"
+    },
+    {
+      "id": "card-9",
+      "notRequired": "ready"
+    },
+    {
+      "id": "card-9",
+      "problem": "ready"
+    },
+    {
+      "id": "card-9",
+      "separate": "ready"
+    }
+  ],
+  "exportComparison": {
+    "identical": true,
+    "beforeBytes": 28082102,
+    "afterBytes": 28082102,
+    "beforeSha256": "5e6446294f1060573d3f7a4f594622afc346af6aa38c224c9ec86e98a0759ef6",
+    "afterSha256": "5e6446294f1060573d3f7a4f594622afc346af6aa38c224c9ec86e98a0759ef6",
+    "updatedAtFields": 259,
+    "menu": "0. Точка отсчёта\n9 блоков, прогресс 94%",
+    "guide": "Сейчас\nШаг 9 из 90\nГотово\nПродукт, сегмент и задача клиента\nВсё заполнено\nGate 0 · Компания\n◀ Назад\nДалее ▶\nК текущему",
+    "readiness": {
+      "total": 9,
+      "done": 8,
+      "ready": 8,
+      "notRequired": 0,
+      "inProgress": 1,
+      "problem": 0,
+      "notStarted": 0,
+      "percent": 94
+    },
+    "path": [
+      {
+        "id": "card-1",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-project-goal",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-brand-purpose",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-segmentation",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-positioning",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-offer",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-keyword-foundation",
+        "status": "ready"
+      },
+      {
+        "id": "card-7",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-2",
+        "status": "ready"
+      }
+    ]
+  }
+}

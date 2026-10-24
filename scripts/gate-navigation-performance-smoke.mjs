@@ -618,8 +618,8 @@ try {
       `Rapid navigation rendered a stale Gate: ${JSON.stringify(baseline.rapid)}`,
     );
     assert(
-      baseline.readinessAnalysisCalls === 1,
-      `Gate 8 analysis duplicated during one readiness refresh: ${baseline.readinessAnalysisCalls}`,
+      baseline.readinessAnalysisCalls === 0,
+      `Full Gate 8 analysis ran during a readiness refresh: ${baseline.readinessAnalysisCalls}`,
     );
     assert(baseline.errors.length === 0, `Browser errors: ${baseline.errors.join(" | ")}`);
     console.log("gate navigation performance smoke: OK");

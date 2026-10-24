@@ -1,0 +1,8 @@
+{
+  "directory": "/private/tmp/guru-gate0-unified-build-fzfnsyuo",
+  "exitCode": 0,
+  "output": "\n> guru-platform@1.2.0 build\n> node scripts/stamp-build.mjs && node scripts/verify-build-bundle.mjs\n\nStamped interface build 2.3.526+1cae4d4dd537\nInterface build: 2.3.526+1cae4d4dd537 (42 matching assets)\n",
+  "gitHead": "bc42b5b058983ae74231649be035c5e066c80b1d",
+  "build": "2.3.526+1cae4d4dd537",
+  "sha256": "1cae4d4dd537168d9c47506549389465f5ca09c80003380b93e810408bbbae84"
+}
