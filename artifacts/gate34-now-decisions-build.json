@@ -1,0 +1,50 @@
+{
+  "head": "96709bd64840ae21d3eff260eafb23008f6a2ec8",
+  "version": "2.3.526+3b9c2288b7bb",
+  "sha256": "3b9c2288b7bbf1fb6421f28c1a2a067f79a10269f439f704371fa61bd94752d2",
+  "copy": "/private/tmp/guru-step3-build-5XTovj",
+  "log": "\n> guru-platform@1.2.0 build\n> node scripts/stamp-build.mjs && node scripts/verify-build-bundle.mjs\n\nStamped interface build 2.3.526+3b9c2288b7bb\nInterface build: 2.3.526+3b9c2288b7bb (42 matching assets)\n",
+  "checkpoint": "9bd7196e8cb9df76211e991c4d3cd1c530206a4c",
+  "testedBuild": "2.3.526+3b9c2288b7bb",
+  "changedCodeFiles": [
+    "now-guide.js",
+    "scripts/gate34-now-decisions-smoke.mjs"
+  ],
+  "exportComparison": {
+    "identical": true,
+    "beforeSha256": "ee88f2cdf58fdd936193280c184ccdf894b6a54e24a51370d66890021f992372",
+    "afterSha256": "ee88f2cdf58fdd936193280c184ccdf894b6a54e24a51370d66890021f992372",
+    "bytes": 28081553,
+    "updatedAtFields": 259,
+    "uiPreferenceWrites": 0
+  },
+  "screenshots": [
+    {
+      "path": "artifacts/gate34-now-decisions-advocate.png",
+      "sha256": "fe75643acc470546500e75e8f533ad74d195ff8c29fb2809b74d41484c6d912f"
+    },
+    {
+      "path": "artifacts/gate34-now-decisions-no-field-next.png",
+      "sha256": "8fa32f6a5156673666a105df3430c08e8eee85ef44071707d5713e8ed7645a7e"
+    },
+    {
+      "path": "artifacts/gate34-now-decisions-status-selector.png",
+      "sha256": "a03ffb526423e92827e048a9e9b7e78f7143a427f7bb43109e7411cf45349c45"
+    }
+  ],
+  "smokeTests": [
+    {
+      "script": "scripts/gate34-now-decisions-smoke.mjs",
+      "passed": true
+    },
+    {
+      "script": "scripts/gate34-now-readiness-smoke.mjs",
+      "passed": true
+    },
+    {
+      "script": "scripts/now-guide-smoke.mjs",
+      "passed": true,
+      "mode": "GURU_NOW_ONLY=korichnoe-yabloko GURU_NOW_DIAG_ONLY=1"
+    }
+  ]
+}

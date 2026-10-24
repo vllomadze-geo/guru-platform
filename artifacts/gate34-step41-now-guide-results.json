@@ -1,0 +1,143 @@
+[
+  {
+    "label": "korichnoe-yabloko",
+    "project": "Коричное яблоко",
+    "pathTotal": 147,
+    "pathDone": 32,
+    "diagnosticTotal": 147,
+    "diagnosticDone": 32,
+    "perGate": [
+      {
+        "id": "gate-0",
+        "total": 9,
+        "done": 8,
+        "path": 9
+      },
+      {
+        "id": "gate-1",
+        "total": 30,
+        "done": 5,
+        "path": 30
+      },
+      {
+        "id": "gate-2",
+        "total": 19,
+        "done": 4,
+        "path": 19
+      },
+      {
+        "id": "gate-3",
+        "total": 5,
+        "done": 4,
+        "path": 5
+      },
+      {
+        "id": "gate-4",
+        "total": 50,
+        "done": 11,
+        "path": 50
+      },
+      {
+        "id": "gate-5",
+        "total": 6,
+        "done": 0,
+        "path": 6
+      },
+      {
+        "id": "gate-6",
+        "total": 27,
+        "done": 0,
+        "path": 27
+      },
+      {
+        "id": "gate-7",
+        "total": 0,
+        "done": 0,
+        "path": 0
+      },
+      {
+        "id": "gate-8",
+        "total": 1,
+        "done": 0,
+        "path": 1
+      }
+    ],
+    "hiddenGate0InPath": [],
+    "hiddenGate1InPath": false,
+    "card": "Сейчас\nШаг 8 из 147\nВ работе\nТекущее состояние маркетинговой системы · Компания\nНе хватает:\nКаталог: URL не указан у 12 товаров\nСтраницы: URL не указан у 2 из 6 записей\nЮридические страницы: URL не указан у 4 из 5 записей\nGate 0 · Компания\n◀ Назад\nДалее ▶\nК текущему",
+    "errors": [],
+    "productId": "catalog-item-1786792591872-51f503",
+    "products": [
+      {
+        "id": "catalog-item-1790860377305-388c56",
+        "name": "Коза & Ёлка",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1786792591872-c8b1e9",
+        "name": "Рубашка Upcycling с кружевом",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-98358d",
+        "name": "Летнее платье «Исландка»",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-5f848a",
+        "name": "Платье из льна",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-3be8f9",
+        "name": "Лонгслив «Мак» с аппликацией",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-1d1d3c",
+        "name": "Свитшот с медведем для Михаила",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-c45ce3",
+        "name": "Свитшот «Яра» с авторской аппликацией",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-52046c",
+        "name": "Льняное демисезонное пальто",
+        "categoryId": "product-1786401011698-231009"
+      },
+      {
+        "id": "catalog-item-1786792591872-51f503",
+        "name": "Символ 2027 года «Коза»",
+        "categoryId": "product-1786401011698-9e81ee"
+      },
+      {
+        "id": "catalog-item-1790936932674-197964",
+        "name": "Шапка Коза",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1790937546522-78edcc",
+        "name": "ТЕРМОС в свитере",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1790937556174-6ad07b",
+        "name": "ТЕРМОС в чехле",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1790937575672-8f423f",
+        "name": "Текстильная ёлочка",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      },
+      {
+        "id": "catalog-item-1790937587589-b751ba",
+        "name": "Новогодние подарочные наборы",
+        "categoryId": "platform-page-1790858796945-b73ebf"
+      }
+    ]
+  }
+]

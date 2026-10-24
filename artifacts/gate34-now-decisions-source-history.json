@@ -1,0 +1,11 @@
+{
+  "sourceCard": "card-24",
+  "sourceTitle": "КАРТОЧКА ТОВАРА",
+  "rows": 11,
+  "keys": [
+    "productClientResult",
+    "productRecommendationReasons"
+  ],
+  "matches": [],
+  "selectedProduct": "catalog-item-1786792591872-51f503"
+}
