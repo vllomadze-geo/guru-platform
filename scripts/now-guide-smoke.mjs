@@ -423,7 +423,7 @@ try {
       const disclosure = await evaluate(page, `(() => {
         nowGuideExpanded.delete("gate-0");
         nowGuideRender();
-        document.querySelector('.gate-btn[data-gate-id="gate-0"]').click();
+        document.querySelector('[data-now-disclosure="gate-0"]').click();
         const list = document.querySelector('[data-now-children="gate-0"]');
         return { expanded: !list.hidden, currentMarked: Boolean(list.querySelector('.now-guide-child.is-current')) };
       })()`);

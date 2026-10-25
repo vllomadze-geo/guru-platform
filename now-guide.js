@@ -951,7 +951,11 @@ const nowGuidePreviousGateBlockStatuses = guruGateBlockStatuses;
 guruGateBlockStatuses = function (gate) {
   // Gate 8 also reads these aggregates. Reuse their canonical assessment
   // instead of rendering Gate 4 or recalculating every Gate 1 editor again.
-  if (nowGuideRegistryCache && ["gate-0", "gate-1", "gate-3", "gate-4"].includes(gate?.id) &&
+  // Input/change already tells us that the snapshot is dirty. Comparing its
+  // complete JSON here blocks every keystroke and blur before the next paint.
+  // Read the live canonical assessment instead; full snapshots are reused
+  // outside the edit dispatch, when the ordinary refresh publishes them.
+  if (!guruUserEditDispatchActive && nowGuideRegistryCache && ["gate-0", "gate-1", "gate-3", "gate-4"].includes(gate?.id) &&
       nowGuideRegistryCache.version === nowGuideDataVersion())
     return nowGuideRegistryCache.items.filter(item => item.gateId === gate.id).map(item => item.status);
   if (gate?.id === "gate-0") {
@@ -1079,6 +1083,20 @@ function nowGuideStatusText(status) {
     problem: "Проблема", not_started: "Не начато" }[status] || "Не начато";
 }
 
+function nowGuideSetGateExpanded(button, expanded) {
+  const gateId = button.dataset.nowDisclosure;
+  const list = document.getElementById(button.getAttribute("aria-controls"));
+  if (!list) return;
+  if (expanded) nowGuideExpanded.add(gateId);
+  else nowGuideExpanded.delete(gateId);
+  list.hidden = !expanded;
+  button.setAttribute("aria-expanded", String(expanded));
+  const title = state?.gates?.find(gate => gate.id === gateId)?.title || gateId;
+  const label = `${expanded ? "Скрыть" : "Показать"} блоки гейта «${nowGuideSafeText(title)}»`;
+  button.setAttribute("aria-label", label);
+  button.title = label;
+}
+
 function nowGuideRender(path, registry) {
   const panel = document.getElementById("nowGuide");
   if (!panel || !state?.gates) return;
@@ -1115,17 +1133,41 @@ function nowGuideRender(path, registry) {
   nav.querySelectorAll(".gate-btn[data-gate-id]").forEach((button) => {
     const gateId = button.dataset.gateId;
     const children = all.filter((item) => item.gateId === gateId);
-    if (!children.length) return;
+    // Navigation and disclosure are separate sibling buttons. The existing
+    // gate button retains its original navigation listener and identity.
+    button.removeAttribute("aria-expanded");
+    let row = button.closest(".now-guide-gate-row");
+    if (!children.length) {
+      button.classList.remove("now-guide-gate-current");
+      if (row) row.replaceWith(button);
+      return;
+    }
+    if (!row) {
+      row = document.createElement("div");
+      row.className = "now-guide-gate-row";
+      button.before(row);
+      row.append(button);
+    }
+    let disclosure = row.querySelector("[data-now-disclosure]");
+    if (!disclosure) {
+      disclosure = document.createElement("button");
+      disclosure.type = "button";
+      disclosure.className = "now-guide-disclosure";
+      disclosure.dataset.nowDisclosure = gateId;
+      disclosure.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7"/></svg>';
+      row.append(disclosure);
+    }
     button.classList.toggle("now-guide-gate-current",
       children.some((item) => item.key === current?.key));
     const expanded = nowGuideExpanded.has(gateId);
-    button.setAttribute("aria-expanded", String(expanded));
     const list = document.createElement("div");
+    list.id = `now-guide-children-${gateId}`;
     list.className = "now-guide-children";
     list.dataset.nowChildren = gateId;
-    list.hidden = !expanded;
     list.innerHTML = children.map((item) => `<button type="button" class="now-guide-child ${item.key === current?.key ? "is-current" : ""}" data-now-step="${escapeAttr(item.key)}" title="${escapeAttr(nowGuideSafeText(item.title))}"><span class="now-guide-dot ${item.status === "ready" || item.status === "not_required" ? "is-done" : ""}"></span><span>${escapeHtml(nowGuideSafeText(item.title))}${nowGuideIsPreflight(item) ? "" : " · После запуска"}</span></button>`).join("");
-    button.insertAdjacentElement("afterend", list);
+    row.insertAdjacentElement("afterend", list);
+    disclosure.setAttribute("aria-controls", list.id);
+    nowGuideSetGateExpanded(disclosure, expanded);
   });
   });
 }
@@ -1364,10 +1406,12 @@ document.getElementById("nowGuide")?.addEventListener("click", (event) => {
 
 let nowGuideMissingRefreshQueued = false;
 function nowGuideScheduleMissingRefresh(event) {
+  // Product-picker drafts stay outside project data until Save is pressed.
+  if (event.target?.closest?.("[data-mega-platform-picker]")) return;
   if (!event.target?.closest?.("#contentArea") || nowGuideCurrent(nowGuideDisplayedPath)?.gateId !== "gate-0") return;
   if (nowGuideMissingRefreshQueued) return;
   nowGuideMissingRefreshQueued = true;
-  queueMicrotask(() => {
+  queueMicrotask(() => nowGuideWithReadPass(() => {
     nowGuideMissingRefreshQueued = false;
     const gate = state?.gates?.find((gate) => gate.id === "gate-0");
     if (!gate) return;
@@ -1389,17 +1433,20 @@ function nowGuideScheduleMissingRefresh(event) {
     const path = nowGuideDisplayedPath.map((item) => item.gateId === "gate-0"
       ? { ...item, status: guruNormBlockStatus(statuses[ids.indexOf(item.id)]) } : item);
     if (path.some((item, index) => item.status !== nowGuideDisplayedPath[index]?.status)) {
-      nowGuideRender(path);
+      const registry = nowGuideDisplayedAllBlocks.map((item) => item.gateId === gate.id
+        ? { ...item, status: guruNormBlockStatus(statuses[ids.indexOf(item.id)]) } : item);
+      nowGuideRender(path, registry);
     } else {
       nowGuideDisplayedPath = path;
       const html = nowGuideMissingHtml(nowGuideCurrent(path));
       const current = document.querySelector("#nowGuide .now-guide-missing");
       if (current && current.outerHTML !== html) current.outerHTML = html;
     }
-  });
+  }));
 }
 let nowGuideGate12RefreshQueued = false;
 function nowGuideScheduleGate12Refresh(event) {
+  if (event.target?.closest?.("[data-mega-platform-picker]")) return;
   if (!event.target?.closest?.("#contentArea") ||
       (!["gate-1", "gate-2", "gate-3", "gate-4"].includes(activeGateId) &&
        !(activeGateId === "gate-0" && nowGuideCurrent(nowGuideDisplayedPath)?.gateId === "gate-3"))) return;
@@ -1442,7 +1489,12 @@ function nowGuideScheduleGate12Refresh(event) {
     const journeyById = new Map(nowGuideGate3Stages().map((stage, index) => [stage.key, guruNormBlockStatus(journeyStatuses[index])]));
     const updated = path.map(item => item.gateId === "gate-3"
       ? { ...item, status: journeyById.get(item.id) || item.status } : item);
-    nowGuideRender(updated);
+    // The edited gate and its journey dependency were assessed above. Publish
+    // those results instead of rebuilding every other gate on each character.
+    const registry = nowGuideDisplayedAllBlocks.map(item => item.gateId === gate.id
+      ? { ...item, ...byId.get(identity(item)) }
+      : item.gateId === "gate-3" ? { ...item, status: journeyById.get(item.id) || item.status } : item);
+    nowGuideRender(updated, registry);
   });
 }
 document.addEventListener("input", nowGuideScheduleGate12Refresh);
@@ -1483,6 +1535,11 @@ document.addEventListener("input", nowGuideScheduleMissingRefresh);
 document.addEventListener("change", nowGuideScheduleMissingRefresh);
 
 document.getElementById("gateNav")?.addEventListener("click", (event) => {
+  const disclosure = event.target.closest("[data-now-disclosure]");
+  if (disclosure) {
+    nowGuideSetGateExpanded(disclosure, disclosure.getAttribute("aria-expanded") !== "true");
+    return;
+  }
   const child = event.target.closest("[data-now-step]");
   if (child) {
     const path = nowGuideDisplayedPath;
@@ -1490,13 +1547,6 @@ document.getElementById("gateNav")?.addEventListener("click", (event) => {
     if (nowGuideIsPreflight(item)) nowGuideSelect(item, path);
     else nowGuideOpen(item);
     return;
-  }
-  const gate = event.target.closest(".gate-btn[data-gate-id]");
-  if (gate) {
-    const id = gate.dataset.gateId;
-    if (nowGuideExpanded.has(id)) nowGuideExpanded.delete(id);
-    else nowGuideExpanded.add(id);
-    nowGuideRender();
   }
 });
 

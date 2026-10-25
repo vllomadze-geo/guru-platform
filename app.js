@@ -150,6 +150,15 @@ const V14_REMOVED_GATE1_BLOCKS = ["Блок А: Сниппет", "Блок Б: �
 const STORAGE_BACKUP_PREFIX = "guru-backup-";
 const STORAGE_RESCUE_PREFIX = "guru-rescue-";
 let _storageWarningShown = false;
+// Save ordering is transient. It never adds metadata to a project or storage.
+const guruStorageWriteVersions = new Map();
+const guruWorkspaceSaveFeedback = new Set();
+
+function guruInvalidateQueuedWorkspaceSave(key) {
+  const version = (guruStorageWriteVersions.get(key) || 0) + 1;
+  guruStorageWriteVersions.set(key, version);
+  return version;
+}
 
 function reportStorageFailure(key, err) {
   console.error("Хранилище браузера переполнено, запись не удалась:", key, err);
@@ -170,6 +179,7 @@ function reportStorageFailure(key, err) {
 }
 
 function safeStorageSet(key, value, options = {}) {
+  guruInvalidateQueuedWorkspaceSave(key);
   try {
     localStorage.setItem(key, value);
     return true;
@@ -178,6 +188,13 @@ function safeStorageSet(key, value, options = {}) {
     return false;
   }
 }
+
+window.addEventListener("storage", (event) => {
+  if (event.key)
+    guruInvalidateQueuedWorkspaceSave(event.key);
+  else
+    for (const key of guruStorageWriteVersions.keys()) guruInvalidateQueuedWorkspaceSave(key);
+});
 
 let projects = loadProjects();
 let activeProjectId = null;
@@ -22766,9 +22783,51 @@ function megaPlatformAutoRows(workspace = state) {
   };
 }
 
-function megaPlatformUrlInput(cardId, group, id) {
+function megaPlatformSeoUrlFromName(name, group, id, workspace = state) {
+  const slug = guruCategoryUrlSlugV494(String(name || "").normalize("NFC"));
+  if (!slug || group === "fixed" && ["home", "on_order"].includes(id)) return "";
+  let origin = "";
+  try {
+    const home = new URL(megaPlatformUrl("fixed", "home", workspace));
+    if (["http:", "https:"].includes(home.protocol)) origin = home.origin;
+  } catch (_) {}
+  const address = (path) => origin ? `${origin}/${path}` : `/${path}`;
+  const urlKey = (value) => {
+    try {
+      const url = new URL(value, origin || "https://seo-address.invalid/");
+      return `${url.origin}${url.pathname.replace(/\/+$/, "")}`;
+    } catch (_) { return String(value || ""); }
+  };
+  const occupied = new Set(megaPlatformAllPages(workspace)
+    .filter((page) => page.url && !(page.group === group && page.id === id))
+    .map((page) => urlKey(page.url)));
+  let candidate = address(slug);
+  for (let suffix = 2; occupied.has(urlKey(candidate)); suffix += 1)
+    candidate = address(`${slug}-${suffix}`);
+  return candidate;
+}
+
+function megaPlatformSeoUrlName(input) {
+  const name = input.closest("tr")?.querySelector(
+    "input[data-mega-platform-rename-product], input[data-mega-platform-rename-category], input[data-mega-platform-audit-name], input[data-mega-field='name']",
+  );
+  return name ? name.value : input.dataset.megaUrlName || "";
+}
+
+function megaPlatformSyncSeoUrlAction(input) {
+  const button = input.closest(".mega-platform-url-field")?.querySelector("[data-mega-url-from-name]");
+  if (!button) return;
+  const name = megaPlatformSeoUrlName(input);
+  button.hidden = Boolean(input.value.trim()) || !guruCategoryUrlSlugV494(name);
+  button.setAttribute("aria-label", `Сформировать SEO-адрес страницы «${name}»`);
+}
+
+function megaPlatformUrlInput(cardId, group, id, name = "") {
   if (!id) return `<span>URL не указан</span>`;
-  return `<input data-mega-card="${escapeAttr(cardId)}" data-mega-field="url" data-mega-url-group="${escapeAttr(group)}" data-mega-url-id="${escapeAttr(id)}" data-guru-field-neutral value="${escapeAttr(megaPlatformUrl(group, id))}" placeholder="Вставьте ссылку" />`;
+  const value = megaPlatformUrl(group, id);
+  const action = group === "fixed" && ["home", "on_order"].includes(id) ? ""
+    : `<button type="button" class="mega-platform-url-action" data-mega-url-from-name title="Сформировать SEO-адрес из названия страницы" aria-label="${escapeAttr(`Сформировать SEO-адрес страницы «${name}»`)}" ${value.trim() || !guruCategoryUrlSlugV494(name) ? "hidden" : ""}>Из названия</button>`;
+  return `<div class="mega-platform-url-field">${action}<input data-mega-card="${escapeAttr(cardId)}" data-mega-field="url" data-mega-url-group="${escapeAttr(group)}" data-mega-url-id="${escapeAttr(id)}" data-mega-url-name="${escapeAttr(name)}" data-guru-field-neutral aria-label="${escapeAttr(`URL страницы «${name}»`)}" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" value="${escapeAttr(value)}" placeholder="Вставьте ссылку" /></div>`;
 }
 
 function megaPlatformReadonlyRow(item, cardId) {
@@ -22777,7 +22836,7 @@ function megaPlatformReadonlyRow(item, cardId) {
     : `<button type="button" class="small-btn" data-open-audit-page="${escapeAttr(item.sourceCardId)}">${escapeHtml(item.sourceText)}</button>`;
   return `<tr class="mega-platform-auto-row">
     <td class="cr-label">${escapeHtml(item.name)}</td>
-    <td>${megaPlatformUrlInput(cardId, item.urlGroup, item.urlId)}</td>
+    <td>${megaPlatformUrlInput(cardId, item.urlGroup, item.urlId, item.name)}</td>
     <td>${megaPlatformIntentCellV1(item.urlGroup, item.urlId, item.name)}</td>
     <td>${source}</td>
   </tr>`;
@@ -22789,7 +22848,7 @@ function megaPlatformManualRow(cardId, item, group, index, removable = false, no
     : group === "onOrder" ? "on_order" : group === "service" ? item.urlId : item.id;
   return `<tr>
     <td class="cr-label"><div class="mega-platform-page-name">${escapeHtml(item.name)}${removable ? `<button type="button" class="v116-multi-remove" data-mega-card="${escapeAttr(cardId)}" data-mega-pv2-remove="${index}" title="Удалить">×</button>` : ""}</div>${note ? `<small class="mega-platform-note">${escapeHtml(note)}</small>` : ""}</td>
-    <td>${megaPlatformUrlInput(cardId, urlGroup, urlId)}</td>
+    <td>${megaPlatformUrlInput(cardId, urlGroup, urlId, item.name)}</td>
     <td>${megaPlatformIntentCellV1(urlGroup, urlId, item.name)}</td>
     <td></td>
   </tr>`;
@@ -22803,7 +22862,7 @@ function megaPlatformAddedRow(cardId, item, index) {
       </label>
       <button type="button" class="v116-multi-remove" data-mega-card="${escapeAttr(cardId)}" data-mega-pv2-remove="${index}" title="Удалить страницу" aria-label="Удалить страницу">×</button>
     </div></td>
-    <td><label class="mega-platform-added-field"><span>URL</span>${megaPlatformUrlInput(cardId, "custom", item.id)}</label></td>
+    <td><div class="mega-platform-added-field"><span>URL</span>${megaPlatformUrlInput(cardId, "custom", item.id, item.name)}</div></td>
     <td>${megaPlatformIntentCellV1("custom", item.id, item.name)}</td>
     <td>Добавлено вручную</td>
   </tr>`;
@@ -23002,7 +23061,7 @@ function megaPlatformCommercialRow(cardId, item, kind, depth = 0, displayCategor
   return `<tr class="mega-platform-commercial-row ${depth ? "is-child" : ""}" ${branchId ? `data-mega-platform-drop-category="${escapeAttr(branchId)}"` : ""}>
     <td class="cr-label">${name}</td><td>${type}</td>
     <td>${isProduct ? megaPlatformContinuumSelect(id) : ""}</td>
-    <td>${megaPlatformUrlInput(cardId, item.urlGroup, item.urlId)}</td>
+    <td>${megaPlatformUrlInput(cardId, item.urlGroup, item.urlId, item.name)}</td>
     <td>${megaPlatformIntentCellV1(item.urlGroup, isCategory ? item.sourceCategoryId : item.urlId, item.name)}</td>
     <td>${megaPlatformCommercialSource(item)}</td><td>${remove}</td>
   </tr>`;
@@ -23032,7 +23091,7 @@ function megaPlatformCommercialManualRow(cardId, item, index, auditRow = null) {
       ? `<option value="landing" ${type === "landing" ? "selected" : ""}>Лендинг</option><option value="category" ${type === "category" ? "selected" : ""}>Категория</option><option value="other" ${type === "other" ? "selected" : ""}>Другая</option>`
       : `<option value="category" ${type === "category" ? "selected" : ""}>Категория</option><option value="product" ${type === "product" ? "selected" : ""}>Товар</option><option value="landing" ${type === "landing" ? "selected" : ""}>Лендинг</option><option value="other" ${type === "other" ? "selected" : ""}>Другая</option>`}</select></td>
     <td></td>
-    <td>${megaPlatformUrlInput(cardId, "custom", id)}</td>
+    <td>${megaPlatformUrlInput(cardId, "custom", id, name)}</td>
     <td>${megaPlatformIntentCellV1("custom", id, name)}</td>
     <td>${source}</td><td><button type="button" class="v116-multi-remove" ${auditRow ? `data-mega-platform-audit-remove="${escapeAttr(auditRow.id)}"` : `data-mega-card="${escapeAttr(cardId)}" data-mega-pv2-remove="${index}"`} aria-label="Удалить страницу" title="Удалить страницу">×</button></td>
   </tr>`;
@@ -23793,7 +23852,10 @@ function updateMegaMarketing(target) {
     const id = target.dataset.megaUrlId;
     megaPlatformSetUrl(group, id, target.value, state);
     document.querySelectorAll(`[data-mega-url-group="${CSS.escape(group)}"][data-mega-url-id="${CSS.escape(id)}"]`)
-      .forEach((input) => { if (input !== target) input.value = target.value; });
+      .forEach((input) => {
+        if (input !== target) input.value = target.value;
+        megaPlatformSyncSeoUrlAction(input);
+      });
     recalculateStatusForCard(card);
     flashSaving();
     return;
@@ -23989,6 +24051,33 @@ const persistMegaPlatformUrlFromEvent = (event) => {
 };
 document.addEventListener("input", persistMegaPlatformUrlFromEvent, true);
 document.addEventListener("change", persistMegaPlatformUrlFromEvent, true);
+
+// Replaced tables use the same action and the existing URL persistence path.
+document.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("[data-mega-url-from-name]");
+  if (!button) return;
+  const input = button.closest(".mega-platform-url-field")?.querySelector("input");
+  if (!input || input.value.trim()) return;
+  const { megaUrlGroup: group, megaUrlId: id } = input.dataset;
+  const existing = megaPlatformUrl(group, id);
+  if (existing.trim()) {
+    input.value = existing;
+    megaPlatformSyncSeoUrlAction(input);
+    return;
+  }
+  const value = megaPlatformSeoUrlFromName(megaPlatformSeoUrlName(input), group, id);
+  if (!value) return;
+  input.value = value;
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.focus({ preventScroll: true });
+  input.setSelectionRange(value.length, value.length);
+});
+
+document.addEventListener("input", (event) => {
+  const name = event.target?.closest?.("input[data-mega-platform-rename-product], input[data-mega-platform-rename-category], input[data-mega-platform-audit-name], input[data-mega-field='name']");
+  name?.closest("tr")?.querySelectorAll(".mega-platform-url-field input")
+    .forEach(megaPlatformSyncSeoUrlAction);
+});
 
 /* ================================================================
    v1.3.0 — Gate 1 Аналитика: дизайн-система ГУРУ (Брокман)
@@ -33617,12 +33706,13 @@ flashSaving = function (options = {}) {
     _saveTimerSkipsDerivedRefresh = false;
     guruAutosaveStateSmooth({ skipDerivedRefresh });
   }, saveDelay);
-  // Полный пересчёт Gate 0 во время набора текста выполняется общим
-  // отложенным проходом после паузы. Клики и выборы обновляют статус сразу.
-  const isTyping =
+  // Ввод и завершающий его change используют один отложенный пересчёт.
+  // Структурные действия кнопок сохраняют немедленное обновление.
+  const isFieldEdit =
     typeof guruUserEditDispatchActive !== "undefined" &&
-    guruUserEditDispatchActive && guruUserEditEventType === "input";
-  if (activeGateId === "gate-0" && !isTyping && !_gate0RefreshPending) {
+    guruUserEditDispatchActive &&
+    (guruUserEditEventType === "input" || guruUserEditEventType === "change");
+  if (activeGateId === "gate-0" && !isFieldEdit && !_gate0RefreshPending) {
     _gate0RefreshPending = true;
     requestAnimationFrame(() => {
       _gate0RefreshPending = false;
@@ -36192,6 +36282,8 @@ function guruApplyMove(ds, from, to) {
 const __guruPrevFlashSavingDirty = flashSaving;
 flashSaving = function () {
   _guruTabDirty = true;
+  if (activeProjectId)
+    guruInvalidateQueuedWorkspaceSave(WORKSPACE_STORAGE_PREFIX + activeProjectId);
   __guruPrevFlashSavingDirty.apply(this, arguments);
   // The v1.21 debounced autosave replaced earlier flashSaving wrappers, so
   // refresh the visible product diagnosis from this final save path.
@@ -42425,10 +42517,15 @@ let guruUiPreferencePending = null;
 // must see the edit guard before they touch the active field.
 function guruBeginUserEditDispatch(event, type) {
   if (!event.target?.closest?.("#contentArea")) return;
+  if (activeProjectId && !event.target.closest("[data-mega-platform-picker]"))
+    guruInvalidateQueuedWorkspaceSave(WORKSPACE_STORAGE_PREFIX + activeProjectId);
   guruCancelDerivedRefresh();
   guruLastUserEditAt = Date.now();
   guruUserEditDispatchActive = true;
   guruUserEditEventType = type;
+  // Draft-only controls may never call flashSaving. Resume an older pending
+  // refresh after their input too, rather than abandoning that work forever.
+  if (guruDerivedRefreshRequired) guruScheduleDerivedRefresh();
   const token = ++guruUserEditDispatchToken;
   setTimeout(() => {
     if (token !== guruUserEditDispatchToken) return;
@@ -42443,11 +42540,17 @@ window.addEventListener("change", (event) => {
   guruBeginUserEditDispatch(event, "change");
 }, true);
 
-function guruPersistStateFast(options = {}) {
-  const workspace = options.workspace || state;
-  const projectId = options.projectId || activeProjectId;
-  if (!workspace || !projectId) return false;
-  const isActiveSnapshot = workspace === state && projectId === activeProjectId;
+// Moving between editors is still active work, even before a new value is
+// entered. Pause derived calculations during the focus handoff.
+for (const type of ["pointerdown", "keydown", "focusin"])
+  window.addEventListener(type, (event) => {
+    if (!event.target?.closest?.("#contentArea") ||
+        !event.target.closest("input, textarea, select, [contenteditable='true']")) return;
+    guruLastUserEditAt = Date.now();
+    if (guruDerivedRefreshRequired) guruScheduleDerivedRefresh();
+  }, true);
+
+function guruPrepareWorkspaceSave(workspace, options) {
   workspace.updatedAt = new Date().toISOString();
   if (options.durable === true) {
     workspace._guruDurableMutationAt = workspace.updatedAt;
@@ -42455,11 +42558,13 @@ function guruPersistStateFast(options = {}) {
   }
   workspace.schemaVersion = PLATFORM_VERSION;
   if (typeof GURU_TAB_ID !== "undefined") workspace._guruTabId = GURU_TAB_ID;
-  const saved = safeStorageSet(
-    WORKSPACE_STORAGE_PREFIX + projectId,
-    JSON.stringify(workspace),
-  );
-  if (saved && options.quiet !== true && isActiveSnapshot) {
+}
+
+function guruCommitWorkspaceSave(workspace, projectId, serialized, options) {
+  const feedback = options.quiet !== true || guruWorkspaceSaveFeedback.has(projectId);
+  const saved = safeStorageSet(WORKSPACE_STORAGE_PREFIX + projectId, serialized);
+  if (saved) guruWorkspaceSaveFeedback.delete(projectId);
+  if (saved && feedback && workspace === state && projectId === activeProjectId) {
     els.saveStatus.textContent =
       "Сохранено локально: " +
       new Date().toLocaleTimeString("ru-RU", {
@@ -42469,6 +42574,78 @@ function guruPersistStateFast(options = {}) {
     els.autosaveDot.style.background = "#82d48d";
   }
   return saved;
+}
+
+function guruPersistStateFast(options = {}) {
+  const workspace = options.workspace || state;
+  const projectId = options.projectId || activeProjectId;
+  if (!workspace || !projectId) return false;
+  if (typeof options.serialized === "string")
+    return guruCommitWorkspaceSave(workspace, projectId, options.serialized, options);
+  guruPrepareWorkspaceSave(workspace, options);
+  return guruCommitWorkspaceSave(workspace, projectId, JSON.stringify(workspace), options);
+}
+
+let guruWorkspaceSaveWorker = null;
+let guruWorkspaceSaveWorkerFailed = false;
+let guruWorkspaceSaveJobId = 0;
+const guruWorkspaceSaveJobs = new Map();
+
+function guruCompleteWorkspaceSaveJob(id, serialized) {
+  const job = guruWorkspaceSaveJobs.get(id);
+  if (!job) return;
+  guruWorkspaceSaveJobs.delete(id);
+  clearTimeout(job.timer);
+  if (guruStorageWriteVersions.get(job.key) !== job.version ||
+      typeof projects !== "undefined" && !projects.some(project => project.id === job.projectId)) {
+    job.resolve(false);
+    return;
+  }
+  job.resolve(typeof serialized === "string"
+    ? guruPersistStateFast({ ...job.options, workspace: job.workspace, projectId: job.projectId, serialized })
+    : guruPersistStateFast({ ...job.options, workspace: job.workspace, projectId: job.projectId }));
+}
+
+function guruFailWorkspaceSaveWorker(event) {
+  event?.preventDefault?.();
+  guruWorkspaceSaveWorker?.terminate();
+  guruWorkspaceSaveWorker = null;
+  guruWorkspaceSaveWorkerFailed = true;
+  for (const id of [...guruWorkspaceSaveJobs.keys()]) guruCompleteWorkspaceSaveJob(id);
+}
+
+function guruQueueWorkspaceSave(options = {}) {
+  const workspace = options.workspace || state;
+  const projectId = options.projectId || activeProjectId;
+  if (!workspace || !projectId) return Promise.resolve(false);
+  if (typeof Worker !== "function" || guruWorkspaceSaveWorkerFailed)
+    return Promise.resolve(guruPersistStateFast(options));
+  if (!guruWorkspaceSaveWorker) {
+    try {
+      const source = document.querySelector('script[src*="app.js"]')?.src || location.href;
+      const url = new URL("workspace-save-worker.js", source);
+      if (typeof GURU_BUILD_INFO !== "undefined") url.searchParams.set("v", GURU_BUILD_INFO.version);
+      guruWorkspaceSaveWorker = new Worker(url);
+      guruWorkspaceSaveWorker.addEventListener("message", event =>
+        guruCompleteWorkspaceSaveJob(event.data.id, event.data.serialized));
+      guruWorkspaceSaveWorker.addEventListener("error", guruFailWorkspaceSaveWorker);
+      guruWorkspaceSaveWorker.addEventListener("messageerror", guruFailWorkspaceSaveWorker);
+    } catch (_) {
+      guruWorkspaceSaveWorkerFailed = true;
+      return Promise.resolve(guruPersistStateFast(options));
+    }
+  }
+  guruPrepareWorkspaceSave(workspace, options);
+  if (options.quiet !== true) guruWorkspaceSaveFeedback.add(projectId);
+  const key = WORKSPACE_STORAGE_PREFIX + projectId;
+  const version = guruInvalidateQueuedWorkspaceSave(key);
+  const id = ++guruWorkspaceSaveJobId;
+  return new Promise(resolve => {
+    const timer = setTimeout(() => guruCompleteWorkspaceSaveJob(id), 15000);
+    guruWorkspaceSaveJobs.set(id, { workspace, projectId, key, version, options, resolve, timer });
+    try { guruWorkspaceSaveWorker.postMessage({ id, workspace }); }
+    catch (_) { guruCompleteWorkspaceSaveJob(id); }
+  });
 }
 
 function guruCancelDerivedRefresh() {
@@ -42506,7 +42683,7 @@ function guruFinishDerivedRefresh(workspace, editEpoch) {
   try {
     syncEvidenceTexts();
     guruGateReadinessCache = new Map();
-    guruPersistStateFast({ quiet: true });
+    guruQueueWorkspaceSave({ quiet: true });
     syncActiveProjectMeta();
     guruRefreshReadiness({ statusesReady: true });
     if (activeGateId === "gate-0")
@@ -42559,6 +42736,11 @@ function guruRecalculateStatusesProgressively(workspace, editEpoch) {
 function guruScheduleDerivedRefresh() {
   guruDerivedRefreshRequired = true;
   guruCancelDerivedRefresh();
+  const quietDelay = 700 - (Date.now() - guruLastUserEditAt);
+  if (quietDelay > 0) {
+    guruDerivedRefreshTimer = setTimeout(guruScheduleDerivedRefresh, quietDelay);
+    return;
+  }
   if (typeof requestIdleCallback === "function") {
     guruDerivedRefreshHandle = requestIdleCallback(guruRunDerivedRefresh, {
       timeout: 2400,
@@ -42570,7 +42752,7 @@ function guruScheduleDerivedRefresh() {
 
 function guruAutosaveStateSmooth(options = {}) {
   if (!state || !activeProjectId) return;
-  guruPersistStateFast();
+  guruQueueWorkspaceSave();
   if (options.skipDerivedRefresh !== true || guruDerivedRefreshRequired)
     guruScheduleDerivedRefresh();
 }

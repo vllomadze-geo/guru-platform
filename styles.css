@@ -2418,6 +2418,14 @@ button, input, select, textarea { font-family: inherit; }
 .now-guide-actions button:disabled { opacity: .4; cursor: default; }
 .now-guide-link { justify-self: start; padding: 0; border: 0; color: #d9e4e0; background: none; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font: inherit; font-size: 12px; }
 .now-guide-finished { font-size: 14px; line-height: 1.35; color: #8dde9c; }
+.now-guide-gate-row { position: relative; min-width: 0; }
+.now-guide-gate-row > .gate-btn { display: block; padding-inline-end: 56px; }
+.now-guide-disclosure { position: absolute; inset-inline-end: 5px; inset-block: 0; margin-block: auto; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 9px; color: #bfb9b1; background: transparent; cursor: pointer; }
+.now-guide-disclosure:hover { color: #fff; background: rgba(255,255,255,.1); }
+.now-guide-disclosure:focus-visible { color: #fff; background: rgba(255,255,255,.1); outline: 2px solid #fff; outline-offset: -2px; }
+.now-guide-disclosure svg { pointer-events: none; transition: transform .16s ease; }
+.now-guide-disclosure[aria-expanded="true"] svg { transform: rotate(90deg); }
+@media (prefers-reduced-motion: reduce) { .now-guide-disclosure svg { transition: none; } }
 .now-guide-children { display: grid; gap: 2px; margin: -4px 0 5px 8px; padding-left: 10px; border-left: 1px solid rgba(255,255,255,.16); }
 .now-guide-children[hidden] { display: none; }
 .now-guide-child { display: flex; align-items: start; gap: 8px; width: 100%; padding: 7px 6px; border: 0; border-radius: 7px; color: #c7c1b9; background: none; text-align: left; cursor: pointer; font: inherit; font-size: 12px; line-height: 1.3; }
@@ -2638,7 +2646,11 @@ textarea { resize: vertical; min-height: var(--control-h); }
     transform: translateX(-100%);
     transition: transform .28s ease;
     box-shadow: 24px 0 48px rgba(0, 0, 0, .28);
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
   }
+  .sidebar > * { flex-shrink: 0; }
+  .sidebar .gate-nav { flex: 0 0 auto; overflow: visible; }
   .app-shell.sidebar-open .sidebar { transform: translateX(0); }
   .sidebar-close { display: grid; place-items: center; }
 
@@ -6635,6 +6647,16 @@ summary.gate0-card-head::-webkit-details-marker { display: none; }
 .mega-platform-section .mega-platform-table input[data-mega-field="url"]::placeholder {
   color: #9ca3af;
   opacity: 1;
+}
+.mega-platform-url-field { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.mega-platform-url-field > input { flex: 1 1 0; min-width: 0; }
+.mega-platform-url-action { flex: none; min-height: 36px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--muted); font: inherit; font-size: 11px; white-space: nowrap; cursor: pointer; }
+.mega-platform-url-action[hidden] { display: none; }
+.mega-platform-url-action:hover { background: rgba(0,0,0,.04); color: var(--text); }
+.mega-platform-url-action:active { background: rgba(0,0,0,.08); color: var(--text); }
+.mega-platform-url-action:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+@media (pointer: coarse) {
+  .mega-platform-url-action, .mega-platform-url-field > input { min-height: 44px; }
 }
 .mega-platform-urls {
   display: grid;
