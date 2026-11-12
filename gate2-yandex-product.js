@@ -124,8 +124,8 @@ function g2ypSourceHtml(kind, stepId, source) {
   const item = (label, value, href = "") => `<div class="g2yp-source"><span>${escapeHtml(label)}</span>${href
     ? `<a href="${escapeAttr(href)}">${escapeHtml(value || "Не указано")} ↗</a>`
     : `<strong>${escapeHtml(value || "Не указано")}</strong>`}</div>`;
-  const url = source.url ? item("URL продукта · Платформа Gate 0", source.url, source.url)
-    : `<div class="g2yp-source"><span>URL продукта · Платформа Gate 0</span><button type="button" data-g2yp-open-platform>Не указан · открыть Платформу →</button></div>`;
+  const url = source.url ? item(`URL продукта · Платформа ${guruGateLabel("gate-0")}`, source.url, source.url)
+    : `<div class="g2yp-source"><span>URL продукта · Платформа ${guruGateLabel("gate-0")}</span><button type="button" data-g2yp-open-platform>Не указан · открыть Платформу →</button></div>`;
   if (kind === "product-yandex-webmaster") return `${url}${item("Проверки сайта · компания", g2ypLabel(source.companyIndex), "#g2sb-company-webmaster-company")}${g2ypIndexEditorHtml(source.productId)}`;
   if (kind === "product-yandex-direct") return `${url}${item("Кабинет Директа · компания", g2ypLabel(source.directAccountStatus), "#g2sb-company-yandex-direct-company")}${item("ID счётчика · компания", source.counterId, "#g2-metrika-company-counter")}${item("Цель · компания", source.goal ? `${source.goal.name || "Цель"} · ${source.goal.goalId}` : "Не выбрана", "#g2-metrika-company-goals")}`;
   if (stepId === "counter") return `${url}${item("ID счётчика · компания", source.counterId, "#g2-metrika-company-counter")}${source.legacyCounter.visitAt ? item("Ранее сохранённый визит", source.legacyCounter.visitAt) : ""}`;

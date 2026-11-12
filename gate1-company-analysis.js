@@ -411,7 +411,7 @@ function g1CompanyComparisonSimpleHtml(entry, ctx, group) {
   const positioning = String(ctx.snapshot.positioning || "").trim();
   return `<div class="g1-company-compare-grid" data-g1bp-company-compare style="--company-compare-columns:${end - start + 1}">
     <section class="g1-company-compare-column g1-company-compare-own">
-      <header><span class="project-comparison-own-label">Наша компания (авто)</span><strong>${escapeHtml(ctx.product.name)}</strong><small>Данные компании из Gate 0 и главной страницы Gate 1</small></header>
+      <header><span class="project-comparison-own-label">Наша компания (авто)</span><strong>${escapeHtml(ctx.product.name)}</strong><small>Данные компании из ${guruGateLabel("gate-0")} и главной страницы ${guruGateLabel("gate-1")}</small></header>
       <div class="g1-company-compare-section"><h4>Как выглядит в поиске</h4>${g1CompanyComparisonSearchHtml(ctx)}</div>
       <div class="g1-company-compare-section g1-company-compare-yandex"><div data-g1bp-company-yandex>${g1BergenJtbdSearchV548(ctx, group, 0, entry, { companyComparison: true })}</div></div>
       <div class="g1-company-compare-field"><span>Позиционирование</span>${positioning ? g1ComparisonOwnV540(positioning, g1CompanyComparisonSource("positioning")) : ""}</div>
@@ -1210,7 +1210,7 @@ function g1CompanyComparisonRefresh() {
 
 function g1CompanyComparisonSearchHtml(ctx) {
   const row = ctx.snapshot.page.row || {}, fields = row.contextFields || {};
-  return `<div class="g1bp-serp-v569"><small>Главная страница компании из Gate 1 · фактический вид в поиске может отличаться</small>
+  return `<div class="g1bp-serp-v569"><small>Главная страница компании из ${guruGateLabel("gate-1")} · фактический вид в поиске может отличаться</small>
     ${g1BergenSearchCardV569({ title: fields.page_settings_title_v513 || row.title || row.h1,
       description: fields.page_settings_description_v513 || row.description, url: ctx.snapshot.landing }, { company: true })}</div>`;
 }

@@ -296,7 +296,7 @@ guruExportGate2CardDiagnosticV223 = function (card, rawStatus) {
     gateId: "gate-2",
     cardId: card.id,
     path,
-    title: `${card.title} · собственная проверка Gate 2`,
+    title: `${card.title} · собственная проверка ${guruGateLabel("gate-2")}`,
     rawStatus: status,
     found: isProduct
       ? Boolean(selectedRow && Object.entries(selectedRow).some(([key, value]) =>
@@ -325,8 +325,8 @@ guruExportGate2CardDiagnosticV223 = function (card, rawStatus) {
     resolver: { name: "g2MetrikaQualityStatusV360", codeAnchor: "gate2-metrika-goals-quality.js" },
     fallbackOrder: ["METRIKA_QUALITY"],
     fallbackExpression: isProduct
-      ? "выбранный product_id; готовность Gate 2 — по всем товарам; Gate 0 не наследуется"
-      : "собственная ручная проверка Gate 2; Gate 0 не наследуется",
+      ? `выбранный product_id; готовность ${guruGateLabel("gate-2")} — по всем товарам; ${guruGateLabel("gate-0")} не наследуется`
+      : `собственная ручная проверка ${guruGateLabel("gate-2")}; ${guruGateLabel("gate-0")} не наследуется`,
     sourceChain: [source],
     selectedSource: {
       key: source.key,

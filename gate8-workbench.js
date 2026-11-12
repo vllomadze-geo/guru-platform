@@ -192,7 +192,7 @@ function g8StrictGoalV3() {
     budgetRecord: budget,
     allowedCost: allowedCost.valid ? allowedCost.value : NaN,
     allowedCostRecord: allowedCost,
-    source: "Gate 0 → Цель проекта",
+    source: `${guruGateLabel("gate-0")} → Цель проекта`,
     updatedAt: primary?.updated_at || project.goalUpdatedAt || state?.updatedAt || "",
     missing: [!metric && "измеримый показатель цели", !target.valid && "целевое значение"].filter(Boolean),
   };
@@ -222,7 +222,7 @@ function g8ProductGoalV4(product) {
     budgetRecord,
     allowedCost: allowedCostRecord.valid ? allowedCostRecord.value : NaN,
     allowedCostRecord,
-    source: "Gate 5 → цель выбранного продукта",
+    source: `${guruGateLabel("gate-5")} → цель выбранного продукта`,
     updatedAt: source.updatedAt || source.createdAt || "",
     productId: product?.id || "",
     missing: [!metric && "измеримый показатель цели продукта", !targetRecord.valid && "целевое значение продукта"].filter(Boolean),
@@ -338,7 +338,7 @@ function g8RatioRecordV3(rows, numerator, denominator, config) {
   if (denominatorSum <= 0) return null;
   return g8DerivedRecordV3(config.key, config.label, config.unit, (numeratorSum / denominatorSum) * (config.multiplier || 1), {
     kind: "fact",
-    source: `Gate 5 → ${usable.length} сопоставимых ${usable.length === 1 ? "период" : "периода"}`,
+    source: `${guruGateLabel("gate-5")} → ${usable.length} сопоставимых ${usable.length === 1 ? "период" : "периода"}`,
     periodStart: usable[0].periodStart,
     periodEnd: usable.at(-1).periodEnd,
     updatedAt: usable.at(-1).updatedAt,
@@ -381,21 +381,21 @@ function g8ParameterBundleV3(product, context, observations) {
   };
   const economics = product ? gate8ExactEconomicsV230(product.id) : {};
   const choose = (fact, assumption) => fact?.valid ? fact : assumption;
-  const budgetRecord = g8AssumptionRecordV3("budget", "Утверждённый бюджет", "₽", budgetRaw, "Gate 4 → бюджет выбранного продукта/кампании", product, context.campaignId);
+  const budgetRecord = g8AssumptionRecordV3("budget", "Утверждённый бюджет", "₽", budgetRaw, `${guruGateLabel("gate-4")} → бюджет выбранного продукта/кампании`, product, context.campaignId);
   budgetRecord.kind = "plan";
   const parameters = {
     budget: budgetRecord,
-    cpc: choose(factual.cpc, g8AssumptionRecordV3("cpc", "Стоимость клика", "₽", assumptions.cpc, "Gate 4 → допущения кампании", product, context.campaignId)),
-    clickToLead: choose(factual.clickToLead, g8AssumptionRecordV3("clickToLead", "Конверсия клик → заявка", "%", assumptions.siteConversion, "Gate 4 → допущения кампании", product, context.campaignId, { maximum: 100 })),
-    leadToSale: choose(factual.leadToSale, g8AssumptionRecordV3("leadToSale", "Конверсия заявка → продажа", "%", assumptions.saleConversion, "Gate 4 → допущения кампании", product, context.campaignId, { maximum: 100 })),
+    cpc: choose(factual.cpc, g8AssumptionRecordV3("cpc", "Стоимость клика", "₽", assumptions.cpc, `${guruGateLabel("gate-4")} → допущения кампании`, product, context.campaignId)),
+    clickToLead: choose(factual.clickToLead, g8AssumptionRecordV3("clickToLead", "Конверсия клик → заявка", "%", assumptions.siteConversion, `${guruGateLabel("gate-4")} → допущения кампании`, product, context.campaignId, { maximum: 100 })),
+    leadToSale: choose(factual.leadToSale, g8AssumptionRecordV3("leadToSale", "Конверсия заявка → продажа", "%", assumptions.saleConversion, `${guruGateLabel("gate-4")} → допущения кампании`, product, context.campaignId, { maximum: 100 })),
     clickToSale: factual.clickToSale,
-    cpl: choose(factual.cpl, g8AssumptionRecordV3("cpl", "Стоимость заявки", "₽", assumptions.cpl, "Gate 4 → допущения кампании", product, context.campaignId)),
+    cpl: choose(factual.cpl, g8AssumptionRecordV3("cpl", "Стоимость заявки", "₽", assumptions.cpl, `${guruGateLabel("gate-4")} → допущения кампании`, product, context.campaignId)),
     cpa: factual.cpa,
-    averageCheck: choose(factual.averageCheck, g8AssumptionRecordV3("averageCheck", "Средний чек", "₽", economics.aov, "Gate 1 → Юнит-экономика продукта", product, context.campaignId)),
-    margin: g8AssumptionRecordV3("margin", "Маржинальность", "%", economics.marginPercent, "Gate 1 → Юнит-экономика продукта", product, context.campaignId, { maximum: 100 }),
+    averageCheck: choose(factual.averageCheck, g8AssumptionRecordV3("averageCheck", "Средний чек", "₽", economics.aov, `${guruGateLabel("gate-1")} → Юнит-экономика продукта`, product, context.campaignId)),
+    margin: g8AssumptionRecordV3("margin", "Маржинальность", "%", economics.marginPercent, `${guruGateLabel("gate-1")} → Юнит-экономика продукта`, product, context.campaignId, { maximum: 100 }),
   };
-  const allowedCpa = g8AssumptionRecordV3("allowedCpa", "Допустимый CPA", "₽", economics.allowedCpa, "Gate 1 → Юнит-экономика продукта", product, context.campaignId);
-  const allowedCpl = g8AssumptionRecordV3("allowedCpl", "Допустимый CPL", "₽", economics.allowedCpl, "Gate 1 → Юнит-экономика продукта", product, context.campaignId);
+  const allowedCpa = g8AssumptionRecordV3("allowedCpa", "Допустимый CPA", "₽", economics.allowedCpa, `${guruGateLabel("gate-1")} → Юнит-экономика продукта`, product, context.campaignId);
+  const allowedCpl = g8AssumptionRecordV3("allowedCpl", "Допустимый CPL", "₽", economics.allowedCpl, `${guruGateLabel("gate-1")} → Юнит-экономика продукта`, product, context.campaignId);
   return { parameters, factual, allowedCpa, allowedCpl, plan, assumptions };
 }
 
@@ -434,7 +434,7 @@ function g8ComputeV3(parameters, actual, period) {
   let futureSpend = Number.isFinite(budget) ? budget : NaN;
   if (past) futureSpend = 0;
   else if (current && Number.isFinite(budget)) futureSpend = Math.max(0, budget - actualSpend);
-  if (!Number.isFinite(budget) && !past) missing.push({ key: "budget", label: "Бюджет выбранного продукта/кампании", gateId: "gate-4", source: "Gate 4 → Кампании" });
+  if (!Number.isFinite(budget) && !past) missing.push({ key: "budget", label: "Бюджет выбранного продукта/кампании", gateId: "gate-4", source: `${guruGateLabel("gate-4")} → Кампании` });
   if (Number.isFinite(budget)) used.push(budgetRecord);
 
   const values = { spend: Number.isFinite(futureSpend) ? futureSpend : NaN, clicks: NaN, leads: NaN, sales: NaN, revenue: NaN, profit: NaN, cpl: NaN, cpa: NaN, roi: NaN };
@@ -602,7 +602,7 @@ function g8PresetParametersV3(kind, parameters, observations) {
     if (!Number.isFinite(value) || Math.abs(value - copy[key].value) < 0.000001) return;
     copy[key] = g8DerivedRecordV3(key, copy[key].label, copy[key].unit, value, {
       kind: "fact",
-      source: `Gate 5 → ${values.length} сопоставимых периодов (${stress ? "наблюдавшаяся граница" : `квартиль ${Math.round(quantile * 100)}%`})`,
+      source: `${guruGateLabel("gate-5")} → ${values.length} сопоставимых периодов (${stress ? "наблюдавшаяся граница" : `квартиль ${Math.round(quantile * 100)}%`})`,
       productId: copy[key].productId,
       campaignId: copy[key].campaignId,
       observations: values.length,
@@ -623,7 +623,7 @@ function g8PresetParametersV3(kind, parameters, observations) {
     parameters: copy,
     changes,
     available: changes.length > 0,
-    basis: changes.length ? "Параметры взяты из фактического диапазона Gate 5" : "Недостаточно сопоставимых периодов для непроизвольного сценария",
+    basis: changes.length ? `Параметры взяты из фактического диапазона ${guruGateLabel("gate-5")}` : "Недостаточно сопоставимых периодов для непроизвольного сценария",
   };
 }
 
@@ -643,7 +643,7 @@ function g8CustomParametersV3(parameters, data, product, campaignId) {
     const raw = data.manual?.[manualKey];
     if (!g8TextV3(raw)) return;
     const previous = copy[key];
-    const record = g8AssumptionRecordV3(key, label, unit, raw, "Gate 8 → пользовательский сценарий", product, campaignId, options);
+    const record = g8AssumptionRecordV3(key, label, unit, raw, `${guruGateLabel("gate-8")} → пользовательский сценарий`, product, campaignId, options);
     copy[key] = record;
     changes.push({
       key,
@@ -696,23 +696,23 @@ function g8MissingForMetricV3(metric, calculation, parameters, context) {
     if (!list.some((item) => item.key === key))
       list.push({ key, label, gateId, source, reason, issueType: "missing" });
   };
-  if (context.needsSelection) push("campaign", "Кампания", "gate-5", "Gate 5 → Реестр кампаний", "Выберите одну кампанию: смешивать статистику кампаний нельзя");
+  if (context.needsSelection) push("campaign", "Кампания", "gate-5", `${guruGateLabel("gate-5")} → Реестр кампаний`, "Выберите одну кампанию: смешивать статистику кампаний нельзя");
   if (Number.isFinite(calculation.values[metric])) return list;
   if (["leads", "sales", "revenue", "profit", "cpl", "cpa", "roi"].includes(metric)) {
     const leadRoute = parameters.cpl?.valid || (parameters.cpc?.valid && parameters.clickToLead?.valid);
     if (!leadRoute && !parameters.cpa?.valid && !parameters.clickToSale?.valid) {
-      if (!parameters.cpc?.valid) push("cpc", "Стоимость клика больше нуля", "gate-5", "Gate 5 → фактический период");
-      if (!parameters.cpl?.valid && !parameters.clickToLead?.valid) push("clickToLead", "CPL или конверсия клик → заявка", "gate-5", "Gate 5 → фактический период");
+      if (!parameters.cpc?.valid) push("cpc", "Стоимость клика больше нуля", "gate-5", `${guruGateLabel("gate-5")} → фактический период`);
+      if (!parameters.cpl?.valid && !parameters.clickToLead?.valid) push("clickToLead", "CPL или конверсия клик → заявка", "gate-5", `${guruGateLabel("gate-5")} → фактический период`);
     }
   }
   if (["sales", "revenue", "profit", "cpa", "roi"].includes(metric) && !parameters.cpa?.valid && !parameters.clickToSale?.valid && !parameters.leadToSale?.valid) {
-    push("leadToSale", "Конверсия в подтверждённую продажу", "gate-5", "Gate 5 → Связка с бизнесом");
+    push("leadToSale", "Конверсия в подтверждённую продажу", "gate-5", `${guruGateLabel("gate-5")} → Связка с бизнесом`);
   }
   if (metric === "cpa" && calculation.values.sales === 0 && Number.isFinite(calculation.values.spend)) {
-    push("salesForCpa", "Подтверждённые продажи больше нуля", "gate-5", "Gate 5 → Связка с бизнесом", "При измеренном нуле продаж CPA не рассчитывается");
+    push("salesForCpa", "Подтверждённые продажи больше нуля", "gate-5", `${guruGateLabel("gate-5")} → Связка с бизнесом`, "При измеренном нуле продаж CPA не рассчитывается");
   }
-  if (["revenue", "profit", "roi"].includes(metric) && !parameters.averageCheck?.valid) push("averageCheck", "Средний чек", "gate-1", "Gate 1 → Юнит-экономика продукта");
-  if (["profit", "roi"].includes(metric) && !parameters.margin?.valid) push("margin", "Маржинальность", "gate-1", "Gate 1 → Юнит-экономика продукта");
+  if (["revenue", "profit", "roi"].includes(metric) && !parameters.averageCheck?.valid) push("averageCheck", "Средний чек", "gate-1", `${guruGateLabel("gate-1")} → Юнит-экономика продукта`);
+  if (["profit", "roi"].includes(metric) && !parameters.margin?.valid) push("margin", "Маржинальность", "gate-1", `${guruGateLabel("gate-1")} → Юнит-экономика продукта`);
   return list;
 }
 
@@ -759,7 +759,7 @@ function g8RecommendationsV3({ missing, calculation, parameters, constraints, re
   if (Number.isFinite(actualCost) && allowed.valid && actualCost > allowed.value) add(
     `cost-over-limit-${metric}`,
     `Снизить стоимость ${metric === "leads" ? "заявки" : "продажи"} до допустимого ограничения`,
-    "Gate 4 → кампания выбранного продукта",
+    `${guruGateLabel("gate-4")} → кампания выбранного продукта`,
     `${g8Money(actualCost)} сейчас против допустимых ${g8Money(allowed.value)} из юнит-экономики`,
     `Тест считается успешным, если стоимость результата станет не выше ${g8Money(allowed.value)}`,
     "После следующего сопоставимого объёма трафика",
@@ -988,12 +988,12 @@ g8ReadinessChecks = function (_bundle, goal) {
     [campaign?.decision, campaign?.campaignName, campaign?.launchStatus, campaign?.status].some((value) => g8TextV3(value)),
   );
   const checks = [
-    { label: "Цель и целевая метрика заданы", passed: Boolean(goal?.valid), source: "Gate 0 → Цель проекта", gateId: "gate-0" },
-    { label: "Посадочная выбранного продукта указана", passed: Boolean(g8TextV3(snapshot.landing)), source: "Gate 1–2 → Посадочная продукта", gateId: "gate-1" },
-    { label: "Счётчик, цели и события аналитики подтверждены", passed: trackingReady, source: "Gate 2 → Аналитика", gateId: "gate-2" },
-    { label: "Бюджет продукта/кампании валиден", passed: budget.valid, source: "Gate 4 → Кампании продукта", gateId: "gate-4" },
-    { label: "Кампания сконфигурирована для запуска", passed: configuredCampaign, source: "Gate 4 → Кампания продукта", gateId: "gate-4" },
-    { label: "Экономическое ограничение результата задано", passed: hasEconomics, source: "Gate 1 → Юнит-экономика продукта", gateId: "gate-1" },
+    { label: "Цель и целевая метрика заданы", passed: Boolean(goal?.valid), source: `${guruGateLabel("gate-0")} → Цель проекта`, gateId: "gate-0" },
+    { label: "Посадочная выбранного продукта указана", passed: Boolean(g8TextV3(snapshot.landing)), source: `${guruGateLabel("gate-1")}–2 → Посадочная продукта`, gateId: "gate-1" },
+    { label: "Счётчик, цели и события аналитики подтверждены", passed: trackingReady, source: `${guruGateLabel("gate-2")} → Аналитика`, gateId: "gate-2" },
+    { label: "Бюджет продукта/кампании валиден", passed: budget.valid, source: `${guruGateLabel("gate-4")} → Кампании продукта`, gateId: "gate-4" },
+    { label: "Кампания сконфигурирована для запуска", passed: configuredCampaign, source: `${guruGateLabel("gate-4")} → Кампания продукта`, gateId: "gate-4" },
+    { label: "Экономическое ограничение результата задано", passed: hasEconomics, source: `${guruGateLabel("gate-1")} → Юнит-экономика продукта`, gateId: "gate-1" },
   ];
   return { checks, ready: checks.filter((item) => item.passed).length, total: checks.length, percent: checks.length ? Math.round(checks.filter((item) => item.passed).length / checks.length * 100) : 0 };
 };
@@ -1299,13 +1299,13 @@ function g8Gate4ForecastSourceHtmlV3(product) {
   const plan = g8Gate4ForecastPlanV3(product.id);
   const open = Boolean(production.forecastAssumptionsUiV3?.[product.id]?.open);
   return `<details class="g1-card g4-forecast-source-v3" data-g4-forecast-source-v3="${escapeAttr(product.id)}" ${open ? "open" : ""}>
-    <summary><span><strong>Параметры прогноза выбранного продукта</strong><small>Единый источник планового бюджета и допущений для Gate 8</small></span><b>${open ? "Свернуть ↑" : "Открыть ↓"}</b></summary>
+    <summary><span><strong>Параметры прогноза выбранного продукта</strong><small>Единый источник планового бюджета и допущений для ${guruGateLabel("gate-8")}</small></span><b>${open ? "Свернуть ↑" : "Открыть ↓"}</b></summary>
     <div class="g4-forecast-source-body-v3">
       ${g8Gate4ForecastFieldV3(product.id, plan, "budget", "Плановый бюджет продукта, ₽", "Например, 50 000")}
-      ${g8Gate4ForecastFieldV3(product.id, plan, "cpc", "Допущение CPC, ₽", "Используется только при отсутствии факта Gate 5")}
+      ${g8Gate4ForecastFieldV3(product.id, plan, "cpc", "Допущение CPC, ₽", `Используется только при отсутствии факта ${guruGateLabel("gate-5")}`)}
       ${g8Gate4ForecastFieldV3(product.id, plan, "siteConversion", "Допущение клик → заявка, %", "От 0 до 100", { maximum: 100 })}
       ${g8Gate4ForecastFieldV3(product.id, plan, "saleConversion", "Допущение заявка → продажа, %", "От 0 до 100", { maximum: 100 })}
-      ${g8Gate4ForecastFieldV3(product.id, plan, "cpl", "Допущение CPL, ₽", "Используется только при отсутствии факта Gate 5")}
+      ${g8Gate4ForecastFieldV3(product.id, plan, "cpl", "Допущение CPL, ₽", `Используется только при отсутствии факта ${guruGateLabel("gate-5")}`)}
     </div>
   </details>`;
 }
@@ -1375,7 +1375,7 @@ function g8GoalCardV5(scope, goal, options = {}) {
     : isCompany ? "Измеримая цель компании не задана"
       : options.product ? "Отдельная цель продукта не задана" : "Выберите продукт";
   const deadline = goal.deadline ? `До ${g8DateLabel(goal.deadline)}` : "Срок не указан";
-  const source = isCompany ? "Gate 0 · Цель компании" : "Gate 5 · Цель продукта";
+  const source = isCompany ? `${guruGateLabel("gate-0")} · Цель компании` : `${guruGateLabel("gate-5")} · Цель продукта`;
   if (isCompany) return `<section class="g8-goal-card is-company" data-g8-goal-scope="company" aria-label="${title}">
     <header><h3>${title}</h3><span>${escapeHtml(g8CompanyNameV3())}</span></header>
     <div class="g8-goal-card-result"><strong>${escapeHtml(result)}</strong><small>${escapeHtml(deadline)} · ${escapeHtml(source)}</small>${g8JumpButton("gate-0", "Уточнить цель")}</div>
@@ -1394,7 +1394,7 @@ function g8ContextPanelV3(analysis) {
   const metric = analysis.data.resultMetric;
   return `<section class="g8-context-panel" aria-label="Настройки прогноза продукта">
     <div class="g8-context-cell"><span>Период прогноза</span><div class="g8-period-inputs"><input type="date" data-g8-v3-context="periodStart" value="${escapeAttr(analysis.period.start)}" aria-label="Начало периода"><span>—</span><input type="date" data-g8-v3-context="periodEnd" value="${escapeAttr(analysis.period.end)}" aria-label="Конец периода"></div></div>
-    ${analysis.parameters.budget.valid ? `<div class="g8-context-cell"><span>Бюджет продукта / кампании</span><strong>${escapeHtml(g8UnitValueV3(analysis.parameters.budget))}</strong>${g8SourceButtonV3({ key: "budget" }, analysis, "Изменить в Gate 4")}</div>` : ""}
+    ${analysis.parameters.budget.valid ? `<div class="g8-context-cell"><span>Бюджет продукта / кампании</span><strong>${escapeHtml(g8UnitValueV3(analysis.parameters.budget))}</strong>${g8SourceButtonV3({ key: "budget" }, analysis, `Изменить в ${guruGateLabel("gate-4")}`)}</div>` : ""}
     <div class="g8-context-cell"><span>Показатель прогноза</span><select data-g8-field="resultMetric">${GATE8_RESULTS.map(([key, label]) => `<option value="${escapeAttr(key)}" ${metric === key ? "selected" : ""}>${escapeHtml(label)}</option>`).join("")}</select></div>
     ${campaignRows.length ? `<label class="g8-context-campaign"><span>Кампания — статистика разных кампаний не смешивается</span><select data-g8-v3-context="campaignId"><option value="">${campaignRows.length > 1 ? "Выберите кампанию" : "Без отдельного выбора"}</option>${campaignRows.map((row) => `<option value="${escapeAttr(row.id)}" ${analysis.context.campaignId === row.id ? "selected" : ""}>${escapeHtml(row.name || row.campaignName || row.cabinetId || row.id)}</option>`).join("")}</select></label>` : ""}
   </section>`;
@@ -1577,7 +1577,7 @@ function g8ScenarioHtmlV3(analysis) {
   const order = ["base", "favorable", "unfavorable", "stress", "custom"];
   return `<div class="g8-scenario-context"><strong>${escapeHtml(g8MetricLabel(analysis.metric))}</strong><span>${escapeHtml(analysis.context.product?.name || "Продукт не выбран")} · ${escapeHtml(analysis.context.campaignLabel || "Кампания не выбрана")} · ${escapeHtml(analysis.period.start)} — ${escapeHtml(analysis.period.end)}</span></div>
     <div class="g8-scenario-list">${order.map((key) => g8ScenarioCardV4(analysis.scenarioResults[key], analysis)).join("")}</div>
-    <p class="g8-scenario-note">Все варианты используют один проект, продукт, кампанию и период. Сценарные условия хранятся отдельно и не изменяют факты Gate 5, утверждённый бюджет Gate 4 или историю.</p>`;
+    <p class="g8-scenario-note">Все варианты используют один проект, продукт, кампанию и период. Сценарные условия хранятся отдельно и не изменяют факты ${guruGateLabel("gate-5")}, утверждённый бюджет ${guruGateLabel("gate-4")} или историю.</p>`;
 }
 
 function g8DataHtmlV3(analysis) {

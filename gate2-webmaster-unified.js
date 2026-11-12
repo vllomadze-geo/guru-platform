@@ -138,7 +138,7 @@ function g2wmStepHtml(step) {
       step.id === "s33" && status !== "ready" && !g2wmVisibilityCanComplete() ||
       step.id === "s34" && status !== "ready" && !g2wmLaunchCanComplete()) marker.disabled = true;
   const source = step.id === "s11"
-    ? `<div class="g2mu-fields"><div class="g2mu-source"><span>Основной адрес · из Gate 0</span><strong>${escapeHtml(g2wmMainAddress() || "Не указан")}</strong></div></div>` : "";
+    ? `<div class="g2mu-fields"><div class="g2mu-source"><span>Основной адрес · из ${guruGateLabel("gate-0")}</span><strong>${escapeHtml(g2wmMainAddress() || "Не указан")}</strong></div></div>` : "";
   const markdown = { s11: G2WM_MAIN_ADDRESS_MARKDOWN, s12: G2WM_RIGHTS_MARKDOWN }[step.id];
   const copyClass = step.id === "s11" ? "g2wm-main-address-copy" : "g2wm-rights-copy";
   const guide = step.id === "s21" ? g2wmIndexingGuideHtml()

@@ -20,9 +20,9 @@ function g8AuditExecutionV1(productId = "") {
   const pending = tasks.filter((task) => gate7TaskStatus(task) !== "ready");
   return {
     ready, total: cards.length, blocker, tasks, pending,
-    gate2Source: g8AuditSourceV1("gate-2", "Gate 2 · Техническая готовность",
+    gate2Source: g8AuditSourceV1("gate-2", `${guruGateLabel("gate-2")} · Техническая готовность`,
       { kind: "gate2-card", cardId: blocker?.id || cards[0]?.id || "", field: "notes" }),
-    gate7Source: g8AuditSourceV1("gate-7", "Gate 7 · Исполнение",
+    gate7Source: g8AuditSourceV1("gate-7", `${guruGateLabel("gate-7")} · Исполнение`,
       { kind: "gate7-task-v1", taskId: pending[0]?.id || tasks[0]?.id || "" }),
   };
 }
@@ -60,7 +60,7 @@ function g8AuditScopedV1(field, product, fieldLabel) {
           field: "unified" } : scopedTarget;
   return {
     value: guruV185Text(record?.value), record, scope: resolved.scope,
-    source: g8AuditSourceV1("gate-0", `Gate 0 · ${fieldLabel} · ${scopeLabel}`,
+    source: g8AuditSourceV1("gate-0", `${guruGateLabel("gate-0")} · ${fieldLabel} · ${scopeLabel}`,
       target),
     confirmed: !record || !record.confirmation_status || record.confirmation_status === "confirmed",
   };
@@ -69,25 +69,25 @@ function g8AuditScopedV1(field, product, fieldLabel) {
 function g8AuditCompanyQuestionsV1(a) {
   const goal = a.goal;
   const goalRecord = guruCompanyPrimaryGoalV360(state);
-  const goalSource = (field = "goalTargetValue") => g8AuditSourceV1("gate-0", `Gate 0 · Цель компании · ${{
+  const goalSource = (field = "goalTargetValue") => g8AuditSourceV1("gate-0", `${guruGateLabel("gate-0")} · Цель компании · ${{
     goalMetric: "показатель", goalTargetValue: "целевое значение", goalDeadline: "срок", goalBudget: "бюджет",
   }[field] || field}`,
     { kind: "gate0-company-goal", cardId: G8_PROJECT_GOAL_CARD_ID, goalId: goalRecord?.id || "", field });
   const segments = guruCompanySegmentsV360(state);
   const segment = segments.find((row) => guruV185Text(row.value)) || segments[0];
-  const segmentSource = g8AuditSourceV1("gate-0", "Gate 0 · Сегмент компании",
+  const segmentSource = g8AuditSourceV1("gate-0", `${guruGateLabel("gate-0")} · Сегмент компании`,
     { kind: "gate0-company-segmentation", cardId: GURU_GATE0_COMPANY_SEGMENTATION_CARD_ID_V309,
       recordId: segment?.id || "", field: "unified" });
   const geography = guruV185Text(state?.project?.geography);
   const passportCard = state?.gates?.find((gate) => gate.id === "gate-0")?.cards?.find(isProjectPassportCard);
-  const geographySource = g8AuditSourceV1("gate-0", "Gate 0 · Паспорт проекта · География",
+  const geographySource = g8AuditSourceV1("gate-0", `${guruGateLabel("gate-0")} · Паспорт проекта · География`,
     { kind: "gate0-project-field", cardId: passportCard?.id || "", field: "geography" });
   const positioning = guruV308ProjectPositioningRecord(state, false);
   const offers = guruCompanyOffersV360(state);
   const offer = offers.find((row) => guruV185Text(row.value || row.offer?.value)) || offers[0];
-  const positioningSource = g8AuditSourceV1("gate-0", "Gate 0 · Позиционирование компании",
+  const positioningSource = g8AuditSourceV1("gate-0", `${guruGateLabel("gate-0")} · Позиционирование компании`,
     { kind: "gate0-company-positioning", cardId: GURU_GATE0_COMPANY_POSITIONING_CARD_ID_V308, field: "unified" });
-  const offerSource = g8AuditSourceV1("gate-0", "Gate 0 · Оффер компании",
+  const offerSource = g8AuditSourceV1("gate-0", `${guruGateLabel("gate-0")} · Оффер компании`,
     { kind: "gate0-company-offer", cardId: GURU_GATE0_COMPANY_OFFER_CARD_ID_V347,
       recordId: offer?.id || "", field: "offer" });
   const productCount = a.contributions.length;
@@ -100,13 +100,13 @@ function g8AuditCompanyQuestionsV1(a) {
     .find((product) => product && guruGate1FinalConfirmedV259(product, state).length);
   const companyComparison = state?.projectComparison
     ? projectComparisonStatus(state.projectComparison) : { status: "not_started", filled: 0 };
-  const productSource = g8AuditSourceV1("gate-0", "Gate 0 · Каталог продуктов", { kind: "gate0-catalog" });
-  const campaignSource = g8AuditSourceV1("gate-4", "Gate 4 · Кампании продуктов", { kind: "gate4-campaign", productId: a.contributions[0]?.product_id || "" });
-  const journeySource = g8AuditSourceV1("gate-3", "Gate 3 · Маршрут 5A",
+  const productSource = g8AuditSourceV1("gate-0", `${guruGateLabel("gate-0")} · Каталог продуктов`, { kind: "gate0-catalog" });
+  const campaignSource = g8AuditSourceV1("gate-4", `${guruGateLabel("gate-4")} · Кампании продуктов`, { kind: "gate4-campaign", productId: a.contributions[0]?.product_id || "" });
+  const journeySource = g8AuditSourceV1("gate-3", `${guruGateLabel("gate-3")} · Маршрут 5A`,
     { kind: "gate3-journey", productId: incompleteJourney?.product_id || a.contributions[0]?.product_id || "" });
   const budgetSource = goalSource("goalBudget");
-  const forecastSource = g8AuditSourceV1("gate-8", "Gate 8 · Прогноз компании", { kind: "gate8-audit-section", scope: "company", section: "expect" });
-  const factsSource = g8AuditSourceV1("gate-5", "Gate 5 · Фактическая статистика", { kind: "gate5-import-v3", block: "input" });
+  const forecastSource = g8AuditSourceV1("gate-8", `${guruGateLabel("gate-8")} · Прогноз компании`, { kind: "gate8-audit-section", scope: "company", section: "expect" });
+  const factsSource = g8AuditSourceV1("gate-5", `${guruGateLabel("gate-5")} · Фактическая статистика`, { kind: "gate5-import-v3", block: "input" });
   const budgetOverrun = goal.budgetRecord.valid && a.plannedProductBudgets > goal.budget;
   const goalMismatch = goal.valid && (goal.metric !== a.metric || goal.deadline && goal.deadline !== a.period.end);
   const periodInvalid = a.period.start > a.period.end;
@@ -119,15 +119,15 @@ function g8AuditCompanyQuestionsV1(a) {
       [goal.metric, goal.targetRecord.valid, goal.deadline], [goalSource("goalMetric"), goalSource(), goalSource("goalDeadline")],
       { attention: goalMismatch, notice: goalMismatch ? "Показатель или срок цели не совпадает с выбранным прогнозом." : "" }),
     g8AuditQuestionV1("На каком рынке и для кого мы работаем?",
-      [geography && `География: ${geography}.`, segment?.value && `Сегмент: ${guruV185Text(segment.value)}.`, demandProduct && "Есть подтверждённые данные спроса Gate 1."].filter(Boolean).join(" ") || "Рынок и аудитория пока не определены.",
-      [geography, segment?.value, demandProduct], [geographySource, segmentSource, g8AuditSourceV1("gate-1", "Gate 1 · Подтверждённый спрос", { kind: "gate1-keywords", productId: demandProduct?.id || a.contributions[0]?.product_id || "" })],
+      [geography && `География: ${geography}.`, segment?.value && `Сегмент: ${guruV185Text(segment.value)}.`, demandProduct && `Есть подтверждённые данные спроса ${guruGateLabel("gate-1")}.`].filter(Boolean).join(" ") || "Рынок и аудитория пока не определены.",
+      [geography, segment?.value, demandProduct], [geographySource, segmentSource, g8AuditSourceV1("gate-1", `${guruGateLabel("gate-1")} · Подтверждённый спрос`, { kind: "gate1-keywords", productId: demandProduct?.id || a.contributions[0]?.product_id || "" })],
       { attention: segment && segment.confirmation_status && segment.confirmation_status !== "confirmed",
-        notice: !geography || !segment?.value ? "Уточните географию и сегмент." : !demandProduct ? "Нет подтверждённых данных спроса Gate 1 для продуктов." : "" }),
+        notice: !geography || !segment?.value ? "Уточните географию и сегмент." : !demandProduct ? `Нет подтверждённых данных спроса ${guruGateLabel("gate-1")} для продуктов.` : "" }),
     g8AuditQuestionV1("Почему клиенты должны выбирать именно нас?",
-      [positioning?.value && `Позиционирование: ${guruV185Text(positioning.value)}.`, offer?.value && `Оффер: ${guruV185Text(offer.value)}.`, companyComparison.filled && "Сравнение с конкурентами есть в Gate 1."].filter(Boolean).join(" ") || "Позиционирование и оффер компании не заданы.",
-      [positioning?.value, offer?.value, companyComparison.filled], [positioningSource, offerSource, g8AuditSourceV1("gate-1", "Gate 1 · Сравнение компании с конкурентами", { kind: "gate1-project-comparison" })],
+      [positioning?.value && `Позиционирование: ${guruV185Text(positioning.value)}.`, offer?.value && `Оффер: ${guruV185Text(offer.value)}.`, companyComparison.filled && `Сравнение с конкурентами есть в ${guruGateLabel("gate-1")}.`].filter(Boolean).join(" ") || "Позиционирование и оффер компании не заданы.",
+      [positioning?.value, offer?.value, companyComparison.filled], [positioningSource, offerSource, g8AuditSourceV1("gate-1", `${guruGateLabel("gate-1")} · Сравнение компании с конкурентами`, { kind: "gate1-project-comparison" })],
       { attention: [positioning, offer].some((row) => row?.confirmation_status && row.confirmation_status !== "confirmed") || companyComparison.status === "in_progress",
-        notice: companyComparison.status === "not_started" ? "Конкурентное сравнение компании в Gate 1 не заполнено." : "" }),
+        notice: companyComparison.status === "not_started" ? `Конкурентное сравнение компании в ${guruGateLabel("gate-1")} не заполнено.` : "" }),
     g8AuditQuestionV1("За счёт каких продуктов и каналов мы достигнем цели?",
       productCount ? `${productCount} продуктов; ${campaignCount} кампаний с привязкой к продуктам.` : "Продуктовый портфель не задан.",
       [productCount, !incompleteJourney && productCount, campaignCount], [productSource, journeySource, campaignSource],
@@ -137,7 +137,7 @@ function g8AuditCompanyQuestionsV1(a) {
       [goal.budgetRecord.valid, a.contributions.some((row) => row.budget.valid)],
       [budgetSource, campaignSource, forecastSource],
       { problem: budgetOverrun ? `Планы продуктов превышают лимит компании на ${g8Money(a.plannedProductBudgets - goal.budget)}.` : "",
-        notice: unassignedSpend ? `Неразнесённые расходы Gate 5: ${g8Money(a.commonExpenses.unassignedSpend)}; они не включены повторно.` : "" }),
+        notice: unassignedSpend ? `Неразнесённые расходы ${guruGateLabel("gate-5")}: ${g8Money(a.commonExpenses.unassignedSpend)}; они не включены повторно.` : "" }),
     g8AuditQuestionV1("Какого результата ожидать и насколько надёжен прогноз?",
       Number.isFinite(a.selected.value)
         ? `${g8FinalMetricPhraseV3(a.metric, a.selected.value)}; покрытие ${a.selected.included.length} из ${productCount} продуктов. ${a.probability.available ? `Вероятность ${g8Percent(a.probability.percent)}.` : "Вероятность не рассчитана."}`
@@ -147,12 +147,12 @@ function g8AuditCompanyQuestionsV1(a) {
         attention: !a.selected.complete || noFact || !a.probability.available,
         notice: !a.selected.complete ? "Не все продукты имеют сопоставимый расчёт; общий итог частичный." : noFact ? "Нет фактических периодов для проверки устойчивости прогноза." : !a.probability.available ? a.probability.reason : "" }),
     g8AuditQuestionV1("Что может помешать и когда необходимо корректировать план?",
-      `${a.risks.length ? a.risks[0] : "Расчётных ограничений пока не выявлено."} Gate 2: ${execution.ready} из ${execution.total} проверок готово; Gate 7: ${execution.pending.length} незавершённых задач.`,
+      `${a.risks.length ? a.risks[0] : "Расчётных ограничений пока не выявлено."} ${guruGateLabel("gate-2")}: ${execution.ready} из ${execution.total} проверок готово; ${guruGateLabel("gate-7")}: ${execution.pending.length} незавершённых задач.`,
       [productCount, execution.total && execution.ready === execution.total],
       [execution.gate2Source, execution.gate7Source, forecastSource],
       { actionSource: execution.blocker ? execution.gate2Source : execution.pending.length ? execution.gate7Source : forecastSource,
         attention: a.risks.length > 0 || execution.pending.length > 0,
-        notice: a.risks[0] || (execution.blocker ? "Техническая готовность Gate 2 не подтверждена полностью." : "") }),
+        notice: a.risks[0] || (execution.blocker ? `Техническая готовность ${guruGateLabel("gate-2")} не подтверждена полностью.` : "") }),
   ];
 }
 
@@ -162,7 +162,7 @@ function g8AuditProductQuestionsV1(a) {
     "Какой результат должен дать продукт и к какому сроку?", "Кто наш покупатель?", "Какую задачу клиента решаем и какую выгоду даём?",
     "Почему клиент выберет нас, а не альтернативу?", "Как мы доведём клиента до покупки?", "Сколько вложим и какой результат получим?",
     "Что может помешать и как мы отреагируем?",
-  ][index], "Продукт не выбран.", [false], [g8AuditSourceV1("gate-0", "Gate 0 · Каталог продуктов", { kind: "gate0-catalog" })]));
+  ][index], "Продукт не выбран.", [false], [g8AuditSourceV1("gate-0", `${guruGateLabel("gate-0")} · Каталог продуктов`, { kind: "gate0-catalog" })]));
   const goal = a.goal;
   const projectedGoals = g8ProductDataV3(product).projected.goals || [];
   const otherGoals = projectedGoals.filter((row) => {
@@ -170,7 +170,7 @@ function g8AuditProductQuestionsV1(a) {
     const target = guruV185Text(row.targetValue ?? row.goalTargetValue ?? row.target);
     return metric && target && (metric !== goal.metric || Number(target) !== goal.target || g8DateOnlyV3(row.deadline || row.goalDeadline) !== goal.deadline);
   });
-  const goalSource = g8AuditSourceV1("gate-5", "Gate 5 · Цель выбранного продукта",
+  const goalSource = g8AuditSourceV1("gate-5", `${guruGateLabel("gate-5")} · Цель выбранного продукта`,
     { kind: "gate5-goal-v1", block: "input", productId: product.id,
       recordId: projectedGoals.find((row) => row.id)?.id || "" });
   const segment = g8AuditScopedV1("segments", product, "Сегмент");
@@ -181,16 +181,16 @@ function g8AuditProductQuestionsV1(a) {
   const snapshot = g3ProductJourneySnapshot(product);
   const stages = g3ProductJourneyStages(snapshot);
   const journeyReady = g3ProductJourneyOverallStatus(stages) === "ready";
-  const landingSource = g8AuditSourceV1("gate-1", "Gate 1 · Посадочная продукта", g3ProductJourneyLandingTarget(snapshot));
-  const routeSource = g8AuditSourceV1("gate-3", "Gate 3 · Маршрут 5A", { kind: "gate3-journey", productId: product.id });
-  const campaignSource = g8AuditSourceV1("gate-4", "Gate 4 · Кампания и CTA", g3ProductJourneyChannelTarget(snapshot));
-  const budgetSource = g8AuditSourceV1("gate-4", "Gate 4 · Бюджет продукта", g8SourceTargetV3({ key: "budget" }, a));
-  const economicsSource = g8AuditSourceV1("gate-1", "Gate 1 · Юнит-экономика", { kind: "gate1-unit", itemIndex: g8UnitItemIndexV3(product.id) });
-  const factsSource = g8AuditSourceV1("gate-5", "Gate 5 · Факт продукта", a.observations[0]?.id
+  const landingSource = g8AuditSourceV1("gate-1", `${guruGateLabel("gate-1")} · Посадочная продукта`, g3ProductJourneyLandingTarget(snapshot));
+  const routeSource = g8AuditSourceV1("gate-3", `${guruGateLabel("gate-3")} · Маршрут 5A`, { kind: "gate3-journey", productId: product.id });
+  const campaignSource = g8AuditSourceV1("gate-4", `${guruGateLabel("gate-4")} · Кампания и CTA`, g3ProductJourneyChannelTarget(snapshot));
+  const budgetSource = g8AuditSourceV1("gate-4", `${guruGateLabel("gate-4")} · Бюджет продукта`, g8SourceTargetV3({ key: "budget" }, a));
+  const economicsSource = g8AuditSourceV1("gate-1", `${guruGateLabel("gate-1")} · Юнит-экономика`, { kind: "gate1-unit", itemIndex: g8UnitItemIndexV3(product.id) });
+  const factsSource = g8AuditSourceV1("gate-5", `${guruGateLabel("gate-5")} · Факт продукта`, a.observations[0]?.id
     ? { kind: "gate5-snapshot-v1", block: "input", productId: product.id,
         campaignId: a.context.campaignId, recordId: a.observations[0].id }
     : { kind: "gate5-import-v3", block: "input", productId: product.id, campaignId: a.context.campaignId });
-  const forecastSource = g8AuditSourceV1("gate-8", "Gate 8 · Прогноз продукта", { kind: "gate8-audit-section", scope: "product", section: "expect" });
+  const forecastSource = g8AuditSourceV1("gate-8", `${guruGateLabel("gate-8")} · Прогноз продукта`, { kind: "gate8-audit-section", scope: "product", section: "expect" });
   const campaignCount = a.context.campaigns.length;
   const execution = g8AuditExecutionV1(product.id);
   const productComparison = state?.projectComparison?.productsById?.[product.id];
@@ -213,9 +213,9 @@ function g8AuditProductQuestionsV1(a) {
   const sourceScope = (row) => row.scope === "product" ? "продукт" : row.scope === "category" ? "наследовано из категории" : "наследовано от компании";
   return [
     g8AuditQuestionV1("Какой результат должен дать продукт и к какому сроку?",
-      goal.valid ? `${g8FinalMetricPhraseV3(goal.metric, goal.target)}${goal.deadline ? ` до ${g8DateLabel(goal.deadline)}` : " · срок не указан"}.` : "Отдельная измеримая цель продукта в Gate 5 не задана.",
+      goal.valid ? `${g8FinalMetricPhraseV3(goal.metric, goal.target)}${goal.deadline ? ` до ${g8DateLabel(goal.deadline)}` : " · срок не указан"}.` : `Отдельная измеримая цель продукта в ${guruGateLabel("gate-5")} не задана.`,
       [goal.metric, goal.targetRecord.valid, goal.deadline], [goalSource],
-      { problem: otherGoals.length ? "Для этого product_id сохранены несовпадающие цели или сроки Gate 5." : "",
+      { problem: otherGoals.length ? `Для этого product_id сохранены несовпадающие цели или сроки ${guruGateLabel("gate-5")}.` : "",
         attention: goalPeriodMismatch, notice: goalPeriodMismatch ? "Срок цели продукта не совпадает с концом прогноза." : "" }),
     g8AuditQuestionV1("Кто наш покупатель?",
       segment.value ? `${segment.value} (${sourceScope(segment)}).` : "Сегмент выбранного продукта не определён.",
@@ -224,17 +224,17 @@ function g8AuditProductQuestionsV1(a) {
       [jtbd.value && `Задача: ${jtbd.value} (${sourceScope(jtbd)}).`, usp.value && `Выгода из УТП: ${usp.value} (${sourceScope(usp)}).`].filter(Boolean).join(" ") || "JTBD и выгода из УТП не заданы.",
       [jtbd.value, usp.value], [jtbd.source, usp.source], { attention: !jtbd.confirmed || !usp.confirmed }),
     g8AuditQuestionV1("Почему клиент выберет нас, а не альтернативу?",
-      [positioning.value && `Позиционирование: ${positioning.value}.`, usp.value && `УТП: ${usp.value}.`, offer.value && `Оффер: ${offer.value}.`, comparisonStatus.filled && "Есть сравнение с альтернативами Gate 1."].filter(Boolean).join(" ") || "Отличие и предложение продукта не сформулированы.",
+      [positioning.value && `Позиционирование: ${positioning.value}.`, usp.value && `УТП: ${usp.value}.`, offer.value && `Оффер: ${offer.value}.`, comparisonStatus.filled && `Есть сравнение с альтернативами ${guruGateLabel("gate-1")}.`].filter(Boolean).join(" ") || "Отличие и предложение продукта не сформулированы.",
       [positioning.value, usp.value, offer.value, comparisonStatus.filled], [positioning.source, usp.source, offer.source,
-        g8AuditSourceV1("gate-1", "Gate 1 · Сравнение выбранного продукта", { kind: "gate1-project-comparison", productId: product.id })],
+        g8AuditSourceV1("gate-1", `${guruGateLabel("gate-1")} · Сравнение выбранного продукта`, { kind: "gate1-project-comparison", productId: product.id })],
       { attention: !positioning.confirmed || !usp.confirmed || !offer.confirmed || comparisonStatus.status === "in_progress",
-        notice: comparisonStatus.status === "not_started" ? "Нет сравнения выбранного продукта с альтернативами в Gate 1." : "" }),
+        notice: comparisonStatus.status === "not_started" ? `Нет сравнения выбранного продукта с альтернативами в ${guruGateLabel("gate-1")}.` : "" }),
     g8AuditQuestionV1("Как мы доведём клиента до покупки?",
-      [snapshot.landing && `Посадочная: ${snapshot.landing}.`, campaignCount && `${campaignCount} кампаний; маршрут 5A: ${journeyReady ? "готов" : "не завершён"}.`, snapshot.cta && `CTA: ${snapshot.cta}.`, execution.total && `Gate 2: ${execution.ready} из ${execution.total} проверок готово.`].filter(Boolean).join(" ") || "Посадочная, маршрут и кампания не определены.",
+      [snapshot.landing && `Посадочная: ${snapshot.landing}.`, campaignCount && `${campaignCount} кампаний; маршрут 5A: ${journeyReady ? "готов" : "не завершён"}.`, snapshot.cta && `CTA: ${snapshot.cta}.`, execution.total && `${guruGateLabel("gate-2")}: ${execution.ready} из ${execution.total} проверок готово.`].filter(Boolean).join(" ") || "Посадочная, маршрут и кампания не определены.",
       [snapshot.landing, journeyReady, campaignCount, snapshot.cta, execution.total && execution.ready === execution.total],
       [landingSource, execution.gate2Source, routeSource, campaignSource],
       { actionSource: !snapshot.landing ? landingSource : !journeyReady ? routeSource : !campaignCount || !snapshot.cta ? campaignSource : execution.gate2Source,
-        notice: !snapshot.landing ? "Для проверки пути к покупке нужна посадочная выбранного продукта." : !journeyReady ? "Маршрут 5A выбранного продукта не завершён." : execution.blocker ? "Техническая готовность Gate 2 не подтверждена полностью." : "" }),
+        notice: !snapshot.landing ? "Для проверки пути к покупке нужна посадочная выбранного продукта." : !journeyReady ? "Маршрут 5A выбранного продукта не завершён." : execution.blocker ? `Техническая готовность ${guruGateLabel("gate-2")} не подтверждена полностью.` : "" }),
     g8AuditQuestionV1("Сколько вложим и какой результат получим?",
       `Бюджет продукта: ${budget.valid ? g8Money(budget.value) : "не указан"}; прогноз: ${Number.isFinite(a.value) ? g8FinalMetricPhraseV3(a.metric, a.value) : "не рассчитан"}.`,
       [budget.valid, Number.isFinite(a.value)], [economicsSource, budgetSource, factsSource, forecastSource],
@@ -246,13 +246,13 @@ function g8AuditProductQuestionsV1(a) {
           partialFactPeriod && "Часть фактических периодов пересекает прогноз лишь частично и не включена в сопоставимый факт.",
           conversionMismatch && "Рекламные конверсии не совпадают с подтверждёнными обращениями; проверьте определение цели."].filter(Boolean).join(" ") }),
     g8AuditQuestionV1("Что может помешать и как мы отреагируем?",
-      `${a.mainConstraint && a.mainConstraint !== "Критическое ограничение не выявлено" ? a.mainConstraint : "Расчётных препятствий пока не выявлено."} Gate 7: ${execution.pending.length} незавершённых задач выбранного продукта.`,
+      `${a.mainConstraint && a.mainConstraint !== "Критическое ограничение не выявлено" ? a.mainConstraint : "Расчётных препятствий пока не выявлено."} ${guruGateLabel("gate-7")}: ${execution.pending.length} незавершённых задач выбранного продукта.`,
       [Number.isFinite(a.value), execution.total && execution.ready === execution.total],
       [execution.gate2Source,
-        g8AuditSourceV1("gate-6", "Gate 6 · Календарь", { kind: "gate6-calendar" }),
+        g8AuditSourceV1("gate-6", `${guruGateLabel("gate-6")} · Календарь`, { kind: "gate6-calendar" }),
         execution.gate7Source, forecastSource],
       { actionSource: !Number.isFinite(a.value) ? forecastSource : execution.blocker ? execution.gate2Source : execution.gate7Source,
-        attention: Boolean(a.missingData.length || execution.pending.length), notice: a.missingData[0] ? g8IssueCopyV3(a.missingData[0]) : execution.blocker ? "Техническая готовность Gate 2 не подтверждена полностью." : "" }),
+        attention: Boolean(a.missingData.length || execution.pending.length), notice: a.missingData[0] ? g8IssueCopyV3(a.missingData[0]) : execution.blocker ? `Техническая готовность ${guruGateLabel("gate-2")} не подтверждена полностью.` : "" }),
   ];
 }
 

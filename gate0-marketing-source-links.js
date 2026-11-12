@@ -51,7 +51,7 @@ G2_SECTIONS.splice(G2_SECTIONS.findIndex((row) => row.key === "crm"), 0,
   { key: "ad_accounts", title: "Рекламные кабинеты", match: /^(?:яндекс директ|google ads|vk ads|meta ads|telegram ads).*рекламный кабинет/i });
 G2_NEW_CARDS.push(...G0_MARKETING_GATE2_CHECKS.map((row) => ({
   id: row.id, title: row.title,
-  instruction: `Состояние ${row.infra} берётся из Gate 0 → Инфраструктура.`,
+  instruction: `Состояние ${row.infra} берётся из ${guruGateLabel("gate-0")} → Инфраструктура.`,
   status: "not_started", evidence: "", pages: "", notes: "", fields: {},
 })));
 
@@ -109,7 +109,7 @@ g2ResolvedSourceV267 = function (card) {
   const { card: sourceCard, row } = g0MarketingInfraRow(check.infra);
   return sourceCard && row ? {
     key: "I", gateId: "gate-0", cardId: sourceCard.id, itemId: check.infra,
-    title: check.infra, path: `Gate 0 · Инфраструктура · ${check.infra}`,
+    title: check.infra, path: `${guruGateLabel("gate-0")} · Инфраструктура · ${check.infra}`,
     result: g0MarketingDerivedStatus(card), found: true,
   } : null;
 };
@@ -119,7 +119,7 @@ function g0MarketingSourceButton(target) {
   const gateNumber = target.gate === "gate-2" ? "2" : "4";
   const encoded = escapeAttr(JSON.stringify(target));
   const title = target.requiresProduct
-    ? `Открыть: Gate 4 · Добавить продукт для «${target.label}»`
+    ? `Открыть: ${guruGateLabel("gate-4")} · Добавить продукт для «${target.label}»`
     : `Открыть: Gate ${gateNumber} · ${target.label}`;
   return `<button type="button" class="mega-system-source-v1" title="${escapeAttr(title)}" aria-label="${escapeAttr(title)}" data-g0-marketing-source="${encoded}">Gate ${gateNumber} ↗</button>`;
 }

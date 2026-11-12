@@ -249,7 +249,7 @@ function g4FiveToolCardHtmlV523(tool, stageKey, productId = "") {
           .some((field) => String(campaign[field] || "").trim())).map(([key, campaign]) => ({ key, channel, campaign })))
     : [];
   const source = tool.id === "articles_cases"
-    ? g3ExecutionGate0ExtraResultV282("Портфолио / кейсы", "Gate 0 · Портфолио / кейсы")
+    ? g3ExecutionGate0ExtraResultV282("Портфолио / кейсы", `${guruGateLabel("gate-0")} · Портфолио / кейсы`)
     : null;
   const status = serviceChannels.length && serviceChannels.every(g4FiveChannelExcludedV523)
     ? "not_needed"

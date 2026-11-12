@@ -103,7 +103,7 @@ function gate1SeoDecorateAuditV298(auditSection) {
   auditSection.classList.add("g1-seo-embedded-source-v298");
   const body = auditSection.querySelector(":scope > .g1-section-body");
   if (body && !body.querySelector(":scope > [data-g1-seo-explanation-v297=\"site-audit\"]"))
-    body.insertAdjacentHTML("afterbegin", `${gate1SeoCentralExplanationV298("site-audit")}${gate1SeoCentralSourceV298("Gate 1 · Аудит сайта")}`);
+    body.insertAdjacentHTML("afterbegin", `${gate1SeoCentralExplanationV298("site-audit")}${gate1SeoCentralSourceV298(`${guruGateLabel("gate-1")} · Аудит сайта`)}`);
   const cards = auditSection.querySelectorAll(":scope > .g1-section-body > [data-card]");
   auditSection.dataset.g1SeoAuditVisibleCardsV298 = String(cards.length);
 }
@@ -270,12 +270,12 @@ function gate1SeoCentralizeV298() {
   gate1SeoDecorateWebmasterV298(
     companyWebmaster,
     "webmaster-company",
-    "Gate 1 · SEO-аудит",
+    `${guruGateLabel("gate-1")} · SEO-аудит`,
   );
   gate1SeoDecorateWebmasterV298(
     productWebmaster,
     "webmaster-product",
-    "Gate 1 · Карточка товара / Страница услуги",
+    `${guruGateLabel("gate-1")} · Карточка товара / Страница услуги`,
   );
   gate1SeoEmbeddedAccordionV300(companyWebmaster, "company-webmaster");
   gate1SeoEmbeddedAccordionV300(productWebmaster, "product-webmaster");
@@ -345,7 +345,7 @@ function gate1SeoCentralizeV298() {
   const structureBody = structureAudit.querySelector(":scope > .g1-section-body");
   structureBody.insertAdjacentHTML(
     "afterbegin",
-    `${gate1SeoCentralExplanationV298("site-audit")}${gate1SeoCentralSourceV298("Gate 1 · структура сайта")}`,
+    `${gate1SeoCentralExplanationV298("site-audit")}${gate1SeoCentralSourceV298(`${guruGateLabel("gate-1")} · структура сайта`)}`,
   );
 
   const legalAudit = gate1CompanyAuditSectionV299(

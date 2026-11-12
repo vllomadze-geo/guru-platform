@@ -13,7 +13,7 @@ function g2s4ProductUrl(productId, workspace = state) {
 }
 function g2s4UrlContext({ product_id, workspace }) {
   const url = g2s4ProductUrl(product_id, workspace);
-  return { label: "Адрес продукта из Gate 0", value: url || "URL не указан", href: url };
+  return { label: `Адрес продукта из ${guruGateLabel("gate-0")}`, value: url || "URL не указан", href: url };
 }
 function g2s4CounterContext({ workspace }) {
   const id = g2MetrikaCompanyCounterV374(workspace);
@@ -56,8 +56,8 @@ g2ServiceBlockRegister({
   steps: [
     g2s4Step("route", "Выберите маршрут трафика: сайт, мессенджер или нативная лид-форма.",
       "Список справа.", "Маршрут выбран.", "", { existingFields: ["route"] }),
-    g2s4Step("url", "Адрес маршрута берётся из «Платформы» Gate 0.",
-      "Gate 0 → Платформа.", "Адрес показан, иначе «URL не указан».", "", { context: g2s4UrlContext }),
+    g2s4Step("url", `Адрес маршрута берётся из «Платформы» ${guruGateLabel("gate-0")}.`,
+      `${guruGateLabel("gate-0")} → Платформа.`, "Адрес показан, иначе «URL не указан».", "", { context: g2s4UrlContext }),
     g2s4Step("open", "Откройте адрес в браузере.", "Кнопка «Проверить URL».",
       "Страница открывается.", "", { context: g2s4UrlContext,
         autoCheck: ({ product_id, workspace }) => Boolean(g2s4ProductUrl(product_id, workspace)) }),
@@ -76,7 +76,7 @@ g2ServiceBlockRegister({
   statusResolver: g2s4WizardStatus("productVk"), gate0Applicability: g2s4WizardApplicability("productVk"),
   steps: [
     g2s4Step("inherit", "Сверьте пиксель с блоком «VK Реклама и пиксель».",
-      "Gate 2 → Компания → «VK Реклама и пиксель» → шаг «Получите ID»; VK Реклама → «Конверсии» → «Пиксели» → выбранный пиксель.",
+      `${guruGateLabel("gate-2")} → Компания → «VK Реклама и пиксель» → шаг «Получите ID»; VK Реклама → «Конверсии» → «Пиксели» → выбранный пиксель.`,
       "ID в карточке продукта совпадает с ID пикселя компании и выбранного пикселя в VK.", G2S4_DOC.vkGuide,
       { context: g2s4PixelContext }),
     g2s4Step("event", "Выберите целевое событие продукта: отправка формы, покупка или другое действие.",
@@ -87,7 +87,7 @@ g2ServiceBlockRegister({
       "Tilda → «Настройки сайта» → «Аналитика» → «MAIL.RU COUNTER ID (VK PIXEL)»; затем VK Реклама → «Конверсии» → «Пиксели» → выбранный пиксель → «События».",
       "Счётчик установлен на опубликованной странице продукта, условие события соответствует действию.", G2S4_DOC.vkCounter),
     g2s4Step("test", "На опубликованной странице продукта выполните целевое действие.",
-      "Gate 0 → Платформа → ссылка продукта → форма, корзина или нужная кнопка.",
+      `${guruGateLabel("gate-0")} → Платформа → ссылка продукта → форма, корзина или нужная кнопка.`,
       "Действие завершилось успешно; зафиксируйте время теста.", G2S4_DOC.vkCounter,
       { context: g2s4UrlContext }),
     g2s4Step("report", "Проверьте регистрацию события в кабинете VK.",
@@ -109,8 +109,8 @@ g2ServiceBlockRegister({
       "Страница продукта.", "Отправлено."),
     g2s4Step("receive", "Проверьте получение обращения в сервисе из блока «Приём заявок».",
       "Сервис заявок; в Tilda раздел «Заявки».", "Обращение получено.", G2S4_DOC.forms,
-      { context: ({ workspace }) => ({ label: "Сервис заявок из Gate 0",
-        value: g2s3CrmName(workspace) || "Не указан в Gate 0", href: "#g2sb-company-leads-company" }) }),
+      { context: ({ workspace }) => ({ label: `Сервис заявок из ${guruGateLabel("gate-0")}`,
+        value: g2s3CrmName(workspace) || `Не указан в ${guruGateLabel("gate-0")}`, href: "#g2sb-company-leads-company" }) }),
     g2s4Step("source", "Проверьте, что в обращении указаны источник и выбранный продукт.",
       "Заявка в сервисе.", "Поля заполнены."),
     g2s4Step("compare", "Сверьте событие в Метрике с фактическим обращением.",

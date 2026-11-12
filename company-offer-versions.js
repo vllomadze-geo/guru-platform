@@ -77,7 +77,7 @@ function guruCompanyCtaHistoryHtmlV1(record, role = 'primary') {
       return `<li><div class="company-offer-history-head"><strong>${index === 0 ? 'Актуальная версия' : 'Предыдущая версия'}</strong><time>${escapeHtml(when)}</time></div>
         <p>${escapeHtml(version.value || 'Пустой CTA')}</p>
         ${before !== undefined ? `<small>Было: ${escapeHtml(before || 'Пустой CTA')}</small>` : ''}
-        <small>${escapeHtml(version.reason || (version.origin === 'gate0' ? 'Гипотеза Gate 0' : 'Основание не указано'))}</small>
+        <small>${escapeHtml(version.reason || (version.origin === 'gate0' ? `Гипотеза ${guruGateLabel("gate-0")}` : 'Основание не указано'))}</small>
       </li>`;
     }).join('')}</ol></details>`;
 }
@@ -130,9 +130,9 @@ function guruCompanyOfferHistoryHtmlV1(record, { open = false, legacyPortraitVal
       return `<li><div class="company-offer-history-head"><strong>${index === 0 ? 'Актуальная версия' : 'Предыдущая версия'}</strong><time>${escapeHtml(when)}</time></div>
         <p>${escapeHtml(version.value || 'Пустой оффер')}</p>
         ${before !== undefined ? `<small>Было: ${escapeHtml(before || 'Пустой оффер')}</small>` : ''}
-        <small>${escapeHtml(version.reason || (version.origin === 'gate0' ? 'Гипотеза Gate 0' : 'Основание не указано'))}</small>
+        <small>${escapeHtml(version.reason || (version.origin === 'gate0' ? `Гипотеза ${guruGateLabel("gate-0")}` : 'Основание не указано'))}</small>
         ${items.length ? `<details class="company-offer-evidence"><summary>Потребность на момент утверждения</summary><dl>${items.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join('')}</dl></details>` : ''}
-        ${gate0Items.length ? `<details class="company-offer-evidence"><summary>Выгоды Gate 0 на момент утверждения</summary><dl>${gate0Items.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join('')}</dl></details>` : ''}
+        ${gate0Items.length ? `<details class="company-offer-evidence"><summary>Выгоды ${guruGateLabel("gate-0")} на момент утверждения</summary><dl>${gate0Items.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join('')}</dl></details>` : ''}
       </li>`;
     }).join('')}</ol>
     ${legacyPortraitValue ? `<p class="company-offer-legacy">Ранее сохранено в этом портрете, без утверждения:<br>${escapeHtml(legacyPortraitValue)}</p>` : ''}

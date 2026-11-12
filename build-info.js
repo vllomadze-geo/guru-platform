@@ -2,7 +2,7 @@
    The local server serves the same computed label after source changes. */
 (() => {
   const scriptUrl = new URL(document.currentScript?.src || "build-info.js", location.href);
-  const displayVersion = "2.3.526+481d60ca2168";
+  const displayVersion = "2.3.526+b4d3eda2705d";
   const version = displayVersion;
   const productLabel = "Рабочая версия MVP";
   window.GURU_BUILD_INFO = Object.freeze({

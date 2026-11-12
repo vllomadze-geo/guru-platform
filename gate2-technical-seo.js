@@ -175,7 +175,7 @@ function g2SeoRead(calculate, workspace = state) {
       g2SeoProjecting = false;
     }
   }, workspace);
-  if (result.unresolved) throw failure || new Error("Не удалось прочитать технический SEO Gate 2");
+  if (result.unresolved) throw failure || new Error(`Не удалось прочитать технический SEO ${guruGateLabel("gate-2")}`);
   // Keep the caller's readiness trace, so the guide can point to unfinished
   // service steps while calculations still run against an isolated view.
   if (collector) collector.push(...result.missing);
@@ -299,7 +299,7 @@ pageStructureStatus = function (row) {
       url: megaPlatformAuditRowUrl(row) || row?.url,
       contextFields: { ...row?.contextFields },
       metaRobotsStatus: "ok", cwvStatus: "ok", imagesStatus: "ok",
-      auditEvidence: "Техническая проверка в Gate 2" });
+      auditEvidence: `Техническая проверка в ${guruGateLabel("gate-2")}` });
     if (status !== "not_started") return status;
     // A missing URL prevents completion, but content already entered on the
     // page must still count as work in progress.
@@ -361,7 +361,7 @@ function g2SeoEditorHtml(kind, productId = "", workspace = state) {
       return `<p>${escapeHtml(aggregate.label)}</p><p>Результат для каждого продукта редактируется в блоке «Посадочная товара» ниже.</p>`;
     }
     const rows = g2SeoRows(productId, view);
-    if (!rows.length) return '<p class="g2s4-empty">Страниц для проверки пока нет. Добавьте страницу в «Платформе» Gate 0.</p>';
+    if (!rows.length) return `<p class="g2s4-empty">Страниц для проверки пока нет. Добавьте страницу в «Платформе» ${guruGateLabel("gate-0")}.</p>`;
     return rows.map(({ card, row, index }) => `<details class="instruction-toggle" data-g2seo-page="${escapeAttr(g2SeoPageKey(card, row))}"><summary>${escapeHtml(row.name || card.title)}</summary><div class="instruction-text">${kind === "cwv"
       ? g2SeoOriginal.cwvHtml(card, row, index)
       : `<label class="g1-field"><span>${kind === "meta" ? "Meta Robots" : "Изображения"}</span><select class="g1-input" data-gate1-page-field="${kind === "meta" ? "metaRobotsStatus" : "imagesStatus"}" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${index}">${auditStatusOptions(row[kind === "meta" ? "metaRobotsStatus" : "imagesStatus"], kind === "meta" ? "meta" : "images")}</select></label>${kind === "meta" ? `<label class="g1-field"><span>Доказательство технического аудита</span><input class="g1-input" data-gate1-page-field="auditEvidence" value="${escapeAttr(row.auditEvidence || "")}" placeholder="Ссылка на отчёт или скриншот"></label>` : ""}`}</div></details>`).join("");
@@ -433,7 +433,7 @@ for (const [id, checks] of Object.entries(G2_SEO_STEPS)) {
   for (const [key, title] of Object.entries(checks)) {
     let step = config.steps.find(item => item.step_id === key);
     if (!step) { step = { step_id: key }; config.steps.push(step); }
-    Object.assign(step, { what: step.what || title, where: step.where || "Техническая проверка в Gate 2.", how: step.how || "Результат рассчитывается по полям проверки.",
+    Object.assign(step, { what: step.what || title, where: step.where || `Техническая проверка в ${guruGateLabel("gate-2")}.`, how: step.how || "Результат рассчитывается по полям проверки.",
       resultType: "reference", existingFields: [],
       uiStatusResolver: id === "company-domain" ? ({ product_id, workspace }) => g2SeoSnapshot(product_id, workspace)[key] : undefined,
       doneResolver: ({ product_id, workspace }) => ["ready", "not_required", "not_needed"].includes(g2SeoSnapshot(product_id, workspace)[key]),
@@ -471,7 +471,7 @@ g2ResolvedSourceV267 = function (card) {
   const config = G2_SERVICE_BLOCK_CONFIGS.get(id), productId = config.scope === "product" ? state?.project?.gate0ScopeUiV194?.selectedProductId || "" : "";
   const status = g2CardStatus(card);
   return { key: "G2", sourceType: "gate2_technical_seo", gateId: "gate-2", cardId: config.cardId,
-    title: config.title, path: `Gate 2 · ${config.title}`, found: true, result: status,
+    title: config.title, path: `${guruGateLabel("gate-2")} · ${config.title}`, found: true, result: status,
     rawStatus: status, normalizedStatus: status, readinessNormalizedStatus: status,
     product_id: productId, consulted: true, participatesInFinalStatus: true };
 };
@@ -483,7 +483,7 @@ gate1WebmasterG2SourceV295 = function (card, workspace = state) {
 };
 gate1WebmasterDerivedCommentV295 = function (workspace = state) {
   const result = gate1WebmasterIndexAggregateV295(workspace);
-  return `Gate 2 · Яндекс Вебмастер: ${result.label}`;
+  return `${guruGateLabel("gate-2")} · Яндекс Вебмастер: ${result.label}`;
 };
 
 // Keep the existing applicability selector and its saved value. Only the

@@ -12,7 +12,7 @@ const G1_COMPETITOR_STEPS_V539 = [
   { number: 4, title: "Цена", description: "Сравните цену аналога с нашей ценой и диапазоном предложений конкурента.", focus: "Наша цена из карточки товара.", fields: [["priceAnalog", "Цена аналога, ₽"], ["priceMin", "Минимальная цена, ₽"], ["priceMax", "Максимальная цена, ₽"]] },
   { number: 5, title: "JTBD и сегмент", description: "Определите, какую задачу закрывает предложение конкурента и для кого оно сделано.", focus: "Наш JTBD и сегмент.", fields: [["jtbdFunctional", "Функциональная задача"], ["jtbdSocial", "Социальная задача"], ["jtbdEmotional", "Эмоциональная задача"], ["segment", "Сегмент конкурента"]] },
   { number: 6, title: "Позиционирование", description: "Сформулируйте позиционирование одним предложением и сохраните подтверждающую цитату.", focus: "Наше позиционирование.", fields: [["positioning", "Позиционирование одной фразой"], ["quote", "Цитата: title, H1 или УТП"]] },
-  { number: 7, title: "Паритет и отличия", description: "Отделите общие свойства от отличий обеих сторон.", focus: "Наши УТП и доверие из Gate 0/1.", fields: [["parity", "Паритет"], ["competitorDifferences", "Отличия конкурента"], ["ourDifferences", "Наши отличия"]] },
+  { number: 7, title: "Паритет и отличия", description: "Отделите общие свойства от отличий обеих сторон.", focus: `Наши УТП и доверие из ${guruGateLabel("gate-0")}/1.`, fields: [["parity", "Паритет"], ["competitorDifferences", "Отличия конкурента"], ["ourDifferences", "Наши отличия"]] },
   { number: 8, title: "Ключевые слова и реклама", description: "Проверьте пересечение по главным фразам в органике и рекламе.", focus: "Есть ли домен конкурента в органике и рекламе по каждой фразе.", fields: [["organicPhrases", "Пересекающиеся фразы · органика"], ["adPhrases", "Пересекающиеся фразы · реклама"], ["adTexts", "Тексты объявлений"], ["offers", "Офферы"], ["triggers", "Триггеры"]] },
   { number: 9, title: "Как продаёт", description: "Изучите посадочную страницу и источники трафика.", focus: "Путь от первого экрана до действия и условия покупки.", fields: [["landingStructure", "Структура посадочной"], ["cta", "CTA"], ["payment", "Оплата"], ["channels", "Каналы"], ["trafficSources", "Источники трафика"]] },
   { number: 10, title: "География и доставка", description: "Проверьте, где и на каких условиях конкурент доставляет заказ.", focus: "Наша география.", fields: [["regions", "Регионы"], ["deliveryTime", "Сроки"], ["deliveryCost", "Стоимость"], ["pickup", "Самовывоз"]] },
@@ -188,7 +188,7 @@ function g1CompetitorCandidateRowV539(candidate, entry, ctx, direct) {
   const matches = ctx.phrases.ranked.filter((row) => selected.has(row.key));
   const phrases = ctx.phrases.ranked.length
     ? `<details class="g1-competitor-phrase-picker-v539"><summary>Фразы, где найден: ${matches.length}</summary><div>${ctx.phrases.ranked.map((row) => `<label><input type="checkbox" data-g1-competitor-phrase-v539="${id}" data-g1-competitor-product-v539="${escapeAttr(ctx.product.id)}" value="${escapeAttr(row.key)}" ${selected.has(row.key) ? "checked" : ""}>${escapeHtml(row.value)}</label>`).join("")}</div></details>`
-    : '<span>Нет фраз с частотностью — заполните метрики в Gate 1.</span>';
+    : `<span>Нет фраз с частотностью — заполните метрики в ${guruGateLabel("gate-1")}.</span>`;
   return `<article class="g1-competitor-candidate-v539" data-g1-competitor-candidate-v539="${id}">
     <div class="g1-competitor-candidate-head-v539"><strong>${escapeHtml(candidate.name || domain || "Кандидат")}</strong><span>${escapeHtml(G1_COMPETITOR_TYPES_V539[g1CompetitorTypeV539(candidate)])}</span></div>
     ${direct ? `<div class="g1-competitor-domain-readonly-v539"><b>Домен</b><span>${domain ? escapeHtml(domain) : "Укажите в карточке конкурента ниже"}</span></div>` : `<label class="g1-competitor-field-v539"><span>Домен</span><input type="text" inputmode="url" value="${escapeAttr(domain)}" data-g1-competitor-domain-v539="${id}" data-g1-competitor-product-v539="${escapeAttr(ctx.product.id)}" aria-label="Домен кандидата"><small aria-live="polite"></small></label>`}
@@ -215,7 +215,7 @@ function g1CompetitorCandidatesStepV539(entry, ctx) {
   const result = `<div class="g1-competitor-candidates-v539"><div class="g1-competitor-candidate-toolbar-v539"><span>Список кандидатов: ${all.length}</span><button type="button" class="small-btn" data-g1-competitor-add-v539 data-g1-competitor-product-v539="${escapeAttr(ctx.product.id)}">+ Добавить кандидата</button></div>${all.map((candidate) => g1CompetitorCandidateRowV539(candidate, entry, ctx, entry.competitors.includes(candidate))).join("") || '<p>Кандидатов пока нет.</p>'}</div>`;
   return g1CompetitorStepV539(1, "Сбор кандидатов", status,
     "Возьмите подтверждённые фразы продукта с наибольшим числом запросов. Выписывайте домены из топ-10 и рекламы.",
-    `${phraseRows}${frequencyNote}`, "Кандидаты — сайты, которые встречаются по нескольким фразам. Регион в Яндексе: " + escapeHtml(ctx.geography || "не указан в Gate 0"), result, entry);
+    `${phraseRows}${frequencyNote}`, "Кандидаты — сайты, которые встречаются по нескольким фразам. Регион в Яндексе: " + escapeHtml(ctx.geography || `не указан в ${guruGateLabel("gate-0")}`), result, entry);
 }
 
 function g1CompetitorClassificationStepV539(entry, ctx) {
@@ -226,7 +226,7 @@ function g1CompetitorClassificationStepV539(entry, ctx) {
     const choice = (field, label) => `<fieldset><legend>${label}</legend>${[["yes", "Да"], ["no", "Нет"]].map(([value, text]) => `<label><input type="radio" name="g1cmp-${id}-${field}" value="${value}" data-g1-competitor-classify-v539="${id}" data-g1-competitor-product-v539="${escapeAttr(ctx.product.id)}" data-g1-competitor-class-field-v539="${field}" ${answers[field] === value ? "checked" : ""}>${text}</label>`).join("")}</fieldset>`;
     return `<article data-g1-competitor-classification-v539="${id}"><strong>${escapeHtml(candidate.siteDomainV538 || candidate.name || "Кандидат без домена")}</strong>${choice("sameMarket", "Тот же JTBD, сегмент, цена, география?")}${choice("sameBusiness", "Тот же тип бизнеса?")}<span>Тип: <b>${escapeHtml(G1_COMPETITOR_TYPES_V539[g1CompetitorTypeV539(candidate)])}</b></span></article>`;
   }).join("") || '<p>Сначала добавьте кандидатов в шаге 1.</p>'}</div>`;
-  const focus = `Наш JTBD: ${escapeHtml(ctx.snapshot.jtbd || "не заполнен")}. Сегмент: ${escapeHtml(ctx.snapshot.segment || "не заполнен")}. Цена: ${escapeHtml(ctx.price.raw || "не заполнена")} ₽. Тип бизнеса: ${escapeHtml(state.project?.niche || "не заполнен в Gate 0")}.`;
+  const focus = `Наш JTBD: ${escapeHtml(ctx.snapshot.jtbd || "не заполнен")}. Сегмент: ${escapeHtml(ctx.snapshot.segment || "не заполнен")}. Цена: ${escapeHtml(ctx.price.raw || "не заполнена")} ₽. Тип бизнеса: ${escapeHtml(state.project?.niche || `не заполнен в ${guruGateLabel("gate-0")}`)}.`;
   return g1CompetitorStepV539(2, "Классификация", status,
     "Ответьте на два вопроса для каждого кандидата. Тип считается автоматически: Да/Да — Прямой, Да/Нет — Заменитель, Нет/Да — Потенциальный, Нет/Нет — Не конкурент.",
     "", focus, result, entry);
@@ -276,9 +276,9 @@ function g1CompetitorDirectCardV539(candidate, entry, ctx) {
     const focus = step.number === 3 ? ctx.snapshot.cardSummary || "Не заполнено в карточке товара"
       : step.number === 4 ? `Наша цена: ${ctx.price.raw ? `${ctx.price.raw} ₽` : "не заполнена в карточке товара"}`
       : step.number === 5 ? `JTBD: ${ctx.snapshot.jtbd || "не заполнен"}. Сегмент: ${ctx.snapshot.segment || "не заполнен"}.`
-      : step.number === 6 ? ctx.snapshot.positioning || "Не заполнено в Gate 0"
+      : step.number === 6 ? ctx.snapshot.positioning || `Не заполнено в ${guruGateLabel("gate-0")}`
       : step.number === 7 ? `УТП: ${ctx.snapshot.usp || "не заполнено"}. Доверие: ${ctx.snapshot.trust || "не заполнено"}.`
-      : step.number === 10 ? ctx.geography || "Не заполнено в Gate 0"
+      : step.number === 10 ? ctx.geography || `Не заполнено в ${guruGateLabel("gate-0")}`
       : step.focus;
     return g1CompetitorStepV539(step.number, step.title, status, step.description, search,
       escapeHtml(focus), g1CompetitorResultFieldsV539(step, candidate, ctx), entry, candidate);

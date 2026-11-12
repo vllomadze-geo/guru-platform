@@ -1698,20 +1698,6 @@ function isGate1Card(card) {
   );
 }
 
-function getGate1CardMode(card) {
-  if (!isGate1Card(card) || !card?.title) return null;
-  const title = normalizeGateTitle(card.title);
-  if (
-    GATE1_PAGE_STRUCTURE_TITLES.some(
-      (page) => title === normalizeGateTitle(page),
-    )
-  )
-    return "page_structure";
-  if (getComparisonConfig(card)) return "comparison";
-  if (getGate1LinkStatusType(card)) return "links";
-  return null;
-}
-
 function getGate1LinkStatusType(card) {
   const title = card?.title || "";
   const found = GATE1_LINK_STATUS_BY_TITLE.find((rule) =>
@@ -1850,62 +1836,6 @@ function evaluateComparisonRow(row) {
   return { ok: null, label: "Проверьте вручную" };
 }
 
-function snippetForPage(row) {
-  const parts = [row.title, row.description, row.h1, row.offer, row.body]
-    .map((v) => String(v || "").trim())
-    .filter(Boolean);
-  return truncateText(parts.join(" · "), 260);
-}
-
-function pageStructureStatus(row) {
-  const checks = [
-    Boolean(megaPlatformAuditRowUrl(row)),
-    Boolean(row.urlStatus),
-    enabledTools().length ? Boolean(row.source) : true,
-    evaluateLength(row.h1, 20, 70).ok,
-    evaluateLength(row.title, 30, 70).ok,
-    evaluateLength(row.description, 70, 180).ok,
-    evaluateLength(row.body, 300, 0).ok,
-    row.ctaMode === "not_needed"
-      ? true
-      : Boolean(String(row.finalCta || "").trim()),
-  ];
-  const filled = checks.filter(Boolean).length;
-  if (!filled) return "not_started";
-  if (filled === checks.length) return "ready";
-  return "in_progress";
-}
-
-function typedDataPlain(card) {
-  const mode = getGate1CardMode(card);
-  ensureGate1TypedData(card);
-  if (mode === "links") {
-    return (card.linkRows || [])
-      .map(
-        (row, i) =>
-          `${i + 1}. ${row.url || "URL не указан"} — ${row.status || "статус не выбран"}${row.source ? ` / источник: ${toolNameByKey(row.source)}` : ""}${row.comment ? ` — ${row.comment}` : ""}`,
-      )
-      .join("\n");
-  }
-  if (mode === "comparison") {
-    return (card.comparisonRows || [])
-      .map((row) => {
-        const result = evaluateComparisonRow(row).label;
-        return `${row.label}: ${row.value || "не заполнено"} ${row.unit || ""} / норма ${row.norm} / ${result}${row.comment ? ` / ${row.comment}` : ""}`;
-      })
-      .join("\n");
-  }
-  if (mode === "page_structure") {
-    return (card.pageRows || [])
-      .map(
-        (row) =>
-          `${row.name}: ${megaPlatformAuditUrl(card, row) || "URL не указан"} / ${row.urlStatus || "статус не выбран"}${row.source ? ` / источник: ${toolNameByKey(row.source)}` : ""}\nH1: ${row.h1 || ""}\nTitle: ${row.title || ""}\nDescription: ${row.description || ""}\nСниппет: ${snippetForPage(row)}\nФинальный CTA: ${row.ctaMode === "not_needed" ? "не нужен" : row.finalCta || "не заполнен"}\nКомментарий: ${row.comment || ""}`,
-      )
-      .join("\n\n");
-  }
-  return "";
-}
-
 function normalizeGateTitle(title = "") {
   return String(title || "")
     .trim()
@@ -1971,34 +1901,6 @@ function ensureGate1Structure(workspace = state) {
   }));
   if (cardsToAdd.length)
     gate.cards.splice(unitHeaderIndex + 1, 0, ...cardsToAdd);
-}
-
-function getGate1Sections(gate, visibleCards = gate.cards) {
-  const visibleIds = new Set((visibleCards || []).map((card) => card.id));
-  const starts = GATE1_SUBBLOCKS.map((config) => {
-    const index = gate.cards.findIndex((card) => {
-      const title = normalizeGateTitle(card.title);
-      return config.aliases.some(
-        (alias) => title === normalizeGateTitle(alias),
-      );
-    });
-    return { ...config, index };
-  });
-  return starts.map((config, order) => {
-    const startIndex = config.index;
-    const nextKnown = starts
-      .slice(order + 1)
-      .map((item) => item.index)
-      .find((index) => index > startIndex);
-    const endIndex = nextKnown ?? gate.cards.length;
-    const headerCard = startIndex >= 0 ? gate.cards[startIndex] : null;
-    const allInnerCards =
-      startIndex >= 0 ? gate.cards.slice(startIndex + 1, endIndex) : [];
-    const filteredInnerCards = allInnerCards.filter((card) =>
-      visibleIds.has(card.id),
-    );
-    return { ...config, headerCard, allInnerCards, filteredInnerCards };
-  });
 }
 
 function getSectionStatus(cards) {
@@ -2907,24 +2809,6 @@ function render() {
   if (activeView === "gate") renderGate();
 }
 
-function renderGateNav() {
-  els.gateNav.innerHTML = state.gates
-    .map((g) => {
-      const progress = getProgress(g.cards);
-      const cls =
-        activeView === "gate" && activeGateId === g.id ? "active" : "";
-      return `<button class="gate-btn ${cls}" data-gate-id="${g.id}">${escapeHtml(g.title)}<span class="small">${guruProgressCardsV468(g.cards).length} блоков, готово ${progress}%</span></button>`;
-    })
-    .join("");
-  document.querySelectorAll("[data-gate-id]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      activeView = "gate";
-      activeGateId = btn.dataset.gateId;
-      render();
-    });
-  });
-}
-
 function projectPassportOverviewFields() {
   const project = state?.project || {};
   const comparison = state?.projectComparison;
@@ -2968,21 +2852,21 @@ function projectPassportOverviewFields() {
 
   return [
     { key: "name", label: "Название проекта", hint: "Как называется проект.", value: project.name || "", source: "вводится в паспорте" },
-    { label: "Ниша", hint: "Чем занимается проект.", value: project.niche || "", source: "Gate 0 · базовые сведения" },
-    { label: "Сайт", hint: "Основной адрес проекта.", value: megaPlatformUrl("fixed", "home", state), source: "Gate 0 · Платформа" },
-    { label: "География", hint: "Где работает проект.", value: project.geography || "", source: "Gate 0 · базовые сведения" },
-    { label: "Продукты", hint: "Что продаём.", value: textList(products), source: "Gate 0 · продукты" },
-    { label: "Основная ЦА", hint: "Кому продаём.", value: textList(project.targetSegment, project.targetSegmentExtra), source: "Gate 0 · целевая аудитория" },
-    { label: "Основной JTBD", hint: "Какой результат хочет получить клиент.", value: firstValue(project.clientResult, projectComparisonJtbdText?.()), source: "Gate 0 / Gate 1 · JTBD" },
-    { label: "Позиционирование", hint: "Чем отличаемся от конкурентов.", value: textList(project.positioningStatement, project.positioningStartFormula), source: "Gate 0 · позиционирование" },
-    { label: "УТП", hint: "Почему выбирают именно нас.", value: project.usp || "", source: "Gate 0 · позиционирование" },
-    { label: "Оффер", hint: "Что предлагаем клиенту.", value: textList(projectComparisonOffersText?.(), project.currentOffers, project.offer), source: "Gate 0 / Gate 1 · офферы" },
-    { label: "Главный CTA", hint: "Какое действие должен сделать клиент.", value: textList(project.primaryTargetAction, project.currentCtas, project.mainCta), source: "Gate 0 · CTA" },
-    { label: "Основные конкуренты", hint: "С кем конкурируем.", value: textList(painCompetitors.map((row) => row?.col0), comparisonCompetitors), source: "Gate 1 · конкуренты" },
-    { label: "Основное отличие", hint: "В чём наше главное преимущество.", value: projectComparisonCompanyKeyDifference(), source: "Gate 0 · Позиционирование · Компания" },
+    { label: "Ниша", hint: "Чем занимается проект.", value: project.niche || "", source: `${guruGateLabel("gate-0")} · базовые сведения` },
+    { label: "Сайт", hint: "Основной адрес проекта.", value: megaPlatformUrl("fixed", "home", state), source: `${guruGateLabel("gate-0")} · Платформа` },
+    { label: "География", hint: "Где работает проект.", value: project.geography || "", source: `${guruGateLabel("gate-0")} · базовые сведения` },
+    { label: "Продукты", hint: "Что продаём.", value: textList(products), source: `${guruGateLabel("gate-0")} · продукты` },
+    { label: "Основная ЦА", hint: "Кому продаём.", value: textList(project.targetSegment, project.targetSegmentExtra), source: `${guruGateLabel("gate-0")} · целевая аудитория` },
+    { label: "Основной JTBD", hint: "Какой результат хочет получить клиент.", value: firstValue(project.clientResult, projectComparisonJtbdText?.()), source: `${guruGateLabel("gate-0")} / ${guruGateLabel("gate-1")} · JTBD` },
+    { label: "Позиционирование", hint: "Чем отличаемся от конкурентов.", value: textList(project.positioningStatement, project.positioningStartFormula), source: `${guruGateLabel("gate-0")} · позиционирование` },
+    { label: "УТП", hint: "Почему выбирают именно нас.", value: project.usp || "", source: `${guruGateLabel("gate-0")} · позиционирование` },
+    { label: "Оффер", hint: "Что предлагаем клиенту.", value: textList(projectComparisonOffersText?.(), project.currentOffers, project.offer), source: `${guruGateLabel("gate-0")} / ${guruGateLabel("gate-1")} · офферы` },
+    { label: "Главный CTA", hint: "Какое действие должен сделать клиент.", value: textList(project.primaryTargetAction, project.currentCtas, project.mainCta), source: `${guruGateLabel("gate-0")} · CTA` },
+    { label: "Основные конкуренты", hint: "С кем конкурируем.", value: textList(painCompetitors.map((row) => row?.col0), comparisonCompetitors), source: `${guruGateLabel("gate-1")} · конкуренты` },
+    { label: "Основное отличие", hint: "В чём наше главное преимущество.", value: projectComparisonCompanyKeyDifference(), source: `${guruGateLabel("gate-0")} · Позиционирование · Компания` },
     { key: "averageCheck", label: "Средний чек", hint: "Средняя стоимость заказа на уровне компании.", value: project.averageCheck || "", source: "вводится в паспорте · уровень компании" },
     { key: "targetCpa", label: "Целевой CPA", hint: "Сколько компания готова заплатить за одного клиента.", value: project.targetCpa || "", source: "вводится в паспорте · уровень компании" },
-    { label: "Каналы привлечения", hint: "Откуда приходят клиенты.", value: textList(project.promotionChannels, project.marketingChannels, project.channels), source: "Gate 0 / Gate 4 · каналы" },
+    { label: "Каналы привлечения", hint: "Откуда приходят клиенты.", value: textList(project.promotionChannels, project.marketingChannels, project.channels), source: `${guruGateLabel("gate-0")} / ${guruGateLabel("gate-4")} · каналы` },
     { label: "Карточек заполнено", hint: "Доля сохранённых карточек со статусом «Готово».", value: `${progress}% · ${ready} из ${cards.length} карточек`, source: "сохранённые карточки всех Gate; готовность к запуску показана в «Сейчас»" },
     { label: "Последнее обновление", hint: "Когда данные обновлялись последний раз.", value: updatedAt, source: "автосохранение" },
   ];
@@ -3106,7 +2990,7 @@ function renderGate() {
       '<div class="empty">Выбранный Gate не найден. Выберите нужный Gate в левом меню.</div>';
     return;
   }
-  els.pageTitle.textContent = gate.title;
+  els.pageTitle.textContent = guruGateTitle(gate);
   const query = els.searchInput.value.trim().toLowerCase();
   const filter = els.statusFilter.value;
   let cards = Array.isArray(gate.cards) ? gate.cards : [];
@@ -3660,7 +3544,7 @@ function renderPainOfferRoute(section) {
   return `<div class="demand-route pain-offer-route">
     <div class="demand-route-head">
       <div>
-        <div class="analytics-path">Gate 1 → ${escapeHtml(section.title)}</div>
+        <div class="analytics-path">${guruGateLabel("gate-1")} → ${escapeHtml(section.title)}</div>
         <h3>Ценность и позиционирование</h3>
         <p class="muted">Цель: превратить спрос, боли и конкурентную среду в готовый офер по сегментам.</p>
       </div>
@@ -3760,7 +3644,7 @@ function renderDemandRoute(section) {
   return `<div class="demand-route">
     <div class="demand-route-head">
       <div>
-        <div class="analytics-path">Gate 1 → Спрос</div>
+        <div class="analytics-path">${guruGateLabel("gate-1")} → Спрос</div>
         <h3>Спрос: подготовка кампании к запуску</h3>
         <p class="muted">Рамки → язык аудитории → намерения → группы → экономика → объявления → запуск.</p>
       </div>
@@ -4021,7 +3905,7 @@ function renderGate1Accordion(gate, cards) {
         return `<section class="analytics-subblock ${sectionOpen ? "is-open is-active" : ""}">
         <button class="subblock-header" data-gate1-toggle-section="${escapeAttr(section.key)}">
           <span class="subblock-main">
-            <span class="analytics-path">Gate 1 → ${escapeHtml(section.title)}</span>
+            <span class="analytics-path">${guruGateLabel("gate-1")} → ${escapeHtml(section.title)}</span>
             <span class="subblock-title">${escapeHtml(section.title)}</span>
             <span class="subblock-progress">${escapeHtml(progressText)}</span>
           </span>
@@ -4051,7 +3935,7 @@ function gate1WorkBlockHtml(card, sectionTitle = "Аналитика") {
   return `<article class="work-accordion-card ${isOpen ? "is-open is-active" : ""}" data-card="${escapeAttr(card.id)}">
     <button class="work-card-header" data-gate1-toggle-card="${escapeAttr(card.id)}">
       <span class="work-card-main">
-        <span class="analytics-path">Gate 1 → ${escapeHtml(sectionTitle)} → ${escapeHtml(card.title)}</span>
+        <span class="analytics-path">${guruGateLabel("gate-1")} → ${escapeHtml(sectionTitle)} → ${escapeHtml(card.title)}</span>
         <span class="work-card-title">${escapeHtml(card.title)}</span>
         <span class="work-card-preview">${escapeHtml(cardPreviewText(card))}</span>
       </span>
@@ -4207,34 +4091,6 @@ function renderGateCards(gate, cards) {
   bindCardInputs();
 }
 
-function renderGateTable(gate, cards) {
-  if (isGate1Analytics(gate)) {
-    renderGate1Accordion(gate, cards);
-    return;
-  }
-  els.contentArea.innerHTML = `
-    <div class="table-scroll clean-table-wrap">
-      <table class="data-table clean-data-table">
-        <thead><tr><th>Блок</th><th>Статус</th><th>Структурированное доказательство / рабочие поля</th></tr></thead>
-        <tbody>${cards
-          .map(
-            (c) => `
-          <tr data-card-row="${c.id}">
-            <td class="table-title">
-              <div class="block-title-main">${escapeHtml(c.title)}</div>
-              ${instructionToggleHtml(c)}
-            </td>
-            <td>${statusSelect(c)}</td>
-            <td>${cardUserFieldsHtml(c)}</td>
-          </tr>`,
-          )
-          .join("")}
-        </tbody>
-      </table>
-    </div>`;
-  bindCardInputs();
-}
-
 function cardHtml(c) {
   return `
     <article class="card" data-card="${c.id}">
@@ -4260,27 +4116,6 @@ function instructionToggleHtml(card) {
     <summary>Показать инструкцию</summary>
     <div class="instruction-text">${escapeHtml(text)}</div>
   </details>`;
-}
-
-function cardUserFieldsHtml(c) {
-  if (isProjectPassportCard(c))
-    return `<div class="field-row">${projectPassportFieldsHtml()}</div>`;
-  if (isCurrentResultsCard(c))
-    return `<div class="field-row"><span>Показатели</span>${currentResultsHtml(c)}</div>`;
-  if (isToolStatusCard(c))
-    return `<div class="field-row"><span>Статусы элементов</span>${toolItemsHtml(c)}</div>`;
-  if (isStartupSummaryCard(c))
-    return `<div class="field-row"><span>Автоматическая сводка</span>${startupSummaryHtml()}</div>`;
-  if (getGate1CardMode(c)) return gate1TypedFieldsHtml(c);
-  const evidence = evidenceStructuredHtml(c);
-  const workspace = instructionWorkspaceHtml(c);
-  if (evidence && workspace)
-    return `<div class="field-row simplified-fields">${evidence}<details class="optional-workspace"><summary>Поля по инструкции</summary>${workspace}</details></div>`;
-  if (evidence)
-    return `<div class="field-row simplified-fields">${evidence}</div>`;
-  if (workspace)
-    return `<div class="field-row simplified-fields">${workspace}</div>`;
-  return "";
 }
 
 function extractInstructionSection(text = "", title = "") {
@@ -4733,51 +4568,6 @@ function pageFieldStatusHtml(value, min, max) {
   return `<span class="result-pill result-${cls}">${escapeHtml(result.label)}</span>`;
 }
 
-function gate1PageStructureHtml(card) {
-  const rows = card.pageRows || [];
-  const repeatable = isRepeatablePageCard(card);
-  return `<div class="typed-block pages-block">
-    ${inlineToolControlsHtml()}
-    ${toolWorkspaceHtml(card)}
-    ${rows.map((row, pageIndex) => pageStructureCardHtml(card, row, pageIndex, repeatable)).join("")}
-    ${repeatable ? `<button class="small-btn add-inline-btn" data-add-gate1-page="${escapeAttr(card.id)}">+ Добавить страницу</button>` : ""}
-  </div>`;
-}
-
-function pageStructureCardHtml(card, row, pageIndex, repeatable) {
-  const snippet = snippetForPage(row);
-  return `<section class="page-structure-card">
-    <div class="page-structure-head">
-      <input class="page-name-input" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="name" value="${escapeAttr(row.name || "")}" placeholder="Название страницы" ${row.fixed ? "readonly" : ""} />
-      <span class="status-pill status-${pageStructureStatus(row)}">${STATUS_LABELS[pageStructureStatus(row)]}</span>
-      ${repeatable ? `<button class="small-btn danger-mini" data-remove-gate1-page="${escapeAttr(card.id)}" data-index="${pageIndex}" ${rowsSafeLength(card.pageRows) <= 1 ? "disabled" : ""}>×</button>` : ""}
-    </div>
-    <div class="page-grid">
-      <label>Ссылка<input list="projectUrlOptions" data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="url" value="${escapeAttr(row.url || "")}" placeholder="https://" />${projectUrlDatalistHtml()}</label>
-      <label>Источник<select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="source">${toolOptionsHtml(row.source || "", true)}</select></label>
-      <label>Статус URL<select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="urlStatus">${linkStatusOptionsHtml("works", row.urlStatus)}</select>${seoIndicatorHtml(row.url)}</label>
-      <label>H1 <small>20–70 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="h1" value="${escapeAttr(row.h1 || "")}" />${pageFieldStatusHtml(row.h1, 20, 70)}</label>
-      <label>Title <small>30–70 знаков</small><input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="title" value="${escapeAttr(row.title || "")}" />${pageFieldStatusHtml(row.title, 30, 70)}</label>
-      <label class="full">Description <small>70–155 знаков</small><textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="description" rows="2">${escapeHtml(row.description || "")}</textarea>${pageFieldStatusHtml(row.description, 70, 155)}</label>
-      <label class="full">Основной текст <small>минимум 300 знаков</small><textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="body" rows="4">${escapeHtml(row.body || "")}</textarea>${pageFieldStatusHtml(row.body, 300, 0)}</label>
-      <label class="full">Оффер страницы<textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="offer" rows="2">${escapeHtml(row.offer || "")}</textarea></label>
-    </div>
-    <div class="embedded-block">
-      <h4>Блок А: Сниппет</h4>
-      <div class="snippet-preview">${snippet ? escapeHtml(snippet) : "Сниппет появится после заполнения H1, Title, Description, смысла и оффера страницы."}</div>
-    </div>
-    <div class="embedded-block">
-      <h4>Блок Б: Финальный CTA</h4>
-      <label class="inline-radio"><select data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="ctaMode">
-        <option value="needed" ${row.ctaMode !== "not_needed" ? "selected" : ""}>Финальный CTA нужен</option>
-        <option value="not_needed" ${row.ctaMode === "not_needed" ? "selected" : ""}>Финальный CTA не нужен</option>
-      </select></label>
-      ${row.ctaMode === "not_needed" ? "" : `<textarea data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="finalCta" rows="2" placeholder="Текст финального CTA">${escapeHtml(row.finalCta || "")}</textarea>`}
-    </div>
-    <label class="full page-comment">Комментарий (необязательно)<input data-gate1-page-card-id="${escapeAttr(card.id)}" data-gate1-page-index="${pageIndex}" data-gate1-page-field="comment" value="${escapeAttr(row.comment || "")}" placeholder="короткое уточнение" /></label>
-  </section>`;
-}
-
 function rowsSafeLength(rows) {
   return Array.isArray(rows) ? rows.length : 0;
 }
@@ -4820,38 +4610,6 @@ function statusSelect(c) {
       )
       .join("")}
   </select>`;
-}
-
-function bindCardInputs() {
-  document.querySelectorAll("[data-card-id][data-field]").forEach((input) => {
-    input.addEventListener("input", updateCardFromInput);
-    input.addEventListener("change", updateCardFromInput);
-  });
-  document.querySelectorAll("[data-evidence-key]").forEach((input) => {
-    input.addEventListener("input", updateEvidenceFromInput);
-    input.addEventListener("change", updateEvidenceFromInput);
-  });
-  document.querySelectorAll("[data-project-inline]").forEach((input) => {
-    input.addEventListener("input", updateProjectFromInline);
-    input.addEventListener("change", updateProjectFromInline);
-  });
-  document.querySelectorAll("[data-tool-card-id]").forEach((input) => {
-    input.addEventListener("input", updateToolItemFromInput);
-    input.addEventListener("change", updateToolItemFromInput);
-  });
-  document
-    .querySelectorAll("[data-current-result-card-id]")
-    .forEach((input) => {
-      input.addEventListener("input", updateCurrentResultFromInput);
-      input.addEventListener("change", updateCurrentResultFromInput);
-    });
-  document
-    .querySelectorAll("[data-instruction-row-card-id]")
-    .forEach((input) => {
-      input.addEventListener("input", updateInstructionRow);
-      input.addEventListener("change", updateInstructionRow);
-    });
-  bindGate1TypedInputs();
 }
 
 function bindGate1TypedInputs() {
@@ -5147,7 +4905,7 @@ function renderLinkBank() {
       <div class="panel-head">
         <div>
           <h2>Единая база ссылок проекта</h2>
-          <p class="muted">Все URL, введённые в Gate 1, сохраняются здесь и предлагаются в следующих блоках.</p>
+          <p class="muted">Все URL, введённые в ${guruGateLabel("gate-1")}, сохраняются здесь и предлагаются в следующих блоках.</p>
         </div>
         <button class="btn primary" id="addProjectLinkBtn">+ Добавить ссылку</button>
       </div>
@@ -5425,11 +5183,11 @@ function renderScheme() {
         <p class="muted">Gate идут последовательно. В каждом Gate есть рабочие блоки. Данные вводятся один раз и автоматически используются в связанных местах.</p>
       </div>
       <div class="flow">
-        ${state.gates
+        ${guruOrderedGates(state.gates)
           .map(
             (g, i) => `
           <div class="flow-node">
-            <div class="flow-title">${escapeHtml(g.title)}</div>
+            <div class="flow-title">${escapeHtml(guruGateTitle(g))}</div>
             <div class="flow-meta">${guruProgressCardsV468(g.cards).length} карточек, заполнено ${getProgress(g.cards)}%</div>
             <div class="progress-line"><div class="progress-fill" style="width:${getProgress(g.cards)}%"></div></div>
           </div>${i < state.gates.length - 1 ? '<div class="flow-arrow">→</div>' : ""}
@@ -5440,13 +5198,13 @@ function renderScheme() {
       <div class="chart-card">
         <h3>Заполнение карточек по Gate</h3>
         <div class="bar-chart">
-          ${state.gates
+          ${guruOrderedGates(state.gates)
             .map(
               (g) => `
             <div class="bar-wrap">
               <div class="bar-value">${getProgress(g.cards)}%</div>
               <div class="bar" style="height:${Math.max(4, getProgress(g.cards) * 1.7)}px"></div>
-              <div class="bar-label">${escapeHtml(g.title.replace(/^[0-9.]*/, "").trim())}</div>
+              <div class="bar-label">${escapeHtml(guruGateTitle(g).replace(/^[0-9.]*/, "").trim())}</div>
             </div>`,
             )
             .join("")}
@@ -5488,14 +5246,14 @@ function exportPdfReport() {
     return;
   }
   const rows = currentGate.cards.map((card) => ({
-    gate: currentGate.title,
+    gate: guruGateTitle(currentGate),
     title: card.title,
     status: STATUS_LABELS[card.status] || card.status,
     evidence: formatStructuredEvidencePlain(card, state),
     notes: card.notes || "",
   }));
   const projectName = escapeHtml(state.project?.name || "Проект");
-  const gateTitle = escapeHtml(currentGate.title);
+  const gateTitle = escapeHtml(guruGateTitle(currentGate));
   const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Отчёт ГУРУ — ${projectName} — ${gateTitle}</title>
     <style>
       body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#1f1b16;margin:24px;background:#fff;}
@@ -5537,7 +5295,7 @@ function exportGateCsv() {
   ]);
   currentGate.cards.forEach((c) =>
     rows.push([
-      currentGate.title,
+      guruGateTitle(currentGate),
       c.title,
       c.instruction || "",
       STATUS_LABELS[c.status] || c.status,
@@ -5561,7 +5319,7 @@ function exportPdfProjectReport() {
     return;
   }
   const projectName = escapeHtml(state.project?.name || "Проект");
-  const gateSections = state.gates
+  const gateSections = guruOrderedGates(state.gates)
     .map((gate) => {
       const rows = gate.cards.map((card) => ({
         title: card.title,
@@ -5569,7 +5327,7 @@ function exportPdfProjectReport() {
         evidence: formatStructuredEvidencePlain(card, state),
         notes: card.notes || "",
       }));
-      return `<h2 style="margin-top:24px;">${escapeHtml(gate.title)}</h2>
+      return `<h2 style="margin-top:24px;">${escapeHtml(guruGateTitle(gate))}</h2>
     <table><thead><tr><th>Название блока</th><th>Статус</th><th>Структурированное доказательство</th><th>Комментарий</th></tr></thead><tbody>
     ${rows.map((row) => `<tr><td>${escapeHtml(row.title)}</td><td>${escapeHtml(row.status)}</td><td class="evidence">${escapeHtml(row.evidence)}</td><td class="notes">${escapeHtml(row.notes)}</td></tr>`).join("")}
     </tbody></table>`;
@@ -5603,10 +5361,10 @@ function exportCsv() {
     "notes",
     "source_row",
   ]);
-  state.gates.forEach((g) => {
+  guruOrderedGates(state.gates).forEach((g) => {
     g.cards.forEach((c) =>
       rows.push([
-        g.title,
+        guruGateTitle(g),
         c.title,
         c.instruction || "",
         STATUS_LABELS[c.status] || c.status,
@@ -5751,7 +5509,7 @@ function appendGate5ExportRows(rows) {
   rows.push([]);
   rows.push(["GATE5_FULL_DATA"]);
   rows.push([
-    "раздел Gate 5",
+    `раздел ${guruGateLabel("gate-5")}`,
     "тип записи",
     "id записи",
     "id кампании",
@@ -5778,11 +5536,11 @@ function exportStagesAndTasksCsv() {
     ],
   ];
 
-  state.gates.forEach((gate) => {
+  guruOrderedGates(state.gates).forEach((gate) => {
     gate.cards.forEach((card) => {
       rows.push([
         "Этап",
-        gate.title || "",
+        guruGateTitle(gate),
         "",
         card.title || "",
         STATUS_LABELS[card.status] || card.status || "",
@@ -5794,7 +5552,7 @@ function exportStagesAndTasksCsv() {
     });
   });
 
-  const gate7Title = state.gates.find((gate) => gate.id === "gate-7")?.title || "Gate 7";
+  const gate7Title = state.gates.find((gate) => gate.id === "gate-7")?.title || `${guruGateLabel("gate-7")}`;
   ensureGate7State().tasks.forEach((task) => {
     rows.push([
       "Задача",
@@ -6410,8 +6168,8 @@ function renderSemanticGateAccordion(gate, cards) {
   const acc = getSemanticAccordionState(gate.id);
   els.contentArea.innerHTML = `<div class="semantic-accordion v14-semantic">
     <div class="analytics-intro compact-intro">
-      <div class="analytics-path">${escapeHtml(gate.title)}</div>
-      <h2>${escapeHtml(gate.title)}</h2>
+      <div class="analytics-path">${escapeHtml(guruGateTitle(gate))}</div>
+      <h2>${escapeHtml(guruGateTitle(gate))}</h2>
       <p class="muted">Блоки сгруппированы по смыслу. Внутри каждого блока показываются только поля, которые нужны для его задачи.</p>
     </div>
     ${sections
@@ -6423,7 +6181,7 @@ function renderSemanticGateAccordion(gate, cards) {
         return `<section class="analytics-subblock semantic-subblock ${isOpen ? "is-open is-active" : ""}">
         <button class="subblock-header" data-semantic-toggle-section="${escapeAttr(gate.id)}::${escapeAttr(section.key)}">
           <span class="subblock-main">
-            <span class="analytics-path">${escapeHtml(gate.title)} → ${escapeHtml(section.title)}</span>
+            <span class="analytics-path">${escapeHtml(guruGateTitle(gate))} → ${escapeHtml(section.title)}</span>
             <span class="subblock-title">${escapeHtml(section.title)}</span>
             <span class="subblock-progress">${escapeHtml(progressText)}</span>
           </span>
@@ -6451,7 +6209,7 @@ function semanticWorkBlockHtml(gate, sectionTitle, card) {
   return `<article class="work-accordion-card semantic-work-card ${isOpen ? "is-open is-active" : ""}" data-card="${escapeAttr(card.id)}">
     <button class="work-card-header" data-semantic-toggle-card="${escapeAttr(gate.id)}::${escapeAttr(card.id)}">
       <span class="work-card-main">
-        <span class="analytics-path">${escapeHtml(gate.title)} → ${escapeHtml(sectionTitle)} → ${escapeHtml(card.title)}</span>
+        <span class="analytics-path">${escapeHtml(guruGateTitle(gate))} → ${escapeHtml(sectionTitle)} → ${escapeHtml(card.title)}</span>
         <span class="work-card-title">${escapeHtml(card.title)}</span>
         <span class="work-card-preview">${escapeHtml(cardPreviewText(card))}</span>
       </span>
@@ -6551,17 +6309,6 @@ function pageStructureStatus(row) {
   if (!filled) return "not_started";
   if (filled === checks.length) return "ready";
   return "in_progress";
-}
-
-function pageTemplateContext(card) {
-  const title = normalizeGateTitle(card?.title || "");
-  if (title === normalizeGateTitle("ГЛАВНАЯ")) return "home";
-  if (/контак/.test(title)) return "contacts";
-  if (/категор|список|каталог/.test(title)) return "catalog";
-  if (/товар|карточка/.test(title)) return "product";
-  if (/услуг/.test(title)) return "service";
-  if (/лендинг|посадоч/.test(title)) return "landing";
-  return "standard";
 }
 
 function ensurePageContextFields(row, context) {
@@ -7426,58 +7173,12 @@ function robotsUnifiedServiceLabel(systemKey) {
   return "Яндекс Вебмастер";
 }
 
-function robotsUnifiedSelect(systemKey, value) {
-  const options = [
-    ["", "Выбрать"],
-    ["ok", "Проверка пройдена"],
-    ["issue", "Есть проблема"],
-  ];
-  return `<select data-robots-unified-system="${escapeAttr(systemKey)}" data-robots-unified-field="status">
-    ${options.map(([key, label]) => `<option value="${escapeAttr(key)}" ${value === key ? "selected" : ""}>${escapeHtml(label)}</option>`).join("")}
-  </select>`;
-}
-
 function robotsUnifiedStatusChip(status) {
   if (!status)
     return '<span class="result-pill result-neutral">Не выбран</span>';
   if (status === "ok")
     return '<span class="result-pill result-ok">Проверка пройдена</span>';
   return '<span class="result-pill result-bad">Есть проблема</span>';
-}
-
-function robotsUnifiedSystemCardHtml(systemKey, data) {
-  return `<section class="robots-system-card ${data.status === "ok" ? "is-ok" : data.status === "issue" ? "is-issue" : ""}">
-    <div class="robots-system-head">
-      <div>
-        <h4>${escapeHtml(robotsUnifiedSystemLabel(systemKey))}</h4>
-        <span>${escapeHtml(robotsUnifiedServiceLabel(systemKey))}</span>
-      </div>
-      ${robotsUnifiedStatusChip(data.status)}
-    </div>
-    <div class="robots-system-fields">
-      <label>Статус проверки${robotsUnifiedSelect(systemKey, data.status || "")}</label>
-      <label>Доказательство<input data-robots-unified-system="${escapeAttr(systemKey)}" data-robots-unified-field="evidence" value="${escapeAttr(data.evidence || "")}" placeholder="ссылка на отчёт, скрин или результат проверки" /></label>
-    </div>
-  </section>`;
-}
-
-function robotsUnifiedFieldsHtml(card) {
-  const fields = ensureRobotsUnifiedFields(card);
-  const systems = fields.systems || {};
-  const enabledSystems = ["yandex"].filter(
-    (key) => systems[key]?.enabled,
-  );
-  return `<div class="robots-unified-workspace context-panel">
-    <div class="robots-unified-line">
-      <label class="robots-url-field">URL robots.txt<input list="projectUrlOptions" data-robots-unified-field="url" value="${escapeAttr(fields.url || "")}" placeholder="https://site.ru/robots.txt" />${projectUrlDatalistHtml()}</label>
-      <div class="robots-system-switches" aria-label="Выбор поисковых систем">
-        <label><input type="checkbox" data-robots-unified-system="yandex" data-robots-unified-field="enabled" ${systems.yandex?.enabled ? "checked" : ""} /> Яндекс</label>
-      </div>
-    </div>
-    <div class="robots-system-grid">
-      ${enabledSystems.length ? enabledSystems.map((key) => robotsUnifiedSystemCardHtml(key, systems[key])).join("") : '<div class="empty compact-empty">Включите проверку в Яндекс Вебмастере.</div>'}
-    </div>
-  </div>`;
 }
 
 const __guruPrevGate1TypedFieldsHtmlV16 = gate1TypedFieldsHtml;
@@ -7488,28 +7189,6 @@ gate1TypedFieldsHtml = function (card) {
     return `<div class="field-row"><span>Robots.txt</span>${robotsUnifiedFieldsHtml(card)}</div>`;
   return __guruPrevGate1TypedFieldsHtmlV16(card);
 };
-
-function robotsUnifiedStatus(card) {
-  const fields = ensureRobotsUnifiedFields(card);
-  const urlFilled = Boolean(String(fields.url || "").trim());
-  const enabled = ["yandex"].filter(
-    (key) => fields.systems?.[key]?.enabled,
-  );
-  const anySystemTouched = ["yandex"].some((key) => {
-    const s = fields.systems?.[key] || {};
-    return s.enabled || s.status || s.evidence;
-  });
-  if (!urlFilled && !anySystemTouched) return "not_started";
-  if (!urlFilled || !enabled.length) return "in_progress";
-  const allSelectedFilled = enabled.every((key) => {
-    const s = fields.systems[key] || {};
-    return (
-      Boolean(String(s.status || "").trim()) &&
-      Boolean(String(s.evidence || "").trim())
-    );
-  });
-  return allSelectedFilled ? "ready" : "in_progress";
-}
 
 const __guruPrevRecalculateStatusForCardV16 = recalculateStatusForCard;
 recalculateStatusForCard = function (card, workspace = state) {
@@ -8107,7 +7786,7 @@ gate1WorkBlockHtml = function (card, sectionTitle = "Аналитика") {
   return `<article class="work-accordion-card ${isOpen ? "is-open is-active" : ""}" data-card="${escapeAttr(card.id)}">
     <button class="work-card-header" data-gate1-toggle-card="${escapeAttr(card.id)}">
       <span class="work-card-main">
-        <span class="analytics-path">Gate 1 → ${escapeHtml(sectionTitle)} → ${escapeHtml(card.title)}</span>
+        <span class="analytics-path">${guruGateLabel("gate-1")} → ${escapeHtml(sectionTitle)} → ${escapeHtml(card.title)}</span>
         <span class="work-card-title">${escapeHtml(card.title)}</span>
         <span class="work-card-preview">${escapeHtml(cardPreviewText(card))}</span>
       </span>
@@ -8851,7 +8530,7 @@ function g8GoalCandidate() {
       budget: primary.goalBudget,
       allowedCost: primary.goalAllowedCost,
       updatedAt: primary.updated_at || project.goalUpdatedAt || "",
-    } : null, source: "Gate 0 → Цель проекта" };
+    } : null, source: `${guruGateLabel("gate-0")} → Цель проекта` };
   }
   const g5Goals = Array.isArray(state?.gate5?.goals) ? state.gate5.goals : [];
   const structuredProjectGoal = g8Text(project.goalDescription || project.goalText)
@@ -8874,7 +8553,7 @@ function g8GoalCandidate() {
     g5Goals.slice().sort((a, b) => String(b?.updatedAt || b?.createdAt || "").localeCompare(String(a?.updatedAt || a?.createdAt || "")))[0],
   ];
   const object = candidates.find((value) => value && typeof value === "object");
-  if (object) return { raw: object, source: g5Goals.includes(object) ? "Gate 5 → Цель периода" : "Gate 0 → Цель проекта" };
+  if (object) return { raw: object, source: g5Goals.includes(object) ? `${guruGateLabel("gate-5")} → Цель периода` : `${guruGateLabel("gate-0")} → Цель проекта` };
   const text = g8First(
     candidates.find((value) => typeof value === "string"),
     project.goalText,
@@ -8882,8 +8561,8 @@ function g8GoalCandidate() {
     state?.gate4?.launchParams?.campaignGoals,
   );
   return text
-    ? { raw: { description: text }, source: state?.demandRoute?.goal === text ? "Gate 1 → Цель спроса" : "Gate 0 → Цель проекта" }
-    : { raw: null, source: "Gate 0 → Цель проекта" };
+    ? { raw: { description: text }, source: state?.demandRoute?.goal === text ? `${guruGateLabel("gate-1")} → Цель спроса` : `${guruGateLabel("gate-0")} → Цель проекта` }
+    : { raw: null, source: `${guruGateLabel("gate-0")} → Цель проекта` };
 }
 
 function g8ObjectValue(object, keys) {
@@ -9034,39 +8713,39 @@ function g8CollectFacts() {
     const readiness = guruGateReadiness(gate);
     add(g8FactRecord(
       `gateReadiness${gate.id.slice(-1)}`,
-      `Готовность ${gate.title}`,
+      `Готовность ${guruGateTitle(gate)}`,
       readiness.percent,
-      `Gate ${gate.id.slice(-1)}`,
+      guruGateLabel(gate.id),
       "Статусы критических блоков",
       "факт",
       updated,
       { ready: readiness.ready, total: readiness.total },
     ));
   });
-  add(g8FactRecord("product", "Продукт", g8First(guruV185CategoryNames(state)[0]), "Gate 0", "Продукт, сегмент и задача клиента", "предположение", updated));
-  add(g8FactRecord("segment", "Сегмент", g8First(project.targetSegment, evidence["кому_продаем"]), "Gate 0", "Продукт, сегмент и задача клиента", "предположение", updated));
-  add(g8FactRecord("jtbd", "Задача клиента", g8First(project.clientResult, evidence["ради_какого_результата"]), "Gate 0", "Продукт, сегмент и задача клиента", "предположение", updated));
-  add(g8FactRecord("positioning", "Позиционирование", g8First(project.positioningStatement, evidence.positioning_statement), "Gate 0", "Позиционирование и УТП", "предположение", updated));
-  add(g8FactRecord("usp", "УТП", g8First(project.usp, evidence.usp), "Gate 0", "Позиционирование и УТП", "предположение", updated));
-  add(g8FactRecord("offer", "Оффер", g8First(state?.gate4?.offer?.finalOffer, project.offer, project.currentOffers), "Gate 4", "Финальный оффер", "предположение", updated));
-  add(g8FactRecord("cta", "CTA", g8First(project.primaryTargetAction, project.mainCta, project.currentCtas), "Gate 0", "Офферы и CTA", "предположение", updated));
-  add(g8FactRecord("searchFocus", "Поисковый фокус", g8First(state?.demandRoute?.promoted, state?.demandRoute?.goal), "Gate 1", "Спрос и поисковый фокус", "предположение", updated));
+  add(g8FactRecord("product", "Продукт", g8First(guruV185CategoryNames(state)[0]), `${guruGateLabel("gate-0")}`, "Продукт, сегмент и задача клиента", "предположение", updated));
+  add(g8FactRecord("segment", "Сегмент", g8First(project.targetSegment, evidence["кому_продаем"]), `${guruGateLabel("gate-0")}`, "Продукт, сегмент и задача клиента", "предположение", updated));
+  add(g8FactRecord("jtbd", "Задача клиента", g8First(project.clientResult, evidence["ради_какого_результата"]), `${guruGateLabel("gate-0")}`, "Продукт, сегмент и задача клиента", "предположение", updated));
+  add(g8FactRecord("positioning", "Позиционирование", g8First(project.positioningStatement, evidence.positioning_statement), `${guruGateLabel("gate-0")}`, "Позиционирование и УТП", "предположение", updated));
+  add(g8FactRecord("usp", "УТП", g8First(project.usp, evidence.usp), `${guruGateLabel("gate-0")}`, "Позиционирование и УТП", "предположение", updated));
+  add(g8FactRecord("offer", "Оффер", g8First(state?.gate4?.offer?.finalOffer, project.offer, project.currentOffers), `${guruGateLabel("gate-4")}`, "Финальный оффер", "предположение", updated));
+  add(g8FactRecord("cta", "CTA", g8First(project.primaryTargetAction, project.mainCta, project.currentCtas), `${guruGateLabel("gate-0")}`, "Офферы и CTA", "предположение", updated));
+  add(g8FactRecord("searchFocus", "Поисковый фокус", g8First(state?.demandRoute?.promoted, state?.demandRoute?.goal), `${guruGateLabel("gate-1")}`, "Спрос и поисковый фокус", "предположение", updated));
 
   const economics = typeof uv130EconomicsSnapshot === "function" ? uv130EconomicsSnapshot() : {};
-  add(g8FactRecord("averageCheck", "Средний чек", g8Number(economics.aov), "Gate 1", "Юнит-экономика", "предположение", updated));
-  add(g8FactRecord("margin", "Маржинальность", g8Number(economics.marginPercent), "Gate 1", "Юнит-экономика", "предположение", updated));
-  add(g8FactRecord("allowedCpa", "Допустимый CPA", g8Number(economics.allowedCpa), "Gate 1", "Юнит-экономика", "предположение", updated));
-  add(g8FactRecord("allowedCpl", "Допустимый CPL", g8Number(economics.allowedCpl), "Gate 1", "Юнит-экономика", "предположение", updated));
-  add(g8FactRecord("ltv", "LTV", g8Number(economics.ltv), "Gate 1", "Юнит-экономика", "предположение", updated));
+  add(g8FactRecord("averageCheck", "Средний чек", g8Number(economics.aov), `${guruGateLabel("gate-1")}`, "Юнит-экономика", "предположение", updated));
+  add(g8FactRecord("margin", "Маржинальность", g8Number(economics.marginPercent), `${guruGateLabel("gate-1")}`, "Юнит-экономика", "предположение", updated));
+  add(g8FactRecord("allowedCpa", "Допустимый CPA", g8Number(economics.allowedCpa), `${guruGateLabel("gate-1")}`, "Юнит-экономика", "предположение", updated));
+  add(g8FactRecord("allowedCpl", "Допустимый CPL", g8Number(economics.allowedCpl), `${guruGateLabel("gate-1")}`, "Юнит-экономика", "предположение", updated));
+  add(g8FactRecord("ltv", "LTV", g8Number(economics.ltv), `${guruGateLabel("gate-1")}`, "Юнит-экономика", "предположение", updated));
 
   const gate2 = state?.gates?.find((gate) => gate.id === "gate-2");
   const gate2Ready = gate2 ? guruGateReadiness(gate2) : { total: 0, percent: 0 };
-  add(g8FactRecord("trackingQuality", "Качество отслеживания", gate2Ready.percent, "Gate 2", "Аналитика и источники", "предположение", updated));
+  add(g8FactRecord("trackingQuality", "Качество отслеживания", gate2Ready.percent, `${guruGateLabel("gate-2")}`, "Аналитика и источники", "предположение", updated));
 
   const g4 = state?.gate4 || {};
   const forecastPlan = g4.forecastAssumptions || {};
-  add(g8FactRecord("budget", "Плановый рекламный бюджет", g8Number(g8First(g4.launchParams?.testBudget, g4.creatives?.budget)), "Gate 4", "Параметры запуска", "предположение", updated));
-  add(g8FactRecord("targetCpl", "Целевой CPL запуска", g8Number(g4.launchParams?.targetCpl), "Gate 4", "Параметры запуска", "предположение", updated));
+  add(g8FactRecord("budget", "Плановый рекламный бюджет", g8Number(g8First(g4.launchParams?.testBudget, g4.creatives?.budget)), `${guruGateLabel("gate-4")}`, "Параметры запуска", "предположение", updated));
+  add(g8FactRecord("targetCpl", "Целевой CPL запуска", g8Number(g4.launchParams?.targetCpl), `${guruGateLabel("gate-4")}`, "Параметры запуска", "предположение", updated));
   [
     ["cpc", "Плановый CPC", forecastPlan.cpc],
     ["ctr", "Плановый CTR", forecastPlan.ctr],
@@ -9074,7 +8753,7 @@ function g8CollectFacts() {
     ["saleConversion", "Плановая конверсия в продажу", forecastPlan.saleConversion],
     ["demandChange", "Плановое изменение спроса", forecastPlan.demandChange],
   ].forEach(([key, label, value]) => {
-    if (g8Text(value) !== "") add(g8FactRecord(key, label, g8SignedNumber(value), "Gate 4", "Применённые допущения прогноза", "предположение", forecastPlan.updatedAt || updated));
+    if (g8Text(value) !== "") add(g8FactRecord(key, label, g8SignedNumber(value), `${guruGateLabel("gate-4")}`, "Применённые допущения прогноза", "предположение", forecastPlan.updatedAt || updated));
   });
 
   const periods = g8LatestGate5Periods();
@@ -9090,7 +8769,7 @@ function g8CollectFacts() {
       ["leads", "Заявки", latest.leads],
       ["siteConversion", "Конверсия сайта", latest.siteConversion],
       ["cpl", "Фактический CPL", latest.cpl],
-    ].forEach(([key, label, value]) => add(g8FactRecord(key, label, value, "Gate 5", "Снимок фактического периода", "факт", factDate, { periodStart: latest.periodStart, periodEnd: latest.periodEnd })));
+    ].forEach(([key, label, value]) => add(g8FactRecord(key, label, value, `${guruGateLabel("gate-5")}`, "Снимок фактического периода", "факт", factDate, { periodStart: latest.periodStart, periodEnd: latest.periodEnd })));
   }
 
   const link = g8LatestBusinessLink(latest);
@@ -9099,19 +8778,19 @@ function g8CollectFacts() {
     const leads = g8Number(link.leads) || g8Number(latest?.leads);
     const orders = g8Number(link.orders || link.sales);
     const revenue = g8Number(link.actualRevenue) || orders * g8Number(link.avgCheck || link.minCheck);
-    add(g8FactRecord("sales", "Продажи", orders, "Gate 5", "Связка с бизнесом", "факт", linkDate));
-    add(g8FactRecord("saleConversion", "Конверсия заявки в продажу", leads ? (orders / leads) * 100 : 0, "Gate 5", "Связка с бизнесом", "факт", linkDate));
-    if (revenue) add(g8FactRecord("revenue", "Выручка", revenue, "Gate 5", "Связка с бизнесом", "факт", linkDate));
-    if (g8Number(link.avgCheck || link.minCheck)) add(g8FactRecord("averageCheck", "Средний чек", g8Number(link.avgCheck || link.minCheck), "Gate 5", "Связка с бизнесом", "факт", linkDate));
-    if (g8Number(link.margin)) add(g8FactRecord("margin", "Маржинальность", g8Number(link.margin), "Gate 5", "Связка с бизнесом", "факт", linkDate));
+    add(g8FactRecord("sales", "Продажи", orders, `${guruGateLabel("gate-5")}`, "Связка с бизнесом", "факт", linkDate));
+    add(g8FactRecord("saleConversion", "Конверсия заявки в продажу", leads ? (orders / leads) * 100 : 0, `${guruGateLabel("gate-5")}`, "Связка с бизнесом", "факт", linkDate));
+    if (revenue) add(g8FactRecord("revenue", "Выручка", revenue, `${guruGateLabel("gate-5")}`, "Связка с бизнесом", "факт", linkDate));
+    if (g8Number(link.avgCheck || link.minCheck)) add(g8FactRecord("averageCheck", "Средний чек", g8Number(link.avgCheck || link.minCheck), `${guruGateLabel("gate-5")}`, "Связка с бизнесом", "факт", linkDate));
+    if (g8Number(link.margin)) add(g8FactRecord("margin", "Маржинальность", g8Number(link.margin), `${guruGateLabel("gate-5")}`, "Связка с бизнесом", "факт", linkDate));
   }
 
   const g7 = typeof ensureGate7State === "function" ? ensureGate7State() : { tasks: [] };
   const tasks = g7.tasks.filter((task) => task.sectionId !== "regular");
   const readyTasks = tasks.filter((task) => gate7TaskStatus(task) === "ready").length;
   const overdueTasks = tasks.filter((task) => typeof gate7IsOverdue === "function" && gate7IsOverdue(task)).length;
-  add(g8FactRecord("taskReadiness", "Готовность задач", tasks.length ? (readyTasks / tasks.length) * 100 : 0, "Gate 7", "Журнал задач", "факт", updated, { total: tasks.length, ready: readyTasks }));
-  add(g8FactRecord("overdueTasks", "Просроченные задачи", overdueTasks, "Gate 7", "Журнал задач", "факт", updated));
+  add(g8FactRecord("taskReadiness", "Готовность задач", tasks.length ? (readyTasks / tasks.length) * 100 : 0, `${guruGateLabel("gate-7")}`, "Журнал задач", "факт", updated, { total: tasks.length, ready: readyTasks }));
+  add(g8FactRecord("overdueTasks", "Просроченные задачи", overdueTasks, `${guruGateLabel("gate-7")}`, "Журнал задач", "факт", updated));
 
   const g6Events = Object.values(state?.gate6Calendar?.events || {});
   const plannedEvents = g6Events.filter((item) => g8Text(item?.decision || item?.relevance || item?.campaign || item?.scenario)).length;
@@ -9119,7 +8798,7 @@ function g8CollectFacts() {
     .map((item) => g8First(item?.deadlineDate, typeof gate6ExtractDeadline === "function" ? gate6ExtractDeadline(item?.preparation) : ""))
     .filter(Boolean)
     .sort();
-  add(g8FactRecord("calendarEvents", "События и сезонность", plannedEvents, "Gate 6", "Маркетинговый календарь", "факт", updated, { nextDeadline: deadlines.find((date) => date >= new Date().toISOString().slice(0, 10)) || "" }));
+  add(g8FactRecord("calendarEvents", "События и сезонность", plannedEvents, `${guruGateLabel("gate-6")}`, "Маркетинговый календарь", "факт", updated, { nextDeadline: deadlines.find((date) => date >= new Date().toISOString().slice(0, 10)) || "" }));
 
   return { facts, periods, latestPeriod: latest, businessLink: link };
 }
@@ -9221,28 +8900,6 @@ function g8GoalFulfillment(value, goal, metric) {
 }
 
 /* v0.21 — Page cards as GURU route: ориентир → действие → стандарт → доказательство → статус */
-function pageRouteOrientir(card, row) {
-  const context = pageTemplateContext(card);
-  const name = String(row?.name || card?.title || "").trim();
-  if (
-    context === "home" ||
-    normalizeGateTitle(name) === normalizeGateTitle("Главная")
-  ) {
-    return "Коммерческая точка входа. За 3 секунды объясняет, кто вы, для кого и почему вам можно доверять.";
-  }
-  if (context === "contacts")
-    return "Точка доверия и связи. Помогает быстро понять, как связаться, где вы находитесь и какие действия доступны.";
-  if (context === "catalog")
-    return "Навигационная страница выбора. Помогает быстро перейти к нужной категории, товару или услуге.";
-  if (context === "product")
-    return "Страница решения о покупке. Показывает ценность, условия, доказательства и действие.";
-  if (context === "service")
-    return "Страница услуги. Объясняет проблему, решение, результат, процесс и следующий шаг.";
-  if (context === "landing")
-    return "Посадочная страница. Ведёт пользователя от боли и оффера к конкретному действию.";
-  return "Рабочая страница сайта. Фиксирует содержание, SEO-основу, техническое состояние и конверсионное действие.";
-}
-
 function rowInputField(
   card,
   pageIndex,
@@ -12128,7 +11785,7 @@ gate1WorkBlockHtml = function (card, sectionTitle = "Аналитика") {
   return `<article class="work-accordion-card ${isOpen ? "is-open is-active" : ""}" data-card="${escapeAttr(card.id)}">
     <button class="work-card-header" data-gate1-toggle-card="${escapeAttr(card.id)}">
       <span class="work-card-main">
-        <span class="analytics-path">Gate 1 → ${escapeHtml(sectionTitle)} → ${escapeHtml(card.title)}</span>
+        <span class="analytics-path">${guruGateLabel("gate-1")} → ${escapeHtml(sectionTitle)} → ${escapeHtml(card.title)}</span>
         <span class="work-card-title">${escapeHtml(card.title)}</span>
         <span class="work-card-preview">${escapeHtml(cardPreviewText(card))}</span>
       </span>
@@ -12480,7 +12137,7 @@ function renderUnitEconomicsRoute(section) {
   return `<div class="demand-route unit-economics-route">
     <div class="demand-route-head">
       <div>
-        <div class="analytics-path">Gate 1 → Юнит-экономика</div>
+        <div class="analytics-path">${guruGateLabel("gate-1")} → Юнит-экономика</div>
         <h3>Юнит-экономика: решение о запуске рекламы</h3>
         <p class="muted">Чек → маржа → LTV → DRR → CPA/CPL → решение о запуске.</p>
       </div>
@@ -12620,7 +12277,7 @@ renderGate1Accordion = function (gate, cards) {
         return `<section class="analytics-subblock ${sectionOpen ? "is-open is-active" : ""}">
         <button class="subblock-header" data-gate1-toggle-section="${escapeAttr(section.key)}">
           <span class="subblock-main">
-            <span class="analytics-path">Gate 1 → ${escapeHtml(section.title)}</span>
+            <span class="analytics-path">${guruGateLabel("gate-1")} → ${escapeHtml(section.title)}</span>
             <span class="subblock-title">${escapeHtml(section.title)}</span>
             <span class="subblock-progress">${escapeHtml(progressText)}</span>
           </span>
@@ -14226,7 +13883,7 @@ function renderGate5Integrated(gate) {
     <section class="gate5-intro">
       <div class="gate5-intro-top">
         <div>
-          <div class="analytics-path">Gate 5 → Оценка и оптимизация</div>
+          <div class="analytics-path">${guruGateLabel("gate-5")} → Оценка и оптимизация</div>
           <h2>Оценка и оптимизация, постоянная петля</h2>
           <p class="muted">Рабочий цикл: кампания → период → метрики → изменение → сравнение → решение. История кампаний и изменений не перезаписывается.</p>
         </div>
@@ -14561,7 +14218,7 @@ function g5UploadStatusHtml(meta, totalRows) {
 function renderGate5Input() {
   const g5 = ensureGate5State();
   const goals = (g5.goals || []).map((goal, index) => `<div class="gate5-upload-row" data-g5-goal-record="${g5Attr(goal.id || index)}" data-g5-goal-product="${g5Attr(goal.product_id || "")}"><span class="gate5-upload-file">${g5Esc(goal.description || goal.goalDescription || goal.name || "Цель продукта")} · ${g5Esc(goal.product_id || "Без product_id")}</span><span class="gate5-muted">${g5Esc(goal.metric || goal.goalMetric || "Показатель не указан")} · ${g5Esc(goal.targetValue ?? goal.goalTargetValue ?? goal.target ?? "Значение не указано")} · ${g5Esc(goal.deadline || goal.goalDeadline || "Срок не указан")}</span></div>`).join("");
-  return `${renderGate5YandexImport()}<div class="gate5-card" data-g5-goal-registry><h4>Цели продуктов из данных Gate 5</h4>${goals || '<p class="gate5-muted">Отдельные цели продуктов не загружены. Цель компании из Gate 0 сюда не переносится.</p>'}</div><div class="gate5-note">Типы импорта: структура кампании, перфоманс-кампании, поисковые запросы, размещение в Поиске, площадки и бизнес-данные CRM / AGBIS.</div><div class="gate5-report-list">${Object.entries(GATE5_REPORTS)
+  return `${renderGate5YandexImport()}<div class="gate5-card" data-g5-goal-registry><h4>Цели продуктов из данных ${guruGateLabel("gate-5")}</h4>${goals || `<p class="gate5-muted">Отдельные цели продуктов не загружены. Цель компании из ${guruGateLabel("gate-0")} сюда не переносится.</p>`}</div><div class="gate5-note">Типы импорта: структура кампании, перфоманс-кампании, поисковые запросы, размещение в Поиске, площадки и бизнес-данные CRM / AGBIS.</div><div class="gate5-report-list">${Object.entries(GATE5_REPORTS)
     .map(([key, rep]) => {
       const meta = g5.imports[key];
       return `<div class="gate5-report-card"><h4>${g5Esc(rep.title)}</h4><small>${g5Esc(rep.desc)}</small>${g5UploadStatusHtml(meta, g5.reports[key]?.length)}<div class="gate5-note">Чтобы добавить или обновить данные, используйте единый блок «Импорт Яндекс Директ» выше.</div></div>`;
@@ -14672,13 +14329,13 @@ function renderGate5LegacyJournal() {
       <label class="gate5-field">Источник сигнала<select data-g5iter="triggerSource">${SOURCES.map((s) => `<option>${g5Esc(s)}</option>`).join("")}</select></label>
     </div>
     <label class="gate5-field" style="margin-top:8px">Проблема одной строкой<input data-g5iter="triggerProblem" placeholder="Что обнаружили"></label>
-    <label class="gate5-field" style="margin-top:8px">Затронутый блок Gate 4<select data-g5iter="triggerGate4Block">${GATE4_BLOCKS.map((b) => `<option>${g5Esc(b)}</option>`).join("")}</select></label>
+    <label class="gate5-field" style="margin-top:8px">Затронутый блок ${guruGateLabel("gate-4")}<select data-g5iter="triggerGate4Block">${GATE4_BLOCKS.map((b) => `<option>${g5Esc(b)}</option>`).join("")}</select></label>
     <div class="gate5-iter-section" style="margin-top:16px"><strong>2. Решение и изменения</strong></div>
     <div class="gate5-grid-2" style="margin-top:8px">
       <label class="gate5-field">Что изменено<select data-g5iter="changeType">${GATE4_BLOCKS.map((b) => `<option>${g5Esc(b)}</option>`).join("")}</select></label>
       <label class="gate5-field">Дата внесения<input type="date" data-g5iter="changeDate" value="${new Date().toISOString().slice(0, 10)}"></label>
     </div>
-    <label class="gate5-field" style="margin-top:8px">Описание изменения<input data-g5iter="changeDesc" placeholder="Что конкретно изменили в Gate 4"></label>
+    <label class="gate5-field" style="margin-top:8px">Описание изменения<input data-g5iter="changeDesc" placeholder="Что конкретно изменили в ${guruGateLabel("gate-4")}"></label>
     <div class="gate5-iter-section" style="margin-top:16px"><strong>3. Параметры проверки</strong></div>
     <div class="gate5-grid-4" style="margin-top:8px">
       <label class="gate5-field">Метрика<select data-g5iter="checkMetric">${METRICS.map((m) => `<option>${g5Esc(m)}</option>`).join("")}</select></label>
@@ -15231,75 +14888,8 @@ function isGate6Calendar(gate) {
 function gate6EventKey(seasonKey, eventKey) {
   return seasonKey + "__" + eventKey;
 }
-function gate6FindEvent(fullKey) {
-  for (const season of GATE6_SEASONS) {
-    const ev = season.events.find(
-      (e) => gate6EventKey(season.key, e.key) === fullKey,
-    );
-    if (ev) return { season, event: ev };
-  }
-  return null;
-}
-function ensureGate6State() {
-  state.gate6Calendar = state.gate6Calendar || {};
-  const g6 = state.gate6Calendar;
-  g6.context = g6.context || {};
-  if (!g6.context.period) g6.context.period = "Год / сезон";
-  if (!g6.context.project) g6.context.project = state.project?.name || "";
-  if (!g6.context.audience)
-    g6.context.audience =
-      "Премиальные клиенты, владельцы ценных вещей, деловой гардероб, семейные клиенты";
-  if (!g6.context.channels)
-    g6.context.channels =
-      "Сайт, email, push, Telegram, реклама, соцсети, персонально 1:1";
-  g6.openSeasons = g6.openSeasons || {};
-  g6.events = g6.events || {};
-  GATE6_SEASONS.forEach((season) =>
-    season.events.forEach((ev) => {
-      const key = gate6EventKey(season.key, ev.key);
-      g6.events[key] = g6.events[key] || {
-        relevance: "",
-        scenario: "",
-        segment: "",
-        offer: "",
-        channel: "",
-        materialsDeadline: "",
-        deadlineDate: "",
-        materialState: "",
-      };
-    }),
-  );
-  return g6;
-}
 function gate6HasText(v) {
   return String(v || "").trim().length > 0;
-}
-function gate6EventStatus(item) {
-  if (!item) return "not_started";
-  if (item.relevance === "not_relevant") return "excluded";
-  const hasDecision =
-    gate6HasText(item.relevance) ||
-    gate6HasText(item.segment) ||
-    gate6HasText(item.scenario) ||
-    gate6HasText(item.offer) ||
-    gate6HasText(item.channel) ||
-    gate6HasText(item.materialsDeadline);
-  if (!hasDecision) return "not_started";
-  const hasCore =
-    gate6HasText(item.segment) &&
-    gate6HasText(item.scenario) &&
-    gate6HasText(item.offer) &&
-    gate6HasText(item.channel);
-  const hasDeadline =
-    gate6HasText(item.materialsDeadline) || gate6HasText(item.deadlineDate);
-  const soon =
-    item.deadlineDate &&
-    gate6DaysUntil(item.deadlineDate) <= 7 &&
-    gate6DaysUntil(item.deadlineDate) >= 0;
-  if (soon && item.materialState !== "ready") return "problem";
-  if (item.materialState === "ready" && hasCore) return "ready_launch";
-  if (hasCore && hasDeadline) return "ready_prepare";
-  return "in_progress";
 }
 function gate6DaysUntil(date) {
   const d = new Date(String(date || "") + "T00:00:00");
@@ -15319,33 +14909,6 @@ function gate6SeasonStatus(season) {
   if (statuses.some((s) => s === "in_progress")) return "in_progress";
   return "not_started";
 }
-function getGate6Status() {
-  const g6 = ensureGate6State();
-  if (
-    !gate6HasText(g6.context.period) ||
-    !gate6HasText(g6.context.project) ||
-    !gate6HasText(g6.context.audience)
-  )
-    return "not_started";
-  const statuses = Object.values(g6.events).map(gate6EventStatus);
-  if (statuses.includes("problem")) return "problem";
-  if (statuses.some((s) => s === "ready_prepare" || s === "ready_launch"))
-    return "ready";
-  if (statuses.some((s) => s === "in_progress" || s === "excluded"))
-    return "in_progress";
-  return "not_started";
-}
-function getGate6Progress() {
-  const g6 = ensureGate6State();
-  const statuses = Object.values(g6.events)
-    .map(gate6EventStatus)
-    .filter((s) => s !== "excluded");
-  if (!statuses.length) return 0;
-  const done = statuses.filter(
-    (s) => s === "ready_prepare" || s === "ready_launch",
-  ).length;
-  return Math.round((done / statuses.length) * 100);
-}
 function getGate6FirstUnfinishedSeasonKey() {
   const g6 = state?.gate6Calendar;
   if (!g6?.events) return GATE6_SEASONS[0]?.key;
@@ -15363,38 +14926,6 @@ function getGate6FirstUnfinishedSeasonKey() {
 function gate6StatusPill(status) {
   const cls = GATE6_EVENT_STATUS_CLASS[status] || status;
   return `<span class="status-pill status-${escapeAttr(cls)}">${escapeHtml(GATE6_EVENT_STATUS_LABELS[status] || STATUS_LABELS[status] || status)}</span>`;
-}
-function renderGate6Calendar(gate) {
-  const g6 = ensureGate6State();
-  const status = getGate6Status();
-  const plan = gate6CampaignPlan();
-  els.contentArea.innerHTML = `<div class="gate6-calendar">
-    <section class="gate6-intro">
-      <div class="gate6-intro-top">
-        <div>
-          <div class="analytics-path">Gate 6 → Маркетинговый календарь событий</div>
-          <h2>Маркетинговый календарь событий</h2>
-          <p class="muted">Не таблица дат. Маршрут принятия решения: событие → спрос → сегмент → офер → канал → дедлайн → запуск.</p>
-        </div>
-        ${gate6StatusPill(status)}
-      </div>
-      <div class="gate6-formula"><span>событие</span><span>спрос</span><span>сегмент</span><span>офер</span><span>канал</span><span>дедлайн</span><span>запуск</span></div>
-      <div class="gate6-context-grid">
-        <label class="gate6-field">Период<input data-g6-context="period" value="${escapeAttr(g6.context.period)}" placeholder="год / квартал / сезон"></label>
-        <label class="gate6-field">Проект<input data-g6-context="project" value="${escapeAttr(g6.context.project)}" placeholder="бренд / сайт / услуга"></label>
-        <label class="gate6-field">Главная аудитория<input data-g6-context="audience" value="${escapeAttr(g6.context.audience)}" placeholder="для кого ищем поводы"></label>
-        <label class="gate6-field">Каналы<input data-g6-context="channels" value="${escapeAttr(g6.context.channels)}" placeholder="сайт / email / push / Telegram / реклама / соцсети"></label>
-      </div>
-    </section>
-    <section class="gate6-seasons">
-      ${GATE6_SEASONS.map((season) => gate6SeasonHtml(season)).join("")}
-    </section>
-    <section class="gate6-plan">
-      <div class="gate6-section-head"><div><h3>Финальный план кампаний</h3><p class="muted">Сюда попадают только события, по которым есть решение, сегмент, офер, канал или дедлайн. Это не архив дат, а запускной план.</p></div><span class="gate6-count">${plan.length} кампаний</span></div>
-      ${gate6PlanTable(plan)}
-    </section>
-  </div>`;
-  bindGate6Events();
 }
 function gate6SeasonHtml(season) {
   const g6 = ensureGate6State();
@@ -15424,140 +14955,9 @@ function gate6SeasonHtml(season) {
     }
   </section>`;
 }
-function gate6EventHtml(season, ev) {
-  const g6 = ensureGate6State();
-  const key = gate6EventKey(season.key, ev.key);
-  const item = g6.events[key] || {};
-  const status = gate6EventStatus(item);
-  return `<article class="gate6-event" id="g6-${escapeAttr(key)}" data-g6-event-card="${escapeAttr(key)}">
-    <div class="gate6-event-head">
-      <div><h4>${escapeHtml(ev.date)} — ${escapeHtml(ev.name)}</h4><p>${escapeHtml(ev.seed)}</p></div>
-      ${gate6StatusPill(status)}
-    </div>
-    <div class="gate6-event-decision">
-      <label class="gate6-field compact">Актуальность<select data-g6-relevance="${escapeAttr(key)}">
-        ${gate6Option("", "Под вопросом", item.relevance)}
-        ${gate6Option("relevant", "Подходит", item.relevance)}
-        ${gate6Option("not_relevant", "Не подходит", item.relevance)}
-      </select></label>
-      <label class="gate6-field compact">Сценарий спроса<textarea data-g6-field="${escapeAttr(key)}" data-field="scenario" rows="2" placeholder="почему человек купит именно сейчас">${escapeHtml(item.scenario || "")}</textarea></label>
-      <label class="gate6-field compact">Сегмент<input data-g6-field="${escapeAttr(key)}" data-field="segment" value="${escapeAttr(item.segment || "")}" placeholder="кому это важно"></label>
-      <label class="gate6-field compact">Офер<input data-g6-field="${escapeAttr(key)}" data-field="offer" value="${escapeAttr(item.offer || "")}" placeholder="что предлагаем"></label>
-      <label class="gate6-field compact">Канал<select data-g6-field="${escapeAttr(key)}" data-field="channel">
-        ${gate6Option("", "Выбрать канал", item.channel)}
-        ${GATE6_CHANNELS.map((ch) => gate6Option(ch, ch, item.channel)).join("")}
-      </select></label>
-      <label class="gate6-field compact wide-field">Материалы / дедлайн<input data-g6-field="${escapeAttr(key)}" data-field="materialsDeadline" value="${escapeAttr(item.materialsDeadline || "")}" placeholder="что подготовить и к какой дате"></label>
-      <label class="gate6-field compact">Дата дедлайна<input type="date" data-g6-field="${escapeAttr(key)}" data-field="deadlineDate" value="${escapeAttr(item.deadlineDate || "")}"></label>
-      <label class="gate6-field compact">Готовность<select data-g6-field="${escapeAttr(key)}" data-field="materialState">
-        ${gate6Option("", "Материалы не готовы", item.materialState)}
-        ${gate6Option("ready", "Материалы готовы", item.materialState)}
-      </select></label>
-    </div>
-  </article>`;
-}
 function gate6Option(value, label, current) {
   return `<option value="${escapeAttr(value)}" ${String(current || "") === String(value) ? "selected" : ""}>${escapeHtml(label)}</option>`;
 }
-function gate6CampaignPlan() {
-  const g6 = ensureGate6State();
-  const out = [];
-  GATE6_SEASONS.forEach((season) =>
-    season.events.forEach((ev) => {
-      const key = gate6EventKey(season.key, ev.key);
-      const item = g6.events[key] || {};
-      const status = gate6EventStatus(item);
-      const hasWork =
-        item.relevance ||
-        item.scenario ||
-        item.segment ||
-        item.offer ||
-        item.channel ||
-        item.materialsDeadline ||
-        item.deadlineDate ||
-        item.materialState;
-      if (!hasWork || status === "excluded") return;
-      out.push({
-        key,
-        season: season.title,
-        date: ev.date,
-        event: ev.name,
-        segment: item.segment,
-        scenario: item.scenario,
-        offer: item.offer,
-        channel: item.channel,
-        material: item.materialsDeadline,
-        deadline: item.deadlineDate,
-        status,
-      });
-    }),
-  );
-  return out;
-}
-function gate6PlanTable(rows) {
-  if (!rows.length)
-    return '<div class="empty compact-empty">План пока пуст. Выберите релевантное событие и заполните сегмент, офер, канал и дедлайн.</div>';
-  return `<div class="table-scroll gate6-plan-table"><table class="data-table clean-data-table"><thead><tr><th>Дата</th><th>Событие</th><th>Сегмент</th><th>Офер</th><th>Канал</th><th>Материал</th><th>Дедлайн</th><th>Статус</th></tr></thead><tbody>${rows.map((row) => `<tr data-g6-jump="${escapeAttr(row.key)}"><td>${escapeHtml(row.date)}</td><td class="table-title"><button class="linklike" data-g6-jump-btn="${escapeAttr(row.key)}">${escapeHtml(row.event)}</button><div class="muted mini-text">${escapeHtml(row.season)}</div></td><td>${escapeHtml(row.segment || "—")}</td><td>${escapeHtml(row.offer || "—")}</td><td>${escapeHtml(row.channel || "—")}</td><td>${escapeHtml(row.material || "—")}</td><td>${escapeHtml(row.deadline || "—")}</td><td>${gate6StatusPill(row.status)}</td></tr>`).join("")}</tbody></table></div>`;
-}
-function bindGate6Events() {
-  document.querySelectorAll("[data-g6-context]").forEach((input) =>
-    input.addEventListener("input", () => {
-      const g6 = ensureGate6State();
-      g6.context[input.dataset.g6Context] = input.value;
-      saveState();
-    }),
-  );
-  document.querySelectorAll("[data-g6-open]").forEach((btn) =>
-    btn.addEventListener("click", () => {
-      const g6 = ensureGate6State();
-      const key = btn.dataset.g6Open;
-      g6.openSeasons[key] = !g6.openSeasons[key];
-      saveState();
-      renderGate();
-    }),
-  );
-  document.querySelectorAll("[data-g6-relevance]").forEach((input) =>
-    input.addEventListener("change", () => {
-      const g6 = ensureGate6State();
-      const key = input.dataset.g6Relevance;
-      g6.events[key] = g6.events[key] || {};
-      g6.events[key].relevance = input.value;
-      saveState();
-      renderGate();
-    }),
-  );
-  document.querySelectorAll("[data-g6-field]").forEach((input) =>
-    input.addEventListener(
-      input.tagName === "SELECT" ? "change" : "input",
-      () => {
-        const g6 = ensureGate6State();
-        const key = input.dataset.g6Field;
-        const field = input.dataset.field;
-        g6.events[key] = g6.events[key] || {};
-        g6.events[key][field] = input.value;
-        saveState();
-      },
-    ),
-  );
-  document.querySelectorAll("[data-g6-jump-btn]").forEach((btn) =>
-    btn.addEventListener("click", () => {
-      const found = gate6FindEvent(btn.dataset.g6JumpBtn);
-      if (!found) return;
-      const g6 = ensureGate6State();
-      g6.openSeasons[found.season.key] = true;
-      saveState();
-      renderGate();
-      setTimeout(
-        () =>
-          document
-            .getElementById("g6-" + btn.dataset.g6JumpBtn)
-            ?.scrollIntoView({ behavior: "smooth", block: "center" }),
-        40,
-      );
-    }),
-  );
-}
-
 const __guruPrevRenderGateTableV30 = renderGateTable;
 renderGateTable = function (gate, cards) {
   if (isGate6Calendar(gate)) {
@@ -15964,7 +15364,7 @@ function renderGate6Calendar(gate) {
     <section class="gate6-intro">
       <div class="gate6-intro-top">
         <div>
-          <div class="analytics-path">Gate 6 → Маркетинговый календарь событий</div>
+          <div class="analytics-path">${guruGateLabel("gate-6")} → Маркетинговый календарь событий</div>
           <h2>Маркетинговый календарь событий</h2>
           <p class="muted">Не анкета и не таблица дат. Квартальный маршрут: квартал → событие → решение → кампания → подготовка → запуск.</p>
         </div>
@@ -16683,10 +16083,6 @@ function getGate7Status() {
   return "in_progress";
 }
 
-function getGate7Progress() {
-  return gate7Stats().percent;
-}
-
 function renderGate7Journal() {
   ensureGate7State();
   const stats = gate7Stats();
@@ -17027,7 +16423,7 @@ function gate7ExportCsv() {
 
 function gate7ExportPdf() {
   const rows = gate7ExportRows();
-  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Gate 7 · Задачи</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h1{font-size:24px}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}th{background:#f3f3f3}</style></head><body><h1>Gate 7 · Задачи и результаты</h1><table><thead><tr><th>Название</th><th>Срок</th><th>Статус</th><th>Результат</th></tr></thead><tbody>${rows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table><script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script></body></html>`;
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${guruGateLabel("gate-7")} · Задачи</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h1{font-size:24px}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}th{background:#f3f3f3}</style></head><body><h1>${guruGateLabel("gate-7")} · Задачи и результаты</h1><table><thead><tr><th>Название</th><th>Срок</th><th>Статус</th><th>Результат</th></tr></thead><tbody>${rows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table><script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script></body></html>`;
   openPrintableReport(html);
 }
 
@@ -17038,38 +16434,6 @@ renderGateTable = function (gate, cards) {
     return;
   }
   __guruPrevRenderGateTableV32(gate, cards);
-};
-
-const __guruPrevRenderGateNavV32 = renderGateNav;
-renderGateNav = function () {
-  els.gateNav.innerHTML = state.gates
-    .map((g) => {
-      const progress =
-        g.id === "gate-5"
-          ? getGate5Progress()
-          : g.id === "gate-6"
-            ? getGate6Progress()
-            : g.id === "gate-7"
-              ? getGate7Progress()
-              : getProgress(g.cards);
-      const cls =
-        activeView === "gate" && activeGateId === g.id ? "active" : "";
-      const countText =
-        g.id === "gate-5"
-          ? "6 подблоков"
-          : g.id === "gate-6"
-            ? "4 квартала"
-            : g.id === "gate-7"
-              ? gate7TaskCountLabel(gate7Stats().total)
-              : guruProgressCardsV468(g.cards).length + " блоков";
-      return `<button class="gate-btn ${cls}" data-gate-id="${escapeAttr(g.id)}">${escapeHtml(g.title)}<span class="small">${countText}, готово ${progress}%</span></button>`;
-    })
-    .join("");
-  document.querySelectorAll("[data-gate-id]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      guruNavigateToGate(btn.dataset.gateId);
-    });
-  });
 };
 
 // Проекты сохраняются в этом браузере: реестр в localStorage, крупные workspace в IndexedDB.
@@ -17088,7 +16452,7 @@ const PRODUCT_SEGMENT_GLOBAL_FIELDS = [
     label: "Что продаём",
     hint: "продукт / услуга / направление",
     evidenceKey: "что_продаем",
-    usedIn: "Gate 1 / Gate 3 / Gate 4",
+    usedIn: `${guruGateLabel("gate-1")} / ${guruGateLabel("gate-3")} / ${guruGateLabel("gate-4")}`,
     downstream: "оффер, семантика, юнит-экономика, кампании, календарь, отчёты",
   },
   {
@@ -17096,7 +16460,7 @@ const PRODUCT_SEGMENT_GLOBAL_FIELDS = [
     label: "Кому продаём",
     hint: "основной сегмент / аудитория",
     evidenceKey: "кому_продаем",
-    usedIn: "Gate 1 / Gate 3 / Gate 4",
+    usedIn: `${guruGateLabel("gate-1")} / ${guruGateLabel("gate-3")} / ${guruGateLabel("gate-4")}`,
     downstream: "ЦА, сегменты, персоны, рекламные группы, коллаборации",
   },
   {
@@ -17104,7 +16468,7 @@ const PRODUCT_SEGMENT_GLOBAL_FIELDS = [
     label: "Ради какого результата",
     hint: "какую задачу клиента решаем",
     evidenceKey: "ради_какого_результата",
-    usedIn: "Gate 1 / Gate 3 / Gate 4",
+    usedIn: `${guruGateLabel("gate-1")} / ${guruGateLabel("gate-3")} / ${guruGateLabel("gate-4")}`,
     downstream: "JTBD, офер, лендинги, объявления, CTA",
   },
 ];
@@ -17280,7 +16644,7 @@ const OFFER_PSYCH_GLOBAL_FIELDS = [
     label: "Рациональное покрытие",
     hint: "цена, срок, гарантия, характеристики, понятный результат",
     downstream: "FAQ, цена, блок преимуществ, объявления",
-    route: "Gate 1 / Gate 3 / Gate 4",
+    route: `${guruGateLabel("gate-1")} / ${guruGateLabel("gate-3")} / ${guruGateLabel("gate-4")}`,
   },
   {
     key: "offerIrrationalDriver",
@@ -17288,7 +16652,7 @@ const OFFER_PSYCH_GLOBAL_FIELDS = [
     label: "Иррациональный драйвер",
     hint: "страх, желание, статус, контроль, уверенность, безопасность",
     downstream: "оффер, hero-экран, боли, креативы",
-    route: "Gate 1 / Gate 3 / Gate 4",
+    route: `${guruGateLabel("gate-1")} / ${guruGateLabel("gate-3")} / ${guruGateLabel("gate-4")}`,
   },
   {
     key: "offerSocialMechanism",
@@ -17296,7 +16660,7 @@ const OFFER_PSYCH_GLOBAL_FIELDS = [
     label: "Социальный механизм",
     hint: "как клиент объяснит покупку другим и кем хочет выглядеть",
     downstream: "отзывы, кейсы, соцдоказательство, PR",
-    route: "Gate 1 / Gate 3 / Gate 4",
+    route: `${guruGateLabel("gate-1")} / ${guruGateLabel("gate-3")} / ${guruGateLabel("gate-4")}`,
   },
 ];
 const OFFER_PSYCH_PROOF_KEY = "offer_psych_proof";
@@ -17408,7 +16772,7 @@ function offerPsychFieldsHtml(card) {
       <input data-offer-psych-proof="true" value="${escapeAttr(readOfferPsychProof(state))}" placeholder="интервью / отзывы / CRM / конкуренты / фокус-группа" />
       <span class="offer-psych-hint">Источник подтверждения, не главное поле анализа.</span>
     </label>
-    <div class="offer-psych-note">Эти три значения являются базовыми данными оффера. Следующий этап: связать их с конкретными полями Gate 1–4.</div>
+    <div class="offer-psych-note">Эти три значения являются базовыми данными оффера. Следующий этап: связать их с конкретными полями ${guruGateLabel("gate-1")}–4.</div>
   </div>`;
 }
 
@@ -17509,7 +16873,7 @@ const POSITIONING_GLOBAL_FIELDS = [
     label: "Стартовая формулировка",
     hint: "как проект сейчас коротко описывает себя",
     downstream: "описание проекта, главная, презентации, отчёты",
-    route: "Gate 1 / Gate 3 / Gate 4",
+    route: `${guruGateLabel("gate-1")} / ${guruGateLabel("gate-3")} / ${guruGateLabel("gate-4")}`,
   },
   {
     key: "positioningStatement",
@@ -17517,7 +16881,7 @@ const POSITIONING_GLOBAL_FIELDS = [
     label: "Позиционирование",
     hint: "для кого проект, в какой категории и чем отличается",
     downstream: "аудит сайта, ЦА, конкуренты, JTBD, сегменты",
-    route: "Gate 1 / Gate 3 / Gate 4",
+    route: `${guruGateLabel("gate-1")} / ${guruGateLabel("gate-3")} / ${guruGateLabel("gate-4")}`,
   },
   {
     key: "usp",
@@ -17525,7 +16889,7 @@ const POSITIONING_GLOBAL_FIELDS = [
     label: "УТП",
     hint: "главное обещание / причина выбрать сейчас",
     downstream: "hero-экран, офер, объявления, CTA, лендинги, карточки услуг",
-    route: "Gate 1 / Gate 3 / Gate 4",
+    route: `${guruGateLabel("gate-1")} / ${guruGateLabel("gate-3")} / ${guruGateLabel("gate-4")}`,
   },
 ];
 const POSITIONING_PROOF_KEY = "positioning_proof";
@@ -17655,7 +17019,7 @@ function positioningFieldsHtml(card) {
       <input data-positioning-proof="true" value="${escapeAttr(readPositioningProof(state))}" placeholder="сайт / посадочные / презентации / рекламные материалы / скрипты продаж" />
       <span class="positioning-hint">Источник подтверждения, не главное поле анализа.</span>
     </label>
-    <div class="positioning-note">Эти три значения являются глобальными данными позиционирования. Следующий этап: связать их с конкретными полями Gate 1–4.</div>
+    <div class="positioning-note">Эти три значения являются глобальными данными позиционирования. Следующий этап: связать их с конкретными полями ${guruGateLabel("gate-1")}–4.</div>
   </div>`;
 }
 
@@ -17755,8 +17119,8 @@ const SEARCH_FOCUS_GLOBAL_FIELDS = [
     sharedKey: "search_main_keywords",
     label: "Основные ключевые слова",
     hint: "главные запросы, по которым проект должен находиться",
-    downstream: "Gate 1 → Спрос, SEO, страницы, Title, H1, Description",
-    route: "Gate 1 / SEO / страницы",
+    downstream: `${guruGateLabel("gate-1")} → Спрос, SEO, страницы, Title, H1, Description`,
+    route: `${guruGateLabel("gate-1")} / SEO / страницы`,
   },
   {
     key: "searchPriorityClusters",
@@ -17764,7 +17128,7 @@ const SEARCH_FOCUS_GLOBAL_FIELDS = [
     label: "Приоритетные кластеры",
     hint: "3–7 направлений спроса, которые важнее всего",
     downstream: "структура сайта, категории, услуги, рекламные группы",
-    route: "Gate 1 / Gate 3 / Gate 4",
+    route: `${guruGateLabel("gate-1")} / ${guruGateLabel("gate-3")} / ${guruGateLabel("gate-4")}`,
   },
   {
     key: "searchBrandQueries",
@@ -17772,7 +17136,7 @@ const SEARCH_FOCUS_GLOBAL_FIELDS = [
     label: "Брендовые запросы",
     hint: "название бренда, продукта, компании, авторские названия",
     downstream: "брендовая реклама, SEO, репутация, отчёты",
-    route: "Gate 1 / Gate 4 / Gate 5",
+    route: `${guruGateLabel("gate-1")} / ${guruGateLabel("gate-4")} / ${guruGateLabel("gate-5")}`,
   },
   {
     key: "searchIrrelevantQueries",
@@ -17780,7 +17144,7 @@ const SEARCH_FOCUS_GLOBAL_FIELDS = [
     label: "Нерелевантные запросы",
     hint: "что точно не нужно собирать и продвигать",
     downstream: "минус-фразы, исключения, фильтрация семантики",
-    route: "Gate 1 / реклама / SEO",
+    route: `${guruGateLabel("gate-1")} / реклама / SEO`,
   },
   {
     key: "searchFocusSummary",
@@ -17788,7 +17152,7 @@ const SEARCH_FOCUS_GLOBAL_FIELDS = [
     label: "Итоговый поисковый фокус",
     hint: "короткий вывод, на чём держится семантика проекта",
     downstream: "стратегия, аудит сайта, рекламные кампании, отчёты",
-    route: "Gate 1 / Gate 3 / Gate 5",
+    route: `${guruGateLabel("gate-1")} / ${guruGateLabel("gate-3")} / ${guruGateLabel("gate-5")}`,
   },
 ];
 const SEARCH_FOCUS_PROOF_KEY = "search_focus_proof";
@@ -17916,7 +17280,7 @@ function searchFocusFieldsHtml(card) {
       <input data-search-focus-proof="true" value="${escapeAttr(readSearchFocusProof(state))}" placeholder="Wordstat / Директ / Search Console / Вебмастер / SEO-отчёт / таблица" />
       <span class="search-focus-hint">Инструменты используются как источник доказательства, а не как отдельные рабочие строки.</span>
     </label>
-    <div class="search-focus-note">Эти пять значений являются глобальным поисковым фокусом проекта. Следующий этап: связать их с конкретными полями Gate 1, SEO, страниц, рекламы и отчётов.</div>
+    <div class="search-focus-note">Эти пять значений являются глобальным поисковым фокусом проекта. Следующий этап: связать их с конкретными полями ${guruGateLabel("gate-1")}, SEO, страниц, рекламы и отчётов.</div>
   </div>`;
 }
 
@@ -18018,8 +17382,8 @@ const CURRENT_OFFERS_CTA_GLOBAL_FIELDS = [
     hint: "какие предложения сейчас используются",
     fallbackKeys: [],
     downstream:
-      "Gate 1 -> Боль / JTBD / Офер, аудит сайта, страницы, лендинги, объявления",
-    route: "Gate 1 / Gate 3 / Gate 4",
+      `${guruGateLabel("gate-1")} -> Боль / JTBD / Офер, аудит сайта, страницы, лендинги, объявления`,
+    route: `${guruGateLabel("gate-1")} / ${guruGateLabel("gate-3")} / ${guruGateLabel("gate-4")}`,
   },
   {
     key: "currentCtas",
@@ -18029,7 +17393,7 @@ const CURRENT_OFFERS_CTA_GLOBAL_FIELDS = [
     fallbackKeys: [],
     downstream:
       "hero-блоки, формы, кнопки, баннеры, объявления, email / push / Telegram",
-    route: "Gate 1 / Gate 4",
+    route: `${guruGateLabel("gate-1")} / ${guruGateLabel("gate-4")}`,
   },
   {
     key: "primaryTargetAction",
@@ -18039,7 +17403,7 @@ const CURRENT_OFFERS_CTA_GLOBAL_FIELDS = [
     fallbackKeys: [],
     downstream:
       "цели Метрики, конверсионные блоки, thank you page, отчеты, рекламные кампании",
-    route: "Gate 2 / Gate 4 / Gate 5",
+    route: `${guruGateLabel("gate-2")} / ${guruGateLabel("gate-4")} / ${guruGateLabel("gate-5")}`,
   },
 ];
 const CURRENT_OFFERS_CTA_PROOF_KEY = "current_offers_cta_proof";
@@ -18184,7 +17548,7 @@ function currentOffersCtaFieldsHtml(card) {
       <input data-offer-cta-proof="true" value="${escapeAttr(readCurrentOffersCtaProof(state))}" placeholder="сайт / посадочные / объявления / баннеры / мессенджеры / скрипты" />
       <span class="offer-cta-hint">Источник подтверждает, что эти офферы и CTA реально используются сейчас.</span>
     </label>
-    <div class="offer-cta-note">Эти три значения являются глобальным источником офферов и призывов к действию. Следующий этап: связать их с конкретными полями Gate 1, Gate 4, целями, формами и отчетами.</div>
+    <div class="offer-cta-note">Эти три значения являются глобальным источником офферов и призывов к действию. Следующий этап: связать их с конкретными полями ${guruGateLabel("gate-1")}, ${guruGateLabel("gate-4")}, целями, формами и отчетами.</div>
   </div>`;
 }
 
@@ -18297,7 +17661,7 @@ const GATE0_PASSPORT_V116_BLOCKS = {
         sharedKey: "что_продаем",
         label: "Что продаем",
         hint: "продукт / услуга / направление",
-        route: "Gate 1, Gate 3, Gate 4",
+        route: `${guruGateLabel("gate-1")}, ${guruGateLabel("gate-3")}, ${guruGateLabel("gate-4")}`,
         downstream:
           "оффер, семантика, юнит-экономика, кампании, календарь, отчеты",
         fallback: [],
@@ -18307,7 +17671,7 @@ const GATE0_PASSPORT_V116_BLOCKS = {
         sharedKey: "кому_продаем",
         label: "Кому продаем",
         hint: "основной сегмент / аудитория",
-        route: "Gate 1, Gate 3, Gate 4",
+        route: `${guruGateLabel("gate-1")}, ${guruGateLabel("gate-3")}, ${guruGateLabel("gate-4")}`,
         downstream: "ЦА, сегменты, персоны, рекламные группы, коллаборации",
         fallback: [],
       },
@@ -18316,12 +17680,12 @@ const GATE0_PASSPORT_V116_BLOCKS = {
         sharedKey: "ради_какого_результата",
         label: "Ради какого результата",
         hint: "jobs-to-be-done",
-        route: "Gate 1, Gate 3, Gate 4",
+        route: `${guruGateLabel("gate-1")}, ${guruGateLabel("gate-3")}, ${guruGateLabel("gate-4")}`,
         downstream: "JTBD, офер, лендинги, объявления, CTA",
         fallback: [],
       },
     ],
-    transfer: "Глобальные поля · используются в Gate 1, Gate 3, Gate 4",
+    transfer: `Глобальные поля · используются в ${guruGateLabel("gate-1")}, ${guruGateLabel("gate-3")}, ${guruGateLabel("gate-4")}`,
   },
   "Психологическая декомпозиция оффера": {
     key: "offer_psychology",
@@ -18339,7 +17703,7 @@ const GATE0_PASSPORT_V116_BLOCKS = {
         sharedKey: "offer_rational_coverage",
         label: "Рациональное покрытие",
         hint: "цена, срок, гарантия, качество, результат",
-        route: "Gate 1, Gate 3, Gate 4",
+        route: `${guruGateLabel("gate-1")}, ${guruGateLabel("gate-3")}, ${guruGateLabel("gate-4")}`,
         downstream: "FAQ, цена, преимущества, объявления",
         fallback: [],
       },
@@ -18348,7 +17712,7 @@ const GATE0_PASSPORT_V116_BLOCKS = {
         sharedKey: "offer_irrational_driver",
         label: "Иррациональный драйвер",
         hint: "страх, желание, статус, контроль, уверенность",
-        route: "Gate 1, Gate 3, Gate 4",
+        route: `${guruGateLabel("gate-1")}, ${guruGateLabel("gate-3")}, ${guruGateLabel("gate-4")}`,
         downstream: "офер, hero-экран, боли, креативы",
         fallback: [],
       },
@@ -18357,12 +17721,12 @@ const GATE0_PASSPORT_V116_BLOCKS = {
         sharedKey: "offer_social_mechanism",
         label: "Социальный механизм",
         hint: "как клиент объясняет покупку другим",
-        route: "Gate 1, Gate 3, Gate 4",
+        route: `${guruGateLabel("gate-1")}, ${guruGateLabel("gate-3")}, ${guruGateLabel("gate-4")}`,
         downstream: "отзывы, кейсы, соцдоказательство, PR",
         fallback: [],
       },
     ],
-    transfer: "Глобальные поля оффера · используются в Gate 1, Gate 3, Gate 4",
+    transfer: `Глобальные поля оффера · используются в ${guruGateLabel("gate-1")}, ${guruGateLabel("gate-3")}, ${guruGateLabel("gate-4")}`,
   },
   "Текущее позиционирование, УТП, офферы и CTA — внешнее сообщение": {
     key: "positioning_utp_offers_cta",
@@ -18386,7 +17750,7 @@ const GATE0_PASSPORT_V116_BLOCKS = {
         sharedKey: "positioning_start_formula",
         label: "Стартовая формулировка",
         hint: "как проект сейчас коротко описывает себя",
-        route: "Gate 1, Gate 3, Gate 4",
+        route: `${guruGateLabel("gate-1")}, ${guruGateLabel("gate-3")}, ${guruGateLabel("gate-4")}`,
         downstream: "описание проекта, главная, презентации, отчеты",
         fallback: [],
       },
@@ -18395,7 +17759,7 @@ const GATE0_PASSPORT_V116_BLOCKS = {
         sharedKey: "positioning_statement",
         label: "Позиционирование",
         hint: "только «категория + отличие от конкурентов»",
-        route: "Gate 1, Gate 3, Gate 4",
+        route: `${guruGateLabel("gate-1")}, ${guruGateLabel("gate-3")}, ${guruGateLabel("gate-4")}`,
         downstream: "аудит сайта, ЦА, конкуренты, JTBD, сегменты",
         fallback: [],
       },
@@ -18404,7 +17768,7 @@ const GATE0_PASSPORT_V116_BLOCKS = {
         sharedKey: "usp",
         label: "УТП",
         hint: "главное обещание выбора",
-        route: "Gate 1, Gate 3, Gate 4",
+        route: `${guruGateLabel("gate-1")}, ${guruGateLabel("gate-3")}, ${guruGateLabel("gate-4")}`,
         downstream: "hero-экран, офер, объявления, CTA, лендинги",
         fallback: [],
       },
@@ -18413,7 +17777,7 @@ const GATE0_PASSPORT_V116_BLOCKS = {
         sharedKey: "current_offers",
         label: "Текущие офферы",
         hint: "предложения, акции, бонусы, сценарии покупки",
-        route: "Gate 1, Gate 3, Gate 4",
+        route: `${guruGateLabel("gate-1")}, ${guruGateLabel("gate-3")}, ${guruGateLabel("gate-4")}`,
         downstream: "офер, JTBD, аудит страниц, лендинги, объявления",
         fallback: [],
       },
@@ -18422,7 +17786,7 @@ const GATE0_PASSPORT_V116_BLOCKS = {
         sharedKey: "current_ctas",
         label: "Текущие CTA",
         hint: "купить, заказать, написать, рассчитать",
-        route: "Gate 1, Gate 4",
+        route: `${guruGateLabel("gate-1")}, ${guruGateLabel("gate-4")}`,
         downstream: "hero-блоки, формы, кнопки, баннеры, email, push, Telegram",
         fallback: [],
       },
@@ -18452,7 +17816,7 @@ const GATE0_PASSPORT_V116_BLOCKS = {
         sharedKey: "search_main_keywords",
         label: "Основные ключевые слова",
         hint: "главные запросы",
-        route: "Gate 1, Gate 4",
+        route: `${guruGateLabel("gate-1")}, ${guruGateLabel("gate-4")}`,
         downstream: "спрос, SEO, страницы, Title, H1, Description",
         fallback: [],
       },
@@ -18461,7 +17825,7 @@ const GATE0_PASSPORT_V116_BLOCKS = {
         sharedKey: "search_priority_clusters",
         label: "Приоритетные кластеры",
         hint: "3–7 направлений спроса",
-        route: "Gate 1, Gate 3, Gate 4",
+        route: `${guruGateLabel("gate-1")}, ${guruGateLabel("gate-3")}, ${guruGateLabel("gate-4")}`,
         downstream: "структура сайта, категории, услуги, рекламные группы",
         fallback: [],
       },
@@ -18470,13 +17834,13 @@ const GATE0_PASSPORT_V116_BLOCKS = {
         sharedKey: "search_irrelevant_queries",
         label: "Нерелевантные запросы",
         hint: "что исключить",
-        route: "Gate 1, Gate 4",
+        route: `${guruGateLabel("gate-1")}, ${guruGateLabel("gate-4")}`,
         downstream: "минус-фразы, исключения, фильтрация семантики",
         fallback: [],
       },
     ],
     transfer:
-      "Глобальный поисковый фокус · используется в Gate 1, Gate 3, Gate 4, Gate 5",
+      `Глобальный поисковый фокус · используется в ${guruGateLabel("gate-1")}, ${guruGateLabel("gate-3")}, ${guruGateLabel("gate-4")}, ${guruGateLabel("gate-5")}`,
   },
 };
 
@@ -19493,10 +18857,10 @@ document.addEventListener("click", (e) => {
 function g5ResetAllData() {
   if (activeGateId !== "gate-5") return;
   const accepted = window.confirm(
-    "Удалить все данные Gate 5: кампании, импорты, отчёты, снимки периодов, связи, журнал, сравнения и решения? Это действие нельзя отменить.",
+    `Удалить все данные ${guruGateLabel("gate-5")}: кампании, импорты, отчёты, снимки периодов, связи, журнал, сравнения и решения? Это действие нельзя отменить.`,
   );
   if (!accepted) return;
-  if (!window.confirm("Подтвердите удаление всех данных Gate 5.")) return;
+  if (!window.confirm(`Подтвердите удаление всех данных ${guruGateLabel("gate-5")}.`)) return;
   state.gate5 = gate5BlankState();
   const gate = state.gates?.find((item) => item.id === "gate-5");
   (gate?.cards || []).forEach((card) => {
@@ -19505,7 +18869,7 @@ function g5ResetAllData() {
   });
   saveState();
   render();
-  alert("Все данные Gate 5 удалены.");
+  alert(`Все данные ${guruGateLabel("gate-5")} удалены.`);
 }
 function g5EnsureResetToolbarButton() {
   const bar = document.getElementById("workspaceToolbar");
@@ -19520,7 +18884,7 @@ function g5EnsureResetToolbarButton() {
     button.type = "button";
     button.className = "btn secondary debug-export-btn";
     button.dataset.g5ResetAll = "1";
-    button.textContent = "Удалить данные Gate 5";
+    button.textContent = `Удалить данные ${guruGateLabel("gate-5")}`;
     const diagnostic = bar.querySelector("[data-debug-export-gate]");
     diagnostic?.insertAdjacentElement("afterend", button) || bar.appendChild(button);
   }
@@ -20406,7 +19770,7 @@ function diag5ALight(pct) {
 
 function diag5AItemsHtml(items = []) {
   if (!items.length)
-    return '<div class="diag-ok">Нет данных для диагностики — заполните блоки Gate 0</div>';
+    return `<div class="diag-ok">Нет данных для диагностики — заполните блоки ${guruGateLabel("gate-0")}</div>`;
   const groups = [
     ["ok", "Реализовано"],
     ["warn", "В работе / планируется"],
@@ -22494,7 +21858,7 @@ const MEGA_PLATFORM_LEGAL_HELP = {
   offer: ["Нужна, если заказ оформляется на сайте", "https://44.rospotrebnadzor.ru/zacshita_prav_potreb/1671/"],
   returns: ["Нужна, если заказ оформляется на сайте", "https://44.rospotrebnadzor.ru/zacshita_prav_potreb/1671/"],
   delivery: ["Нужна, если заказ оформляется на сайте", "https://44.rospotrebnadzor.ru/zacshita_prav_potreb/1671/"],
-  cookie_banner: ["Нужен, если сайт собирает персональные данные. Настройте баннер в Gate 1.", "https://saby.ru/articles/contragents/kak_vypolnit_trebovaniya_zakona_o_persdannyh_na_sayte"],
+  cookie_banner: [`Нужен, если сайт собирает персональные данные. Настройте баннер в ${guruGateLabel("gate-1")}.`, "https://saby.ru/articles/contragents/kak_vypolnit_trebovaniya_zakona_o_persdannyh_na_sayte"],
 };
 function megaPlatformLegalRequirement(item, pv2) {
   const id = item.id || MEGA_PLATFORM_LEGAL_KEYS[item.name];
@@ -22543,7 +21907,7 @@ function megaPlatformLegalQuestionsHtml(cardId, pv2, workspace = state) {
 }
 function megaPlatformLegalValueHtml(cardId, row) {
   if (!row.needed) return "Не требуется";
-  if (row.kind === "banner") return '<button type="button" class="small-btn" data-open-audit-page="card-35">Блок «Cookie-баннер» в Gate 1</button>';
+  if (row.kind === "banner") return `<button type="button" class="small-btn" data-open-audit-page="card-35">Блок «Cookie-баннер» в ${guruGateLabel("gate-1")}</button>`;
   if (row.kind === "reference") return row.url.trim()
     ? `<span class="mega-platform-legal-reference">${escapeHtml(row.url)}</span>` : "URL не указан";
   return megaPlatformUrlInput(cardId, "fixed", row.id, row.name, row.url);
@@ -24511,7 +23875,7 @@ const ROBOTS_V2_RESULT_OPTIONS = [
   "Требует внимания",
 ];
 const ROBOTS_V2_YANDEX_INSTRUCTION =
-  "Суть:\nПроверить, что Яндекс может обходить важные страницы сайта и robots.txt не содержит ошибок.\n\nИсточник URL:\nСтраницы автоматически читаются из Gate 0 → Точка отсчёта и распределяются на важные и служебные.\n\nИдеал:\n0 ошибок, важные страницы разрешены, служебные URL обработаны корректно.";
+  `Суть:\nПроверить, что Яндекс может обходить важные страницы сайта и robots.txt не содержит ошибок.\n\nИсточник URL:\nСтраницы автоматически читаются из ${guruGateLabel("gate-0")} → Точка отсчёта и распределяются на важные и служебные.\n\nИдеал:\n0 ошибок, важные страницы разрешены, служебные URL обработаны корректно.`;
 
 function robotsV130Gate0UrlKey(value) {
   const url = String(value || "").trim();
@@ -24685,7 +24049,7 @@ function robotsV130FieldsHtml(card) {
         ) => `<tr><td class="cr-label">${escapeHtml(r.url)}</td><td>${escapeHtml(r.type)}</td><td>${escapeHtml(r.expect)}</td>
     <td>${rv2Select("", r.result, ROBOTS_V2_RESULT_OPTIONS, `data-rv2-sys="yandex" data-rv2-table="url" data-rv2-idx="${i}"`)}</td></tr>`,
       )
-      .join("") || '<tr><td colspan="4" class="rv2-source-empty">Добавьте URL важных страниц в Gate 0 → Точка отсчёта.</td></tr>'}</tbody></table>`;
+      .join("") || `<tr><td colspan="4" class="rv2-source-empty">Добавьте URL важных страниц в ${guruGateLabel("gate-0")} → Точка отсчёта.</td></tr>`}</tbody></table>`;
 
   const yServiceTable = `<table class="cr-table rv2-url-table"><thead><tr><th>URL</th><th>Тип</th><th>Ожидаем</th><th>Результат</th><th>Комментарий (необязательно)</th></tr></thead>
     <tbody>${f.yandex.serviceResults
@@ -24697,7 +24061,7 @@ function robotsV130FieldsHtml(card) {
     <td>${rv2Select("", r.result, ROBOTS_V2_RESULT_OPTIONS, `data-rv2-sys="yandex" data-rv2-table="service" data-rv2-idx="${i}"`)}</td>
     <td>${rv2Input(r.comment, "—", `data-rv2-sys="yandex" data-rv2-table="service-comment" data-rv2-idx="${i}"`)}</td></tr>`,
       )
-      .join("") || '<tr><td colspan="5" class="rv2-source-empty">Добавьте URL служебных страниц в Gate 0 → Точка отсчёта.</td></tr>'}</tbody></table>`;
+      .join("") || `<tr><td colspan="5" class="rv2-source-empty">Добавьте URL служебных страниц в ${guruGateLabel("gate-0")} → Точка отсчёта.</td></tr>`}</tbody></table>`;
 
   const ySitemapRows = f.yandex.sitemaps
     .map((row, index) => `<div class="rv2-sitemap-row" data-rv2-sitemap-row="${index}">
@@ -27594,7 +26958,7 @@ const PAIN_V130_STEPS = [
   {
     key: "search",
     title: "1. Поисковое поведение",
-    task: "Берём, что продаём в Gate 0, и под каждый продукт формируем поисковое поведение: как рынок называет потребность, какой интент стоит за поиском и какие сегменты скрываются внутри спроса.",
+    task: `Берём, что продаём в ${guruGateLabel("gate-0")}, и под каждый продукт формируем поисковое поведение: как рынок называет потребность, какой интент стоит за поиском и какие сегменты скрываются внутри спроса.`,
     standard:
       "Понятно: что продаём, какой кластер спроса относится к продукту, какими словами рынок описывает потребность, какой интент стоит за поиском, какой скрытый мотив запускает поиск и какие сегменты присутствуют внутри спроса.",
     customRender: "searchClusters",
@@ -28042,7 +27406,7 @@ function pv130SearchClustersHtml(step, data) {
         </div>
         <div class="g1-card-collapse-body pv130-search-cluster-body">
           <div class="g1-fields-grid">
-            ${pv130SearchField(ri, "product", "Что продаём", row.product, "продукт из Gate 0", "input")}
+            ${pv130SearchField(ri, "product", "Что продаём", row.product, `продукт из ${guruGateLabel("gate-0")}`, "input")}
             ${pv130SearchField(ri, "cluster", "Кластер спроса", row.cluster, "группировка поискового спроса по намерению", "input")}
             ${pv130SearchField(ri, "mainQueries", "Основные запросы", row.mainQueries, "3–7 наиболее показательных запросов")}
             ${pv130SearchField(ri, "intent", "Интент клиента", row.intent, "")}
@@ -28096,7 +27460,7 @@ const PV140_PRODUCT_FIELDS = [
   {
     group: "Оффер",
     fields: [
-      ["initialOffer", "Оффер из точки отсчёта", "что было зафиксировано в Gate 0"],
+      ["initialOffer", "Оффер из точки отсчёта", `что было зафиксировано в ${guruGateLabel("gate-0")}`],
       ["finalOffer", "Финальный оффер после анализа", "кому, что, зачем и почему стоит поверить"],
       ["offerConclusion", "Вывод по офферу", "оставить / усилить / заменить / разделить на несколько офферов"],
     ],
@@ -29660,7 +29024,7 @@ function g2LaunchContextHtml() {
   return `<section class="g1-section g2-launch-context">
     <div class="g1-section-header g2-open-header">
       <span class="g1-section-left">
-        <span class="g1-section-title">Контекст запуска из Gate 0 / 1</span>
+        <span class="g1-section-title">Контекст запуска из ${guruGateLabel("gate-0")} / 1</span>
         <span class="g1-section-progress">${rows.length} продуктов</span>
       </span>
     </div>
@@ -30376,14 +29740,14 @@ function g4MentionedChannels() {
     seen.add(key);
     active.push({ name: key, source });
   };
-  g4ReadGate3Channels().forEach((c) => push(c.name, "Gate 3 · " + c.stage));
+  g4ReadGate3Channels().forEach((c) => push(c.name, `${guruGateLabel("gate-3")} · ` + c.stage));
   const route = state?.demandRoute || {};
-  if (route.adSystem === "yandex" || route.adSystem === "both") push("Яндекс Директ", "Gate 1 · маршрут спроса");
-  if (route.adSystem === "google" || route.adSystem === "both") push("Google Ads", "Gate 1 · маршрут спроса");
+  if (route.adSystem === "yandex" || route.adSystem === "both") push("Яндекс Директ", `${guruGateLabel("gate-1")} · маршрут спроса`);
+  if (route.adSystem === "google" || route.adSystem === "both") push("Google Ads", `${guruGateLabel("gate-1")} · маршрут спроса`);
   const se = state?.sharedEvidence || {};
   if (String(se["search_main_keywords"] || "").trim()) {
-    push("Яндекс Поиск (SEO)", "Gate 0 · семантика");
-    push("Google Поиск (SEO)", "Gate 0 · семантика");
+    push("Яндекс Поиск (SEO)", `${guruGateLabel("gate-0")} · семантика`);
+    push("Google Поиск (SEO)", `${guruGateLabel("gate-0")} · семантика`);
   }
   const suggestions = new Set(seen);
   G3_5A_STEPS.forEach((step) => step.tools.forEach((t) => suggestions.add(t)));
@@ -30440,7 +29804,7 @@ function g4ImplItemHtml(item, index) {
     </div>
     <div class="g1-card-body">
       <div class="g1-fields-grid">
-        <label class="g1-field"><span>Канал / площадка</span><small style="color:var(--muted);font-size:11px">из упомянутых в Gate 0–3 или своя</small><input class="g1-input ${item.channel.trim() ? "is-filled" : "is-empty"}" list="g4-channels-list" data-g4-impl="${index}" data-g4-impl-field="channel" value="${escapeAttr(item.channel)}" placeholder="Яндекс Директ, Telegram, VK…" /></label>
+        <label class="g1-field"><span>Канал / площадка</span><small style="color:var(--muted);font-size:11px">из упомянутых в ${guruGateLabel("gate-0")}–3 или своя</small><input class="g1-input ${item.channel.trim() ? "is-filled" : "is-empty"}" list="g4-channels-list" data-g4-impl="${index}" data-g4-impl-field="channel" value="${escapeAttr(item.channel)}" placeholder="Яндекс Директ, Telegram, VK…" /></label>
         <label class="g1-field"><span>Тип реализации</span><select class="g1-input is-filled" data-g4-impl="${index}" data-g4-impl-field="type">${G4_IMPL_TYPES.map(([v, l]) => `<option value="${escapeAttr(v)}"${item.type === v ? " selected" : ""}>${escapeHtml(l)}</option>`).join("")}</select></label>
         ${fld("name", "Название кампании / активности", "как называется в кабинете или плане")}
         ${fld("message", "Сообщение / креатив", "что говорим: оффер, заголовок, формат креатива", 2)}
@@ -30552,25 +29916,25 @@ function g4OfferHtml() {
   const ue = product?.id
     ? uv130EconomicsSnapshot(product.id, { productIdOnly: true })
     : {};
-  return `<p class="g1-task">Собрать финальную формулировку оффера из данных Gate 0–1. Все поля ниже — только чтение, кроме итоговой формулировки.</p>
+  return `<p class="g1-task">Собрать финальную формулировку оффера из данных ${guruGateLabel("gate-0")}–1. Все поля ниже — только чтение, кроме итоговой формулировки.</p>
     <div class="g4-upstream">
-      <div class="g4-upstream-title">Данные из Gate 0</div>
-      ${g4ReadonlyRow("Продукт / услуга", g0.product, "Gate 0")}
-      ${g4ReadonlyRow("Целевой сегмент", g0.segment, "Gate 0")}
-      ${g4ReadonlyRow("Результат клиента", g0.result, "Gate 0")}
+      <div class="g4-upstream-title">Данные из ${guruGateLabel("gate-0")}</div>
+      ${g4ReadonlyRow("Продукт / услуга", g0.product, `${guruGateLabel("gate-0")}`)}
+      ${g4ReadonlyRow("Целевой сегмент", g0.segment, `${guruGateLabel("gate-0")}`)}
+      ${g4ReadonlyRow("Результат клиента", g0.result, `${guruGateLabel("gate-0")}`)}
     </div>
     <div class="g4-upstream">
-      <div class="g4-upstream-title">Ценность и позиционирование из Gate 1</div>
-      ${g4ReadonlyRow("Позиционирование", g1.positioning, "Gate 1")}
-      ${g4ReadonlyRow("УТП", g1.usp, "Gate 1")}
-      ${g4ReadonlyRow("Рациональное покрытие", g1.rationalCoverage, "Gate 1")}
-      ${g4ReadonlyRow("Иррациональный драйвер", g1.irrationalDriver, "Gate 1")}
-      ${g4ReadonlyRow("Социальный механизм", g1.socialMechanism, "Gate 1")}
+      <div class="g4-upstream-title">Ценность и позиционирование из ${guruGateLabel("gate-1")}</div>
+      ${g4ReadonlyRow("Позиционирование", g1.positioning, `${guruGateLabel("gate-1")}`)}
+      ${g4ReadonlyRow("УТП", g1.usp, `${guruGateLabel("gate-1")}`)}
+      ${g4ReadonlyRow("Рациональное покрытие", g1.rationalCoverage, `${guruGateLabel("gate-1")}`)}
+      ${g4ReadonlyRow("Иррациональный драйвер", g1.irrationalDriver, `${guruGateLabel("gate-1")}`)}
+      ${g4ReadonlyRow("Социальный механизм", g1.socialMechanism, `${guruGateLabel("gate-1")}`)}
     </div>
     <div class="g4-upstream">
-      <div class="g4-upstream-title">Цена из юнит-экономики Gate 1</div>
-      ${g4ReadonlyRow("Средний чек (AOV)", ue.aov, "Gate 1")}
-      ${g4ReadonlyRow("Допустимый CPA", ue.allowedCpa, "Gate 1")}
+      <div class="g4-upstream-title">Цена из юнит-экономики ${guruGateLabel("gate-1")}</div>
+      ${g4ReadonlyRow("Средний чек (AOV)", ue.aov, `${guruGateLabel("gate-1")}`)}
+      ${g4ReadonlyRow("Допустимый CPA", ue.allowedCpa, `${guruGateLabel("gate-1")}`)}
     </div>
     <div class="g1-fields-grid" style="margin-top:16px">
       <label class="g1-field"><span>Финальная формулировка оффера</span><small style="color:var(--muted);font-size:11px">продукт + цена + главное обещание</small><textarea class="g1-input ${d.offer.finalOffer.trim() ? "is-filled" : "is-empty"}" data-g4-block="offer" data-g4-field="finalOffer" rows="3" placeholder="Например: [продукт] за [цена] — [обещание]">${escapeHtml(d.offer.finalOffer)}</textarea></label>
@@ -30584,23 +29948,23 @@ function g4LandingHtml() {
   const appeal = g4ReadGate3Appeal();
   const g2 = g4ReadGate2Status();
   const g2StatusText = g2.ready
-    ? "Gate 2 готов (" + g2.done + "/" + g2.total + ")"
-    : "Gate 2: " + g2.done + " из " + g2.total + " блоков готово";
-  return `<p class="g1-task">Производство посадочной: каркас + психослои + связка с оффером. Техническая готовность проверена в Gate 2.</p>
+    ? `${guruGateLabel("gate-2")} готов (` + g2.done + "/" + g2.total + ")"
+    : `${guruGateLabel("gate-2")}: ` + g2.done + " из " + g2.total + " блоков готово";
+  return `<p class="g1-task">Производство посадочной: каркас + психослои + связка с оффером. Техническая готовность проверена в ${guruGateLabel("gate-2")}.</p>
     <div class="g4-upstream">
       <div class="g4-upstream-title">Оффер из блока 1</div>
       ${g4ReadonlyRow("Финальный оффер", d.offer.finalOffer, "блок 1")}
     </div>
     <div class="g4-upstream">
-      <div class="g4-upstream-title">Стадия Appeal из Gate 3</div>
-      ${g4ReadonlyRow("Что должно зацепить", appeal.hook, "Gate 3")}
-      ${g4ReadonlyRow("Образ бренда", appeal.image, "Gate 3")}
-      ${g4ReadonlyRow("Эмоция", appeal.emotion, "Gate 3")}
-      ${g4ReadonlyRow("Обещание бренда", appeal.promise, "Gate 3")}
+      <div class="g4-upstream-title">Стадия Appeal из ${guruGateLabel("gate-3")}</div>
+      ${g4ReadonlyRow("Что должно зацепить", appeal.hook, `${guruGateLabel("gate-3")}`)}
+      ${g4ReadonlyRow("Образ бренда", appeal.image, `${guruGateLabel("gate-3")}`)}
+      ${g4ReadonlyRow("Эмоция", appeal.emotion, `${guruGateLabel("gate-3")}`)}
+      ${g4ReadonlyRow("Обещание бренда", appeal.promise, `${guruGateLabel("gate-3")}`)}
     </div>
     <div class="g4-upstream">
       <div class="g4-upstream-title">Техническая готовность</div>
-      <div class="g4-readonly"><span class="g4-readonly-label">Формы, мобильная, SSL</span><span class="g4-readonly-value status-pill status-${g2.ready ? "ready" : "in_progress"}" style="font-size:12px">${escapeHtml(g2StatusText)}</span><span class="g4-readonly-source">← Gate 2</span></div>
+      <div class="g4-readonly"><span class="g4-readonly-label">Формы, мобильная, SSL</span><span class="g4-readonly-value status-pill status-${g2.ready ? "ready" : "in_progress"}" style="font-size:12px">${escapeHtml(g2StatusText)}</span><span class="g4-readonly-source">← ${guruGateLabel("gate-2")}</span></div>
     </div>
     <div class="g1-fields-grid" style="margin-top:16px">
       <label class="g1-field"><span>Каркас страницы</span><small style="color:var(--muted);font-size:11px">блоки, секции, порядок, логика прокрутки</small><textarea class="g1-input ${d.landing.framework.trim() ? "is-filled" : "is-empty"}" data-g4-block="landing" data-g4-field="framework" rows="3" placeholder="hero → оффер → соцдоказательство → FAQ → CTA">${escapeHtml(d.landing.framework)}</textarea></label>
@@ -30621,12 +29985,12 @@ function g4CreativesHtml() {
             `<div class="g4-readonly"><span class="g4-readonly-label">${escapeHtml(c.name)}</span><span class="g4-readonly-source">← ${escapeHtml(c.source)}</span></div>`,
         )
         .join("")
-    : `<div class="g4-readonly"><span class="g4-readonly-empty">каналы пока не упоминались в Gate 0–3 — можно добавить площадку вручную ниже</span></div>`;
+    : `<div class="g4-readonly"><span class="g4-readonly-empty">каналы пока не упоминались в ${guruGateLabel("gate-0")}–3 — можно добавить площадку вручную ниже</span></div>`;
   const items = d.implementations;
-  return `<p class="g1-task">Ядро Gate 4 — реальное место реализации. Здесь создаются кампании и активности: поисковые, медийные, SMM и всё, что упоминалось в Gate 0–3.</p>
+  return `<p class="g1-task">Ядро ${guruGateLabel("gate-4")} — реальное место реализации. Здесь создаются кампании и активности: поисковые, медийные, SMM и всё, что упоминалось в ${guruGateLabel("gate-0")}–3.</p>
     <datalist id="g4-channels-list">${mentioned.suggestions.map((n) => `<option value="${escapeAttr(n)}"></option>`).join("")}</datalist>
     <div class="g4-upstream">
-      <div class="g4-upstream-title">Каналы, упомянутые в Gate 0–3</div>
+      <div class="g4-upstream-title">Каналы, упомянутые в ${guruGateLabel("gate-0")}–3</div>
       ${channelsHtml}
     </div>
     <div class="g4-upstream">
@@ -30638,7 +30002,7 @@ function g4CreativesHtml() {
       ${items.map((item, i) => g4ImplItemHtml(item, i)).join("")}
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <button class="btn secondary" data-g4-add-impl>+ Добавить реализацию</button>
-        ${mentioned.active.length ? `<button class="btn secondary" data-g4-impl-from-channels>Создать из каналов Gate 3 (${mentioned.active.length})</button>` : ""}
+        ${mentioned.active.length ? `<button class="btn secondary" data-g4-impl-from-channels>Создать из каналов ${guruGateLabel("gate-3")} (${mentioned.active.length})</button>` : ""}
       </div>
     </div>
     <div class="g1-fields-grid" style="margin-top:16px">
@@ -30665,16 +30029,16 @@ function g4LaunchParamsHtml() {
   const g2 = g4ReadGate2Status();
   return `<p class="g1-task">Кампанийный слой этого запуска: цели, UTM, целевой CPL, бюджет на тест. Юнит-экономика и Метрика — из предыдущих Gate.</p>
     <div class="g4-upstream">
-      <div class="g4-upstream-title">Юнит-экономика из Gate 1</div>
-      ${g4ReadonlyRow("Допустимый CPA", ue.allowedCpa, "Gate 1")}
-      ${g4ReadonlyRow("Допустимый CPL", ue.allowedCpl, "Gate 1")}
-      ${g4ReadonlyRow("Целевой DRR", ue.targetDrr, "Gate 1")}
-      ${g4ReadonlyRow("Средний чек (AOV)", ue.aov, "Gate 1")}
-      ${g4ReadonlyRow("LTV", ue.ltv, "Gate 1")}
+      <div class="g4-upstream-title">Юнит-экономика из ${guruGateLabel("gate-1")}</div>
+      ${g4ReadonlyRow("Допустимый CPA", ue.allowedCpa, `${guruGateLabel("gate-1")}`)}
+      ${g4ReadonlyRow("Допустимый CPL", ue.allowedCpl, `${guruGateLabel("gate-1")}`)}
+      ${g4ReadonlyRow("Целевой DRR", ue.targetDrr, `${guruGateLabel("gate-1")}`)}
+      ${g4ReadonlyRow("Средний чек (AOV)", ue.aov, `${guruGateLabel("gate-1")}`)}
+      ${g4ReadonlyRow("LTV", ue.ltv, `${guruGateLabel("gate-1")}`)}
     </div>
     <div class="g4-upstream">
       <div class="g4-upstream-title">Инструментирование</div>
-      <div class="g4-readonly"><span class="g4-readonly-label">Готовность Метрики / Analytics</span><span class="g4-readonly-value status-pill status-${g2.ready ? "ready" : "in_progress"}" style="font-size:12px">${g2.done} из ${g2.total} блоков</span><span class="g4-readonly-source">← Gate 2</span></div>
+      <div class="g4-readonly"><span class="g4-readonly-label">Готовность Метрики / Analytics</span><span class="g4-readonly-value status-pill status-${g2.ready ? "ready" : "in_progress"}" style="font-size:12px">${g2.done} из ${g2.total} блоков</span><span class="g4-readonly-source">← ${guruGateLabel("gate-2")}</span></div>
     </div>
     <div class="g1-fields-grid" style="margin-top:16px">
       <label class="g1-field"><span>Цели этой кампании</span><textarea class="g1-input ${d.launchParams.campaignGoals.trim() ? "is-filled" : "is-empty"}" data-g4-block="launchParams" data-g4-field="campaignGoals" rows="2" placeholder="заявка, звонок, покупка — конкретно для этого запуска">${escapeHtml(d.launchParams.campaignGoals)}</textarea></label>
@@ -30704,7 +30068,7 @@ function g4ReadinessHtml() {
     d.readiness.launchConfirmed === "да";
   return `<p class="g1-task">Финальный QA перед стартом. Бинарно: да / нет.</p>
     <div class="g4-upstream">
-      <div class="g4-upstream-title">Статусы блоков Gate 4</div>
+      <div class="g4-upstream-title">Статусы блоков ${guruGateLabel("gate-4")}</div>
       ${G4_BLOCKS.slice(0, 4)
         .map(
           (b, i) =>
@@ -30946,10 +30310,10 @@ function g0PopoverHtml(hintKey) {
     const value = readGate0Value(key);
     const label = G0_HINT_LABELS[key] || key;
     if (!value)
-      return `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(label)}</div><div class="g0-popover-empty">В Gate 0 это поле пока не заполнено.</div></div>`;
+      return `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(label)}</div><div class="g0-popover-empty">В ${guruGateLabel("gate-0")} это поле пока не заполнено.</div></div>`;
     return `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(label)}</div><div class="g0-popover-value">${escapeHtml(value)}</div></div>`;
   });
-  return `<div class="g0-popover"><div class="g0-popover-title">Gate 0 / контекст</div>${items.join("")}</div>`;
+  return `<div class="g0-popover"><div class="g0-popover-title">${guruGateLabel("gate-0")} / контекст</div>${items.join("")}</div>`;
 }
 
 let _g0ActivePopover = null;
@@ -31262,7 +30626,7 @@ function seoPopoverHtml(field, card, pageIndex) {
     });
   }
   if (g0Items.length) {
-    html += `<div class="g0-popover-title" style="margin-top:${pageGroups.length ? 8 : 0}px">Gate 0 / проект</div>`;
+    html += `<div class="g0-popover-title" style="margin-top:${pageGroups.length ? 8 : 0}px">${guruGateLabel("gate-0")} / проект</div>`;
     html += g0Items
       .map(
         (i) =>
@@ -31376,7 +30740,7 @@ function demandPromotedPopoverHtml() {
 
   let html = '<div class="g0-popover">';
   if (g0Base.length) {
-    html += '<div class="g0-popover-title">Gate 0 / продукт</div>';
+    html += `<div class="g0-popover-title">${guruGateLabel("gate-0")} / продукт</div>`;
     html += g0Base
       .map(
         (i) =>
@@ -31394,7 +30758,7 @@ function demandPromotedPopoverHtml() {
       .join("");
   }
   if (g0Sem.length) {
-    html += `<div class="g0-popover-title" style="margin-top:8px">Gate 0 / семантика</div>`;
+    html += `<div class="g0-popover-title" style="margin-top:8px">${guruGateLabel("gate-0")} / семантика</div>`;
     html += g0Sem
       .map(
         (i) =>
@@ -31450,7 +30814,7 @@ function sitelinksContextPopoverHtml() {
   if (clusters.length) add("Кластеры кампании", clusters.join(", "));
   const g0clusters = readGate0Value("priority_clusters");
   if (g0clusters && !clusters.length)
-    add("Приоритетные кластеры (Gate 0)", g0clusters);
+    add(`Приоритетные кластеры (${guruGateLabel("gate-0")})`, g0clusters);
 
   add("Главная посадочная", readGate0Value("website"));
 
@@ -31578,7 +30942,7 @@ function clustersPopoverHtml() {
   const g0clusters = readGate0Value("priority_clusters");
   if (g0clusters) {
     html +=
-      '<div class="g0-popover-title" style="margin-top:8px">Gate 0 / приоритетные кластеры</div>';
+      `<div class="g0-popover-title" style="margin-top:8px">${guruGateLabel("gate-0")} / приоритетные кластеры</div>`;
     html += `<div class="g0-popover-item"><div class="g0-popover-value">${escapeHtml(g0clusters)}</div></div>`;
   }
   html += "</div>";
@@ -31620,7 +30984,7 @@ function allSeoKeywordsPopoverHtml() {
       .join("");
   }
   if (g0Items.length) {
-    html += `<div class="g0-popover-title" style="margin-top:${pages.length ? 8 : 0}px">Gate 0 / семантика</div>`;
+    html += `<div class="g0-popover-title" style="margin-top:${pages.length ? 8 : 0}px">${guruGateLabel("gate-0")} / семантика</div>`;
     html += g0Items
       .map(
         (i) =>
@@ -32102,7 +31466,7 @@ function g4SearchCampaignMetricsHtml() {
       String(value || "").trim() && String(value || "").trim() !== "0",
     );
   return `<div class="g4-search-metrics">
-    <div class="g4-upstream-title">Поисковая кампания из Gate 1</div>
+    <div class="g4-upstream-title">Поисковая кампания из ${guruGateLabel("gate-1")}</div>
     <div class="g4-search-metrics-grid">
       <div class="g4-search-metric">
         <span>Платформа</span>
@@ -32147,8 +31511,8 @@ function g4SearchCampaignMetricsHtml() {
         <strong>${escapeHtml(g3AutoJoin([String(fact?.leads || "").trim() && String(fact?.leads || "").trim() !== "0" && "лиды " + fact.leads, String(fact?.cost || "").trim() && String(fact?.cost || "").trim() !== "0" && "расход " + fact.cost], " / ") || "—")}</strong>
       </div>
     </div>
-    ${!hasPlan ? '<div class="g4-search-empty">Заполните «Частотность и кластеры» в Gate 1, чтобы здесь появился план показов и кликов.</div>' : ""}
-    ${!hasFact ? '<div class="g4-search-empty">Заполните «Текущие результаты» в Gate 1, чтобы здесь появился факт: просмотры/трафик, показы и клики.</div>' : ""}
+    ${!hasPlan ? `<div class="g4-search-empty">Заполните «Частотность и кластеры» в ${guruGateLabel("gate-1")}, чтобы здесь появился план показов и кликов.</div>` : ""}
+    ${!hasFact ? `<div class="g4-search-empty">Заполните «Текущие результаты» в ${guruGateLabel("gate-1")}, чтобы здесь появился факт: просмотры/трафик, показы и клики.</div>` : ""}
   </div>`;
 }
 
@@ -32487,11 +31851,11 @@ function g4CampaignInput(channelKey, field, label, value, placeholder, multiline
 function g4CampaignContextHtml(ctx) {
   const gate3 = g4Gate3ProductContext(ctx.product);
   return `<div class="g4-campaign-context">
-    <div><span>Gate 1 · оффер</span><b>${g2ShortValue(ctx.offer)}</b></div>
-    <div><span>Gate 1 · спрос</span><b>${g2ShortValue(ctx.queries)}</b></div>
-    <div><span>Gate 1 · экономика</span><b>${g2ShortValue([ctx.cpa && "CPA " + ctx.cpa, ctx.cpl && "CPL " + ctx.cpl].filter(Boolean).join(" / "))}</b></div>
-    <div><span>Gate 2 · посадочная</span><b>${g2ShortValue(ctx.landingUrl || ctx.landingStatus)}</b></div>
-    <div><span>Gate 3 · 5A</span><b>${g2ShortValue(gate3.stageStatuses)}</b></div>
+    <div><span>${guruGateLabel("gate-1")} · оффер</span><b>${g2ShortValue(ctx.offer)}</b></div>
+    <div><span>${guruGateLabel("gate-1")} · спрос</span><b>${g2ShortValue(ctx.queries)}</b></div>
+    <div><span>${guruGateLabel("gate-1")} · экономика</span><b>${g2ShortValue([ctx.cpa && "CPA " + ctx.cpa, ctx.cpl && "CPL " + ctx.cpl].filter(Boolean).join(" / "))}</b></div>
+    <div><span>${guruGateLabel("gate-2")} · посадочная</span><b>${g2ShortValue(ctx.landingUrl || ctx.landingStatus)}</b></div>
+    <div><span>${guruGateLabel("gate-3")} · 5A</span><b>${g2ShortValue(gate3.stageStatuses)}</b></div>
   </div>`;
 }
 
@@ -32511,10 +31875,10 @@ function g4CampaignRowHtml(channel, campaign, index, product) {
       <span class="g4-campaign-platform">
         <span>${channel.launchType === "search" ? "Поиск" : "Медиа"} ${index + 1}</span>
         <strong>${escapeHtml(g4LaunchChannelLabel(channel))}</strong>
-        <small>Gate 0: ${escapeHtml(g4LaunchChannelStatus(channel))}${channel.materials ? " · " + escapeHtml(channel.materials) : ""}</small>
+        <small>${guruGateLabel("gate-0")}: ${escapeHtml(g4LaunchChannelStatus(channel))}${channel.materials ? " · " + escapeHtml(channel.materials) : ""}</small>
       </span>
       <span class="g4-campaign-5a">
-        <span>Gate 3 · роль</span>
+        <span>${guruGateLabel("gate-3")} · роль</span>
         <b>${escapeHtml(g4Gate3ChannelRole(channel))}</b>
       </span>
       <span class="g4-campaign-status">
@@ -32563,11 +31927,11 @@ function g4SelectedProductHtml(product) {
         .join("")}</select>
     </label>
     <div class="g4-product-launch-context">
-      <div><span>Gate 1 · оффер</span><b>${g2ShortValue(ctx.offer)}</b></div>
-      <div><span>Gate 1 · сегмент / JTBD</span><b>${g2ShortValue(ctx.jtbd || ctx.segment)}</b></div>
-      <div><span>Gate 0/1 · CTA</span><b>${g2ShortValue(ctx.cta)}</b></div>
-      <div><span>Gate 2 · посадочная</span><b>${g2ShortValue(ctx.landingUrl || ctx.landingStatus)}</b></div>
-      <div><span>Gate 3 · маршрут 5A</span><b>${g2ShortValue(gate3.route || gate3.stageStatuses)}</b></div>
+      <div><span>${guruGateLabel("gate-1")} · оффер</span><b>${g2ShortValue(ctx.offer)}</b></div>
+      <div><span>${guruGateLabel("gate-1")} · сегмент / JTBD</span><b>${g2ShortValue(ctx.jtbd || ctx.segment)}</b></div>
+      <div><span>${guruGateLabel("gate-0")}/1 · CTA</span><b>${g2ShortValue(ctx.cta)}</b></div>
+      <div><span>${guruGateLabel("gate-2")} · посадочная</span><b>${g2ShortValue(ctx.landingUrl || ctx.landingStatus)}</b></div>
+      <div><span>${guruGateLabel("gate-3")} · маршрут 5A</span><b>${g2ShortValue(gate3.route || gate3.stageStatuses)}</b></div>
     </div>
   </div>`;
 }
@@ -32593,7 +31957,7 @@ function g4CampaignSectionHtml(type, title, channels, campaigns, product) {
                 product,
               ),
             )
-            .join("") || '<div class="g4-search-empty">Платформы не указаны в Gate 0.</div>'}
+            .join("") || `<div class="g4-search-empty">Платформы не указаны в ${guruGateLabel("gate-0")}.</div>`}
         </div>`
         : ""
     }
@@ -32605,7 +31969,7 @@ function g4CampaignLaunchCenterHtml() {
   const campaigns = g4EnsureLaunchCampaigns();
   const product = g4SelectedLaunchProduct();
   if (!channels.length) {
-    return `<div class="g4-campaign-center"><div class="g4-upstream-title">Запуск кампаний по платформам</div><div class="g4-search-empty">Заполните каналы в Gate 0, чтобы здесь появились поисковые и медийные кампании.</div></div>`;
+    return `<div class="g4-campaign-center"><div class="g4-upstream-title">Запуск кампаний по платформам</div><div class="g4-search-empty">Заполните каналы в ${guruGateLabel("gate-0")}, чтобы здесь появились поисковые и медийные кампании.</div></div>`;
   }
   return `<div class="g4-campaign-center">
     <div class="g4-campaign-center-head">
@@ -32635,7 +31999,7 @@ function gate4ProductionHtml() {
           return `${i + 1}. ${intent || cluster || "Кластер " + (i + 1)}${type ? " [" + type + "]" : ""}`;
         })
         .join("\n")
-    : "Кластеры не заполнены в Gate 1";
+    : `Кластеры не заполнены в ${guruGateLabel("gate-1")}`;
 
   const scFilled = String(g4.semanticCore || "").trim();
   const groupRows = g4.groupRows || [{}];
@@ -32646,7 +32010,7 @@ function gate4ProductionHtml() {
     <div class="g1-card-body">
       ${g4CampaignLaunchCenterHtml()}
       ${g4SearchCampaignMetricsHtml()}
-      <details class="g1-prompt-toggle"><summary>Кластеры из Gate 1 (только чтение)</summary><div>${escapeHtml(g1CorePreview)}</div></details>
+      <details class="g1-prompt-toggle"><summary>Кластеры из ${guruGateLabel("gate-1")} (только чтение)</summary><div>${escapeHtml(g1CorePreview)}</div></details>
       <label class="g1-field" style="margin-top:12px;"><span>Семантическое ядро</span><small style="color:var(--muted);font-size:11px;">Группы, ключевые фразы, минус-слова, структура кампании</small><textarea class="g1-input ${scFilled ? "is-filled" : "is-empty"}" data-g4prod-field="semanticCore" rows="1" placeholder="семантическое ядро">${escapeHtml(g4.semanticCore || "")}</textarea></label>
       <label class="g1-field" style="margin-top:8px;"><span>Минус-фразы</span><small style="color:var(--muted);font-size:11px;">Общие минус-фразы кампании</small><textarea class="g1-input ${String(g4.minusPhrases || "").trim() ? "is-filled" : "is-empty"}" data-g4prod-field="minusPhrases" rows="1" placeholder="минус-фразы">${escapeHtml(g4.minusPhrases || "")}</textarea></label>
 
@@ -32810,7 +32174,7 @@ function g4RendererReadyV525() {
   });
   els.contentArea.innerHTML = `<div class="g1-route" role="alert">
     <div class="g1-card"><div class="g1-card-body">
-      <h2>Gate 4 обновляется</h2>
+      <h2>${guruGateLabel("gate-4")} обновляется</h2>
       <p>Файлы интерфейса загрузились из разных сборок. Данные проекта сохранены в браузере.</p>
       <button type="button" class="small-btn" data-g4-reload-build>Перезагрузить страницу</button>
     </div></div></div>`;
@@ -33519,7 +32883,7 @@ g0PopoverHtml = function (hintKey) {
   if (hintKey !== 'audit_url') return __prevG0PopoverHtmlUrls(hintKey);
   const urls = g0AllUrls();
   if (!urls.length) {
-    return '<div class="g0-popover"><div class="g0-popover-title">Gate 0 / ссылки</div><div class="g0-popover-empty">В Gate 0 ссылки пока не заполнены.</div></div>';
+    return `<div class="g0-popover"><div class="g0-popover-title">${guruGateLabel("gate-0")} / ссылки</div><div class="g0-popover-empty">В ${guruGateLabel("gate-0")} ссылки пока не заполнены.</div></div>`;
   }
   const used = gate1UsedUrls();
   const items = urls.map(({ label, url }) => {
@@ -33532,7 +32896,7 @@ g0PopoverHtml = function (hintKey) {
       <div class="g0-popover-value" style="${isUsed ? 'opacity:.55;' : ''}word-break:break-all;">${escapeHtml(url)}</div>
     </div>`;
   });
-  return `<div class="g0-popover"><div class="g0-popover-title">Gate 0 / ссылки — клик вставит в поле</div>${items.join('')}</div>`;
+  return `<div class="g0-popover"><div class="g0-popover-title">${guruGateLabel("gate-0")} / ссылки — клик вставит в поле</div>${items.join('')}</div>`;
 };
 
 const __prevShowG0PopoverUrls = showG0Popover;
@@ -34005,8 +33369,8 @@ function pv180Ensure(row) {
 }
 
 const PV180_SEM_LEVELS = [
-  { key: 'semL1', title: 'Уровень 1 — Брендовый (общий по проекту/продукту)', hints: ['Источники: Стартовая формулировка, Позиционирование, УТП, Офферы и CTA (Gate 0)', 'Даёт общие, широкие фразы — то как продукт описан на уровне смысла'] },
-  { key: 'semL2', title: 'Уровень 2 — Страничный (конкретный, по посадочной)', hints: ['Источники: H1, Соцдоказательство, H2 (заголовки секций), H3 и ниже (Gate 1 «Аудит сайта» под URL этого продукта)', 'Даёт точные, «долгохвостые» фразы — то как продукт описан на уровне конкретной страницы'] },
+  { key: 'semL1', title: 'Уровень 1 — Брендовый (общий по проекту/продукту)', hints: [`Источники: Стартовая формулировка, Позиционирование, УТП, Офферы и CTA (${guruGateLabel("gate-0")})`, 'Даёт общие, широкие фразы — то как продукт описан на уровне смысла'] },
+  { key: 'semL2', title: 'Уровень 2 — Страничный (конкретный, по посадочной)', hints: [`Источники: H1, Соцдоказательство, H2 (заголовки секций), H3 и ниже (${guruGateLabel("gate-1")} «Аудит сайта» под URL этого продукта)`, 'Даёт точные, «долгохвостые» фразы — то как продукт описан на уровне конкретной страницы'] },
   { key: 'semL3', title: 'Уровень 3 — Основные запросы + Ключевые слова', hints: ['От 10 запросов, которые лучше всего показывают спрос', 'От 15 ключевых слов, которые лучше всего показывают спрос'] },
   { key: 'semL4', title: 'Уровень 4 — JTBD + Язык клиента + скрытая потребность', hints: ['Как именно ищут: с каким намерением, какими словами, что за этим стоит. Язык клиента и скрытая потребность — это то, что потом ляжет в заголовки объявлений и посадочных'] },
 ];
@@ -34070,7 +33434,7 @@ pv140ProductMapHtml = function (row, index, totalBaseProducts) {
   const mapStatus = pv140ProductMapStatus(row);
   const statusLabel = STATUS_LABELS[mapStatus.status] || mapStatus.status;
 
-  const landingCell = `<div class="g1-field"><span>Посадочная — URL</span><small style="color:var(--muted);font-size:11px;">Автоподтяжка из Gate 0 «Посадочные под продукты», только чтение</small><div class="g1-input ${landingUrl ? 'is-filled' : 'is-empty'}" style="cursor:default;${landingUrl ? 'background:var(--panel-soft);' : ''}word-break:break-all;">${escapeHtml(landingUrl || 'В Gate 0 посадочная не указана')}</div></div>`;
+  const landingCell = `<div class="g1-field"><span>Посадочная — URL</span><small style="color:var(--muted);font-size:11px;">Автоподтяжка из ${guruGateLabel("gate-0")} «Посадочные под продукты», только чтение</small><div class="g1-input ${landingUrl ? 'is-filled' : 'is-empty'}" style="cursor:default;${landingUrl ? 'background:var(--panel-soft);' : ''}word-break:break-all;">${escapeHtml(landingUrl || `В ${guruGateLabel("gate-0")} посадочная не указана`)}</div></div>`;
 
   return `<div class="g1-card g1-card-collapsible pv140-product-card" style="border-radius:16px;padding:0;">
     <div class="g1-card-collapse-header pv140-product-head" data-g1-collapse>
@@ -34202,7 +33566,7 @@ function pv180SemHintPopoverHtml(levelKey, row) {
   let title = '';
   let items = [];
   if (levelKey === 'semL1') {
-    title = 'Gate 0 / смысловая база продукта';
+    title = `${guruGateLabel("gate-0")} / смысловая база продукта`;
     items = ['product', 'positioning', 'usp', 'current_offers', 'current_ctas', 'main_keywords', 'brand_queries']
       .map(k => [G0_HINT_LABELS[k] || k, readGate0Value(k)])
       .filter(([, v]) => v);
@@ -34219,9 +33583,9 @@ function pv180SemHintPopoverHtml(levelKey, row) {
     }
   } else if (levelKey === 'semL2') {
     const url = pv180LandingUrl(String(row.product || '').trim());
-    title = 'Gate 1 / семантика страницы' + (url ? ` — ${url}` : '');
+    title = `${guruGateLabel("gate-1")} / семантика страницы` + (url ? ` — ${url}` : '');
     items = pv180PageSemantics(url);
-    if (!url) return `<div class="g0-popover"><div class="g0-popover-title">${escapeHtml(title)}</div><div class="g0-popover-empty">В Gate 0 не указана посадочная этого продукта.</div></div>`;
+    if (!url) return `<div class="g0-popover"><div class="g0-popover-title">${escapeHtml(title)}</div><div class="g0-popover-empty">В ${guruGateLabel("gate-0")} не указана посадочная этого продукта.</div></div>`;
     if (!items.length) return `<div class="g0-popover"><div class="g0-popover-title">${escapeHtml(title)}</div><div class="g0-popover-empty">В Аудите сайта нет страницы с этим URL или её семантика не заполнена.</div></div>`;
   }
   if (!items.length) return `<div class="g0-popover"><div class="g0-popover-title">${escapeHtml(title)}</div><div class="g0-popover-empty">Данные пока не заполнены.</div></div>`;
@@ -34299,8 +33663,8 @@ const __pv180PrevSemHintPopover = pv180SemHintPopoverHtml;
 pv180SemHintPopoverHtml = function (levelKey, row) {
   if (levelKey !== 'semL2') return __pv180PrevSemHintPopover(levelKey, row);
   const url = pv180LandingUrl(String(row.product || '').trim());
-  const title = 'Gate 1 / Аудит сайта — вся страница' + (url ? ` — ${url}` : '');
-  if (!url) return `<div class="g0-popover"><div class="g0-popover-title">${escapeHtml(title)}</div><div class="g0-popover-empty">В Gate 0 не указана посадочная этого продукта.</div></div>`;
+  const title = `${guruGateLabel("gate-1")} / Аудит сайта — вся страница` + (url ? ` — ${url}` : '');
+  if (!url) return `<div class="g0-popover"><div class="g0-popover-title">${escapeHtml(title)}</div><div class="g0-popover-empty">В ${guruGateLabel("gate-0")} не указана посадочная этого продукта.</div></div>`;
   const groups = pv180PageSemanticsFull(url);
   if (!groups.length) return `<div class="g0-popover"><div class="g0-popover-title">${escapeHtml(title)}</div><div class="g0-popover-empty">В Аудите сайта нет страницы с этим URL или она не заполнена.</div></div>`;
   const body = groups.map((g, gi) => `<div class="g0-popover-title" style="margin-top:${gi ? 10 : 0}px;">${escapeHtml(g.title)}</div>${g.items.map(([l, v]) => `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(l)}</div><div class="g0-popover-value">${escapeHtml(v)}</div></div>`).join('')}`).join('');
@@ -34379,7 +33743,7 @@ function g2SyncInfo(card) {
   info.g0 = g2Gate0Item(rule);
   if (rule.g1) {
     const src = g2FindGateCard("gate-1", rule.g1);
-    if (src) info.source = { gate: "Gate 1", title: src.title, status: src.status || "not_started" };
+    if (src) info.source = { gate: `${guruGateLabel("gate-1")}`, title: src.title, status: src.status || "not_started" };
   }
   const g4card = rule.g4 ? g2FindGateCard("gate-4", rule.g4) : null;
   if (g4card) info.g4 = { title: g4card.title, status: g4card.status || "not_started" };
@@ -34408,22 +33772,22 @@ g2CardStatus = function (card) {
 function g2SyncNoteHtml(card) {
   const sync = g2SyncInfo(card);
   if (sync.g0 && guruStatusIsOk(sync.g0.status)) {
-    return `<span class="g2-sync-note is-done">✓ Выполнено в Gate 0 · ${escapeHtml(sync.g0.name)}</span>`;
+    return `<span class="g2-sync-note is-done">✓ Выполнено в ${guruGateLabel("gate-0")} · ${escapeHtml(sync.g0.name)}</span>`;
   }
   if (sync.source && sync.source.status === "ready") {
-    return `<span class="g2-sync-note is-done">✓ Выполнено в Gate 1 · ${escapeHtml(sync.source.title)}</span>`;
+    return `<span class="g2-sync-note is-done">✓ Выполнено в ${guruGateLabel("gate-1")} · ${escapeHtml(sync.source.title)}</span>`;
   }
   if (sync.g0 && guruCanonStatus(sync.g0.status) === "needs_improvement") {
-    return `<span class="g2-sync-note is-progress">Gate 0 · ${escapeHtml(sync.g0.name)} — ${escapeHtml(guruStatusLabel(sync.g0.status))}</span>`;
+    return `<span class="g2-sync-note is-progress">${guruGateLabel("gate-0")} · ${escapeHtml(sync.g0.name)} — ${escapeHtml(guruStatusLabel(sync.g0.status))}</span>`;
   }
   if (sync.source && sync.source.status !== "not_started") {
-    return `<span class="g2-sync-note is-progress">Gate 1 · ${escapeHtml(sync.source.title)} — ${escapeHtml(STATUS_LABELS[sync.source.status] || sync.source.status)}</span>`;
+    return `<span class="g2-sync-note is-progress">${guruGateLabel("gate-1")} · ${escapeHtml(sync.source.title)} — ${escapeHtml(STATUS_LABELS[sync.source.status] || sync.source.status)}</span>`;
   }
   if (sync.g4) {
     if (sync.g4.status === "ready") {
-      return `<span class="g2-sync-note is-done">✓ Реализовано в Gate 4 · ${escapeHtml(sync.g4.title)}</span>`;
+      return `<span class="g2-sync-note is-done">✓ Реализовано в ${guruGateLabel("gate-4")} · ${escapeHtml(sync.g4.title)}</span>`;
     }
-    return `<span class="g2-sync-note">→ Передано в Gate 4 · ${escapeHtml(sync.g4.title)} — ${escapeHtml(STATUS_LABELS[sync.g4.status] || sync.g4.status)}</span>`;
+    return `<span class="g2-sync-note">→ Передано в ${guruGateLabel("gate-4")} · ${escapeHtml(sync.g4.title)} — ${escapeHtml(STATUS_LABELS[sync.g4.status] || sync.g4.status)}</span>`;
   }
   return "";
 }
@@ -34455,15 +33819,15 @@ function g2SourceLinkLabelV267(source) {
   const title = source?.title || "поле-источник";
   if (source?.key === "F" || source?.key === "I") {
     const prefix = status === "ready" ? "✓ Выполнено" : "Открыть источник";
-    return `${prefix} в Gate 0 · ${title}`;
+    return `${prefix} в ${guruGateLabel("gate-0")} · ${title}`;
   }
   if (source?.key === "G1") {
     const prefix = status === "ready" ? "✓ Выполнено" : "Открыть источник";
-    return `${prefix} в Gate 1 · ${title}`;
+    return `${prefix} в ${guruGateLabel("gate-1")} · ${title}`;
   }
   if (source?.key === "L") {
     const prefix = status === "ready" ? "✓ Реализовано" : "Открыть источник";
-    return `${prefix} в Gate 4 · ${title}`;
+    return `${prefix} в ${guruGateLabel("gate-4")} · ${title}`;
   }
   return `Открыть источник · ${title}`;
 }
@@ -34627,13 +33991,13 @@ g4LaunchChannels = function () {
   // Gate 1 · рекламная система маршрута спроса
   const route = state?.demandRoute || {};
   if (route.adSystem === "yandex" || route.adSystem === "both")
-    push("Яндекс Директ", "Gate 1 · маршрут спроса");
+    push("Яндекс Директ", `${guruGateLabel("gate-1")} · маршрут спроса`);
   if (route.adSystem === "google" || route.adSystem === "both")
-    push("Google Ads", "Gate 1 · маршрут спроса");
+    push("Google Ads", `${guruGateLabel("gate-1")} · маршрут спроса`);
   // Gate 0 · семантика → SEO
   const se = state?.sharedEvidence || {};
   if (String(se["search_main_keywords"] || "").trim()) {
-    push("SEO / поисковая выдача", "Gate 0 · семантика");
+    push("SEO / поисковая выдача", `${guruGateLabel("gate-0")} · семантика`);
   }
   const merged = [...base, ...extras].map((row, index) => ({
     ...row,
@@ -34666,14 +34030,14 @@ g4CampaignLaunchCenterHtml = function () {
   const campaigns = g4EnsureLaunchCampaigns();
   const product = g4SelectedLaunchProduct();
   if (!channels.length) {
-    return `<div class="g4-campaign-center"><div class="g4-upstream-title">Запуск по каналам</div><div class="g4-search-empty">Заполните каналы в Gate 0 или карту 5A в Gate 3, чтобы здесь появились площадки для реализации.</div></div>`;
+    return `<div class="g4-campaign-center"><div class="g4-upstream-title">Запуск по каналам</div><div class="g4-search-empty">Заполните каналы в ${guruGateLabel("gate-0")} или карту 5A в ${guruGateLabel("gate-3")}, чтобы здесь появились площадки для реализации.</div></div>`;
   }
   const smmCount = channels.filter((c) => c.launchType === "smm").length;
   const otherCount = channels.filter((c) => c.launchType === "other").length;
   return `<div class="g4-campaign-center">
     <div class="g4-campaign-center-head">
       <div>
-        <span class="g4-upstream-title">Запуск по каналам · всё, что упоминалось в Gate 0–3</span>
+        <span class="g4-upstream-title">Запуск по каналам · всё, что упоминалось в ${guruGateLabel("gate-0")}–3</span>
       </div>
       <span class="status-pill status-in_progress">${channels.length} площадок</span>
     </div>
@@ -34681,7 +34045,7 @@ g4CampaignLaunchCenterHtml = function () {
     ${g4CampaignSectionHtml("search", "Поисковые кампании", channels, campaigns, product)}
     ${g4CampaignSectionHtml("media", "Медийные кампании", channels, campaigns, product)}
     ${smmCount ? g4CampaignSectionHtml("smm", "SMM и соцсети", channels, campaigns, product) : ""}
-    ${otherCount ? g4CampaignSectionHtml("other", "Другие каналы из Gate 0–3", channels, campaigns, product) : ""}
+    ${otherCount ? g4CampaignSectionHtml("other", `Другие каналы из ${guruGateLabel("gate-0")}–3`, channels, campaigns, product) : ""}
   </div>`;
 };
 
@@ -34739,7 +34103,7 @@ g4CampaignRowHtml = function (channel, campaign, index, product) {
   const isOpen = launchOpen.rows[stateKey] === true;
   const typeLabel = G4_LAUNCH_TYPE_LABELS[channel.launchType] || "Канал";
   const subtitle = g3AutoJoin(
-    [typeLabel, "Gate 0: " + g4LaunchChannelStatus(channel), channel.materials],
+    [typeLabel, `${guruGateLabel("gate-0")}: ` + g4LaunchChannelStatus(channel), channel.materials],
     " · ",
   );
   const defaultName = g4DefaultCampaignName(channel, campaign, ctx);
@@ -34772,12 +34136,12 @@ g4CampaignRowHtml = function (channel, campaign, index, product) {
             ${g4v191Field(channel.key, "notes", "Следующее действие", campaign.notes, "что нужно закрыть перед запуском", 2)}
           </div>
           <div class="g4-upstream" style="margin-top:12px">
-            <div class="g4-upstream-title">Контекст из Gate 1–3</div>
-            ${g4ReadonlyRow("Оффер", ctx.offer, "Gate 1")}
-            ${g4ReadonlyRow("Спрос", ctx.queries, "Gate 1")}
-            ${g4ReadonlyRow("Экономика", [ctx.cpa && "CPA " + ctx.cpa, ctx.cpl && "CPL " + ctx.cpl].filter(Boolean).join(" / "), "Gate 1")}
-            ${g4ReadonlyRow("Посадочная", ctx.landingUrl || ctx.landingStatus, "Gate 2")}
-            ${g4ReadonlyRow("Маршрут 5A", gate3.stageStatuses, "Gate 3")}
+            <div class="g4-upstream-title">Контекст из ${guruGateLabel("gate-1")}–3</div>
+            ${g4ReadonlyRow("Оффер", ctx.offer, `${guruGateLabel("gate-1")}`)}
+            ${g4ReadonlyRow("Спрос", ctx.queries, `${guruGateLabel("gate-1")}`)}
+            ${g4ReadonlyRow("Экономика", [ctx.cpa && "CPA " + ctx.cpa, ctx.cpl && "CPL " + ctx.cpl].filter(Boolean).join(" / "), `${guruGateLabel("gate-1")}`)}
+            ${g4ReadonlyRow("Посадочная", ctx.landingUrl || ctx.landingStatus, `${guruGateLabel("gate-2")}`)}
+            ${g4ReadonlyRow("Маршрут 5A", gate3.stageStatuses, `${guruGateLabel("gate-3")}`)}
           </div>
           <p class="g1-task" style="font-style:italic;margin-top:8px">Готово, когда решение, название, цель, посадочная, бюджет и UTM заполнены, а статус запуска — «Готово к запуску» или «Запущено».</p>
         </div>`
@@ -34827,12 +34191,12 @@ g4SelectedProductHtml = function (product) {
       .join("")}</select></label>
   </div>
   <div class="g4-upstream">
-    <div class="g4-upstream-title">Стратегическая основа из Gate 0–3</div>
-    ${g4ReadonlyRow("Оффер", ctx.offer, "Gate 1")}
-    ${g4ReadonlyRow("Сегмент / JTBD", ctx.jtbd || ctx.segment, "Gate 1")}
-    ${g4ReadonlyRow("CTA", ctx.cta, "Gate 0/1")}
-    ${g4ReadonlyRow("Посадочная", ctx.landingUrl || ctx.landingStatus, "Gate 2")}
-    ${g4ReadonlyRow("Маршрут 5A (Котлер)", gate3.route || gate3.stageStatuses, "Gate 3")}
+    <div class="g4-upstream-title">Стратегическая основа из ${guruGateLabel("gate-0")}–3</div>
+    ${g4ReadonlyRow("Оффер", ctx.offer, `${guruGateLabel("gate-1")}`)}
+    ${g4ReadonlyRow("Сегмент / JTBD", ctx.jtbd || ctx.segment, `${guruGateLabel("gate-1")}`)}
+    ${g4ReadonlyRow("CTA", ctx.cta, `${guruGateLabel("gate-0")}/1`)}
+    ${g4ReadonlyRow("Посадочная", ctx.landingUrl || ctx.landingStatus, `${guruGateLabel("gate-2")}`)}
+    ${g4ReadonlyRow("Маршрут 5A (Котлер)", gate3.route || gate3.stageStatuses, `${guruGateLabel("gate-3")}`)}
   </div>`;
 };
 
@@ -34841,14 +34205,14 @@ g4CampaignLaunchCenterHtml = function () {
   const campaigns = g4EnsureLaunchCampaigns();
   const product = g4SelectedLaunchProduct();
   if (!channels.length) {
-    return `<div class="g1-empty">Заполните каналы в Gate 0 или карту 5A в Gate 3, чтобы здесь появились площадки для реализации.</div>`;
+    return `<div class="g1-empty">Заполните каналы в ${guruGateLabel("gate-0")} или карту 5A в ${guruGateLabel("gate-3")}, чтобы здесь появились площадки для реализации.</div>`;
   }
   return `<div class="g1-route">
     ${g4SelectedProductHtml(product)}
     ${g4CampaignSectionHtml("search", "Поисковые кампании", channels, campaigns, product)}
     ${g4CampaignSectionHtml("media", "Медийные кампании", channels, campaigns, product)}
     ${g4CampaignSectionHtml("smm", "SMM и соцсети", channels, campaigns, product)}
-    ${g4CampaignSectionHtml("other", "Другие каналы из Gate 0–3", channels, campaigns, product)}
+    ${g4CampaignSectionHtml("other", `Другие каналы из ${guruGateLabel("gate-0")}–3`, channels, campaigns, product)}
   </div>`;
 };
 
@@ -34901,23 +34265,23 @@ function g4v192ProductContextHtml(product) {
     ...new Set(g4sbClusterList(product).flatMap((cluster) => cluster.phrases)),
   ];
   return `<div class="g4-upstream">
-    <div class="g4-upstream-title">Стратегическая основа из Gate 0–3</div>
-    ${g4ReadonlyRow("Продукт / направление", productLabel || g0.product, productLabel ? "позиция Gate 4" : "Gate 0 «Что продаём»")}
-    ${g4ReadonlyRow("Посадочная страница", ctx.landingUrl || ctx.landingStatus, "Gate 2 «Посадочные под продукты»")}
-    ${g4ReadonlyRow("Оффер", ctx.offer, "Gate 1")}
-    ${g4ReadonlyRow("CTA", ctx.cta, "Gate 0/1")}
-    ${g4ReadonlyRow("Допустимый CPL", ctx.cpl, "Gate 1 «Юнит-экономика»")}
-    ${g4ReadonlyRow("Маршрут 5A (Котлер)", gate3.route || gate3.stageStatuses, "Gate 3")}
-    ${g4ReadonlyRow("Стратегическая основа", `Сегменты: ${sem.segments.length} · JTBD: ${sem.languageJtbd.length} · Фразы: ${allPhrases.length}`, "Gate 1")}
+    <div class="g4-upstream-title">Стратегическая основа из ${guruGateLabel("gate-0")}–3</div>
+    ${g4ReadonlyRow("Продукт / направление", productLabel || g0.product, productLabel ? `позиция ${guruGateLabel("gate-4")}` : `${guruGateLabel("gate-0")} «Что продаём»`)}
+    ${g4ReadonlyRow("Посадочная страница", ctx.landingUrl || ctx.landingStatus, `${guruGateLabel("gate-2")} «Посадочные под продукты»`)}
+    ${g4ReadonlyRow("Оффер", ctx.offer, `${guruGateLabel("gate-1")}`)}
+    ${g4ReadonlyRow("CTA", ctx.cta, `${guruGateLabel("gate-0")}/1`)}
+    ${g4ReadonlyRow("Допустимый CPL", ctx.cpl, `${guruGateLabel("gate-1")} «Юнит-экономика»`)}
+    ${g4ReadonlyRow("Маршрут 5A (Котлер)", gate3.route || gate3.stageStatuses, `${guruGateLabel("gate-3")}`)}
+    ${g4ReadonlyRow("Стратегическая основа", `Сегменты: ${sem.segments.length} · JTBD: ${sem.languageJtbd.length} · Фразы: ${allPhrases.length}`, `${guruGateLabel("gate-1")}`)}
     <div style="margin-top:8px">
       <button class="small-btn add-inline-btn" data-g4-strategy-toggle="${escapeAttr(strategyKey)}">${isOpen ? "Скрыть стратегическую основу" : "Показать стратегическую основу"}</button>
     </div>
     ${
       isOpen
         ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);">
-      ${g4ReadonlyRow("Сегменты (полный текст)", sem.segmentsText || ctx.segment, "Gate 1 «Спрос, ценность, позиционирование»")}
-      ${g4ReadonlyRow("JTBD (полный текст)", sem.languageJtbd.join("; ") || ctx.jtbd, "Gate 1 «Продуктовые карты»")}
-      ${g4ReadonlyRow("Ключевые фразы", allPhrases.slice(0, 80).join(", "), "Gate 1")}
+      ${g4ReadonlyRow("Сегменты (полный текст)", sem.segmentsText || ctx.segment, `${guruGateLabel("gate-1")} «Спрос, ценность, позиционирование»`)}
+      ${g4ReadonlyRow("JTBD (полный текст)", sem.languageJtbd.join("; ") || ctx.jtbd, `${guruGateLabel("gate-1")} «Продуктовые карты»`)}
+      ${g4ReadonlyRow("Ключевые фразы", allPhrases.slice(0, 80).join(", "), `${guruGateLabel("gate-1")}`)}
       ${g4sbItemsListHtml(product)}
     </div>`
         : ""
@@ -34940,7 +34304,7 @@ g4CampaignLaunchCenterHtml = function () {
   const campaigns = g4EnsureLaunchCampaigns();
   const products = g4LaunchProducts();
   if (!channels.length) {
-    return `<div class="g1-empty">Заполните каналы в Gate 0 или карту 5A в Gate 3, чтобы здесь появились площадки для реализации.</div>`;
+    return `<div class="g1-empty">Заполните каналы в ${guruGateLabel("gate-0")} или карту 5A в ${guruGateLabel("gate-3")}, чтобы здесь появились площадки для реализации.</div>`;
   }
   const launchOpen = g4EnsureLaunchUiState();
   return `<div class="g1-route">
@@ -34969,7 +34333,7 @@ g4CampaignLaunchCenterHtml = function () {
                 ${g4v192TypeGroupHtml("search", "Поисковые кампании", channels, campaigns, product)}
                 ${g4v192TypeGroupHtml("media", "Медийные кампании", channels, campaigns, product)}
                 ${g4v192TypeGroupHtml("smm", "SMM и соцсети", channels, campaigns, product)}
-                ${g4v192TypeGroupHtml("other", "Другие каналы из Gate 0–3", channels, campaigns, product)}
+                ${g4v192TypeGroupHtml("other", `Другие каналы из ${guruGateLabel("gate-0")}–3`, channels, campaigns, product)}
               </div>`
               : ""
           }
@@ -35009,7 +34373,7 @@ g4CampaignRowHtml = function (channel, campaign, index, product) {
   const isOpen = Boolean(launchOpen.rows[stateKey]);
   const typeLabel = G4_LAUNCH_TYPE_LABELS[channel.launchType] || "Канал";
   const subtitle = g3AutoJoin(
-    [typeLabel, "Gate 0: " + g4LaunchChannelStatus(channel), channel.materials],
+    [typeLabel, `${guruGateLabel("gate-0")}: ` + g4LaunchChannelStatus(channel), channel.materials],
     " · ",
   );
   const defaultName = g4DefaultCampaignName(channel, campaign, ctx);
@@ -35098,7 +34462,7 @@ const G4_GROUP_COLS = [
   ["col1", "Ключевые фразы", "фразы группы, по одной на строку", ""],
   ["col2", "Прогноз показов", "из Вордстата или Прогноза бюджета Директа", "частотность кластера в месяц"],
   ["col3", "Прогноз кликов", "≈ показы × CTR", "CTR поиска обычно 5–10%"],
-  ["col4", "Прогноз бюджета, руб.", "≈ клики × средняя ставка (CPC)", "сверяйте с допустимым CPL из Gate 1"],
+  ["col4", "Прогноз бюджета, руб.", "≈ клики × средняя ставка (CPC)", `сверяйте с допустимым CPL из ${guruGateLabel("gate-1")}`],
 ];
 
 function g4v193GroupTotals(groupRows) {
@@ -35121,8 +34485,8 @@ function g4v193BenchmarksHtml(groupRows) {
     ${g4ReadonlyRow("Прогноз показов", "сколько раз запросы группы ищут в месяц — берите из Вордстата или «Прогноза бюджета» Директа", "справка")}
     ${g4ReadonlyRow("Прогноз кликов", "показы × CTR. Нормальный CTR поиска 5–10%; ниже 3% — слабые объявления или нецелевые фразы", "справка")}
     ${g4ReadonlyRow("Прогноз бюджета", "клики × средняя ставка (CPC). Бюджет ÷ ожидаемые лиды должен помещаться в допустимый CPL", "справка")}
-    ${g4ReadonlyRow("Допустимый CPL из Gate 1", ue.allowedCpl, "Gate 1")}
-    ${g4ReadonlyRow("Допустимый CPA из Gate 1", ue.allowedCpa, "Gate 1")}
+    ${g4ReadonlyRow(`Допустимый CPL из ${guruGateLabel("gate-1")}`, ue.allowedCpl, `${guruGateLabel("gate-1")}`)}
+    ${g4ReadonlyRow(`Допустимый CPA из ${guruGateLabel("gate-1")}`, ue.allowedCpa, `${guruGateLabel("gate-1")}`)}
     ${g4ReadonlyRow("Итого по группам", "показы " + (totals.impressions ? g4NumFormat(totals.impressions) : "—") + " · клики " + (totals.clicks ? g4NumFormat(totals.clicks) : "—") + " · бюджет " + (totals.budget ? g4NumFormat(totals.budget, " ₽") : "—") + " · CTR " + ctr + " · CPC " + cpc, "расчёт")}
   </div>`;
 }
@@ -35177,12 +34541,12 @@ function g4YandexSearchBuildHtml() {
     ? g1Clusters
         .map((r, i) => `${i + 1}. ${r.col1 || r.col2 || "Кластер " + (i + 1)}${r.col0 ? " [" + r.col0 + "]" : ""}`)
         .join("\n")
-    : "Кластеры не заполнены в Gate 1";
+    : `Кластеры не заполнены в ${guruGateLabel("gate-1")}`;
   const groupRows = g4.groupRows || [{}];
   const sitelinkRows = g4.sitelinkRows || [{}];
   return `<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);">
     <div style="font-weight:800;font-size:14px;margin-bottom:12px;">Сборка поисковой кампании</div>
-    <details class="g1-prompt-toggle"><summary>Кластеры из Gate 1 (только чтение)</summary><div>${escapeHtml(g1CorePreview)}</div></details>
+    <details class="g1-prompt-toggle"><summary>Кластеры из ${guruGateLabel("gate-1")} (только чтение)</summary><div>${escapeHtml(g1CorePreview)}</div></details>
     <div class="g1-fields-grid" style="margin-top:12px">
       <label class="g1-field"><span>Минус-фразы</span><small style="color:var(--muted);font-size:11px;">Общие минус-фразы кампании</small><textarea class="g1-input ${String(g4.minusPhrases || "").trim() ? "is-filled" : "is-empty"}" data-g4prod-field="minusPhrases" rows="1" placeholder="минус-фразы">${escapeHtml(g4.minusPhrases || "")}</textarea></label>
     </div>
@@ -36206,14 +35570,14 @@ function g4SearchSemanticBaseHtml(product) {
     .map((r) => r.kw + (r.vol ? " — " + r.vol + " пок./мес" : ""))
     .join("\n");
   return `<div class="g4-upstream">
-    <div class="g4-upstream-title">Семантическая база из Gate 1${productLabel ? " · " + escapeHtml(productLabel) : ""}</div>
-    ${g4ReadonlyRow("Кластер спроса", sem.cluster, "Gate 1")}
-    ${g4ReadonlyRow("Запросы с объёмом", demandPreview, "Gate 1")}
-    ${g4ReadonlyRow("Основные запросы и ключи", list(sem.queries), "Gate 1")}
-    ${g4ReadonlyRow("Брендовые фразы (ур. 1)", list(sem.brandPhrases), "Gate 1")}
-    ${g4ReadonlyRow("Страничные фразы (ур. 2)", list(sem.pagePhrases), "Gate 1")}
-    ${g4ReadonlyRow("JTBD / язык клиента (ур. 4)", list(sem.languageJtbd, 10), "Gate 1")}
-    ${g4ReadonlyRow("Сегменты спроса", sem.segmentsText, "Gate 1")}
+    <div class="g4-upstream-title">Семантическая база из ${guruGateLabel("gate-1")}${productLabel ? " · " + escapeHtml(productLabel) : ""}</div>
+    ${g4ReadonlyRow("Кластер спроса", sem.cluster, `${guruGateLabel("gate-1")}`)}
+    ${g4ReadonlyRow("Запросы с объёмом", demandPreview, `${guruGateLabel("gate-1")}`)}
+    ${g4ReadonlyRow("Основные запросы и ключи", list(sem.queries), `${guruGateLabel("gate-1")}`)}
+    ${g4ReadonlyRow("Брендовые фразы (ур. 1)", list(sem.brandPhrases), `${guruGateLabel("gate-1")}`)}
+    ${g4ReadonlyRow("Страничные фразы (ур. 2)", list(sem.pagePhrases), `${guruGateLabel("gate-1")}`)}
+    ${g4ReadonlyRow("JTBD / язык клиента (ур. 4)", list(sem.languageJtbd, 10), `${guruGateLabel("gate-1")}`)}
+    ${g4ReadonlyRow("Сегменты спроса", sem.segmentsText, `${guruGateLabel("gate-1")}`)}
     ${sem.queries.length ? `<div style="margin-top:10px"><button class="small-btn add-inline-btn" data-g4prod-groups-from-sem="${escapeAttr(product)}">Создать группы из семантики (${sem.queries.length} фраз)</button></div>` : ""}
   </div>`;
 }
@@ -36339,9 +35703,9 @@ gate1PageStructureHtml = function (card) {
       <div style="padding:12px 0 8px;border-bottom:2px solid var(--line);margin-bottom:10px;">
         <div style="font-weight:900;font-size:15px;">${escapeHtml(g.product)}</div>
         <small style="display:block;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.06em;margin-top:6px;">ОФФЕР</small>
-        <div class="g1-input ${offer ? 'is-filled' : 'is-empty'}" style="cursor:default;margin-top:2px;${offer ? 'background:var(--panel-soft);' : ''}">${escapeHtml(offer || 'Оффер не заполнен в Gate 0')}</div>
+        <div class="g1-input ${offer ? 'is-filled' : 'is-empty'}" style="cursor:default;margin-top:2px;${offer ? 'background:var(--panel-soft);' : ''}">${escapeHtml(offer || `Оффер не заполнен в ${guruGateLabel("gate-0")}`)}</div>
         <small style="display:block;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.06em;margin-top:6px;">CTA</small>
-        <div class="g1-input ${cta ? 'is-filled' : 'is-empty'}" style="cursor:default;margin-top:2px;${cta ? 'background:var(--panel-soft);' : ''}">${escapeHtml(cta || 'CTA не заполнен в Gate 0')}</div>
+        <div class="g1-input ${cta ? 'is-filled' : 'is-empty'}" style="cursor:default;margin-top:2px;${cta ? 'background:var(--panel-soft);' : ''}">${escapeHtml(cta || `CTA не заполнен в ${guruGateLabel("gate-0")}`)}</div>
       </div>
       ${g.entries.map((entry, pos) => pageBlock(entry, pos, g.entries.length)).join('')}
       <button class="small-btn add-inline-btn" style="margin-top:6px;" data-g1pc-add="${escapeAttr(card.id)}" data-g1pc-dir="${escapeAttr(g.product)}">+ Добавить страницу</button>
@@ -36752,7 +36116,7 @@ function guruGate1KeywordTransferTargetsV555(itemId, itemData) {
     seen.add(id);
     targets.push({
       value: `additional:${id}`,
-      label: `JTBD №${targets.length + 1}${saved ? " · из Gate 4" : ""}`,
+      label: `JTBD №${targets.length + 1}${saved ? ` · из ${guruGateLabel("gate-4")}` : ""}`,
     });
   });
   targets.push({
@@ -36840,9 +36204,9 @@ function pv181DemandRowsHtmlV272(entries, options = {}) {
         control = `<textarea class="g1-input ${filledClass}" aria-label="${escapeAttr(label)}" data-pv181-map="${mapIndex}" data-pv181-item="${escapeAttr(itemId)}" data-pv181-demand="${index}" data-pv181-dfield="${escapeAttr(field)}" rows="1" placeholder="${escapeAttr(label)}">${escapeHtml(value)}</textarea>`;
       }
       const sourceNote = field !== "kw" ? "" : savedInGate4
-        ? '<small class="pv181-linked-foundation-note-v518">Есть в Gate 4 · Поиск</small>'
+        ? `<small class="pv181-linked-foundation-note-v518">Есть в ${guruGateLabel("gate-4")} · Поиск</small>`
         : linkedFoundation
-          ? `<small class="pv181-linked-foundation-note-v518">из ${linkedFoundation === "gate0" ? "Gate 0" : "Gate 1"} · метрики после импорта</small>`
+          ? `<small class="pv181-linked-foundation-note-v518">из ${linkedFoundation === "gate0" ? `${guruGateLabel("gate-0")}` : `${guruGateLabel("gate-1")}`} · метрики после импорта</small>`
           : "";
       const duplicateNote = field === "kw" && isDuplicate
         ? `<small class="g1kw-duplicate-note-v562">Повтор в JTBD · ${guruGate1DuplicateDecisionsV562(itemData)[phraseKey]?.owner ? "решение принято" : "решение ниже"}</small>` : "";
@@ -37227,7 +36591,7 @@ function guruGate1GroupBenchmarksHtmlV277(entries, itemId) {
   const priceBenchmark = benchmark.productPrice.value > 0
     ? `<div class="pv181-group-benchmark-item-v277 is-info-v277" data-pv181-group-benchmark-v277="price"><span class="pv181-group-benchmark-dot-v277" aria-hidden="true"></span><div><strong>${benchmark.clickPriceShare === null
       ? "Недостаточно данных для оценки цены клика относительно цены товара"
-      : `Цена клика ≈ ${guruGate1PercentV277(benchmark.clickPriceShare)}% от цены товара`}</strong><span>Справочно. Не показывает выгодность — для этого нужны реальные данные конверсии (Gate 5).</span></div></div>`
+      : `Цена клика ≈ ${guruGate1PercentV277(benchmark.clickPriceShare)}% от цены товара`}</strong><span>Справочно. Не показывает выгодность — для этого нужны реальные данные конверсии (${guruGateLabel("gate-5")}).</span></div></div>`
     : "";
   const anomalyBenchmark = `<div class="pv181-group-benchmark-item-v277 ${benchmark.anomalies ? "is-attention-v277" : "is-ready-v277"}" data-pv181-group-benchmark-v277="anomalies"><span class="pv181-group-benchmark-dot-v277" aria-hidden="true"></span><div><strong>${benchmark.anomalies
     ? `Аномалии: ${benchmark.anomalies}`
@@ -37367,7 +36731,7 @@ function pv181ItemHtml(mapIndex, item, row, options = {}) {
           </div>
           <div class="pv181-demand-implementation-rows-v263">${implementationDemandEntries.length
             ? demandRowsHtml(implementationDemandEntries)
-            : '<div class="pv181-demand-origin-empty">Новых фраз из Gate 4 пока нет</div>'}</div>
+            : `<div class="pv181-demand-origin-empty">Новых фраз из ${guruGateLabel("gate-4")} пока нет</div>`}</div>
         </div>
       </div>
       <button class="small-btn add-inline-btn" style="margin-top:4px;font-size:12px;" data-pv181-demand-add data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(item.id)}">+</button>
@@ -37539,7 +36903,7 @@ document.addEventListener('click', (e) => {
     closeG0Popover();
     const url = pageBtn.dataset.pv181PageHint;
     const groups = pv180PageSemanticsFull(url);
-    const title = 'Gate 1 / Аудит сайта — страница товара — ' + url;
+    const title = `${guruGateLabel("gate-1")} / Аудит сайта — страница товара — ` + url;
     const body = groups.length
       ? groups.map((g, gi) => `<div class="g0-popover-title" style="margin-top:${gi ? 10 : 0}px;">${escapeHtml(g.title)}</div>${g.items.map(([l, v]) => `<div class="g0-popover-item"><div class="g0-popover-label">${escapeHtml(l)}</div><div class="g0-popover-value">${escapeHtml(v)}</div></div>`).join('')}`).join('')
       : '<div class="g0-popover-empty">В Аудите сайта нет страницы с этим URL или она не заполнена.</div>';
@@ -38137,9 +37501,9 @@ function g4sbItemsListHtml(product) {
           (d.demandRows || []).filter((r) => String(r.kw || "").trim()).length
         : 0;
       const value = phrases
-        ? phrases + " фраз · спрос из Gate 1"
-        : "семантика не заполнена в Gate 1";
-      return `<div class="g4-readonly"><span class="g4-readonly-label">${escapeHtml(item.name)}</span><span class="${phrases ? "g4-readonly-value" : "g4-readonly-empty"}">${escapeHtml(value)}</span><span class="g4-readonly-source">← Gate 1</span></div>`;
+        ? phrases + ` фраз · спрос из ${guruGateLabel("gate-1")}`
+        : `семантика не заполнена в ${guruGateLabel("gate-1")}`;
+      return `<div class="g4-readonly"><span class="g4-readonly-label">${escapeHtml(item.name)}</span><span class="${phrases ? "g4-readonly-value" : "g4-readonly-empty"}">${escapeHtml(value)}</span><span class="g4-readonly-source">← ${guruGateLabel("gate-1")}</span></div>`;
     })
     .join("");
   return `<div class="g4-upstream">
@@ -38161,7 +37525,7 @@ g4YandexSearchBuildHtml = function (product) {
   ).length;
   return `<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);">
     <div style="font-weight:800;font-size:14px;margin-bottom:12px;">Сборка поисковой кампании${product ? " · " + escapeHtml(typeof g4ProductIdDisplayNameV224 === "function" ? g4ProductIdDisplayNameV224(product) : product) : ""}</div>
-    <p class="g1-task">Котлер сверху вниз: аккумулированная семантика Gate 1 → кампания-направление → группы = товары → объявления. Данные не вводятся дважды: группы создаются из товаров направления автоматически.</p>
+    <p class="g1-task">Котлер сверху вниз: аккумулированная семантика ${guruGateLabel("gate-1")} → кампания-направление → группы = товары → объявления. Данные не вводятся дважды: группы создаются из товаров направления автоматически.</p>
     ${g4sbItemsListHtml(product)}
     ${g4SearchSemanticBaseHtml(product).replace(/<div style="margin-top:10px"><button[^>]*data-g4prod-groups-from-sem[\s\S]*?<\/div>/, "")}
     <div class="g1-fields-grid" style="margin-top:12px">
@@ -38812,13 +38176,13 @@ function g4sbUniversalHeaderHtml(product) {
     ? g4ProductIdDisplayNameV224(product)
     : product;
   return `<div class="g4-upstream">
-    ${g4ReadonlyRow("Продукт / направление", productLabel || g0.product, productLabel ? "позиция Gate 4" : "Gate 0 «Что продаём»")}
-    ${g4ReadonlyRow("Посадочная страница", ctx.landingUrl || ctx.landingStatus, "Gate 2 «Посадочные под продукты»")}
-    ${g4ReadonlyRow("Оффер", ctx.offer, "Gate 1 «Продуктовые карты»")}
-    ${g4ReadonlyRow("Сегменты", sem.segmentsText || ctx.segment, "Gate 1 «Спрос, ценность, позиционирование»")}
-    ${g4ReadonlyRow("JTBD", sem.languageJtbd.join("; ") || ctx.jtbd, "Gate 1 «Продуктовые карты»")}
-    ${g4ReadonlyRow("CTA", ctx.cta, "Gate 0 «Офферы и CTA»")}
-    ${g4ReadonlyRow("Допустимый CPL", ctx.cpl, "Gate 1 «Юнит-экономика»")}
+    ${g4ReadonlyRow("Продукт / направление", productLabel || g0.product, productLabel ? `позиция ${guruGateLabel("gate-4")}` : `${guruGateLabel("gate-0")} «Что продаём»`)}
+    ${g4ReadonlyRow("Посадочная страница", ctx.landingUrl || ctx.landingStatus, `${guruGateLabel("gate-2")} «Посадочные под продукты»`)}
+    ${g4ReadonlyRow("Оффер", ctx.offer, `${guruGateLabel("gate-1")} «Продуктовые карты»`)}
+    ${g4ReadonlyRow("Сегменты", sem.segmentsText || ctx.segment, `${guruGateLabel("gate-1")} «Спрос, ценность, позиционирование»`)}
+    ${g4ReadonlyRow("JTBD", sem.languageJtbd.join("; ") || ctx.jtbd, `${guruGateLabel("gate-1")} «Продуктовые карты»`)}
+    ${g4ReadonlyRow("CTA", ctx.cta, `${guruGateLabel("gate-0")} «Офферы и CTA»`)}
+    ${g4ReadonlyRow("Допустимый CPL", ctx.cpl, `${guruGateLabel("gate-1")} «Юнит-экономика»`)}
   </div>`;
 }
 
@@ -38864,7 +38228,7 @@ g4sbGroupCardHtml = function (product, row, ri, groupRows, ads) {
     .join("");
 
   const phrasesFieldHtml = boundCluster
-    ? `<label class="g1-field"><span>Ключевые фразы кластера · ${boundCluster.phrases.length}</span><small style="color:var(--muted);font-size:11px;">Только чтение — источник Gate 1, кластер «${escapeHtml(boundCluster.name)}». Не копируются, читаются заново при каждом изменении семантики.</small><div class="g1-input is-filled" style="cursor:default;background:var(--panel-soft);white-space:pre-wrap;">${escapeHtml(boundCluster.phrases.join("\n")) || "—"}</div></label>`
+    ? `<label class="g1-field"><span>Ключевые фразы кластера · ${boundCluster.phrases.length}</span><small style="color:var(--muted);font-size:11px;">Только чтение — источник ${guruGateLabel("gate-1")}, кластер «${escapeHtml(boundCluster.name)}». Не копируются, читаются заново при каждом изменении семантики.</small><div class="g1-input is-filled" style="cursor:default;background:var(--panel-soft);white-space:pre-wrap;">${escapeHtml(boundCluster.phrases.join("\n")) || "—"}</div></label>`
     : g4sbField("col", `${p} data-g4sb-group="${ri}" data-g4sb-col="col1"`, "Ключевые фразы (свои, без кластера)", row.col1, "фразы этой группы, по одной на строку");
 
   return `<div class="g1-card" style="border-radius:14px;">
@@ -38880,7 +38244,7 @@ g4sbGroupCardHtml = function (product, row, ri, groupRows, ads) {
       <p class="g1-task">Самостоятельная единица: свой кластер, свои фразы, свои минус-фразы, свой прогноз, свои объявления.</p>
       <div class="g1-fields-grid">
         ${g4sbField("col", `${p} data-g4sb-group="${ri}" data-g4sb-col="col0"`, "Название группы", row.col0, "например: название кластера")}
-        <label class="g1-field"><span>Кластер спроса (1 группа = 1 кластер)</span><small style="color:var(--muted);font-size:11px;">Фразы подтягиваются из Gate 1 автоматически, не копируются в отдельный источник</small>
+        <label class="g1-field"><span>Кластер спроса (1 группа = 1 кластер)</span><small style="color:var(--muted);font-size:11px;">Фразы подтягиваются из ${guruGateLabel("gate-1")} автоматически, не копируются в отдельный источник</small>
           <select class="g1-input is-filled" ${p} data-g4sb-group="${ri}" data-g4sb-gfield="clusterKey">
             <option value="">— свой список фраз (без кластера) —</option>
             ${clusterOptionsHtml}
@@ -39231,7 +38595,7 @@ function g4sbSearchChannelCardHtml(channel, campaign, index, product) {
   const statusClass = G4_SEARCH_STATUS_CLASS[status] || "not_started";
   const typeLabel = G4_LAUNCH_TYPE_LABELS[channel.launchType] || "Канал";
   const subtitle = g3AutoJoin(
-    [typeLabel, "Gate 0: " + g4LaunchChannelStatus(channel), channel.materials],
+    [typeLabel, `${guruGateLabel("gate-0")}: ` + g4LaunchChannelStatus(channel), channel.materials],
     " · ",
   );
 
@@ -39520,7 +38884,7 @@ g4sbGroupCardHtml = function (product, row, ri, groupRows, ads) {
           <option value="">— не выбран —</option>
           ${segments.map((s) => `<option value="${s.index}" ${String(row.segmentIndex) === String(s.index) ? "selected" : ""}>${escapeHtml(s.name)}</option>`).join("")}
         </select>
-        ${!segments.length ? '<small style="color:var(--muted);font-size:11px;">В Gate 1 у этого товара сегменты не заполнены</small>' : ""}
+        ${!segments.length ? `<small style="color:var(--muted);font-size:11px;">В ${guruGateLabel("gate-1")} у этого товара сегменты не заполнены</small>` : ""}
       </label>`
     : `<div class="g1-field"><span>Сегмент</span><small style="color:var(--muted);font-size:11px;">Станет доступен после выбора кластера</small><div class="g1-input is-empty" style="cursor:default;">сначала выберите кластер</div></div>`;
 
@@ -39530,7 +38894,7 @@ g4sbGroupCardHtml = function (product, row, ri, groupRows, ads) {
           <option value="">— не выбран —</option>
           ${jtbdList.map((j) => `<option value="${j.index}" ${String(row.jtbdIndex) === String(j.index) ? "selected" : ""}>${escapeHtml(j.text.slice(0, 70))}</option>`).join("")}
         </select>
-        ${!jtbdList.length ? '<small style="color:var(--muted);font-size:11px;">В Gate 1 у этого товара JTBD не заполнены</small>' : ""}
+        ${!jtbdList.length ? `<small style="color:var(--muted);font-size:11px;">В ${guruGateLabel("gate-1")} у этого товара JTBD не заполнены</small>` : ""}
       </label>`
     : `<div class="g1-field"><span>JTBD</span><small style="color:var(--muted);font-size:11px;">Станет доступен после выбора кластера</small><div class="g1-input is-empty" style="cursor:default;">сначала выберите кластер</div></div>`;
 
@@ -39548,7 +38912,7 @@ g4sbGroupCardHtml = function (product, row, ri, groupRows, ads) {
           })
           .join("")}
       </div>`
-    : `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${row.itemId ? "У выбранного кластера пока нет базовых фраз в Gate 1" : "Кластер не выбран — базовых фраз нет"}</div>`;
+    : `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${row.itemId ? `У выбранного кластера пока нет базовых фраз в ${guruGateLabel("gate-1")}` : "Кластер не выбран — базовых фраз нет"}</div>`;
 
   const extraPhrasesHtml = `<div style="margin-top:10px;">
     <span style="font-weight:700;font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Дополнительные фразы этой группы</span>
@@ -39575,7 +38939,7 @@ g4sbGroupCardHtml = function (product, row, ri, groupRows, ads) {
     <div class="g1-card-body" style="padding:14px 18px;">
       <p class="g1-task">Самостоятельная единица: свой кластер, свои фразы, свои минус-фразы, свой прогноз, свои объявления.</p>
       <div class="g1-fields-grid">
-        <label class="g1-field"><span>Кластер спроса (1 группа = 1 кластер)</span><small style="color:var(--muted);font-size:11px;">= товар из Gate 1, привязка по реальному id. Фразы читаются оттуда каждый раз заново.</small>
+        <label class="g1-field"><span>Кластер спроса (1 группа = 1 кластер)</span><small style="color:var(--muted);font-size:11px;">= товар из ${guruGateLabel("gate-1")}, привязка по реальному id. Фразы читаются оттуда каждый раз заново.</small>
           <select class="g1-input is-filled" ${p} data-g4sb-group="${ri}" data-g4sb-gfield="itemId">
             <option value="">— свой список фраз (без кластера) —</option>
             ${clusterOptionsHtml}
@@ -39588,7 +38952,7 @@ g4sbGroupCardHtml = function (product, row, ri, groupRows, ads) {
       </div>
       <div style="margin-top:12px;">
         <span style="font-weight:800;font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Ключевые фразы кластера · ${basePhrases.length}</span>
-        <small style="color:var(--muted);font-size:11px;">Только чтение из Gate 1. Чтобы убрать фразу только из этой группы — нажмите «Исключить» (в Gate 1 фраза останется).</small>
+        <small style="color:var(--muted);font-size:11px;">Только чтение из ${guruGateLabel("gate-1")}. Чтобы убрать фразу только из этой группы — нажмите «Исключить» (в ${guruGateLabel("gate-1")} фраза останется).</small>
         ${basePhrasesHtml}
         ${extraPhrasesHtml}
       </div>
@@ -39638,7 +39002,7 @@ g4sbSearchChannelCardHtml = function (channel, campaign, index, product) {
   const statusClass = G4_SEARCH_STATUS_CLASS[status] || "not_started";
   const typeLabel = G4_LAUNCH_TYPE_LABELS[channel.launchType] || "Канал";
   const subtitle = g3AutoJoin(
-    [typeLabel, "Gate 0: " + g4LaunchChannelStatus(channel), channel.materials],
+    [typeLabel, `${guruGateLabel("gate-0")}: ` + g4LaunchChannelStatus(channel), channel.materials],
     " · ",
   );
 
@@ -39900,10 +39264,10 @@ function g4sbClusterAssemblyHtml(product, d) {
           )
           .join("")}
       </div>`
-    : `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${draft.itemId ? "У этого товара пока нет базовых фраз в Gate 1" : "Сначала выберите сегмент, чтобы увидеть фразы товара"}</div>`;
+    : `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${draft.itemId ? `У этого товара пока нет базовых фраз в ${guruGateLabel("gate-1")}` : "Сначала выберите сегмент, чтобы увидеть фразы товара"}</div>`;
 
   const extraPhrasesHtml = `<div style="margin-top:10px;">
-    <span style="font-weight:700;font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Дополнительные фразы (свои, не из Gate 1)</span>
+    <span style="font-weight:700;font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Дополнительные фразы (свои, не из ${guruGateLabel("gate-1")})</span>
     ${(draft.extraPhrases || [])
       .map(
         (phrase, pi) => `<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
@@ -39920,7 +39284,7 @@ function g4sbClusterAssemblyHtml(product, d) {
   const demandText = demand.matched
     ? `${g4NumFormat(demand.total)} показов/мес (совпало фраз со спросом: ${demand.matched})`
     : draft.itemId
-      ? "нет данных о спросе для выбранных фраз (заполните объём показов в Gate 1)"
+      ? `нет данных о спросе для выбранных фраз (заполните объём показов в ${guruGateLabel("gate-1")})`
       : "нет данных";
 
   const nameSuggestion = draft.name || (allSegments.find((s) => s.itemId === draft.itemId && String(s.index) === String(draft.segmentIndex))?.name) || (itemCluster ? itemCluster.name : "");
@@ -39929,7 +39293,7 @@ function g4sbClusterAssemblyHtml(product, d) {
     <div class="g4-upstream-title">${draft.editingClusterId ? "Изменение кластера" : "Сборка кластера"}</div>
     <p class="g1-task">1 кластер = 1 поисковое намерение = 1 группа объявлений. Шаги: сегмент → JTBD → ключевые фразы → спрос считается автоматически → сохранить.</p>
     <div class="g1-fields-grid">
-      <label class="g1-field"><span>1. Сегмент</span><small style="color:var(--muted);font-size:11px;">Кто клиент и зачем ищет услугу. Данные Gate 1, по товарам.</small>
+      <label class="g1-field"><span>1. Сегмент</span><small style="color:var(--muted);font-size:11px;">Кто клиент и зачем ищет услугу. Данные ${guruGateLabel("gate-1")}, по товарам.</small>
         <select class="g1-input is-filled" ${p} data-g4sb-draft-field="segmentPick">
           <option value="">— выбрать сегмент —</option>
           ${segmentOptionsHtml}
@@ -39940,7 +39304,7 @@ function g4sbClusterAssemblyHtml(product, d) {
           <option value="">— не выбран —</option>
           ${jtbdOptionsHtml}
         </select>
-        ${draft.itemId && !jtbdList.length ? '<small style="color:var(--muted);font-size:11px;">У товара нет JTBD в Gate 1</small>' : ""}
+        ${draft.itemId && !jtbdList.length ? `<small style="color:var(--muted);font-size:11px;">У товара нет JTBD в ${guruGateLabel("gate-1")}</small>` : ""}
       </label>
     </div>
     <div style="margin-top:12px;">
@@ -39951,7 +39315,7 @@ function g4sbClusterAssemblyHtml(product, d) {
     <div class="g4-readonly" style="margin-top:10px;">
       <span class="g4-readonly-label">4. Суммарный спрос</span>
       <span class="g4-readonly-value">${escapeHtml(demandText)}</span>
-      <span class="g4-readonly-source">← Gate 1</span>
+      <span class="g4-readonly-source">← ${guruGateLabel("gate-1")}</span>
     </div>
     <div class="g1-fields-grid" style="margin-top:10px">
       <label class="g1-field"><span>5. Название кластера</span><input class="g1-input ${draft.name.trim() ? "is-filled" : "is-empty"}" ${p} data-g4sb-draft-field="name" value="${escapeAttr(draft.name)}" placeholder="${escapeAttr(nameSuggestion || "например: Отбеливание подошвы")}" /></label>
@@ -40031,7 +39395,7 @@ function g4sbGroupClusterSummaryHtml(product, row) {
     ${g4ReadonlyRow("Сегмент", segment ? segment.name : "", "сборка кластера")}
     ${g4ReadonlyRow("JTBD", jtbd ? jtbd.text : "", "сборка кластера")}
     ${g4ReadonlyRow("Ключевые фразы · " + phrases.length, phrases.join(", "), "сборка кластера")}
-    ${g4ReadonlyRow("Суммарный спрос", demand.matched ? g4NumFormat(demand.total) + " показов/мес" : "нет данных", "Gate 1")}
+    ${g4ReadonlyRow("Суммарный спрос", demand.matched ? g4NumFormat(demand.total) + " показов/мес" : "нет данных", `${guruGateLabel("gate-1")}`)}
     <div style="margin-top:8px">
       <button class="small-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-edit-cluster="${escapeAttr(cluster.id)}">Изменить состав кластера</button>
     </div>
@@ -40117,7 +39481,7 @@ g4sbGroupCardHtml = function (product, row, ri, groupRows, ads) {
 function g4sbSegmentCoverageHtml(product, d) {
   const segments = g4sbAllSegmentsFlat(product);
   if (!segments.length) {
-    return `<div class="g1-empty" style="margin-top:8px">В Gate 1 «Уровень 2 — Сегментация + позиционирование» пока нет ни одного сегмента.</div>`;
+    return `<div class="g1-empty" style="margin-top:8px">В ${guruGateLabel("gate-1")} «Уровень 2 — Сегментация + позиционирование» пока нет ни одного сегмента.</div>`;
   }
   const p = `data-g4sb-product="${escapeAttr(product)}"`;
   const isCovered = (s) =>
@@ -40127,7 +39491,7 @@ function g4sbSegmentCoverageHtml(product, d) {
   const covered = segments.filter(isCovered).length;
   return `<div class="g4-upstream" style="margin-top:12px">
     <div class="g4-upstream-title">Покрытие сегментов Уровня 2 — реализовано ${covered} из ${segments.length}</div>
-    <p class="g1-task">Источник — Gate 1 «Уровень 2 — Сегментация + позиционирование». Сегмент считается реализованным, когда на нём собран хотя бы один кластер.</p>
+    <p class="g1-task">Источник — ${guruGateLabel("gate-1")} «Уровень 2 — Сегментация + позиционирование». Сегмент считается реализованным, когда на нём собран хотя бы один кластер.</p>
     <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
       ${segments
         .map((s) => {
@@ -40181,9 +39545,9 @@ function g4sbUsageOverviewHtml(product, d) {
         .join("");
       return `${items.length > 1 ? `<div style="font-weight:700;font-size:12px;color:var(--muted);margin-top:10px;">${escapeHtml(item.name)}</div>` : ""}
         <div style="font-weight:700;font-size:12px;color:var(--muted);margin-top:8px;">JTBD · ${jtbdList.length}</div>
-        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">${jtbdHtml || '<div class="g1-empty">Нет JTBD в Gate 1</div>'}</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">${jtbdHtml || `<div class="g1-empty">Нет JTBD в ${guruGateLabel("gate-1")}</div>`}</div>
         <div style="font-weight:700;font-size:12px;color:var(--muted);margin-top:10px;">Ключевые фразы · ${phraseRows.length}</div>
-        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">${phrasesHtml || '<div class="g1-empty">Нет фраз в Gate 1</div>'}</div>`;
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">${phrasesHtml || `<div class="g1-empty">Нет фраз в ${guruGateLabel("gate-1")}</div>`}</div>`;
     })
     .join("");
   if (!sections.trim()) return "";
@@ -40396,7 +39760,7 @@ g4sbSearchChannelCardHtml = function (channel, campaign, index, product) {
   const statusClass = G4_SEARCH_STATUS_CLASS[status] || "not_started";
   const typeLabel = G4_LAUNCH_TYPE_LABELS[channel.launchType] || "Канал";
   const subtitle = g3AutoJoin(
-    [typeLabel, "Gate 0: " + g4LaunchChannelStatus(channel), channel.materials],
+    [typeLabel, `${guruGateLabel("gate-0")}: ` + g4LaunchChannelStatus(channel), channel.materials],
     " · ",
   );
 
@@ -40435,7 +39799,7 @@ g4sbSearchChannelCardHtml = function (channel, campaign, index, product) {
       g4sbClusterAssemblyHtml(product, d) +
       (!d.clusterDraft.open
         ? (!hasSemantics
-            ? `<div class="g1-empty" style="margin-top:8px">В Gate 1 пока нет заполненной семантики (сегменты, JTBD, фразы) ни по одному товару этого направления.</div>`
+            ? `<div class="g1-empty" style="margin-top:8px">В ${guruGateLabel("gate-1")} пока нет заполненной семантики (сегменты, JTBD, фразы) ни по одному товару этого направления.</div>`
             : "") +
           `<button class="small-btn add-inline-btn" style="width:100%;margin-top:12px;" ${p} data-g4sb-draft-open>+ Создать кластер-группу</button>`
         : "")
@@ -40776,7 +40140,7 @@ function g4sbKeywordEditorHtml(product, draft, p) {
   const rows = g4sbEnsureDraftKeywordRows(product, draft);
   return `<div class="g4-cluster-demand-editor">
     <div style="font-weight:800;font-size:13px;">Уровень 1 — Объём показов/мес</div>
-    <small style="color:var(--muted);display:block;margin:3px 0 10px;">Число, из Wordstat / Google Trends. Новые запросы синхронизируются с Gate 1.</small>
+    <small style="color:var(--muted);display:block;margin:3px 0 10px;">Число, из Wordstat / Google Trends. Новые запросы синхронизируются с ${guruGateLabel("gate-1")}.</small>
     <div style="display:flex;flex-direction:column;gap:10px;">
       ${rows.map((row, index) => `<div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;border-bottom:1px dashed var(--line);padding-bottom:8px;">
         ${[["kw", "Ключевое слово"], ["vol", "Объём показов/мес"], ["growth", "Общее число запросов за"]].map(([field, label]) => {
@@ -40929,7 +40293,7 @@ g4sbClusterAssemblyHtml = function (product, d) {
       <label class="g1-field"><span>Название кластера</span><small style="color:var(--muted);font-size:11px;">Название отображается в заголовке карточки и в связанной группе объявлений.</small><input class="g1-input ${draft.name.trim() ? "is-filled" : "is-empty"}" ${p} data-g4sb-draft-field="name" value="${escapeAttr(draft.name)}" placeholder="${escapeAttr(nameSuggestion || "например: Отбеливание подошвы")}" /></label>
     </div>
     <div class="g1-fields-grid">
-      <label class="g1-field"><span>1. Сегмент</span><small style="color:var(--muted);font-size:11px;">Кто клиент и зачем ищет услугу. Данные Gate 1, по товарам.</small>
+      <label class="g1-field"><span>1. Сегмент</span><small style="color:var(--muted);font-size:11px;">Кто клиент и зачем ищет услугу. Данные ${guruGateLabel("gate-1")}, по товарам.</small>
         <select class="g1-input is-filled" ${p} data-g4sb-draft-field="segmentPick">
           <option value="">— выбрать сегмент —</option>
           ${segmentOptionsHtml}
@@ -40940,7 +40304,7 @@ g4sbClusterAssemblyHtml = function (product, d) {
           <option value="">— не выбран —</option>
           ${mainJtbdOptionsHtml}
         </select>
-        ${draft.itemId && !jtbdList.length ? '<small style="color:var(--muted);font-size:11px;">У товара нет JTBD в Gate 1</small>' : ""}
+        ${draft.itemId && !jtbdList.length ? `<small style="color:var(--muted);font-size:11px;">У товара нет JTBD в ${guruGateLabel("gate-1")}</small>` : ""}
         ${hiddenMainCount > 0 ? `<small style="color:var(--muted);font-size:11px;">Скрыто ${hiddenMainCount} — уже основные в других кластерах этого товара.</small>` : ""}
       </label>
     </div>
@@ -40956,7 +40320,7 @@ g4sbClusterAssemblyHtml = function (product, d) {
     <div class="g4-upstream" style="margin-top:10px;">
       <div class="g4-upstream-title">5. Итог</div>
       ${g4ReadonlyRow("Выбрано фраз", String(totalCount), "расчёт")}
-      ${g4ReadonlyRow("Суммарный спрос", demandText, "Gate 1")}
+      ${g4ReadonlyRow("Суммарный спрос", demandText, `${guruGateLabel("gate-1")}`)}
     </div>
     <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
       <button class="small-btn add-inline-btn" ${p} data-g4sb-draft-save>${draft.editingClusterId ? "Сохранить изменения" : "Сохранить кластер"}</button>
@@ -41050,7 +40414,7 @@ g4sbGroupClusterSummaryHtml = function (product, row) {
     ${g4ReadonlyRow("Основной JTBD", mainJtbd ? mainJtbd.text : "", "сборка кластера")}
     ${extraJtbd.length ? g4ReadonlyRow("Дополнительные JTBD", extraJtbd.map((j) => j.text).join(" · "), "сборка кластера") : ""}
     ${g4ReadonlyRow("Ключевые фразы · " + phrases.length, phrases.join(", "), "сборка кластера")}
-    ${g4ReadonlyRow("Суммарный спрос", demand.matched ? g4NumFormat(demand.total) + " показов/мес" : "нет данных", "Gate 1")}
+    ${g4ReadonlyRow("Суммарный спрос", demand.matched ? g4NumFormat(demand.total) + " показов/мес" : "нет данных", `${guruGateLabel("gate-1")}`)}
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
       <button class="small-btn add-inline-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-edit-cluster="${escapeAttr(cluster.id)}">Редактировать кластер</button>
       <button class="small-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-duplicate-cluster="${escapeAttr(cluster.id)}">Дублировать</button>
@@ -41704,7 +41068,7 @@ function guruProjectReadiness() {
 // Левое меню: число рабочих блоков и процент — из единого механизма.
 let guruGateReadinessCache = new Map();
 
-renderGateNav = function (options = {}) {
+function renderGateNav(options = {}) {
   if (!state || !state.gates) return;
   if (guruUserEditDispatchActive && guruUserEditEventType === "input") return;
   // Во время перехода активная кнопка уже обновлена точечно через
@@ -41732,7 +41096,8 @@ renderGateNav = function (options = {}) {
     projectButton.classList.toggle("active", isProjectActive);
     projectButton.setAttribute("aria-current", isProjectActive ? "page" : "false");
   }
-  els.gateNav.innerHTML = state.gates
+  // Порядок и заголовки — из единого списка GURU_GATE_ORDER (gate-order.js).
+  els.gateNav.innerHTML = guruOrderedGates(state.gates)
     .map((g) => {
       let r = guruGateReadinessCache.get(g.id);
       if (!r) {
@@ -41741,7 +41106,7 @@ renderGateNav = function (options = {}) {
       }
       const cls =
         activeView === "gate" && activeGateId === g.id ? "active" : "";
-      return `<button class="gate-btn ${cls}" data-gate-id="${escapeAttr(g.id)}">${escapeHtml(g.title)}<span class="small">${r.total} блоков, прогресс ${r.percent}%</span></button>`;
+      return `<button class="gate-btn ${cls}" data-gate-id="${escapeAttr(g.id)}">${escapeHtml(guruGateTitle(g))}<span class="small">${r.total} блоков, прогресс ${r.percent}%</span></button>`;
     })
     .join("");
   document.querySelectorAll("[data-gate-id]").forEach((btn) => {
@@ -41749,7 +41114,7 @@ renderGateNav = function (options = {}) {
       guruNavigateToGate(btn.dataset.gateId);
     });
   });
-};
+}
 
 // Реалтайм: после любого сохранения статуса пересчитываем меню.
 // Контент-область НЕ трогаем — фокус и ввод пользователя не теряются.
@@ -42393,10 +41758,10 @@ g4sbGroupClusterSummaryHtml = function (product, row) {
   const demand = g4sbClusterDemand(product, row.itemId, phrases);
   return `<div class="g4-upstream g4-v126-group-summary">
     <div class="g4-upstream-title">Логика группы</div>
-    ${g4ReadonlyRow("Сегмент", segment ? segment.name : "", "Gate 1 · Уровень 2")}
+    ${g4ReadonlyRow("Сегмент", segment ? segment.name : "", `${guruGateLabel("gate-1")} · Уровень 2`)}
     ${g4ReadonlyRow("JTBD", jtbd ? jtbd.text : "", "фундамент группы")}
     ${g4ReadonlyRow("Основные поисковые запросы · " + phrases.length, phrases.join(", "), "группа")}
-    ${g4ReadonlyRow("Суммарный спрос", demand.matched ? g4NumFormat(demand.total) + " показов/мес" : "нет данных", "Gate 1")}
+    ${g4ReadonlyRow("Суммарный спрос", demand.matched ? g4NumFormat(demand.total) + " показов/мес" : "нет данных", `${guruGateLabel("gate-1")}`)}
     <div class="g4-v126-actions">
       <button class="small-btn add-inline-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-edit-group="${escapeAttr(row.groupId)}">Редактировать группу</button>
       <button class="small-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-duplicate-cluster="${escapeAttr(row.groupId)}">Дублировать</button>
@@ -42698,7 +42063,7 @@ function g4sbV140ForecastTableHtml(draft, phraseCount, settings = {}, product = 
     if (row.key === "budget") return `<strong>${escapeHtml(row.value)}</strong>${row.detail ? `<small>${escapeHtml(row.detail)}</small>` : ""}`;
     if (row.key === "conversions") return `<div class="g4-v168-scenario-block">
       ${assessment.hasCpa
-        ? `<div class="g4-v168-cpa-source"><span>Допустимый CPA бизнеса</span><strong>${Number(Math.round(assessment.allowedBusinessCpa)).toLocaleString("ru-RU")} ₽</strong><small>Автоматически из Gate 1 «Юнит-экономика» этого продукта</small></div>`
+        ? `<div class="g4-v168-cpa-source"><span>Допустимый CPA бизнеса</span><strong>${Number(Math.round(assessment.allowedBusinessCpa)).toLocaleString("ru-RU")} ₽</strong><small>Автоматически из ${guruGateLabel("gate-1")} «Юнит-экономика» этого продукта</small></div>`
         : `<div class="g4-v168-cpa-unavailable">Допустимый CPA пока не рассчитан</div>`}
       <div class="g4-v168-scenario-scroll"><table class="g4-v168-scenario-table"><thead><tr><th>Сценарий</th><th>Конверсия</th><th>Заявки</th><th>CPA</th>${assessment.hasCpa ? "<th>Сравнение</th>" : ""}</tr></thead><tbody>${assessment.conversionScenarios.map((scenario) => `<tr><td>${escapeHtml(scenario.label)}</td><td>${scenario.rate}%</td><td>${scenario.conversions === null ? "—" : Number(scenario.conversions).toLocaleString("ru-RU", { maximumFractionDigits: 1 })}</td><td>${scenario.cpa === null ? "—" : `${Number(Math.round(scenario.cpa)).toLocaleString("ru-RU")} ₽`}</td>${assessment.hasCpa ? `<td>${escapeHtml(scenario.cpaComparison)}</td>` : ""}</tr>`).join("")}</tbody></table></div>
       ${assessment.hasCpa ? `<div class="g4-v168-cpa-summary"><strong>${escapeHtml(assessment.cpaSummary)}</strong></div>` : ""}
@@ -43142,7 +42507,7 @@ function g4sbV393GroupMetricEntries(productId, draft) {
 
 function g4sbV393ApplyGroupMetricImport(productId, d, draft, parsed, fileName) {
   const { itemData } = g4sbV385ProductSource(productId);
-  if (!itemData) throw new Error("Не найден товарный Фундамент Gate 1.");
+  if (!itemData) throw new Error(`Не найден товарный Фундамент ${guruGateLabel("gate-1")}.`);
   if (!Array.isArray(itemData.demandRows)) itemData.demandRows = [];
   const columns = [
     [parsed.volumeIndex, "vol", "volume"],
@@ -43293,7 +42658,7 @@ function g4sbV128PhraseSelectorHtml(product, d, draft, p, jtbd) {
   });
   if (!g4sbV385ProductSource(product).itemData) return '<div class="g1-empty">Сначала выберите сегмент.</div>';
   const emptyBankNote = allSourceRows.length ? "" :
-    '<div class="g1-empty">В Фундаменте Gate 1 пока нет фраз. Импортируйте файл или добавьте фразу вручную.</div>';
+    `<div class="g1-empty">В Фундаменте ${guruGateLabel("gate-1")} пока нет фраз. Импортируйте файл или добавьте фразу вручную.</div>`;
   const excluded = new Set((d.excludedCampaignPhrases || []).map(g4sbV128PhraseKey));
   const usage = g4sbV128PhraseUsage(product, d, draft);
   const selectedRows = sourceRows.filter((row) => selected.has(g4sbV128PhraseKey(row.kw)));
@@ -43364,7 +42729,7 @@ function g4sbV128PhraseSelectorHtml(product, d, draft, p, jtbd) {
           ? "Исключена для всей кампании"
           : "Не распределена";
     const locations = isDeleted
-      ? "Остаётся в Gate 1. Верните фразу, чтобы снова включить её в кампанию."
+      ? `Остаётся в ${guruGateLabel("gate-1")}. Верните фразу, чтобы снова включить её в кампанию.`
       : occupied
       ? `Фраза уже используется в группе «${sameCampaignRecords[0].group}»`
       : isSelected
@@ -43375,9 +42740,9 @@ function g4sbV128PhraseSelectorHtml(product, d, draft, p, jtbd) {
             ? "Остаётся в банке, но не участвует в этой кампании"
             : "Ожидает распределения в подходящую группу";
     const action = isGate1Assigned
-      ? '<small class="g4-v137-hidden-note" title="Принадлежность фразы управляется в Gate 1">Из Gate 1</small>'
+      ? `<small class="g4-v137-hidden-note" title="Принадлежность фразы управляется в ${guruGateLabel("gate-1")}">Из ${guruGateLabel("gate-1")}</small>`
       : isDeleted
-      ? `<button type="button" class="g4-v147-action" ${p} data-g4sb-restore-bank-phrase="${escapeAttr(row.kw)}" title="Вернуть фразу из Gate 1 в поисковую кампанию">Вернуть</button>`
+      ? `<button type="button" class="g4-v147-action" ${p} data-g4sb-restore-bank-phrase="${escapeAttr(row.kw)}" title="Вернуть фразу из ${guruGateLabel("gate-1")} в поисковую кампанию">Вернуть</button>`
       : occupied && !isSelected
       ? ""
       : `<div class="g4-v147-action-group${isSelected ? "" : " has-three-actions"}">${isSelected
@@ -43421,7 +42786,7 @@ function g4sbV128PhraseSelectorHtml(product, d, draft, p, jtbd) {
   const metricsMessage = metricsFeedback
     ? `<div class="g4-v393-metric-feedback ${metricsFeedback.error ? "is-error" : "is-success"}" role="${metricsFeedback.error ? "alert" : "status"}"><div><strong>${metricsFeedback.error ? "Импорт не выполнен" : "Фразы и метрики группы импортированы"}</strong><span>${escapeHtml(metricsFeedback.error || `Обновлено: ${metricsFeedback.updated}. Добавлено в группу: ${metricsFeedback.added}. Пропущено: ${metricsFeedback.skipped}${metricsFeedback.occupied ? ` (заняты другой группой: ${metricsFeedback.occupied})` : ""}${metricsFeedback.excluded ? ` (исключены для кампании: ${metricsFeedback.excluded})` : ""}${metricsFeedback.overLimit ? ` (лимит 200: ${metricsFeedback.overLimit})` : ""}. Служебных строк: ${metricsFeedback.service}.`)}</span></div></div>`
     : "";
-  return `<p class="g1-task">В Gate 1 для этого JTBD: ${gate1Count} фраз. В группе сейчас: ${copyCount}${deletedGate1Count ? `. Удалено из кампании: ${deletedGate1Count} — эти слова видны ниже и их можно вернуть` : ""}. Исключённые для кампании хранятся отдельно.</p>
+  return `<p class="g1-task">В ${guruGateLabel("gate-1")} для этого JTBD: ${gate1Count} фраз. В группе сейчас: ${copyCount}${deletedGate1Count ? `. Удалено из кампании: ${deletedGate1Count} — эти слова видны ниже и их можно вернуть` : ""}. Исключённые для кампании хранятся отдельно.</p>
     ${warning}
     ${occupiedNote}
     <div class="g4-v143-phrase-tools"><div class="g4-v393-metric-actions"><button type="button" class="small-btn" ${p} data-g4sb-group-metrics-export ${copyCount ? "" : "disabled"}>Экспорт CSV</button><button type="button" class="small-btn" ${p} data-g4sb-group-metrics-import>Импорт CSV/XLS/XLSX с метриками</button><input class="gate0-keyword-csv-file-v248" type="file" accept=".csv,.xls,.xlsx,text/csv,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ${p} data-g4sb-group-metrics-file></div><button type="button" class="small-btn" ${p} data-g4sb-copy-group-phrases ${copyCount ? "" : "disabled"}>Копировать все фразы группы · ${copyCount}</button><label><span>Порядок</span><select class="g4-v142-compact-input" ${p} data-g4sb-draft-oper="phraseSort"><option value="source"${draft.phraseSort !== "clicks_desc" ? " selected" : ""}>Исходный</option><option value="clicks_desc"${draft.phraseSort === "clicks_desc" ? " selected" : ""}>Прогноз кликов: больше → меньше</option></select></label></div>
@@ -43638,7 +43003,7 @@ g4sbSearchChannelCardHtml = function () {
   return __g4V126PrevSearchChannelHtml.apply(this, arguments)
     .replace(
       "Кластер и его группа объявлений — одна единица: соберите кластер (сегмент → JTBD → фразы → спрос), группа с прогнозом и объявлениями создастся автоматически.",
-      "В Gate 4 выберите JTBD для реализации сегмента. Группа создаётся внутри конкретного JTBD, наследует его название и объединяет совместимые запросы и объявления.",
+      `В ${guruGateLabel("gate-4")} выберите JTBD для реализации сегмента. Группа создаётся внутри конкретного JTBD, наследует его название и объединяет совместимые запросы и объявления.`,
     )
     .replaceAll("Кластер-групп", "Групп объявлений")
     .replaceAll("кластер-группу", "группу объявлений")
@@ -43983,7 +43348,7 @@ function projectComparisonCellHtml(criterion, ownerId, stickyClass = "") {
     <div class="project-comparison-cell-tools">
       <button type="button" class="project-comparison-leader ${isLeader ? "is-active" : ""}" data-project-comparison-leader="${escapeAttr(criterion.id)}" data-project-comparison-owner="${escapeAttr(ownerId)}" aria-pressed="${isLeader}" title="${isLeader ? "Снять отметку преимущества" : "Отметить преимущество"}">★<span>${isLeader ? "Преимущество" : "Отметить"}</span></button>
     </div>
-    ${cell.automatic ? `<small class="project-comparison-auto">${cell.text ? "Автоматически из данных проекта" : "Заполните связанные данные в Gate 0–1"}</small>` : isCompanyManual ? '<small class="project-comparison-auto">Ввод вручную · уровень компании</small>' : ""}
+    ${cell.automatic ? `<small class="project-comparison-auto">${cell.text ? "Автоматически из данных проекта" : `Заполните связанные данные в ${guruGateLabel("gate-0")}–1`}</small>` : isCompanyManual ? '<small class="project-comparison-auto">Ввод вручную · уровень компании</small>' : ""}
   </td>`;
 }
 
@@ -44094,8 +43459,8 @@ function projectComparisonHtml() {
         ${summaryFields.map(([key, label]) => `<label><span>${escapeHtml(label)}</span><textarea rows="3" data-project-comparison-summary="${escapeAttr(key)}" placeholder="Зафиксируйте вывод">${escapeHtml(model.summary[key] || "")}</textarea></label>`).join("")}
         <label data-project-comparison-key-difference-readonly>
           <span>Чем мы должны отличаться</span>
-          <textarea rows="3" readonly aria-readonly="true" placeholder="Заполните «Ключевое отличие» в Gate 0">${escapeHtml(keyDifference)}</textarea>
-          <small class="project-comparison-auto">Источник: Gate 0 → Позиционирование · Компания → Ключевое отличие</small>
+          <textarea rows="3" readonly aria-readonly="true" placeholder="Заполните «Ключевое отличие» в ${guruGateLabel("gate-0")}">${escapeHtml(keyDifference)}</textarea>
+          <small class="project-comparison-auto">Источник: ${guruGateLabel("gate-0")} → Позиционирование · Компания → Ключевое отличие</small>
         </label>
       </div>
     </div>
@@ -44480,7 +43845,7 @@ function g4sbV166RefreshJtbdPhraseSummary(product, d, card) {
 g4sbSegmentCoverageHtml = function (product, d) {
   const segments = g4sbAllSegmentsFlat(product);
   if (!segments.length) {
-    return `<div class="g1-empty" style="margin-top:8px">В Gate 1 «Уровень 2 — Сегментация + позиционирование» пока нет ни одного сегмента.</div>`;
+    return `<div class="g1-empty" style="margin-top:8px">В ${guruGateLabel("gate-1")} «Уровень 2 — Сегментация + позиционирование» пока нет ни одного сегмента.</div>`;
   }
   const groupsFor = (segment) => d.groupRows
     .map((row, index) => ({ row, index }))
@@ -44554,7 +43919,7 @@ g4sbSegmentCoverageHtml = function (product, d) {
           <span class="g4-v132-jtbd-copy"><strong>${escapeHtml(jtbd.text)}</strong>${usageHtml}${crossSegmentHtml}</span>
           <em>${stateLabel}</em>
         </label>`;
-      }).join("") || '<div class="g1-empty">В Gate 1 пока нет JTBD для этого направления.</div>'}</div>
+      }).join("") || `<div class="g1-empty">В ${guruGateLabel("gate-1")} пока нет JTBD для этого направления.</div>`}</div>
     </section>`;
     const byJtbd = new Map();
     linkedJtbds.forEach((jtbd) => byJtbd.set(jtbd.id, []));
@@ -44632,7 +43997,7 @@ g4sbSegmentCoverageHtml = function (product, d) {
   }).join("");
   return `<div class="g4-upstream g4-v126-coverage" style="margin-top:12px">
     <div class="g4-upstream-title">Покрытие сегментов Уровня 2 — реализовано ${covered} из ${segments.length}</div>
-    <p class="g1-task">Сегменты и общий список JTBD приходят из Gate 1. Здесь JTBD становится неизменяемым фундаментом группы: название группы равно JTBD, а внутри настраиваются запросы и объявления.</p>
+    <p class="g1-task">Сегменты и общий список JTBD приходят из ${guruGateLabel("gate-1")}. Здесь JTBD становится неизменяемым фундаментом группы: название группы равно JTBD, а внутри настраиваются запросы и объявления.</p>
     <div class="g4-v126-coverage-list">${segmentHtml}</div>
   </div>`;
 };
@@ -45420,7 +44785,7 @@ g3ExecutionResolveV282 = function (item, snapshot) {
     const status = g4ImplItemStatus(implementation);
     return g3ExecutionResultV282(
       g3ExecutionReadyStatusV282(status !== "not_started"),
-      "Gate 4 · блок реализации",
+      `${guruGateLabel("gate-4")} · блок реализации`,
       {
         gateId: "gate-4",
         kind: "gate4-map-implementation",
@@ -45445,11 +44810,11 @@ function g3Gate4BoundCampaignResultV290(item, snapshot) {
   const predicate = (channel) => keys.has(guruV185Text(channel?.key));
   if (item.resolver === "search_campaign")
     return g3ExecutionCampaignResultV282(snapshot, predicate, {
-      source: "Gate 4 · поисковая кампания товара",
+      source: `${guruGateLabel("gate-4")} · поисковая кампания товара`,
     });
   if (item.resolver === "media_campaign" || item.resolver === "media_creatives")
     return g3ExecutionCampaignResultV282(snapshot, predicate, {
-      source: "Gate 4 · медийная кампания товара",
+      source: `${guruGateLabel("gate-4")} · медийная кампания товара`,
       field: item.resolver === "media_creatives" ? "creative" : "campaignName",
       hasProgress: (_channel, campaign) =>
         item.resolver === "media_creatives" &&
@@ -45457,7 +44822,7 @@ function g3Gate4BoundCampaignResultV290(item, snapshot) {
     });
   if (item.resolver === "smm_campaign")
     return g3ExecutionCampaignResultV282(snapshot, predicate, {
-      source: "Gate 4 · SMM и соцсети",
+      source: `${guruGateLabel("gate-4")} · SMM и соцсети`,
     });
   if (item.resolver === "retargeting") {
     const rsya = g3ExecutionRsyaStateV282(snapshot.product);
@@ -45466,7 +44831,7 @@ function g3Gate4BoundCampaignResultV290(item, snapshot) {
     );
     return g3ExecutionCampaignResultV282(snapshot, predicate, {
       kind: "gate4-rsya",
-      source: "Gate 4 · РСЯ / ЕПК · ретаргетинг",
+      source: `${guruGateLabel("gate-4")} · РСЯ / ЕПК · ретаргетинг`,
       hasProgress: () =>
         retargetingGroups.some((group) =>
           g4RsyaGroupStatus(group) !== "not_started",
@@ -45868,7 +45233,7 @@ function g4Gate3MapHtmlV290(product, channels, campaigns) {
 
   if (context.bindingsChanged) g3Gate4ScheduleBindingSaveV290();
 
-  return `<div class="g4-map-v290" data-g4-map-product-v290="${escapeAttr(productId)}"><div class="g4-map-intro-v290"><strong>Структура реализации по карте 5А</strong><span>Этапы, группы и порядок читаются напрямую из Gate 3. Перестановка не копирует и не сбрасывает рабочие данные.</span></div>${activeHtml}${outsideRows.length ? `<details class="g4-map-outside-v290" ${model.ui.outsideOpen ? "open" : ""}><summary>Вне текущей карты · ${outsideRows.length}</summary><div class="g4-map-list-v290">${outsideRows.join("")}</div></details>` : ""}</div>`;
+  return `<div class="g4-map-v290" data-g4-map-product-v290="${escapeAttr(productId)}"><div class="g4-map-intro-v290"><strong>Структура реализации по карте 5А</strong><span>Этапы, группы и порядок читаются напрямую из ${guruGateLabel("gate-3")}. Перестановка не копирует и не сбрасывает рабочие данные.</span></div>${activeHtml}${outsideRows.length ? `<details class="g4-map-outside-v290" ${model.ui.outsideOpen ? "open" : ""}><summary>Вне текущей карты · ${outsideRows.length}</summary><div class="g4-map-list-v290">${outsideRows.join("")}</div></details>` : ""}</div>`;
 }
 
 /* Основа реализации остаётся отдельным чек-листом. Кампании и прочие
@@ -45881,7 +45246,7 @@ function g4CampaignLaunchCenterFromGate3V290(options = {}) {
     ? ""
     : g4ProductPickPickerHtml(products, product);
   if (!products.length)
-    return `${picker}<div class="g3-product-journey-empty"><strong>Нет продуктов или услуг</strong><span>Сначала добавьте позицию в Gate 0.</span></div>`;
+    return `${picker}<div class="g3-product-journey-empty"><strong>Нет продуктов или услуг</strong><span>Сначала добавьте позицию в ${guruGateLabel("gate-0")}.</span></div>`;
   if (!product)
     return `${picker}<div class="g3-product-journey-empty"><strong>Продукт не выбран</strong></div>`;
   const channels = g4LaunchChannels();
@@ -46559,7 +45924,7 @@ pv181JtbdModelHtml = function (mapIndex, itemId, itemData, level) {
   );
   html = html.replace(
     '<span><b class="pv181-query-number">№1</b> Основной JTBD</span>',
-    `<span><b class="pv181-query-number">№1</b> Основной JTBD</span><small class="guru-jtbd-source">Источник: Gate 0 · «Ради какого результата» для ${escapeHtml(product)}</small>`,
+    `<span><b class="pv181-query-number">№1</b> Основной JTBD</span><small class="guru-jtbd-source">Источник: ${guruGateLabel("gate-0")} · «Ради какого результата» для ${escapeHtml(product)}</small>`,
   );
   return html;
 };
@@ -46856,7 +46221,7 @@ g4sbGroupClusterSummaryHtml = function (product, row) {
     <div class="g4-upstream-title">Логика группы</div>
     ${g4ReadonlyRow("JTBD", jtbd ? jtbd.text : row.col0, "фундамент группы")}
     ${g4ReadonlyRow("Основные поисковые запросы · " + phrases.length, phrases.join(", "), "группа")}
-    ${g4ReadonlyRow("Суммарный спрос", demand.matched ? g4NumFormat(demand.total) + " показов/мес" : "нет данных", "Gate 1")}
+    ${g4ReadonlyRow("Суммарный спрос", demand.matched ? g4NumFormat(demand.total) + " показов/мес" : "нет данных", `${guruGateLabel("gate-1")}`)}
     <div class="g4-v126-actions">
       <button class="small-btn add-inline-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-edit-group="${escapeAttr(row.groupId)}">Редактировать группу</button>
       <button class="small-btn" data-g4sb-product="${escapeAttr(product)}" data-g4sb-duplicate-cluster="${escapeAttr(row.groupId)}">Дублировать</button>
@@ -47103,7 +46468,7 @@ g4sbSegmentCoverageHtml = function (product, d) {
   return `<div class="g4-v166-coverage" data-g4-v166-jtbd-count="${jtbds.length}" data-g4-v166-implemented-count="${implemented}">
     <div class="g4-v403-duplicate-summary" data-g4sb-product-duplicate-count="${duplicateCount}"><strong>Дубли фраз продукта (включая черновики): ${duplicateCount}</strong><span>При точном совпадении фраза остаётся за группой выше в списке.</span></div>
     ${launch.first ? `<div class="g4-v131-launch-note"><span>Приоритет запуска по прогнозу</span><strong>№1 — ${escapeHtml(launch.first.row.col0 || "Группа")}</strong><small>Прогноз ранжирует готовые группы, но не меняет выбранный JTBD.</small></div>` : ""}
-    <div class="g4-v166-jtbd-list">${jtbdHtml || '<div class="g1-empty">В аналитике направления пока нет JTBD. Сначала заполните основной и дополнительные JTBD в Gate 1.</div>'}${orphanedHtml}</div>
+    <div class="g4-v166-jtbd-list">${jtbdHtml || `<div class="g1-empty">В аналитике направления пока нет JTBD. Сначала заполните основной и дополнительные JTBD в ${guruGateLabel("gate-1")}.</div>`}${orphanedHtml}</div>
     ${g4sbV405LaunchSummaryHtml(product, d, savedDuplicateCount)}
   </div>`;
 };
@@ -47420,7 +46785,7 @@ g4sbSearchChannelCardHtml = function () {
   return __g4V166PrevSearchChannelHtml.apply(this, arguments)
     .replace("Сегменты, JTBD и группы", "JTBD и группы")
     .replace(
-      "В Gate 4 выберите JTBD для реализации сегмента. Группа создаётся внутри конкретного JTBD, наследует его название и объединяет совместимые запросы и объявления.",
+      `В ${guruGateLabel("gate-4")} выберите JTBD для реализации сегмента. Группа создаётся внутри конкретного JTBD, наследует его название и объединяет совместимые запросы и объявления.`,
       "Выберите JTBD направления и создайте внутри него одну или несколько групп объявлений с совместимыми запросами и единым рекламным сообщением.",
     )
     .replace(/<button class="small-btn add-inline-btn"[^>]*data-g4sb-draft-open[^>]*>[^<]*<\/button>/, "");
@@ -48730,7 +48095,7 @@ function g8ForecastRequiredLinks(metric) {
 function g8ForecastDistributions(bundle, goal, base, observations, metric) {
   const budget = g8Number(goal.budget || base.budget);
   const benchmarkSource = `${GATE8_FUNNEL_BENCHMARK.name} · предположение`;
-  const projectSource = "Gate 1 / Gate 4 · проектное предположение";
+  const projectSource = `${guruGateLabel("gate-1")} / ${guruGateLabel("gate-4")} · проектное предположение`;
   const values = (key) => observations.map((item) => g8Number(item[key])).filter((value) => value > 0);
   const trafficValues = observations
     .map((item) => {
@@ -48748,19 +48113,19 @@ function g8ForecastDistributions(bundle, goal, base, observations, metric) {
     ? (g8Number(base.cpc) / g8Number(base.cpl)) * 100
     : 0;
   const distributions = {
-    budget: budget ? { key: "budget", label: "Бюджет", center: budget, min: budget, max: budget, sourceType: "project", source: goal.source || "Gate 0 → Цель проекта", count: 1, uncertainty: 0 } : null,
-    traffic: g8FactDistribution("traffic", "Трафик", trafficValues, "Gate 5 → показы, нормированные на текущий бюджет")
+    budget: budget ? { key: "budget", label: "Бюджет", center: budget, min: budget, max: budget, sourceType: "project", source: goal.source || `${guruGateLabel("gate-0")} → Цель проекта`, count: 1, uncertainty: 0 } : null,
+    traffic: g8FactDistribution("traffic", "Трафик", trafficValues, `${guruGateLabel("gate-5")} → показы, нормированные на текущий бюджет`)
       || g8AssumptionDistribution("traffic", "Трафик", benchmarkTraffic, benchmarkSource),
-    ctr: g8FactDistribution("ctr", "CTR", values("ctr"), "Gate 5 → CTR")
+    ctr: g8FactDistribution("ctr", "CTR", values("ctr"), `${guruGateLabel("gate-5")} → CTR`)
       || g8AssumptionDistribution("ctr", "CTR", g8Number(base.ctr) || GATE8_FUNNEL_BENCHMARK.ctr, g8Number(base.ctr) ? projectSource : benchmarkSource),
-    siteConversion: g8FactDistribution("siteConversion", "CVR сайта", values("siteConversion"), "Gate 5 → конверсия сайта")
+    siteConversion: g8FactDistribution("siteConversion", "CVR сайта", values("siteConversion"), `${guruGateLabel("gate-5")} → конверсия сайта`)
       || g8AssumptionDistribution("siteConversion", "CVR сайта", g8Number(base.siteConversion) || inferredSiteConversion || GATE8_FUNNEL_BENCHMARK.siteConversion, (g8Number(base.siteConversion) || inferredSiteConversion) ? projectSource : benchmarkSource),
-    saleConversion: g8FactDistribution("saleConversion", "CVR продаж", values("saleConversion"), "Gate 5 → связка заявок и продаж")
+    saleConversion: g8FactDistribution("saleConversion", "CVR продаж", values("saleConversion"), `${guruGateLabel("gate-5")} → связка заявок и продаж`)
       || g8AssumptionDistribution("saleConversion", "CVR продаж", g8Number(base.saleConversion) || GATE8_FUNNEL_BENCHMARK.saleConversion, g8Number(base.saleConversion) ? projectSource : benchmarkSource),
-    averageCheck: g8FactDistribution("averageCheck", "Средний чек", values("averageCheck"), "Gate 5 → связка с бизнесом")
-      || g8AssumptionDistribution("averageCheck", "Средний чек", base.averageCheck, "Gate 1 → Юнит-экономика · предположение", 0.25),
-    margin: g8FactDistribution("margin", "Маржинальность", values("margin"), "Gate 5 → связка с бизнесом")
-      || g8AssumptionDistribution("margin", "Маржинальность", base.margin, "Gate 1 → Юнит-экономика · предположение", 0.2),
+    averageCheck: g8FactDistribution("averageCheck", "Средний чек", values("averageCheck"), `${guruGateLabel("gate-5")} → связка с бизнесом`)
+      || g8AssumptionDistribution("averageCheck", "Средний чек", base.averageCheck, `${guruGateLabel("gate-1")} → Юнит-экономика · предположение`, 0.25),
+    margin: g8FactDistribution("margin", "Маржинальность", values("margin"), `${guruGateLabel("gate-5")} → связка с бизнесом`)
+      || g8AssumptionDistribution("margin", "Маржинальность", base.margin, `${guruGateLabel("gate-1")} → Юнит-экономика · предположение`, 0.2),
   };
   const required = g8ForecastRequiredLinks(metric);
   const missing = required.filter((key) => !distributions[key]);
@@ -48931,7 +48296,7 @@ function g8MonteCarloCore(bundle, goal, base, observations, metric) {
     runs: baseline.models.length,
     distributions: setup.distributions,
     missing: [],
-    probability: { available: Number.isFinite(baseline.probability), percent: baseline.probability, min: ranges[metric]?.min, max: ranges[metric]?.max, count: baseline.models.length, source: observations.length ? "Gate 5 → фактические периоды" : setup.benchmarkSource },
+    probability: { available: Number.isFinite(baseline.probability), percent: baseline.probability, min: ranges[metric]?.min, max: ranges[metric]?.max, count: baseline.models.length, source: observations.length ? `${guruGateLabel("gate-5")} → фактические периоды` : setup.benchmarkSource },
     ranges,
     scenarios,
     sensitivity,
@@ -48967,11 +48332,11 @@ function g8ReadinessChecks(bundle, goal) {
     ["Задача клиента понятна", Boolean(g8Text(f.jtbd?.value)), f.jtbd?.source, "gate-0"],
     ["Оффер соответствует проекту", Boolean(g8Text(f.offer?.value)), f.offer?.source, "gate-4"],
     ["CTA определён", Boolean(g8Text(f.cta?.value)), f.cta?.source, "gate-0"],
-    ["Посадочная страница готова", landingReady, "Gate 4 → Посадочная страница", "gate-4"],
-    ["Аналитика работает", gateReady("gate-2"), "Gate 2 → Аналитика", "gate-2"],
+    ["Посадочная страница готова", landingReady, `${guruGateLabel("gate-4")} → Посадочная страница`, "gate-4"],
+    ["Аналитика работает", gateReady("gate-2"), `${guruGateLabel("gate-2")} → Аналитика`, "gate-2"],
     ["Бюджет рассчитан", Boolean(goal.budget || g8Number(f.budget?.value)), f.budget?.source || goal.source, "gate-4"],
-    ["Экономика сходится", economicsReady, "Gate 1 → Юнит-экономика", "gate-1"],
-    ["Реклама готова", adsReady, "Gate 4 → Готовность запуска", "gate-4"],
+    ["Экономика сходится", economicsReady, `${guruGateLabel("gate-1")} → Юнит-экономика`, "gate-1"],
+    ["Реклама готова", adsReady, `${guruGateLabel("gate-4")} → Готовность запуска`, "gate-4"],
     ["Нет просроченных задач", g8Number(f.overdueTasks?.value) === 0, f.overdueTasks?.source, "gate-7"],
   ].map(([label, passed, source, gateId]) => ({ label, passed: Boolean(passed), source: source || "Источник не найден", gateId }));
   return { checks, ready: checks.filter((item) => item.passed).length, total: checks.length, percent: Math.round((checks.filter((item) => item.passed).length / checks.length) * 100) };
@@ -48984,7 +48349,7 @@ function g8Completeness(bundle, goal, metric, base) {
     { key: "goalDeadline", label: "Срок цели", filled: Boolean(goal.deadline), gateId: "gate-0", source: goal.source },
     { key: "budget", label: "Бюджет", filled: Boolean(base.budget), gateId: "gate-4", source: bundle.facts.budget?.source || goal.source },
     { key: "resultCost", label: "Допустимая стоимость результата", filled: Boolean(goal.allowedCost), gateId: "gate-1", source: bundle.facts.allowedCpl?.source || bundle.facts.allowedCpa?.source },
-    { key: "trafficRoute", label: "CPL или связка CPC + конверсия", filled: Boolean(base.cpl || (base.cpc && base.siteConversion)), gateId: base.cpl ? "gate-5" : "gate-5", source: base.cpl ? bundle.facts.cpl?.source || bundle.facts.targetCpl?.source : "Gate 5 → CPC и конверсия" },
+    { key: "trafficRoute", label: "CPL или связка CPC + конверсия", filled: Boolean(base.cpl || (base.cpc && base.siteConversion)), gateId: base.cpl ? "gate-5" : "gate-5", source: base.cpl ? bundle.facts.cpl?.source || bundle.facts.targetCpl?.source : `${guruGateLabel("gate-5")} → CPC и конверсия` },
   ];
   if (["sales", "cpa", "revenue", "profit", "roi"].includes(metric)) required.push({ key: "saleConversion", label: "Конверсия заявки в продажу", filled: Boolean(base.saleConversion), gateId: "gate-5", source: bundle.facts.saleConversion?.source });
   if (["revenue", "profit", "roi"].includes(metric)) required.push({ key: "averageCheck", label: "Средний чек", filled: Boolean(base.averageCheck), gateId: "gate-1", source: bundle.facts.averageCheck?.source });
@@ -49046,14 +48411,14 @@ function g8Risks(bundle, goal, base, model, completeness, contradictions, readin
   const push = (severity, title, consequence, signal, action, source, gateId) => risks.push({ severity, title, consequence, signal, action, source, gateId });
   const actualCpl = g8Number(f.cpl?.value);
   const allowedCpl = goal.metric === "sales" ? 0 : goal.allowedCost || g8Number(f.allowedCpl?.value);
-  if (actualCpl && allowedCpl && actualCpl > allowedCpl) push(5, `Фактический CPL выше допустимого на ${g8Percent(((actualCpl / allowedCpl) - 1) * 100)}`, "При текущем бюджете цель по заявкам может быть не выполнена.", `CPL остаётся выше ${g8Money(allowedCpl)}.`, "Проверить рекламные группы и посадочную страницу.", f.cpl?.source || "Gate 5", "gate-5");
+  if (actualCpl && allowedCpl && actualCpl > allowedCpl) push(5, `Фактический CPL выше допустимого на ${g8Percent(((actualCpl / allowedCpl) - 1) * 100)}`, "При текущем бюджете цель по заявкам может быть не выполнена.", `CPL остаётся выше ${g8Money(allowedCpl)}.`, "Проверить рекламные группы и посадочную страницу.", f.cpl?.source || `${guruGateLabel("gate-5")}`, "gate-5");
   const metric = g8ResolvedMetric(ensureGate8Workspace().resultMetric, goal);
   const forecast = g8MetricValue(model, metric);
   const completion = g8GoalFulfillment(forecast, goal, metric);
-  if (Number.isFinite(completion) && completion < 100) push(5, `Текущая модель покрывает ${g8Percent(completion)} цели`, "Целевое значение не достигается при текущих входных данных.", `${g8MetricLabel(metric)} остаётся ниже цели.`, "Изменить показатель с максимальным влиянием на результат.", "Gate 8 → Базовый сценарий", "gate-8");
-  contradictions.forEach((text) => push(4, "Источники дают разные результаты", text, "Расчёты по двум маршрутам расходятся.", "Проверить CPL, CPC и конверсию за один и тот же период.", "Gate 5 → Снимки периода", "gate-5"));
+  if (Number.isFinite(completion) && completion < 100) push(5, `Текущая модель покрывает ${g8Percent(completion)} цели`, "Целевое значение не достигается при текущих входных данных.", `${g8MetricLabel(metric)} остаётся ниже цели.`, "Изменить показатель с максимальным влиянием на результат.", `${guruGateLabel("gate-8")} → Базовый сценарий`, "gate-8");
+  contradictions.forEach((text) => push(4, "Источники дают разные результаты", text, "Расчёты по двум маршрутам расходятся.", "Проверить CPL, CPC и конверсию за один и тот же период.", `${guruGateLabel("gate-5")} → Снимки периода`, "gate-5"));
   if (g8Number(f.overdueTasks?.value)) push(4, `Просрочено задач: ${g8NumberLabel(g8Number(f.overdueTasks.value), 0)}`, "Запуск или исправление критической проблемы может задержаться.", "Срок задачи прошёл, статус не «Готово».", "Закрыть просроченную задачу с наибольшим влиянием.", f.overdueTasks.source, "gate-7");
-  if (!readiness.checks.find((item) => item.label === "Аналитика работает")?.passed) push(5, "Аналитика не подтверждена", "Фактический результат и точность прогноза нельзя надёжно проверить.", "Gate 2 готов менее чем на 100%.", "Завершить настройку целей, событий и передачи данных.", "Gate 2 → Аналитика", "gate-2");
+  if (!readiness.checks.find((item) => item.label === "Аналитика работает")?.passed) push(5, "Аналитика не подтверждена", "Фактический результат и точность прогноза нельзя надёжно проверить.", `${guruGateLabel("gate-2")} готов менее чем на 100%.`, "Завершить настройку целей, событий и передачи данных.", `${guruGateLabel("gate-2")} → Аналитика`, "gate-2");
   completeness.missing.forEach((item) => push(3, `Не хватает показателя: ${item.label}`, "Прогноз остаётся предварительным или не рассчитывается.", "Источник не содержит значения.", `Заполнить «${item.label}» в исходном Gate.`, item.source || `Gate ${item.gateId}`, item.gateId));
   Object.values(f).filter((record) => record.type === "факт" && record.value && g8Stale(record)).forEach((record) => push(3, `Устарели данные: ${record.label}`, "Прогноз использует неактуальный факт.", `Последнее обновление: ${g8DateLabel(record.updatedAt)}.`, "Загрузить свежий фактический период.", record.source, record.gate.toLowerCase().replace(" ", "-")));
   return risks.sort((a, b) => b.severity - a.severity);
@@ -49063,11 +48428,11 @@ function g8MainAction(sensitivity, risks, missingData, base, metric) {
   const missing = missingData[0];
   if (missing) return { title: `Заполнить показатель «${missing.label}»`, where: missing.source || "Исходный Gate", gateId: missing.gateId, result: `Появится расчёт для показателя «${g8MetricLabel(metric)}».`, impact: "Прогноз можно будет пересчитать без предположения.", criterion: `В источнике указано проверяемое значение «${missing.label}».` };
   const factor = sensitivity[0];
-  if (factor && factor.basis === "value" && Number.isFinite(factor.valueDeltaPct)) return { title: `Улучшить показатель «${factor.label}»`, where: factor.source || "Gate 5 → Фактические показатели", gateId: "gate-5", result: g8MetricLabel(metric), impact: `Цель уже гарантированно ${factor.baseProbability >= 99.95 ? "достигается" : "недостижима"} по вероятности, поэтому смотрим на сам результат: при росте показателя на 10% медиана «${g8MetricLabel(metric)}» меняется на ${factor.valueDeltaPct >= 0 ? "+" : ""}${g8NumberLabel(factor.valueDeltaPct, 1)}%.`, criterion: `${factor.label} вырос на 10%, а остальные исходные данные не изменились.` };
-  if (factor && Number.isFinite(factor.delta)) return { title: `Улучшить показатель «${factor.label}»`, where: factor.source || "Gate 5 → Фактические показатели", gateId: "gate-5", result: g8MetricLabel(metric), impact: `При росте показателя на 10% вероятность меняется на ${factor.delta >= 0 ? "+" : ""}${g8NumberLabel(factor.delta, 1)} п.п.`, criterion: `${factor.label} вырос на 10%, а остальные исходные данные не изменились.` };
+  if (factor && factor.basis === "value" && Number.isFinite(factor.valueDeltaPct)) return { title: `Улучшить показатель «${factor.label}»`, where: factor.source || `${guruGateLabel("gate-5")} → Фактические показатели`, gateId: "gate-5", result: g8MetricLabel(metric), impact: `Цель уже гарантированно ${factor.baseProbability >= 99.95 ? "достигается" : "недостижима"} по вероятности, поэтому смотрим на сам результат: при росте показателя на 10% медиана «${g8MetricLabel(metric)}» меняется на ${factor.valueDeltaPct >= 0 ? "+" : ""}${g8NumberLabel(factor.valueDeltaPct, 1)}%.`, criterion: `${factor.label} вырос на 10%, а остальные исходные данные не изменились.` };
+  if (factor && Number.isFinite(factor.delta)) return { title: `Улучшить показатель «${factor.label}»`, where: factor.source || `${guruGateLabel("gate-5")} → Фактические показатели`, gateId: "gate-5", result: g8MetricLabel(metric), impact: `При росте показателя на 10% вероятность меняется на ${factor.delta >= 0 ? "+" : ""}${g8NumberLabel(factor.delta, 1)} п.п.`, criterion: `${factor.label} вырос на 10%, а остальные исходные данные не изменились.` };
   const risk = risks[0];
   if (risk) return { title: risk.action, where: risk.source, gateId: risk.gateId, result: g8MetricLabel(metric), impact: risk.consequence, criterion: risk.signal };
-  return { title: "Зафиксировать следующий фактический период", where: "Gate 5 → Импорт данных", gateId: "gate-5", result: "Надёжность прогноза", impact: "Появится история для сценариев и проверки точности.", criterion: "В Gate 5 сохранён новый период с расходом, кликами и заявками." };
+  return { title: "Зафиксировать следующий фактический период", where: `${guruGateLabel("gate-5")} → Импорт данных`, gateId: "gate-5", result: "Надёжность прогноза", impact: "Появится история для сценариев и проверки точности.", criterion: `В ${guruGateLabel("gate-5")} сохранён новый период с расходом, кликами и заявками.` };
 }
 
 function g8Analysis() {
@@ -49191,7 +48556,7 @@ function g8JumpButton(gateId, label = "Перейти к источнику") {
 
 function g8GoalHtml(analysis) {
   const goal = analysis.goal;
-  if (!goal.present) return `<div class="g8-empty"><strong>Для расчёта прогноза сначала укажите цель проекта.</strong>${g8JumpButton("gate-0", "Открыть Gate 0")}</div>`;
+  if (!goal.present) return `<div class="g8-empty"><strong>Для расчёта прогноза сначала укажите цель проекта.</strong>${g8JumpButton("gate-0", `Открыть ${guruGateLabel("gate-0")}`)}</div>`;
   const rows = [
     ["Результат", goal.description || "Не указан"],
     ["Целевое значение", goal.target ? `${g8NumberLabel(goal.target)} · ${g8MetricLabel(goal.metric)}` : "Не указано"],
@@ -49200,7 +48565,7 @@ function g8GoalHtml(analysis) {
     ["Допустимая стоимость результата", goal.allowedCost ? g8Money(goal.allowedCost) : "Не указана"],
   ];
   return `<div class="g8-values">${rows.map(([label, value]) => `<div class="g8-value"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("")}</div>
-    <div class="g8-source-line"><span>Источник: ${escapeHtml(goal.source)}</span><span>Обновлено: ${escapeHtml(g8DateLabel(goal.updatedAt))}</span>${g8JumpButton(goal.source.includes("Gate 5") ? "gate-5" : "gate-0")}</div>
+    <div class="g8-source-line"><span>Источник: ${escapeHtml(goal.source)}</span><span>Обновлено: ${escapeHtml(g8DateLabel(goal.updatedAt))}</span>${g8JumpButton(goal.source.includes(`${guruGateLabel("gate-5")}`) ? "gate-5" : "gate-0")}</div>
     ${goal.missing.length ? `<div class="g8-warning"><strong>Цель заполнена не полностью.</strong><ul>${goal.missing.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>` : ""}`;
 }
 
@@ -49321,7 +48686,7 @@ function g8ProbabilityHtml(analysis) {
   const p = analysis.probability;
   if (!p.available) return `<div class="g8-empty"><strong>${escapeHtml(p.text || "Недостаточно данных для расчёта вероятности.")}</strong><span>Значение 0% не подставляется вместо отсутствующих данных.</span></div>`;
   return `<div class="g8-big-result"><strong>${escapeHtml(g8NumberLabel(p.percent, 1))}%</strong><span>доля прогонов, в которых достигнута цель</span></div>
-    <div class="g8-value"><span>Диапазон результата 10–90%</span><strong>${escapeHtml(g8MetricValueLabel(analysis.metric, p.min))} — ${escapeHtml(g8MetricValueLabel(analysis.metric, p.max))}</strong><small>${p.count} прогонов Monte Carlo · ${escapeHtml(p.source || "источники Gate 0–5")}</small></div>`;
+    <div class="g8-value"><span>Диапазон результата 10–90%</span><strong>${escapeHtml(g8MetricValueLabel(analysis.metric, p.min))} — ${escapeHtml(g8MetricValueLabel(analysis.metric, p.max))}</strong><small>${p.count} прогонов Monte Carlo · ${escapeHtml(p.source || `источники ${guruGateLabel("gate-0")}–5`)}</small></div>`;
 }
 
 function g8ScenarioHtml(analysis, kind, title) {
@@ -49343,7 +48708,7 @@ function g8CustomHtml(analysis) {
   return `<div class="g8-custom-fields">${GATE8_MANUAL_FIELDS.map(([key, label]) => `<label class="g8-field"><span>${escapeHtml(label)}</span><input type="number" step="any" data-g8-manual="${escapeAttr(key)}" value="${escapeAttr(manual[key])}" placeholder="Текущее: ${escapeAttr(g8NumberLabel(analysis.baseInputs[key]))}"></label>`).join("")}</div>
     <div class="g8-scenario-result"><span>Результат своего сценария</span><strong>${escapeHtml(g8MetricValueLabel(analysis.metric, value))}</strong><small>${Number.isFinite(value) ? `Выполнение цели: ${escapeHtml(g8Percent(g8GoalFulfillment(value, analysis.goal, analysis.metric)))}` : "Недостаточно данных"}</small></div>
     <div class="g8-actions"><button type="button" class="primary-btn" data-g8-save-scenario>Сохранить свой сценарий</button><button type="button" class="secondary-btn" data-g8-apply>Применить изменения к проекту</button><button type="button" class="secondary-btn" data-g8-reset-manual>Сбросить сценарий</button></div>
-    <p class="g8-note">До нажатия кнопки значения существуют только внутри сценария и не меняют Gate 0–7. CTR влияет на расчёт при наличии фактических показов. Срок и готовность задач меняют контекст риска, но не подменяют финансовую формулу вымышленным коэффициентом.</p>`;
+    <p class="g8-note">До нажатия кнопки значения существуют только внутри сценария и не меняют ${guruGateLabel("gate-0")}–7. CTR влияет на расчёт при наличии фактических показов. Срок и готовность задач меняют контекст риска, но не подменяют финансовую формулу вымышленным коэффициентом.</p>`;
 }
 
 function g8SensitivityHtml(analysis) {
@@ -49377,7 +48742,7 @@ function g8ActionHtml(analysis) {
 function g8CreateTaskHtml(analysis) {
   const signature = `${analysis.action.title}|${analysis.action.where}|${analysis.goal.deadline}`;
   const linked = analysis.data.linkedTasks.find((item) => item.signature === signature);
-  return `<div class="g8-actions"><button type="button" class="primary-btn" data-g8-create-task ${linked ? "disabled" : ""}>${linked ? "Задача уже создана" : "Создать задачу в Gate 7"}</button>${analysis.goal.deadline ? `<button type="button" class="secondary-btn" data-g8-add-calendar>Добавить в календарь Gate 6</button>` : ""}</div>
+  return `<div class="g8-actions"><button type="button" class="primary-btn" data-g8-create-task ${linked ? "disabled" : ""}>${linked ? "Задача уже создана" : `Создать задачу в ${guruGateLabel("gate-7")}`}</button>${analysis.goal.deadline ? `<button type="button" class="secondary-btn" data-g8-add-calendar>Добавить в календарь ${guruGateLabel("gate-6")}</button>` : ""}</div>
     <div class="g8-source-line"><span>Будут переданы действие, источник, результат, критерий, приоритет, срок и связь с прогнозом.</span></div>`;
 }
 
@@ -49389,7 +48754,7 @@ function g8HistoryHtml(analysis) {
 
 function g8ComparisonHtml(analysis) {
   const compared = analysis.data.history.filter((item) => Number.isFinite(item.actualValue)).slice().reverse();
-  if (!compared.length) return `<div class="g8-empty"><strong>Факт для сохранённых прогнозов пока не появился.</strong><span>Сравнение выполнится автоматически после загрузки нового фактического периода Gate 5.</span></div>`;
+  if (!compared.length) return `<div class="g8-empty"><strong>Факт для сохранённых прогнозов пока не появился.</strong><span>Сравнение выполнится автоматически после загрузки нового фактического периода ${guruGateLabel("gate-5")}.</span></div>`;
   const accuracy = compared.map((item) => Math.max(0, 100 - Math.abs(item.deviation))).reduce((sum, value) => sum + value, 0) / compared.length;
   return `<div class="g8-big-result"><strong>${g8Percent(accuracy)}</strong><span>средняя точность прошлых прогнозов</span></div><div class="g8-history">${compared.map((item) => `<div class="g8-history-row"><div><strong>${escapeHtml(g8DateLabel(item.createdAt))}</strong><span>Факт: ${escapeHtml(g8DateLabel(item.actualAt))}</span></div><div><span>Прогноз</span><b>${escapeHtml(g8MetricValueLabel(item.metric, item.forecastValue))}</b></div><div><span>Факт</span><b>${escapeHtml(g8MetricValueLabel(item.metric, item.actualValue))}</b></div><div><span>Отклонение</span><b>${escapeHtml(g8Percent(item.deviation))}</b></div></div>`).join("")}</div>`;
 }
@@ -49445,10 +48810,10 @@ function renderGate8Forecast() {
   const helps = analysis.readiness.checks.filter((item) => item.passed);
   const hinders = [
     ...analysis.readiness.checks.filter((item) => !item.passed),
-    ...analysis.contradictions.map((text) => ({ label: text, source: "Gate 5 → Проверка расчётов", gateId: "gate-5" })),
+    ...analysis.contradictions.map((text) => ({ label: text, source: `${guruGateLabel("gate-5")} → Проверка расчётов`, gateId: "gate-5" })),
   ];
   els.contentArea.innerHTML = `<div class="g8-page">
-    <header class="g8-header"><div><div class="analytics-path">Gate 8 → Прогноз и моделирование</div><h2>Насколько реально достичь цели проекта?</h2><p>Расчёт по данным Gate 0–7. Пустые поля и подсказки не считаются данными.</p></div>${g8Pill(status)}</header>
+    <header class="g8-header"><div><div class="analytics-path">${guruGateLabel("gate-8")} → Прогноз и моделирование</div><h2>Насколько реально достичь цели проекта?</h2><p>Расчёт по данным ${guruGateLabel("gate-0")}–7. Пустые поля и подсказки не считаются данными.</p></div>${g8Pill(status)}</header>
     ${g8MissingNavigatorHtml(analysis)}
     ${g8Section(1, "Цель проекта", analysis.goal.valid ? "ready" : analysis.goal.present ? "in_progress" : "not_started", g8GoalHtml(analysis))}
     ${g8Section(2, "Что прогнозируем", analysis.metric ? "ready" : "not_started", g8ResultSelectorHtml(analysis))}
@@ -49483,13 +48848,13 @@ function g8ApplyManualToProject() {
     const g4 = typeof ensureGate4State === "function" ? ensureGate4State() : (state.gate4 = state.gate4 || {});
     g4.launchParams = g4.launchParams || {};
     g4.launchParams.testBudget = String(manual.budget);
-    applied.push("бюджет → Gate 4");
+    applied.push(`бюджет → ${guruGateLabel("gate-4")}`);
   }
   if (g8Text(manual.cpl) !== "") {
     const g4 = typeof ensureGate4State === "function" ? ensureGate4State() : (state.gate4 = state.gate4 || {});
     g4.launchParams = g4.launchParams || {};
     g4.launchParams.targetCpl = String(manual.cpl);
-    applied.push("CPL → Gate 4");
+    applied.push(`CPL → ${guruGateLabel("gate-4")}`);
   }
   const assumptionKeys = ["demandChange", "cpc", "ctr", "siteConversion", "saleConversion", "termDays", "taskReadiness"];
   const assumptionValues = assumptionKeys.filter((key) => g8Text(manual[key]) !== "");
@@ -49497,7 +48862,7 @@ function g8ApplyManualToProject() {
     const g4 = typeof ensureGate4State === "function" ? ensureGate4State() : (state.gate4 = state.gate4 || {});
     g4.forecastAssumptions = { ...(g4.forecastAssumptions || {}), updatedAt: new Date().toISOString() };
     assumptionValues.forEach((key) => { g4.forecastAssumptions[key] = String(manual[key]); });
-    applied.push("плановые допущения → Gate 4");
+    applied.push(`плановые допущения → ${guruGateLabel("gate-4")}`);
   }
   if (g8Text(manual.averageCheck) !== "" || g8Text(manual.margin) !== "") {
     const units = typeof ensureUnitV130 === "function" ? ensureUnitV130().items : [];
@@ -49508,10 +48873,10 @@ function g8ApplyManualToProject() {
       item.steps.margin = item.steps.margin || {};
       if (g8Text(manual.averageCheck) !== "") item.steps.revenue.avgCheck = String(manual.averageCheck);
       if (g8Text(manual.margin) !== "") item.steps.margin.marginPct = String(manual.margin);
-      applied.push("средний чек и маржинальность → Gate 1");
+      applied.push(`средний чек и маржинальность → ${guruGateLabel("gate-1")}`);
     }
   }
-  data.message = applied.length ? `Применено: ${applied.join("; ")}. Фактические данные Gate 5 не изменялись.` : "Нет значений, для которых в исходных Gate есть редактируемое плановое поле.";
+  data.message = applied.length ? `Применено: ${applied.join("; ")}. Фактические данные ${guruGateLabel("gate-5")} не изменялись.` : "Нет значений, для которых в исходных Gate есть редактируемое плановое поле.";
   saveState();
   renderGate();
 }
@@ -49568,7 +48933,7 @@ function g8CreateTask() {
   };
   g7.tasks.push(task);
   analysis.data.linkedTasks.push({ signature, taskId: task.id, createdAt: task.createdAt });
-  analysis.data.message = "Задача создана в Gate 7 и связана с прогнозом.";
+  analysis.data.message = `Задача создана в ${guruGateLabel("gate-7")} и связана с прогнозом.`;
   saveState();
   renderGate();
 }
@@ -49580,8 +48945,8 @@ function g8AddCalendarAction() {
   const g6 = typeof ensureGate6State === "function" ? ensureGate6State() : (state.gate6Calendar = state.gate6Calendar || {});
   g6.forecastActions = Array.isArray(g6.forecastActions) ? g6.forecastActions : [];
   const exists = g6.forecastActions.some((item) => item.deadline === deadline && item.title === analysis.action.title);
-  if (!exists) g6.forecastActions.push({ id: makeId("g6-forecast"), title: analysis.action.title, deadline, source: "Gate 8", criterion: analysis.action.criterion, createdAt: new Date().toISOString() });
-  analysis.data.message = exists ? "Действие уже добавлено в календарь Gate 6." : "Действие добавлено в календарь Gate 6.";
+  if (!exists) g6.forecastActions.push({ id: makeId("g6-forecast"), title: analysis.action.title, deadline, source: `${guruGateLabel("gate-8")}`, criterion: analysis.action.criterion, createdAt: new Date().toISOString() });
+  analysis.data.message = exists ? `Действие уже добавлено в календарь ${guruGateLabel("gate-6")}.` : `Действие добавлено в календарь ${guruGateLabel("gate-6")}.`;
   saveState();
   renderGate();
 }
@@ -49698,7 +49063,7 @@ renderGateTable = function (gate, cards) {
     const assumptions = state?.gate4?.forecastAssumptions || {};
     const rows = GATE8_MANUAL_FIELDS.filter(([key]) => g8Text(assumptions[key]) !== "");
     if (rows.length) {
-      els.contentArea.insertAdjacentHTML("beforeend", `<section class="g8-section g8-applied-plan"><div class="g8-section-head"><h3>Допущения, применённые из Gate 8</h3>${g8Pill("in_progress")}</div><div class="g8-section-body g8-values">${rows.map(([key, label]) => `<div class="g8-value"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(assumptions[key]))}</strong></div>`).join("")}<div class="g8-source-line">Источник: Gate 8 → Создать свой сценарий · ${escapeHtml(g8DateLabel(assumptions.updatedAt))}</div></div></section>`);
+      els.contentArea.insertAdjacentHTML("beforeend", `<section class="g8-section g8-applied-plan"><div class="g8-section-head"><h3>Допущения, применённые из ${guruGateLabel("gate-8")}</h3>${g8Pill("in_progress")}</div><div class="g8-section-body g8-values">${rows.map(([key, label]) => `<div class="g8-value"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(assumptions[key]))}</strong></div>`).join("")}<div class="g8-source-line">Источник: ${guruGateLabel("gate-8")} → Создать свой сценарий · ${escapeHtml(g8DateLabel(assumptions.updatedAt))}</div></div></section>`);
     }
   }
 };
@@ -49710,7 +49075,7 @@ renderGate6Calendar = function () {
   if (!actions.length) return;
   const page = els.contentArea.querySelector(".gate6-calendar");
   if (!page) return;
-  page.insertAdjacentHTML("beforeend", `<section class="gate6-plan"><div class="gate6-section-head"><div><h3>Действия из Gate 8</h3><p class="muted">Контрольные действия, связанные со сроком прогноза.</p></div><span class="gate6-count">${actions.length}</span></div><div class="g8-history">${actions.map((item) => `<div class="g8-history-row"><div><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.source)}</span></div><div><span>Срок</span><b>${escapeHtml(item.deadline)}</b></div><div><span>Критерий</span><b>${escapeHtml(item.criterion)}</b></div></div>`).join("")}</div></section>`);
+  page.insertAdjacentHTML("beforeend", `<section class="gate6-plan"><div class="gate6-section-head"><div><h3>Действия из ${guruGateLabel("gate-8")}</h3><p class="muted">Контрольные действия, связанные со сроком прогноза.</p></div><span class="gate6-count">${actions.length}</span></div><div class="g8-history">${actions.map((item) => `<div class="g8-history-row"><div><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.source)}</span></div><div><span>Срок</span><b>${escapeHtml(item.deadline)}</b></div><div><span>Критерий</span><b>${escapeHtml(item.criterion)}</b></div></div>`).join("")}</div></section>`);
 };
 
 if (state) {
@@ -49910,7 +49275,7 @@ function g8ProjectGoalSourceHtml() {
     ${active.map(goalHtml).join("")}
     <button type="button" class="small-btn" data-g8-company-goal-add ${active.length >= 3 ? "disabled" : ""}>${active.length >= 3 ? "Максимум 3 активные цели" : "+ Добавить цель"}</button>
     ${archived.length ? `<details class="gate0-company-archive-v360"><summary>Архив целей · ${archived.length}</summary>${archived.map((goal) => `<div class="gate0-company-archive-row-v360"><span>${escapeHtml(guruV185Text(goal.goalDescription) || "Цель без формулировки")}</span><button type="button" class="small-btn" data-g8-company-goal-restore="${escapeAttr(goal.id)}" ${active.length >= 3 ? "disabled" : ""}>Восстановить</button></div>`).join("")}</details>` : ""}
-    <div class="g8-goal-source-link">Только основная цель управляет KPI Gate 8. Дополнительные цели не меняют прогноз и бюджет.</div>
+    <div class="g8-goal-source-link">Только основная цель управляет KPI ${guruGateLabel("gate-8")}. Дополнительные цели не меняют прогноз и бюджет.</div>
   </div>`;
 }
 
@@ -50089,7 +49454,7 @@ function guruRestoreCachedGateView(gateId) {
   if (!cached || cached.projectId !== activeProjectId) return false;
   const gate = state?.gates?.find((item) => item.id === gateId);
   if (!gate || !els.contentArea) return false;
-  els.pageTitle.textContent = gate.title;
+  els.pageTitle.textContent = guruGateTitle(gate);
   setToolbarVisible(true);
   els.contentArea.replaceChildren(cached.fragment);
   els.contentArea.dataset.guruViewCache = "hit";
@@ -51091,10 +50456,10 @@ guruV187ProductCardsHtml = function () {
   const categories = guruV187EnsureProductCards(state);
   return `<div class="passport-v116-field-card v116-multi-field guru-product-card-list">
     <span class="passport-v116-field-title">Что продаём</span>
-    <span class="passport-v116-field-hint">Категории агрегируются из позиций Gate 1. Пустая категория означает, что позиции ещё не привязаны.</span>
+    <span class="passport-v116-field-hint">Категории агрегируются из позиций ${guruGateLabel("gate-1")}. Пустая категория означает, что позиции ещё не привязаны.</span>
     ${categories.map((category, index) => {
       const positions = guruV188CategoryPositions(category.id);
-      return `<details class="pv181-jtbd-model guru-product-jtbd-card" ${index === 0 ? "open" : ""}><summary class="guru-product-jtbd-head"><span class="guru-product-jtbd-product">${escapeHtml(category.name)}</span><span>${positions.length ? `Позиций: ${positions.length}` : "Пустая категория"}</span></summary>${positions.length ? `<ul>${positions.map(({ card, row }) => `<li>${escapeHtml(g1pcContentName(row, card))}${megaPlatformAuditUrl(card, row) ? ` · ${escapeHtml(megaPlatformAuditUrl(card, row))}` : ""}</li>`).join("")}</ul>` : '<small>Создайте или привяжите позицию в Gate 1.</small>'}</details>`;
+      return `<details class="pv181-jtbd-model guru-product-jtbd-card" ${index === 0 ? "open" : ""}><summary class="guru-product-jtbd-head"><span class="guru-product-jtbd-product">${escapeHtml(category.name)}</span><span>${positions.length ? `Позиций: ${positions.length}` : "Пустая категория"}</span></summary>${positions.length ? `<ul>${positions.map(({ card, row }) => `<li>${escapeHtml(g1pcContentName(row, card))}${megaPlatformAuditUrl(card, row) ? ` · ${escapeHtml(megaPlatformAuditUrl(card, row))}` : ""}</li>`).join("")}</ul>` : `<small>Создайте или привяжите позицию в ${guruGateLabel("gate-1")}.</small>`}</details>`;
     }).join("")}
     <button type="button" class="v116-multi-add" data-guru-category-create>+ создать категорию</button>
   </div>`;
@@ -51120,18 +50485,18 @@ guruV187ProductCardsHtml = function () {
   const categories = guruV187EnsureProductCards(state);
   return `<div class="passport-v116-field-card v116-multi-field guru-product-card-list">
     <span class="passport-v116-field-title">Что продаём</span>
-    <span class="passport-v116-field-hint">Заполняйте содержание каждой категории вручную; ниже автоматически показаны связанные позиции Gate 1.</span>
+    <span class="passport-v116-field-hint">Заполняйте содержание каждой категории вручную; ниже автоматически показаны связанные позиции ${guruGateLabel("gate-1")}.</span>
     ${categories.map((category, index) => {
       const description = guruCategoryDescriptionV1(category.id);
       const profile = guruV187ProductProfile(category.id, state);
       const profileFields = GURU_PRODUCT_CONTINUUM_FIELDS_V187[profile.continuum] || [];
       const positions = guruV188CategoryPositions(category.id);
-      return `<details class="pv181-jtbd-model guru-product-jtbd-card" ${index === 0 ? "open" : ""}><summary class="guru-product-jtbd-head"><span class="guru-product-jtbd-product">${escapeHtml(category.name)}</span><span>Позиций Gate 1: ${positions.length}</span></summary>
+      return `<details class="pv181-jtbd-model guru-product-jtbd-card" ${index === 0 ? "open" : ""}><summary class="guru-product-jtbd-head"><span class="guru-product-jtbd-product">${escapeHtml(category.name)}</span><span>Позиций ${guruGateLabel("gate-1")}: ${positions.length}</span></summary>
         <label class="g1-field"><strong>Название категории</strong><input class="passport-v116-input is-filled" data-guru-product-name-id="${escapeAttr(category.id)}" value="${escapeAttr(category.name)}" placeholder="категория / направление" /></label>
         <label class="g1-field guru-category-description-field">${guruCategoryDescriptionHeadingV1(description)}<textarea class="passport-v116-input ${description ? "is-filled" : "is-empty"}" data-guru-category-description-id="${escapeAttr(category.id)}" rows="2" aria-label="Описание категории ${escapeAttr(category.name)}. Рекомендуемый объём 100–180 символов" placeholder="Кратко о категории">${escapeHtml(description)}</textarea></label>
         <label class="g1-field"><strong>Континуум товар-услуга</strong><select class="passport-v116-input ${profile.continuum ? "is-filled" : "is-empty"}" data-guru-product-continuum-id="${escapeAttr(category.id)}"><option value="">Выберите вариант</option>${GURU_PRODUCT_CONTINUUMS_V187.map(([value, label]) => `<option value="${value}" ${profile.continuum === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
         ${profileFields.length ? `<div class="guru-product-profile-fields">${profileFields.map(([key, label, placeholder]) => guruV187ProfileFieldHtml(category, profile, key, label, placeholder)).join("")}</div>` : ""}
-        <div class="guru-category-positions"><strong>Позиции из Gate 1</strong>${positions.length ? `<ul>${positions.map(({ card, row }) => `<li>${escapeHtml(g1pcContentName(row, card))}${row.h1 ? ` · H1: ${escapeHtml(row.h1)}` : ""}${megaPlatformAuditRowUrl(row) ? ` · ${escapeHtml(megaPlatformAuditRowUrl(row))}` : ""}</li>`).join("")}</ul>` : '<small>Пока нет привязанных позиций. Добавьте категорию в карточке позиции Gate 1.</small>'}</div>
+        <div class="guru-category-positions"><strong>Позиции из ${guruGateLabel("gate-1")}</strong>${positions.length ? `<ul>${positions.map(({ card, row }) => `<li>${escapeHtml(g1pcContentName(row, card))}${row.h1 ? ` · H1: ${escapeHtml(row.h1)}` : ""}${megaPlatformAuditRowUrl(row) ? ` · ${escapeHtml(megaPlatformAuditRowUrl(row))}` : ""}</li>`).join("")}</ul>` : `<small>Пока нет привязанных позиций. Добавьте категорию в карточке позиции ${guruGateLabel("gate-1")}.</small>`}</div>
       </details>`;
     }).join("")}
     <button type="button" class="v116-multi-add" data-guru-category-create>+ создать категорию</button>
@@ -51596,7 +50961,7 @@ function guruV189CatalogItemHtml(item, categories, groupId, groupIndex) {
   const drag = guruDragRowHtml("catalogCategory", { key: groupId }, groupIndex);
   return `<article class="guru-catalog-item" ${drag.rowAttrs}>
     <div class="guru-catalog-item-toolbar">${drag.handle}<span>Перетащите, чтобы изменить порядок в категории</span></div>
-    <label class="g1-field"><strong>Что продаём</strong>${item.name ? `<span class="mega-platform-source-value">${escapeHtml(item.name)}</span><small class="mega-platform-source-label">из Платформы</small>` : `<input class="passport-v116-input is-empty" data-guru-catalog-name="${escapeAttr(item.id)}" value="" placeholder="Название нового товара или услуги" /><small class="guru-catalog-duplicate-hint" data-guru-catalog-duplicate-hint hidden>Товар с таким названием уже есть</small>`}${item.source?.kind === "gate1" ? '<small class="guru-catalog-source">Из Gate 1</small>' : ""}</label>
+    <label class="g1-field"><strong>Что продаём</strong>${item.name ? `<span class="mega-platform-source-value">${escapeHtml(item.name)}</span><small class="mega-platform-source-label">из Платформы</small>` : `<input class="passport-v116-input is-empty" data-guru-catalog-name="${escapeAttr(item.id)}" value="" placeholder="Название нового товара или услуги" /><small class="guru-catalog-duplicate-hint" data-guru-catalog-duplicate-hint hidden>Товар с таким названием уже есть</small>`}${item.source?.kind === "gate1" ? `<small class="guru-catalog-source">Из ${guruGateLabel("gate-1")}</small>` : ""}</label>
     <label class="g1-field"><strong>Что это</strong><select class="passport-v116-input ${item.continuum ? "is-filled" : "is-empty"}" data-guru-catalog-continuum="${escapeAttr(item.id)}" ${canChooseType ? "" : "disabled"}><option value="">${canChooseType ? "Выберите вариант" : "Сначала укажите продукт"}</option>${GURU_PRODUCT_CONTINUUMS_V187.map(([value, label]) => `<option value="${escapeAttr(value)}" ${value === item.continuum ? "selected" : ""}>${escapeHtml(label)}</option>`).join("")}</select></label>
     ${guruV192ContinuumHelpHtml(item.continuum)}
     <label class="g1-field"><strong>Категории</strong><span class="mega-platform-source-value">${escapeHtml(visibleCategoryNames.join(", ") || "Без категории")}</span><small class="mega-platform-source-label">из Платформы</small></label>
@@ -52295,7 +51660,7 @@ function guruV194AppendLegacy(field, value, scope, product, legacyPath, workspac
     ...location,
     field,
     value: text,
-    source: { type: "migration", label: "Gate 0 · прежняя структура", legacy_path: legacyPath },
+    source: { type: "migration", label: `${guruGateLabel("gate-0")} · прежняя структура`, legacy_path: legacyPath },
     confirmation_status: "needs_confirmation",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -53590,7 +52955,7 @@ function guruV247KeywordFoundationRecord(product, create = false, workspace = st
       field: "keyword_foundation",
       value: "",
       keywords: [],
-      source: { type: "manual", label: "Gate 0 · стратегия продукта" },
+      source: { type: "manual", label: `${guruGateLabel("gate-0")} · стратегия продукта` },
       confirmation_status: "draft",
       created_at: now,
       updated_at: now,
@@ -54424,7 +53789,7 @@ function guruV247KeywordFoundationHtml(product) {
     ? record.last_generation
     : null;
   return `<section class="gate0-scope-field-v194 gate0-keyword-foundation-v247" data-gate0-scope-field-row="keyword_foundation" data-gate0-keyword-product-id="${escapeAttr(product.id)}">
-    <div class="gate0-scope-field-head-v194"><div><strong>Фундамент ключевых слов · Продукт/Услуга</strong><small>Кандидаты из единых формулировок JTBD, сегмента, позиционирования, УТП и оффера этого продукта. Только 2–4 слова, без автоматической записи в Gate 1.</small></div></div>
+    <div class="gate0-scope-field-head-v194"><div><strong>Фундамент ключевых слов · Продукт/Услуга</strong><small>Кандидаты из единых формулировок JTBD, сегмента, позиционирования, УТП и оффера этого продукта. Только 2–4 слова, без автоматической записи в ${guruGateLabel("gate-1")}.</small></div></div>
     <div class="gate0-keyword-foundation-summary-v247"><span>${filled.length} предложено</span><span>${confirmed} подтверждено</span><small>Только этот продукт</small></div>
     <div class="gate0-keyword-foundation-actions-v247">
       <button type="button" class="small-btn" data-gate0-keyword-foundation-generate ${snapshot.texts.length ? "" : "disabled"}>Сгенерировать кандидатов</button>
@@ -54452,7 +53817,7 @@ function guruProductDescriptionRecordV1(product, create = false, workspace = sta
       id: makeId("gate0-value"), project_id: guruV194ProjectId(workspace),
       category_id: "", product_id: product.id, scope: "product",
       field: "product_description", value: "", confirmation_status: "draft",
-      source: { type: "synthesis", label: "Gate 0 · анализ продукта" },
+      source: { type: "synthesis", label: `${guruGateLabel("gate-0")} · анализ продукта` },
       created_at: now, updated_at: now,
     };
     records.push(record);
@@ -54641,7 +54006,7 @@ function guruProductDescriptionSyncVisibleV1(productId, { strategic = true } = {
     field: "product_description", scope: "product", recordId: view.record?.id || "" };
   const html = guruStrategicRowV286("Утверждённое описание", {
     value: view.approved, complete: view.status === "ready", target,
-    source: "Gate 0 · описание продукта/услуги",
+    source: `${guruGateLabel("gate-0")} · описание продукта/услуги`,
   });
   const template = document.createElement("template");
   template.innerHTML = html;
@@ -55592,7 +54957,7 @@ function guruCompanySegmentEntryHtmlV1(record, index, options = {}) {
     <div class="gate0-company-entry-head-v360"><strong ${productView ? "" : `data-gate0-company-segment-title data-fallback-title="${escapeAttr(fallbackTitle)}"`}>${escapeHtml(segmentName || fallbackTitle)}</strong><span class="gate0-company-entry-actions-v360"><span class="gate0-company-primary-v360">${record.is_primary ? "Основной" : "Дополнительный"}</span>${productView ? "" : `${record.is_primary ? "" : `<button type="button" class="small-btn" data-gate0-company-segment-primary="${escapeAttr(record.id)}">Сделать основным</button>`}<button type="button" class="small-btn" data-gate0-company-segment-delete="${escapeAttr(record.id)}">Удалить</button>`}</span></div>
     ${migrationWarning}
     <label class="gate0-company-segment-name-v360"><strong>Название сегмента</strong><small>Короткое понятное название. Например: ${record.is_primary ? "Частные покупатели" : "Корпоративные клиенты"}</small><input class="passport-v116-input ${segmentName ? "is-filled" : "is-empty"}" type="text" ${editAttrs("segment_name")} value="${escapeAttr(record.segment_name || "")}" placeholder="${record.is_primary ? "Частные покупатели" : "Корпоративные клиенты"}" autocomplete="off" ${productView ? "" : "required"} ${nameConflict ? 'aria-invalid="true"' : ""}>${productView ? "" : `<small class="gate0-company-segment-name-error-v360" aria-live="polite" ${nameConflict ? "" : "hidden"}>Название сегмента уже используется в этом проекте.</small>`}</label>
-    <p class="gate0-company-portrait-link">Портрет ЦА: ${audiencePortrait ? `<a href="#gate-1" data-gate0-company-portrait-link="${escapeAttr(record.id)}">Открыть связанный портрет</a>` : 'не связан с этим сегментом'}. Мотивы и сомнения хранятся в портрете Gate 1.</p>
+    <p class="gate0-company-portrait-link">Портрет ЦА: ${audiencePortrait ? `<a href="#gate-1" data-gate0-company-portrait-link="${escapeAttr(record.id)}">Открыть связанный портрет</a>` : 'не связан с этим сегментом'}. Мотивы и сомнения хранятся в портрете ${guruGateLabel("gate-1")}.</p>
     <div class="gate0-segment-parts-v194">${GURU_GATE0_SEGMENT_PART_FIELDS_V309.map(([key, title, hint, placeholder]) => `<label><small>${escapeHtml(hint)}</small><strong>${escapeHtml(title)}</strong><textarea class="passport-v116-input passport-v116-autosize ${parts[key] ? "is-filled" : "is-empty"}" ${editAttrs(key)} rows="1" placeholder="${escapeAttr(placeholder)}">${escapeHtml(parts[key])}</textarea></label>`).join("")}</div>
     <label class="gate0-positioning-unified-v244"><strong>Единая формулировка сегмента</strong><small>Самостоятельная формулировка — пять полей выше автоматически не склеиваются.</small><textarea class="passport-v116-input passport-v116-autosize ${unified ? "is-filled" : "is-empty"}" ${editAttrs("unified")} rows="2" placeholder="Сформулируйте целевой сегмент одним предложением">${escapeHtml(unified)}</textarea></label>
   </article>`;
@@ -55643,7 +55008,7 @@ function guruCompanyKeywordFoundationRecordV351(
       field: "keyword_foundation",
       value: "",
       keywords: [],
-      source: { type: "manual", label: "Gate 0 · стратегия компании" },
+      source: { type: "manual", label: `${guruGateLabel("gate-0")} · стратегия компании` },
       confirmation_status: "draft",
       created_at: now,
       updated_at: now,
@@ -56011,7 +55376,7 @@ function guruV351EnsureCompanyKeywordFoundationCard(workspace = state) {
       id: GURU_GATE0_COMPANY_KEYWORD_FOUNDATION_CARD_ID_V351,
       title: "Фундамент ключевых слов · Компания",
       instruction:
-        "Соберите кандидатов из четырёх единых формулировок стратегии компании. Подтвердите только те фразы, которые должны стать источником компанийной таблицы спроса в Gate 1.",
+        `Соберите кандидатов из четырёх единых формулировок стратегии компании. Подтвердите только те фразы, которые должны стать источником компанийной таблицы спроса в ${guruGateLabel("gate-1")}.`,
       status: "not_started",
       evidence: "",
       pages: "",
@@ -56042,7 +55407,7 @@ function guruCompanyKeywordFoundationHtmlV351() {
       : null;
   return `<div class="field-row passport-v116-row"><div class="passport-v116"><section class="gate0-keyword-foundation-v247" data-gate0-company-keyword-foundation>
     <div class="gate0-scope-field-head-v194"><div><strong>Весь проект</strong><small>Единый company-only источник: project.gate0ScopedValuesV194 · field: keyword_foundation · scope: project.</small></div></div>
-    <div class="gate0-scope-field-head-v194"><div><strong>Фундамент ключевых слов · Компания</strong><small>Кандидаты из единых формулировок сегментации, позиционирования, цели бренда и оффера компании. Только 2–4 слова; в Gate 1 попадают только подтверждённые фразы.</small></div></div>
+    <div class="gate0-scope-field-head-v194"><div><strong>Фундамент ключевых слов · Компания</strong><small>Кандидаты из единых формулировок сегментации, позиционирования, цели бренда и оффера компании. Только 2–4 слова; в ${guruGateLabel("gate-1")} попадают только подтверждённые фразы.</small></div></div>
     <div class="gate0-keyword-foundation-summary-v247"><span>${stats.total} предложено</span><span>${stats.confirmed} подтверждено</span><small>Весь проект</small></div>
     <div class="gate0-keyword-foundation-actions-v247">
       <button type="button" class="small-btn" data-gate0-company-keyword-generate ${snapshot.texts.length ? "" : "disabled"}>Сгенерировать кандидатов</button>
@@ -57876,7 +57241,7 @@ function g3ProductJourneyScoped(field, product) {
     scope: resolved.scope,
     records: resolved.records,
     value: g3ProductJourneyJoin(resolved.records.map((record) => record.value)),
-    source: `Gate 0 · ${g3ProductJourneyScopeLabel(resolved.scope)}`,
+    source: `${guruGateLabel("gate-0")} · ${g3ProductJourneyScopeLabel(resolved.scope)}`,
   };
 }
 
@@ -57955,7 +57320,7 @@ function g3ProductJourneyCampaigns(product, legacy) {
       add(
         g3AutoJoin([g4LaunchChannelLabel(channel), campaign.campaignName], " · "),
         g4CampaignStatus(campaign),
-        "Gate 4",
+        `${guruGateLabel("gate-4")}`,
         megaPlatformProductUrl(product, state),
         {
           channelKey: channel.key,
@@ -57970,7 +57335,7 @@ function g3ProductJourneyCampaigns(product, legacy) {
     if (!campaign || !storageKeys.some((key) => g3ProductJourneyNorm(key) === g3ProductJourneyNorm(campaign.product))) return;
     const touched = [campaign.decision, campaign.campaignName, campaign.objective, megaPlatformProductUrl(product, state), campaign.launchStatus]
       .some((value) => guruV185Text(value));
-    if (touched) add(campaign.campaignName || "Кампания продукта", g4CampaignStatus(campaign), "Gate 4", megaPlatformProductUrl(product, state));
+    if (touched) add(campaign.campaignName || "Кампания продукта", g4CampaignStatus(campaign), `${guruGateLabel("gate-4")}`, megaPlatformProductUrl(product, state));
   });
   if (!rows.length) {
     (g3Gate0Marketing().channels || [])
@@ -57979,7 +57344,7 @@ function g3ProductJourneyCampaigns(product, legacy) {
         add(
           g3AutoJoin([channel.channel, channel.platform, channel.type], " · "),
           guruStatusIsOk(channel.status) ? "ready" : guruStatusIsBad(channel.status) ? "problem" : "in_progress",
-          "Gate 0 · проект",
+          `${guruGateLabel("gate-0")} · проект`,
           "",
           { channelIndex: index },
         );
@@ -58154,7 +57519,7 @@ function g3ProductJourneyLandingTarget(snapshot) {
 }
 
 function g3ProductJourneyChannelTarget(snapshot) {
-  const campaign = snapshot.campaigns.find((item) => item.source === "Gate 4" && item.channelKey);
+  const campaign = snapshot.campaigns.find((item) => item.source === `${guruGateLabel("gate-4")}` && item.channelKey);
   if (campaign) {
     return {
       gateId: "gate-4",
@@ -58216,20 +57581,20 @@ function g3ProductJourneyCell(label, value, source, target = null) {
 }
 
 function g3ProductJourneyStages(snapshot) {
-  const cardSource = snapshot.page.row ? "Gate 1 · карточка продукта" : "Gate 1 · карточка продукта не найдена";
+  const cardSource = snapshot.page.row ? `${guruGateLabel("gate-1")} · карточка продукта` : `${guruGateLabel("gate-1")} · карточка продукта не найдена`;
   const hasSavedGate4Queries = typeof guruGate4SavedGroupsV519 === "function" &&
     guruGate4SavedGroupsV519(snapshot.product.id, state).length > 0;
   const mapSource = hasSavedGate4Queries
-    ? "Gate 0/1 и Gate 4 · Поиск"
-    : snapshot.queries ? "Gate 0/1 · ключевые слова товара"
-      : snapshot.legacy.map.product ? "Gate 1 · аналитика продукта/категории"
-        : "Gate 1 · аналитика не заполнена";
+    ? `${guruGateLabel("gate-0")}/1 и ${guruGateLabel("gate-4")} · Поиск`
+    : snapshot.queries ? `${guruGateLabel("gate-0")}/1 · ключевые слова товара`
+      : snapshot.legacy.map.product ? `${guruGateLabel("gate-1")} · аналитика продукта/категории`
+        : `${guruGateLabel("gate-1")} · аналитика не заполнена`;
   const landingSource = snapshot.page.row
-    ? "Gate 1 · карточка продукта"
+    ? `${guruGateLabel("gate-1")} · карточка продукта`
     : snapshot.campaigns.some((item) => item.landing && item.channelKey)
-      ? "Gate 4"
-      : "Gate 0 · посадочная продукта";
-  const channelSource = snapshot.campaigns.some((item) => item.source === "Gate 4") ? "Gate 4" : "Gate 0 · проект";
+      ? `${guruGateLabel("gate-4")}`
+      : `${guruGateLabel("gate-0")} · посадочная продукта`;
+  const channelSource = snapshot.campaigns.some((item) => item.source === `${guruGateLabel("gate-4")}`) ? `${guruGateLabel("gate-4")}` : `${guruGateLabel("gate-0")} · проект`;
   const landingTarget = g3ProductJourneyLandingTarget(snapshot);
   const analysisTarget = g3ProductJourneyAnalysisTarget(snapshot);
   return [
@@ -58281,7 +57646,7 @@ function g3ProductJourneyStages(snapshot) {
       subtitle: "Результат использования становится основанием для повтора и рекомендации.",
       cells: [
         g3ProductJourneyCell("Результат клиента", snapshot.clientResult, "Источник удалён из активной карточки продукта", null),
-        g3ProductJourneyCell("Повтор / LTV", snapshot.repeat, "Gate 1 · юнит-экономика", g3ProductJourneyUnitTarget(snapshot)),
+        g3ProductJourneyCell("Повтор / LTV", snapshot.repeat, `${guruGateLabel("gate-1")} · юнит-экономика`, g3ProductJourneyUnitTarget(snapshot)),
         g3ProductJourneyCell("Основания рекомендовать", snapshot.recommendationReasons, "Источник удалён из активной карточки продукта", null),
       ],
     },
@@ -59068,15 +58433,15 @@ function guruStrategicOfferCardV245(ctx, scopeNote) {
     </button>`;
   };
   return `<article class="passport-v116-input ${offer || cta ? "is-filled" : "is-empty"} guru-strategic-offer-card-v245">
-    ${part("Оффер", offer, "Gate 0–1", ctx.targets.offer, scopeNote("offer"))}
-    ${part("CTA", cta, "Gate 0–1", ctx.targets.cta, scopeNote("cta"))}
+    ${part("Оффер", offer, `${guruGateLabel("gate-0")}–1`, ctx.targets.offer, scopeNote("offer"))}
+    ${part("CTA", cta, `${guruGateLabel("gate-0")}–1`, ctx.targets.cta, scopeNote("cta"))}
   </article>`;
 }
 
 function guruStrategicKeywordCardV249(ctx, options = {}) {
   const title = options.title || "Фундамент ключевых слов";
   const value = options.value ?? ctx.keywordFoundation;
-  const source = options.source || "Gate 0";
+  const source = options.source || `${guruGateLabel("gate-0")}`;
   const keywords = Array.isArray(options.items ?? ctx.keywordFoundationItems)
     ? options.items ?? ctx.keywordFoundationItems
     : [];
@@ -59422,7 +58787,7 @@ function guruStrategicProductIntentFieldV1(product, workspace = state) {
     complete: Boolean(intent?.confidence >= 60 && MEGA_SEARCH_INTENTS_V1[intent.primary]),
     extras: secondary.length ? [{ label: "Дополнительно", value: secondary.join(" · ") }] : [],
     target: { gateId: "gate-0", kind: "gate0-platform-product", productId: product.id },
-    source: "Gate 0 · Платформа",
+    source: `${guruGateLabel("gate-0")} · Платформа`,
   };
 }
 
@@ -59447,8 +58812,8 @@ function guruStrategicFoundationModelV286(product, options = {}) {
         moreExtras: characteristics.filter(({ label }) => !priority.has(label)),
         target: guruStrategicScopedRecordTargetV286(snapshot, "segments", record),
         source: record.productAudienceSourceId
-          ? "Gate 0 · ЦА компании"
-          : `Gate 0 · ${g3ProductJourneyScopeLabel(record.scope || snapshot.scoped.segments.scope)}`,
+          ? `${guruGateLabel("gate-0")} · ЦА компании`
+          : `${guruGateLabel("gate-0")} · ${g3ProductJourneyScopeLabel(record.scope || snapshot.scoped.segments.scope)}`,
       };
     });
   const positioningRecord = guruStrategicCurrentRecordV286(snapshot, "positioning");
@@ -59510,7 +58875,7 @@ function guruStrategicFoundationModelV286(product, options = {}) {
       name: {
         value: guruV185Text(product.name),
         target: { gateId: "gate-0", kind: "gate0-platform-product", productId: product.id },
-        source: "Gate 0 · Платформа",
+        source: `${guruGateLabel("gate-0")} · Платформа`,
       },
       intent: guruStrategicProductIntentFieldV1(product, state),
       description: {
@@ -59518,12 +58883,12 @@ function guruStrategicFoundationModelV286(product, options = {}) {
         complete: description.status === "ready",
         target: { gateId: "gate-0", kind: "gate0-scoped", productId: product.id,
           field: "product_description", scope: "product", recordId: description.record?.id || "" },
-        source: "Gate 0 · описание продукта/услуги",
+        source: `${guruGateLabel("gate-0")} · описание продукта/услуги`,
       },
       landing: {
         value: guruV185Text(snapshot.landing),
         target: g3ProductJourneyLandingTarget(snapshot),
-        source: "Gate 1–2",
+        source: `${guruGateLabel("gate-1")}–2`,
       },
       segment: {
         value: guruStrategicRecordValueV286(
@@ -59537,8 +58902,8 @@ function guruStrategicFoundationModelV286(product, options = {}) {
           segmentRecord,
         ),
         source: segmentRecord?.scope
-          ? `Gate 0 · ${g3ProductJourneyScopeLabel(segmentRecord.scope)}`
-          : "Gate 0",
+          ? `${guruGateLabel("gate-0")} · ${g3ProductJourneyScopeLabel(segmentRecord.scope)}`
+          : `${guruGateLabel("gate-0")}`,
       },
       positioning: {
         value: guruStrategicRecordValueV286(
@@ -59552,15 +58917,15 @@ function guruStrategicFoundationModelV286(product, options = {}) {
           positioningRecord,
         ),
         source: positioningRecord?.scope
-          ? `Gate 0 · ${g3ProductJourneyScopeLabel(positioningRecord.scope)}`
-          : "Gate 0",
+          ? `${guruGateLabel("gate-0")} · ${g3ProductJourneyScopeLabel(positioningRecord.scope)}`
+          : `${guruGateLabel("gate-0")}`,
       },
       usp: {
         value: guruStrategicRecordValueV286("usp", uspRecord, snapshot.usp),
         target: guruStrategicScopedRecordTargetV286(snapshot, "usp", uspRecord),
         source: uspRecord?.scope
-          ? `Gate 0 · ${g3ProductJourneyScopeLabel(uspRecord.scope)}`
-          : "Gate 0",
+          ? `${guruGateLabel("gate-0")} · ${g3ProductJourneyScopeLabel(uspRecord.scope)}`
+          : `${guruGateLabel("gate-0")}`,
       },
       offer: {
         // The foundation mirrors the editable Gate 0 offer record. Legacy
@@ -59572,8 +58937,8 @@ function guruStrategicFoundationModelV286(product, options = {}) {
         ctas: guruStrategicOfferCtasV286(offerParts),
         target: guruStrategicScopedRecordTargetV286(snapshot, "offers", offerRecord),
         source: offerRecord?.scope
-          ? `Gate 0 · ${g3ProductJourneyScopeLabel(offerRecord.scope)}`
-          : "Gate 0",
+          ? `${guruGateLabel("gate-0")} · ${g3ProductJourneyScopeLabel(offerRecord.scope)}`
+          : `${guruGateLabel("gate-0")}`,
       },
     },
   };
@@ -59625,7 +58990,7 @@ function guruStrategicRowV286(label, field) {
       <span class="status-pill status-${status}">${statusLabel}</span>
       ${guruStrategicSourceButtonV286(field?.target, field?.source || "Открыть источник")}
       ${hasSeparateCtaTarget
-        ? guruStrategicSourceButtonV286(field.ctaTarget, "Gate 0 · CTA")
+        ? guruStrategicSourceButtonV286(field.ctaTarget, `${guruGateLabel("gate-0")} · CTA`)
         : ""}
     </div>
   </article>`;
@@ -59675,7 +59040,7 @@ function guruStrategicJtbdCardV286(model, descriptor, number) {
       </section>` : ""}
       <div class="guru-strategic-jtbd-links-v286">
         ${guruStrategicSourceButtonV286(descriptor.target, "Открыть JTBD в источнике")}
-        ${guruStrategicSourceButtonV286(keywordTarget, "Открыть финальные ключевые слова в Gate 1")}
+        ${guruStrategicSourceButtonV286(keywordTarget, `Открыть финальные ключевые слова в ${guruGateLabel("gate-1")}`)}
       </div>
     </div>
   </details>`;
@@ -59710,7 +59075,7 @@ function guruStrategicFoundationFlowHtmlV529(model) {
     ).join("")}
     ${finalNotice}
     ${model.keywordModel.unlinked.length
-      ? `<button type="button" class="guru-strategic-unlinked-v286" data-g4-jump-target="${escapeAttr(JSON.stringify(pendingTarget))}">Без связи с JTBD: <strong>${model.keywordModel.unlinked.length}</strong><span>→ Открыть в Gate 1</span></button>`
+      ? `<button type="button" class="guru-strategic-unlinked-v286" data-g4-jump-target="${escapeAttr(JSON.stringify(pendingTarget))}">Без связи с JTBD: <strong>${model.keywordModel.unlinked.length}</strong><span>→ Открыть в ${guruGateLabel("gate-1")}</span></button>`
       : ""}`;
   const segmentHtml = model.segmentRows.length
     ? model.segmentRows.map((field, index) => `<div class="guru-strategic-segment-entry-v530" data-guru-strategic-segment-id="${escapeAttr(field.id)}">
@@ -59811,28 +59176,28 @@ function guruStrategicFoundationContextCompanyV310(workspace = state) {
         touched: guruV349CompanyBrandPurposeStatus(workspace) !== "not_started",
         complete: Boolean(guruV185Text(brandPurposeRecord?.value)),
         target: brandPurposeTarget,
-        source: "Gate 0 · Цель бренда",
+        source: `${guruGateLabel("gate-0")} · Цель бренда`,
       },
       targetAudience: {
         value: guruV185Text(segmentRecord?.value),
         touched: guruV309CompanySegmentationStatus(workspace) !== "not_started",
         complete: Boolean(guruV185Text(segmentRecord?.value)),
         target: segmentationTarget(segmentRecord?.id),
-        source: "Gate 0 · Сегментация · Компания",
+        source: `${guruGateLabel("gate-0")} · Сегментация · Компания`,
       },
       positioning: {
         value: guruV185Text(positioningRecord?.value),
         touched: guruV308CompanyPositioningStatus(workspace) !== "not_started",
         complete: Boolean(guruV185Text(positioningRecord?.value)),
         target: positioningTarget("unified"),
-        source: "Gate 0 · Позиционирование · Компания",
+        source: `${guruGateLabel("gate-0")} · Позиционирование · Компания`,
       },
       companyOffer: {
         value: guruV185Text(companyOfferRecord?.value),
         touched: guruV347CompanyOfferStatus(workspace) !== "not_started",
         complete: false,
         target: companyOfferTarget(companyOfferRecord?.id),
-        source: "Gate 0 · Оффер и CTA · Компания",
+        source: `${guruGateLabel("gate-0")} · Оффер и CTA · Компания`,
       },
     },
     segmentRows: segmentRecords.map((record) => ({
@@ -59843,7 +59208,7 @@ function guruStrategicFoundationContextCompanyV310(workspace = state) {
         guruV185Text(guruV194SegmentParts(record)[key]))),
       complete: guruCompanySegmentCompleteV360(record, workspace),
       target: segmentationTarget(record.id),
-      source: "Открыть сегмент в Gate 0",
+      source: `Открыть сегмент в ${guruGateLabel("gate-0")}`,
     })),
     offerRows: companyOfferRecords.map((record, originalIndex) => {
       const parts = guruV194OfferParts(record);
@@ -59870,7 +59235,7 @@ function guruStrategicFoundationContextCompanyV310(workspace = state) {
         complete: guruCompanyOfferCompleteV360(record, activeSegmentIds),
         ctas: GURU_GATE0_CTA_LEVELS_V2.map(([key, label]) => ({ key, label, value: parts.ctaV2[key] })),
         target: companyOfferTarget(record.id),
-        source: "Открыть оффер в Gate 0",
+        source: `Открыть оффер в ${guruGateLabel("gate-0")}`,
       };
     }).sort((left, right) => left.segmentOrder - right.segmentOrder ||
       (left.createdAt && right.createdAt ? left.createdAt.localeCompare(right.createdAt) : 0) ||
@@ -59894,14 +59259,14 @@ function guruStrategicFoundationContextCompanyV310(workspace = state) {
       touched: G8_PROJECT_GOAL_FIELDS.some(([key]) => guruV185Text(goal[key])),
       complete: guruCompanyGoalCompleteV360(goal),
       target: goalTarget(goal.id),
-      source: "Открыть цель в Gate 0",
+      source: `Открыть цель в ${guruGateLabel("gate-0")}`,
     })),
     status: guruCompanyStrategyStatusV360(workspace),
     keywordFoundation: {
       entries: keywordFoundation.entries,
       count: keywordFoundation.entries.length,
       target: keywordFoundationTarget,
-      source: "Gate 0 · Фундамент ключевых слов · Компания",
+      source: `${guruGateLabel("gate-0")} · Фундамент ключевых слов · Компания`,
       contextKey: keywordFoundationContextKey,
       itemId: keywordFoundationItemId,
       open: keywordFoundationOpenByItem?.[keywordFoundationItemId] === true,
@@ -60049,14 +59414,14 @@ g4CampaignLaunchCenterHtml = function () {
   const product = g4ProductPickSelected();
   const picker = g4ProductPickPickerHtml(products, product);
   if (!products.length) {
-    return `${picker}<div class="g3-product-journey-empty"><strong>Нет продуктов или услуг</strong><span>Сначала добавьте позицию в Gate 0.</span></div>`;
+    return `${picker}<div class="g3-product-journey-empty"><strong>Нет продуктов или услуг</strong><span>Сначала добавьте позицию в ${guruGateLabel("gate-0")}.</span></div>`;
   }
   if (!product) {
     return `${picker}<div class="g3-product-journey-empty"><strong>Продукт не выбран</strong></div>`;
   }
   const channels = g4LaunchChannels();
   if (!channels.length) {
-    return `${picker}<div class="g1-empty">Заполните каналы в Gate 0 или карту 5A в Gate 3, чтобы здесь появились площадки для реализации.</div>`;
+    return `${picker}<div class="g1-empty">Заполните каналы в ${guruGateLabel("gate-0")} или карту 5A в ${guruGateLabel("gate-3")}, чтобы здесь появились площадки для реализации.</div>`;
   }
   const key = g4ProductPickKey(product);
   const campaigns = g4EnsureLaunchCampaigns();
@@ -60066,7 +59431,7 @@ g4CampaignLaunchCenterHtml = function () {
     ${g4v192TypeGroupHtml("search", "Поисковые кампании", channels, campaigns, key)}
     ${g4v192TypeGroupHtml("media", "Медийные кампании", channels, campaigns, key)}
     ${g4v192TypeGroupHtml("smm", "SMM и соцсети", channels, campaigns, key)}
-    ${g4v192TypeGroupHtml("other", "Другие каналы из Gate 0–3", channels, campaigns, key)}
+    ${g4v192TypeGroupHtml("other", `Другие каналы из ${guruGateLabel("gate-0")}–3`, channels, campaigns, key)}
   </div>`;
 };
 
@@ -63195,29 +62560,19 @@ guruGateContentPayloadV120 = function (gateId = activeGateId) {
   return payload;
 };
 
-// Gate identity exactly as the navigation shows it. renderGateNav() lists
-// state.gates in order and prints gate.title; the rendered menu is read first,
-// so a later reorder of the menu reaches the export without touching it here.
-// Internal ids (gate-N) are never renamed.
+// Gate identity exactly as the navigation shows it: order, number and title
+// come from GURU_GATE_ORDER (gate-order.js), the same list renderGateNav()
+// uses. Internal ids (gate-N) are never renamed.
 function guruExportGateNavigationV223(workspace) {
-  const gates = workspace?.gates || [];
-  const byId = new Map(gates.map((gate) => [gate.id, gate]));
-  const menuIds = [...(els?.gateNav?.querySelectorAll?.("[data-gate-id]") || [])]
-    .map((button) => button.dataset.gateId);
-  const fromMenu = menuIds.length === gates.length &&
-    new Set(menuIds).size === gates.length &&
-    menuIds.every((id) => byId.has(id));
-  const order = fromMenu ? menuIds : gates.map((gate) => gate.id);
-  return order.map((id, position) => {
-    const title = String(byId.get(id)?.title || "");
-    const match = title.match(/^\s*(\d+)\s*[.)]\s*(.*)$/);
+  return guruOrderedGates(workspace?.gates).map((gate, position) => {
+    const meta = guruGateMeta(gate.id);
     return {
-      id,
+      id: gate.id,
       position,
-      number: match ? match[1] : null,
-      name: match ? match[2] : title,
-      title,
-      source: fromMenu ? "gate-nav" : "state.gates",
+      number: meta ? String(meta.number) : null,
+      name: meta ? meta.name : String(gate.title || ""),
+      title: guruGateTitle(gate),
+      source: "GURU_GATE_ORDER",
     };
   });
 }
@@ -65273,7 +64628,7 @@ function g4ReadinessProductRowsHtmlV225(card, product) {
 function g4ReadinessGate0RowsHtmlV225(card) {
   const rows = g4ReadinessGate0RowsV225(card.id, state);
   return `<div class="g4-readiness-readonly" data-g4-readiness-readonly="${escapeAttr(card.id)}">
-    <div class="g4-readiness-readonly-note">Только чтение · живые данные из Gate 0 → Компания</div>
+    <div class="g4-readiness-readonly-note">Только чтение · живые данные из ${guruGateLabel("gate-0")} → Компания</div>
     ${rows
       .map((row) => {
         const canonical = guruCanonStatus(row.status);
@@ -65299,7 +64654,7 @@ function g4ReadinessCardHtmlV225(card, product) {
   const status = g4ReadinessCardStatusV225(card, product?.id || "", state);
   return `<details class="g1-card g4-readiness-card-v225 g4-readiness-state-${status}" data-g4-readiness-card="${escapeAttr(card.id)}" data-ui-keeper-key="g4-readiness-${escapeAttr(product?.id || "company")}-${escapeAttr(card.id)}">
     <summary class="g1-card-header g4-readiness-card-head-v225">
-      <span class="g1-section-left g4-readiness-card-title-v225"><strong class="g1-card-title">${escapeHtml(card.title)}</strong><small class="g1-section-progress">${isCompany ? "Компания · Gate 0" : "Продукт · " + escapeHtml(product.name)}</small></span>
+      <span class="g1-section-left g4-readiness-card-title-v225"><strong class="g1-card-title">${escapeHtml(card.title)}</strong><small class="g1-section-progress">${isCompany ? `Компания · ${guruGateLabel("gate-0")}` : "Продукт · " + escapeHtml(product.name)}</small></span>
       <span class="status-pill status-${status}" data-g4-readiness-status="${escapeAttr(card.id)}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
       <span class="g4-readiness-toggle-v225">Открыть</span>
     </summary>
@@ -65332,7 +64687,7 @@ g4CampaignLaunchCenterHtml = function () {
   const product = g4ProductPickSelected();
   const picker = g4ProductPickPickerHtml(products, product);
   if (!products.length) {
-    return `${picker}<div class="g3-product-journey-empty"><strong>Нет продуктов или услуг</strong><span>Сначала добавьте позицию в Gate 0.</span></div>`;
+    return `${picker}<div class="g3-product-journey-empty"><strong>Нет продуктов или услуг</strong><span>Сначала добавьте позицию в ${guruGateLabel("gate-0")}.</span></div>`;
   }
   if (!product) {
     return `${picker}<div class="g3-product-journey-empty"><strong>Продукт не выбран</strong></div>`;
@@ -65345,9 +64700,9 @@ g4CampaignLaunchCenterHtml = function () {
         g4v192TypeGroupHtml("search", "Поисковые кампании", channels, campaigns, key),
         g4v192TypeGroupHtml("media", "Медийные кампании", channels, campaigns, key),
         g4v192TypeGroupHtml("smm", "SMM и соцсети", channels, campaigns, key),
-        g4v192TypeGroupHtml("other", "Другие каналы из Gate 0–3", channels, campaigns, key),
+        g4v192TypeGroupHtml("other", `Другие каналы из ${guruGateLabel("gate-0")}–3`, channels, campaigns, key),
       ].join("")
-    : '<div class="g1-empty">Заполните каналы в Gate 0 или карту 5A в Gate 3, чтобы здесь появились площадки для реализации.</div>';
+    : `<div class="g1-empty">Заполните каналы в ${guruGateLabel("gate-0")} или карту 5A в ${guruGateLabel("gate-3")}, чтобы здесь появились площадки для реализации.</div>`;
   return `<div class="g1-route">
     ${picker}
     ${g4ProductPickCategorySummaryHtml(product)}
@@ -65789,7 +65144,7 @@ g2SyncInfo = function (card) {
     const source = g2FindGateCard("gate-1", rule.g1);
     if (source)
       info.source = {
-        gate: "Gate 1",
+        gate: `${guruGateLabel("gate-1")}`,
         title: source.title,
         status: source.status || "not_started",
       };
@@ -65874,7 +65229,7 @@ renderGate2Redesign = function (gate, cards) {
 
   els.contentArea.innerHTML = `<div class="g1-redesign g2-company-product-v226">
     <section class="g2-scope-v226" data-g2-scope="company" data-g2-model-card-count="${audit.company.length}" data-g2-visible-card-count="${companyVisibleCount}">
-      ${gate0SectionHeadingHtml("Компания", `Общие проверки проекта и инфраструктуры · ${audit.company.length} карточек в структуре Gate 2.`)}
+      ${gate0SectionHeadingHtml("Компания", `Общие проверки проекта и инфраструктуры · ${audit.company.length} карточек в структуре ${guruGateLabel("gate-2")}.`)}
       ${guruStrategicFoundationCompanyHtmlV310(state)}
       ${companySections.length ? companySections.map((section) => g2CompanySectionHtmlV226(section, "company")).join("") : '<div class="g1-empty">По текущему фильтру ничего не найдено.</div>'}
     </section>
@@ -66356,7 +65711,7 @@ function gate5ProductPickerHtmlV230(products, product) {
       <option value="">Выберите продукт / услугу</option>
       ${g3ProductJourneyOptions(products, product?.id || "")}
     </select>
-    <small>Направление → Товар из единого каталога Gate 0. Хранение и фильтрация — только по product_id.</small>
+    <small>Направление → Товар из единого каталога ${guruGateLabel("gate-0")}. Хранение и фильтрация — только по product_id.</small>
   </label>`;
 }
 
@@ -66367,7 +65722,7 @@ renderGate5Integrated = function (gate, cards) {
   const unassigned = gate5UnassignedSummaryV230(state);
   const companyNote = unassigned.campaigns
     ? `Самостоятельных company-блоков нет. Без изменения сохранены нераспределённые legacy-данные: кампаний — ${unassigned.campaigns}, строк отчётов — ${unassigned.reportRows}, строк структуры — ${unassigned.setupRows}, снимков — ${unassigned.snapshots}, бизнес-связей — ${unassigned.links}, событий журнала — ${unassigned.journalRows}, документов импорта — ${unassigned.importDocuments}. Для них нет доказанного product_id, поэтому автоматическая привязка не выполнялась.`
-    : "Самостоятельных company-блоков нет: весь цикл Gate 5 относится к запуску конкретного товара.";
+    : `Самостоятельных company-блоков нет: весь цикл ${guruGateLabel("gate-5")} относится к запуску конкретного товара.`;
 
   let productRoot = null;
   if (product) {
@@ -66391,7 +65746,7 @@ renderGate5Integrated = function (gate, cards) {
     </section>`;
   const body = root.querySelector(".guru-product-scope-body-v230");
   if (!products.length) {
-    body.innerHTML = `<div class="g3-product-journey-empty"><strong>Нет продуктов или услуг</strong><span>Сначала добавьте позицию в Gate 0.</span></div>`;
+    body.innerHTML = `<div class="g3-product-journey-empty"><strong>Нет продуктов или услуг</strong><span>Сначала добавьте позицию в ${guruGateLabel("gate-0")}.</span></div>`;
   } else if (!product) {
     body.innerHTML = `<div class="g3-product-journey-empty"><strong>Продукт не выбран</strong></div>`;
   } else if (productRoot) {
@@ -66605,7 +65960,7 @@ function gate6ProductPickerHtmlV230(products, product) {
       <option value="">Выберите продукт / услугу</option>
       ${g3ProductJourneyOptions(products, product?.id || "")}
     </select>
-    <small>Направление → Товар из единого каталога Gate 0. События сохраняются только по product_id.</small>
+    <small>Направление → Товар из единого каталога ${guruGateLabel("gate-0")}. События сохраняются только по product_id.</small>
   </label>`;
 }
 
@@ -66627,13 +65982,13 @@ renderGate6Calendar = function (gate, cards) {
     productField.value = state.project?.name || "";
     productField.readOnly = true;
     productField.dataset.guruFieldNeutral = "";
-    productField.title = "Источник: Gate 0 · Паспорт проекта";
+    productField.title = `Источник: ${guruGateLabel("gate-0")} · Паспорт проекта`;
   }
   if (channelsField) {
     channelsField.value = gate6CompanyChannelsV230() || "Не заполнено в источнике";
     channelsField.readOnly = true;
     channelsField.dataset.guruFieldNeutral = "";
-    channelsField.title = "Источник: Gate 0 · Каналы";
+    channelsField.title = `Источник: ${guruGateLabel("gate-0")} · Каналы`;
   }
   if (audienceField) audienceField.remove();
   if (introTop) introTop.remove();
@@ -66641,7 +65996,7 @@ renderGate6Calendar = function (gate, cards) {
   const legacyActionNodes = [...page.children].filter(
     (node) =>
       node !== intro &&
-      /Действия из Gate 8/i.test(node.querySelector?.("h3")?.textContent || ""),
+      new RegExp(`Действия из ${guruGateLabel("gate-8")}`, "i").test(node.querySelector?.("h3")?.textContent || ""),
   );
   const remainingProductNodes = [...page.children].filter(
     (node) => node !== intro && !legacyActionNodes.includes(node),
@@ -66652,7 +66007,7 @@ renderGate6Calendar = function (gate, cards) {
   companySection.dataset.gateScope = "company";
   companySection.innerHTML = `${gate0SectionHeadingHtml(
     "Компания",
-    "Период задаётся здесь; название проекта и каналы читаются живьём из Gate 0.",
+    `Период задаётся здесь; название проекта и каналы читаются живьём из ${guruGateLabel("gate-0")}.`,
   )}${guruStrategicFoundationCompanyHtmlV310(state)}`;
   if (intro) companySection.appendChild(intro);
   legacyActionNodes.forEach((node) => companySection.appendChild(node));
@@ -66666,7 +66021,7 @@ renderGate6Calendar = function (gate, cards) {
   )}${gate6ProductPickerHtmlV230(products, product)}<div class="guru-product-scope-body-v230"></div>`;
   const body = productSection.querySelector(".guru-product-scope-body-v230");
   if (!products.length) {
-    body.innerHTML = `<div class="g3-product-journey-empty"><strong>Нет продуктов или услуг</strong><span>Сначала добавьте позицию в Gate 0.</span></div>`;
+    body.innerHTML = `<div class="g3-product-journey-empty"><strong>Нет продуктов или услуг</strong><span>Сначала добавьте позицию в ${guruGateLabel("gate-0")}.</span></div>`;
   } else if (!product) {
     body.innerHTML = `<div class="g3-product-journey-empty"><strong>Продукт не выбран</strong></div>`;
   } else {
@@ -66675,7 +66030,7 @@ renderGate6Calendar = function (gate, cards) {
     const audience = document.createElement("div");
     audience.className = "gate6-context-grid guru-product-context-v230";
     const value = gate6ProductAudienceV230(product);
-    audience.innerHTML = `<label class="gate6-field">Главная аудитория<input readonly data-guru-field-neutral value="${escapeAttr(value || "Не заполнено в источнике")}" title="Источник: Gate 0 · Сегменты выбранного product_id"></label>`;
+    audience.innerHTML = `<label class="gate6-field">Главная аудитория<input readonly data-guru-field-neutral value="${escapeAttr(value || "Не заполнено в источнике")}" title="Источник: ${guruGateLabel("gate-0")} · Сегменты выбранного product_id"></label>`;
     body.appendChild(audience);
     remainingProductNodes.forEach((node) => body.appendChild(node));
     const actions = gate6EnsureProductStateV230(
@@ -66685,7 +66040,7 @@ renderGate6Calendar = function (gate, cards) {
     if (actions.length) {
       body.insertAdjacentHTML(
         "beforeend",
-        `<section class="gate6-plan"><div class="gate6-section-head"><div><h3>Действия из Gate 8</h3><p class="muted">Контрольные действия этого продукта, связанные со сроком прогноза.</p></div><span class="gate6-count">${actions.length}</span></div><div class="g8-history">${actions.map((item) => `<div class="g8-history-row"><div><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.source)}</span></div><div><span>Срок</span><b>${escapeHtml(item.deadline)}</b></div><div><span>Критерий</span><b>${escapeHtml(item.criterion)}</b></div></div>`).join("")}</div></section>`,
+        `<section class="gate6-plan"><div class="gate6-section-head"><div><h3>Действия из ${guruGateLabel("gate-8")}</h3><p class="muted">Контрольные действия этого продукта, связанные со сроком прогноза.</p></div><span class="gate6-count">${actions.length}</span></div><div class="g8-history">${actions.map((item) => `<div class="g8-history-row"><div><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.source)}</span></div><div><span>Срок</span><b>${escapeHtml(item.deadline)}</b></div><div><span>Критерий</span><b>${escapeHtml(item.criterion)}</b></div></div>`).join("")}</div></section>`,
       );
     }
   }
@@ -66796,7 +66151,7 @@ renderGate7Journal = function (gate, cards) {
   productSection.dataset.gateScope = "product";
   productSection.innerHTML = `${gate0SectionHeadingHtml(
     "Продукт-Услуга",
-    "В текущей структуре Gate 7 нет карточек и полей с product_id.",
+    `В текущей структуре ${guruGateLabel("gate-7")} нет карточек и полей с product_id.`,
   )}<div class="guru-gate-scope-empty-v230">Продуктовых блоков нет — селектор не требуется.</div>`;
 
   page.replaceChildren(companySection, productSection);
@@ -67003,7 +66358,7 @@ g8GoalCandidate = function () {
       budget: primary.goalBudget,
       allowedCost: primary.goalAllowedCost,
       updatedAt: primary.updated_at || project.goalUpdatedAt || "",
-    } : null, source: "Gate 0 → Цель проекта" };
+    } : null, source: `${guruGateLabel("gate-0")} → Цель проекта` };
   }
   const structured = g8Text(project.goalDescription || project.goalText)
     ? {
@@ -67023,15 +66378,15 @@ g8GoalCandidate = function () {
     project.targetGoal,
     project.marketingGoal,
   ].find((value) => value && typeof value === "object");
-  if (object) return { raw: object, source: "Gate 0 → Цель проекта" };
+  if (object) return { raw: object, source: `${guruGateLabel("gate-0")} → Цель проекта` };
   const text = g8First(
     [project.goal, project.projectGoal, project.targetGoal, project.marketingGoal]
       .find((value) => typeof value === "string"),
     project.goalText,
   );
   return text
-    ? { raw: { description: text }, source: "Gate 0 → Цель проекта" }
-    : { raw: null, source: "Gate 0 → Цель проекта" };
+    ? { raw: { description: text }, source: `${guruGateLabel("gate-0")} → Цель проекта` }
+    : { raw: null, source: `${guruGateLabel("gate-0")} → Цель проекта` };
 };
 
 const __gate8ProductPrevBaseInputsV230 = g8BaseInputs;
@@ -67092,21 +66447,21 @@ g8CollectFacts = function () {
       { product_id: product.id },
     );
   };
-  set("product", "Продукт", product.name, "Gate 0", "Единый каталог", "факт");
-  set("segment", "Сегмент", snapshot.segment, "Gate 0", "Сегменты");
-  set("jtbd", "Задача клиента", snapshot.jtbd, "Gate 0", "JTBD");
-  set("positioning", "Позиционирование", snapshot.positioning, "Gate 0", "Позиционирование");
-  set("usp", "УТП", snapshot.usp, "Gate 0", "УТП");
-  set("offer", "Оффер", snapshot.offer, "Gate 0", "Оффер");
-  set("cta", "CTA", snapshot.cta, "Gate 0", "Оффер");
-  set("searchFocus", "Поисковый фокус", snapshot.queries, "Gate 1", "Спрос выбранного product_id");
-  set("averageCheck", "Средний чек", g8Number(economics.aov), "Gate 1", "Юнит-экономика");
-  set("margin", "Маржинальность", g8Number(economics.marginPercent), "Gate 1", "Юнит-экономика");
-  set("allowedCpa", "Допустимый CPA", g8Number(economics.allowedCpa), "Gate 1", "Юнит-экономика");
-  set("allowedCpl", "Допустимый CPL", g8Number(economics.allowedCpl), "Gate 1", "Юнит-экономика");
-  set("ltv", "LTV", g8Number(economics.ltv), "Gate 1", "Юнит-экономика");
-  set("budget", "Плановый рекламный бюджет", g8Number(plan.budget), "Gate 4", "Кампании продукта");
-  set("targetCpl", "Целевой CPL запуска", g8Number(plan.cpl), "Gate 4", "Прогнозные допущения продукта");
+  set("product", "Продукт", product.name, `${guruGateLabel("gate-0")}`, "Единый каталог", "факт");
+  set("segment", "Сегмент", snapshot.segment, `${guruGateLabel("gate-0")}`, "Сегменты");
+  set("jtbd", "Задача клиента", snapshot.jtbd, `${guruGateLabel("gate-0")}`, "JTBD");
+  set("positioning", "Позиционирование", snapshot.positioning, `${guruGateLabel("gate-0")}`, "Позиционирование");
+  set("usp", "УТП", snapshot.usp, `${guruGateLabel("gate-0")}`, "УТП");
+  set("offer", "Оффер", snapshot.offer, `${guruGateLabel("gate-0")}`, "Оффер");
+  set("cta", "CTA", snapshot.cta, `${guruGateLabel("gate-0")}`, "Оффер");
+  set("searchFocus", "Поисковый фокус", snapshot.queries, `${guruGateLabel("gate-1")}`, "Спрос выбранного product_id");
+  set("averageCheck", "Средний чек", g8Number(economics.aov), `${guruGateLabel("gate-1")}`, "Юнит-экономика");
+  set("margin", "Маржинальность", g8Number(economics.marginPercent), `${guruGateLabel("gate-1")}`, "Юнит-экономика");
+  set("allowedCpa", "Допустимый CPA", g8Number(economics.allowedCpa), `${guruGateLabel("gate-1")}`, "Юнит-экономика");
+  set("allowedCpl", "Допустимый CPL", g8Number(economics.allowedCpl), `${guruGateLabel("gate-1")}`, "Юнит-экономика");
+  set("ltv", "LTV", g8Number(economics.ltv), `${guruGateLabel("gate-1")}`, "Юнит-экономика");
+  set("budget", "Плановый рекламный бюджет", g8Number(plan.budget), `${guruGateLabel("gate-4")}`, "Кампании продукта");
+  set("targetCpl", "Целевой CPL запуска", g8Number(plan.cpl), `${guruGateLabel("gate-4")}`, "Прогнозные допущения продукта");
   ["cpc", "ctr", "siteConversion", "saleConversion", "demandChange"].forEach(
     (key) => {
       const value = plan.assumptions?.[key];
@@ -67115,7 +66470,7 @@ g8CollectFacts = function () {
         key,
         key,
         key === "demandChange" ? g8SignedNumber(value) : g8Number(value),
-        "Gate 4",
+        `${guruGateLabel("gate-4")}`,
         "Прогнозные допущения продукта",
       );
     },
@@ -67138,7 +66493,7 @@ g8ReadinessChecks = function (bundle, goal) {
   patch(
     "Посадочная страница готова",
     Boolean(guruV185Text(snapshot.landing)),
-    "Gate 1–2 → Посадочная выбранного product_id",
+    `${guruGateLabel("gate-1")}–2 → Посадочная выбранного product_id`,
     "gate-1",
   );
   patch(
@@ -67148,7 +66503,7 @@ g8ReadinessChecks = function (bundle, goal) {
         guruV185Text,
       ),
     ),
-    "Gate 4 → Кампании выбранного product_id",
+    `${guruGateLabel("gate-4")} → Кампании выбранного product_id`,
     "gate-4",
   );
   result.ready = result.checks.filter((item) => item.passed).length;
@@ -67191,7 +66546,7 @@ g8ApplyManualToProject = function () {
   ].forEach((key) => {
     if (g8Text(manual[key]) === "") return;
     plan[key] = String(manual[key]);
-    applied.push(`${key} → Gate 4 (${product.name})`);
+    applied.push(`${key} → ${guruGateLabel("gate-4")} (${product.name})`);
   });
   const economics = gate8ExactEconomicsV230(product.id);
   if (economics.item) {
@@ -67200,15 +66555,15 @@ g8ApplyManualToProject = function () {
     economics.item.steps.margin = economics.item.steps.margin || {};
     if (g8Text(manual.averageCheck) !== "") {
       economics.item.steps.revenue.avgCheck = String(manual.averageCheck);
-      applied.push(`средний чек → Gate 1 (${product.name})`);
+      applied.push(`средний чек → ${guruGateLabel("gate-1")} (${product.name})`);
     }
     if (g8Text(manual.margin) !== "") {
       economics.item.steps.margin.marginPct = String(manual.margin);
-      applied.push(`маржинальность → Gate 1 (${product.name})`);
+      applied.push(`маржинальность → ${guruGateLabel("gate-1")} (${product.name})`);
     }
   }
   data.message = applied.length
-    ? `Применено: ${applied.join("; ")}. Фактические данные Gate 5 не изменялись.`
+    ? `Применено: ${applied.join("; ")}. Фактические данные ${guruGateLabel("gate-5")} не изменялись.`
     : "Нет значений, для которых в исходных Gate есть редактируемое плановое поле.";
   saveState();
   renderGate();
@@ -67253,7 +66608,7 @@ g8CreateTask = function () {
     product_id: product.id,
     createdAt: task.createdAt,
   });
-  analysis.data.message = "Задача создана в Gate 7 и связана с прогнозом продукта.";
+  analysis.data.message = `Задача создана в ${guruGateLabel("gate-7")} и связана с прогнозом продукта.`;
   saveState();
   renderGate();
 };
@@ -67265,7 +66620,7 @@ function gate8ProductPickerHtmlV230(products, product) {
       <option value="">Выберите продукт / услугу</option>
       ${g3ProductJourneyOptions(products, product?.id || "")}
     </select>
-    <small>Направление → Товар из единого каталога Gate 0. Сценарии и история хранятся только по product_id.</small>
+    <small>Направление → Товар из единого каталога ${guruGateLabel("gate-0")}. Сценарии и история хранятся только по product_id.</small>
   </label>`;
 }
 
@@ -67287,7 +66642,7 @@ renderGate8Forecast = function () {
     companySection.dataset.gateScope = "company";
     companySection.innerHTML = gate0SectionHeadingHtml(
       "Компания",
-      "Цель проекта читается живьём из Gate 0 и не дублируется в прогнозе.",
+      `Цель проекта читается живьём из ${guruGateLabel("gate-0")} и не дублируется в прогнозе.`,
     );
     if (goalSection) companySection.appendChild(goalSection);
     const productSection = document.createElement("section");
@@ -67314,15 +66669,15 @@ renderGate8Forecast = function () {
       ? "in_progress"
       : "not_started";
   els.contentArea.innerHTML = `<div class="g8-page guru-company-product-layout-v230" data-gate-scope-layout="v230">
-    <header class="g8-header"><div><div class="analytics-path">Gate 8 → Прогноз и моделирование</div><h2>Насколько реально достичь цели проекта?</h2><p>Расчёт строится для конкретной позиции из единого каталога.</p></div>${g8Pill("not_started")}</header>
+    <header class="g8-header"><div><div class="analytics-path">${guruGateLabel("gate-8")} → Прогноз и моделирование</div><h2>Насколько реально достичь цели проекта?</h2><p>Расчёт строится для конкретной позиции из единого каталога.</p></div>${g8Pill("not_started")}</header>
     <section class="guru-gate-scope-v230" data-gate-scope="company">
-      ${gate0SectionHeadingHtml("Компания", "Цель проекта читается живьём из Gate 0 и не дублируется в прогнозе.")}
+      ${gate0SectionHeadingHtml("Компания", `Цель проекта читается живьём из ${guruGateLabel("gate-0")} и не дублируется в прогнозе.`)}
       ${g8Section(1, "Цель проекта", goalStatus, g8GoalHtml({ goal }))}
     </section>
     <section class="guru-gate-scope-v230" data-gate-scope="product">
       ${gate0SectionHeadingHtml("Продукт-Услуга", "Расчёт, сценарии, риски, действия и история выбранной позиции.")}
       ${gate8ProductPickerHtmlV230(products, product)}
-      <div class="g3-product-journey-empty"><strong>${products.length ? "Продукт не выбран" : "Нет продуктов или услуг"}</strong>${products.length ? "" : "<span>Сначала добавьте позицию в Gate 0.</span>"}</div>
+      <div class="g3-product-journey-empty"><strong>${products.length ? "Продукт не выбран" : "Нет продуктов или услуг"}</strong>${products.length ? "" : `<span>Сначала добавьте позицию в ${guruGateLabel("gate-0")}.</span>`}</div>
     </section>
   </div>`;
 };
@@ -71033,12 +70388,12 @@ function guruGate1FinalKeywordFoundationHtmlV259() {
   return `<section class="gate1-final-keyword-foundation-v259" data-gate1-final-foundation-v259 data-gate1-final-product-id-v259="${escapeAttr(product.id)}">
     <div class="gate0-scope-field-head-v194"><div>
       <strong>Фундамент ключевых слов (Предфинальный)</strong>
-      <small>${escapeHtml(product.name)} · подтверждённые фразы из Gate 0 и Gate 1 сопоставляются с метриками строго по тексту.</small>
+      <small>${escapeHtml(product.name)} · подтверждённые фразы из ${guruGateLabel("gate-0")} и ${guruGateLabel("gate-1")} сопоставляются с метриками строго по тексту.</small>
     </div></div>
     <div class="gate0-keyword-foundation-summary-v247">
       <span>${confirmed.length} подтверждено</span>
-      <span>Gate 0: ${gate0Count}</span>
-      <span>Gate 1: ${middleCount}</span>
+      <span>${guruGateLabel("gate-0")}: ${gate0Count}</span>
+      <span>${guruGateLabel("gate-1")}: ${middleCount}</span>
     </div>
     <div class="gate0-keyword-foundation-actions-v247">
       <button type="button" class="small-btn" data-gate1-final-export-v259 ${confirmed.length ? "" : "disabled"}>Экспорт CSV</button>
@@ -71153,7 +70508,7 @@ pv181JtbdModelHtml = function (mapIndex, itemId, itemData, level) {
     <section class="pv181-jtbd-model">
       <label class="g1-field pv181-main-query">
         <span><b class="pv181-query-number">№1</b> Основной JTBD</span>
-        <small class="guru-jtbd-source">Источник: Gate 0 · JTBD${escapeHtml(scopeNote)} · только чтение</small>
+        <small class="guru-jtbd-source">Источник: ${guruGateLabel("gate-0")} · JTBD${escapeHtml(scopeNote)} · только чтение</small>
         <div class="g1-input ${main.value ? "is-filled" : "is-empty"}" data-gate1-live-jtbd-v259>${escapeHtml(main.value || "Не заполнено в источнике")}</div>
       </label>
       ${typeof guruGate1PrimaryGroupHtmlV267 === "function"
@@ -71728,7 +71083,7 @@ function gate1CompanyBrandDemandHtmlV345(workspace = state) {
   const unmatched = gate1CompanyBrandDemandImportIssuesV356(importState?.unmatched);
   return `<section class="pv181-demand-level-v266" data-pv181-company-demand data-pv181-company-demand-v345>
     <div class="pv140-section-title" style="margin-top:14px;">Ключевые слова компании</div>
-    <small style="display:block;color:var(--muted);font-size:11px;">Единый список с «Фундаментом ключевых слов · Компания» в Gate 0. Добавление и удаление слов действует в обоих блоках. Метрики удалённых слов сохраняются в архиве.</small>
+    <small style="display:block;color:var(--muted);font-size:11px;">Единый список с «Фундаментом ключевых слов · Компания» в ${guruGateLabel("gate-0")}. Добавление и удаление слов действует в обоих блоках. Метрики удалённых слов сохраняются в архиве.</small>
     <small style="display:block;color:var(--muted);font-size:11px;">Блок готов, когда заполнены все шесть метрик у каждого слова. Нулевое значение допустимо.</small>
     <div class="gate0-keyword-foundation-actions-v247">
       <button type="button" class="small-btn" data-pv181-company-demand-export-v356 ${entries.length ? "" : "disabled"}>Экспорт CSV</button>
@@ -71752,7 +71107,7 @@ function gate1CompanyBrandDemandHtmlV345(workspace = state) {
         ${pv181DemandTableHeadHtmlV272()}
         <div data-pv181-company-demand-rows-v345>${visibleEntries.length
           ? gate1CompanyBrandDemandRowsHtmlV345(visibleEntries)
-          : '<div class="pv181-demand-origin-empty">Добавьте ключевое слово компании или подтвердите фразу в Gate 0.</div>'}</div>
+          : `<div class="pv181-demand-origin-empty">Добавьте ключевое слово компании или подтвердите фразу в ${guruGateLabel("gate-0")}.</div>`}</div>
       </div>
     </details>
     <form class="gate0-keyword-foundation-actions-v247" data-company-demand-add-form>
@@ -74005,7 +73360,7 @@ function guruGate1CreateCanonicalAdditionalV594(itemId, entry) {
     field: "jtbd",
     value: "",
     jtbd: { situation: "", desired_action: "", result: "" },
-    source: { type: "manual", label: "Gate 1 · группа запросов" },
+    source: { type: "manual", label: `${guruGateLabel("gate-1")} · группа запросов` },
     confirmation_status: "draft",
     created_at: now,
     updated_at: now,
@@ -74044,7 +73399,7 @@ function guruGate1SyncJtbdSourceV594(itemId, itemData) {
           ...guruV194RecordLocation("product", product),
           jtbd: record.jtbd && typeof record.jtbd === "object"
             ? { ...record.jtbd } : undefined,
-          source: { type: "inheritance_override", label: "Перенос JTBD из Gate 1", inherited_from_id: record.id },
+          source: { type: "inheritance_override", label: `Перенос JTBD из ${guruGateLabel("gate-1")}`, inherited_from_id: record.id },
           created_at: now,
           updated_at: now,
         }));
@@ -74059,7 +73414,7 @@ function guruGate1SyncJtbdSourceV594(itemId, itemData) {
           ...guruV194RecordLocation("product", product),
           field: "jtbd",
           value: legacyMain,
-          source: { type: "migration", label: "Основной JTBD из Gate 1" },
+          source: { type: "migration", label: `Основной JTBD из ${guruGateLabel("gate-1")}` },
           confirmation_status: "draft",
           created_at: now,
           updated_at: now,
@@ -74083,7 +73438,7 @@ function guruGate1SyncJtbdSourceV594(itemId, itemData) {
             desired_action: guruV185Text(entry.desired_action),
             result: guruV185Text(entry.result),
           },
-          source: { type: "migration", label: "Дополнительный JTBD из Gate 1", legacy_id: entry.id },
+          source: { type: "migration", label: `Дополнительный JTBD из ${guruGateLabel("gate-1")}`, legacy_id: entry.id },
           confirmation_status: "draft",
           created_at: now,
           updated_at: now,
@@ -74163,7 +73518,7 @@ function guruGate1SavedJtbdsHtmlV520(mapIndex, itemId, itemData, current, onlyId
         { sortQueryCount: "desc" },
       );
       return `<article class="pv181-group-jtbd-v267" data-pv181-additional-jtbd-v268="${escapeAttr(entry.id)}" data-gate1-saved-jtbd-v520="${escapeAttr(entry.id)}">
-        <header><span>Дополнительный JTBD · из Gate 4</span><small>Сохранённая связь по ID · только чтение</small></header>
+        <header><span>Дополнительный JTBD · из ${guruGateLabel("gate-4")}</span><small>Сохранённая связь по ID · только чтение</small></header>
         <div class="gate0-jtbd-sentence-v194"><small>Единая формулировка JTBD</small><strong>${escapeHtml(entry.text)}</strong></div>
         <section class="pv181-additional-jtbd-keywords-v274" data-pv181-additional-jtbd-keywords-v274="${escapeAttr(entry.id)}">
           <header><strong>Ключевые слова дополнительного JTBD</strong><span>${visible.length} фраз</span></header>
@@ -74303,7 +73658,7 @@ function guruGate1AdditionalJtbdsHtmlV268(mapIndex, itemId, itemData, duplicates
       const sentence = guruV185Text(entry.gate0_value) ||
         guruV194JtbdSentence(entry, { placeholders: true });
       return `<article class="pv181-group-jtbd-v267" data-pv181-additional-jtbd-v268="${escapeAttr(entry.id)}" data-pv181-jtbd-drop-target-v274="additional" data-pv181-additional-jtbd-id-v274="${escapeAttr(entry.id)}" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}">
-        <header><span>Дополнительный JTBD №${index + 2}</span>${group ? `<strong>${escapeHtml(guruV185Text(group.mainQuery) || `Группа запросов ${index + 1}`)}</strong>` : ""}${canonical ? "<small>Источник: Gate 0 · только чтение</small>" : ""}</header>
+        <header><span>Дополнительный JTBD №${index + 2}</span>${group ? `<strong>${escapeHtml(guruV185Text(group.mainQuery) || `Группа запросов ${index + 1}`)}</strong>` : ""}${canonical ? `<small>Источник: ${guruGateLabel("gate-0")} · только чтение</small>` : ""}</header>
         <div class="gate0-jtbd-parts-v194">
           ${fields.map(([field, label, hint]) => `<label><small>${escapeHtml(hint)}</small><strong>${escapeHtml(label)}</strong>${canonical ? `<div class="g1-input ${guruV185Text(entry[field]) ? "is-filled" : "is-empty"}">${escapeHtml(entry[field] || "—")}</div>` : `<textarea class="g1-input passport-v116-autosize ${guruV185Text(entry[field]) ? "is-filled" : "is-empty"}" data-pv181-map="${mapIndex}" data-pv181-item="${escapeAttr(itemId)}" data-pv181-jtbd-part-v268 data-pv181-jtbd-additional-index-v268="${index}" data-pv181-jtbd-field-v268="${escapeAttr(field)}" rows="1">${escapeHtml(entry[field])}</textarea>`}</label>`).join("")}
         </div>
@@ -74324,7 +73679,7 @@ function guruGate1AdditionalJtbdsHtmlV268(mapIndex, itemId, itemData, duplicates
       </article>`;
     }).join("") : '<div class="pv181-keyword-empty">Дополнительные JTBD пока не добавлены.</div>'}
     ${canonical ? "" : guruGate1SavedJtbdsHtmlV520(mapIndex, itemId, itemData, additional, "", duplicateKeys)}
-    ${canonical ? `<div class="guru-jtbd-source"><small>Добавляйте и редактируйте JTBD в стратегической основе Gate 0.</small><button type="button" class="small-btn" data-g4-jump-target="${sourceTarget}">Открыть JTBD в Gate 0 →</button></div>` : `<button type="button" class="small-btn add-inline-btn" data-pv181-jtbd-add data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" ${totalCount >= 3 ? "disabled" : ""}>+ Добавить дополнительный JTBD</button>`}
+    ${canonical ? `<div class="guru-jtbd-source"><small>Добавляйте и редактируйте JTBD в стратегической основе ${guruGateLabel("gate-0")}.</small><button type="button" class="small-btn" data-g4-jump-target="${sourceTarget}">Открыть JTBD в ${guruGateLabel("gate-0")} →</button></div>` : `<button type="button" class="small-btn add-inline-btn" data-pv181-jtbd-add data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" ${totalCount >= 3 ? "disabled" : ""}>+ Добавить дополнительный JTBD</button>`}
     ${archivedTexts.length ? `<details class="guru-jtbd-legacy-archive-v594"><summary>Прежние записи вне стратегии · ${archivedTexts.length}</summary><small>Сохранены без изменений и не входят в счётчик JTBD.</small><ul>${archivedTexts.map((value) => `<li>${escapeHtml(value)}</li>`).join("")}</ul></details>` : ""}
     ${guruGate1DuplicateDecisionsHtmlV562(mapIndex, itemId, itemData, duplicates)}
   </div>`;
@@ -74850,7 +74205,7 @@ function guruGate1OpenTransferMenuV557(trigger) {
   const context = select && pv181QueryGroupTarget(select);
   if (!context) return;
   const main = guruGate1ResolvedMainJtbdV259(context.itemId).value;
-  const descriptions = new Map([["primary", main || "Не заполнено в Gate 0"]]);
+  const descriptions = new Map([["primary", main || `Не заполнено в ${guruGateLabel("gate-0")}`]]);
   guruGate1EnsureAdditionalJtbdsV268(context.itemData).forEach((entry) => {
     descriptions.set(`additional:${entry.id}`,
       guruV194JtbdSentence(entry) || guruGate1AdditionalJtbdTextV268(entry) ||
@@ -75615,7 +74970,7 @@ function g3ExecutionCampaignResultV282(snapshot, predicate, options = {}) {
     : false;
   return g3ExecutionResultV282(
     g3ExecutionReadyStatusV282(campaignProgress || extraProgress),
-    options.source || `Gate 4 · ${g4LaunchChannelLabel(channel)}`,
+    options.source || `${guruGateLabel("gate-4")} · ${g4LaunchChannelLabel(channel)}`,
     {
       gateId: "gate-4",
       kind: options.kind || "gate4-campaign",
@@ -75644,7 +74999,7 @@ function g3ExecutionResolveV282(item, snapshot) {
     );
     return g3ExecutionResultV282(
       g3ExecutionReadyStatusV282(confirmed.length > 0 || hasDemand),
-      "Gate 1 · Фундамент ключевых слов / Спрос",
+      `${guruGateLabel("gate-1")} · Фундамент ключевых слов / Спрос`,
       {
         gateId: "gate-1",
         kind: "gate1-keywords",
@@ -75661,7 +75016,7 @@ function g3ExecutionResolveV282(item, snapshot) {
         /(?:яндекс|yandex).*?(?:директ|direct).*?(?:поиск|search)|(?:google).*?(?:ads).*?(?:search)/i.test(
           channel.executionLabelV282,
         ),
-      { source: "Gate 4 · поисковая кампания товара" },
+      { source: `${guruGateLabel("gate-4")} · поисковая кампания товара` },
     );
   }
   if (item.resolver === "media_campaign" || item.resolver === "media_creatives") {
@@ -75671,7 +75026,7 @@ function g3ExecutionResolveV282(item, snapshot) {
         channel.launchType === "media" &&
         /рся|медийн|display|мастер\s+кампан/i.test(channel.executionLabelV282),
       {
-        source: "Gate 4 · медийная кампания товара",
+        source: `${guruGateLabel("gate-4")} · медийная кампания товара`,
         field: item.resolver === "media_creatives" ? "creative" : "campaignName",
         hasProgress: (_channel, campaign) =>
           item.resolver === "media_creatives" && Boolean(guruV185Text(campaign?.creative)),
@@ -75682,7 +75037,7 @@ function g3ExecutionResolveV282(item, snapshot) {
     return g3ExecutionCampaignResultV282(
       snapshot,
       (channel) => channel.launchType === "smm",
-      { source: "Gate 4 · SMM и соцсети" },
+      { source: `${guruGateLabel("gate-4")} · SMM и соцсети` },
     );
   }
   if (item.resolver === "retargeting") {
@@ -75699,7 +75054,7 @@ function g3ExecutionResolveV282(item, snapshot) {
         ),
       {
         kind: "gate4-rsya",
-        source: "Gate 4 · РСЯ / ЕПК · ретаргетинг",
+        source: `${guruGateLabel("gate-4")} · РСЯ / ЕПК · ретаргетинг`,
         hasProgress: () =>
           retargetingGroups.some((group) =>
             g4RsyaGroupStatus(group) !== "not_started",
@@ -75721,7 +75076,7 @@ function g3ExecutionResolveV282(item, snapshot) {
     );
     return g3ExecutionResultV282(
       g3ExecutionReadyStatusV282(hasProgress),
-      "Gate 1 · Карточка товара",
+      `${guruGateLabel("gate-1")} · Карточка товара`,
       g3ProductJourneyPageTarget(snapshot, {
         sectionKey: "productHeroV253",
       }),
@@ -75733,7 +75088,7 @@ function g3ExecutionResolveV282(item, snapshot) {
       Boolean(guruV185Text(snapshot.page.row?.finalCta));
     return g3ExecutionResultV282(
       g3ExecutionReadyStatusV282(hasProgress),
-      "Gate 1 · Карточка товара · Финальный CTA",
+      `${guruGateLabel("gate-1")} · Карточка товара · Финальный CTA`,
       g3ProductJourneyPageTarget(snapshot, {
         sectionKey: "productFinalCtaImplementedV253",
         contextKey: "productFinalCtaImplementedV253",
@@ -75746,28 +75101,28 @@ function g3ExecutionResolveV282(item, snapshot) {
       : { status: "not_started" };
     return g3ExecutionResultV282(
       g3ExecutionReadyStatusV282(comparison.status !== "not_started"),
-      "Gate 1 · Сравнение проектов · Компания",
+      `${guruGateLabel("gate-1")} · Сравнение проектов · Компания`,
       { gateId: "gate-1", kind: "gate1-project-comparison" },
     );
   }
   if (item.resolver === "faq")
-    return g3ExecutionGate0ExtraResultV282("FAQ", "Gate 0 · FAQ");
+    return g3ExecutionGate0ExtraResultV282("FAQ", `${guruGateLabel("gate-0")} · FAQ`);
   if (item.resolver === "cases")
     return g3ExecutionGate0ExtraResultV282(
       "Портфолио / кейсы",
-      "Gate 0 · Портфолио / кейсы",
+      `${guruGateLabel("gate-0")} · Портфолио / кейсы`,
     );
   if (item.resolver === "quiz")
     return g3ExecutionGate2ResultV282(
       ["card-93"],
-      "Gate 2 · Квизы / тесты",
+      `${guruGateLabel("gate-2")} · Квизы / тесты`,
     );
   if (item.resolver === "forms")
-    return g3ExecutionGate2ResultV282(["card-92"], "Gate 2 · Формы");
+    return g3ExecutionGate2ResultV282(["card-92"], `${guruGateLabel("gate-2")} · Формы`);
   if (item.resolver === "crm")
     return g3ExecutionGate2ResultV282(
       ["card-122", "card-123", "card-124", "card-126"],
-      "Gate 2 · CRM и обработка лидов",
+      `${guruGateLabel("gate-2")} · CRM и обработка лидов`,
     );
   return g3ExecutionResultV282("no_implementation", "", null);
 }
@@ -83523,7 +82878,7 @@ function g4sbV419Period(product, d) {
     if (campaign) {
       start = g4sbV419Date(campaign.launchDate);
       end = g4sbV419Date(campaign.stopDate);
-      source = "Рекламный период кампании Gate 5";
+      source = `Рекламный период кампании ${guruGateLabel("gate-5")}`;
     }
   }
 
@@ -83661,7 +83016,7 @@ function g4sbV419ControlModel(product, d, summary, period) {
   const strategyLabel = G4_SB_STRATEGIES.find(([key]) => key === strategy)?.[1] || "Стратегия не выбрана";
   const minimumConversions = ["max_conversions", "max_profit"].includes(strategy) ? 10 : 3;
   const missing = [];
-  if (!actual.snapshots.length) missing.push("нет фактического периода Gate 5");
+  if (!actual.snapshots.length) missing.push(`нет фактического периода ${guruGateLabel("gate-5")}`);
   if (actual.spend <= 0) missing.push("не зафиксирован расход");
   if (actual.impressions <= 0) missing.push("нет показов для расчёта CTR");
   if (actual.clicks < 30) missing.push(`кликов ${actual.clicks} из 30`);
@@ -83777,12 +83132,12 @@ function g4sbV419ControlPlanHtml(model, period, summary) {
     : "данные риска пока не рассчитаны";
   const factRange = actual.snapshots.length
     ? `Факт за ${actual.coverageDays} ${actual.coverageDays === 1 ? "день" : "дней"}: ${g4sbV419DateLabel(actual.start)} — ${g4sbV419DateLabel(actual.end)}`
-    : "Фактическая статистика выбранного периода ещё не загружена в Gate 5";
+    : `Фактическая статистика выбранного периода ещё не загружена в ${guruGateLabel("gate-5")}`;
   const decision = model.sufficient
     ? model.recommendations.length
       ? `<ul>${model.recommendations.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
       : "<p>Накоплено достаточно данных. Существенных отклонений для корректировки не выявлено.</p>"
-    : "<p class=\"g4-v419-data-basis\">Данные Gate 5 за этот период ещё не внесены - корректировки вносить рано</p>";
+    : `<p class="g4-v419-data-basis">Данные ${guruGateLabel("gate-5")} за этот период ещё не внесены - корректировки вносить рано</p>`;
   const comparisonNote = actual.snapshots.length && actual.coverageDays < period.days
     ? `Прогноз в таблице приведён к ${actual.coverageDays} ${actual.coverageDays === 1 ? "дню" : "дням"} с фактическими данными.`
     : `Прогноз рассчитан на весь период: ${period.days} дней.`;

@@ -23,7 +23,7 @@ function g1pdSourcesV1(product, itemData) {
     guruV247KeywordNormalize(entry.value)));
   confirmed.forEach((entry) => add(entry.value, {
     key: entry.foundation, label: entry.foundation === "gate0"
-      ? "Фундамент · Gate 0" : "Фундамент · Gate 1", target: entry.foundation,
+      ? `Фундамент · ${guruGateLabel("gate-0")}` : `Фундамент · ${guruGateLabel("gate-1")}`, target: entry.foundation,
   }));
   // The existing confirmed projection keeps one phrase. Add its second
   // provenance if the same confirmed phrase was saved in both foundations.
@@ -35,7 +35,7 @@ function g1pdSourcesV1(product, itemData) {
       const value = guruV247KeywordText(parsed);
       if (parsed.status === "confirmed" &&
           confirmedKeys.has(guruV247KeywordNormalize(value)))
-        add(value, { key: "gate0", label: "Фундамент · Gate 0", target: "gate0" });
+        add(value, { key: "gate0", label: `Фундамент · ${guruGateLabel("gate-0")}`, target: "gate0" });
     }));
 
   (state?.gates || []).filter(isGate1Analytics)
@@ -48,7 +48,7 @@ function g1pdSourcesV1(product, itemData) {
         const value = guruV247KeywordText(parsed);
         if (parsed.status === "confirmed" &&
             confirmedKeys.has(guruV247KeywordNormalize(value)))
-          add(value, { key: "gate1-middle", label: "Фундамент · Gate 1",
+          add(value, { key: "gate1-middle", label: `Фундамент · ${guruGateLabel("gate-1")}`,
             target: card.id === "card-24" ? "middle" : "page",
             cardId: card.id, index });
       });
@@ -62,7 +62,7 @@ function g1pdSourcesV1(product, itemData) {
 
   (itemData?.demandRows || []).forEach((row, index) => add(row?.kw,
     { key: row?.originStage === "gate4" ? "gate4" : "demand",
-      label: row?.originStage === "gate4" ? "Gate 4 · Поиск" : "Спрос · Gate 1",
+      label: row?.originStage === "gate4" ? `${guruGateLabel("gate-4")} · Поиск` : `Спрос · ${guruGateLabel("gate-1")}`,
       target: row?.originStage === "gate4" ? "gate4" : "demand" },
     { demand: { row, index } }));
   return [...byKey.values()];
@@ -71,9 +71,9 @@ function g1pdSourcesV1(product, itemData) {
 function g1pdSourceButtonsV1(entry) {
   return [...entry.sources.values()].filter((source) => source.target !== "demand")
     .map((source) => {
-      const label = source.key === "gate0" ? "Gate 0"
-        : source.key === "gate1-middle" ? "Gate 1"
-          : source.target === "gate4" ? "Gate 4" : source.label;
+      const label = source.key === "gate0" ? `${guruGateLabel("gate-0")}`
+        : source.key === "gate1-middle" ? `${guruGateLabel("gate-1")}`
+          : source.target === "gate4" ? `${guruGateLabel("gate-4")}` : source.label;
       return `<button type="button" class="g1pd-source-v1" data-g1pd-source-v1="${escapeAttr(source.target)}" data-g1pd-card-v1="${escapeAttr(source.cardId || "")}" data-g1pd-index-v1="${source.index ?? ""}" title="Перейти к источнику">${escapeHtml(label)} <span aria-hidden="true">↗</span></button>`;
     }).join('<span class="g1pd-source-separator-v2" aria-hidden="true">·</span>');
 }
@@ -285,7 +285,7 @@ function g1pdSegmentsHtmlV2(model, view, itemId) {
   ];
   return `<div class="g1pd-filter-row-v2"><div class="g1pd-segments-v2" role="group" aria-label="Фильтр по JTBD" style="--g1pd-segments:${items.length}">
     ${items.map(([key, label, count]) => `<button type="button" data-g1pd-filter-v2="${escapeAttr(key)}" aria-pressed="${view.filter === key}">${escapeHtml(label)} <b>${count}</b></button>`).join("")}
-    </div>${model.additional.length < 3 ? `<button type="button" class="small-btn" data-g1pd-add-jtbd-v2="${escapeAttr(itemId)}" ${guruGate1ResolvedMainJtbdV259(itemId).records.length ? "" : 'disabled title="Сначала задайте основной JTBD в Gate 0"'}>+ JTBD</button>` : ""}</div>`;
+    </div>${model.additional.length < 3 ? `<button type="button" class="small-btn" data-g1pd-add-jtbd-v2="${escapeAttr(itemId)}" ${guruGate1ResolvedMainJtbdV259(itemId).records.length ? "" : `disabled title="Сначала задайте основной JTBD в ${guruGateLabel("gate-0")}"`}>+ JTBD</button>` : ""}</div>`;
 }
 
 function g1pdContextHtmlV2(product, context, model, filter) {
@@ -295,7 +295,7 @@ function g1pdContextHtmlV2(product, context, model, filter) {
     return '<p>Здесь остаются неназначенные фразы и фразы, исключённые из JTBD. Автоматическое сопоставление не включает слова категории.</p>';
   if (filter === "primary") {
     const main = guruGate1ResolvedMainJtbdV259(product.id);
-    return `<div><strong>JTBD №1 · основной</strong><small>Формулировка из Gate 0 · только чтение</small><div class="g1-input" data-gate1-live-jtbd-v259>${escapeHtml(main.value || "Не заполнено в источнике")}</div></div>
+    return `<div><strong>JTBD №1 · основной</strong><small>Формулировка из ${guruGateLabel("gate-0")} · только чтение</small><div class="g1-input" data-gate1-live-jtbd-v259>${escapeHtml(main.value || "Не заполнено в источнике")}</div></div>
       <button type="button" class="g1pd-final-link-v2" data-g1pd-final-link-v2>Фундамент ключевых слов (Финальный) · ${g1pdPhraseCountV2(model.counts.primary)} ↗</button>`;
   }
   const index = model.additional.findIndex((entry) => `additional:${entry.id}` === filter);
@@ -306,7 +306,7 @@ function g1pdContextHtmlV2(product, context, model, filter) {
     item.id === entry.id);
   if (record && resolved.scope !== "product")
     return `<div class="g1pd-jtbd-context-head-v2"><strong>JTBD №${index + 2}</strong><button type="button" class="small-btn" data-g1pd-fork-jtbd-v2>Редактировать для товара</button></div>
-      <small>Формулировка наследуется из Gate 0 · ${escapeHtml(resolved.scope === "category" ? "категория" : "проект")}</small>
+      <small>Формулировка наследуется из ${guruGateLabel("gate-0")} · ${escapeHtml(resolved.scope === "category" ? "категория" : "проект")}</small>
       <div class="g1-input" aria-readonly="true">${escapeHtml(record.value || "Не заполнено")}</div>
       <button type="button" class="g1pd-final-link-v2" data-g1pd-final-link-v2>Фундамент ключевых слов (Финальный) · ${g1pdPhraseCountV2(model.counts[filter] || 0)} ↗</button>`;
   const fields = [
@@ -400,7 +400,7 @@ function g1pdWorkspaceHtmlV1() {
     <div class="g1pd-undo-v2" data-g1pd-undo-v2 hidden aria-live="polite"></div>
     ${pv181DemandTrafficVolumeHtmlV270(context.itemData)}
     ${g1pdPanelHtmlV2(product, context, model, view)}
-    ${middleEditor ? `<details class="g1pd-middle-v1" data-g1pd-middle-v1><summary>Кандидаты из карточки · Gate 1</summary>${middleEditor}</details>` : ""}
+    ${middleEditor ? `<details class="g1pd-middle-v1" data-g1pd-middle-v1><summary>Кандидаты из карточки · ${guruGateLabel("gate-1")}</summary>${middleEditor}</details>` : ""}
   </div>`;
 }
 
@@ -647,7 +647,7 @@ function g1pdForkJtbdsV2(active) {
     ...guruV194RecordLocation("product", active.product),
     jtbd: record.jtbd && typeof record.jtbd === "object"
       ? { ...record.jtbd } : undefined,
-    source: { type: "inheritance_override", label: "Gate 1 · JTBD товара",
+    source: { type: "inheritance_override", label: `${guruGateLabel("gate-1")} · JTBD товара`,
       inherited_from_id: record.id },
     created_at: now,
     updated_at: now,

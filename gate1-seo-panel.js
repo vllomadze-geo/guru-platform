@@ -293,7 +293,7 @@ function gate1SeoProductFoundationsV296(product, snapshot) {
           title: "Фундамент · исходный",
           value: `${gate0.confirmed}/${gate0.total} подтверждено`,
           items: gate0.record?.keywords || [],
-          source: "Gate 0 · продукт",
+          source: `${guruGateLabel("gate-0")} · продукт`,
           target: gate0Target,
         }),
       },
@@ -305,7 +305,7 @@ function gate1SeoProductFoundationsV296(product, snapshot) {
           title: "Фундамент · середина",
           value: `${middle.confirmed}/${middle.total} подтверждено`,
           items: middle.keywords,
-          source: "Gate 1 · Карточка товара",
+          source: `${guruGateLabel("gate-1")} · Карточка товара`,
           target: middleTarget,
         }),
       },
@@ -317,7 +317,7 @@ function gate1SeoProductFoundationsV296(product, snapshot) {
           title: "Фундамент · Финальный",
           value: `${finalEntries.length} финальных фраз`,
           items: finalEntries,
-          source: "Gate 1 · Финальный",
+          source: `${guruGateLabel("gate-1")} · Финальный`,
           target: finalTarget,
         }),
       },
@@ -381,7 +381,7 @@ function gate1SeoCompanyHtmlV296() {
           label: "Аудит сайта",
           summary: audit.total ? `${audit.ready}/${audit.total} блоков готово` : "Блоки аудита не найдены",
           status: audit.status,
-          source: "Gate 1 · Аудит сайта",
+          source: `${guruGateLabel("gate-1")} · Аудит сайта`,
           target: audit.target,
         })}
         ${gate1SeoStatusRowV296({
@@ -389,7 +389,7 @@ function gate1SeoCompanyHtmlV296() {
           label: "Яндекс Вебмастер",
           summary: `${webmaster.ready}/${webmaster.total} проверок готово`,
           status: webmaster.status,
-          source: "Gate 1 · Яндекс Вебмастер",
+          source: `${guruGateLabel("gate-1")} · Яндекс Вебмастер`,
           target: webmaster.target,
           details: webmaster.details,
         })}
@@ -398,7 +398,7 @@ function gate1SeoCompanyHtmlV296() {
           label: "Канонический URL и редиректы",
           summary: redirects.canonicalUrl || "Канонический URL не указан",
           status: redirects.status,
-          source: "Gate 1 · Канонический URL и редиректы",
+          source: `${guruGateLabel("gate-1")} · Канонический URL и редиректы`,
           target: redirects.target,
           details: gate1SeoDetailV296(
             "Проверки вариантов",
@@ -412,7 +412,7 @@ function gate1SeoCompanyHtmlV296() {
             ? `${comparison.filled}/${comparison.total} полей · ${comparison.competitors} конкурентов`
             : "Анализ конкурентов не начат",
           status: comparison.status,
-          source: "Gate 1 · Сравнение проектов · Компания (данные Gate 0–1)",
+          source: `${guruGateLabel("gate-1")} · Сравнение проектов · Компания (данные ${guruGateLabel("gate-0")}–1)`,
           target: { gateId: "gate-1", kind: "gate1-project-comparison" },
         })}
       </div>
@@ -435,9 +435,9 @@ function gate1SeoProductEmptyHtmlV296() {
     html: `<section class="g1-seo-scope-v296" data-g1-seo-scope-v296="product">
       <div class="g1-seo-scope-head-v296"><div><strong>Продукт</strong><small>Живой срез выбранного товара</small></div><span>Товар не выбран</span></div>
       <div class="g1-seo-rows-v296">
-        ${empty("keyword-foundations", "Фундамент ключевых слов", "Gate 0–1 · три уровня")}
-        ${empty("seo-snippet", "SEO-сниппет товара", "Gate 1 · Карточка товара")}
-        ${empty("webmaster-product", "Яндекс Вебмастер · индексация посадочной", "Gate 1 · Яндекс Вебмастер")}
+        ${empty("keyword-foundations", "Фундамент ключевых слов", `${guruGateLabel("gate-0")}–1 · три уровня`)}
+        ${empty("seo-snippet", "SEO-сниппет товара", `${guruGateLabel("gate-1")} · Карточка товара`)}
+        ${empty("webmaster-product", "Яндекс Вебмастер · индексация посадочной", `${guruGateLabel("gate-1")} · Яндекс Вебмастер`)}
       </div>
     </section>`,
   };
@@ -470,7 +470,7 @@ function gate1SeoProductHtmlV296(product) {
           label: "SEO-сниппет товара",
           summary: `${snippet.filled}/${snippet.total} полей заполнено`,
           status: snippet.status,
-          source: "Gate 1 · Карточка товара · SEO-сниппет",
+          source: `${guruGateLabel("gate-1")} · Карточка товара · SEO-сниппет`,
           target: snippet.target,
           details: snippet.details,
         })}
@@ -479,7 +479,7 @@ function gate1SeoProductHtmlV296(product) {
           label: "Яндекс Вебмастер · индексация посадочной",
           summary: webmaster.value,
           status: webmaster.status,
-          source: "Gate 1 · Яндекс Вебмастер",
+          source: `${guruGateLabel("gate-1")} · Яндекс Вебмастер`,
           target: webmaster.target,
           details: gate1SeoDetailV296("Последняя проверка", webmaster.note, "дата и заметка не указаны"),
         })}
@@ -602,15 +602,15 @@ function gate1SeoAuditV296() {
     productStatuses: productSection.statuses,
     sources: {
       company: [
-        "Gate 1 · Аудит сайта",
-        "Gate 1 · Яндекс Вебмастер",
-        "Gate 1 · Канонический URL и редиректы",
-        "Gate 1 · Сравнение проектов · Компания (данные Gate 0–1)",
+        `${guruGateLabel("gate-1")} · Аудит сайта`,
+        `${guruGateLabel("gate-1")} · Яндекс Вебмастер`,
+        `${guruGateLabel("gate-1")} · Канонический URL и редиректы`,
+        `${guruGateLabel("gate-1")} · Сравнение проектов · Компания (данные ${guruGateLabel("gate-0")}–1)`,
       ],
       product: [
-        "Gate 0–1 · Фундамент ключевых слов",
-        "Gate 1 · Карточка товара · SEO-сниппет",
-        "Gate 1 · Яндекс Вебмастер",
+        `${guruGateLabel("gate-0")}–1 · Фундамент ключевых слов`,
+        `${guruGateLabel("gate-1")} · Карточка товара · SEO-сниппет`,
+        `${guruGateLabel("gate-1")} · Яндекс Вебмастер`,
       ],
     },
   };

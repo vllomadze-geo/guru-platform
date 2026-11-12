@@ -184,8 +184,12 @@ try {
       assert.equal(initial.registryTotal, initial.diagnosticTotal, `${label}: registry total differs from diagnostics`);
       assert.equal(initial.pathTotal, initial.launchReadiness.total);
       assert.equal(initial.pathDone, initial.launchReadiness.done);
-      assert(initial.perGate.filter(item => Number(item.id.slice(5)) < 4).every(item => item.path === item.total));
-      assert(initial.perGate.filter(item => Number(item.id.slice(5)) > 4).every(item => item.path === 0));
+      // GURU_GATE_ORDER: gates before «Реализация» (gate-4) are fully in the path,
+      // gates after it are «после запуска».
+      const beforeLaunch = ["gate-0", "gate-1", "gate-2"];
+      const afterLaunch = ["gate-5", "gate-3", "gate-8", "gate-6", "gate-7"];
+      assert(initial.perGate.filter(item => beforeLaunch.includes(item.id)).every(item => item.path === item.total));
+      assert(initial.perGate.filter(item => afterLaunch.includes(item.id)).every(item => item.path === 0));
       assert.equal(initial.registryDone, initial.diagnosticDone, `${label}: registry done differs from diagnostics`);
       assert.deepEqual(initial.hiddenGate0InPath, [], `${label}: hidden Gate 0 card in path`);
       assert.equal(initial.hiddenGate1InPath, false, `${label}: hidden Gate 1 route in path`);

@@ -227,8 +227,8 @@ try {
     emptyFact.checkpoint14.includes("Расход: факт — / ожидается ≈2 100 ₽") &&
     emptyFact.checkpoint14.includes("Заявки: факт — / ожидается ≈3,5") &&
     emptyFact.riskAction.includes("Если CPC фраз со статусом «Переплата»") &&
-    emptyFact.decision.includes("Данные Gate 5 за этот период ещё не внесены - корректировки вносить рано") &&
-    !emptyFact.decision.includes("нет фактического периода Gate 5") &&
+    emptyFact.decision.includes("Данные Gate 4 за этот период ещё не внесены - корректировки вносить рано") &&
+    !emptyFact.decision.includes("нет фактического периода Gate 4") &&
     emptyFact.tableRows.every((row) => row[2] === "—" && row[3] === "—") &&
     emptyFact.recommendations.length > 0,
   `Empty-fact summary extension failed: ${JSON.stringify(emptyFact)}`);
@@ -251,7 +251,7 @@ try {
     const node = document.querySelector('[data-g4sb-summary-product="${productId}"]');
     return node.querySelector('.g4-v419-decision').textContent.trim().replace(/\\s+/g, ' ');
   })()`);
-  assert(lowFact.includes("Данные Gate 5 за этот период ещё не внесены - корректировки вносить рано") &&
+  assert(lowFact.includes("Данные Gate 4 за этот период ещё не внесены - корректировки вносить рано") &&
     !lowFact.includes("кликов 20 из 30") && !lowFact.includes("конверсий 1 из 10"),
   `Calendar time incorrectly unlocked a recommendation: ${lowFact}`);
 
@@ -1195,8 +1195,8 @@ try {
       `${Number(realThreeGroups.riskShare).toLocaleString("ru-RU", { maximumFractionDigits: 1 })}% бюджета`
     ) &&
     realThreeGroups.decision.includes(
-      "Данные Gate 5 за этот период ещё не внесены - корректировки вносить рано"
-    ) && !realThreeGroups.decision.includes("нет фактического периода Gate 5"),
+      "Данные Gate 4 за этот период ещё не внесены - корректировки вносить рано"
+    ) && !realThreeGroups.decision.includes("нет фактического периода Gate 4"),
   `Real control checkpoints failed: ${JSON.stringify(realThreeGroups)}`);
   const clip = await evaluate(`(() => {
     const node = document.querySelector('[data-g4sb-summary-product="${productId}"]');

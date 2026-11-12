@@ -1130,8 +1130,8 @@ function nowGuideBuildAllBlocks() {
   const version = nowGuideDataVersion();
   if (nowGuideRegistryCache?.version === version)
     return nowGuideRegistryCache.items.map(item => ({ ...item }));
-  const items = nowGuidePlainRead(() => [...state.gates].sort((a, b) =>
-    Number(a.id.replace("gate-", "")) - Number(b.id.replace("gate-", "")))
+  // Порядок гейтов — из единого списка GURU_GATE_ORDER (gate-order.js).
+  const items = nowGuidePlainRead(() => guruOrderedGates(state.gates)
     .flatMap((gate) => {
       const statuses = guruGateBlockStatuses(gate);
       const items = nowGuideDescriptors(gate, statuses);
@@ -1147,10 +1147,13 @@ function nowGuideBuildAllBlocks() {
 
 // The registry still covers every visible block. The preflight journey is a
 // projection of that registry, without changing any gate's readiness units.
+// The path ends inside «Реализация» (gate-4): every gate placed before it in
+// GURU_GATE_ORDER, then that gate's product preparation and campaigns.
+// Everything placed after it is «после запуска».
 function nowGuideIsPreflight(item) {
   if (!item) return false;
-  const number = Number(item.gateId.replace("gate-", ""));
-  return number >= 0 && number <= 3 || item.gateId === "gate-4" &&
+  if (guruGatePosition(item.gateId) < guruGatePosition("gate-4")) return true;
+  return item.gateId === "gate-4" &&
     item.scope === "product" && ["preparation", "campaigns"].includes(item.preflightGroup);
 }
 function nowGuidePreflightPath(all = nowGuideBuildAllBlocks()) {
@@ -1230,7 +1233,7 @@ function nowGuideRender(path, registry, options = {}) {
        <div class="now-guide-gate">После запуска: ${after.length} блоков не готово</div>${after.length ? `<button type="button" class="now-guide-link" data-now-after>К первому неготовому после запуска</button>` : ""}`
     : current ? `<div class="now-guide-block">${escapeHtml(nowGuideDisplayTitle(current))}</div>
        ${nowGuideMissingHtml(current, missingDetails)}
-       <div class="now-guide-gate">Gate ${current.gateId.replace("gate-", "")} · ${escapeHtml(NOW_GATE_NAMES[current.gateId] || "")}</div>`
+       <div class="now-guide-gate">${guruGateLabel(current.gateId)} · ${escapeHtml(NOW_GATE_NAMES[current.gateId] || "")}</div>`
     : `<div class="now-guide-block">Предполётный путь пока пуст</div>`}
        ${current ? `<div class="now-guide-actions"><button type="button" data-now-prev ${index === 0 ? "disabled" : ""}>◀ Назад</button><button type="button" data-now-next class="${canAdvance ? "is-ready" : ""}" ${index + 1 >= path.length ? "disabled" : ""} title="${ready ? "Следующий блок" : missingDetails?.needsDecision ? "Перейти к следующему блоку, статус не изменится" : "Сначала заполните этот блок"}">Далее ▶</button></div>
        <button type="button" class="now-guide-link" data-now-current>К текущему</button>` : ""}`;
@@ -1746,7 +1749,7 @@ function nowGuideProductDecisionChangedV554(productId, section, status) {
       }
       insert = before >= 0 ? before + 1 : all.findIndex((entry) =>
         (entry.gateId === "gate-1" && entry.id === "unit-economics") ||
-        Number(entry.gateId?.slice(5)) > 1);
+        guruGatePosition(entry.gateId) > guruGatePosition("gate-1"));
     }
     all.splice(insert < 0 ? all.length : insert, 0, item);
   }

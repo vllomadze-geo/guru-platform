@@ -100,7 +100,7 @@ function gate1SeoInteractiveToolHtmlV305(store) {
         <textarea rows="2" placeholder="Что инструмент должен считать, подбирать или помогать выбрать" data-g1-seo-interactive-tool-field-v305="idea">${escapeHtml(store.idea)}</textarea>
       </label>
     </div>
-    <small class="gate1-seo-interactive-tool-source-v305">Gate 1 · SEO → Компания · единое значение на проект</small>
+    <small class="gate1-seo-interactive-tool-source-v305">${guruGateLabel("gate-1")} · SEO → Компания · единое значение на проект</small>
   </article>`;
 }
 

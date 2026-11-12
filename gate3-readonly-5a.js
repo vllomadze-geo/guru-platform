@@ -25,7 +25,7 @@
   };
   const companyTarget = (kind, cardId, field = "unified") => ({ gateId: "gate-0", kind, cardId, field });
   const companyCardItem = (label, kind, cardId, status, gap, field) =>
-    card("gate-0", cardId) ? item(label, `Gate 0 · ${label}`, companyTarget(kind, cardId, field), checked(status), gap) : null;
+    card("gate-0", cardId) ? item(label, `${guruGateLabel("gate-0")} · ${label}`, companyTarget(kind, cardId, field), checked(status), gap) : null;
   const sourcePlatform = () => gate("gate-0")?.cards?.find(isMegaMarketingCard);
   const platformTarget = (kind, cardId, extra = {}) => ({ gateId: "gate-0", kind, cardId, ...extra });
   const platformRows = () => sourcePlatform()?.megaMarketing?.platformV2?.fundamental || [];
@@ -36,7 +36,7 @@
     const rows = names.map(fixedPage).filter(Boolean);
     if (!rows.length) return null;
     const firstMissing = rows.find((row) => guruCanonStatus(row.status) !== "works") || rows[0];
-    return item(label, `Gate 0 · Платформа`, platformTarget("gate0-fundamental", source.id,
+    return item(label, `${guruGateLabel("gate-0")} · Платформа`, platformTarget("gate0-fundamental", source.id,
       { rowName: firstMissing.name }), rows.every((row) => guruCanonStatus(row.status) === "works") ? "ready" : "in_progress", gap);
   };
   const allReady = (rows) => rows.length && rows.every((row) => row === "ready") ? "ready" : "in_progress";
@@ -49,10 +49,10 @@
     add("aware", companyCardItem("ЦА компании", "gate0-company-segmentation",
       GURU_GATE0_COMPANY_SEGMENTATION_CARD_ID_V309, (view) => guruV309CompanySegmentationStatus(view), "Не завершена сегментация компании"));
     if (typeof g4SmmStrategyHtmlV298 === "function") add("aware", item("SMM-стратегия компании",
-      "Gate 4 · SMM-стратегия компании", { gateId: "gate-4", kind: "gate4-company-smm" },
+      `${guruGateLabel("gate-4")} · SMM-стратегия компании`, { gateId: "gate-4", kind: "gate4-company-smm" },
       "in_progress", "У блока нет статуса «Готово»"));
     if (typeof G4_FIVE_A_COMPANY_V523 !== "undefined") add("aware", item("Каналы",
-      "Gate 4 · Каналы компании", { gateId: "gate-4", kind: "gate4-company-stage", stage: "aware" },
+      `${guruGateLabel("gate-4")} · Каналы компании`, { gateId: "gate-4", kind: "gate4-company-stage", stage: "aware" },
       "in_progress", "У блока нет общего статуса «Готово»"));
     add("appeal", companyCardItem("Позиционирование бренда", "gate0-company-positioning",
       GURU_GATE0_COMPANY_POSITIONING_CARD_ID_V308, (view) => guruV308CompanyPositioningStatus(view), "Не завершено позиционирование бренда"));
@@ -64,7 +64,7 @@
     add("ask", companyCardItem("Фундамент ключевых слов", "gate0-company-keyword-foundation",
       GURU_GATE0_COMPANY_KEYWORD_FOUNDATION_CARD_ID_V351, (view) => guruCompanyKeywordFoundationStatusV351(view), "Не подтверждены ключевые слова"));
     if (state?.projectComparison) add("ask", item("Сравнение проектов · Компания",
-      "Gate 1 · Сравнение проектов", { gateId: "gate-1", kind: "gate1-project-comparison" },
+      `${guruGateLabel("gate-1")} · Сравнение проектов`, { gateId: "gate-1", kind: "gate1-project-comparison" },
       checked((view) => projectComparisonStatus(view.projectComparison)), "Сравнение проектов не готово"));
     add("ask", platformFixedItem("Блок доверия на сайте", ["Блоки доверия (отзывы, гарантии, сертификаты)"], "Блок доверия не готов"));
     const metriks = ["g2-metrika-company-counter", "g2-metrika-company-goals", "g2-metrika-company-internal-filter", "g2-metrika-company-robots"]
@@ -72,11 +72,11 @@
     if (metriks.length) {
       const statuses = metriks.map((source) => checked((view) => g2MetrikaCompanyStatusV374(card("gate-2", source.id, view))));
       const missing = metriks[statuses.findIndex((status) => status !== "ready")] || metriks[0];
-      add("act", item("Яндекс Метрика · Компания", "Gate 2 · Яндекс Метрика · Компания",
+      add("act", item("Яндекс Метрика · Компания", `${guruGateLabel("gate-2")} · Яндекс Метрика · Компания`,
         { gateId: "gate-2", kind: "gate2-card", cardId: missing.id }, allReady(statuses), "Не все проверки Метрики готовы"));
     }
     const platform = sourcePlatform();
-    if (platform) add("act", item("Юридические страницы", "Gate 0 · Платформа",
+    if (platform) add("act", item("Юридические страницы", `${guruGateLabel("gate-0")} · Платформа`,
       platformTarget("gate0-legal", platform.id), deriveLegalPages(state).ready ? "ready" : "in_progress",
       "Не все обязательные юридические страницы готовы"));
     return s;
@@ -89,7 +89,7 @@
     const gate0Status = gate0Product
       ? checked((view) => guruGate0ProductBlockStatus(card("gate-0", gate0Product.id, view), view, product.id)) : null;
     const strategic = (key, label, field, gap) => {
-      if (gate0Product) add(key, item(label, "Gate 0 · Продукт, сегмент и задача клиента",
+      if (gate0Product) add(key, item(label, `${guruGateLabel("gate-0")} · Продукт, сегмент и задача клиента`,
         productTarget(product, field), gate0Status, gap));
     };
     strategic("aware", "Сегмент ЦА", "segments", "Не завершён блок сегмента ЦА");
@@ -100,7 +100,7 @@
     const campaignItem = (key, label, match, gap, area) => {
       if (typeof G4_FIVE_A_STAGES_V523 === "undefined") return;
       const rows = campaignRows.filter(match);
-      add(key, item(label, `Gate 4 · ${label}`,
+      add(key, item(label, `${guruGateLabel("gate-4")} · ${label}`,
         { gateId: "gate-4", kind: "gate4-product-stage", productId: product.id, stage: "aware", area },
         allReady(rows.map(campaignStatus)), gap));
     };
@@ -117,21 +117,21 @@
       ? checked((view) => projectComparisonProductStatus(view.projectComparison?.productsById?.[product.id])) : null;
     if (comparison) {
       const target = { gateId: "gate-1", kind: "gate1-project-comparison", productId: product.id };
-      add("appeal", item("Мини-версия поисковой выдачи", "Gate 1 · Сравнение", target,
+      add("appeal", item("Мини-версия поисковой выдачи", `${guruGateLabel("gate-1")} · Сравнение`, target,
         comparisonStatus, "Сравнение с конкурентами не готово"));
-      add("ask", item("Сравнение с конкурентами", "Gate 1 · Сравнение", target,
+      add("ask", item("Сравнение с конкурентами", `${guruGateLabel("gate-1")} · Сравнение`, target,
         comparisonStatus, "Сравнение с конкурентами не готово"));
     }
     const demandRow = (state?.painV130?.productMaps || []).find((row) =>
       row?.items?.[product.id] || row?.product_id === product.id);
-    if (demandRow) add("ask", item("Спрос / ключевые слова", "Gate 1 · Спрос / ключевые слова",
+    if (demandRow) add("ask", item("Спрос / ключевые слова", `${guruGateLabel("gate-1")} · Спрос / ключевые слова`,
       { gateId: "gate-1", kind: "gate1-keywords", productId: product.id }, "in_progress",
       "У продуктового блока спроса нет статуса «Готово»"));
     const platform = sourcePlatform();
     if (platform) {
       const landing = checked((view) => gate0LandingRecordReadV348(guruV194Product(product.id, view), view));
       const url = text(platform.megaMarketing?.platformV2?.urlsV1?.products?.[product.id]);
-      add("act", item("Посадочная страница", "Gate 0 · Платформа",
+      add("act", item("Посадочная страница", `${guruGateLabel("gate-0")} · Платформа`,
         platformTarget("gate0-landing", platform.id, { productId: product.id, field: "status" }),
         guruCanonStatus(landing?.status) === "works" && url ? "ready" : "in_progress",
         "Посадочная страница или её URL не готовы"));
@@ -139,7 +139,7 @@
     const page = g3ProductJourneyPageSource(product);
     if (page.row && page.card) {
       const rowIndex = page.card.pageRows.indexOf(page.row);
-      add("act", item("Доставка и оплата", "Gate 1 · Карточка продукта",
+      add("act", item("Доставка и оплата", `${guruGateLabel("gate-1")} · Карточка продукта`,
         { gateId: "gate-1", kind: "gate1-page", cardId: page.card.id, rowIndex,
           rowId: page.row.id, sectionKey: "delivery", contextKey: "productDeliveryGuaranteeV253" },
         goatProductCardStatusV514(page.row, "delivery"), "Доставка и оплата не готовы"));
@@ -150,11 +150,11 @@
       const statuses = metrika.map((source) => checked((view) =>
         g2MetrikaProductStatusV367(card("gate-2", source.id, view), product.id, view)));
       const missing = metrika[statuses.findIndex((status) => status !== "ready")] || metrika[0];
-      add("act", item("Яндекс Метрика · Продукт", "Gate 2 · Яндекс Метрика · Продукт",
+      add("act", item("Яндекс Метрика · Продукт", `${guruGateLabel("gate-2")} · Яндекс Метрика · Продукт`,
         { gateId: "gate-2", kind: "gate2-card", cardId: missing.id, productId: product.id },
         allReady(statuses), missing.id === "g2-metrika-goals-primary" ? "Не задана главная конверсия" : "Не все проверки Метрики готовы"));
     }
-    if (typeof G4_FIVE_A_STAGES_V523 !== "undefined") add("act", item("Кампании продукта", "Gate 4 · Кампании продукта",
+    if (typeof G4_FIVE_A_STAGES_V523 !== "undefined") add("act", item("Кампании продукта", `${guruGateLabel("gate-4")} · Кампании продукта`,
       { gateId: "gate-4", kind: "gate4-product-stage", productId: product.id, stage: "act" },
       allReady(campaignRows.map(campaignStatus)), "Не все кампании продукта готовы"));
     productArchive(product).forEach(({ stage, row }) => add(stage, row));
@@ -173,7 +173,7 @@
         || entry.implementationId || entry.channelKeys?.length || entry.observedChannelKeys?.length))
       .map((entry) => ({ stage, row: { label: entry.label, archive: true,
         archiveId: `product:${product.id}:${entry.instanceId || entry.id || entry.label}`,
-        source: "Gate 3 · сохранённый инструмент",
+        source: `${guruGateLabel("gate-3")} · сохранённый инструмент`,
         target: { gateId: "gate-3", kind: "gate3-archive", productId: product.id,
           archiveId: `product:${product.id}:${entry.instanceId || entry.id || entry.label}`, stage },
         gap: "Сохранённая запись; статус этапа не меняет" } })));
@@ -193,7 +193,7 @@
         .forEach(([name, status]) => rows.push({ label: name, value: status }));
       return [stage, rows.map((row, index) => ({ ...row, archive: true,
         archiveId: `company:${stage}:${index}`,
-        source: "Gate 3 · сохранённая запись",
+        source: `${guruGateLabel("gate-3")} · сохранённая запись`,
         target: { gateId: "gate-3", kind: "gate3-archive", stage,
           archiveId: `company:${stage}:${index}` } }))];
     }));
@@ -270,7 +270,7 @@
     els.contentArea.innerHTML = `<div class="g3ro" data-gate3-readonly-5a>
       ${mapHtml("company", "project", "Компания", company)}
       ${product ? mapHtml("product", product.id, "Продукт/Услуга", models.get(product.id),
-        productSelector(products, product, models)) : `<section class="g3ro-map"><h2>Продукт/Услуга</h2><p>Добавьте продукт в Gate 0.</p></section>`}
+        productSelector(products, product, models)) : `<section class="g3ro-map"><h2>Продукт/Услуга</h2><p>Добавьте продукт в ${guruGateLabel("gate-0")}.</p></section>`}
     </div>`;
     renderGateNav();
   };

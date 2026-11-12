@@ -81,7 +81,7 @@ function guruAudienceCompanySources(workspace) {
 }
 function guruAudienceRowSource(segment, row, linked) {
   if (['rational', 'irrational', 'social'].includes(row.field)) return linked?.offer
-    ? { label: 'Оффер компании · Gate 0', cardId: 'gate0-company-offer', recordId: linked.offer.id,
+    ? { label: `Оффер компании · ${guruGateLabel("gate-0")}`, cardId: 'gate0-company-offer', recordId: linked.offer.id,
       selector: row.field }
     : null;
   if (row.field === 'value' && linked?.offer) return { label: 'Уточнить оффер', field: 'value' };
@@ -139,14 +139,14 @@ function guruAudienceRowHtml(row, view, segmentId) {
   const ctaRow = row.field.startsWith('cta_');
   const offerEditing = editing && (row.field === 'value' || ctaRow) && row.offerRecord;
   const isMissingSource = (['rational', 'irrational', 'social', 'value'].includes(row.field) || ctaRow) && !row.linked && !row.editable && !String(row.raw || '').trim();
-  const missingLabel = !row.hasSourceSegment ? 'Сегмент компании не связан' : 'Для сегмента нет оффера Gate 0';
+  const missingLabel = !row.hasSourceSegment ? 'Сегмент компании не связан' : `Для сегмента нет оффера ${guruGateLabel("gate-0")}`;
   const extraItems = row.items.slice(row.field === 'criteria' ? 3 : 1);
   const itemHtml = extraItems.map((value) => `<li>${escapeHtml(value)}</li>`).join('');
   const empty = !String(row.raw || '').trim();
   const display = isMissingSource ? 'Нет данных' : row.preview || (row.editable ? 'Добавить' : 'Нет данных');
   const source = row.source && !editing
     ? `<a href="#${row.source.cardId ? 'gate-0' : 'target-audience'}" class="target-audience-icon" data-audience-source="${escapeAttr(JSON.stringify({ ...row.source, segmentId }))}" title="${escapeAttr(row.source.cardId ? `Открыть источник: ${row.source.label}` : `Изменить: ${row.label}`)}" aria-label="${escapeAttr(row.source.cardId ? `Открыть источник поля «${row.label}»: ${row.source.label}` : `Изменить поле «${row.label}»`)}">${guruAudienceIcon(row.source.cardId ? 'source' : 'edit')}</a>`
-    : isMissingSource ? `<button type="button" class="target-audience-icon" ${row.hasSourceSegment ? 'data-audience-open-offers' : 'data-audience-focus-link'} title="${escapeAttr(missingLabel)}" aria-label="${escapeAttr(row.hasSourceSegment ? 'Открыть офферы Gate 0' : 'Связать с сегментом компании')}">${guruAudienceIcon('link')}</button>` : '';
+    : isMissingSource ? `<button type="button" class="target-audience-icon" ${row.hasSourceSegment ? 'data-audience-open-offers' : 'data-audience-focus-link'} title="${escapeAttr(missingLabel)}" aria-label="${escapeAttr(row.hasSourceSegment ? `Открыть офферы ${guruGateLabel("gate-0")}` : 'Связать с сегментом компании')}">${guruAudienceIcon('link')}</button>` : '';
   return `<div class="target-audience-row${expanded ? ' is-expanded' : ''}" data-audience-row="${escapeAttr(row.field)}" data-audience-segment="${escapeAttr(segmentId)}">
     <span class="target-audience-row-label">${escapeHtml(row.label)}</span>
     <div class="target-audience-row-content">${offerEditing
@@ -172,7 +172,7 @@ function guruAudienceZoneHtml(zone, view, segmentId) {
 function guruAudienceTabsHtml(projection) {
   const linked = new Set(projection.segments.map((segment) => segment.gate0SegmentId || segment.id));
   return projection.segments.map((segment, index) => `<button type="button" class="${segment === projection.active ? 'is-active' : ''}" data-audience-tab="${escapeAttr(segment.id)}" aria-current="${segment === projection.active ? 'page' : 'false'}">Сегмент ${index + 1}</button>`).join('') +
-    projection.companySources.filter((source) => !linked.has(source.id)).map((source) => `<button type="button" data-audience-create-source="${escapeAttr(source.id)}">+ ${escapeHtml(source.segment_name || 'Сегмент Gate 0')}</button>`).join('') +
+    projection.companySources.filter((source) => !linked.has(source.id)).map((source) => `<button type="button" data-audience-create-source="${escapeAttr(source.id)}">+ ${escapeHtml(source.segment_name || `Сегмент ${guruGateLabel("gate-0")}`)}</button>`).join('') +
     '<button type="button" class="target-audience-add" data-audience-add>+ Добавить сегмент</button>';
 }
 function guruAudiencePanelHtml(projection, view) {
@@ -181,7 +181,7 @@ function guruAudiencePanelHtml(projection, view) {
   const subtitle = [projection.who && projection.who.trim() !== projection.name.trim() ? projection.who : '', projection.geography].filter(Boolean);
   const linkOpen = view.linkMenuOpen === active.id;
   return `<article class="target-audience-panel" data-audience-panel="${escapeAttr(active.id)}">
-    <header class="target-audience-panel-head"><button type="button" class="target-audience-name" data-audience-name>${escapeHtml(projection.name || 'Добавить название')}</button><div class="target-audience-subline"><span>${subtitle.map(escapeHtml).join(' · ')}</span><span class="target-audience-actions"><button type="button" class="target-audience-icon" data-audience-link-toggle aria-expanded="${linkOpen}" aria-label="Связать с сегментом компании" title="Связать с сегментом компании">${guruAudienceIcon('link')}</button>${projection.linked?.source ? `<a href="#gate-0" class="target-audience-icon" data-audience-source="${escapeAttr(JSON.stringify({ cardId: 'gate0-company-segmentation', recordId: projection.linked.source.id, selector: 'segment_name', segmentId: active.id }))}" aria-label="Открыть связанный сегмент в Gate 0" title="Открыть связанный сегмент в Gate 0">${guruAudienceIcon('source')}</a>` : ''}<button type="button" class="target-audience-icon" data-audience-duplicate="${escapeAttr(active.id)}" aria-label="Дублировать сегмент" title="Дублировать сегмент">${guruAudienceIcon('copy')}</button><button type="button" class="target-audience-icon" data-audience-delete="${escapeAttr(active.id)}" aria-label="Удалить сегмент" title="Удалить сегмент">${guruAudienceIcon('delete')}</button></span></div><div class="target-audience-link-popover" data-audience-link-popover ${linkOpen ? '' : 'hidden'}><label>Сегмент компании · Gate 0 <select data-audience-company-link="${escapeAttr(active.id)}"><option value="">Не связан</option>${projection.companySources.map((source) => `<option value="${escapeAttr(source.id)}" ${projection.linked?.source?.id === source.id ? 'selected' : ''}>${escapeHtml(source.segment_name || 'Сегмент без названия')}</option>`).join('')}</select></label></div></header>
+    <header class="target-audience-panel-head"><button type="button" class="target-audience-name" data-audience-name>${escapeHtml(projection.name || 'Добавить название')}</button><div class="target-audience-subline"><span>${subtitle.map(escapeHtml).join(' · ')}</span><span class="target-audience-actions"><button type="button" class="target-audience-icon" data-audience-link-toggle aria-expanded="${linkOpen}" aria-label="Связать с сегментом компании" title="Связать с сегментом компании">${guruAudienceIcon('link')}</button>${projection.linked?.source ? `<a href="#gate-0" class="target-audience-icon" data-audience-source="${escapeAttr(JSON.stringify({ cardId: 'gate0-company-segmentation', recordId: projection.linked.source.id, selector: 'segment_name', segmentId: active.id }))}" aria-label="Открыть связанный сегмент в ${guruGateLabel("gate-0")}" title="Открыть связанный сегмент в ${guruGateLabel("gate-0")}">${guruAudienceIcon('source')}</a>` : ''}<button type="button" class="target-audience-icon" data-audience-duplicate="${escapeAttr(active.id)}" aria-label="Дублировать сегмент" title="Дублировать сегмент">${guruAudienceIcon('copy')}</button><button type="button" class="target-audience-icon" data-audience-delete="${escapeAttr(active.id)}" aria-label="Удалить сегмент" title="Удалить сегмент">${guruAudienceIcon('delete')}</button></span></div><div class="target-audience-link-popover" data-audience-link-popover ${linkOpen ? '' : 'hidden'}><label>Сегмент компании · ${guruGateLabel("gate-0")} <select data-audience-company-link="${escapeAttr(active.id)}"><option value="">Не связан</option>${projection.companySources.map((source) => `<option value="${escapeAttr(source.id)}" ${projection.linked?.source?.id === source.id ? 'selected' : ''}>${escapeHtml(source.segment_name || 'Сегмент без названия')}</option>`).join('')}</select></label></div></header>
     <div class="target-audience-zones">${projection.zones.map((zone) => guruAudienceZoneHtml(zone, view, active.id)).join('')}</div>
   </article>`;
 }

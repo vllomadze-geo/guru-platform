@@ -95,8 +95,8 @@ function gate1SeoGuideRobotsV307(root) {
   gate1SeoGuideAfterV307(body?.querySelector('[data-rv2-sitemap-list] > span'), "robots-sitemap", "1. Вебмастер → Индексирование → Файлы Sitemap.\n2. Проверить каждый найденный Sitemap.\n3. Эталон: статус OK.");
   gate1SeoGuideAfterV307(body?.querySelector('[data-rv2-url-heading="important"]'), "robots-important", "Вебмастер → Инструменты → Анализ robots.txt.\n1. В блоке «Доступ к страницам» вставить важные URL: главную, категории, товары, услуги.\n2. Нажать Проверить.\n3. Эталон: для всех важных страниц Яндекс показывает, что доступ разрешён.");
   gate1SeoGuideAfterV307(body?.querySelector('[data-rv2-url-heading="service"]'), "robots-service", "4. Вебмастер → Инструменты → Анализ robots.txt.\n5. Проверить реальные служебные URL сайта.\n6. Эталон: ненужные для поиска страницы закрыты от обхода или индексирования.\n7. Важные коммерческие страницы при этом открыты.");
-  gate1SeoGuideAfterV307(body?.querySelector('[data-rv2-url-title="important"]'), "robots-important-urls", "URL подставляются автоматически из Gate 0 → Точка отсчёта. Здесь зафиксируй результат проверки каждого адреса.");
-  gate1SeoGuideAfterV307(body?.querySelector('[data-rv2-url-title="service"]'), "robots-service-urls", "Служебные URL определяются автоматически среди страниц Gate 0 → Точка отсчёта. Здесь зафиксируй результат и комментарий.");
+  gate1SeoGuideAfterV307(body?.querySelector('[data-rv2-url-title="important"]'), "robots-important-urls", `URL подставляются автоматически из ${guruGateLabel("gate-0")} → Точка отсчёта. Здесь зафиксируй результат проверки каждого адреса.`);
+  gate1SeoGuideAfterV307(body?.querySelector('[data-rv2-url-title="service"]'), "robots-service-urls", `Служебные URL определяются автоматически среди страниц ${guruGateLabel("gate-0")} → Точка отсчёта. Здесь зафиксируй результат и комментарий.`);
 }
 
 function gate1SeoGuideCanonicalV307(root) {

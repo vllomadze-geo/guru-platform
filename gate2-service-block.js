@@ -30,7 +30,7 @@ function g2ServiceBlockRegister(config) {
       !["company", "product"].includes(config.scope) ||
       !config.title || !Array.isArray(config.steps) ||
       (!config.steps.length && !config.emptyStepScaffold))
-    throw new TypeError("Некорректный конфиг блока сервиса Gate 2");
+    throw new TypeError(`Некорректный конфиг блока сервиса ${guruGateLabel("gate-2")}`);
   if (typeof config.serviceUrl !== "function" && !/^https:\/\//.test(config.serviceUrl || ""))
     throw new TypeError("Для сервиса нужен адрес HTTPS");
   const ids = new Set();
@@ -40,20 +40,20 @@ function g2ServiceBlockRegister(config) {
         ids.has(step.step_id) || !step.what || !step.where || !step.how ||
         (source && !/^https:\/\//.test(source)) ||
         !["checkbox", "text", "reference"].includes(step.resultType || "checkbox"))
-      throw new TypeError("Некорректный шаг блока сервиса Gate 2");
+      throw new TypeError(`Некорректный шаг блока сервиса ${guruGateLabel("gate-2")}`);
     ids.add(step.step_id);
   }
   if ([...G2_SERVICE_BLOCK_CONFIGS.values()].some((item) =>
     item.id !== config.id && item.scope === config.scope &&
     g2ServiceBlockCardId(item) === g2ServiceBlockCardId(config)))
-    throw new TypeError("У сервисов одной области Gate 2 должен быть разный cardId");
+    throw new TypeError(`У сервисов одной области ${guruGateLabel("gate-2")} должен быть разный cardId`);
   G2_SERVICE_BLOCK_CONFIGS.set(config.id, config);
   return config;
 }
 
 function g2ServiceBlockEnsureCard(config, workspace = state) {
   const gate = g2wGate(workspace);
-  if (!gate) throw new TypeError("Gate 2 отсутствует");
+  if (!gate) throw new TypeError(`${guruGateLabel("gate-2")} отсутствует`);
   const cardId = g2ServiceBlockCardId(config);
   let card = gate.cards.find((item) => item.id === cardId);
   if (!card) {
@@ -96,7 +96,7 @@ function g2ServiceBlockStatus(config, productId = "", workspace = state) {
 
 function g2ServiceBlockStatusLabel(config, status, productId = "", workspace = state) {
   if (status === "not_needed") return g2ServiceBlockSafeText(
-    g2ServiceBlockValue(config.notNeededReason, config, null, productId, workspace) || "Не требуется по Gate 0");
+    g2ServiceBlockValue(config.notNeededReason, config, null, productId, workspace) || `Не требуется по ${guruGateLabel("gate-0")}`);
   return { ready: "Готово", in_progress: "В работе", not_started: "Не начато",
     problem: "Проблема" }[status] || "Не начато";
 }

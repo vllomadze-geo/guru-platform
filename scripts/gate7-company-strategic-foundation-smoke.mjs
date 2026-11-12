@@ -508,7 +508,7 @@ try {
   assert(journalFlow.csvName === "guru-gate7-tasks.csv", "Gate 7 CSV filename changed");
   assert(journalFlow.csvContents.includes("Smoke: пройти полный цикл"), "CSV lacks the test task");
   assert(journalFlow.csvContents.includes("Smoke: результат сохранён"), "CSV lacks the task result");
-  assert(journalFlow.pdfHtml.includes("Gate 7 · Задачи и результаты"), "PDF report did not render");
+  assert(journalFlow.pdfHtml.includes("Gate 8 · Задачи и результаты"), "PDF report did not render");
   assert(journalFlow.pdfHtml.includes("Smoke: пройти полный цикл"), "PDF lacks the test task");
   assert(journalFlow.pdfHtml.includes("Smoke: результат сохранён"), "PDF lacks the task result");
   assert(

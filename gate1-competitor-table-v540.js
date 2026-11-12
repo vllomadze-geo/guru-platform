@@ -79,7 +79,7 @@ function g1ComparisonPhrasesV540(ctx, count = 15, quoted = false) {
   const phrases = ctx.phrases.ranked.slice(0, count);
   if (!phrases.length) return `<div class="g1ct-missing-v540">${ctx.phrases.confirmed.length ? "Нет частотности у подтверждённых фраз" : "Нет подтверждённых фраз"}${g1CompetitorSourceLinkV539({ gateId: "gate-1", kind: "gate1-keywords", productId: ctx.product.id })}</div>`;
   const values = phrases.map((row) => quoted ? `"${row.value}"` : row.value);
-  const note = quoted ? "" : `Регион: ${ctx.geography || "не указан в Gate 0"} · ${ctx.phrases.source}${ctx.phrases.file ? ` · ${ctx.phrases.file}` : ""}${ctx.phrases.archived ? " · часть метрик из архива категории" : ""}`;
+  const note = quoted ? "" : `Регион: ${ctx.geography || `не указан в ${guruGateLabel("gate-0")}`} · ${ctx.phrases.source}${ctx.phrases.file ? ` · ${ctx.phrases.file}` : ""}${ctx.phrases.archived ? " · часть метрик из архива категории" : ""}`;
   return `<div class="g1ct-phrases-v540 ${phrases.length > 3 ? "is-long" : ""}" tabindex="0" aria-label="${phrases.length} фраз для поиска">${note ? `<small>${escapeHtml(note)}</small>` : ""}${phrases.map((row, index) =>
     `<div class="g1ct-phrase-v540"><code>${escapeHtml(values[index])}</code>${quoted ? "" : `<small>${escapeHtml(String(row.frequency))} запросов</small>`}<button type="button" class="small-btn" data-g1-competitor-copy-v539="${escapeAttr(values[index])}">Копировать</button></div>`).join("")}</div>`;
 }
@@ -109,7 +109,7 @@ function g1ComparisonRowsV540(ctx) {
     ["not_needed", "not_required"].includes(guruCanonStatus(channel.status))
       ? [g4LaunchChannelKey(channel, index)] : []));
   const campaigns = (snapshot.campaigns || []).filter((row) =>
-    row.source === "Gate 4" && !["not_needed", "not_required"].includes(guruCanonStatus(row.status)) &&
+    row.source === `${guruGateLabel("gate-4")}` && !["not_needed", "not_required"].includes(guruCanonStatus(row.status)) &&
     !excludedChannels.has(row.channelKey))
     .map((row) => row.name).join("\n");
   const platformUrl = megaPlatformProductUrl(ctx.product, state);
@@ -126,7 +126,7 @@ function g1ComparisonRowsV540(ctx) {
     { step: 2, title: "Классификация", question: "Тот же JTBD, сегмент, цена и география?", own: () => g1ComparisonOwnPartsV540([["JTBD", snapshot.jtbd, gate0("jtbd")], ["Сегмент", snapshot.segment, gate0("segments")], ["Цена", ctx.price.raw && `${ctx.price.raw} ₽`, gate1Page], ["География", ctx.geography, { gateId: "gate-0" }]]), competitor: (c) => g1ComparisonChoiceV540(c, "sameMarket", [["yes", "Да"], ["no", "Нет"]], c.classificationV539?.sameMarket), complete: (c) => !!c.classificationV539?.sameMarket },
     { step: 2, title: "Классификация", question: "Тот же тип бизнеса?", own: () => g1ComparisonOwnV540(state.project?.niche || state.project?.type, { gateId: "gate-0" }), competitor: (c) => g1ComparisonChoiceV540(c, "sameBusiness", [["yes", "Да"], ["no", "Нет"]], c.classificationV539?.sameBusiness), complete: (c) => !!c.classificationV539?.sameBusiness },
     { step: 2, title: "Классификация", question: "Какой тип конкурента?", own: () => '—', competitor: (c) => `<strong>${escapeHtml(G1_COMPETITOR_TYPES_V539[g1CompetitorTypeV539(c)])}</strong>` },
-    { step: 3, title: "Продукт", question: "Какой ближайший аналог?", own: () => g1ComparisonOwnPartsV540([["Название", ctx.product.name, { gateId: "gate-0", productId }], [platformUrl ? "URL · Платформа" : "URL · карточка Gate 1", ownUrl, ownUrlTarget]]), competitor: (c) => `${f(c, 3, [["analogName", "Название аналога"], ["analogUrl", "URL аналога", "url"]])}${query(c, [`site:<домен> ${ctx.mainWord}`, ctx.secondPhrase && `site:<домен> ${ctx.secondPhrase}`].filter(Boolean))}`, complete: (c) => saved(c, 3, "analogName", "analogUrl") },
+    { step: 3, title: "Продукт", question: "Какой ближайший аналог?", own: () => g1ComparisonOwnPartsV540([["Название", ctx.product.name, { gateId: "gate-0", productId }], [platformUrl ? "URL · Платформа" : `URL · карточка ${guruGateLabel("gate-1")}`, ownUrl, ownUrlTarget]]), competitor: (c) => `${f(c, 3, [["analogName", "Название аналога"], ["analogUrl", "URL аналога", "url"]])}${query(c, [`site:<домен> ${ctx.mainWord}`, ctx.secondPhrase && `site:<домен> ${ctx.secondPhrase}`].filter(Boolean))}`, complete: (c) => saved(c, 3, "analogName", "analogUrl") },
     { step: 3, title: "Продукт", question: "Какие характеристики?", own: () => g1ComparisonOwnV540(snapshot.cardSummary, gate1Page), competitor: (c) => f(c, 3, [["characteristics", "Характеристики"]]), complete: (c) => saved(c, 3, "characteristics") },
     { step: 4, title: "Цена", question: "Сколько стоит?", own: () => g1ComparisonOwnV540(ctx.price.raw && `${ctx.price.raw} ₽`, gate1Page), competitor: (c) => f(c, 4, [["priceAnalog", "Цена аналога, ₽", "price"]]), complete: (c) => saved(c, 4, "priceAnalog") },
     { step: 4, title: "Цена", question: "Какой разброс цен?", own: () => '—', competitor: (c) => f(c, 4, [["priceMin", "Минимальная, ₽", "price"], ["priceMax", "Максимальная, ₽", "price"]]), complete: (c) => saved(c, 4, "priceMin", "priceMax") },
@@ -139,7 +139,7 @@ function g1ComparisonRowsV540(ctx) {
     { step: 7, title: "Паритет и отличия", question: "Чем отличается?", own: () => g1ComparisonOwnPartsV540([["УТП", snapshot.usp, gate0("usp")], ["Доверие", snapshot.trust, gate1Page]]), competitor: (c) => f(c, 7, [["competitorDifferences", "Отличия конкурента"], ["ourDifferences", "Наши отличия"]]), complete: (c) => saved(c, 7, "competitorDifferences", "ourDifferences") },
     { step: 8, title: "Ключевые слова и реклама", question: "Показывается ли по нашим главным фразам?", own: () => g1ComparisonPhrasesV540(ctx, 3, true), competitor: (c) => g1ComparisonVisibilityV540(c, ctx), complete: (c) => Object.values(c.visibilityByPhraseV540 || {}).some(Boolean) || saved(c, 8, "organicPhrases", "adPhrases") },
     { step: 8, title: "Ключевые слова и реклама", question: "Что написано в его объявлениях?", own: () => '—', competitor: (c) => f(c, 8, [["adTexts", "Тексты"], ["offers", "Офферы"], ["triggers", "Триггеры"]]), complete: (c) => saved(c, 8, "adTexts", "offers", "triggers") },
-    { step: 9, title: "Как продаёт", question: "Как устроены посадочная, CTA, каналы?", own: () => g1ComparisonOwnPartsV540([["Посадочная", snapshot.landing, gate1Page], ["CTA", snapshot.cta, gate1Page], ["Каналы Gate 4", campaigns, gate4]]), competitor: (c) => `${f(c, 9, [["landingStructure", "Посадочная"], ["cta", "CTA"], ["payment", "Оплата"], ["channels", "Каналы"], ["trafficSources", "Источники трафика"]])}${query(c, ["<домен>"], "Вставить в Similarweb")}`, complete: (c) => saved(c, 9, "landingStructure", "cta", "payment", "channels", "trafficSources") },
+    { step: 9, title: "Как продаёт", question: "Как устроены посадочная, CTA, каналы?", own: () => g1ComparisonOwnPartsV540([["Посадочная", snapshot.landing, gate1Page], ["CTA", snapshot.cta, gate1Page], [`Каналы ${guruGateLabel("gate-4")}`, campaigns, gate4]]), competitor: (c) => `${f(c, 9, [["landingStructure", "Посадочная"], ["cta", "CTA"], ["payment", "Оплата"], ["channels", "Каналы"], ["trafficSources", "Источники трафика"]])}${query(c, ["<домен>"], "Вставить в Similarweb")}`, complete: (c) => saved(c, 9, "landingStructure", "cta", "payment", "channels", "trafficSources") },
     { step: 10, title: "География и доставка", question: "Куда, за сколько и в какие сроки доставляет?", own: () => g1ComparisonOwnV540(ctx.geography, { gateId: "gate-0" }), competitor: (c) => `${f(c, 10, [["regions", "Регионы"], ["deliveryTime", "Сроки"], ["deliveryCost", "Стоимость"], ["pickup", "Самовывоз"]])}${query(c, ["site:<домен> доставка"])}`, complete: (c) => saved(c, 10, "regions", "deliveryTime", "deliveryCost", "pickup") },
     { step: 11, title: "Доверие", question: "Какой рейтинг и что пишут в отзывах?", own: () => '—', competitor: (c) => `${f(c, 11, [["rating", "Рейтинг"], ["reviewCount", "Число отзывов"], ["praise", "Похвалы"], ["complaints", "Жалобы"]])}${query(c, ["<домен> отзывы"])}`, complete: (c) => saved(c, 11, "rating", "reviewCount", "praise", "complaints") },
     { step: 12, title: "Вывод", question: "3 сильные и 3 слабые стороны?", own: () => '—', competitor: (c) => `${f(c, 12, [["strength1", "Сильная 1"], ["strength2", "Сильная 2"], ["strength3", "Сильная 3"], ["weakness1", "Слабая 1"], ["weakness2", "Слабая 2"], ["weakness3", "Слабая 3"]])}${c.stepsV539?.[12]?.legacySummary ? f(c, 12, [["legacySummary", "Перенесённый вывод"]]) : ""}`, complete: (c) => saved(c, 12, "strength1", "strength2", "strength3", "weakness1", "weakness2", "weakness3", "legacySummary") },
@@ -474,7 +474,7 @@ function g1BergenJtbdSearchV548(ctx, jtbd, index, entry, options = {}) {
   const rated = jtbd.phrases.filter((phrase) => G1_BERGEN_RELEVANCE_V549.some(([value]) =>
     entry.keywordRelevanceByPhraseV549?.[phrase.key] === value)).length;
   return `<div class="g1bp-jtbd-search-v548">${options.companyComparison ? "" : `<div class="g1bp-jtbd-text-v548">${jtbd.company ? "Релевантность по ключевым словам" : `№${index + 1}${jtbd.primary ? " · основной" : ""} — ${escapeHtml(jtbd.text)}`}</div>`}
-    ${index === 0 ? `<small class="g1bp-search-region-v548">Регион: ${ctx.geography ? escapeHtml(ctx.geography) : `Не заполнено в Gate 0 ${g1CompetitorSourceLinkV539({ gateId: "gate-0" })}`}</small>` : ""}
+    ${index === 0 ? `<small class="g1bp-search-region-v548">Регион: ${ctx.geography ? escapeHtml(ctx.geography) : `Не заполнено в ${guruGateLabel("gate-0")} ${g1CompetitorSourceLinkV539({ gateId: "gate-0" })}`}</small>` : ""}
     <details class="g1bp-search-details-v548" data-g1bp-search-key-v548="${escapeAttr(key)}"${G1_BERGEN_SEARCH_OPEN_V548.has(key) ? " open" : ""}>
       <summary><strong>Что вставить в Яндекс</strong><span>Фраз: ${jtbd.phrases.length} · оценено: ${rated} · выбрано: ${selected.size}</span></summary>
       ${jtbd.phrases.length ? `<div class="g1bp-phrase-list-v548" tabindex="0" aria-label="${jtbd.company ? "Ключевые слова компании" : `Все ${jtbd.phrases.length} фраз JTBD №${index + 1}`}">${g1BergenSortedPhrasesV551(entry, jtbd).map((phrase) => `<div class="g1bp-phrase-v543"><button type="button" class="g1bp-phrase-pick-v550" data-g1bp-select-keyword-v550="${escapeAttr(jtbd.id)}" data-g1bp-keyword-key-v550="${escapeAttr(phrase.key)}" aria-pressed="${selected.has(phrase.key)}" title="${selected.has(phrase.key) ? "Убрать фразу из колонок конкурентов" : "Показать фразу у конкурентов"}"><code>${escapeHtml(phrase.value)}</code></button><small>${phrase.frequency === null ? "Частотность не указана" : `${Number(phrase.frequency).toLocaleString("ru-RU")} запросов`}</small><button type="button" class="small-btn" data-g1-competitor-copy-v539="${escapeAttr(phrase.value)}">Копировать</button>${g1BergenRelevanceFieldV549(entry, jtbd, phrase)}</div>`).join("")}</div>` : `<div class="g1ct-missing-v540">${jtbd.company ? "Добавьте ключевые слова компании в блоке «Спрос»." : "Нет ключевых слов в этом JTBD"} ${g1CompetitorSourceLinkV539(target)}</div>`}
@@ -504,14 +504,14 @@ function g1BergenChoicesV543(competitor, key, choices) {
 
 function g1BergenJtbdReferenceV581(competitor, jtbds, oneIndex = null, entry = null) {
   return jtbds.length ? `<div class="g1bp-jtbd-reference-v581">${jtbds.map((jtbd, index) => ({ jtbd, index })).filter(({ index }) => oneIndex === null || index === oneIndex).map(({ jtbd, index }) => `<div class="g1bp-jtbd-text-v548">${jtbd.company ? "Релевантность по ключевым словам" : `№${index + 1}${jtbd.primary ? " · основной" : ""} — ${escapeHtml(jtbd.text)}`}</div>${entry ? `<div data-g1bp-keywords-for-v550="${escapeAttr(competitor.id)}">${g1BergenCompetitorKeywordsV550(entry, competitor, jtbd)}</div>` : ""}`).join("")}</div>`
-    : '<span class="g1ct-muted-v540">Сначала добавьте JTBD продукта в Gate 0.</span>';
+    : `<span class="g1ct-muted-v540">Сначала добавьте JTBD продукта в ${guruGateLabel("gate-0")}.</span>`;
 }
 
 function g1BergenChannelsV543(snapshot) {
   const excluded = new Set((g3Gate0Marketing().channels || []).flatMap((channel, index) =>
     ["not_needed", "not_required"].includes(guruCanonStatus(channel.status))
       ? [g4LaunchChannelKey(channel, index)] : []));
-  return (snapshot.campaigns || []).filter((row) => row.source === "Gate 4" &&
+  return (snapshot.campaigns || []).filter((row) => row.source === `${guruGateLabel("gate-4")}` &&
     !["not_needed", "not_required"].includes(guruCanonStatus(row.status)) &&
     !excluded.has(row.channelKey)).map((row) => row.name).join("\n");
 }
@@ -536,7 +536,7 @@ function g1BergenOwnAdvertisementsV568(product, searchOnly = false) {
       const body = (ad.texts || []).map((item) => String(item?.value || "").trim()).find(Boolean) || "";
       if (headline || body) rows.push([headline, body].filter(Boolean).join(" — "));
     }));
-  return rows.slice(0, 3).join("\n") + (rows.length > 3 ? `\nИ ещё ${rows.length - 3} объявлений в Gate 4` : "");
+  return rows.slice(0, 3).join("\n") + (rows.length > 3 ? `\nИ ещё ${rows.length - 3} объявлений в ${guruGateLabel("gate-4")}` : "");
 }
 
 function g1BergenSearchUrlV569(value) {
@@ -672,7 +672,7 @@ function g1BergenOwnProductPreviewV602(ctx) {
 
 function g1BergenOwnSearchV569(ctx, options = {}) {
   const preview = g1BergenOwnProductPreviewV602(ctx);
-  return `<div class="g1bp-serp-v569">${options.hideNote ? "" : "<small>Заголовок и текст — из объявлений Gate 4; фото и сведения о товаре — из Gate 1. Фактический вид в поиске может отличаться.</small>"}
+  return `<div class="g1bp-serp-v569">${options.hideNote ? "" : `<small>Заголовок и текст — из объявлений ${guruGateLabel("gate-4")}; фото и сведения о товаре — из ${guruGateLabel("gate-1")}. Фактический вид в поиске может отличаться.</small>`}
     ${g1BergenSearchCardV569(preview, options.readOnlyPhoto ? {} : { ownProductId: ctx.product.id })}</div>`;
 }
 
@@ -1296,7 +1296,7 @@ document.addEventListener("change", async (event) => {
   if (status) status.textContent = "Подготавливаю фото…";
   try {
     if (v22ProductGalleryPhotos(page).length >= V22_PRODUCT_GALLERY_MAX_PHOTOS)
-      throw new Error("Достигнут лимит фото в Gate 1. Удалите лишнее фото в карточке товара.");
+      throw new Error(`Достигнут лимит фото в ${guruGateLabel("gate-1")}. Удалите лишнее фото в карточке товара.`);
     const photo = await v22PrepareProductPhoto(file);
     if (state !== workspace || !g3ProductJourneyPageSource(product).row ||
         g3ProductJourneyPageSource(product).row !== page) return;

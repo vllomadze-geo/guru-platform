@@ -201,7 +201,9 @@ renderScheme = function () {
   const gateIndex = state?.gates?.findIndex((gate) => gate.id === "gate-2") ?? -1;
   if (gateIndex < 0) return;
   const readiness = guruGateReadiness(state.gates[gateIndex]);
-  const meta = els.contentArea.querySelectorAll(".flow-node .flow-meta")[gateIndex];
+  // The scheme draws gates in GURU_GATE_ORDER, not in stored array order.
+  const meta = els.contentArea.querySelectorAll(".flow-node .flow-meta")[
+    guruOrderedGates(state.gates).findIndex((gate) => gate.id === "gate-2")];
   if (meta) meta.textContent = `${readiness.total} блоков, готово ${readiness.percent}%`;
 };
 

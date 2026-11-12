@@ -75,7 +75,7 @@ function g8CompanyContributionV4(product, period, base) {
     campaignCount: productData.campaigns.length,
     campaignIds: productData.campaigns.map((campaign) => campaign.id),
     period,
-    source: "Gate 4 → план; Gate 5 → факты; Gate 1 → экономика",
+    source: `${guruGateLabel("gate-4")} → план; ${guruGateLabel("gate-5")} → факты; ${guruGateLabel("gate-1")} → экономика`,
     updatedAt: [bundle.parameters.budget.updatedAt, ...observations.map((row) => row.updatedAt)]
       .filter(Boolean).sort().at(-1) || "",
     observations: observations.length,
@@ -163,15 +163,15 @@ function g8CompanyAnalysisV4(root = ensureGate8Workspace()) {
   if (costMetric && goal.allowedCostRecord.valid && actualCost?.complete && actualCost.value > goal.allowedCost) {
     risks.push(`${G8_COMPANY_LABELS_V4[costMetric]} ${g8Money(actualCost.value)} выше ограничения компании ${g8Money(goal.allowedCost)}.`);
     recommendations.push({ id: "company-cost-limit", what: `Снизить общий ${G8_COMPANY_LABELS_V4[costMetric]} до допустимого уровня`,
-      basis: `Текущий прогноз: ${g8Money(actualCost.value)}; предел Gate 0: ${g8Money(goal.allowedCost)}.`,
+      basis: `Текущий прогноз: ${g8Money(actualCost.value)}; предел ${guruGateLabel("gate-0")}: ${g8Money(goal.allowedCost)}.`,
       effect: `Для выполнения ограничения требуется снижение минимум на ${g8Money(actualCost.value - goal.allowedCost)} на результат.`,
-      where: "Gate 4 → планы продуктов и кампаний", gateId: "gate-4" });
+      where: `${guruGateLabel("gate-4")} → планы продуктов и кампаний`, gateId: "gate-4" });
   }
   if (goal.budgetRecord.valid && plannedProductBudgets > goal.budget) recommendations.push({
     id: "company-budget-overrun", what: "Согласовать планы продуктов с общим бюджетом",
     basis: `Планы продуктов: ${g8Money(plannedProductBudgets)}; бюджет компании: ${g8Money(goal.budget)}.`,
     effect: `Устранить превышение ${g8Money(plannedProductBudgets - goal.budget)} без повторного учёта общего бюджета.`,
-    where: "Gate 4 → бюджеты продуктов", gateId: "gate-4",
+    where: `${guruGateLabel("gate-4")} → бюджеты продуктов`, gateId: "gate-4",
   });
   const comparable = contributions.filter((row) => row.observations >= 3 &&
     Number.isFinite(row.scenarios.base.values.cpa) && row.scenarios.base.values.sales > 0);
@@ -182,7 +182,7 @@ function g8CompanyAnalysisV4(root = ensureGate8Workspace()) {
         id: "company-cost-comparison", what: "Проверить перераспределение тестового бюджета между продуктами",
         basis: `${ordered[0].productName}: CPA ${g8Money(ordered[0].scenarios.base.values.cpa)}; ${ordered.at(-1).productName}: ${g8Money(ordered.at(-1).scenarios.base.values.cpa)}. У обоих есть не менее трёх наблюдений.`,
         effect: "Потенциальное снижение общего CPA; величина эффекта не рассчитана без данных о предельном спросе.",
-        where: "Gate 4 → планы кампаний; затем проверить факт в Gate 5", gateId: "gate-4",
+        where: `${guruGateLabel("gate-4")} → планы кампаний; затем проверить факт в ${guruGateLabel("gate-5")}`, gateId: "gate-4",
       });
   }
   const assignedCampaignIds = new Set(contributions.flatMap((row) => row.campaignIds));
@@ -206,7 +206,7 @@ function g8CompanyAnalysisV4(root = ensureGate8Workspace()) {
     probability: { available: false, reason: "Общая вероятность не выводится из вероятностей продуктов: для неё нужна сопоставимая совместная история." },
     commonExpenses: {
       unassignedSpend, unassignedCampaigns: unassignedCampaigns.length,
-      source: "Gate 5 → кампании без точной привязки к product_id",
+      source: `${guruGateLabel("gate-5")} → кампании без точной привязки к product_id`,
       includedInForecast: false,
       rule: "Не прибавлять к расходам продуктов до явной привязки или правила распределения; возможное пересечение с импортами проверяется отдельно.",
     },
@@ -259,7 +259,7 @@ function g8CompanyResultHtmlV4(analysis) {
       return `<span>${escapeHtml(G8_COMPANY_LABELS_V4[key])}: <b>${escapeHtml(g8CompanyValueV4(key, row.value))}</b>${row.complete ? "" : " · частично"}</span>`;
     }).join("")}</div>
     <p class="g8-company-note">Общий бюджет компании ${analysis.goal.budgetRecord.valid ? escapeHtml(g8Money(analysis.goal.budget)) : "не указан"}; планы продуктов ${escapeHtml(g8Money(analysis.plannedProductBudgets))}. Общий бюджет служит ограничением и не прибавляется к расходам продуктов.</p>
-    <p class="g8-company-note">Неразнесённые расходы Gate 5: ${escapeHtml(g8Money(analysis.commonExpenses.unassignedSpend))} по ${analysis.commonExpenses.unassignedCampaigns} кампаниям. ${escapeHtml(analysis.commonExpenses.rule)}</p>
+    <p class="g8-company-note">Неразнесённые расходы ${guruGateLabel("gate-5")}: ${escapeHtml(g8Money(analysis.commonExpenses.unassignedSpend))} по ${analysis.commonExpenses.unassignedCampaigns} кампаниям. ${escapeHtml(analysis.commonExpenses.rule)}</p>
     ${analysis.risks.length ? `<div class="g8-company-risks"><strong>Риски и ограничения</strong><ul>${analysis.risks.map((risk) => `<li>${escapeHtml(risk)}</li>`).join("")}</ul></div>` : ""}
     <p class="g8-company-note">${escapeHtml(analysis.probability.reason)}</p>
   </div>`;

@@ -3192,21 +3192,21 @@ const G4_FUNNEL_ROW_SOURCES_V294 = Object.freeze({
 });
 
 const G4_FUNNEL_SOURCE_LABELS_V294 = Object.freeze({
-  product: "Gate 0 · выбранный продукт",
-  segment: "Gate 0 · Сегмент",
-  positioning: "Gate 0 · Позиционирование",
-  usp: "Gate 0 · УТП",
-  offer: "Gate 0 · Оффер",
-  price: "Gate 1 · Карточка товара · Цена",
-  cta: "Gate 1 · Карточка товара · Финальный CTA",
-  page: "Gate 1 · Карточка товара",
-  forms: "Gate 2 · Формы",
-  crm: "Gate 2 · CRM и обработка лидов",
-  contacts: "Gate 0 · Контакты",
-  mobile: "Gate 0 · Мобильная версия",
-  analytics: "Gate 0 · Яндекс Метрика",
-  utm: "Gate 0 · UTM-разметка",
-  yandex_channel: "Gate 0 · Яндекс Директ",
+  product: `${guruGateLabel("gate-0")} · выбранный продукт`,
+  segment: `${guruGateLabel("gate-0")} · Сегмент`,
+  positioning: `${guruGateLabel("gate-0")} · Позиционирование`,
+  usp: `${guruGateLabel("gate-0")} · УТП`,
+  offer: `${guruGateLabel("gate-0")} · Оффер`,
+  price: `${guruGateLabel("gate-1")} · Карточка товара · Цена`,
+  cta: `${guruGateLabel("gate-1")} · Карточка товара · Финальный CTA`,
+  page: `${guruGateLabel("gate-1")} · Карточка товара`,
+  forms: `${guruGateLabel("gate-2")} · Формы`,
+  crm: `${guruGateLabel("gate-2")} · CRM и обработка лидов`,
+  contacts: `${guruGateLabel("gate-0")} · Контакты`,
+  mobile: `${guruGateLabel("gate-0")} · Мобильная версия`,
+  analytics: `${guruGateLabel("gate-0")} · Яндекс Метрика`,
+  utm: `${guruGateLabel("gate-0")} · UTM-разметка`,
+  yandex_channel: `${guruGateLabel("gate-0")} · Яндекс Директ`,
 });
 
 const G4_FUNNEL_ENCODING_REPAIRS_V294 = Object.freeze([
@@ -3906,7 +3906,7 @@ g4CampaignLaunchCenterHtml = function (options = {}) {
     ? ""
     : g4ProductPickPickerHtml(products, product);
   if (!products.length)
-    return `${picker}<div class="g3-product-journey-empty"><strong>Нет продуктов или услуг</strong><span>Сначала добавьте позицию в Gate 0.</span></div>`;
+    return `${picker}<div class="g3-product-journey-empty"><strong>Нет продуктов или услуг</strong><span>Сначала добавьте позицию в ${guruGateLabel("gate-0")}.</span></div>`;
   if (!product)
     return `${picker}<div class="g3-product-journey-empty"><strong>Продукт не выбран</strong></div>`;
   const channels = g4LaunchChannels();
@@ -4010,7 +4010,7 @@ function g4FunnelReadinessAuditV294(product = g4ProductPickSelected()) {
       key: channel.key,
       label: g4LaunchChannelLabel(channel),
       stage: placement.byKey.get(channel.key),
-      source: "Gate 0 · Каналы → gate4Production.campaigns[product_id/channel_key]",
+      source: `${guruGateLabel("gate-0")} · Каналы → gate4Production.campaigns[product_id/channel_key]`,
     })),
     brokenEncoding: broken,
     deletions: { cards: 0, rows: 0, channels: 0, fields: 0 },

@@ -205,7 +205,7 @@ function gate1WebmasterDerivedCommentV295(workspace = state) {
     .split(/\r?\n/)
     .map((item) => item.trim())
     .filter(Boolean).length;
-  return `Gate 1 · Яндекс Вебмастер: ${aggregate.label}; текущих ошибок: ${errors}`;
+  return `${guruGateLabel("gate-1")} · Яндекс Вебмастер: ${aggregate.label}; текущих ошибок: ${errors}`;
 }
 
 function gate1WebmasterApplyDerivedGate0V295(workspace, mega) {
@@ -280,7 +280,7 @@ function gate1WebmasterCompanyHtmlV295() {
     <div class="g1-section-header g2-open-header">
       <span class="g1-section-left">
         <span class="g1-section-title">Яндекс Вебмастер</span>
-        <span class="g1-section-progress">Компания · единый источник для Gate 0 и Gate 2</span>
+        <span class="g1-section-progress">Компания · единый источник для ${guruGateLabel("gate-0")} и ${guruGateLabel("gate-2")}</span>
       </span>
       ${gate1WebmasterPillV295(overall.readiness)}
     </div>
@@ -416,7 +416,7 @@ function gate1WebmasterG2SourceV295(card, workspace = state) {
 const __gate1WebmasterPrevG2SyncInfoV295 = g2SyncInfo;
 g2SyncInfo = function (card) {
   const source = gate1WebmasterG2SourceV295(card, state);
-  if (source) return { g0: null, source: { ...source, gate: "Gate 1", status: source.result }, g4: null };
+  if (source) return { g0: null, source: { ...source, gate: `${guruGateLabel("gate-1")}`, status: source.result }, g4: null };
   return __gate1WebmasterPrevG2SyncInfoV295.apply(this, arguments);
 };
 
@@ -481,7 +481,7 @@ guruExportGate2CardDiagnosticV223 = function (card, rawStatus) {
     codeAnchor: "gate1-webmaster-qa.js:gate1WebmasterG2SourceV295",
   };
   diagnostic.fallbackOrder = ["G1"];
-  diagnostic.fallbackExpression = "G1: конкретное поле Gate 1 · Яндекс Вебмастер";
+  diagnostic.fallbackExpression = `G1: конкретное поле ${guruGateLabel("gate-1")} · Яндекс Вебмастер`;
   diagnostic.sourceChain = [source];
   diagnostic.selectedSource = source;
   diagnostic.recalculatedStatus = source.result;
@@ -1179,7 +1179,7 @@ gate1WebmasterCompanyHtmlV295 = function () {
     <div class="g1-section-header g2-open-header">
       <span class="g1-section-left">
         <span class="g1-section-title">Яндекс Вебмастер · Компания</span>
-        <span class="g1-section-progress">Единый источник для Gate 0 и пяти карточек Gate 2</span>
+        <span class="g1-section-progress">Единый источник для ${guruGateLabel("gate-0")} и пяти карточек ${guruGateLabel("gate-2")}</span>
       </span>
       ${gate1WebmasterPillV295(overall.readiness)}
     </div>

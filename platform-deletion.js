@@ -132,35 +132,35 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
     remove(products, (row) => row?.id === key, "Что продаём · позиции");
     sharedDrop(project.productBindingsV185, key, "Gate 0 · productBindingsV185[product_id]");
     drop(project.productScopedOverridesV194, key, "Gate 0 · productScopedOverridesV194[product_id]");
-    drop(project.productAudienceSelectionV1, key, "Gate 0 · выбор ЦА продукта[product_id]");
+    drop(project.productAudienceSelectionV1, key, `${guruGateLabel("gate-0")} · выбор ЦА продукта[product_id]`);
     drop(project.gate0ScopeUiV194?.commonMetaByProduct, key,
       "Gate 0 · commonMetaByProduct[product_id]");
     sharedDrop(workspace.projectComparison?.productsById, key,
-      "Gate 1 · сравнение продуктов[product_id]");
+      `${guruGateLabel("gate-1")} · сравнение продуктов[product_id]`);
     sharedDrop(workspace.ui?.gate1LandingContinuumV234?.byProduct, key,
-      "Gate 1 · карточка посадочной[product_id]");
+      `${guruGateLabel("gate-1")} · карточка посадочной[product_id]`);
     sharedDrop(workspace.gate1WebmasterV295?.byProduct, key,
-      "Gate 1 · прежний Вебмастер[product_id]");
+      `${guruGateLabel("gate-1")} · прежний Вебмастер[product_id]`);
     sharedDrop(workspace.gate3ProductJourneyV210?.openStepsByProduct, key,
-      "Gate 3 · раскрытые этапы[product_id]");
+      `${guruGateLabel("gate-3")} · раскрытые этапы[product_id]`);
     clear(workspace.gate3ProductJourneyV210, "selectedProductId",
-      "Gate 3 · прежний выбранный товар");
+      `${guruGateLabel("gate-3")} · прежний выбранный товар`);
     sharedDrop(workspace.gate3Gate4StructureV290?.byProduct, key,
-      "Gate 3 · структура Gate 4[product_id]");
+      `${guruGateLabel("gate-3")} · структура ${guruGateLabel("gate-4")}[product_id]`);
     clear(workspace.gate4ProductPickV210, "selectedProductId",
-      "Gate 4 · прежний выбранный товар");
+      `${guruGateLabel("gate-4")} · прежний выбранный товар`);
     sharedDrop(workspace.gate4Production?.readinessV225?.byProduct, key,
-      "Gate 4 · готовность[product_id]");
+      `${guruGateLabel("gate-4")} · готовность[product_id]`);
     sharedDrop(workspace.gate4Production?.forecastAssumptionsByProduct, key,
-      "Gate 4 · прогноз[product_id]");
+      `${guruGateLabel("gate-4")} · прогноз[product_id]`);
     sharedDrop(workspace.gate4Production?.forecastAssumptionsUiV3, key,
-      "Gate 4 · интерфейс прогноза[product_id]");
+      `${guruGateLabel("gate-4")} · интерфейс прогноза[product_id]`);
     sharedDrop(workspace.gate5?.importsByProduct, key,
-      "Gate 5 · импорты[product_id]");
+      `${guruGateLabel("gate-5")} · импорты[product_id]`);
     sharedDrop(workspace.gate6Calendar?.byProduct, key,
-      "Gate 6 · календарь[product_id]");
+      `${guruGateLabel("gate-6")} · календарь[product_id]`);
     sharedDrop(workspace.gate8Forecast?.byProduct, key,
-      "Gate 8 · прогноз и история[product_id]");
+      `${guruGateLabel("gate-8")} · прогноз и история[product_id]`);
     drop(urls?.products, key, "Платформа · URL товара");
     drop(relations?.categoryIdsByProduct, key, "Платформа · категории товара");
     for (const [categoryId, order] of Object.entries(relations?.productOrderByCategory || {})) {
@@ -171,8 +171,8 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
     drop(relations?.primaryByProduct, key, "Платформа · основная категория товара");
     drop(relations?.additionalByProduct, key, "Платформа · доп. категории товара");
     if (project.gate0ScopeUiV194?.selectedProductId === key)
-      clear(project.gate0ScopeUiV194, "selectedProductId", "Gate 0 · выбранный товар");
-    clear(workspace.gate4Production, "launchProduct", "Gate 4 · выбранный товар");
+      clear(project.gate0ScopeUiV194, "selectedProductId", `${guruGateLabel("gate-0")} · выбранный товар`);
+    clear(workspace.gate4Production, "launchProduct", `${guruGateLabel("gate-4")} · выбранный товар`);
 
     const scoped = project.gate0ScopedValuesV194;
     remove(scoped, (row) => row?.product_id === key,
@@ -182,88 +182,88 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
         remove(card.pageRows, (row) => row?.catalogItemIdV189 === key ||
           Boolean(sourceRowId && row?.id === sourceRowId &&
             card.id === target.source?.cardId),
-        `Gate 1 · ${card.id} · карточки товара`);
+        `${guruGateLabel("gate-1")} · ${card.id} · карточки товара`);
       }
       for (const field of ["metrikaQualityV360", "metrikaProductV367"])
         sharedRemove(card.fields?.[field]?.perProduct,
           (row) => row?.product_id === key,
-          `Gate 2 · ${card.id} · ${field}.perProduct`);
+          `${guruGateLabel("gate-2")} · ${card.id} · ${field}.perProduct`);
       if (card.currentResultsMeta?.positionId === key) {
         const resultRows = (card.currentResults || []).filter((row) =>
           row?.value || row?.source || row?.comment);
-        note(`Gate 0 · ${card.id} · показатели результатов товара`,
+        note(`${guruGateLabel("gate-0")} · ${card.id} · показатели результатов товара`,
           resultRows.length, () => { card.currentResults = []; });
-        note(`Gate 0 · ${card.id} · продукт результатов`, 1, () => {
+        note(`${guruGateLabel("gate-0")} · ${card.id} · продукт результатов`, 1, () => {
           card.currentResultsMeta = {
             ...card.currentResultsMeta, period: "", sources: "", positionId: "",
           };
         });
       }
       sharedDrop(card.legacyGate1WebmasterV295?.data?.byProduct, key,
-        `Gate 1 · ${card.id} · архив Вебмастера[product_id]`);
+        `${guruGateLabel("gate-1")} · ${card.id} · архив Вебмастера[product_id]`);
     }
     for (const [index, map] of (workspace.painV130?.productMaps || []).entries())
-      sharedDrop(map?.items, key, `Gate 1 · спрос[${index}].items[product_id]`);
+      sharedDrop(map?.items, key, `${guruGateLabel("gate-1")} · спрос[${index}].items[product_id]`);
     for (const [index, map] of (workspace.painV130?.productMaps || []).entries()) {
       const archived = map?.legacyPageItemsV237;
       const keyed = archived?.[key];
       const conflictingOwner = keyed && [keyed.mapped_product_id, keyed.data?.product_id]
         .some((ownerId) => ownerId && ownerId !== key);
       if (conflictingOwner) unresolved.push({
-        path: `Gate 1 · спрос[${index}].legacyPageItemsV237[product_id]`,
+        path: `${guruGateLabel("gate-1")} · спрос[${index}].legacyPageItemsV237[product_id]`,
         reason: "Ключ совпадает с product_id, но вложенная запись указывает на другой товар",
       });
       else sharedDrop(archived, key,
-        `Gate 1 · спрос[${index}].legacyPageItemsV237[product_id]`);
+        `${guruGateLabel("gate-1")} · спрос[${index}].legacyPageItemsV237[product_id]`);
       for (const [archiveId, entry] of Object.entries(archived || {})) {
         if (archiveId === key || !entry || typeof entry !== "object") continue;
         sharedClear(entry, "mapped_product_id",
-          `Gate 1 · спрос[${index}].legacyPageItemsV237[${archiveId}].mapped_product_id`);
+          `${guruGateLabel("gate-1")} · спрос[${index}].legacyPageItemsV237[${archiveId}].mapped_product_id`);
         sharedClear(entry, "source_key",
-          `Gate 1 · спрос[${index}].legacyPageItemsV237[${archiveId}].source_key`);
+          `${guruGateLabel("gate-1")} · спрос[${index}].legacyPageItemsV237[${archiveId}].source_key`);
         sharedClear(entry.data, "product_id",
-          `Gate 1 · спрос[${index}].legacyPageItemsV237[${archiveId}].data.product_id`);
+          `${guruGateLabel("gate-1")} · спрос[${index}].legacyPageItemsV237[${archiveId}].data.product_id`);
       }
     }
     const archivedSemantics = workspace.painV130?.legacySemanticLevelsV264?.pageByProduct;
     const keyedSemantics = archivedSemantics?.[key];
     if (keyedSemantics?.product_id && keyedSemantics.product_id !== key)
       unresolved.push({
-        path: "Gate 1 · спрос · legacySemanticLevelsV264.pageByProduct[product_id]",
+        path: `${guruGateLabel("gate-1")} · спрос · legacySemanticLevelsV264.pageByProduct[product_id]`,
         reason: "Ключ совпадает с product_id, но запись указывает на другой товар",
       });
     else sharedDrop(archivedSemantics, key,
-      "Gate 1 · спрос · legacySemanticLevelsV264.pageByProduct[product_id]");
+      `${guruGateLabel("gate-1")} · спрос · legacySemanticLevelsV264.pageByProduct[product_id]`);
     for (const [archiveId, entry] of Object.entries(archivedSemantics || {})) {
       if (archiveId === key || !entry || typeof entry !== "object") continue;
       if (entry.product_id === key) {
         if (oppositeIdCollision)
           unresolved.push({
-            path: `Gate 1 · спрос · legacySemanticLevelsV264.pageByProduct[${archiveId}]`,
+            path: `${guruGateLabel("gate-1")} · спрос · legacySemanticLevelsV264.pageByProduct[${archiveId}]`,
             reason: "Один ID есть и у товара, и у категории; владелец записи не подтверждён",
           });
         else drop(archivedSemantics, archiveId,
-          `Gate 1 · спрос · legacySemanticLevelsV264.pageByProduct[${archiveId}]`);
+          `${guruGateLabel("gate-1")} · спрос · legacySemanticLevelsV264.pageByProduct[${archiveId}]`);
       } else sharedClear(entry, "source_key",
-        `Gate 1 · спрос · legacySemanticLevelsV264.pageByProduct[${archiveId}].source_key`);
+        `${guruGateLabel("gate-1")} · спрос · legacySemanticLevelsV264.pageByProduct[${archiveId}].source_key`);
     }
     remove(workspace.unitV130?.items, (row) =>
       Boolean(sourceRowId && row?.sourceItemId === sourceRowId &&
         row?.catalogKind !== "direction"),
-      "Gate 1 · юнит экономика товара");
+      `${guruGateLabel("gate-1")} · юнит экономика товара`);
     sharedRemove(workspace.unitV130?.items, (row) =>
       row?.sourceItemId === key || row?.productKey === key,
-    "Gate 1 · юнит экономика товара по старому ID");
+    `${guruGateLabel("gate-1")} · юнит экономика товара по старому ID`);
     for (const article of workspace.gate1BlogV304?.articles || [])
       remove(article?.product_links, (row) => row?.product_id === key,
-        `Gate 1 · блог «${article.title || article.id || "статья"}» · связи товара`);
+        `${guruGateLabel("gate-1")} · блог «${article.title || article.id || "статья"}» · связи товара`);
     const smmIdeaIds = new Set((workspace.gate4SmmContentV299?.ideas || [])
       .filter((row) => row?.productId === key).map((row) => row?.id).filter(Boolean));
     sharedRemove(workspace.gate4SmmContentV299?.ideas, (row) => row?.productId === key,
-      "Gate 4 · SMM идеи товара");
+      `${guruGateLabel("gate-4")} · SMM идеи товара`);
     sharedRemove(workspace.gate4SmmContentV299?.publications,
       (row) => row?.productId === key || smmIdeaIds.has(row?.sourceIdeaId),
-      "Gate 4 · SMM публикации товара");
+      `${guruGateLabel("gate-4")} · SMM публикации товара`);
 
     const normalized = typeof normalizeAspectKey === "function"
       ? normalizeAspectKey(key) : key;
@@ -272,32 +272,32 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
         === normalized);
     const searchBranch = workspace.gate4SearchBuild?.[normalized];
     if (searchBranch && keyCollision)
-      unresolved.push({ path: `Gate 4 Search · ${normalized}`,
+      unresolved.push({ path: `${guruGateLabel("gate-4")} Search · ${normalized}`,
         reason: "Ключ совпадает с другим product_id после нормализации" });
     if (searchBranch && !keyCollision) {
-      note("Gate 4 Search · сборка товара", 1,
+      note(`${guruGateLabel("gate-4")} Search · сборка товара`, 1,
         () => { delete workspace.gate4SearchBuild[normalized]; });
-      note("Gate 4 Search · группы", (searchBranch.groupRows || []).length);
-      note("Gate 4 Search · объявления", megaPlatformSearchAdCountV1(searchBranch));
+      note(`${guruGateLabel("gate-4")} Search · группы`, (searchBranch.groupRows || []).length);
+      note(`${guruGateLabel("gate-4")} Search · объявления`, megaPlatformSearchAdCountV1(searchBranch));
     }
     const rsyaBranch = workspace.gate4Rsya?.[normalized];
     const rsyaMixed = (rsyaBranch?.groups || []).some((group) =>
       group?.product_id && group.product_id !== key);
     if (rsyaBranch && (keyCollision || rsyaMixed))
-      unresolved.push({ path: `Gate 4 РСЯ · ${normalized}`,
+      unresolved.push({ path: `${guruGateLabel("gate-4")} РСЯ · ${normalized}`,
         reason: keyCollision ? "Ключ совпадает с другим product_id после нормализации" :
           "В ветке есть группы с другим product_id" });
     if (rsyaBranch && !keyCollision && !rsyaMixed) {
-      note("Gate 4 РСЯ · сборка товара", 1,
+      note(`${guruGateLabel("gate-4")} РСЯ · сборка товара`, 1,
         () => { delete workspace.gate4Rsya[normalized]; });
-      note("Gate 4 РСЯ · группы", (rsyaBranch.groups || []).length);
-      note("Gate 4 РСЯ · объявления", (rsyaBranch.groups || [])
+      note(`${guruGateLabel("gate-4")} РСЯ · группы`, (rsyaBranch.groups || []).length);
+      note(`${guruGateLabel("gate-4")} РСЯ · объявления`, (rsyaBranch.groups || [])
         .reduce((sum, group) => sum + (group.ads || []).length, 0));
     }
     for (const [branchId, branch] of Object.entries(workspace.gate4Rsya || {})) {
       if (branchId === normalized && !rsyaMixed && !keyCollision) continue;
       sharedRemove(branch?.groups, (row) => row?.product_id === key,
-        `Gate 4 РСЯ · ${branchId} · группы товара`);
+        `${guruGateLabel("gate-4")} РСЯ · ${branchId} · группы товара`);
     }
     const campaigns = workspace.gate4Production?.campaigns || {};
     const matchingCampaigns = Object.entries(campaigns).filter(([, row]) =>
@@ -305,24 +305,24 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
     for (const [branchId, row] of Object.entries(campaigns))
       if (branchId.startsWith(`${normalized}_`) &&
           !row?.product && !row?.product_id && !row?.productId)
-        unresolved.push({ path: `Gate 4 · кампания ${branchId}`,
+        unresolved.push({ path: `${guruGateLabel("gate-4")} · кампания ${branchId}`,
           reason: "Нет подтверждённого product_id" });
     const campaignKeys = matchingCampaigns.map(([branchId]) => branchId);
     if (oppositeIdCollision && matchingCampaigns.length)
-      unresolved.push({ path: `Gate 4 · кампании с общим ID: ${matchingCampaigns.length}`,
+      unresolved.push({ path: `${guruGateLabel("gate-4")} · кампании с общим ID: ${matchingCampaigns.length}`,
         reason: "Один ID есть и у товара, и у категории" });
-    else note("Gate 4 · кампании товара", matchingCampaigns.length, () =>
+    else note(`${guruGateLabel("gate-4")} · кампании товара`, matchingCampaigns.length, () =>
       campaignKeys.forEach((branchId) => { delete campaigns[branchId]; }));
     sharedRemove(workspace.gate4?.implementations,
       (row) => row?.product_id === key || row?.productId === key,
-      "Gate 4 · реализации товара");
+      `${guruGateLabel("gate-4")} · реализации товара`);
 
     // Gate 5 reports and setup are owned by campaign identifiers rather than
     // product_id. Remove only records whose campaign belongs to this product.
     const g5 = workspace.gate5 || {};
     if (oppositeIdCollision) {
       const count = megaPlatformGate5IdCountV1(g5, key);
-      if (count) unresolved.push({ path: `Gate 5 · записи с общим ID: ${count}`,
+      if (count) unresolved.push({ path: `${guruGateLabel("gate-5")} · записи с общим ID: ${count}`,
         reason: "Один ID есть и у товара, и у категории; кампании оставлены для сверки" });
     } else {
     const ownedCampaigns = (g5.campaignRegistry || []).filter((row) =>
@@ -337,37 +337,37 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
       ownsInternal(row) || ownsCabinet(row);
     remove(g5.campaignRegistry,
       (row) => row?.product_id === key || row?.productId === key,
-      "Gate 5 · реестр кампаний товара");
+      `${guruGateLabel("gate-5")} · реестр кампаний товара`);
     for (const field of ["periodSnapshots", "assessments", "goals", "links",
       "iterations", "comparisons", "finalDecisions"])
-      remove(g5[field], ownsAny, `Gate 5 · ${field}`);
+      remove(g5[field], ownsAny, `${guruGateLabel("gate-5")} · ${field}`);
     for (const [reportName, rows] of Object.entries(g5.reports || {}))
-      remove(rows, ownsAny, `Gate 5 · отчёт ${reportName}`);
+      remove(rows, ownsAny, `${guruGateLabel("gate-5")} · отчёт ${reportName}`);
     for (const [groupName, rows] of Object.entries(g5.setup || {}))
       if (rows && typeof rows === "object" && !Array.isArray(rows))
         for (const [rowId, row] of Object.entries(rows))
           if (ownsAny(row) || ownsSetup(row))
-            drop(rows, rowId, `Gate 5 · настройка ${groupName}`);
+            drop(rows, rowId, `${guruGateLabel("gate-5")} · настройка ${groupName}`);
     for (const [groupName, rows] of Object.entries(g5.yandexDirect || {})) {
       if (Array.isArray(rows) && groupName === "imports") {
         const ids = (row) => String(row?.campaignId || "").split(",")
           .map((value) => value.trim()).filter(Boolean);
         remove(rows, (row) => ownsAny(row) ||
           ids(row).length > 0 && ids(row).every((value) => cabinetIds.has(value)),
-        "Gate 5 · Яндекс Директ imports");
+        `${guruGateLabel("gate-5")} · Яндекс Директ imports`);
         for (const row of rows) {
           const values = ids(row);
           const owned = values.filter((value) => cabinetIds.has(value));
           if (!owned.length || owned.length === values.length) continue;
-          note("Gate 5 · смешанный документ импорта · снята связь кампании", 1,
+          note(`${guruGateLabel("gate-5")} · смешанный документ импорта · снята связь кампании`, 1,
             () => { row.campaignId = values.filter((value) => !cabinetIds.has(value)).join(","); });
         }
       } else if (Array.isArray(rows)) remove(rows, ownsAny,
-        `Gate 5 · Яндекс Директ ${groupName}`);
+        `${guruGateLabel("gate-5")} · Яндекс Директ ${groupName}`);
       else if (rows && typeof rows === "object")
         for (const [rowId, row] of Object.entries(rows))
           if (ownsAny(row) || ownsSetup(row)) drop(rows, rowId,
-            `Gate 5 · Яндекс Директ ${groupName}`);
+            `${guruGateLabel("gate-5")} · Яндекс Директ ${groupName}`);
     }
     }
   } else {
@@ -375,27 +375,27 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
     sharedDrop(project.productBindingsV185, key,
       "Gate 0 · productBindingsV185[category_id]");
     sharedDrop(project.productScopedOverridesV194, key,
-      "Gate 0 · прежний category_id в overrides");
+      `${guruGateLabel("gate-0")} · прежний category_id в overrides`);
     sharedDrop(workspace.projectComparison?.productsById, key,
-      "Gate 1 · прежнее сравнение категории");
+      `${guruGateLabel("gate-1")} · прежнее сравнение категории`);
     sharedDrop(workspace.gate1WebmasterV295?.byProduct, key,
-      "Gate 1 · прежний Вебмастер категории");
+      `${guruGateLabel("gate-1")} · прежний Вебмастер категории`);
     sharedDrop(workspace.gate3ProductJourneyV210?.openStepsByProduct, key,
-      "Gate 3 · прежние этапы категории");
+      `${guruGateLabel("gate-3")} · прежние этапы категории`);
     sharedDrop(workspace.gate3Gate4StructureV290?.byProduct, key,
-      "Gate 3 · прежняя структура категории");
+      `${guruGateLabel("gate-3")} · прежняя структура категории`);
     sharedDrop(workspace.gate4Production?.readinessV225?.byProduct, key,
-      "Gate 4 · прежняя готовность категории");
+      `${guruGateLabel("gate-4")} · прежняя готовность категории`);
     sharedDrop(workspace.gate4Production?.forecastAssumptionsByProduct, key,
-      "Gate 4 · прежний прогноз категории");
+      `${guruGateLabel("gate-4")} · прежний прогноз категории`);
     sharedDrop(workspace.gate4Production?.forecastAssumptionsUiV3, key,
-      "Gate 4 · интерфейс прежнего прогноза категории");
+      `${guruGateLabel("gate-4")} · интерфейс прежнего прогноза категории`);
     sharedDrop(workspace.gate5?.importsByProduct, key,
-      "Gate 5 · прежние импорты категории");
+      `${guruGateLabel("gate-5")} · прежние импорты категории`);
     sharedDrop(workspace.gate6Calendar?.byProduct, key,
-      "Gate 6 · прежний календарь категории");
+      `${guruGateLabel("gate-6")} · прежний календарь категории`);
     sharedDrop(workspace.gate8Forecast?.byProduct, key,
-      "Gate 8 · прежний прогноз категории");
+      `${guruGateLabel("gate-8")} · прежний прогноз категории`);
     drop(urls?.categories, key, "Платформа · URL категории");
     drop(relations?.productOrderByCategory, key, "Платформа · порядок товаров категории");
     if (urls?.onOrderCategoryId === key) {
@@ -436,31 +436,31 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
       }
     }
     clear(project.gate0ScopeUiV194, "selectedCategoryId",
-      "Gate 0 · выбранная категория");
+      `${guruGateLabel("gate-0")} · выбранная категория`);
     drop(project.catalogUiV191?.collapsedGroupsV193, key,
-      "Gate 0 · раскрытие категории");
+      `${guruGateLabel("gate-0")} · раскрытие категории`);
 
     for (const card of allCards) {
       if (card.id === "card-22")
         remove(card.pageRows, (row) => row?.categoryId === key,
-          "Gate 1 · карточка категории");
+          `${guruGateLabel("gate-1")} · карточка категории`);
       else if (Array.isArray(card.pageRows)) {
         const affected = card.pageRows.filter((row) => row?.categoryId === key);
-        note(`Gate 1 · ${card.id} · привязки страниц товара к категории`,
+        note(`${guruGateLabel("gate-1")} · ${card.id} · привязки страниц товара к категории`,
           affected.length, () => affected.forEach((row) => { row.categoryId = ""; }));
       }
       for (const row of card.pageRows || []) {
         drop(row.catalogHubShowcaseV502, key,
-          `Gate 1 · ${card.id} · витрина категории`);
+          `${guruGateLabel("gate-1")} · ${card.id} · витрина категории`);
         drop(row.homeSegmentImagesV509, key,
-          `Gate 1 · ${card.id} · изображение категории`);
+          `${guruGateLabel("gate-1")} · ${card.id} · изображение категории`);
       }
       sharedClear(card.currentResultsMeta, "productId",
-        `Gate 0 · ${card.id} · прежняя категория результатов`);
+        `${guruGateLabel("gate-0")} · ${card.id} · прежняя категория результатов`);
       for (const field of ["metrikaQualityV360", "metrikaProductV367"])
         sharedRemove(card.fields?.[field]?.perProduct,
           (row) => row?.product_id === key,
-          `Gate 2 · ${card.id} · прежние цели категории`);
+          `${guruGateLabel("gate-2")} · ${card.id} · прежние цели категории`);
     }
     // Direction-level pain rows contain product-specific items. Keep those
     // items in an uncategorized shell so deleting a category cannot erase
@@ -468,13 +468,13 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
     for (const [index, map] of (workspace.painV130?.productMaps || []).entries()) {
       if (map?.product_id !== key && map?.category_id !== key) continue;
       if (oppositeIdCollision && map?.category_id !== key) {
-        unresolved.push({ path: `Gate 1 · спрос[${index}] · product_id`,
+        unresolved.push({ path: `${guruGateLabel("gate-1")} · спрос[${index}] · product_id`,
           reason: "ID также принадлежит сохранённому товару; направление не подтверждено category_id" });
         continue;
       }
       const retainedItems = Object.keys(map.items || {}).filter((id) =>
         products.some((product) => product.id === id));
-      note(`Gate 1 · спрос[${index}] · данные категории`, 1, () => {
+      note(`${guruGateLabel("gate-1")} · спрос[${index}] · данные категории`, 1, () => {
         if (retainedItems.length) {
           for (const itemId of Object.keys(map.items || {}))
             if (!retainedItems.includes(itemId)) delete map.items[itemId];
@@ -487,20 +487,20 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
           if (position >= 0) maps.splice(position, 1);
         }
       });
-      note(`Gate 1 · спрос[${index}] · сохранённые данные товаров`,
+      note(`${guruGateLabel("gate-1")} · спрос[${index}] · сохранённые данные товаров`,
         retainedItems.length);
     }
     const units = workspace.unitV130?.items;
     remove(units, (row) => row?.product_id === key &&
       (row.catalogKind === "direction" || row.type === "direction"),
-    "Gate 1 · юнит экономика категории");
+    `${guruGateLabel("gate-1")} · юнит экономика категории`);
     if (Array.isArray(units)) {
       const affected = units.filter((row) => row?.product_id === key &&
         row.catalogKind !== "direction" && row.type !== "direction");
       if (oppositeIdCollision && affected.length)
-        unresolved.push({ path: `Gate 1 · юнит экономика · product_id: ${affected.length}`,
+        unresolved.push({ path: `${guruGateLabel("gate-1")} · юнит экономика · product_id: ${affected.length}`,
           reason: "ID также принадлежит сохранённому товару" });
-      else note("Gate 1 · юнит экономика сохранённых товаров · снимаем категорию",
+      else note(`${guruGateLabel("gate-1")} · юнит экономика сохранённых товаров · снимаем категорию`,
         affected.length, () => affected.forEach((row) => {
           row.product_id = "";
           if (row.directionKey === targetName) row.directionKey = "";
@@ -515,40 +515,40 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
         === normalized);
     const categorySearch = workspace.gate4SearchBuild?.[normalized];
     if (categorySearch && collision)
-      unresolved.push({ path: `Gate 4 Search · ${normalized}`,
+      unresolved.push({ path: `${guruGateLabel("gate-4")} Search · ${normalized}`,
         reason: "Нормализованный ключ совпадает с другим ID" });
     if (categorySearch && !collision) {
-      note("Gate 4 Search · прежняя сборка категории", 1,
+      note(`${guruGateLabel("gate-4")} Search · прежняя сборка категории`, 1,
         () => { delete workspace.gate4SearchBuild[normalized]; });
-      note("Gate 4 Search · группы категории", (categorySearch.groupRows || []).length);
-      note("Gate 4 Search · объявления категории", megaPlatformSearchAdCountV1(categorySearch));
+      note(`${guruGateLabel("gate-4")} Search · группы категории`, (categorySearch.groupRows || []).length);
+      note(`${guruGateLabel("gate-4")} Search · объявления категории`, megaPlatformSearchAdCountV1(categorySearch));
     }
     const categoryRsya = workspace.gate4Rsya?.[normalized];
     const mixedRsya = (categoryRsya?.groups || []).some((group) =>
       group?.product_id && group.product_id !== key);
     if (categoryRsya && (collision || mixedRsya))
-      unresolved.push({ path: `Gate 4 РСЯ · ${normalized}`,
+      unresolved.push({ path: `${guruGateLabel("gate-4")} РСЯ · ${normalized}`,
         reason: collision ? "Нормализованный ключ совпадает с другим ID" :
           "Есть группы товаров, которые должны сохраниться" });
     if (categoryRsya && !collision && !mixedRsya) {
-      note("Gate 4 РСЯ · прежняя сборка категории", 1,
+      note(`${guruGateLabel("gate-4")} РСЯ · прежняя сборка категории`, 1,
         () => { delete workspace.gate4Rsya[normalized]; });
-      note("Gate 4 РСЯ · группы категории", (categoryRsya.groups || []).length);
-      note("Gate 4 РСЯ · объявления категории", (categoryRsya.groups || [])
+      note(`${guruGateLabel("gate-4")} РСЯ · группы категории`, (categoryRsya.groups || []).length);
+      note(`${guruGateLabel("gate-4")} РСЯ · объявления категории`, (categoryRsya.groups || [])
         .reduce((sum, group) => sum + (group.ads || []).length, 0));
     }
     const nameKey = typeof normalizeAspectKey === "function"
       ? normalizeAspectKey(targetName) : targetName;
     if (nameKey !== normalized && workspace.gate4SearchBuild?.[nameKey])
-      unresolved.push({ path: `Gate 4 Search · ${nameKey}`,
+      unresolved.push({ path: `${guruGateLabel("gate-4")} Search · ${nameKey}`,
         reason: "Старая ветка названа текстом категории, владелец не подтверждён ID" });
     if (nameKey !== normalized && workspace.gate4Rsya?.[nameKey])
-      unresolved.push({ path: `Gate 4 РСЯ · ${nameKey}`,
+      unresolved.push({ path: `${guruGateLabel("gate-4")} РСЯ · ${nameKey}`,
         reason: "Старая ветка названа текстом категории, владелец не подтверждён ID" });
     for (const [branchId, branch] of Object.entries(workspace.gate4Rsya || {})) {
       if (branchId === normalized) continue;
       const count = (branch?.groups || []).filter((group) => group?.product_id === key).length;
-      if (count) unresolved.push({ path: `Gate 4 РСЯ · ${branchId} · ${count} групп`,
+      if (count) unresolved.push({ path: `${guruGateLabel("gate-4")} РСЯ · ${branchId} · ${count} групп`,
         reason: "Группы помечены category_id, но ветка может принадлежать сохранённому товару" });
     }
     const campaigns = workspace.gate4Production?.campaigns || {};
@@ -556,23 +556,23 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
       .filter(([, row]) => row?.product === key || row?.product_id === key ||
         row?.productId === key).map(([campaignKey]) => campaignKey);
     if (oppositeIdCollision && categoryCampaignKeys.length)
-      unresolved.push({ path: `Gate 4 · кампании с общим ID: ${categoryCampaignKeys.length}`,
+      unresolved.push({ path: `${guruGateLabel("gate-4")} · кампании с общим ID: ${categoryCampaignKeys.length}`,
         reason: "Один ID есть и у товара, и у категории" });
-    else note("Gate 4 · прежние кампании категории", categoryCampaignKeys.length,
+    else note(`${guruGateLabel("gate-4")} · прежние кампании категории`, categoryCampaignKeys.length,
       () => categoryCampaignKeys.forEach((campaignKey) => { delete campaigns[campaignKey]; }));
     for (const [campaignKey, campaign] of Object.entries(campaigns))
       if (campaign?.product === targetName && !categoryCampaignKeys.includes(campaignKey))
-        unresolved.push({ path: `Gate 4 · кампания ${campaignKey}`,
+        unresolved.push({ path: `${guruGateLabel("gate-4")} · кампания ${campaignKey}`,
           reason: "Владелец указан только названием категории" });
     sharedRemove(workspace.gate4SmmContentV299?.ideas, (row) => row?.productId === key,
-      "Gate 4 · прежние SMM идеи категории");
+      `${guruGateLabel("gate-4")} · прежние SMM идеи категории`);
     sharedRemove(workspace.gate4SmmContentV299?.publications,
       (row) => row?.productId === key,
-      "Gate 4 · прежние SMM публикации категории");
+      `${guruGateLabel("gate-4")} · прежние SMM публикации категории`);
     const legacyGate5 = workspace.gate5 || {};
     if (oppositeIdCollision) {
       const count = megaPlatformGate5IdCountV1(legacyGate5, key);
-      if (count) unresolved.push({ path: `Gate 5 · записи с общим ID: ${count}`,
+      if (count) unresolved.push({ path: `${guruGateLabel("gate-5")} · записи с общим ID: ${count}`,
         reason: "Один ID есть и у товара, и у категории; кампании оставлены для сверки" });
     } else {
     const categoryGate5Campaigns = (legacyGate5.campaignRegistry || []).filter((row) =>
@@ -586,27 +586,27 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
       cabinetIds.has(String(row?.campaignId || ""));
     remove(legacyGate5.campaignRegistry,
       (row) => row?.product_id === key || row?.productId === key,
-      "Gate 5 · прежние кампании категории");
+      `${guruGateLabel("gate-5")} · прежние кампании категории`);
     for (const field of ["periodSnapshots", "assessments", "goals", "links",
       "iterations", "comparisons", "finalDecisions"])
       remove(legacyGate5[field], ownedByCategory,
-        `Gate 5 · прежние данные категории · ${field}`);
+        `${guruGateLabel("gate-5")} · прежние данные категории · ${field}`);
     for (const [reportName, rows] of Object.entries(legacyGate5.reports || {}))
       remove(rows, ownedByCategory,
-        `Gate 5 · прежний отчёт категории ${reportName}`);
+        `${guruGateLabel("gate-5")} · прежний отчёт категории ${reportName}`);
     for (const [groupName, rows] of Object.entries(legacyGate5.setup || {}))
       if (rows && typeof rows === "object" && !Array.isArray(rows))
         for (const [rowId, row] of Object.entries(rows))
           if (ownedByCategory(row) || cabinetIds.has(String(row?.id || "")))
-            drop(rows, rowId, `Gate 5 · прежняя настройка категории ${groupName}`);
+            drop(rows, rowId, `${guruGateLabel("gate-5")} · прежняя настройка категории ${groupName}`);
     for (const [groupName, rows] of Object.entries(legacyGate5.yandexDirect || {})) {
       if (Array.isArray(rows)) remove(rows, ownedByCategory,
-        `Gate 5 · прежний Яндекс Директ категории ${groupName}`);
+        `${guruGateLabel("gate-5")} · прежний Яндекс Директ категории ${groupName}`);
       else if (rows && typeof rows === "object")
         for (const [rowId, row] of Object.entries(rows))
           if (ownedByCategory(row) || cabinetIds.has(String(row?.id || "")))
             drop(rows, rowId,
-              `Gate 5 · прежний Яндекс Директ категории ${groupName}`);
+              `${guruGateLabel("gate-5")} · прежний Яндекс Директ категории ${groupName}`);
     }
     }
     // Exact legacy category mirror. Sync functions otherwise recreate the
@@ -616,7 +616,7 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
     const legacyNames = [project.whatSell,
       ...(Array.isArray(project.whatSellExtra) ? project.whatSellExtra : [])];
     if (JSON.stringify(legacyNames.filter(Boolean)) !== JSON.stringify(remainingNames))
-      note("Gate 0 · прежний список «Что продаём»", 1, () => {
+      note(`${guruGateLabel("gate-0")} · прежний список «Что продаём»`, 1, () => {
         project.whatSell = remainingNames[0] || "";
         project.whatSellExtra = remainingNames.slice(1);
         if (workspace.sharedEvidence) workspace.sharedEvidence.что_продаем = project.whatSell;
@@ -627,20 +627,20 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
       if (!oppositeIdCollision && legacyJtbd && typeof legacyJtbd === "object" &&
           (legacyJtbd.productId === key || legacyJtbd.categoryId === key))
         drop(project.productMainJtbds, targetName,
-          "Gate 0 · прежний JTBD категории по названию");
-      else unresolved.push({ path: `Gate 0 · прежний JTBD «${targetName}»`,
+          `${guruGateLabel("gate-0")} · прежний JTBD категории по названию`);
+      else unresolved.push({ path: `${guruGateLabel("gate-0")} · прежний JTBD «${targetName}»`,
         reason: "Ключ основан на названии; category_id записи не подтверждён" });
     }
     if (project.offersV2?.productOffers?.[targetName]?.productId === key)
       sharedDrop(project.offersV2.productOffers, targetName,
-        "Gate 0 · прежний оффер категории по названию");
+        `${guruGateLabel("gate-0")} · прежний оффер категории по названию`);
     if (platform?.landings?.[targetName]?.productId === key)
       sharedDrop(platform.landings, targetName,
         "Платформа · прежняя посадочная категории по названию");
     for (const overrides of Object.values(project.productScopedOverridesV194 || {}))
       if (overrides && typeof overrides === "object") {
         const affected = Object.values(overrides).filter((row) => row?.category_id === key);
-        note("Gate 0 · прежние производные ссылки на категорию", affected.length,
+        note(`${guruGateLabel("gate-0")} · прежние производные ссылки на категорию`, affected.length,
           () => affected.forEach((row) => { row.category_id = ""; }));
       }
   }
@@ -685,7 +685,7 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
     if (card.id !== "card-32") continue;
     const rows = (card.pageRows || []).filter((row) =>
       row?.targetV1?.kind === targetKind && row?.targetV1?.id === key);
-    note("Gate 1 · лендинги · привязка «Для чего»", rows.length,
+    note(`${guruGateLabel("gate-1")} · лендинги · привязка «Для чего»`, rows.length,
       () => rows.forEach((row) => { row.targetV1 = null; }));
   }
 

@@ -40,7 +40,7 @@ function g2s3AllChannelsNotNeeded(platform, workspace = state) {
 }
 function g2s3SiteContext() {
   const url = g2s3Gate0Url();
-  return { label: "Адрес сайта из Gate 0", value: url || "URL не указан", href: url };
+  return { label: `Адрес сайта из ${guruGateLabel("gate-0")}`, value: url || "URL не указан", href: url };
 }
 function g2s3DomainHttpsDone(workspace = state) {
   return g2wRecord(g2wDef("domain"), "", false, workspace)?.steps?.https?.result === "done";
@@ -81,7 +81,7 @@ g2ServiceBlockRegister({
   title: "Meta Ads · кабинет и пиксель", afterUnit: "goal", serviceUrl: "https://business.facebook.com/",
   notice: "Meta Platforms признана экстремистской организацией, деятельность запрещена в РФ (решение суда от 21.03.2022, по справке Tilda).",
   gate0Applicability: ({ workspace }) => g2s3AllChannelsNotNeeded("Meta Ads", workspace),
-  notNeededReason: "Не требуется: все каналы отмечены «Не требуется» в Gate 0",
+  notNeededReason: `Не требуется: все каналы отмечены «Не требуется» в ${guruGateLabel("gate-0")}`,
   includeInReadiness: true,
   steps: [
     { step_id: "pixel", what: "Создайте пиксель.",
@@ -101,7 +101,7 @@ g2ServiceBlockRegister({
   id: "company-ga4", cardId: "g2-marketing-ga4", scope: "company",
   title: "Google Analytics 4", afterUnit: "goal", serviceUrl: "https://analytics.google.com/",
   gate0Applicability: ({ workspace }) => g2s3Applicability("Google Analytics 4", "", workspace),
-  notNeededReason: "Gate 0: Не требуется",
+  notNeededReason: `${guruGateLabel("gate-0")}: Не требуется`,
   includeInReadiness: true,
   steps: [
     { step_id: "account", what: "Создайте аккаунт.", where: "analytics.google.com",
@@ -141,7 +141,7 @@ g2ServiceBlockRegister({
   id: "company-google-ads", cardId: "g2-marketing-google-ads", scope: "company",
   title: "Google Ads · конверсии", afterUnit: "goal", serviceUrl: "https://ads.google.com/",
   gate0Applicability: ({ workspace }) => g2s3AllChannelsNotNeeded("Google Ads", workspace),
-  notNeededReason: "Не требуется: все каналы отмечены «Не требуется» в Gate 0",
+  notNeededReason: `Не требуется: все каналы отмечены «Не требуется» в ${guruGateLabel("gate-0")}`,
   includeInReadiness: true,
   steps: [
     { step_id: "source", what: "Выберите источник конверсий сайта: Google tag, Google Analytics или оба.",
@@ -166,7 +166,7 @@ g2ServiceBlockRegister({
   steps: [
     { step_id: "system", what: "Определите, куда приходят заявки: раздел «Заявки» Tilda, Email, Telegram, amoCRM или Битрикс24. Сервисы работают только при активной подписке.",
       where: "Tilda: Настройки сайта → нужный сервис.", how: "Способ выбран.", source_url: G2S3_DOC.forms,
-      context: () => ({ label: "CRM из Gate 0", value: g2s3CrmName() || "Не указана в Gate 0" }) },
+      context: () => ({ label: `CRM из ${guruGateLabel("gate-0")}`, value: g2s3CrmName() || `Не указана в ${guruGateLabel("gate-0")}` }) },
     { step_id: "connect", what: "Подключите сервис и привяжите его к форме.",
       where: "Настройки сайта → сервис → заполнить поля → активировать. Затем на странице: настройки блока формы → отметить сервис → сохранить.",
       how: "Сервис отмечен в блоке формы.", source_url: G2S3_DOC.forms },
@@ -198,7 +198,7 @@ g2ServiceBlockRegister({
   steps: g2wDef("safety").steps.map(([id, what]) => ({
     step_id: id, what,
     where: ({ step }) => ({ https: "Блок «Домен и HTTPS» → шаг «HTTPS».",
-      policy: "Gate 0 → Платформа → URL политики.", consent: "Формы на сайте.",
+      policy: `${guruGateLabel("gate-0")} → Платформа → URL политики.`, consent: "Формы на сайте.",
       spam: "Формы на сайте.", test: "Тестовая заявка на сайте." })[step.step_id],
     how: ({ step }) => ({ https: "Статус шага HTTPS в блоке «Домен и HTTPS».",
       policy: "Политика опубликована и открывается.", consent: "Согласия видны и работают.",
@@ -210,7 +210,7 @@ g2ServiceBlockRegister({
     doneResolver: id === "https" ? ({ workspace }) => g2s3DomainHttpsDone(workspace) : undefined,
     context: id === "https" ? () => ({ label: "HTTPS в блоке «Домен и HTTPS»",
       value: g2s3DomainHttpsLabel(), href: "#g2sb-company-domain-company" })
-      : id === "policy" ? () => ({ label: "URL политики из Gate 0",
+      : id === "policy" ? () => ({ label: `URL политики из ${guruGateLabel("gate-0")}`,
         value: g2s3PrivacyUrl() || "URL политики не указан", href: g2s3PrivacyUrl() }) : undefined,
   })),
 });
