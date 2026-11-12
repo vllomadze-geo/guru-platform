@@ -1,0 +1,74 @@
+[
+  {
+    "personal": "unchanged",
+    "order": "unchanged",
+    "total": 6,
+    "done": 1,
+    "ready": false,
+    "unchanged": true
+  },
+  {
+    "personal": "unchanged",
+    "order": true,
+    "total": 6,
+    "done": 1,
+    "ready": false,
+    "unchanged": true
+  },
+  {
+    "personal": "unchanged",
+    "order": false,
+    "total": 3,
+    "done": 1,
+    "ready": false,
+    "unchanged": true
+  },
+  {
+    "personal": true,
+    "order": "unchanged",
+    "total": 6,
+    "done": 1,
+    "ready": false,
+    "unchanged": true
+  },
+  {
+    "personal": true,
+    "order": true,
+    "total": 6,
+    "done": 1,
+    "ready": false,
+    "unchanged": true
+  },
+  {
+    "personal": true,
+    "order": false,
+    "total": 3,
+    "done": 1,
+    "ready": false,
+    "unchanged": true
+  },
+  {
+    "personal": false,
+    "order": "unchanged",
+    "total": 5,
+    "done": 1,
+    "ready": false,
+    "unchanged": true
+  },
+  {
+    "personal": false,
+    "order": true,
+    "total": 5,
+    "done": 1,
+    "ready": false,
+    "unchanged": true
+  },
+  {
+    "personal": false,
+    "order": false,
+    "total": 2,
+    "done": 1,
+    "ready": false,
+    "unchanged": true
+  }
+]

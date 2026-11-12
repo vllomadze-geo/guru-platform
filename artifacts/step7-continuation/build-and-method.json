@@ -1,0 +1,10 @@
+{
+  "baseline": "bc42b5b058983ae74231649be035c5e066c80b1d",
+  "testedApplicationCommit": "b14370cb3010ee3e979f947acfbf0af951f21986",
+  "testFixCommit": "ceffa020e25db24df9e4ca8e5a3a3460eb7d9e95",
+  "version": "2.3.526+1b98c471bf26",
+  "buildSha256": "1b98c471bf26a313cfd0abffc6ddf84a501baef5931178906dc455806f61142b",
+  "timeoutPerProcessSeconds": 120,
+  "currentTests": 137,
+  "applicationChangesThisTurn": ""
+}

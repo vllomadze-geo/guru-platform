@@ -1,0 +1,37 @@
+{
+  "empty": {
+    "root": true,
+    "buttonCount": 1,
+    "label": "Копировать все слова",
+    "disabled": true,
+    "sameActions": true,
+    "copied": []
+  },
+  "filled": {
+    "copied": [
+      "первая подтверждённая фраза\nвторая подтверждённая фраза"
+    ],
+    "enabledBeforeCopy": true,
+    "disabledAfterCopy": true,
+    "feedback": "Скопировано: 2",
+    "sameActions": true,
+    "activeRows": [
+      "первая подтверждённая фраза",
+      "вторая подтверждённая фраза"
+    ],
+    "visibleKeywords": [
+      "первая подтверждённая фраза",
+      "вторая подтверждённая фраза"
+    ],
+    "stateUnchanged": true
+  },
+  "emptyAgain": {
+    "exists": true,
+    "disabled": true,
+    "copiedBefore": 1,
+    "copiedAfter": 1,
+    "activeRows": 0,
+    "errors": []
+  }
+}
+gate1 company brand demand copy smoke: OK

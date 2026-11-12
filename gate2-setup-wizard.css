@@ -4,6 +4,8 @@
 .workspace:has(.g2w-workspace) #workspaceToolbar > .view-lock { display: none; }
 .g2w-workspace .g2-scope-v226 { min-width: 0; }
 .g2w-scope { display: grid; gap: 10px; margin: 16px 0 24px; }
+.g2w-scope[data-g2w-scope="company"] { gap: 24px; }
+.g2w-scope[data-g2w-scope="company"] > :is(.g2sb-block, .g2w-card, .g2y-company, .g2g-company) { margin-block: 0; }
 .g2w-scope-summary { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 0 2px 5px; color: #24211e; }
 .g2w-scope-summary strong { font-size: 16px; }
 .g2w-scope-summary span { color: #827b73; font-size: 12px; white-space: nowrap; }
@@ -22,19 +24,19 @@
 .g2w-step-label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; color: #302d29; font-size: 13px; line-height: 1.45; }
 .g2w-step-label input { flex: none; margin: 2px 0 0; accent-color: #246a50; width: 16px; height: 16px; }
 .g2w-step-index { flex: none; color: #a59d94; font-size: 11px; font-weight: 700; margin-top: 1px; }
-.g2w-step.is-done .g2w-step-label { color: #5e675f; }
+.g2w-step.is-done .g2w-step-label { color: var(--muted); }
 .g2w-step-tools { display: flex; flex-wrap: wrap; align-items: end; gap: 9px; padding-left: 46px; }
-.g2w-step-tools a, .g2w-hint a { color: #27694f; text-decoration: none; font-size: 12px; font-weight: 700; }
+.g2w-step-tools a, .g2w-hint a { color: var(--muted); text-decoration: none; font-size: 12px; font-weight: 700; }
 .g2w-step-tools a:hover, .g2w-hint a:hover { text-decoration: underline; }
 .g2w-field { display: grid; gap: 5px; min-width: min(100%, 250px); color: #827b73; font-size: 11px; font-weight: 700; }
 .g2w-field input, .g2w-field select, .g2w-usage select, .g2w-verify input { box-sizing: border-box; width: 100%; min-height: 36px; border: 1px solid #e4dfd7; border-radius: 8px; background: #fff; padding: 7px 10px; color: #24211e; font: inherit; }
-.g2w-field input:focus, .g2w-field select:focus, .g2w-verify input:focus { outline: 2px solid #aacbbc; outline-offset: 1px; }
-.g2w-step-tools button, .g2w-verify button { border: 1px solid #d9e5dc; border-radius: 8px; background: #f7faf7; color: #27694f; font-size: 12px; font-weight: 700; padding: 9px 12px; cursor: pointer; }
-.g2w-step-tools button:hover, .g2w-verify button:hover { background: #edf6ef; }
+.g2w-field input:focus, .g2w-field select:focus, .g2w-verify input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.g2w-step-tools button, .g2w-verify button { border: 1px solid var(--line); border-radius: 8px; background: #f7faf7; color: var(--text); font-size: 12px; font-weight: 700; padding: 9px 12px; cursor: pointer; }
+.g2w-step-tools button:hover, .g2w-verify button:hover { background: var(--panel-soft); }
 .g2w-verify button:disabled { cursor: not-allowed; opacity: .5; background: #f6f5f2; color: #827b73; }
 .g2w-usage { display: flex; align-items: center; gap: 12px; padding: 12px 0; color: #302d29; font-size: 12px; font-weight: 700; }
 .g2w-usage select { max-width: 190px; }
-.g2w-note, .g2w-hint, .g2w-inherited { margin: 11px 0 8px; padding: 10px 12px; border-radius: 9px; background: #f5f6f1; color: #5b6156; font-size: 12px; line-height: 1.45; }
+.g2w-note, .g2w-hint, .g2w-inherited { margin: 11px 0 8px; padding: 10px 12px; border-radius: 9px; background: #f5f6f1; color: var(--muted); font-size: 12px; line-height: 1.45; }
 .g2w-hint { background: #f6f5f1; color: #6d675e; }
 .g2w-verify { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(190px, 1fr) auto; align-items: end; gap: 12px; padding-top: 18px; }
 .g2w-verify > div:first-child { display: grid; gap: 4px; }
@@ -42,7 +44,7 @@
 .g2w-verify small { color: #827b73; font-size: 11px; line-height: 1.4; }
 .g2w-verify label { display: grid; gap: 5px; color: #827b73; font-size: 11px; font-weight: 700; }
 .g2w-verify-actions { display: flex; gap: 7px; }
-.g2w-verify-actions button:last-child { border-color: #e9e1d3; background: #fffaf3; color: #8c671f; }
+.g2w-verify-actions button:last-child { border-color: var(--line); background: #fffaf3; color: var(--text); }
 .g2w-verification-state { grid-column: 1 / -1; }
 .g2w-additional { margin-top: 10px; }
 .g2w-additional > summary { color: #615c54; font-size: 13px; font-weight: 700; }

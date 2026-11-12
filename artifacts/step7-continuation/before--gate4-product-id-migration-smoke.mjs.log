@@ -1,0 +1,9 @@
+file:///private/tmp/guru-step7-before/scripts/gate4-product-id-migration-smoke.mjs:16
+  if (!condition) throw new Error(message);
+                        ^
+
+Error: Expected 447 source campaigns, got 330
+    at assert (file:///private/tmp/guru-step7-before/scripts/gate4-product-id-migration-smoke.mjs:16:25)
+    at file:///private/tmp/guru-step7-before/scripts/gate4-product-id-migration-smoke.mjs:217:1
+
+Node.js v22.14.0

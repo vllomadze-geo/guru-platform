@@ -1,0 +1,231 @@
+--- before/app.js
++++ after/app.js
+@@ -4032,7 +4032,9 @@
+ 
+ function gate1ToggleMountedAccordionV302(button, open, kind) {
+   const container = gate1AccordionContainerV302(button, kind);
+-  const body = gate1AccordionBodyV302(container, kind);
++  let body = gate1AccordionBodyV302(container, kind);
++  if (container && !body && open)
++    body = gate1MountAccordionBodyV302(button, container, kind);
+   if (!container || !body) return false;
+   container.classList.toggle("is-open", open);
+   button.setAttribute("aria-expanded", String(open));
+@@ -4042,6 +4044,41 @@
+     ? (open ? "Свернуть" : "Раскрыть")
+     : (open ? "Закрыть" : "Открыть");
+   return true;
++}
++
++function gate1MountAccordionBodyV302(button, container, kind) {
++  const key = button.dataset.gate1ToggleSection;
++  const cardId = button.dataset.gate1ToggleCard;
++  if (activeGateId !== "gate-1" ||
++      (kind !== "card" && !["company_demand_positioning", "pain_jtbd_offer", "unit_economics"].includes(key))) return null;
++  const live = state, cache = guruRenderReadCacheV470;
++  let html;
++  try {
++    state = guruExportDiagnosticCloneV223(live);
++    guruRenderReadCacheV470 = guruCreateRenderReadCacheV470();
++    html = guruExportWithoutPersistenceV223(() => {
++      if (kind === "card") {
++        const card = findCard(cardId);
++        return card ? `<div class="g1-card-body">${instructionToggleHtml(card)}<div class="card-fields">${cardUserFieldsHtml(card)}</div></div>` : "";
++      }
++      const content = key === "company_demand_positioning"
++        ? `<div class="g1-route gate1-company-demand-positioning-route-v357">${gate1CompanySemanticsHtmlV264(state)}</div>`
++        : key === "pain_jtbd_offer" ? g1RenderPainOffer() : g1RenderUnitEconomics();
++      return `<div class="g1-section-body">${content}</div>`;
++    });
++  } finally {
++    state = live;
++    guruRenderReadCacheV470 = cache;
++  }
++  if (!html) return null;
++  container.insertAdjacentHTML("beforeend", html);
++  // Bind against the live workspace, just as on the initial Gate render.
++  if (kind === "card") bindCardInputs();
++  if (key === "pain_jtbd_offer") bindPainOfferRouteEvents();
++  if (key === "unit_economics") bindUnitEconomicsRouteEvents();
++  bindGate1Accordion();
++  if (typeof nowGuideBindCalculatorEdits === "function") nowGuideBindCalculatorEdits();
++  return gate1AccordionBodyV302(container, kind);
+ }
+ 
+ function gate1RenderAccordionFallbackV302(button) {
+@@ -24991,7 +25028,7 @@
+     gate1DurableSaveFrame = null;
+     gate1DurableSaveTimer = setTimeout(() => {
+       gate1DurableSaveTimer = null;
+-      guruPersistStateFast({ durable: true, quiet: true, cloud: false });
++      guruQueueWorkspaceSave({ durable: true, quiet: true, cloud: false });
+     }, 0);
+   };
+   if (typeof requestAnimationFrame === "function")
+@@ -42677,6 +42714,7 @@
+ let guruDerivedRefreshRequired = false;
+ let guruUiPreferenceTimer = null;
+ let guruUiPreferencePending = null;
++const guruUiPreferenceInFlight = new Map();
+ 
+ // Window capture runs before every document-level handler, including legacy
+ // capture handlers registered earlier in this file. Their save/render calls
+@@ -42929,15 +42967,25 @@
+   const pending = guruUiPreferencePending;
+   guruUiPreferencePending = null;
+   if (!pending) return false;
+-  return guruPersistStateFast({
++  const saveOptions = {
+     quiet: true,
+     cloud: options.cloud !== false,
+     workspace: pending.workspace,
+     projectId: pending.projectId,
+-  });
++  };
++  if (pending.gateId === "gate-1" && options.synchronous !== true) {
++    guruUiPreferenceInFlight.set(pending.projectId, pending);
++    guruQueueWorkspaceSave(saveOptions).finally(() => {
++      if (guruUiPreferenceInFlight.get(pending.projectId) === pending)
++        guruUiPreferenceInFlight.delete(pending.projectId);
++    });
++    return true;
++  }
++  return guruPersistStateFast(saveOptions);
+ }
+ 
+ function guruDiscardUiPreferenceSave(projectId) {
++  guruUiPreferenceInFlight.delete(projectId);
+   if (!guruUiPreferencePending || guruUiPreferencePending.projectId !== projectId)
+     return;
+   if (guruUiPreferenceTimer) clearTimeout(guruUiPreferenceTimer);
+@@ -42954,7 +43002,7 @@
+   ) {
+     guruFlushUiPreferenceSave();
+   }
+-  guruUiPreferencePending = { workspace: state, projectId: activeProjectId };
++  guruUiPreferencePending = { workspace: state, projectId: activeProjectId, gateId: activeGateId };
+   if (guruUiPreferenceTimer) clearTimeout(guruUiPreferenceTimer);
+   guruUiPreferenceTimer = setTimeout(guruFlushUiPreferenceSave, 220);
+ }
+@@ -42963,7 +43011,15 @@
+    Снимок уже содержит точный workspace/projectId, поэтому последняя настройка
+    аккордеона не потеряется и не сможет записаться в соседний проект. */
+ window.addEventListener("pagehide", () => {
+-  guruFlushUiPreferenceSave({ cloud: false });
++  guruFlushUiPreferenceSave({ cloud: false, synchronous: true });
++  // A closing tab cannot wait for its worker. Persist the latest workspace
++  // for each pending disclosure save, invalidating any older worker reply.
++  for (const pending of guruUiPreferenceInFlight.values()) {
++    guruInvalidateQueuedWorkspaceSave(WORKSPACE_STORAGE_PREFIX + pending.projectId);
++    guruPersistStateFast({ quiet: true, cloud: false,
++      workspace: pending.workspace, projectId: pending.projectId });
++  }
++  guruUiPreferenceInFlight.clear();
+ });
+ 
+ /* ================================================================
+--- before/now-guide.js
++++ after/now-guide.js
+@@ -445,13 +445,15 @@
+   return root.querySelector(item.kind === "comparison" ? "[data-project-comparison-toggle]" : "[data-target-audience-toggle]");
+ }
+ 
+-function nowGuideGate1Refresh(items = nowGuideGate1Items(state.gates.find((gate) => gate.id === "gate-1"))) {
++function nowGuideGate1Refresh(items, assessed = false) {
+   if (activeGateId !== "gate-1") return;
++  if (!nowGuideReadPass) return nowGuideWithReadPass(() => nowGuideGate1Refresh(items, assessed));
++  items ||= nowGuideGate1Items(state.gates.find((gate) => gate.id === "gate-1"));
+   for (const item of items) {
+     const header = nowGuideGate1Node(item);
+     const badge = header?.querySelector(".status-pill");
+     if (!badge) continue;
+-    const status = nowGuideGate1Assessment(item).status;
++    const status = assessed ? item.status : nowGuideGate1Assessment(item).status;
+     if (!status) continue;
+     badge.className = `status-pill status-${guruNormBlockStatus(status)}`;
+     badge.textContent = item.kind === "card" ? g1CardStatusLabel({ ...findCard(item.id), status })
+@@ -1366,6 +1368,9 @@
+ 
+ const nowGuidePreviousRenderGateNav = renderGateNav;
+ renderGateNav = function (...args) {
++  // Gate 1 input and blur share the deferred assessment below. Rebuilding
++  // navigation here would synchronously assess every gate between cells.
++  if (activeGateId === "gate-1" && guruUserEditDispatchActive) return;
+   const renderNavigation = () => {
+     const result = nowGuidePreviousRenderGateNav.apply(this, args);
+     if (!(guruUserEditDispatchActive && guruUserEditEventType === "input") && !guruFastGateNavigation)
+@@ -1445,15 +1450,50 @@
+   }));
+ }
+ let nowGuideGate12RefreshQueued = false;
++let nowGuideGate1RefreshTimer = 0;
++let nowGuideGate1RefreshIdle = 0;
++let nowGuideGate1RefreshTask = null;
++function nowGuideQueueGate1Refresh(task = nowGuideGate1RefreshTask) {
++  nowGuideGate1RefreshTask = task;
++  clearTimeout(nowGuideGate1RefreshTimer);
++  if (nowGuideGate1RefreshIdle && typeof cancelIdleCallback === "function")
++    cancelIdleCallback(nowGuideGate1RefreshIdle);
++  nowGuideGate1RefreshIdle = 0;
++  if (!task) return;
++  nowGuideGate1RefreshTimer = setTimeout(() => {
++    nowGuideGate1RefreshTimer = 0;
++    const run = () => {
++      nowGuideGate1RefreshIdle = 0;
++      if (Date.now() - guruLastUserEditAt < 400) {
++        nowGuideQueueGate1Refresh();
++        return;
++      }
++      const pending = nowGuideGate1RefreshTask;
++      nowGuideGate1RefreshTask = null;
++      pending?.();
++    };
++    if (typeof requestIdleCallback === "function")
++      nowGuideGate1RefreshIdle = requestIdleCallback(run, { timeout: 1000 });
++    else nowGuideGate1RefreshTimer = setTimeout(run, 0);
++  }, 400);
++}
++for (const type of ["pointerdown", "keydown", "focusin"])
++  document.addEventListener(type, event => {
++    if (activeGateId === "gate-1" && nowGuideGate1RefreshTask && event.target?.closest?.("#contentArea"))
++      nowGuideQueueGate1Refresh();
++  }, true);
+ function nowGuideScheduleGate12Refresh(event) {
+   if (event.target?.closest?.("[data-mega-platform-picker]")) return;
+   if (!event.target?.closest?.("#contentArea") ||
+       (!["gate-1", "gate-2", "gate-3", "gate-4"].includes(activeGateId) &&
+        !(activeGateId === "gate-0" && nowGuideCurrent(nowGuideDisplayedPath)?.gateId === "gate-3"))) return;
+-  if (nowGuideGate12RefreshQueued) return;
+-  nowGuideGate12RefreshQueued = true;
+-  queueMicrotask(() => {
++  if (nowGuideGate12RefreshQueued && activeGateId !== "gate-1") return;
++  const workspace = state, gateId = activeGateId;
++  const productId = state?.project?.gate0ScopeUiV194?.selectedProductId;
++  const refresh = () => nowGuideWithReadPass(() => {
+     nowGuideGate12RefreshQueued = false;
++    if (state !== workspace || activeGateId !== gateId ||
++        state?.project?.gate0ScopeUiV194?.selectedProductId !== productId) return;
+     const gate = state.gates.find((gate) => gate.id === activeGateId);
+     if (!gate || !["gate-0", "gate-1", "gate-2", "gate-3", "gate-4"].includes(gate.id)) return;
+     const { statuses, descriptors } = nowGuideWithReadPass(() => {
+@@ -1468,7 +1508,7 @@
+     guruGateReadinessCache.set(gate.id, summary);
+     const menu = document.querySelector(`[data-gate-id="${gate.id}"] .small`);
+     if (menu) menu.textContent = `${summary.total} блоков, прогресс ${summary.percent}%`;
+-    if (gate.id === "gate-1") nowGuideGate1Refresh();
++    if (gate.id === "gate-1") nowGuideGate1Refresh(descriptors, true);
+     if (gate.id === "gate-4") descriptors.forEach(item => {
+       // A canonical campaign can be shown in two funnel rows. Both views
+       // display the same assessment; the path still contains it only once.
+@@ -1496,6 +1536,11 @@
+       : item.gateId === "gate-3" ? { ...item, status: journeyById.get(item.id) || item.status } : item);
+     nowGuideRender(updated, registry);
+   });
++  if (activeGateId === "gate-1") nowGuideQueueGate1Refresh(refresh);
++  else {
++    nowGuideGate12RefreshQueued = true;
++    queueMicrotask(refresh);
++  }
+ }
+ document.addEventListener("input", nowGuideScheduleGate12Refresh);
+ document.addEventListener("change", nowGuideScheduleGate12Refresh);

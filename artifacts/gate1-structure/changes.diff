@@ -1,0 +1,671 @@
+--- before/gate2-technical-seo.js
++++ after/gate2-technical-seo.js
+@@ -444,7 +444,7 @@
+ nowGuideGate1Items = function (gate) {
+   return g2SeoPreviousItems.apply(this, arguments).filter(item => !G2_SEO_ARCHIVED_IDS.has(item.id) &&
+     !["interactive-tool", "gate1-seo-v300-company-webmaster", "gate1-seo-v300-product-webmaster"].includes(item.id))
+-    .map(item => item.id === "project-comparison" ? { ...item, title: "Сравнение проектов · Компания" } : item);
++    .map(item => item.id === "project-comparison" ? { ...item, title: "Конкуренты (Сравнение проектов)" } : item);
+ };
+ // Disable mounting, without calling the old mutating tool-store normalizer.
+ gate1SeoInteractiveToolInjectV305 = function () {};
+@@ -474,7 +474,7 @@
+       comparison.classList.add("g1-company-direct-v299");
+       comparison.dataset.g1CompanyBlockV299 = "project-comparison";
+       const title = comparison.querySelector("[data-project-comparison-toggle] b");
+-      if (title) title.textContent = "Сравнение проектов · Компания";
++      if (title) title.textContent = "Конкуренты (Сравнение проектов)";
+     }
+   }
+   if (activeGateId === "gate-2") for (const id of G2_SEO_OLD_CHECKS)
+--- before/gate1-project-comparison-product-card.js
++++ after/gate1-project-comparison-product-card.js
+@@ -260,7 +260,7 @@
+   if (activeGateId !== "gate-1") return;
+   const root = els.contentArea?.querySelector?.(".g1-redesign");
+   const comparison = root?.querySelector?.(
+-    '[data-g1-company-block-v299="seo-audit"] [data-g1-seo-item-v296="project-comparison"]',
++    '[data-g1-seo-item-v296="project-comparison"], [data-g1-company-block-v299="project-comparison"]',
+   );
+   const body = comparison?.querySelector?.(":scope > .project-comparison-body");
+   if (!body || body.querySelector(":scope > [data-g1-comparison-product-summary-v306]"))
+--- before/gate4-five-a.js
++++ after/gate4-five-a.js
+@@ -547,12 +547,14 @@
+         ${gate0SectionHeadingHtml("Компания", "Общая стратегическая основа проекта — без привязки к конкретному продукту или кампании.")}
+         ${guruStrategicFoundationCompanyHtmlV310(state)}
+         ${g4FiveCompanyHtmlV523()}
++        ${gate4BlogHtmlV304("company")}
+       </section>
+       <section class="guru-gate-scope-v230" data-gate-scope="product">
+         ${gate0SectionHeadingHtml("Продукт / Услуга", "Селектор и стратегическая основа относятся к выбранной позиции каталога.")}
+         ${guruV194ProductSelectHtml("gate4-launch")}
+         ${product ? guruStrategicFoundationHtmlV237(product) : ""}
+         ${g4FiveProductHtmlV523(product)}
++        ${gate4BlogHtmlV304("product", product)}
+       </section>
+     </div>`);
+   });
+--- before/now-guide.js
++++ after/now-guide.js
+@@ -284,21 +284,20 @@
+     const section = (id, title, calculate) => ({ id, title, kind: "gate1-section", calculate });
+     const productId = workspace.project?.gate0ScopeUiV194?.selectedProductId || "";
+     const items = [
+-      section("company_demand_positioning", "Спрос, ценность, позиционирование · Компания", "company-demand"),
++      section("company_demand_positioning", "Спрос", "company-demand"),
+       ...groups.seo,
+       { id: "project-comparison", title: "Сравнение проекта", kind: "comparison" },
+       section("gate1-seo-v300-company-webmaster", "Яндекс Вебмастер · Компания", "webmaster-company"),
+       { id: "interactive-tool", title: "Собственный интерактивный инструмент", kind: "gate1-tool" },
++      { id: "target-audience", title: "Целевая аудитория", kind: "audience" },
+       ...groups.structure, ...groups.legal,
+-      { id: "target-audience", title: "Целевая аудитория", kind: "audience" },
+-      section("gate1-blog-v304-company", "Блог · Компания", "blog-company"),
+       ...sections.filter((entry) => entry.bare).flatMap((entry) => entry.allInnerCards || [])
+         .filter((card) => !card._merged && getGate1CardMode(card)).map(descriptor),
+     ];
+     if (productId) items.push(
+       section("gate1-seo-v300-product-webmaster", "Яндекс Вебмастер · Продукт/Услуга", "webmaster-product"),
+       section("pain_jtbd_offer", "Спрос, ценность, позиционирование · Продукт/Услуга", "product-demand"),
+-      section("gate1-blog-v304-product", "Блог · Продукт/Услуга", "blog-product"),
++      { id: "project-comparison-product", title: "Сравнение проектов · Продукт/Услуга", kind: "product-comparison", productId },
+     );
+     if (sections.some((entry) => entry.key === "unit_economics"))
+       items.push({ id: "unit-economics", title: "Юнит-экономика", kind: "unit" });
+@@ -330,14 +329,15 @@
+     if (item.kind === "card") return cardUserFieldsHtml(workspace.gates.find((gate) => gate.id === "gate-1").cards.find((card) => card.id === item.id));
+     if (item.kind === "gate1-tool") return gate1SeoInteractiveToolHtmlV305(gate1SeoInteractiveToolStoreV305(workspace));
+     if (item.kind === "comparison") return projectComparisonHtml();
++    if (item.kind === "product-comparison") return projectComparisonProductHtml();
+     if (item.kind === "audience") return targetAudienceHtml();
+     if (item.kind === "unit") return g1RenderUnitEconomics();
+     if (item.calculate === "company-demand") return gate1CompanySemanticsHtmlV264(workspace);
+     if (item.calculate === "product-demand") return g1RenderPainOffer();
+     if (item.calculate === "webmaster-company") return gate1WebmasterCompanyHtmlV295();
+     if (item.calculate === "webmaster-product") return gate1WebmasterProductHtmlV295();
+-    if (item.calculate === "blog-company") return gate1BlogCompanyHtmlV304(gate1BlogStoreV304(workspace));
+-    if (item.calculate === "blog-product") return gate1BlogProductHtmlV304(gate1BlogStoreV304(workspace), guruV194SelectedProduct(workspace));
++    if (item.calculate === "blog-company") return gate1BlogCompanyHtmlV304(gate1BlogStoreV304(workspace, true));
++    if (item.calculate === "blog-product") return gate1BlogProductHtmlV304(gate1BlogStoreV304(workspace, true), guruV194SelectedProduct(workspace));
+     return "";
+   }).status || "";
+ }
+@@ -362,6 +362,7 @@
+       }
+       if (item.kind === "gate1-tool") return gate1SeoInteractiveToolStatusV305(gate1SeoInteractiveToolStoreV305(view));
+       if (item.kind === "comparison") return projectComparisonStatus().status;
++      if (item.kind === "product-comparison") return projectComparisonProductStatus(ensureProjectComparisonProduct(item.productId)).status;
+       if (item.kind === "audience") return targetAudienceStatus(ensureTargetAudience()).status;
+       if (item.kind === "unit") {
+         const id = view.project?.gate0ScopeUiV194?.selectedProductId;
+@@ -381,9 +382,9 @@
+           { selector: '[data-g1-webmaster-product-v295="landingIndexed"]', label: "Результат" });
+         return value === "yes" ? "ready" : value === "no" ? "problem" : "not_started";
+       }
+-      if (item.calculate === "blog-company") return gate1BlogCompanyStatusV304(gate1BlogStoreV304(view));
++      if (item.calculate === "blog-company") return gate1BlogCompanyStatusV304(gate1BlogStoreV304(view, true));
+       if (item.calculate === "blog-product") return gate1BlogProductStatusV304(
+-        gate1BlogStoreV304(view).articles, view.project?.gate0ScopeUiV194?.selectedProductId || "");
++        gate1BlogStoreV304(view, true).articles, view.project?.gate0ScopeUiV194?.selectedProductId || "");
+       return null;
+     } finally { nowGuideGate1Trace = previous; }
+   }, workspace);
+@@ -441,6 +442,7 @@
+   if (item.kind === "card") return root.querySelector(`[data-card="${CSS.escape(item.id)}"] > .g1-card-header`);
+   if (item.kind === "gate1-tool") return root.querySelector("[data-g1-seo-interactive-tool-v305] > header");
+   if (item.kind === "gate1-section") return root.querySelector(`[data-gate1-toggle-section="${CSS.escape(item.id)}"]`);
++  if (item.kind === "product-comparison") return root.querySelector("[data-project-comparison-product-toggle]");
+   if (item.kind === "unit") return root.querySelector('[data-gate1-toggle-section="unit_economics"]');
+   return root.querySelector(item.kind === "comparison" ? "[data-project-comparison-toggle]" : "[data-target-audience-toggle]");
+ }
+@@ -688,7 +690,7 @@
+     const productId = state?.project?.gate0ScopeUiV194?.selectedProductId || "";
+     const channels = g4LaunchChannels();
+     const seen = new Set(), result = [];
+-    for (const node of template.content.querySelectorAll('[data-g4five-tool-v523], [data-g4-readiness-card], [data-g4camp-toggle]')) {
++    for (const node of template.content.querySelectorAll('[data-g4five-tool-v523], [data-g4-readiness-card], [data-g4camp-toggle], [data-gate4-blog-scope]')) {
+       // A host and its inner card may carry the same tool marker. Campaign
+       // hosts are represented by their own existing header, once per key.
+       if (node.matches('[data-g4five-tool-v523]') && (node.matches('.g4five-campaign-host-v523') || node.querySelector('[data-g4camp-toggle]'))) continue;
+@@ -699,16 +701,17 @@
+       if (!badge) continue;
+       const channel = node.matches('[data-g4camp-toggle]') ? channels.find(channel => g4CampaignStateKey(productId, channel.key) === node.dataset.g4campToggle) : null;
+       if (node.matches('[data-g4camp-toggle]') && !channel) continue;
+-      const scope = node.closest('[data-g4five-company-v523]') ? 'company' : 'product';
+-      const kind = channel ? 'channel' : node.hasAttribute('data-g4-readiness-card') ? 'gate4-readiness' : 'gate4-tool';
+-      const id = channel?.key || node.dataset.g4ReadinessCard || node.dataset.g4fiveToolV523;
++      const blog = node.dataset.gate4BlogScope;
++      const scope = blog || (node.closest('[data-g4five-company-v523]') ? 'company' : 'product');
++      const kind = blog ? 'gate4-blog' : channel ? 'channel' : node.hasAttribute('data-g4-readiness-card') ? 'gate4-readiness' : 'gate4-tool';
++      const id = blog ? `gate1-blog-v304-${blog}` : channel?.key || node.dataset.g4ReadinessCard || node.dataset.g4fiveToolV523;
+       const identity = `${scope}:${kind}:${id}`;
+       if (seen.has(identity)) continue;
+       seen.add(identity);
+       const raw = [...badge.classList].find(name => name.startsWith('status-') && name !== 'status-pill')?.slice(7);
+       const status = guruNormBlockStatus(raw);
+-      const title = header.querySelector('.g1-card-title')?.textContent.trim() || id;
+-      const selector = channel ? `[data-g4camp-toggle="${CSS.escape(node.dataset.g4campToggle)}"]`
++      const title = header.querySelector('.g1-card-title, .g1-section-title')?.textContent.trim() || id;
++      const selector = blog ? `[data-gate4-blog-scope="${blog}"] > summary` : channel ? `[data-g4camp-toggle="${CSS.escape(node.dataset.g4campToggle)}"]`
+         : kind === 'gate4-readiness' ? `[data-g4-readiness-card="${CSS.escape(id)}"] > summary`
+         : `[data-g4five-${scope === 'company' ? 'company' : 'product'}-v523] [data-g4five-tool-v523="${CSS.escape(id)}"]${linked ? ' > .g1-card' : ''} > .g1-card-header-static`;
+       result.push({ id, title, kind, scope, productId: scope === 'product' ? productId : '', status,
+@@ -721,6 +724,7 @@
+   return items;
+ }
+ function nowGuideGate4Missing(item) {
++  if (item.kind === "gate4-blog") return nowGuideGate1Missing({ ...item, calculate: `blog-${item.scope}` });
+   if (item.kind !== 'channel') {
+     // These source blocks already own their status calculators. Manual
+     // readiness rows emit targets in that same calculator below.
+@@ -832,6 +836,7 @@
+     });
+   }
+   nowGuideOpenAncestors(header);
++  if (item.kind === "gate4-blog") guruAutosizeProgressively(header.parentElement);
+ }
+ function nowGuideGate4EditorTemplate(item, revealSteps = false) {
+   const html = nowGuidePlainRead(() => {
+--- before/gate1-seo-central.js
++++ after/gate1-seo-central.js
+@@ -385,9 +385,9 @@
+       companyDemandPositioning || companyDemandHeading,
+       ...(companyDemandPositioning ? [] : [companySemantics]),
+       seoAudit,
++      targetAudience,
+       structureAudit,
+       legalAudit,
+-      targetAudience,
+     ]);
+   else {
+     root.prepend(legalAudit);
+--- before/app.js
++++ after/app.js
+@@ -44845,7 +44845,7 @@
+   const customCount = displayCriteria.length - coreCount;
+   return `<section class="project-comparison g1-section ${model.open ? "is-open" : ""}">
+     <button type="button" class="project-comparison-heading" data-project-comparison-toggle aria-expanded="${model.open ? "true" : "false"}">
+-      <span><b>Сравнение проектов · Компания</b></span>
++      <span><b>Конкуренты (Сравнение проектов)</b></span>
+       <span class="project-comparison-heading-meta"><span class="status-pill status-${comparisonStatus.status}" data-status-block="project-comparison">${escapeHtml(statusLabel)}</span><span data-status-block-meta="project-comparison">${comparisonStatus.filled}/${comparisonStatus.total} · ${model.competitors.length} ${model.competitors.length === 1 ? "конкурент" : "конкурента"} · ${coreCount} основных${customCount ? ` + ${customCount}` : ""}</span></span>
+       <i>${model.open ? "Свернуть ↑" : "Развернуть ↓"}</i>
+     </button>
+@@ -60183,7 +60183,7 @@
+ 
+ function gate1CompanyDemandPositioningHeadingHtmlV346() {
+   return `<div class="g1-section-left gate1-company-demand-positioning-heading-v346" data-gate1-company-demand-positioning-heading-v346>
+-    <span class="g1-section-title">Спрос, ценность, позиционирование · Компания</span>
++    <span class="g1-section-title">Спрос</span>
+   </div>`;
+ }
+ 
+@@ -60275,7 +60275,7 @@
+   return `${guruStrategicFoundationCompanyHtmlV310(workspace)}<section class="g1-section ${sectionOpen ? "is-open" : ""}" data-gate1-company-demand-positioning-v357 data-project-id="${escapeAttr(guruV194ProjectId(workspace))}" data-gate1-company-completed-v357="${completion.completed}" data-gate1-company-status-v357="${escapeAttr(completion.status)}">
+     <button type="button" class="g1-section-header" data-gate1-toggle-section="${escapeAttr(key)}" aria-expanded="${sectionOpen ? "true" : "false"}">
+       <span class="g1-section-left">
+-        <span class="g1-section-title">Спрос, ценность, позиционирование · Компания</span>
++        <span class="g1-section-title">Спрос</span>
+         <span class="g1-section-progress">${escapeHtml(gate1CompanyDemandPositioningProgressV357(completion))}</span>
+       </span>
+       <span class="status-pill status-${completion.status}">${escapeHtml(STATUS_LABELS[completion.status] || completion.status)}</span>
+--- before/gate1-blog-system.js
++++ after/gate1-blog-system.js
+@@ -1,5 +1,5 @@
+ /* ================================================================
+-   Gate 1 · Блог как система (v304).
++   Gate 4 · Блог как система (хранилище v304 сохранено).
+ 
+    Это отдельная модель планирования блога. Она не добавляет карточки в
+    gate-1.cards и не меняет card-25 «СТАТЬЯ БЛОГА» или данные других Gate.
+@@ -25,7 +25,8 @@
+     : `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+ }
+ 
+-function gate1BlogStoreV304(workspace = state) {
++function gate1BlogStoreV304(workspace = state, readOnly = false) {
++  if (readOnly) workspace = { gate1BlogV304: structuredClone(workspace?.gate1BlogV304 || {}) };
+   if (!workspace || typeof workspace !== "object") return null;
+   const store = workspace.gate1BlogV304 && typeof workspace.gate1BlogV304 === "object"
+     ? workspace.gate1BlogV304
+@@ -37,27 +38,27 @@
+   store.hub.path = gate1BlogTextV304(store.hub.path) || "/blog";
+   store.hub.description = String(store.hub.description || "");
+   store.articles = Array.isArray(store.articles) ? store.articles : [];
+-  store.articles = store.articles.map((article) => {
++  store.articles = store.articles.map((article, index) => {
+     const normalized = article && typeof article === "object" ? article : {};
+-    normalized.id = gate1BlogTextV304(normalized.id) || gate1BlogIdV304("gate1-blog-article");
++    normalized.id = gate1BlogTextV304(normalized.id) || `gate1-blog-article-legacy-${index}`;
+     normalized.title = String(normalized.title || "");
+     normalized.summary = String(normalized.summary || "");
+     normalized.publication_date = String(normalized.publication_date || "");
+     normalized.updated_date = String(normalized.updated_date || "");
+     normalized.reading_minutes = String(normalized.reading_minutes || "");
+     normalized.toc = Array.isArray(normalized.toc) && normalized.toc.length
+-      ? normalized.toc.map((entry) => ({
+-          id: gate1BlogTextV304(entry?.id) || gate1BlogIdV304("gate1-blog-toc"),
++      ? normalized.toc.map((entry, index) => ({
++          id: gate1BlogTextV304(entry?.id) || `${normalized.id}-toc-${index}`,
+           title: String(entry?.title || ""),
+         }))
+-      : [{ id: gate1BlogIdV304("gate1-blog-toc"), title: "" }];
++      : [{ id: `${normalized.id}-toc-0`, title: "" }];
+     normalized.faq = Array.isArray(normalized.faq) && normalized.faq.length
+-      ? normalized.faq.map((entry) => ({
+-          id: gate1BlogTextV304(entry?.id) || gate1BlogIdV304("gate1-blog-faq"),
++      ? normalized.faq.map((entry, index) => ({
++          id: gate1BlogTextV304(entry?.id) || `${normalized.id}-faq-${index}`,
+           question: String(entry?.question || ""),
+           answer: String(entry?.answer || ""),
+         }))
+-      : [{ id: gate1BlogIdV304("gate1-blog-faq"), question: "", answer: "" }];
++      : [{ id: `${normalized.id}-faq-0`, question: "", answer: "" }];
+     normalized.author = normalized.author && typeof normalized.author === "object"
+       ? normalized.author
+       : {};
+@@ -155,20 +156,44 @@
+ }
+ 
+ function gate1BlogSectionV304(scope, title, note, status, body) {
+-  const accordion = gate1BlogAccordionV304(scope);
+-  const section = document.createElement("section");
+-  section.className = `g1-section gate1-blog-section-v304 ${accordion.open ? "is-open" : ""}`;
++  const section = document.createElement("details");
++  section.className = "g1-section gate1-blog-section-v304 is-open";
++  section.open = true;
++  section.dataset.gate4BlogScope = scope;
+   section.dataset[`gate1Blog${scope === "company" ? "Company" : "Product"}V304`] = "1";
+-  section.innerHTML = `<button type="button" class="g1-section-header" data-gate1-toggle-section="${escapeAttr(accordion.key)}" aria-expanded="${accordion.open ? "true" : "false"}">
++  section.innerHTML = `<summary class="g1-section-header">
+     <span class="g1-section-left">
+       <span class="g1-section-title">${escapeHtml(title)}</span>
+       <span class="g1-section-progress">${escapeHtml(note)}</span>
+     </span>
+     <span class="status-pill status-${escapeAttr(status)}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
+-    <span class="g1-section-toggle">${accordion.open ? "Закрыть" : "Открыть"}</span>
+-  </button>
+-  <div class="g1-section-body gate1-blog-body-v304"${accordion.open ? "" : " hidden"}>${body}</div>`;
++    <span class="gate4-blog-disclosure" aria-hidden="true"></span>
++  </summary>
++  <div class="g1-section-body gate1-blog-body-v304">${body}</div>`;
+   return section;
++}
++
++// Gate 4 owns the editor location. The existing storage key and product links
++// stay unchanged, so moving the workspace requires no data migration.
++function gate4BlogHtmlV304(scope, product = null) {
++  if (scope === "product" && !product?.id) return "";
++  const store = gate1BlogStoreV304(state, true);
++  const linked = product ? store.articles.filter(article =>
++    article.product_links.some(link => link.product_id === product.id)) : [];
++  const block = gate1BlogSectionV304(scope,
++    scope === "company" ? "Блог · Компания" : "Блог · Продукт/Услуга",
++    scope === "company" ? `${store.articles.length} статей · архитектура хаба и шаблон`
++      : `${product.name} · ${linked.length} связанных статей`,
++    scope === "company" ? gate1BlogCompanyStatusV304(store)
++      : gate1BlogProductStatusV304(store.articles, product.id),
++    scope === "company" ? gate1BlogCompanyHtmlV304(store)
++      : gate1BlogProductHtmlV304(store, product));
++  if (scope === "product" && typeof gate1SeoGuideBlogProductV307 === "function") {
++    const host = document.createElement("div");
++    host.append(block);
++    gate1SeoGuideBlogProductV307(host);
++  }
++  return block.outerHTML;
+ }
+ 
+ function gate1BlogProductsV304() {
+@@ -366,9 +391,8 @@
+     ...landings,
+     root.querySelector(':scope > [data-g1-seo-central-v298="product"]'),
+     section("pain_jtbd_offer"),
+-    root.querySelector(":scope > [data-gate1-blog-product-v304]"),
++    root.querySelector(":scope > .project-comparison-product-v309"),
+     section("unit_economics"),
+-    root.querySelector(":scope > .project-comparison-product-v309"),
+   ];
+   let anchor = selector;
+   sequence.filter((node) => node && node.parentElement === root).forEach((node) => {
+@@ -379,51 +403,21 @@
+ 
+ function gate1BlogInjectV304() {
+   if (activeGateId !== "gate-1") return;
+-  const root = els.contentArea?.querySelector?.(".g1-redesign");
+-  if (!root || root.querySelector("[data-gate1-blog-company-v304]")) return;
+-  const store = gate1BlogStoreV304(state);
+-  const product = gate1BlogSelectedProductV304();
+-  const companyBlock = gate1BlogSectionV304(
+-    "company",
+-    "Блог · Компания",
+-    `${store.articles.length} статей · архитектура хаба и шаблон`,
+-    gate1BlogCompanyStatusV304(store),
+-    gate1BlogCompanyHtmlV304(store),
+-  );
+-  const linked = product
+-    ? store.articles.filter((article) =>
+-        article.product_links.some((link) => link.product_id === product.id),
+-      )
+-    : [];
+-  const productBlock = gate1BlogSectionV304(
+-    "product",
+-    "Блог · Продукт/Услуга",
+-    product ? `${product.name} · ${linked.length} связанных статей` : "Выберите категорию и товар",
+-    product ? gate1BlogProductStatusV304(store.articles, product.id) : "not_started",
+-    gate1BlogProductHtmlV304(store, product),
+-  );
+-  const productDivider = gate1BlogFindDividerV304(root, "Продукт / Услуга");
+-  if (productDivider) productDivider.insertAdjacentElement("beforebegin", companyBlock);
+-  else root.prepend(companyBlock);
+-  const productSeo = root.querySelector(':scope > [data-g1-seo-central-v298="product"]');
+-  const selector = root.querySelector(':scope > [data-guru-product-context="gate1-product-pages"]');
+-  if (productSeo) productSeo.insertAdjacentElement("afterend", productBlock);
+-  else if (selector) selector.insertAdjacentElement("afterend", productBlock);
+-  else if (productDivider) productDivider.insertAdjacentElement("afterend", productBlock);
+-  else root.append(productBlock);
+-  gate1BlogOrderProductSectionsV368(root);
+-  root.dataset.gate1BlogSystemV304 = "1";
+-  bindGate1Accordion();
++  gate1BlogOrderProductSectionsV368(els.contentArea?.querySelector?.(".g1-redesign"));
+ }
+ 
+ function gate1BlogRefreshV304() {
+-  if (activeGateId !== "gate-1") return;
+-  const root = els.contentArea?.querySelector?.(".g1-redesign");
+-  if (!root) return;
+-  root.querySelector(":scope > [data-gate1-blog-company-v304]")?.remove();
+-  root.querySelector(":scope > [data-gate1-blog-product-v304]")?.remove();
+-  delete root.dataset.gate1BlogSystemV304;
+-  gate1BlogInjectV304();
++  if (activeGateId !== "gate-4") return;
++  const product = g4ProductPickSelected(state);
++  els.contentArea.querySelectorAll("[data-gate4-blog-scope]").forEach(block => {
++    const template = document.createElement("template");
++    template.innerHTML = gate4BlogHtmlV304(block.dataset.gate4BlogScope, product);
++    const next = template.content.firstElementChild;
++    if (next) { next.open = block.open; block.replaceWith(next); }
++  });
++  // Click actions (create/link/remove) do not emit an input event. Publish the
++  // same readiness update as normal editing, without rebuilding Gate 4.
++  nowGuideScheduleGate12Refresh({ target: els.contentArea });
+ }
+ 
+ const __gate1BlogPrevRenderV304 = renderGate1Accordion;
+--- before/styles.css
++++ after/styles.css
+@@ -24254,3 +24254,16 @@
+ [data-mega-legal-block] .mega-platform-legal-answers { display: block; font-size: 11px; line-height: 1.5; color: var(--muted, #77736c); }
+ [data-mega-legal-block] .mega-platform-legal-reference { overflow-wrap: anywhere; }
+ [data-mega-legal-block] .mega-platform-legal-disclosure > summary:focus-visible { outline: 2px solid var(--text, #33312d); outline-offset: 3px; border-radius: 4px; }
++
++/* Blog workspaces use native disclosure in Gate 4 without saving UI state. */
++[data-gate4-blog-scope] > summary { list-style: none; }
++[data-gate4-blog-scope] > summary::-webkit-details-marker { display: none; }
++.gate4-blog-disclosure {
++  width: 8px;
++  height: 8px;
++  border-right: 1.5px solid currentColor;
++  border-bottom: 1.5px solid currentColor;
++  transform: rotate(-45deg);
++  justify-self: end;
++}
++[data-gate4-blog-scope][open] > summary .gate4-blog-disclosure { transform: rotate(45deg); }
+--- before/scripts/gate1-structure-blog-move-smoke.mjs
++++ after/scripts/gate1-structure-blog-move-smoke.mjs
+@@ -0,0 +1,120 @@
++import assert from 'node:assert/strict';
++import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
++import { createHash } from 'node:crypto';
++const port=process.env.GURU_CHROME_DEBUG_PORT || '9535';
++const baseline=process.env.GURU_STRUCTURE_BASELINE==='1';
++const appUrl=process.env.GURU_APP_URL || 'http://127.0.0.1:9531/';
++const output='artifacts/gate1-structure';mkdirSync(output,{recursive:true});
++const name=process.env.GURU_UI_PROJECT || 'apple';
++const files={apple:'guru-now-korich-workspace.json',icleaning:'guru-step6-icleaning-workspace.json',sivrce:'guru-step6-sivrce-workspace.json',guru:'guru-step6-guru-workspace.json'};
++const hash=s=>createHash('sha256').update(s).digest('hex');
++const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
++class Cdp {
++  constructor(url) {
++    this.socket = new WebSocket(url); this.id = 0; this.pending = new Map(); this.errors = [];
++    this.ready = new Promise((resolve, reject) => { this.socket.addEventListener('open', resolve, { once: true }); this.socket.addEventListener('error', reject, { once: true }); });
++    this.socket.addEventListener('message', event => {
++      const message = JSON.parse(event.data);
++      if (message.method === 'Runtime.exceptionThrown') this.errors.push(message.params.exceptionDetails.exception?.description || message.params.exceptionDetails.text);
++      const task = this.pending.get(message.id); if (!task) return;
++      this.pending.delete(message.id); clearTimeout(task.timer);
++      if (message.error) task.reject(new Error(message.error.message)); else task.resolve(message.result);
++    });
++  }
++  async call(method, params = {}) {
++    await this.ready;
++    return new Promise((resolve, reject) => {
++      const id = ++this.id, timer = setTimeout(() => { this.pending.delete(id); reject(new Error(`CDP timeout: ${method}`)); }, 120000);
++      this.pending.set(id, { resolve, reject, timer }); this.socket.send(JSON.stringify({ id, method, params }));
++    });
++  }
++  close() { this.socket.close(); }
++}
++const version = await (await fetch(`http://127.0.0.1:${port}/json/version`)).json();
++const browser = new Cdp(version.webSocketDebuggerUrl);
++const { browserContextId } = await browser.call('Target.createBrowserContext');
++const { targetId } = await browser.call('Target.createTarget', { url: 'about:blank', browserContextId });
++const tabs = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
++const page = new Cdp(tabs.find(tab => tab.id === targetId).webSocketDebuggerUrl);
++const evaluate = async expression => {
++  const result = await page.call('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
++  if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
++  return result.result.value;
++};
++const waitFor = async expression => {
++  const start = Date.now();
++  while (Date.now() - start < 30000) { if (await evaluate(expression)) return; await delay(100); }
++  throw new Error(`Timeout: ${expression}`);
++};
++const screenshot = async name => {
++  await page.call('Page.bringToFront');
++  const image = await page.call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
++  writeFileSync(`${output}/${name}.png`, Buffer.from(image.data, 'base64'));
++};
++
++const raw=JSON.parse(readFileSync('/private/tmp/'+files[name],'utf8')),source=raw.workspace||raw;
++const report={project:name,baseline};
++const navigate=async(gate,id)=>{
++ await evaluate(`(()=>{const all=nowGuideWithReadPass(()=>nowGuideBuildAllBlocks());const item=all.find(i=>i.gateId===${JSON.stringify(gate)}&&i.id===${JSON.stringify(id)});if(!item)throw Error('Missing navigation item: '+${JSON.stringify(gate)}+':'+${JSON.stringify(id)}+'; '+JSON.stringify(all.map(i=>[i.gateId,i.id])));nowGuideOpen(item);return true})()`);
++ await waitFor(`guruRenderedGateId===${JSON.stringify(gate)}&&document.querySelector('.now-guide-highlight')`);
++};
++try{
++ await page.call('Runtime.enable');await page.call('Page.enable');await page.call('Page.bringToFront');
++ await page.call('Emulation.setDeviceMetricsOverride',{width:1920,height:1200,deviceScaleFactor:1,mobile:false});
++ await page.call('Page.addScriptToEvaluateOnNewDocument',{source:`const mem=new Map();Storage.prototype.getItem=function(k){return mem.get(String(k))??null};Storage.prototype.setItem=function(k,v){mem.set(String(k),String(v))};Storage.prototype.removeItem=function(k){mem.delete(String(k))};Storage.prototype.clear=function(){mem.clear()};const f=fetch.bind(window);window.fetch=(u,i)=>String(u).includes('/api/')?Promise.resolve(new Response(JSON.stringify({ok:true,projects:[],workspaces:[]}))):f(u,i);`});
++ await page.call('Page.navigate',{url:appUrl});await waitFor('document.readyState==="complete"&&typeof g2SeoMigrationPlan==="function"');
++ await evaluate('rememberAccessUnlocked();setAccessState(true);bootstrapAppOnce();scheduleCloudSync=()=>{};scheduleProjectsCloudSync=()=>{};true');
++ await evaluate(`(()=>{guruCancelDerivedRefresh();activeProjectId=${JSON.stringify(source.project.id)};state=guruExportWithoutPersistenceV223(()=>migrateWorkspace(${JSON.stringify(source)},${JSON.stringify(source.project.id)}));projects=[{id:activeProjectId,name:state.project.name,lifecycleStatus:'active'}];updateProjectChrome();els.launcher.hidden=true;els.appShell.hidden=false;activeView='gate';activeGateId='gate-0';nowGuideRegistryCache=null;renderGateNav({recalculate:false});window.__structureBefore=JSON.stringify(state);return true})()`);
++ report.beforeHash=hash(await evaluate('window.__structureBefore'));
++ report.snapshot=await evaluate(`nowGuideWithReadPass(()=>{const all=nowGuideBuildAllBlocks();const path=nowGuidePreflightPath(all);return {blocks:all.map(({id,gateId,title,kind,productId,status})=>({id,gateId,title,kind,productId,status})),readiness:Object.fromEntries(state.gates.map(g=>[g.id,guruReadinessFromStatuses(all.filter(i=>i.gateId===g.id).map(i=>i.status))])),path:nowGuideLaunchReadiness(path),current:nowGuideCurrent(path)?.id,step:path.indexOf(nowGuideCurrent(path))+1,productId:state.project.gate0ScopeUiV194?.selectedProductId,blog:state.gate1BlogV304||null}})`);
++ await navigate('gate-1','company_demand_positioning');
++ report.dom=await evaluate(`(()=>{const root=document.querySelector('.g1-redesign');return [...root.children].map(n=>({key:n.dataset.g1CompanyBlockV299||n.dataset.guruProductContext||n.dataset.card||n.querySelector(':scope > [data-gate1-toggle-section]')?.dataset.gate1ToggleSection||n.dataset.projectComparisonProduct||'',title:n.querySelector(':scope > .g1-section-header .g1-section-title,:scope > .project-comparison-heading b,:scope > .target-audience-heading b,:scope > .g1-card-header .g1-card-title,.gate0-section-heading-title')?.textContent.trim()||'',blog:n.hasAttribute('data-gate1-blog-company-v304')||n.hasAttribute('data-gate1-blog-product-v304')}))})()`);
++ if(!baseline){
++  assert(!report.dom.some(n=>n.blog),'Blog still in Gate 1');
++  const company=report.dom.filter(n=>['company_demand_positioning','project-comparison','target-audience','site-structure-audit','legal-audit'].includes(n.key)).map(n=>n.key);
++  assert.deepEqual(company,['company_demand_positioning','project-comparison','target-audience','site-structure-audit','legal-audit']);
++  const product=report.dom.filter(n=>n.key==='pain_jtbd_offer'||n.key===report.snapshot.productId||n.key==='unit_economics').map(n=>n.key);
++  if(report.snapshot.productId) assert.deepEqual(product,['pain_jtbd_offer',report.snapshot.productId,'unit_economics']);
++  const labels={ready:'Готово',in_progress:'В работе',problem:'Проблема',not_started:'Не начато',not_required:'Не требуется'};
++  for(const item of report.snapshot.blocks.filter(i=>i.gateId==='gate-1')){
++    await navigate('gate-1',item.id);
++    const header=await evaluate(`(()=>{const item=nowGuideBuildAllBlocks().find(i=>i.gateId==='gate-1'&&i.id===${JSON.stringify(item.id)});const n=nowGuideFindNode(item);return {visible:!!n&&n.getBoundingClientRect().height>0,badge:n?.querySelector('.status-pill')?.textContent,highlight:n?.classList.contains('now-guide-highlight')}})()`);
++    assert(header.visible&&header.highlight,'Missing header '+item.id);
++    assert(header.badge?.startsWith(labels[item.status]),JSON.stringify({item,header}));
++  }
++  const old=JSON.parse(readFileSync(output+'/before-'+name+'.json','utf8')).snapshot;
++  report.navigationReadiness = await evaluate(`nowGuideWithReadPass(()=>nowGuidePlainRead(()=>Object.fromEntries(['gate-1','gate-4'].map(id=>[id,guruExportGateDiagnosticsCurrentV223(id,guruExportRawCardStatusesV223(state)).navigationReadiness.summary]))))`);
++  for(const gate of ['gate-1','gate-4']) assert.deepEqual(report.navigationReadiness[gate],report.snapshot.readiness[gate],'Export readiness differs: '+gate);
++
++  const unchanged=rows=>rows.filter(i=>!['gate-1','gate-4'].includes(i.gateId));
++  assert.deepEqual(unchanged(report.snapshot.blocks),unchanged(old.blocks),'Other gates changed');
++  const existingGate4 = rows => rows.filter(i=>i.gateId==='gate-4'&&i.kind!=='gate4-blog');
++  assert.deepEqual(existingGate4(report.snapshot.blocks),existingGate4(old.blocks),'Existing Gate 4 blocks changed');
++  const existingGate1 = rows => rows.filter(i=>i.gateId==='gate-1'&&!i.id.includes('gate1-blog')&&i.id!=='project-comparison-product').map(i=>[i.id,i.status]).sort();
++  assert.deepEqual(existingGate1(report.snapshot.blocks),existingGate1(old.blocks),'Existing Gate 1 statuses changed');
++  const blogs=report.snapshot.blocks.filter(i=>i.kind==='gate4-blog');
++  assert.equal(blogs.length,report.snapshot.productId?2:1);
++  for(const blog of blogs){
++    assert.equal(blog.status,old.blocks.find(i=>i.id===blog.id).status,'Blog status changed');
++    await navigate('gate-4',blog.id);
++    const info=await evaluate(`(()=>{const n=document.querySelector('[data-gate4-blog-scope="${blog.id.endsWith('company')?'company':'product'}"]');return {open:n.open,highlight:n.querySelector('summary').classList.contains('now-guide-highlight'),badge:n.querySelector('.status-pill').textContent}})()`);
++    assert(info.open&&info.highlight);assert.equal(info.badge,labels[blog.status]);
++  }
++  // Switching products uses product_id, while company articles are shared.
++  report.products=await evaluate(`(()=>{const original=JSON.stringify(state);const ids=(state.project.catalogItemsV189||[]).filter(p=>p.id&&p.name).map(p=>p.id);const results=ids.map(id=>nowGuidePlainRead(view=>{view.project.gate0ScopeUiV194.selectedProductId=id;const gate1=nowGuideGate1Items(view.gates.find(g=>g.id==='gate-1')).map(i=>({id:i.id,status:nowGuideGate1Assessment(i).status}));const product=view.project.catalogItemsV189.find(p=>p.id===id);const template=document.createElement('template');template.innerHTML=gate4BlogHtmlV304('product',product);return {productId:id,gate1,blog:{productId:id,status:gate1BlogProductStatusV304(gate1BlogStoreV304(view,true).articles,id),rendered:!!template.content.querySelector('[data-gate4-blog-scope="product"]')}};}));if(original!==JSON.stringify(state))throw Error('Product reads changed data');return results})()`);
++  for(const p of report.products){assert.equal(p.blog.productId,p.productId);assert(p.gate1.some(i=>i.id==='project-comparison-product'));}
++ }
++ writeFileSync(output+'/'+(baseline?'before-':'after-')+name+'-diagnostic.json',JSON.stringify(report,null,2));
++ report.afterHash=hash(await evaluate('JSON.stringify(state)'));
++ assert.equal(report.afterHash,report.beforeHash,'Reading/navigation changed workspace');
++ if(!baseline&&name==='apple'){
++  await navigate('gate-1','company_demand_positioning');await delay(700);
++  // Only DOM disclosure changes for screenshots, no saved preferences.
++  await evaluate(`(()=>{document.querySelectorAll('.g1-redesign > .g1-section > .g1-section-body,.g1-redesign > .project-comparison > .project-comparison-body,.g1-redesign > .target-audience > .target-audience-body').forEach(n=>n.hidden=true);document.querySelector('[data-gate1-company-demand-positioning-v357]').scrollIntoView({block:'start',behavior:'instant'});window.scrollBy(0,-90);return true})()`);await delay(350);await screenshot('gate1-company');
++  if(report.snapshot.productId){await navigate('gate-1','project-comparison-product');await delay(700);await evaluate(`(()=>{document.querySelectorAll('.g1-redesign > .g1-section > .g1-section-body,.g1-redesign > .g1-card > .g1-card-body,.project-comparison-product-v309 > .project-comparison-body').forEach(n=>n.hidden=true);document.querySelector('[data-card="card-24"]').scrollIntoView({block:'start',behavior:'instant'});window.scrollBy(0,-60);return true})()`);await delay(250);await screenshot('gate1-product');}
++  for(const scope of ['company','product']){await navigate('gate-4','gate1-blog-v304-'+scope);await delay(700);await screenshot('gate4-blog-'+scope);}
++ }
++ assert.deepEqual(page.errors,[]);report.build=await evaluate('GURU_BUILD_INFO.version');report.passed=true;
++ writeFileSync(output+'/'+(baseline?'before-':'after-')+name+'.json',JSON.stringify(report,null,2));
++ console.log(name,baseline?'BEFORE':'AFTER',JSON.stringify({readiness:report.snapshot.readiness,path:report.snapshot.path,pure:report.beforeHash===report.afterHash,pass:true}));
++}finally{await browser.call('Target.disposeBrowserContext',{browserContextId}).catch(()=>{});page.close();browser.close();}
+--- before/scripts/gate1-blog-system-smoke.mjs
++++ after/scripts/gate1-blog-system-smoke.mjs
+@@ -60,6 +60,7 @@
+     if (await evaluate(page, `Boolean(${expression})`)) return;
+     await wait(100);
+   }
++  console.error(await evaluate(page, `({gate:activeGateId,rendered:guruRenderedGateId,errors:window.__guruErrors,blog:document.querySelectorAll('[data-gate4-blog-scope]').length,selected:state?.project?.gate0ScopeUiV194,body:document.querySelector('#contentArea')?.textContent.slice(0,1000)})`));
+   throw new Error(`Timed out waiting for ${expression}`);
+ }
+ 
+@@ -81,6 +82,7 @@
+ try {
+   await page.call("Runtime.enable");
+   await page.call("Page.enable");
++  await page.call("Page.bringToFront");
+   await page.call("Page.addScriptToEvaluateOnNewDocument", {
+     source: `{
+       const nativeFetch = window.fetch.bind(window);
+@@ -143,6 +145,9 @@
+       createdAt: new Date().toISOString()
+     };
+     products.push(goat, horse);
++    const membership = megaPlatformCategoryStore(state).categoryIdsByProduct;
++    membership[goat.id] = [category.id];
++    membership[horse.id] = [category.id];
+     const records = guruV194Records(state);
+     records.push(
+       {
+@@ -167,7 +172,7 @@
+     const ui = guruV194Ui(state);
+     ui.selectedCategoryId = category.id;
+     ui.selectedProductId = goat.id;
+-    activeGateId = "gate-1";
++    activeGateId = "gate-4";
+     renderGate();
+     return { goatId: goat.id, horseId: horse.id, count: gate1.cards.length };
+   })()`);
+@@ -238,20 +243,14 @@
+   })()`);
+ 
+   const result = await evaluate(page, `(() => {
+-    const root = document.querySelector(".g1-redesign");
++    const root = document.querySelector(".g4-launch-workspace");
+     const gate1 = state.gates.find((gate) => gate.id === "gate-1");
+     const card25 = gate1.cards.find((card) => card.id === "card-25");
+-    const companyBlog = root.querySelector(":scope > [data-gate1-blog-company-v304]");
+-    const productBlog = root.querySelector(":scope > [data-gate1-blog-product-v304]");
+-    const productDivider = [...root.querySelectorAll(":scope > .gate0-section-heading")].find(
+-      (node) => node.querySelector(".gate0-section-heading-title")?.textContent.trim() === "Продукт / Услуга",
+-    );
+-    const selector = root.querySelector(':scope > [data-guru-product-context="gate1-product-pages"]');
+-    const productCard = root.querySelector(':scope > [data-card="card-24"]');
+-    const seo = root.querySelector(':scope > [data-g1-seo-central-v298="product"]');
+-    const demand = root.querySelector(':scope > .g1-section > [data-gate1-toggle-section="pain_jtbd_offer"]')?.closest('.g1-section');
+-    const economics = root.querySelector(':scope > .g1-section > [data-gate1-toggle-section="unit_economics"]')?.closest('.g1-section');
+-    const productComparison = root.querySelector(':scope > .project-comparison-product-v309');
++    const companyScope = root.querySelector('[data-gate-scope="company"]');
++    const productScope = root.querySelector('[data-gate-scope="product"]');
++    const companyBlog = companyScope.querySelector('[data-gate1-blog-company-v304]');
++    const productBlog = productScope.querySelector('[data-gate1-blog-product-v304]');
++    const selector = productScope.querySelector('[data-guru-product-context="gate4-launch"]');
+     const article = gate1BlogStoreV304(state).articles.find(
+       (item) => item.id === ${JSON.stringify(createdId)},
+     );
+@@ -269,20 +268,9 @@
+       ),
+       separateStorage: Boolean(state.gate1BlogV304) &&
+         !Object.prototype.hasOwnProperty.call(card25 || {}, "gate1BlogV304"),
+-      companyBeforeProductDivider: Boolean(
+-        companyBlog && productDivider &&
+-        (companyBlog.compareDocumentPosition(productDivider) & Node.DOCUMENT_POSITION_FOLLOWING),
+-      ),
+-      productOrder: Boolean(
+-        productDivider?.nextElementSibling === selector &&
+-        selector?.querySelector('[data-guru-strategic-foundation]') &&
+-        selector?.nextElementSibling === productCard &&
+-        productCard?.nextElementSibling === seo &&
+-        seo?.nextElementSibling === demand &&
+-        demand?.nextElementSibling === productBlog &&
+-        productBlog?.nextElementSibling === economics &&
+-        economics?.nextElementSibling === productComparison,
+-      ),
++      companyBeforeProductDivider: Boolean(companyScope.compareDocumentPosition(productScope) & Node.DOCUMENT_POSITION_FOLLOWING),
++      productOrder: Boolean(selector && productBlog &&
++        (selector.compareDocumentPosition(productBlog) & Node.DOCUMENT_POSITION_FOLLOWING)),
+       blocks: Boolean(companyBlog && productBlog),
+       hubRow: Boolean(companyBlog.querySelector(
+         '[data-gate1-blog-hub-article-v304="${createdId}"]',
+@@ -304,12 +292,35 @@
+   assert(result.card25Unchanged && result.card25Title === "СТАТЬЯ БЛОГА", "card-25 changed while adding the separate Blog system");
+   assert(result.otherGatesUnchanged, "A non-Gate-1 gate changed during Blog interactions");
+   assert(result.separateStorage, "Blog data crossed into the existing Audit card storage");
+-  assert(result.blocks && result.companyBeforeProductDivider && result.productOrder, "Blog Company/Product blocks are missing or mounted in the wrong Gate 1 positions");
++  assert(result.blocks && result.companyBeforeProductDivider && result.productOrder, "Blog Company/Product blocks are missing or mounted in the wrong Gate 4 scopes");
+   assert(result.hubRow && result.requiredTemplate && result.faqCount >= 1, "The article template or hub reference row is incomplete");
+   assert(JSON.stringify(result.productIds) === JSON.stringify([setup.goatId, setup.horseId].sort()), "Many-to-many product links were not preserved");
+   assert(result.goatStatus === "published" && result.linkedVisible, "The Goat article/status is not visible in the Product Blog block");
+   assert(result.contextText.includes("памятный подарок") && result.contextText.includes("Покупатели необычных подарков"), "Live JTBD/Segment context is missing from Product Blog");
+   assert(result.errors.length === 0, `Runtime errors: ${result.errors.join(" | ")}`);
++  // Native disclosure and typing keep the same editor and save through the
++  // existing autosave, without migrating the blog storage or product links.
++  await evaluate(page, `(() => {
++    const input = document.querySelector('[data-gate1-blog-article-id-v304="${createdId}"][data-gate1-blog-article-field-v304="title"]');
++    window.__blogTypingNode = input;
++    nowGuideOpenAncestors(input);
++    input.focus();
++    if (document.activeElement !== input) throw new Error("Blog editor could not receive focus"); input.value = "Статья после переноса в Реализацию";
++    input.dispatchEvent(new Event("input", { bubbles: true }));
++    return true;
++  })()`);
++  await waitFor(page, `JSON.parse(localStorage.getItem(WORKSPACE_STORAGE_PREFIX + activeProjectId) || '{}').gate1BlogV304?.articles?.some(a=>a.id==='${createdId}'&&a.title==='Статья после переноса в Реализацию')`);
++  assert(await evaluate(page, 'window.__blogTypingNode.isConnected && document.activeElement === window.__blogTypingNode'), "Autosave replaced the focused blog editor");
++  await evaluate(page, `(() => {
++    const selector = document.querySelector('[data-gate0-scope-product-select="gate4-launch"]');
++    selector.value = '${setup.horseId}'; selector.dispatchEvent(new Event('change',{bubbles:true}));return true;
++  })()`);
++  await waitFor(page, `document.querySelector('[data-gate1-blog-link-status-v304][data-gate1-blog-product-id-v304="${setup.horseId}"]')`);
++  assert(await evaluate(page, `document.querySelector('[data-gate1-blog-link-status-v304][data-gate1-blog-product-id-v304="${setup.horseId}"]').value === 'not_started'`), "Article status leaked between products");
++  await evaluate(page, 'saveState(); location.reload();');
++  await waitFor(page, `typeof state !== 'undefined' && Boolean(state?.gate1BlogV304?.articles?.some(a=>a.id==='${createdId}'&&a.title==='Статья после переноса в Реализацию'))`);
++  console.log('PASS: Gate 4 blog, autosave, focus, product isolation, reload');
++
+ } finally {
+   page.close();
+   await browser.call("Target.disposeBrowserContext", { browserContextId });
+--- before/scripts/gate1-company-unified-container-smoke.mjs
++++ after/scripts/gate1-company-unified-container-smoke.mjs
+@@ -410,7 +410,7 @@
+     assert(snapshot.foundationAdjacent, `Strategic foundation placement changed at ${label}`);
+     assert(snapshot.semanticsInside, `Company demand escaped the frame at ${label}`);
+     assert(
+-      snapshot.title === "Спрос, ценность, позиционирование · Компания",
++      snapshot.title === "Спрос",
+       `Wrong company title at ${label}: ${snapshot.title}`,
+     );
+     assert(

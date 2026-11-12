@@ -132,6 +132,7 @@ function megaPlatformDeleteCollectV1(kind, id, workspace, perform) {
     remove(products, (row) => row?.id === key, "Что продаём · позиции");
     sharedDrop(project.productBindingsV185, key, "Gate 0 · productBindingsV185[product_id]");
     drop(project.productScopedOverridesV194, key, "Gate 0 · productScopedOverridesV194[product_id]");
+    drop(project.productAudienceSelectionV1, key, "Gate 0 · выбор ЦА продукта[product_id]");
     drop(project.gate0ScopeUiV194?.commonMetaByProduct, key,
       "Gate 0 · commonMetaByProduct[product_id]");
     sharedDrop(workspace.projectComparison?.productsById, key,

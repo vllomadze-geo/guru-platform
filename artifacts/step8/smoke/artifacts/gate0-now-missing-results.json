@@ -1,0 +1,364 @@
+{
+  "passed": true,
+  "initial": {
+    "project": "Коричное яблоко",
+    "productId": "catalog-item-1786792591872-51f503",
+    "build": "2.3.526+2cc30c019700",
+    "summary": {
+      "total": 9,
+      "done": 6,
+      "ready": 6,
+      "notRequired": 0,
+      "inProgress": 3,
+      "problem": 0,
+      "notStarted": 0,
+      "percent": 83
+    },
+    "details": [
+      {
+        "id": "card-1",
+        "title": "Проект: базовые сведения",
+        "status": "ready",
+        "details": {
+          "text": "Всё заполнено",
+          "items": [],
+          "unresolved": []
+        }
+      },
+      {
+        "id": "gate0-project-goal",
+        "title": "Цель проекта и ограничения",
+        "status": "ready",
+        "details": {
+          "text": "Всё заполнено",
+          "items": [],
+          "unresolved": []
+        }
+      },
+      {
+        "id": "gate0-company-brand-purpose",
+        "title": "Цель бренда",
+        "status": "ready",
+        "details": {
+          "text": "Всё заполнено",
+          "items": [],
+          "unresolved": []
+        }
+      },
+      {
+        "id": "gate0-company-segmentation",
+        "title": "Сегментация · Компания",
+        "status": "ready",
+        "details": {
+          "text": "Всё заполнено",
+          "items": [],
+          "unresolved": []
+        }
+      },
+      {
+        "id": "gate0-company-positioning",
+        "title": "Позиционирование · Компания",
+        "status": "ready",
+        "details": {
+          "text": "Всё заполнено",
+          "items": [],
+          "unresolved": []
+        }
+      },
+      {
+        "id": "gate0-company-offer",
+        "title": "Оффер и CTA · Компания",
+        "status": "ready",
+        "details": {
+          "text": "Всё заполнено",
+          "items": [],
+          "unresolved": []
+        }
+      },
+      {
+        "id": "gate0-company-keyword-foundation",
+        "title": "Фундамент ключевых слов · Компания",
+        "status": "in_progress",
+        "details": {
+          "items": [
+            {
+              "fallback": true,
+              "label": "Заполните блок"
+            }
+          ],
+          "unresolved": [
+            "card-6"
+          ]
+        }
+      },
+      {
+        "id": "card-7",
+        "title": "Текущее состояние маркетинговой системы · Компания",
+        "status": "in_progress",
+        "details": {
+          "items": [
+            {
+              "label": "Коза & Ёлка: URL",
+              "selector": "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790860377305-388c56\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "Летнее платье «Исландка»: URL",
+              "selector": "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-98358d\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "Платье из льна: URL",
+              "selector": "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-5f848a\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "Лонгслив «Мак» с аппликацией: URL",
+              "selector": "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-3be8f9\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "Свитшот с медведем для Михаила: URL",
+              "selector": "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-1d1d3c\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "Свитшот «Яра» с авторской аппликацией: URL",
+              "selector": "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-c45ce3\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "Льняное демисезонное пальто: URL",
+              "selector": "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-52046c\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "Шапка Коза: URL",
+              "selector": "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790936932674-197964\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "ТЕРМОС в свитере: URL",
+              "selector": "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790937546522-78edcc\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "ТЕРМОС в чехле: URL",
+              "selector": "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790937556174-6ad07b\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "Текстильная ёлочка: URL",
+              "selector": "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790937575672-8f423f\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "Новогодние подарочные наборы: URL",
+              "selector": "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790937587589-b751ba\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "Доставка и оплата: URL",
+              "selector": "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"delivery\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "Блог: URL",
+              "selector": "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"blog\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "Реквизиты компании: URL",
+              "selector": "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"company_details\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "Согласие на обработку данных: URL",
+              "selector": "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"data_consent\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "Публичная оферта: URL",
+              "selector": "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"offer\"]",
+              "cardId": "card-7"
+            },
+            {
+              "label": "Условия возврата: URL",
+              "selector": "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"returns\"]",
+              "cardId": "card-7"
+            },
+            {
+              "fallback": true,
+              "label": "Заполните блок"
+            }
+          ],
+          "unresolved": [
+            "card-8",
+            "card-9"
+          ]
+        }
+      },
+      {
+        "id": "card-2",
+        "title": "Продукт, сегмент и задача клиента",
+        "status": "in_progress",
+        "details": {
+          "items": [
+            {
+              "fallback": true,
+              "label": "Заполните блок"
+            }
+          ],
+          "unresolved": [
+            "card-4",
+            "card-5"
+          ]
+        }
+      }
+    ],
+    "ready": "<div class=\"now-guide-missing\" aria-live=\"polite\">Всё заполнено</div>",
+    "excluded": "<div class=\"now-guide-missing\" aria-live=\"polite\">Не требуется</div>",
+    "hiddenForGate1": true,
+    "protectedSample": {
+      "nested": {
+        "value": ""
+      },
+      "rows": []
+    },
+    "guideFormFields": 0
+  },
+  "transitions": [
+    {
+      "id": "card-2",
+      "fallback": true,
+      "label": "Заполните блок",
+      "missingCount": 1,
+      "visibleItems": 1,
+      "moreText": "Не хватает:\nЗаполните блок",
+      "focused": false,
+      "empty": null,
+      "highlighted": true,
+      "top": 89.953125,
+      "bottom": 115.953125,
+      "expanded": true,
+      "title": "Продукт, сегмент и задача клиента"
+    },
+    {
+      "id": "gate0-company-keyword-foundation",
+      "fallback": true,
+      "label": "Заполните блок",
+      "missingCount": 1,
+      "visibleItems": 1,
+      "moreText": "Не хватает:\nЗаполните блок",
+      "focused": false,
+      "empty": null,
+      "highlighted": true,
+      "top": 90.234375,
+      "bottom": 116.234375,
+      "expanded": true,
+      "title": "Фундамент ключевых слов · Компания"
+    },
+    {
+      "id": "card-7",
+      "fallback": false,
+      "label": "Коза & Ёлка: URL",
+      "missingCount": 19,
+      "visibleItems": 3,
+      "moreText": "Не хватает:\nКоза & Ёлка: URL\nЛетнее платье «Исландка»: URL\nПлатье из льна: URL\nи ещё 16",
+      "focused": true,
+      "empty": true,
+      "highlighted": true,
+      "top": 526.03125,
+      "bottom": 563.53125,
+      "expanded": true,
+      "title": "Текущее состояние маркетинговой системы · Компания"
+    }
+  ],
+  "fallbackBlocks": [
+    {
+      "id": "gate0-company-keyword-foundation",
+      "title": "Фундамент ключевых слов · Компания",
+      "unresolved": [
+        "card-6"
+      ]
+    },
+    {
+      "id": "card-7",
+      "title": "Текущее состояние маркетинговой системы · Компания",
+      "unresolved": [
+        "card-8",
+        "card-9"
+      ]
+    },
+    {
+      "id": "card-2",
+      "title": "Продукт, сегмент и задача клиента",
+      "unresolved": [
+        "card-4",
+        "card-5"
+      ]
+    }
+  ],
+  "readOnly": {
+    "identical": true,
+    "beforeBytes": 28081262,
+    "afterBytes": 28081262,
+    "beforeSha256": "ac8e362222028c2bda22249cf4925d34fd85df1b84fe66367e3bf7083a621d07",
+    "afterSha256": "ac8e362222028c2bda22249cf4925d34fd85df1b84fe66367e3bf7083a621d07",
+    "updatedAtFields": 259,
+    "uiPreferenceWrites": 0
+  },
+  "filled": {
+    "before": [
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790860377305-388c56\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-98358d\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-5f848a\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-3be8f9\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-1d1d3c\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-c45ce3\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-52046c\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790936932674-197964\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790937546522-78edcc\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790937556174-6ad07b\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790937575672-8f423f\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790937587589-b751ba\"]",
+      "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"delivery\"]",
+      "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"blog\"]",
+      "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"company_details\"]",
+      "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"data_consent\"]",
+      "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"offer\"]",
+      "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"returns\"]",
+      "Заполните блок"
+    ],
+    "selector": "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790860377305-388c56\"]",
+    "label": "Коза & Ёлка: URL",
+    "started": 14007.799999982119
+  },
+  "liveUpdate": {
+    "disappeared": true,
+    "sameDocument": true,
+    "focused": true,
+    "after": [
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-98358d\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-5f848a\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-3be8f9\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-1d1d3c\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-c45ce3\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1786792591872-52046c\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790936932674-197964\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790937546522-78edcc\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790937556174-6ad07b\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790937575672-8f423f\"]",
+      "[data-mega-url-group=\"products\"][data-mega-url-id=\"catalog-item-1790937587589-b751ba\"]",
+      "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"delivery\"]",
+      "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"blog\"]",
+      "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"company_details\"]",
+      "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"data_consent\"]",
+      "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"offer\"]",
+      "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"returns\"]",
+      "Заполните блок"
+    ],
+    "exportedDataChangedByTestInput": true
+  },
+  "errors": []
+}

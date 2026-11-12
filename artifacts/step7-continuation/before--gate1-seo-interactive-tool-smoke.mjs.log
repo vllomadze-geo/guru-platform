@@ -1,0 +1,83 @@
+{
+  "setup": {
+    "cardCount": 84
+  },
+  "initial": {
+    "oneInstance": true,
+    "insideCompanySeo": true,
+    "outsideProductSeo": true,
+    "fieldNames": [
+      "exists_now",
+      "tool_name",
+      "tool_url",
+      "should_build",
+      "idea"
+    ],
+    "yesHidden": true,
+    "noHidden": true
+  },
+  "yesResult": {
+    "store": {
+      "version": "gate1-seo-interactive-tool-v305",
+      "exists_now": "yes",
+      "tool_name": "Калькулятор стоимости подарка",
+      "tool_url": "https://example.ru/calculator",
+      "should_build": "",
+      "idea": "Подбирать подарок по поводу, бюджету и сроку."
+    },
+    "saved": {
+      "version": "gate1-seo-interactive-tool-v305",
+      "exists_now": "yes",
+      "tool_name": "Калькулятор стоимости подарка",
+      "tool_url": "https://example.ru/calculator",
+      "should_build": "",
+      "idea": "Подбирать подарок по поводу, бюджету и сроку."
+    },
+    "status": "ready",
+    "yesVisible": true,
+    "noHidden": true
+  },
+  "noResult": {
+    "existsNow": "no",
+    "shouldBuild": "not_considered",
+    "previousYesValuesPreserved": true,
+    "yesHidden": true,
+    "noVisible": true,
+    "status": "ready"
+  },
+  "finalResult": {
+    "cardCount": 84,
+    "cardsUnchanged": true,
+    "otherGatesUnchanged": false,
+    "explanationKeys": [
+      "canonical-redirects",
+      "keyword-foundations",
+      "project-comparison",
+      "seo-snippet",
+      "site-audit",
+      "webmaster-company",
+      "webmaster-product"
+    ],
+    "saved": {
+      "version": "gate1-seo-interactive-tool-v305",
+      "exists_now": "no",
+      "tool_name": "Калькулятор стоимости подарка",
+      "tool_url": "https://example.ru/calculator",
+      "should_build": "not_considered",
+      "idea": "Подбирать подарок по поводу, бюджету и сроку."
+    },
+    "instanceCount": 1,
+    "errors": [
+      "Uncaught TypeError: m.infra is not iterable"
+    ]
+  }
+}
+file:///private/tmp/guru-step7-before/scripts/gate1-seo-interactive-tool-smoke.mjs:15
+  if (!condition) throw new Error(message);
+                        ^
+
+Error: Gate 1 cards changed: {"before":84,"after":84}
+    at assert (file:///private/tmp/guru-step7-before/scripts/gate1-seo-interactive-tool-smoke.mjs:15:25)
+    at file:///private/tmp/guru-step7-before/scripts/gate1-seo-interactive-tool-smoke.mjs:250:3
+
+Node.js v22.14.0

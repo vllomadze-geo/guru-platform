@@ -1,0 +1,66 @@
+{
+  "legacyOffer": "Старый оффер из карты",
+  "legacyCta": "Старый CTA проекта",
+  "emptyOffer": "",
+  "emptyCta": "",
+  "emptySource": "Gate 0 · категория",
+  "emptyEditorHasRecord": true,
+  "categoryOffer": "Оффер категории",
+  "categoryCta": "CTA категории",
+  "categoryTarget": "category-offer",
+  "productOffer": "Оффер продукта",
+  "productCta": "CTA продукта",
+  "productTarget": "product-offer",
+  "threeCtas": [
+    [
+      "primary",
+      "Оформить заказ"
+    ],
+    [
+      "secondary",
+      "Посмотреть подробнее"
+    ],
+    [
+      "alternative",
+      "Задать вопрос"
+    ]
+  ],
+  "renderedCtas": [
+    "primary",
+    "secondary",
+    "alternative"
+  ],
+  "assignedCtas": [
+    "primary",
+    "secondary",
+    "alternative"
+  ],
+  "secondaryCtas": [
+    "secondary"
+  ],
+  "secondaryStatus": true,
+  "noEmptyCtas": true,
+  "liveSecondary": true,
+  "otherProductCtas": [
+    "CTA категории"
+  ],
+  "activeSourceVisible": true,
+  "activeSourceLabel": "Сейчас используется · Только этот продукт",
+  "resolvedScope": "product",
+  "selectedScope": "category",
+  "renderedRecordIds": [
+    "product-offer",
+    "product-complete",
+    "category-offer",
+    "gate0-value-1792850236889-ff7e6a"
+  ],
+  "editedOffer": "Оффер продукта обновлён",
+  "editedCta": "CTA продукта",
+  "blankOverrideOffer": "",
+  "blankOverrideCta": "",
+  "completeOffer": "Другой полный оффер",
+  "completeCta": "Другой CTA",
+  "completeTarget": "product-complete",
+  "focusedChosenRow": true,
+  "legacyPreserved": true
+}

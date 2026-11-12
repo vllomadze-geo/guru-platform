@@ -1,0 +1,27 @@
+{
+  "build": "2.3.526+4076b861d779",
+  "baseCommit": "86515d9b3ad8738508f8eb67c615de42620b20e3",
+  "published": false,
+  "runtimeFilesChanged": ["now-guide.js", "styles.css"],
+  "testsChanged": ["scripts/now-guide-smoke.mjs", "scripts/now-guide-disclosure-smoke.mjs"],
+  "checks": {
+    "now-guide-disclosure-smoke": "PASS",
+    "now-guide-smoke (korichnoe-yabloko)": "PASS",
+    "npm run build (temporary checkout)": "PASS, 42 matching assets",
+    "node --check": "PASS",
+    "git diff --check": "PASS"
+  },
+  "data": {
+    "mode": "isolated browser context, workspace copy in memory, cloud API stubbed",
+    "sourceFileUnchanged": true,
+    "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+    "tenTransitionsExportUnchangedIncludingUpdatedAt": true,
+    "exportBeforeSha256": "87eeda7f8959523b8ec0a69fd289070203be023143434876b02fd0a6b7a41871",
+    "exportAfterSha256": "87eeda7f8959523b8ec0a69fd289070203be023143434876b02fd0a6b7a41871"
+  },
+  "sources": [
+    "https://developer.apple.com/design/human-interface-guidelines/disclosure-controls",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/examples/disclosure-navigation-hybrid/"
+  ],
+  "notChecked": ["production", "Safari", "other projects in this task"]
+}

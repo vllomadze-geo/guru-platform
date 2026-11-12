@@ -1,0 +1,1 @@
+DUPLICATE_ALREADY_TESTED {"test":"product-card-seven-blocks-smoke.mjs","label":"before","result":{"status":"FAIL","seconds":2.26,"exit_code":1,"log":"artifacts/step7-continuation/tail-before--product-card-seven-blocks-smoke.mjs.log"}}

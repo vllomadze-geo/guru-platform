@@ -1,0 +1,408 @@
+[
+  {
+    "name": "Коричное яблоко",
+    "build": "2.3.526+81d96c5da3c8",
+    "snapshot": {
+      "gate0": {
+        "total": 9,
+        "done": 8,
+        "ready": 8,
+        "notRequired": 0,
+        "inProgress": 1,
+        "problem": 0,
+        "notStarted": 0,
+        "percent": 94
+      },
+      "step": 8,
+      "M": 95,
+      "current": "card-7",
+      "product_id": "catalog-item-1786792591872-51f503",
+      "statuses": [
+        [
+          "card-1",
+          "ready"
+        ],
+        [
+          "gate0-project-goal",
+          "ready"
+        ],
+        [
+          "gate0-company-brand-purpose",
+          "ready"
+        ],
+        [
+          "gate0-company-segmentation",
+          "ready"
+        ],
+        [
+          "gate0-company-positioning",
+          "ready"
+        ],
+        [
+          "gate0-company-offer",
+          "ready"
+        ],
+        [
+          "gate0-company-keyword-foundation",
+          "ready"
+        ],
+        [
+          "card-7",
+          "in_progress"
+        ],
+        [
+          "card-2",
+          "ready"
+        ]
+      ]
+    },
+    "renderReadOnly": true,
+    "recordsUnchanged": true,
+    "metaUnchanged": true,
+    "panelCount": 0,
+    "label": "apple",
+    "source": {
+      "label": "apple",
+      "file": "/private/tmp/guru-now-korich-workspace.json",
+      "sha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37"
+    },
+    "scopes": {
+      "product": 14,
+      "category": 47,
+      "project": 8
+    },
+    "nonProduct": 55,
+    "nonProductRecords": [
+      {
+        "id": "gate0-value-1787592562065-6373bc",
+        "field": "jtbd",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-100242",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-bd31b0",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-b5be99",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-f630cb",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-aefdd7",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-004e62",
+        "field": "offers",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-0b90a8",
+        "field": "cta",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-d2a902",
+        "field": "jtbd",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-444d3e",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-c20f40",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-cb2310",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-a8b307",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-05d5e2",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-35a38d",
+        "field": "offers",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-e1efb1",
+        "field": "cta",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-3f8b98",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-f7fb03",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-4d41b8",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562066-e2a5eb",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-c6ba45",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-ee147e",
+        "field": "offers",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-d29280",
+        "field": "cta",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-547706",
+        "field": "jtbd",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-c8f12c",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-40bc4b",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-2a6715",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-b6782b",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-d0a872",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-2db478",
+        "field": "offers",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-80c107",
+        "field": "cta",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-501c7c",
+        "field": "jtbd",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-22a3cf",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-03acd4",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-436713",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-6fdb4a",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-a0743d",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562067-440627",
+        "field": "offers",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562068-fe8c11",
+        "field": "cta",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562068-1effb4",
+        "field": "jtbd",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562068-077057",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562068-d2cf54",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562068-25b242",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562068-08415b",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562068-cec5cb",
+        "field": "segments",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562068-a76561",
+        "field": "offers",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562068-ad3a59",
+        "field": "cta",
+        "scope": "category",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562068-7a5549",
+        "field": "positioning",
+        "scope": "project",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1787592562068-d0372f",
+        "field": "usp",
+        "scope": "project",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1789376038405-47dcd8",
+        "field": "segments",
+        "scope": "project",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1790700954534-541753",
+        "field": "keyword_foundation",
+        "scope": "project",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1792148090449-dd9417",
+        "field": "brand_purpose",
+        "scope": "project",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1792150971543-392ec9",
+        "field": "company_offer",
+        "scope": "project",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1792152463596-0c6e96",
+        "field": "segments",
+        "scope": "project",
+        "archived": false
+      },
+      {
+        "id": "gate0-value-1792152795127-905a3c",
+        "field": "company_offer",
+        "scope": "project",
+        "archived": false
+      }
+    ]
+  }
+]

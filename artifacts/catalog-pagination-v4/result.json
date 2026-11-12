@@ -1,0 +1,179 @@
+{
+  "setup": {
+    "hubId": "page-1793622158690-b5f27b",
+    "categoryId": "cat-a",
+    "refs": [
+      {
+        "pageKey": "categories:cat-b"
+      },
+      {
+        "legacyIndex": 1
+      }
+    ],
+    "legacy": "Одежда -> https://old.test/odezhda/\nНеизвестная -> /unknown",
+    "count": 15
+  },
+  "check": {
+    "before": {
+      "hub": "not_required",
+      "category": "in_progress"
+    },
+    "five": "in_progress",
+    "manualAtFive": "ready",
+    "invalidManual": "in_progress",
+    "changedManual": "in_progress",
+    "duplicateSix": "in_progress",
+    "after": "ready",
+    "missingAtSix": "in_progress",
+    "path": "/odezhda",
+    "partialLegacy": [
+      {
+        "pageKey": "fixed:blog"
+      },
+      {
+        "pageKey": "categories:cat-c"
+      }
+    ],
+    "emptyOrder": [
+      "h2",
+      "add"
+    ],
+    "categoryOrder": [
+      "h2",
+      "links",
+      "add"
+    ]
+  },
+  "interaction": {
+    "unchangedBeforeSelection": true,
+    "confirmInitiallyDisabled": true,
+    "unchangedAfterSelection": true,
+    "afterAdd": [
+      {
+        "pageKey": "categories:cat-a"
+      }
+    ],
+    "progressAtOne": "Выбрано 1 из 6 · Осталось 5",
+    "statusBeforeApproval": "В работе",
+    "statusAfterApproval": "Готово",
+    "approvalStored": "[\"categories:cat-a\"]",
+    "sameSection": true,
+    "sectionTopShift": 0,
+    "addXShift": 1,
+    "resolvedEditAbsent": true,
+    "pillClickDidNotOpen": true,
+    "unchangedSecondSelection": true,
+    "afterSecondAdd": [
+      {
+        "pageKey": "categories:cat-a"
+      },
+      {
+        "pageKey": "fixed:catalog"
+      }
+    ],
+    "statusAfterCompositionChange": "В работе",
+    "progressAtTwo": "Выбрано 2 из 6 · Осталось 4",
+    "afterFirstRemove": [
+      {
+        "pageKey": "fixed:catalog"
+      }
+    ],
+    "options": [
+      "categories:cat-a",
+      "fixed:catalog",
+      "categories:cat-c",
+      "products:product-0",
+      "products:product-1",
+      "products:product-2",
+      "products:product-3",
+      "products:product-4",
+      "products:product-5",
+      "products:product-6",
+      "products:product-7",
+      "products:product-8",
+      "products:product-9",
+      "products:product-10",
+      "products:product-11",
+      "products:product-12",
+      "products:product-13",
+      "products:product-14",
+      "fixed:home",
+      "fixed:contacts",
+      "fixed:delivery",
+      "fixed:about",
+      "fixed:blog",
+      "fixed:not_found",
+      "fixed:thank_you",
+      "fixed:company_details",
+      "fixed:privacy",
+      "fixed:data_consent",
+      "fixed:offer",
+      "fixed:returns",
+      "custom:audit:page-1793622158692-5840c3"
+    ],
+    "suggestionBeforeConfirm": true,
+    "suggestionAfterConfirm": [
+      {
+        "pageKey": "categories:cat-a"
+      }
+    ],
+    "afterRemove": [],
+    "pageStillExists": true,
+    "emptyPreview": true,
+    "noMode": true,
+    "status": "Не нужна",
+    "original": "",
+    "legacyAfter": ""
+  },
+  "sync": {
+    "first": true,
+    "updated": true,
+    "nameUpdated": true,
+    "missing": "in_progress",
+    "legacyModeIgnored": {
+      "label": "В работе",
+      "status": "in_progress"
+    },
+    "empty": {
+      "label": "Не нужна",
+      "status": "not_required"
+    },
+    "legacyPreserved": true
+  },
+  "navigation": {
+    "button": true,
+    "gate": "gate-0"
+  },
+  "pickerShot": {
+    "visible": true,
+    "groups": 6,
+    "onTop": true,
+    "choices": 31
+  },
+  "pendingShot": {
+    "selected": true,
+    "confirmEnabled": true,
+    "unchanged": true
+  },
+  "emptyHeadingEdit": {
+    "visible": true,
+    "saved": true,
+    "restored": true
+  },
+  "wide": {
+    "body": 1704,
+    "preview": 1664
+  },
+  "runtimeErrors": [],
+  "shots": [
+    "01-hub",
+    "02-category",
+    "03-empty-suggestions",
+    "04-missing-platform-url",
+    "05-unmatched",
+    "06-pagination-15",
+    "07-picker-open",
+    "08-picker-selected",
+    "09-manual-approved"
+  ]
+}

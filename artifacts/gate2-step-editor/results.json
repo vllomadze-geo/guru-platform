@@ -1,0 +1,159 @@
+{
+  "blocks": [
+    {
+      "id": "company-domain",
+      "edit": true
+    },
+    {
+      "id": "company-webmaster",
+      "edit": true
+    },
+    {
+      "id": "company-yandex-business",
+      "edit": true
+    },
+    {
+      "id": "company-yandex-direct",
+      "edit": true
+    },
+    {
+      "id": "company-vk",
+      "edit": true
+    },
+    {
+      "id": "company-telegram-ads",
+      "edit": true
+    },
+    {
+      "id": "company-meta-ads",
+      "edit": true
+    },
+    {
+      "id": "company-ga4",
+      "edit": true
+    },
+    {
+      "id": "company-gsc",
+      "edit": true
+    },
+    {
+      "id": "company-google-ads",
+      "edit": true
+    },
+    {
+      "id": "company-leads",
+      "edit": true
+    },
+    {
+      "id": "company-safety",
+      "edit": true
+    },
+    {
+      "id": "product-landing",
+      "edit": true
+    },
+    {
+      "id": "product-counter",
+      "edit": true
+    },
+    {
+      "id": "product-goal",
+      "edit": true
+    },
+    {
+      "id": "product-vk",
+      "edit": true
+    },
+    {
+      "id": "product-lead",
+      "edit": true
+    }
+  ],
+  "checks": {
+    "dark": {
+      "block": "rgb(33, 31, 28)",
+      "input": "rgb(33, 31, 28)"
+    },
+    "editor1440": {
+      "visible": true,
+      "fields": [
+        "what",
+        "where",
+        "how",
+        "troubleshooting",
+        "reconciliation",
+        "source_url"
+      ],
+      "system": true
+    },
+    "width1440": {
+      "page": 1440,
+      "viewport": 1440
+    },
+    "editor390": {
+      "visible": true,
+      "fields": [
+        "what",
+        "where",
+        "how",
+        "troubleshooting",
+        "reconciliation",
+        "source_url"
+      ],
+      "system": true
+    },
+    "width390": {
+      "page": 390,
+      "viewport": 390
+    },
+    "added": {
+      "total": 9,
+      "id": "custom_d6a2e8fbdb324171855694080ce694d4",
+      "progress": "5 из 9 шагов",
+      "saved": true,
+      "row": true
+    },
+    "manual": {
+      "done": "done",
+      "value": "https://example.test/check",
+      "progress": "6 из 9 шагов"
+    },
+    "edited": {
+      "what": "Проверить обновлённый шаг",
+      "field": {
+        "id": "field_7027a964a1764cc195b12d72d4fe7f64",
+        "label": "Заметка",
+        "type": "url"
+      }
+    },
+    "preservedValue": "https://example.test/check",
+    "deleted": {
+      "count": 8,
+      "toast": true
+    },
+    "undone": true,
+    "restoredAnswer": "done",
+    "rerender": {
+      "edited": "Изменить",
+      "count": 9
+    },
+    "migrated": {
+      "steps": 9,
+      "answer": "done"
+    },
+    "wizard": {
+      "unified": true
+    }
+  },
+  "screenshots": [
+    "artifacts/gate2-step-editor/normal-1440.png",
+    "artifacts/gate2-step-editor/edit-1440.png",
+    "artifacts/gate2-step-editor/editor-1440.png",
+    "artifacts/gate2-step-editor/confirmation-1440.png",
+    "artifacts/gate2-step-editor/normal-390.png",
+    "artifacts/gate2-step-editor/edit-390.png",
+    "artifacts/gate2-step-editor/editor-390.png",
+    "artifacts/gate2-step-editor/confirmation-390.png"
+  ],
+  "errors": []
+}

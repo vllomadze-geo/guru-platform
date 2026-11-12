@@ -1,0 +1,272 @@
+[
+  {
+    "name": "(root)",
+    "url": "",
+    "line": 0,
+    "inclusiveMs": 30720
+  },
+  {
+    "name": "",
+    "url": "",
+    "line": 1,
+    "inclusiveMs": 29463
+  },
+  {
+    "name": "renderGate",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 87510,
+    "inclusiveMs": 29333
+  },
+  {
+    "name": "renderGate",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 87629,
+    "inclusiveMs": 29333
+  },
+  {
+    "name": "renderGate",
+    "url": "gate0-marketing-source-links.js?v=2.3.526%2B1b98c471bf26",
+    "line": 58,
+    "inclusiveMs": 29333
+  },
+  {
+    "name": "renderGate",
+    "url": "now-guide.js?v=2.3.526%2B1b98c471bf26",
+    "line": 735,
+    "inclusiveMs": 29333
+  },
+  {
+    "name": "renderGate",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 86490,
+    "inclusiveMs": 29332
+  },
+  {
+    "name": "renderGate",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 84310,
+    "inclusiveMs": 29330
+  },
+  {
+    "name": "renderGate",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 74173,
+    "inclusiveMs": 29319
+  },
+  {
+    "name": "renderGate",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 82244,
+    "inclusiveMs": 29319
+  },
+  {
+    "name": "renderGate",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 83961,
+    "inclusiveMs": 29319
+  },
+  {
+    "name": "renderGate",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 38378,
+    "inclusiveMs": 29316
+  },
+  {
+    "name": "renderGate",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 50939,
+    "inclusiveMs": 29316
+  },
+  {
+    "name": "renderGate",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 52568,
+    "inclusiveMs": 29316
+  },
+  {
+    "name": "renderGate",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 62353,
+    "inclusiveMs": 29316
+  },
+  {
+    "name": "renderGate",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 66378,
+    "inclusiveMs": 29316
+  },
+  {
+    "name": "renderGate",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 36059,
+    "inclusiveMs": 29314
+  },
+  {
+    "name": "renderGate2Redesign",
+    "url": "gate2-service-block.js?v=2.3.526%2B1b98c471bf26",
+    "line": 210,
+    "inclusiveMs": 29214
+  },
+  {
+    "name": "renderGateTable",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 29740,
+    "inclusiveMs": 29214
+  },
+  {
+    "name": "renderGateTable",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 33410,
+    "inclusiveMs": 29214
+  },
+  {
+    "name": "renderGateTable",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 50504,
+    "inclusiveMs": 29214
+  },
+  {
+    "name": "renderGateTable",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 55484,
+    "inclusiveMs": 29214
+  },
+  {
+    "name": "renderGateTable",
+    "url": "now-guide.js?v=2.3.526%2B1b98c471bf26",
+    "line": 875,
+    "inclusiveMs": 29214
+  },
+  {
+    "name": "renderGate",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 2992,
+    "inclusiveMs": 29214
+  },
+  {
+    "name": "renderGate",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 32534,
+    "inclusiveMs": 29214
+  },
+  {
+    "name": "guruExportWithoutPersistenceV223",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 60598,
+    "inclusiveMs": 28852
+  },
+  {
+    "name": "nowGuideGate12WithView",
+    "url": "now-guide.js?v=2.3.526%2B1b98c471bf26",
+    "line": 225,
+    "inclusiveMs": 28843
+  },
+  {
+    "name": "guruV194ExactRecords",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 52809,
+    "inclusiveMs": 27006
+  },
+  {
+    "name": "guruV194Ensure",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 53116,
+    "inclusiveMs": 26755
+  },
+  {
+    "name": "guruV194Ensure",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 59955,
+    "inclusiveMs": 26755
+  },
+  {
+    "name": "guruV194Ensure",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 83744,
+    "inclusiveMs": 26755
+  },
+  {
+    "name": "guruV194SyncLegacy",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 53029,
+    "inclusiveMs": 26691
+  },
+  {
+    "name": "guruV194SelectedProduct",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 53177,
+    "inclusiveMs": 26578
+  },
+  {
+    "name": "guruV194SelectedProduct",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 83762,
+    "inclusiveMs": 26578
+  },
+  {
+    "name": "run",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 2249,
+    "inclusiveMs": 26519
+  },
+  {
+    "name": "guruReadinessInspect",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 2218,
+    "inclusiveMs": 26519
+  },
+  {
+    "name": "",
+    "url": "now-guide.js?v=2.3.526%2B1b98c471bf26",
+    "line": 246,
+    "inclusiveMs": 26414
+  },
+  {
+    "name": "nowGuideGate12Read",
+    "url": "now-guide.js?v=2.3.526%2B1b98c471bf26",
+    "line": 245,
+    "inclusiveMs": 26414
+  },
+  {
+    "name": "guruV194Resolve",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 52860,
+    "inclusiveMs": 25985
+  },
+  {
+    "name": "",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 53076,
+    "inclusiveMs": 25716
+  },
+  {
+    "name": "",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 53079,
+    "inclusiveMs": 25712
+  },
+  {
+    "name": "guruV194Records",
+    "url": "app.js?v=2.3.526%2B1b98c471bf26",
+    "line": 52707,
+    "inclusiveMs": 25213
+  },
+  {
+    "name": "renderGate2Redesign",
+    "url": "gate2-setup-wizard.js?v=2.3.526%2B1b98c471bf26",
+    "line": 493,
+    "inclusiveMs": 24577
+  },
+  {
+    "name": "",
+    "url": "now-guide.js?v=2.3.526%2B1b98c471bf26",
+    "line": 493,
+    "inclusiveMs": 24231
+  },
+  {
+    "name": "nowGuideWithReadPass",
+    "url": "now-guide.js?v=2.3.526%2B1b98c471bf26",
+    "line": 484,
+    "inclusiveMs": 24231
+  }
+]

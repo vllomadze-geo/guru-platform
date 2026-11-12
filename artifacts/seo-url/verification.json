@@ -1,0 +1,35 @@
+{
+  "build": "2.3.526+90afe2181bf6",
+  "filesChangedForThisTask": [
+    "app.js",
+    "styles.css",
+    "scripts/seo-url-transliteration-smoke.mjs"
+  ],
+  "checks": {
+    "seoUrlSmoke": "PASS",
+    "nowGuideSmoke": "PASS (Коричное яблоко)",
+    "build": "PASS, 42 matching assets",
+    "syntax": "PASS",
+    "diffCheck": "PASS"
+  },
+  "sourceUnchanged": true,
+  "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+  "guideTenTransitionsExport": {
+    "same": true,
+    "beforeBytes": 22257842,
+    "afterBytes": 22257842,
+    "beforeSha256": "4da2339541fc43df7c1ef4b52c4521ad13a4536f3132e2e19b199d8a360ba380",
+    "afterSha256": "4da2339541fc43df7c1ef4b52c4521ad13a4536f3132e2e19b199d8a360ba380"
+  },
+  "writesDuringTest": "Only isolated storage in memory. Cloud API requests stubbed.",
+  "sources": [
+    "https://developer.apple.com/design/human-interface-guidelines/buttons",
+    "https://developers.google.com/search/docs/crawling-indexing/url-structure"
+  ],
+  "published": false,
+  "notChecked": [
+    "Safari",
+    "production",
+    "existence of generated pages on the website"
+  ]
+}

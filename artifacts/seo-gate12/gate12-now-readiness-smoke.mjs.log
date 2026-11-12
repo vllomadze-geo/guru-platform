@@ -1,0 +1,19 @@
+Коричное яблоко: тестовая копия загружена
+Переход gate-1 company_demand_positioning
+Переход gate-1 project-comparison
+Переход gate-1 interactive-tool
+Состояние сбоя null
+Ошибки браузера []
+file:///Users/vl/Developer/guru-platform/scripts/gate12-now-readiness-smoke.mjs:65
+    throw new Error(response.exceptionDetails.exception?.description || response.exceptionDetails.text);
+          ^
+
+Error: ReferenceError: nowGuideCurrent is not defined
+    at <anonymous>:2:20
+    at <anonymous>:6:7
+    at evaluate (file:///Users/vl/Developer/guru-platform/scripts/gate12-now-readiness-smoke.mjs:65:11)
+    at async waitFor (file:///Users/vl/Developer/guru-platform/scripts/gate12-now-readiness-smoke.mjs:72:9)
+    at async select (file:///Users/vl/Developer/guru-platform/scripts/gate12-now-readiness-smoke.mjs:142:5)
+    at async file:///Users/vl/Developer/guru-platform/scripts/gate12-now-readiness-smoke.mjs:208:7
+
+Node.js v22.14.0

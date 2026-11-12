@@ -1,0 +1,712 @@
+{
+  "count": 17013,
+  "tinted": [
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 54,
+      "height": 22,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 54,
+      "height": 22,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 54,
+      "height": 22,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 54,
+      "height": 22,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 54,
+      "height": 22,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 54,
+      "height": 22,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 54,
+      "height": 22,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-in_progress",
+      "bg": "rgb(255, 244, 204)",
+      "width": 75,
+      "height": 21,
+      "text": "В работе"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-in_progress",
+      "bg": "rgb(255, 244, 204)",
+      "width": 71,
+      "height": 23,
+      "text": "В работе"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-in_progress",
+      "bg": "rgb(255, 244, 204)",
+      "width": 75,
+      "height": 21,
+      "text": "В работе"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "v22-section-status status-pill status-in_progress",
+      "bg": "rgb(255, 244, 204)",
+      "width": 75,
+      "height": 21,
+      "text": "В работе"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "v22-section-status status-pill status-in_progress",
+      "bg": "rgb(255, 244, 204)",
+      "width": 75,
+      "height": 21,
+      "text": "В работе"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "v22-section-status status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "v22-section-status status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "v22-section-status status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "v22-section-status status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "v22-section-status status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-in_progress",
+      "bg": "rgb(255, 244, 204)",
+      "width": 75,
+      "height": 21,
+      "text": "В работе"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-in_progress",
+      "bg": "rgb(255, 244, 204)",
+      "width": 75,
+      "height": 21,
+      "text": "В работе"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "v22-section-status status-pill status-in_progress",
+      "bg": "rgb(255, 244, 204)",
+      "width": 75,
+      "height": 21,
+      "text": "В работе"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "v22-section-status status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "v22-section-status status-pill status-in_progress",
+      "bg": "rgb(255, 244, 204)",
+      "width": 75,
+      "height": 21,
+      "text": "В работе"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "v22-section-status status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "v22-section-status status-pill status-in_progress",
+      "bg": "rgb(255, 244, 204)",
+      "width": 75,
+      "height": 21,
+      "text": "В работе"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "v22-section-status status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "v22-section-status status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "v22-section-status status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-in_progress",
+      "bg": "rgb(255, 244, 204)",
+      "width": 75,
+      "height": 21,
+      "text": "В работе"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 54,
+      "height": 22,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 54,
+      "height": 22,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 54,
+      "height": 22,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 54,
+      "height": 22,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 54,
+      "height": 22,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 54,
+      "height": 22,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SELECT",
+      "classes": "status-pill status-ready goat-product-status-badge-v515",
+      "bg": "rgb(217, 251, 226)",
+      "width": 132,
+      "height": 30,
+      "text": "Не начато\n    В работе\n    Готово\n "
+    },
+    {
+      "tag": "SELECT",
+      "classes": "status-pill status-ready goat-product-status-badge-v515",
+      "bg": "rgb(217, 251, 226)",
+      "width": 132,
+      "height": 30,
+      "text": "Не начато\n    В работе\n    Готово\n "
+    },
+    {
+      "tag": "SELECT",
+      "classes": "status-pill status-ready goat-product-status-badge-v515",
+      "bg": "rgb(217, 251, 226)",
+      "width": 132,
+      "height": 30,
+      "text": "Не начато\n    В работе\n    Готово\n "
+    },
+    {
+      "tag": "SELECT",
+      "classes": "status-pill status-ready goat-product-status-badge-v515",
+      "bg": "rgb(217, 251, 226)",
+      "width": 132,
+      "height": 30,
+      "text": "Не начато\n    В работе\n    Готово\n "
+    },
+    {
+      "tag": "SELECT",
+      "classes": "status-pill status-problem goat-product-status-badge-v515",
+      "bg": "rgb(220, 38, 38)",
+      "width": 132,
+      "height": 30,
+      "text": "Не начато\n    В работе\n    Готово\n "
+    },
+    {
+      "tag": "SELECT",
+      "classes": "status-pill status-ready goat-product-status-badge-v515",
+      "bg": "rgb(217, 251, 226)",
+      "width": 132,
+      "height": 30,
+      "text": "Не начато\n    В работе\n    Готово\n "
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "gate0-keyword-status-v247",
+      "bg": "rgba(50, 140, 60, 0.14)",
+      "width": 98,
+      "height": 23,
+      "text": "Подтверждено"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "v22-section-status status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "status-pill status-ready",
+      "bg": "rgb(217, 251, 226)",
+      "width": 63,
+      "height": 21,
+      "text": "Готово"
+    },
+    {
+      "tag": "SPAN",
+      "classes": "pv181-group-benchmark-dot-v277",
+      "bg": "rgb(201, 150, 26)",
+      "width": 9,
+      "height": 9,
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "classes": "pv181-group-benchmark-dot-v277",
+      "bg": "rgb(122, 135, 148)",
+      "width": 9,
+      "height": 9,
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "classes": "pv181-group-benchmark-dot-v277",
+      "bg": "rgb(201, 150, 26)",
+      "width": 9,
+      "height": 9,
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "classes": "pv181-group-benchmark-dot-v277",
+      "bg": "rgb(122, 135, 148)",
+      "width": 9,
+      "height": 9,
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "classes": "pv181-group-benchmark-dot-v277",
+      "bg": "rgb(11, 122, 52)",
+      "width": 9,
+      "height": 9,
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "classes": "pv181-group-benchmark-dot-v277",
+      "bg": "rgb(11, 122, 52)",
+      "width": 9,
+      "height": 9,
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "classes": "pv181-group-benchmark-dot-v277",
+      "bg": "rgb(122, 135, 148)",
+      "width": 9,
+      "height": 9,
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "classes": "pv181-group-benchmark-dot-v277",
+      "bg": "rgb(201, 150, 26)",
+      "width": 9,
+      "height": 9,
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "classes": "pv181-group-benchmark-dot-v277",
+      "bg": "rgb(122, 135, 148)",
+      "width": 9,
+      "height": 9,
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "classes": "pv181-group-benchmark-dot-v277",
+      "bg": "rgb(201, 150, 26)",
+      "width": 9,
+      "height": 9,
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "classes": "pv181-group-benchmark-dot-v277",
+      "bg": "rgb(11, 122, 52)",
+      "width": 9,
+      "height": 9,
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "classes": "pv181-group-benchmark-dot-v277",
+      "bg": "rgb(122, 135, 148)",
+      "width": 9,
+      "height": 9,
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "classes": "pv181-group-benchmark-dot-v277",
+      "bg": "rgb(11, 122, 52)",
+      "width": 9,
+      "height": 9,
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "classes": "pv181-group-benchmark-dot-v277",
+      "bg": "rgb(122, 135, 148)",
+      "width": 9,
+      "height": 9,
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "classes": "pv181-group-benchmark-dot-v277",
+      "bg": "rgb(201, 150, 26)",
+      "width": 9,
+      "height": 9,
+      "text": ""
+    }
+  ],
+  "tintedCount": 88,
+  "hub": false,
+  "hubSections": 0
+}

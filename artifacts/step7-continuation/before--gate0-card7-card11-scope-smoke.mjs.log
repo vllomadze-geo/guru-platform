@@ -1,0 +1,9 @@
+file:///private/tmp/guru-step7-before/scripts/gate0-card7-card11-scope-smoke.mjs:11
+  if (!condition) throw new Error(message);
+                        ^
+
+Error: Landing card is not immediately after card-2 inside the product section: {"count":20,"landingCount":1,"companyOrder":["card-1","gate0-project-goal","gate0-company-segmentation","gate0-company-positioning","gate0-company-offer","card-7"],"productOrder":["card-2"],"orderCorrect":false,"status":"not_started","companyDiagnostic":{"title":"Диагностика точки отсчёта · Компания","scope":"company"},"productDiagnostic":{"title":"Диагностика точки отсчёта · Продукт/Услуга","scope":"product"},"megaTitle":"Текущее состояние маркетинговой системы · Компания"}
+    at assert (file:///private/tmp/guru-step7-before/scripts/gate0-card7-card11-scope-smoke.mjs:11:25)
+    at file:///private/tmp/guru-step7-before/scripts/gate0-card7-card11-scope-smoke.mjs:239:3
+
+Node.js v22.14.0

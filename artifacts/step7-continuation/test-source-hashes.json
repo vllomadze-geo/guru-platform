@@ -1,0 +1,961 @@
+[
+  {
+    "test": "category-input-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "80380101df6bebfe49f1d7fb91b013b01a19683a49bf95829a2e4fee86ef2569",
+    "afterSha256": "80380101df6bebfe49f1d7fb91b013b01a19683a49bf95829a2e4fee86ef2569"
+  },
+  {
+    "test": "company-manual-economics-gate4-strict-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "2c1a6e28a2e92cf96e218701e492931dbae1e37cc85657bf3f12a4ff46f3f076",
+    "afterSha256": "2c1a6e28a2e92cf96e218701e492931dbae1e37cc85657bf3f12a4ff46f3f076"
+  },
+  {
+    "test": "export-diagnostics-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "62a62b25d7cf24ecdd95b53c9fab681751ee0643e4da19870377907af6f6ba55",
+    "afterSha256": "62a62b25d7cf24ecdd95b53c9fab681751ee0643e4da19870377907af6f6ba55"
+  },
+  {
+    "test": "gate-navigation-performance-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": true,
+    "beforeSha256": "593d409e04585a6a6bd27e9e11942af1d5a6b1288c43fef95aa1efa4978b6ca4",
+    "afterSha256": "063f66f93eb8e0c14b6eea2a37e5c615e07f0c9eef04008edb7be7533d0bc652"
+  },
+  {
+    "test": "gate0-card7-card11-scope-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "6d7c7c1b06771a2dc55acba22790bb92b5656d91b1192601000b51cc6e1cb192",
+    "afterSha256": "6d7c7c1b06771a2dc55acba22790bb92b5656d91b1192601000b51cc6e1cb192"
+  },
+  {
+    "test": "gate0-company-brand-purpose-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "cf5fb5c23ba43c5b362bb0c7d1cebd18e4d36b744ec8bdf10b7829b056331421",
+    "afterSha256": "cf5fb5c23ba43c5b362bb0c7d1cebd18e4d36b744ec8bdf10b7829b056331421"
+  },
+  {
+    "test": "gate0-company-keyword-foundation-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "eeb0b44e22a728db1d31abe2fa7b13a9b8e4e912aebc1bcc825cac2d9b857a11",
+    "afterSha256": "eeb0b44e22a728db1d31abe2fa7b13a9b8e4e912aebc1bcc825cac2d9b857a11"
+  },
+  {
+    "test": "gate0-company-multiplicity-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "98199b165b79ad49d7301ace5c20e9a9c4be76aab1702553fac2c7325b3c83b8",
+    "afterSha256": "98199b165b79ad49d7301ace5c20e9a9c4be76aab1702553fac2c7325b3c83b8"
+  },
+  {
+    "test": "gate0-company-offer-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "fba4e4f8ea5d4f33cdf718a697b0d0480e20b1d6e9a06e9d7c2172178c7dfc97",
+    "afterSha256": "fba4e4f8ea5d4f33cdf718a697b0d0480e20b1d6e9a06e9d7c2172178c7dfc97"
+  },
+  {
+    "test": "gate0-company-segmentation-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "225c2fa65594fcac93be250aa56699d61c6ae8e099342d3dfacd4a14cc2edbc8",
+    "afterSha256": "225c2fa65594fcac93be250aa56699d61c6ae8e099342d3dfacd4a14cc2edbc8"
+  },
+  {
+    "test": "gate0-company-strategic-foundation-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "7b30c837e8cf576bd418df2f9d1c18d00c6148b31f7bea31d18ec13a6886b662",
+    "afterSha256": "7b30c837e8cf576bd418df2f9d1c18d00c6148b31f7bea31d18ec13a6886b662"
+  },
+  {
+    "test": "gate0-company-strategy-chain-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "01567bbe6da6e341698377d8b3e835c16c6795efb02a8c9aa78a2ba6d7f3849c",
+    "afterSha256": "01567bbe6da6e341698377d8b3e835c16c6795efb02a8c9aa78a2ba6d7f3849c"
+  },
+  {
+    "test": "gate0-gate1-jtbd-source-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "74cdc566191929fb1693b65e404d070cca0bcf1dfdcabd65e4f9e411542e06a3",
+    "afterSha256": "74cdc566191929fb1693b65e404d070cca0bcf1dfdcabd65e4f9e411542e06a3"
+  },
+  {
+    "test": "gate0-keyword-foundation-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "6a0792ff3b7fd9a1c8770b65039829f97662147926e2f734ff941ca5768303e8",
+    "afterSha256": "6a0792ff3b7fd9a1c8770b65039829f97662147926e2f734ff941ca5768303e8"
+  },
+  {
+    "test": "gate0-merged-readiness-smoke.mjs",
+    "existsBefore": false,
+    "changedTest": false,
+    "beforeSha256": null,
+    "afterSha256": "6a07d1431aac0f1a2a3df0b72daa3372a0c5b8a9818e5a32504afd41318a249d"
+  },
+  {
+    "test": "gate0-now-missing-smoke.mjs",
+    "existsBefore": false,
+    "changedTest": false,
+    "beforeSha256": null,
+    "afterSha256": "0f7b2d35f0e5abfea79b1202faf0d6115c1d81eb4a9d1826890cc945863e2f6c"
+  },
+  {
+    "test": "gate0-offer-foundation-source-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "951bc2cf95df87cec9b10b05cd5803b32c637486eb369875d760702c860a4a49",
+    "afterSha256": "951bc2cf95df87cec9b10b05cd5803b32c637486eb369875d760702c860a4a49"
+  },
+  {
+    "test": "gate0-platform-audit-navigation-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "aec5cf7a83a95d6b0dd5e3b37578fbe140504b7356b95008fbeae409b5be298a",
+    "afterSha256": "aec5cf7a83a95d6b0dd5e3b37578fbe140504b7356b95008fbeae409b5be298a"
+  },
+  {
+    "test": "gate0-product-editors-restore-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "ddb2cf38b048c0182c06c8e72e44cbf11971b6d523fb487baf1eb6dce56bce83",
+    "afterSha256": "ddb2cf38b048c0182c06c8e72e44cbf11971b6d523fb487baf1eb6dce56bce83"
+  },
+  {
+    "test": "gate0-product-scope-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "8a980439b9037e701e083a2d2d73a3eb19cdfd81920e96de3333337033002bf9",
+    "afterSha256": "8a980439b9037e701e083a2d2d73a3eb19cdfd81920e96de3333337033002bf9"
+  },
+  {
+    "test": "gate0-unified-readiness-smoke.mjs",
+    "existsBefore": false,
+    "changedTest": false,
+    "beforeSha256": null,
+    "afterSha256": "03e3b6ad151f3e4625e6b5e9961c6ae1f4502cc84883be6636962b75e52385b3"
+  },
+  {
+    "test": "gate1-blog-system-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "ecf3fd4cb085d0a614b495544d51150b9270ff9c96f5a64618767589d7b34f7a",
+    "afterSha256": "ecf3fd4cb085d0a614b495544d51150b9270ff9c96f5a64618767589d7b34f7a"
+  },
+  {
+    "test": "gate1-catalog-audit-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "5ce854ccaa76f565a458967b7ca21a39bd92ed338d76fa55e566d29762afb397",
+    "afterSha256": "5ce854ccaa76f565a458967b7ca21a39bd92ed338d76fa55e566d29762afb397"
+  },
+  {
+    "test": "gate1-category-list-preview-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "e7344b9b0cd0c3242a2e304e099c374f8295b2fc9d84f4309f7736cd37320b21",
+    "afterSha256": "e7344b9b0cd0c3242a2e304e099c374f8295b2fc9d84f4309f7736cd37320b21"
+  },
+  {
+    "test": "gate1-category-move-non-destructive-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "591d8eb0765579384c1b6bdbee590ce7510d9bc81f1841cfd681e3971dc2573d",
+    "afterSha256": "591d8eb0765579384c1b6bdbee590ce7510d9bc81f1841cfd681e3971dc2573d"
+  },
+  {
+    "test": "gate1-company-brand-demand-copy-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "4c9c04bc91879140d627aafb69ba81d75c48d6f16ccc0f189e03063591291dfa",
+    "afterSha256": "4c9c04bc91879140d627aafb69ba81d75c48d6f16ccc0f189e03063591291dfa"
+  },
+  {
+    "test": "gate1-company-brand-demand-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "2f85db721073541a346991f2bc28cf9dba7e4b63937d5998c73c36a4fb66972d",
+    "afterSha256": "2f85db721073541a346991f2bc28cf9dba7e4b63937d5998c73c36a4fb66972d"
+  },
+  {
+    "test": "gate1-company-strategic-foundation-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "3f7738491e9cfd92553c5d5d282c35cb9863581a26217d61dbde04ace03b9b11",
+    "afterSha256": "3f7738491e9cfd92553c5d5d282c35cb9863581a26217d61dbde04ace03b9b11"
+  },
+  {
+    "test": "gate1-company-unified-container-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "f904eed2d70d1270d1542f5e0b318061ff380e681c07886fb8183fd99710118c",
+    "afterSha256": "f904eed2d70d1270d1542f5e0b318061ff380e681c07886fb8183fd99710118c"
+  },
+  {
+    "test": "gate1-comparison-performance-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "2e60e039b3a01ebc93c2109b631c468afa4b82ba454a362928059d79c45d976b",
+    "afterSha256": "2e60e039b3a01ebc93c2109b631c468afa4b82ba454a362928059d79c45d976b"
+  },
+  {
+    "test": "gate1-competitor-bergen-v543-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "c0b7b2ecb76352178fede438ec489a22c5e3d3c14f71b8ff96fbdf03bdaea079",
+    "afterSha256": "c0b7b2ecb76352178fede438ec489a22c5e3d3c14f71b8ff96fbdf03bdaea079"
+  },
+  {
+    "test": "gate1-competitor-table-v540-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "0d298cff1c21ac688ddbad3c47f1cc64e8a7b58f68224177e1d954fcd5cf0e0d",
+    "afterSha256": "0d298cff1c21ac688ddbad3c47f1cc64e8a7b58f68224177e1d954fcd5cf0e0d"
+  },
+  {
+    "test": "gate1-competitor-workflow-v539-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "7140112368595a04237c850c834c7f392828190bfbcd6a8ebe5af1f4c0725aec",
+    "afterSha256": "7140112368595a04237c850c834c7f392828190bfbcd6a8ebe5af1f4c0725aec"
+  },
+  {
+    "test": "gate1-export-self-contained-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "873bc9cfd816cdfee27212567f8bdcbbcd666e97ad1cb72d1b0806531e3b790d",
+    "afterSha256": "873bc9cfd816cdfee27212567f8bdcbbcd666e97ad1cb72d1b0806531e3b790d"
+  },
+  {
+    "test": "gate1-final-keyword-foundation-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "7364baf1c974a253555d7cd4c10bf9c18c07a20e39e290a395b926e3ecb83585",
+    "afterSha256": "7364baf1c974a253555d7cd4c10bf9c18c07a20e39e290a395b926e3ecb83585"
+  },
+  {
+    "test": "gate1-imported-candidates-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "3da9dde31f3b6cd56d18889131972ee2833838c94572b87ce28e1381b7adad44",
+    "afterSha256": "3da9dde31f3b6cd56d18889131972ee2833838c94572b87ce28e1381b7adad44"
+  },
+  {
+    "test": "gate1-pain-product-id-migration-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "152b8b2050e0472844495612c4e702a0b3a7335a399ff289bf5f640bdbd8ffc9",
+    "afterSha256": "152b8b2050e0472844495612c4e702a0b3a7335a399ff289bf5f640bdbd8ffc9"
+  },
+  {
+    "test": "gate1-project-comparison-product-card-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "9c23d098ea716a3765f53cbfe453d7a41d0d9a25360dcb9012170ffa79c05064",
+    "afterSha256": "9c23d098ea716a3765f53cbfe453d7a41d0d9a25360dcb9012170ffa79c05064"
+  },
+  {
+    "test": "gate1-rsya-competitor-domains-v538-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "28591dc67a3c105c2c6d5d516242b13376ae211b805835a2a5d583b23d6f4d6f",
+    "afterSha256": "28591dc67a3c105c2c6d5d516242b13376ae211b805835a2a5d583b23d6f4d6f"
+  },
+  {
+    "test": "gate1-seo-central-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "d9d30a0870b03687329aeed2a04b211d03a2b6109fcf7d2939be2e9e39d559d7",
+    "afterSha256": "d9d30a0870b03687329aeed2a04b211d03a2b6109fcf7d2939be2e9e39d559d7"
+  },
+  {
+    "test": "gate1-seo-guidance-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "d74da8b8bc74f1d4003401fbabe8df84913965d4795cbb3b527ad6fbd948eb8c",
+    "afterSha256": "d74da8b8bc74f1d4003401fbabe8df84913965d4795cbb3b527ad6fbd948eb8c"
+  },
+  {
+    "test": "gate1-seo-interactive-tool-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "b618534439dc0ad0453bdb54ac5f1c09ca84f8972511adf70390fa2bb987c4f6",
+    "afterSha256": "b618534439dc0ad0453bdb54ac5f1c09ca84f8972511adf70390fa2bb987c4f6"
+  },
+  {
+    "test": "gate1-seo-panel-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "d77eb936113b4f1b16f4ce4c74c6862938af3ea62542ed320d33d0d4213efe4f",
+    "afterSha256": "d77eb936113b4f1b16f4ce4c74c6862938af3ea62542ed320d33d0d4213efe4f"
+  },
+  {
+    "test": "gate1-webmaster-qa-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "e9fa465e0b2b0c7bc9c5adfacb284274954f5561d79431b612af274c9c4cae50",
+    "afterSha256": "e9fa465e0b2b0c7bc9c5adfacb284274954f5561d79431b612af274c9c4cae50"
+  },
+  {
+    "test": "gate12-now-readiness-smoke.mjs",
+    "existsBefore": false,
+    "changedTest": false,
+    "beforeSha256": null,
+    "afterSha256": "eabe9271b0b774c7ec6f2b90762a5faff10f0da03617e4f5dc36aab406e57366"
+  },
+  {
+    "test": "gate12-readiness-audit-smoke.mjs",
+    "existsBefore": false,
+    "changedTest": false,
+    "beforeSha256": null,
+    "afterSha256": "8c9214e471a196fecdb6fc6337a5964505081eb04e388543783d0bd4b30d90f6"
+  },
+  {
+    "test": "gate2-company-product-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "ee3cb39088de118ba3460e7b4895adacde0a9d4389062e51870268d142cd55b4",
+    "afterSha256": "ee3cb39088de118ba3460e7b4895adacde0a9d4389062e51870268d142cd55b4"
+  },
+  {
+    "test": "gate2-company-services-smoke.mjs",
+    "existsBefore": false,
+    "changedTest": false,
+    "beforeSha256": null,
+    "afterSha256": "93e92d758c3a46a29c132dbb4acdaa019bfadd33367bd226f19cafbe7630672d"
+  },
+  {
+    "test": "gate2-company-services-step3-smoke.mjs",
+    "existsBefore": false,
+    "changedTest": false,
+    "beforeSha256": null,
+    "afterSha256": "3e9674a47d382b1b1710fdd203ccd9e314e628d79734b68e9e1e88508ed9abff"
+  },
+  {
+    "test": "gate2-company-strategic-foundation-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "77b410454f3fd76942cb59122c0e20626bad742ce194b1819b37e2e92dd290ea",
+    "afterSha256": "77b410454f3fd76942cb59122c0e20626bad742ce194b1819b37e2e92dd290ea"
+  },
+  {
+    "test": "gate2-metrika-company-product-v361-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "8db0498f93e884146d2a80a877fd6afc7c4907841deb72cef1eee11f28323eff",
+    "afterSha256": "8db0498f93e884146d2a80a877fd6afc7c4907841deb72cef1eee11f28323eff"
+  },
+  {
+    "test": "gate2-metrika-company-source-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "5ff2b00e815c20c1e6e5b951d61372a58b0f17e1aa8c6203a2e5f62ab2d928c2",
+    "afterSha256": "5ff2b00e815c20c1e6e5b951d61372a58b0f17e1aa8c6203a2e5f62ab2d928c2"
+  },
+  {
+    "test": "gate2-metrika-goals-quality-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "cf4936b356458fd926ae33a3964224830a7e5b1b17f14af6e4307fda5c6772a8",
+    "afterSha256": "cf4936b356458fd926ae33a3964224830a7e5b1b17f14af6e4307fda5c6772a8"
+  },
+  {
+    "test": "gate2-metrika-product-audit-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "f501f48941222c095b016415e73a8b8ad85b6880386f81674fdc9da2689fdc70",
+    "afterSha256": "f501f48941222c095b016415e73a8b8ad85b6880386f81674fdc9da2689fdc70"
+  },
+  {
+    "test": "gate2-product-services-step4-smoke.mjs",
+    "existsBefore": false,
+    "changedTest": false,
+    "beforeSha256": null,
+    "afterSha256": "c4087aa8efd7e2bb06626374ae92c5e14a48bd217e13c4aaf59d45d29ccfc84f"
+  },
+  {
+    "test": "gate2-service-block-smoke.mjs",
+    "existsBefore": false,
+    "changedTest": false,
+    "beforeSha256": null,
+    "afterSha256": "e525a8611174d15bcaa2da7ecb3aea2928e6dd404cdb4d00a028583f9f03e509"
+  },
+  {
+    "test": "gate2-setup-wizard-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": true,
+    "beforeSha256": "cce648077ea7441db6b5f9ef5f9c00e410361a5276bd3fdcdca62b9fb0b09f60",
+    "afterSha256": "6b3f866f0b626497b7f03d0eb77dec75b0a192531bc673bbc1980b0e48197893"
+  },
+  {
+    "test": "gate2-status-propagation-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "6b87ae5bd89ee3019fb5f8563c17c3e156e427c29a945fb28422177fa55814cc",
+    "afterSha256": "6b87ae5bd89ee3019fb5f8563c17c3e156e427c29a945fb28422177fa55814cc"
+  },
+  {
+    "test": "gate3-execution-map-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "4a7ca1323248fa231df264d2e2e1dfed17e4032b159266ec952f20d0c66980b3",
+    "afterSha256": "4a7ca1323248fa231df264d2e2e1dfed17e4032b159266ec952f20d0c66980b3"
+  },
+  {
+    "test": "gate3-gate4-structure-sync-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "343cb6ceafe486a126918a15c8145edafe614d9ce78e0207939ce3865167fea6",
+    "afterSha256": "343cb6ceafe486a126918a15c8145edafe614d9ce78e0207939ce3865167fea6"
+  },
+  {
+    "test": "gate3-product-journey-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "ec1d1bda37f470d3d368efa6a4e33b4651d48d389efc00e699eaf8ee59f21aa1",
+    "afterSha256": "ec1d1bda37f470d3d368efa6a4e33b4651d48d389efc00e699eaf8ee59f21aa1"
+  },
+  {
+    "test": "gate3-stage-explanations-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "d66a71b65b0d97e2ea789328e14b9ce7dd8f7cea7bb179736f66464936f74a12",
+    "afterSha256": "d66a71b65b0d97e2ea789328e14b9ce7dd8f7cea7bb179736f66464936f74a12"
+  },
+  {
+    "test": "gate34-now-decisions-smoke.mjs",
+    "existsBefore": false,
+    "changedTest": false,
+    "beforeSha256": null,
+    "afterSha256": "e065582ab39741c81cceddf3310876db7816afb257e8533a9390e4c2ec6b7ea1"
+  },
+  {
+    "test": "gate34-now-readiness-smoke.mjs",
+    "existsBefore": false,
+    "changedTest": false,
+    "beforeSha256": null,
+    "afterSha256": "a60e5b324838b12d75aaaa8825297652aad2883fae9cca5fc0e25c68b6158318"
+  },
+  {
+    "test": "gate4-aware-media-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "e23d757d520664a8dfbc8412711260c1d5d9c9ab7c5a22836359f734e01aefb4",
+    "afterSha256": "e23d757d520664a8dfbc8412711260c1d5d9c9ab7c5a22836359f734e01aefb4"
+  },
+  {
+    "test": "gate4-aware-navigation-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "1e62414118f0c1644bcd9c3ad74e2e15184d7e63775c8ac1057ce9dc9e719be3",
+    "afterSha256": "1e62414118f0c1644bcd9c3ad74e2e15184d7e63775c8ac1057ce9dc9e719be3"
+  },
+  {
+    "test": "gate4-company-product-foundation-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "90ea8f63b3147d983b95b50bfa2d68b885cd3076bde74fd05f48246efb975ac0",
+    "afterSha256": "90ea8f63b3147d983b95b50bfa2d68b885cd3076bde74fd05f48246efb975ac0"
+  },
+  {
+    "test": "gate4-company-strategic-foundation-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "a5feccf7f575cd7b3da33a0010c856d87224bda34ec4ed982764f4d609f1491f",
+    "afterSha256": "a5feccf7f575cd7b3da33a0010c856d87224bda34ec4ed982764f4d609f1491f"
+  },
+  {
+    "test": "gate4-duplicate-audit-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "11c17db5a01f21ee391503ac4da7436647478dc7c665e9e4907a31e496348034",
+    "afterSha256": "11c17db5a01f21ee391503ac4da7436647478dc7c665e9e4907a31e496348034"
+  },
+  {
+    "test": "gate4-five-a-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "528d3710c43c0bc4007a311b792b552b9f4f7c083dd504331212ed77189bb1b2",
+    "afterSha256": "528d3710c43c0bc4007a311b792b552b9f4f7c083dd504331212ed77189bb1b2"
+  },
+  {
+    "test": "gate4-funnel-readiness-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "a39311f003d433ce77c8be85a8e1bd8f7746184b4834d84241e56b7bfe936d61",
+    "afterSha256": "a39311f003d433ce77c8be85a8e1bd8f7746184b4834d84241e56b7bfe936d61"
+  },
+  {
+    "test": "gate4-jtbd-link-id-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "f37587e735772c3a74c682bc5a9aa9aa179543aa738cf0a78039f086be2d63e9",
+    "afterSha256": "f37587e735772c3a74c682bc5a9aa9aa179543aa738cf0a78039f086be2d63e9"
+  },
+  {
+    "test": "gate4-paid-smm-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "bec76da7b07f0a18ae25a937930453b48f0ae15d4fa970610b9f8dd57a23bb38",
+    "afterSha256": "bec76da7b07f0a18ae25a937930453b48f0ae15d4fa970610b9f8dd57a23bb38"
+  },
+  {
+    "test": "gate4-product-id-migration-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "d595cbe66c448a2c2c4a3f6e59b5ec74dc388d5cc44969658ebfa58b9fb55478",
+    "afterSha256": "d595cbe66c448a2c2c4a3f6e59b5ec74dc388d5cc44969658ebfa58b9fb55478"
+  },
+  {
+    "test": "gate4-product-smm-calendar-policy-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "6de535cb90532d9a711cd07f6882fdfb7cb805b90ec6118892db3eaa8ac42218",
+    "afterSha256": "6de535cb90532d9a711cd07f6882fdfb7cb805b90ec6118892db3eaa8ac42218"
+  },
+  {
+    "test": "gate4-product-smm-scope-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "b7d11d9407807c581d282c0aa35f2990888f55dc9b9ca1b8f0665ff7cb6ab9b3",
+    "afterSha256": "b7d11d9407807c581d282c0aa35f2990888f55dc9b9ca1b8f0665ff7cb6ab9b3"
+  },
+  {
+    "test": "gate4-product-smm-workspace-v2-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": true,
+    "beforeSha256": "a88a60b0547a9912a68d138a1f95df69304bf918ccb623cd7ab273b700465200",
+    "afterSha256": "68d029b41650e746ae8c6e42eeb16f44562b46a25ce0ce83d0734b95bd7cb764"
+  },
+  {
+    "test": "gate4-readiness-product-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "477ff24de7157bf7790c16fbca9c66b88616416dc40403a389667645935fbdf4",
+    "afterSha256": "477ff24de7157bf7790c16fbca9c66b88616416dc40403a389667645935fbdf4"
+  },
+  {
+    "test": "gate4-rsya-ad-prompt-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "5ba55dedee0f05d7cc2431f36048a04da1bf434f9ee442328d7b6b721bd5a99c",
+    "afterSha256": "5ba55dedee0f05d7cc2431f36048a04da1bf434f9ee442328d7b6b721bd5a99c"
+  },
+  {
+    "test": "gate4-rsya-assets-prompt-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "9626764215b44a55bb57d7c0a18909e3911ebfcd827d73985e4a061e3a3adc82",
+    "afterSha256": "9626764215b44a55bb57d7c0a18909e3911ebfcd827d73985e4a061e3a3adc82"
+  },
+  {
+    "test": "gate4-rsya-builder-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "32ca570a3151542bcbd934f1468c44e6852e805a403a656a58eb0d9080e0d890",
+    "afterSha256": "32ca570a3151542bcbd934f1468c44e6852e805a403a656a58eb0d9080e0d890"
+  },
+  {
+    "test": "gate4-rsya-direct-form-v534-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "8ddf9a915bc9191ae0f2d672ca1145a4b73e5b1c65ea95b5a25bb60ed539811a",
+    "afterSha256": "8ddf9a915bc9191ae0f2d672ca1145a4b73e5b1c65ea95b5a25bb60ed539811a"
+  },
+  {
+    "test": "gate4-rsya-direct-panel-v533-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "f3601de5a51a8ce24cec79767155dd33d7b6f01ee97692d04577254b43be0bb9",
+    "afterSha256": "f3601de5a51a8ce24cec79767155dd33d7b6f01ee97692d04577254b43be0bb9"
+  },
+  {
+    "test": "gate4-rsya-exclusions-v536-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "4255137e7484f1672b805cc8ae7899b572933fbd6781c47aff261f3d5f85d922",
+    "afterSha256": "4255137e7484f1672b805cc8ae7899b572933fbd6781c47aff261f3d5f85d922"
+  },
+  {
+    "test": "gate4-rsya-foundation-source-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "87d386bd1f42f1c7cec1b93017804fbc18b4fad7176d8183abe055717fff2b4b",
+    "afterSha256": "87d386bd1f42f1c7cec1b93017804fbc18b4fad7176d8183abe055717fff2b4b"
+  },
+  {
+    "test": "gate4-rsya-gate1-defaults-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "12a75c1aedc3c2d74a559cb1e9d21aaafb669ffae1b3a89268cef97ab20365a3",
+    "afterSha256": "12a75c1aedc3c2d74a559cb1e9d21aaafb669ffae1b3a89268cef97ab20365a3"
+  },
+  {
+    "test": "gate4-rsya-group-card-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "cb935424f60f4223b71bbf5b1fe54fbc2ee4707a7c11371a185f5659c2052e50",
+    "afterSha256": "cb935424f60f4223b71bbf5b1fe54fbc2ee4707a7c11371a185f5659c2052e50"
+  },
+  {
+    "test": "gate4-rsya-group-launch-v537-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "e171a4b799625e6fb51047f8bfc76fe9736483569eeaae0079a7112bd83cdff6",
+    "afterSha256": "e171a4b799625e6fb51047f8bfc76fe9736483569eeaae0079a7112bd83cdff6"
+  },
+  {
+    "test": "gate4-rsya-guidance-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "4b5fafe6dc33542685b092217b0b005e5a784547b1634c2dd313e452ae34cd27",
+    "afterSha256": "4b5fafe6dc33542685b092217b0b005e5a784547b1634c2dd313e452ae34cd27"
+  },
+  {
+    "test": "gate4-rsya-jtbd-groups-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "7512b609e3fd5fac605adf5edc57c54d55a4d1395ef3ee9291b2dc44a75e5390",
+    "afterSha256": "7512b609e3fd5fac605adf5edc57c54d55a4d1395ef3ee9291b2dc44a75e5390"
+  },
+  {
+    "test": "gate4-rsya-launch-checklist-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "e4c16e726fb19a879eddbb57ddec62f679cbab96865e0bbe920754ef66bdecc9",
+    "afterSha256": "e4c16e726fb19a879eddbb57ddec62f679cbab96865e0bbe920754ef66bdecc9"
+  },
+  {
+    "test": "gate4-rsya-launch-v528-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "5a61773f5064f7ec9b97914b77574d39c9a2e73c79b1cf9f53afa2e03afc4782",
+    "afterSha256": "5a61773f5064f7ec9b97914b77574d39c9a2e73c79b1cf9f53afa2e03afc4782"
+  },
+  {
+    "test": "gate4-rsya-launch-v541-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "0979a606a7df93d479c74f77596184faf3d4e130448c123775cab90db9589835",
+    "afterSha256": "0979a606a7df93d479c74f77596184faf3d4e130448c123775cab90db9589835"
+  },
+  {
+    "test": "gate4-rsya-metrika-link-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "f093564fc3899f3335686a38c2008556fe111fa3ce6ac9b46bb5146fdf611da4",
+    "afterSha256": "f093564fc3899f3335686a38c2008556fe111fa3ce6ac9b46bb5146fdf611da4"
+  },
+  {
+    "test": "gate4-rsya-product-id-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "95834f2497ee101a0c915099d951d2c1b1c302bf2717f06984587feaea08e6c7",
+    "afterSha256": "95834f2497ee101a0c915099d951d2c1b1c302bf2717f06984587feaea08e6c7"
+  },
+  {
+    "test": "gate4-rsya-project-photo-delete-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "422ca975d0c6e1ae703d246d2de5ccd984b468ed158d4d635fcc7bc2fd02070d",
+    "afterSha256": "422ca975d0c6e1ae703d246d2de5ccd984b468ed158d4d635fcc7bc2fd02070d"
+  },
+  {
+    "test": "gate4-rsya-promotion-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "0fc50147751284efa1dbe2e42307cec78f2a3f3dd7aef861ffee4bde57a29721",
+    "afterSha256": "0fc50147751284efa1dbe2e42307cec78f2a3f3dd7aef861ffee4bde57a29721"
+  },
+  {
+    "test": "gate4-rsya-start-method-v532-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "6559f0949bdd3ea2fc014c9d3e279bf293aa998eeb3d6d64c197d9a1fc6e504f",
+    "afterSha256": "6559f0949bdd3ea2fc014c9d3e279bf293aa998eeb3d6d64c197d9a1fc6e504f"
+  },
+  {
+    "test": "gate4-rsya-strategy-v531-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "c657379c579294013969c44b2534b1c6377c9af6ec12332e9ef5b72c2c7522d6",
+    "afterSha256": "c657379c579294013969c44b2534b1c6377c9af6ec12332e9ef5b72c2c7522d6"
+  },
+  {
+    "test": "gate4-rsya-two-step-workflow-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "fa1daf6e610943ec218f1d70faaf9631d466cfaa675669d9843de146fafb8135",
+    "afterSha256": "fa1daf6e610943ec218f1d70faaf9631d466cfaa675669d9843de146fafb8135"
+  },
+  {
+    "test": "gate4-search-duplicate-ownership-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "1fda931f5c151613095d265de5df410f769647a302f8da071a54f219144f9973",
+    "afterSha256": "1fda931f5c151613095d265de5df410f769647a302f8da071a54f219144f9973"
+  },
+  {
+    "test": "gate4-search-gate1-product-source-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "b1d953faa9ca62761ddcded8f6cda972c25ac126968b3b845b966b7048e248e5",
+    "afterSha256": "b1d953faa9ca62761ddcded8f6cda972c25ac126968b3b845b966b7048e248e5"
+  },
+  {
+    "test": "gate4-search-group-fixation-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "dfca50ebe5a4e4a7a8704a9d8897ee4d9d8c491f2d7221a478c1d75ffeb66a21",
+    "afterSha256": "dfca50ebe5a4e4a7a8704a9d8897ee4d9d8c491f2d7221a478c1d75ffeb66a21"
+  },
+  {
+    "test": "gate4-search-group-metrics-import-export-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "88bee725c4fb031e295ebd8f73e6a58f8fde99b4f16462bc61c1cf81ca3692f8",
+    "afterSha256": "88bee725c4fb031e295ebd8f73e6a58f8fde99b4f16462bc61c1cf81ca3692f8"
+  },
+  {
+    "test": "gate4-search-jtbd-audience-forecast-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "3ee1cd87ad8f503366f787cf5794f0f3742250176f2a9c7d4e75e98ca0eeee13",
+    "afterSha256": "3ee1cd87ad8f503366f787cf5794f0f3742250176f2a9c7d4e75e98ca0eeee13"
+  },
+  {
+    "test": "gate4-search-jtbd-readiness-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "1cba27c59d95582ac1dfade49019589e498dd3dc7805c1e844d34cc931d5060d",
+    "afterSha256": "1cba27c59d95582ac1dfade49019589e498dd3dc7805c1e844d34cc931d5060d"
+  },
+  {
+    "test": "gate4-search-launch-summary-period-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "95d59b17203fd8289d44bd444c46fda17f5a8b2af87f43f0df500445e4d55c17",
+    "afterSha256": "95d59b17203fd8289d44bd444c46fda17f5a8b2af87f43f0df500445e4d55c17"
+  },
+  {
+    "test": "gate4-search-launch-visibility-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "c1e0074c9b2427f85a147ccb56b826849c373bb284b318a474b1ac09f32ba7cb",
+    "afterSha256": "c1e0074c9b2427f85a147ccb56b826849c373bb284b318a474b1ac09f32ba7cb"
+  },
+  {
+    "test": "gate4-search-save-export-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "9b48eaae8176b45ed89a5003e6f089d8b3bea349615d1099c1a9360a28662bfe",
+    "afterSha256": "9b48eaae8176b45ed89a5003e6f089d8b3bea349615d1099c1a9360a28662bfe"
+  },
+  {
+    "test": "gate4-smm-campaign-key-guard-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "3b3c4542cf6af2b3daba0bbf98661c4b6251913529c024db9a9ca33ebe387786",
+    "afterSha256": "3b3c4542cf6af2b3daba0bbf98661c4b6251913529c024db9a9ca33ebe387786"
+  },
+  {
+    "test": "gate4-smm-content-system-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "4ba16f5a06fa5c7e5579f67c745151013ce6ae3d5186a1632e03d8daf957cc38",
+    "afterSha256": "4ba16f5a06fa5c7e5579f67c745151013ce6ae3d5186a1632e03d8daf957cc38"
+  },
+  {
+    "test": "gate4-smm-digestion-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "ec95a1f2fbe059e1b5794265eabcb956be035cc7d017f056e6a4239678e84e90",
+    "afterSha256": "ec95a1f2fbe059e1b5794265eabcb956be035cc7d017f056e6a4239678e84e90"
+  },
+  {
+    "test": "gate4-smm-material-foundation-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "f312648f731096e594f689eaa6402d890231791ad33200dead5040b1b73b1612",
+    "afterSha256": "f312648f731096e594f689eaa6402d890231791ad33200dead5040b1b73b1612"
+  },
+  {
+    "test": "gate4-smm-scenario-smoke.mjs",
+    "existsBefore": false,
+    "changedTest": false,
+    "beforeSha256": null,
+    "afterSha256": "d081864dc0df39f2faa04782e4235fb07a46e2303700d8dcacf5ace204b97a5b"
+  },
+  {
+    "test": "gate4-smm-strategy-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "3c890067df79a96f08ba31349711772c6289a3f611cdd515aa8ed00b0d31d994",
+    "afterSha256": "3c890067df79a96f08ba31349711772c6289a3f611cdd515aa8ed00b0d31d994"
+  },
+  {
+    "test": "gate4-stage-explanations-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "a2142c5a6434e2584917249f0b8ae94631ecbf70b651d252b69896fd51b6a222",
+    "afterSha256": "a2142c5a6434e2584917249f0b8ae94631ecbf70b651d252b69896fd51b6a222"
+  },
+  {
+    "test": "gate4-upstream-integration-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "38d04726658acf511d3fda194c4cbd6d78253340376eaa26d724bbf19df4a863",
+    "afterSha256": "38d04726658acf511d3fda194c4cbd6d78253340376eaa26d724bbf19df4a863"
+  },
+  {
+    "test": "gate4-upstream-links-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "d7796559c20fd4be84e6a40d9a7ecb2da418dc823d0dd94f82bcf9795350f41a",
+    "afterSha256": "d7796559c20fd4be84e6a40d9a7ecb2da418dc823d0dd94f82bcf9795350f41a"
+  },
+  {
+    "test": "gate5-snapshot-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "c2bb27e15e62673f9f4ddac018954514dbe3b586adde729095fa5f9eeb96244a",
+    "afterSha256": "c2bb27e15e62673f9f4ddac018954514dbe3b586adde729095fa5f9eeb96244a"
+  },
+  {
+    "test": "gate6-company-strategic-foundation-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "3e0ac49e179a204e6a01e51df255494401a0b10321a2aadc72f6e37754470d2c",
+    "afterSha256": "3e0ac49e179a204e6a01e51df255494401a0b10321a2aadc72f6e37754470d2c"
+  },
+  {
+    "test": "gate7-company-strategic-foundation-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "64644ea97b81055a46990e56c6c027f8428cd5f30ab1acd6c8f2a49e6624db1f",
+    "afterSha256": "64644ea97b81055a46990e56c6c027f8428cd5f30ab1acd6c8f2a49e6624db1f"
+  },
+  {
+    "test": "gate8-browser-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "bd476fde9e5b57bba44b1a6f7f4a87298e4b11fa059caf8ba41952503526ec98",
+    "afterSha256": "bd476fde9e5b57bba44b1a6f7f4a87298e4b11fa059caf8ba41952503526ec98"
+  },
+  {
+    "test": "gate8-compact-workbench-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "da2742c1ce05642b6ff2638d6b059c558a3d733eabce69a2fbabfca552b2c691",
+    "afterSha256": "da2742c1ce05642b6ff2638d6b059c558a3d733eabce69a2fbabfca552b2c691"
+  },
+  {
+    "test": "gate8-ui-integration-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": true,
+    "beforeSha256": "bb316cdb39a1070e74aeb333022408b0d8da8e5287a10cd687ba2216bee27d72",
+    "afterSha256": "a6239c6817e812ac0358beec98105c444ea7015b4b0048d9ff740fec3586ed67"
+  },
+  {
+    "test": "gates-3-5-6-7-8-product-scope-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "1685d8a43c90e5a417f418f26fd7e774dd92be51c064e1b54dfd8fa247fd9fd6",
+    "afterSha256": "1685d8a43c90e5a417f418f26fd7e774dd92be51c064e1b54dfd8fa247fd9fd6"
+  },
+  {
+    "test": "local-storage-only-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "f4c72413b20d510e4a5e7ee98a874f2dccae88aa6824d415e6e30f2ea72e81f4",
+    "afterSha256": "f4c72413b20d510e4a5e7ee98a874f2dccae88aa6824d415e6e30f2ea72e81f4"
+  },
+  {
+    "test": "navigation-url-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "d0f61ee5f1ce5f92e1b53749a8c5fa47f54fd0e13a983bd1c7a7881da9eae52b",
+    "afterSha256": "d0f61ee5f1ce5f92e1b53749a8c5fa47f54fd0e13a983bd1c7a7881da9eae52b"
+  },
+  {
+    "test": "now-guide-smoke.mjs",
+    "existsBefore": false,
+    "changedTest": false,
+    "beforeSha256": null,
+    "afterSha256": "5589a162c6241868cdd5dad9ea94fb9d82bbe54b7de4a93fef174c6a35dd4daf"
+  },
+  {
+    "test": "other-project-now-guide-smoke.mjs",
+    "existsBefore": false,
+    "changedTest": false,
+    "beforeSha256": null,
+    "afterSha256": "3ef0aa30fbe1d56a0aed8df75543de6c102cdba9f69d3b49565262be75bd3a14"
+  },
+  {
+    "test": "preflight-now-guide-smoke.mjs",
+    "existsBefore": false,
+    "changedTest": false,
+    "beforeSha256": null,
+    "afterSha256": "795f9a0a5241c9c24331cc7ed8d70d24fd25f16ece51eda305f43ce578049f15"
+  },
+  {
+    "test": "product-card-seven-blocks-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "23bc3dd60d0a88dbdb98005b806c2d1c268209e19118f3575fd76d2ed885d5d5",
+    "afterSha256": "23bc3dd60d0a88dbdb98005b806c2d1c268209e19118f3575fd76d2ed885d5d5"
+  },
+  {
+    "test": "product-card-unified-template-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "a6da09f798ac1577ff7f969f9d24eb90da71f77ec7b241361919b05b3f994fbc",
+    "afterSha256": "a6da09f798ac1577ff7f969f9d24eb90da71f77ec7b241361919b05b3f994fbc"
+  },
+  {
+    "test": "project-passport-baseline-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": true,
+    "beforeSha256": "a412b4f5264afa3178d56fa7abc653fa1f0e900fbf88ccf6c51679bb3d67dd4d",
+    "afterSha256": "a37d337abf0fd058c7807d2af4c163631e84d2ea02b2456925b3fcaeedab21f1"
+  },
+  {
+    "test": "strategic-foundation-hierarchy-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "16d5488de02bcac4cd867ec235a0f36825115908bf5cf0e457d4f44b5e1d4431",
+    "afterSha256": "16d5488de02bcac4cd867ec235a0f36825115908bf5cf0e457d4f44b5e1d4431"
+  },
+  {
+    "test": "strategic-foundation-segments-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "2e6a54fb5fcc06118ae9e4c63c583dd22e873da228a9a596356717c63e2aa901",
+    "afterSha256": "2e6a54fb5fcc06118ae9e4c63c583dd22e873da228a9a596356717c63e2aa901"
+  },
+  {
+    "test": "workspace-sync-egress-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "1a7a04fec0e0f7a92a5930795a1ab8bf474c8dcd66a8e4299db2c93958dd375c",
+    "afterSha256": "1a7a04fec0e0f7a92a5930795a1ab8bf474c8dcd66a8e4299db2c93958dd375c"
+  },
+  {
+    "test": "workspace-sync-retry-smoke.mjs",
+    "existsBefore": true,
+    "changedTest": false,
+    "beforeSha256": "b18d8c0a3cccce2640133403ca1f0ab6f7f234905023002d5c09dae9ada55ae4",
+    "afterSha256": "b18d8c0a3cccce2640133403ca1f0ab6f7f234905023002d5c09dae9ada55ae4"
+  }
+]

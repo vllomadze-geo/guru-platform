@@ -1,0 +1,260 @@
+Loading fixture: http://127.0.0.1:9531/
+Fixture ready
+{
+  "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+  "after": {
+    "baseline": {
+      "answers": [
+        {
+          "key": "collectsPersonalDataV1",
+          "present": false,
+          "value": null
+        },
+        {
+          "key": "siteCheckoutV1",
+          "present": false,
+          "value": null
+        }
+      ],
+      "readiness": {
+        "total": 9,
+        "done": 8,
+        "ready": 8,
+        "notRequired": 0,
+        "inProgress": 1,
+        "problem": 0,
+        "notStarted": 0,
+        "percent": 94
+      },
+      "step": 8,
+      "M": 95,
+      "current": "gate-0:card::card-7",
+      "rows": [
+        {
+          "id": "card-1",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-project-goal",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-company-brand-purpose",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-company-segmentation",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-company-positioning",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-company-offer",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-company-keyword-foundation",
+          "status": "ready"
+        },
+        {
+          "id": "card-7",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-2",
+          "status": "ready"
+        }
+      ],
+      "missing": [
+        "Доставка и оплата: URL"
+      ]
+    },
+    "cases": [],
+    "build": "2.3.526+689b8c6f275b"
+  },
+  "pure": {
+    "cases": [
+      {
+        "personal": true,
+        "order": true,
+        "total": 6,
+        "done": 6,
+        "ready": true,
+        "unchanged": true,
+        "cookie": true
+      },
+      {
+        "personal": true,
+        "order": false,
+        "total": 3,
+        "done": 3,
+        "ready": true,
+        "unchanged": true,
+        "cookie": true
+      },
+      {
+        "personal": false,
+        "order": true,
+        "total": 5,
+        "done": 5,
+        "ready": true,
+        "unchanged": true,
+        "cookie": false
+      },
+      {
+        "personal": false,
+        "order": false,
+        "total": 2,
+        "done": 2,
+        "ready": true,
+        "unchanged": true,
+        "cookie": false
+      }
+    ],
+    "renderUnchanged": true,
+    "html": true,
+    "emptyUnchanged": true
+  },
+  "disclosureReadOnly": true,
+  "ui": [
+    {
+      "personal": true,
+      "order": true,
+      "total": 6,
+      "done": 1,
+      "ready": false,
+      "ids": [
+        "delivery",
+        "company_details",
+        "privacy",
+        "cookie_banner",
+        "data_consent",
+        "offer",
+        "returns"
+      ],
+      "staticUnneeded": true,
+      "fundamentalEditors": 1,
+      "deliveryEditor": true,
+      "cookieText": "Блок «Cookie-баннер» в Gate 1",
+      "summary": "Нужно страниц: 6 · URL указан: 1 из 6",
+      "urls": "{\"fixed\":{\"home\":\"https://k-apple.ru/\",\"catalog\":\"https://k-apple.ru/katalog-podarkov\",\"privacy\":\"https://k-apple.ru/politika\",\"contacts\":\"https://k-apple.ru/contacts\",\"about\":\"https://k-apple.ru/onas\",\"thank_you\":\"http://k-apple.ru/thankyou\",\"on_order\":\"https://k-apple.ru/individualnyj_zakaz\"},\"categories\":{\"product-1786401011698-231009\":\"avtorskaya-odezhda\",\"product-1786401011698-981bb3\":\"zhivopis-i-grafika\",\"product-1786401011698-9e81ee\":\"dizajnerskie-podarki\",\"product-1786401011698-96355e\":\"dom-i-servirovka\",\"product-1786401011698-bd5754\":\"ukrashenie-doma\",\"platform-page-1790858796945-b73ebf\":\"https://k-apple.ru/novogodnie-podarki-2027\",\"product-1786401011698-bf5af0\":\"https://k-apple.ru/individualnyj_zakaz\"},\"products\":{\"catalog-item-1786792591872-c8b1e9\":\"https://k-apple.ru/polka#rec797841767463\",\"catalog-item-1786792591872-51f503\":\"https://k-apple.ru/simvol-2027-koza\"},\"custom\":{},\"missingCategoryIds\":[],\"onOrderCategoryId\":\"product-1786401011698-bf5af0\",\"migrationConflicts\":[{\"key\":\"categories:product-1786401011698-231009\",\"selected\":\"avtorskaya-odezhda\",\"candidates\":[{\"source\":\"card-22.pageRows[0].url\",\"url\":\"avtorskaya-odezhda\"},{\"source\":\"productBindingsV185.product-1786401011698-231009.landing.url\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416066461\"},{\"source\":\"robotsV130.card-14.Авторская одежда\",\"url\":\"avtorskaya-odezhda\"}]},{\"key\":\"categories:product-1786401011698-981bb3\",\"selected\":\"zhivopis-i-grafika\",\"candidates\":[{\"source\":\"card-22.pageRows[1].url\",\"url\":\"zhivopis-i-grafika\"},{\"source\":\"productBindingsV185.product-1786401011698-981bb3.landing.url\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416060871\"},{\"source\":\"robotsV130.card-14.Живопись и графика\",\"url\":\"zhivopis-i-grafika\"}]},{\"key\":\"categories:product-1786401011698-9e81ee\",\"selected\":\"dizajnerskie-podarki\",\"candidates\":[{\"source\":\"card-22.pageRows[2].url\",\"url\":\"dizajnerskie-podarki\"},{\"source\":\"productBindingsV185.product-1786401011698-9e81ee.landing.url\",\"url\":\"https://k-apple.ru/simvol-2027-koza\"},{\"source\":\"robotsV130.card-14.Дизайнерские подарки\",\"url\":\"dizajnerskie-podarki\"}]},{\"key\":\"categories:product-1786401011698-96355e\",\"selected\":\"dom-i-servirovka\",\"candidates\":[{\"source\":\"card-22.pageRows[3].url\",\"url\":\"dom-i-servirovka\"},{\"source\":\"productBindingsV185.product-1786401011698-96355e.landing.url\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416056631\"},{\"source\":\"robotsV130.card-14.Дом и сервировка\",\"url\":\"dom-i-servirovka\"}]},{\"key\":\"categories:product-1786401011698-bd5754\",\"selected\":\"ukrashenie-doma\",\"candidates\":[{\"source\":\"card-22.pageRows[4].url\",\"url\":\"ukrashenie-doma\"},{\"source\":\"productBindingsV185.product-1786401011698-bd5754.landing.url\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416064251\"},{\"source\":\"robotsV130.card-14.Украшение дома\",\"url\":\"ukrashenie-doma\"}]}],\"unmappedLegacyUrls\":[{\"source\":\"card-23.pageRows[0].url\",\"url\":\"https://k-apple.ru/individualnyj_zakaz\",\"reason\":\"У страницы нет стабильной связи с ключом Платформы\"},{\"source\":\"gate4Rsya.catalog_item_1786792591872_51f503.rsya-group-1788714688153-be477b\",\"url\":\"https://k-apple.ru/simvol-2027-koza\",\"reason\":\"Нет product_id\"},{\"source\":\"robotsV130.card-14.На заказ\",\"url\":\"https://k-apple.ru/individualnyj_zakaz\",\"reason\":\"Нет product_id в каталоге\"},{\"source\":\"robotsV130.card-14.Новогодние подарки 2027\",\"url\":\"https://k-apple.ru/novogodnie-podarki-2027\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Страница «Спасибо»\",\"url\":\"http://k-apple.ru/thankyou\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Форма заявки / корзина\",\"url\":\"https://k-apple.ru/contacts\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Посадочная: На заказ\",\"url\":\"https://k-apple.ru/individualnyj_zakaz\",\"reason\":\"Нет product_id в каталоге\"},{\"source\":\"robotsV130.card-14.Посадочная: Украшение дома\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416064251\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Посадочная: Дом и сервировка\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416056631\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Посадочная: Авторская одежда\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416066461\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Посадочная: Живопись и графика\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416060871\",\"reason\":\"Нет стабильной связи со страницей Платформы\"}],\"unresolvedReferences\":[{\"source\":\"linkBank[4].url\",\"url\":\"1\"},{\"source\":\"linkBank[5].url\",\"url\":\"12\"},{\"source\":\"linkBank[6].url\",\"url\":\"123\"},{\"source\":\"linkBank[8].url\",\"url\":\"https://k-apple.ru/robots.txt\"}],\"migratedAt\":\"2026-09-30T15:40:41.762Z\",\"missingCategoryGeneratedIds\":[],\"optionalOnOrderMigratedV2\":true}"
+    },
+    {
+      "personal": true,
+      "order": false,
+      "total": 3,
+      "done": 1,
+      "ready": false,
+      "ids": [
+        "delivery",
+        "company_details",
+        "privacy",
+        "cookie_banner",
+        "data_consent",
+        "offer",
+        "returns"
+      ],
+      "staticUnneeded": true,
+      "fundamentalEditors": 0,
+      "deliveryEditor": false,
+      "cookieText": "Блок «Cookie-баннер» в Gate 1",
+      "summary": "Нужно страниц: 3 · URL указан: 1 из 3",
+      "urls": "{\"fixed\":{\"home\":\"https://k-apple.ru/\",\"catalog\":\"https://k-apple.ru/katalog-podarkov\",\"privacy\":\"https://k-apple.ru/politika\",\"contacts\":\"https://k-apple.ru/contacts\",\"about\":\"https://k-apple.ru/onas\",\"thank_you\":\"http://k-apple.ru/thankyou\",\"on_order\":\"https://k-apple.ru/individualnyj_zakaz\"},\"categories\":{\"product-1786401011698-231009\":\"avtorskaya-odezhda\",\"product-1786401011698-981bb3\":\"zhivopis-i-grafika\",\"product-1786401011698-9e81ee\":\"dizajnerskie-podarki\",\"product-1786401011698-96355e\":\"dom-i-servirovka\",\"product-1786401011698-bd5754\":\"ukrashenie-doma\",\"platform-page-1790858796945-b73ebf\":\"https://k-apple.ru/novogodnie-podarki-2027\",\"product-1786401011698-bf5af0\":\"https://k-apple.ru/individualnyj_zakaz\"},\"products\":{\"catalog-item-1786792591872-c8b1e9\":\"https://k-apple.ru/polka#rec797841767463\",\"catalog-item-1786792591872-51f503\":\"https://k-apple.ru/simvol-2027-koza\"},\"custom\":{},\"missingCategoryIds\":[],\"onOrderCategoryId\":\"product-1786401011698-bf5af0\",\"migrationConflicts\":[{\"key\":\"categories:product-1786401011698-231009\",\"selected\":\"avtorskaya-odezhda\",\"candidates\":[{\"source\":\"card-22.pageRows[0].url\",\"url\":\"avtorskaya-odezhda\"},{\"source\":\"productBindingsV185.product-1786401011698-231009.landing.url\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416066461\"},{\"source\":\"robotsV130.card-14.Авторская одежда\",\"url\":\"avtorskaya-odezhda\"}]},{\"key\":\"categories:product-1786401011698-981bb3\",\"selected\":\"zhivopis-i-grafika\",\"candidates\":[{\"source\":\"card-22.pageRows[1].url\",\"url\":\"zhivopis-i-grafika\"},{\"source\":\"productBindingsV185.product-1786401011698-981bb3.landing.url\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416060871\"},{\"source\":\"robotsV130.card-14.Живопись и графика\",\"url\":\"zhivopis-i-grafika\"}]},{\"key\":\"categories:product-1786401011698-9e81ee\",\"selected\":\"dizajnerskie-podarki\",\"candidates\":[{\"source\":\"card-22.pageRows[2].url\",\"url\":\"dizajnerskie-podarki\"},{\"source\":\"productBindingsV185.product-1786401011698-9e81ee.landing.url\",\"url\":\"https://k-apple.ru/simvol-2027-koza\"},{\"source\":\"robotsV130.card-14.Дизайнерские подарки\",\"url\":\"dizajnerskie-podarki\"}]},{\"key\":\"categories:product-1786401011698-96355e\",\"selected\":\"dom-i-servirovka\",\"candidates\":[{\"source\":\"card-22.pageRows[3].url\",\"url\":\"dom-i-servirovka\"},{\"source\":\"productBindingsV185.product-1786401011698-96355e.landing.url\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416056631\"},{\"source\":\"robotsV130.card-14.Дом и сервировка\",\"url\":\"dom-i-servirovka\"}]},{\"key\":\"categories:product-1786401011698-bd5754\",\"selected\":\"ukrashenie-doma\",\"candidates\":[{\"source\":\"card-22.pageRows[4].url\",\"url\":\"ukrashenie-doma\"},{\"source\":\"productBindingsV185.product-1786401011698-bd5754.landing.url\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416064251\"},{\"source\":\"robotsV130.card-14.Украшение дома\",\"url\":\"ukrashenie-doma\"}]}],\"unmappedLegacyUrls\":[{\"source\":\"card-23.pageRows[0].url\",\"url\":\"https://k-apple.ru/individualnyj_zakaz\",\"reason\":\"У страницы нет стабильной связи с ключом Платформы\"},{\"source\":\"gate4Rsya.catalog_item_1786792591872_51f503.rsya-group-1788714688153-be477b\",\"url\":\"https://k-apple.ru/simvol-2027-koza\",\"reason\":\"Нет product_id\"},{\"source\":\"robotsV130.card-14.На заказ\",\"url\":\"https://k-apple.ru/individualnyj_zakaz\",\"reason\":\"Нет product_id в каталоге\"},{\"source\":\"robotsV130.card-14.Новогодние подарки 2027\",\"url\":\"https://k-apple.ru/novogodnie-podarki-2027\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Страница «Спасибо»\",\"url\":\"http://k-apple.ru/thankyou\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Форма заявки / корзина\",\"url\":\"https://k-apple.ru/contacts\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Посадочная: На заказ\",\"url\":\"https://k-apple.ru/individualnyj_zakaz\",\"reason\":\"Нет product_id в каталоге\"},{\"source\":\"robotsV130.card-14.Посадочная: Украшение дома\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416064251\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Посадочная: Дом и сервировка\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416056631\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Посадочная: Авторская одежда\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416066461\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Посадочная: Живопись и графика\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416060871\",\"reason\":\"Нет стабильной связи со страницей Платформы\"}],\"unresolvedReferences\":[{\"source\":\"linkBank[4].url\",\"url\":\"1\"},{\"source\":\"linkBank[5].url\",\"url\":\"12\"},{\"source\":\"linkBank[6].url\",\"url\":\"123\"},{\"source\":\"linkBank[8].url\",\"url\":\"https://k-apple.ru/robots.txt\"}],\"migratedAt\":\"2026-09-30T15:40:41.762Z\",\"missingCategoryGeneratedIds\":[],\"optionalOnOrderMigratedV2\":true}"
+    },
+    {
+      "personal": false,
+      "order": true,
+      "total": 5,
+      "done": 1,
+      "ready": false,
+      "ids": [
+        "delivery",
+        "company_details",
+        "privacy",
+        "data_consent",
+        "offer",
+        "returns"
+      ],
+      "staticUnneeded": true,
+      "fundamentalEditors": 1,
+      "deliveryEditor": true,
+      "cookieText": "",
+      "summary": "Нужно страниц: 5 · URL указан: 1 из 5",
+      "urls": "{\"fixed\":{\"home\":\"https://k-apple.ru/\",\"catalog\":\"https://k-apple.ru/katalog-podarkov\",\"privacy\":\"https://k-apple.ru/politika\",\"contacts\":\"https://k-apple.ru/contacts\",\"about\":\"https://k-apple.ru/onas\",\"thank_you\":\"http://k-apple.ru/thankyou\",\"on_order\":\"https://k-apple.ru/individualnyj_zakaz\"},\"categories\":{\"product-1786401011698-231009\":\"avtorskaya-odezhda\",\"product-1786401011698-981bb3\":\"zhivopis-i-grafika\",\"product-1786401011698-9e81ee\":\"dizajnerskie-podarki\",\"product-1786401011698-96355e\":\"dom-i-servirovka\",\"product-1786401011698-bd5754\":\"ukrashenie-doma\",\"platform-page-1790858796945-b73ebf\":\"https://k-apple.ru/novogodnie-podarki-2027\",\"product-1786401011698-bf5af0\":\"https://k-apple.ru/individualnyj_zakaz\"},\"products\":{\"catalog-item-1786792591872-c8b1e9\":\"https://k-apple.ru/polka#rec797841767463\",\"catalog-item-1786792591872-51f503\":\"https://k-apple.ru/simvol-2027-koza\"},\"custom\":{},\"missingCategoryIds\":[],\"onOrderCategoryId\":\"product-1786401011698-bf5af0\",\"migrationConflicts\":[{\"key\":\"categories:product-1786401011698-231009\",\"selected\":\"avtorskaya-odezhda\",\"candidates\":[{\"source\":\"card-22.pageRows[0].url\",\"url\":\"avtorskaya-odezhda\"},{\"source\":\"productBindingsV185.product-1786401011698-231009.landing.url\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416066461\"},{\"source\":\"robotsV130.card-14.Авторская одежда\",\"url\":\"avtorskaya-odezhda\"}]},{\"key\":\"categories:product-1786401011698-981bb3\",\"selected\":\"zhivopis-i-grafika\",\"candidates\":[{\"source\":\"card-22.pageRows[1].url\",\"url\":\"zhivopis-i-grafika\"},{\"source\":\"productBindingsV185.product-1786401011698-981bb3.landing.url\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416060871\"},{\"source\":\"robotsV130.card-14.Живопись и графика\",\"url\":\"zhivopis-i-grafika\"}]},{\"key\":\"categories:product-1786401011698-9e81ee\",\"selected\":\"dizajnerskie-podarki\",\"candidates\":[{\"source\":\"card-22.pageRows[2].url\",\"url\":\"dizajnerskie-podarki\"},{\"source\":\"productBindingsV185.product-1786401011698-9e81ee.landing.url\",\"url\":\"https://k-apple.ru/simvol-2027-koza\"},{\"source\":\"robotsV130.card-14.Дизайнерские подарки\",\"url\":\"dizajnerskie-podarki\"}]},{\"key\":\"categories:product-1786401011698-96355e\",\"selected\":\"dom-i-servirovka\",\"candidates\":[{\"source\":\"card-22.pageRows[3].url\",\"url\":\"dom-i-servirovka\"},{\"source\":\"productBindingsV185.product-1786401011698-96355e.landing.url\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416056631\"},{\"source\":\"robotsV130.card-14.Дом и сервировка\",\"url\":\"dom-i-servirovka\"}]},{\"key\":\"categories:product-1786401011698-bd5754\",\"selected\":\"ukrashenie-doma\",\"candidates\":[{\"source\":\"card-22.pageRows[4].url\",\"url\":\"ukrashenie-doma\"},{\"source\":\"productBindingsV185.product-1786401011698-bd5754.landing.url\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416064251\"},{\"source\":\"robotsV130.card-14.Украшение дома\",\"url\":\"ukrashenie-doma\"}]}],\"unmappedLegacyUrls\":[{\"source\":\"card-23.pageRows[0].url\",\"url\":\"https://k-apple.ru/individualnyj_zakaz\",\"reason\":\"У страницы нет стабильной связи с ключом Платформы\"},{\"source\":\"gate4Rsya.catalog_item_1786792591872_51f503.rsya-group-1788714688153-be477b\",\"url\":\"https://k-apple.ru/simvol-2027-koza\",\"reason\":\"Нет product_id\"},{\"source\":\"robotsV130.card-14.На заказ\",\"url\":\"https://k-apple.ru/individualnyj_zakaz\",\"reason\":\"Нет product_id в каталоге\"},{\"source\":\"robotsV130.card-14.Новогодние подарки 2027\",\"url\":\"https://k-apple.ru/novogodnie-podarki-2027\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Страница «Спасибо»\",\"url\":\"http://k-apple.ru/thankyou\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Форма заявки / корзина\",\"url\":\"https://k-apple.ru/contacts\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Посадочная: На заказ\",\"url\":\"https://k-apple.ru/individualnyj_zakaz\",\"reason\":\"Нет product_id в каталоге\"},{\"source\":\"robotsV130.card-14.Посадочная: Украшение дома\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416064251\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Посадочная: Дом и сервировка\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416056631\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Посадочная: Авторская одежда\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416066461\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Посадочная: Живопись и графика\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416060871\",\"reason\":\"Нет стабильной связи со страницей Платформы\"}],\"unresolvedReferences\":[{\"source\":\"linkBank[4].url\",\"url\":\"1\"},{\"source\":\"linkBank[5].url\",\"url\":\"12\"},{\"source\":\"linkBank[6].url\",\"url\":\"123\"},{\"source\":\"linkBank[8].url\",\"url\":\"https://k-apple.ru/robots.txt\"}],\"migratedAt\":\"2026-09-30T15:40:41.762Z\",\"missingCategoryGeneratedIds\":[],\"optionalOnOrderMigratedV2\":true}"
+    },
+    {
+      "personal": false,
+      "order": false,
+      "total": 2,
+      "done": 1,
+      "ready": false,
+      "ids": [
+        "delivery",
+        "company_details",
+        "privacy",
+        "data_consent",
+        "offer",
+        "returns"
+      ],
+      "staticUnneeded": true,
+      "fundamentalEditors": 0,
+      "deliveryEditor": false,
+      "cookieText": "",
+      "summary": "Нужно страниц: 2 · URL указан: 1 из 2",
+      "urls": "{\"fixed\":{\"home\":\"https://k-apple.ru/\",\"catalog\":\"https://k-apple.ru/katalog-podarkov\",\"privacy\":\"https://k-apple.ru/politika\",\"contacts\":\"https://k-apple.ru/contacts\",\"about\":\"https://k-apple.ru/onas\",\"thank_you\":\"http://k-apple.ru/thankyou\",\"on_order\":\"https://k-apple.ru/individualnyj_zakaz\"},\"categories\":{\"product-1786401011698-231009\":\"avtorskaya-odezhda\",\"product-1786401011698-981bb3\":\"zhivopis-i-grafika\",\"product-1786401011698-9e81ee\":\"dizajnerskie-podarki\",\"product-1786401011698-96355e\":\"dom-i-servirovka\",\"product-1786401011698-bd5754\":\"ukrashenie-doma\",\"platform-page-1790858796945-b73ebf\":\"https://k-apple.ru/novogodnie-podarki-2027\",\"product-1786401011698-bf5af0\":\"https://k-apple.ru/individualnyj_zakaz\"},\"products\":{\"catalog-item-1786792591872-c8b1e9\":\"https://k-apple.ru/polka#rec797841767463\",\"catalog-item-1786792591872-51f503\":\"https://k-apple.ru/simvol-2027-koza\"},\"custom\":{},\"missingCategoryIds\":[],\"onOrderCategoryId\":\"product-1786401011698-bf5af0\",\"migrationConflicts\":[{\"key\":\"categories:product-1786401011698-231009\",\"selected\":\"avtorskaya-odezhda\",\"candidates\":[{\"source\":\"card-22.pageRows[0].url\",\"url\":\"avtorskaya-odezhda\"},{\"source\":\"productBindingsV185.product-1786401011698-231009.landing.url\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416066461\"},{\"source\":\"robotsV130.card-14.Авторская одежда\",\"url\":\"avtorskaya-odezhda\"}]},{\"key\":\"categories:product-1786401011698-981bb3\",\"selected\":\"zhivopis-i-grafika\",\"candidates\":[{\"source\":\"card-22.pageRows[1].url\",\"url\":\"zhivopis-i-grafika\"},{\"source\":\"productBindingsV185.product-1786401011698-981bb3.landing.url\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416060871\"},{\"source\":\"robotsV130.card-14.Живопись и графика\",\"url\":\"zhivopis-i-grafika\"}]},{\"key\":\"categories:product-1786401011698-9e81ee\",\"selected\":\"dizajnerskie-podarki\",\"candidates\":[{\"source\":\"card-22.pageRows[2].url\",\"url\":\"dizajnerskie-podarki\"},{\"source\":\"productBindingsV185.product-1786401011698-9e81ee.landing.url\",\"url\":\"https://k-apple.ru/simvol-2027-koza\"},{\"source\":\"robotsV130.card-14.Дизайнерские подарки\",\"url\":\"dizajnerskie-podarki\"}]},{\"key\":\"categories:product-1786401011698-96355e\",\"selected\":\"dom-i-servirovka\",\"candidates\":[{\"source\":\"card-22.pageRows[3].url\",\"url\":\"dom-i-servirovka\"},{\"source\":\"productBindingsV185.product-1786401011698-96355e.landing.url\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416056631\"},{\"source\":\"robotsV130.card-14.Дом и сервировка\",\"url\":\"dom-i-servirovka\"}]},{\"key\":\"categories:product-1786401011698-bd5754\",\"selected\":\"ukrashenie-doma\",\"candidates\":[{\"source\":\"card-22.pageRows[4].url\",\"url\":\"ukrashenie-doma\"},{\"source\":\"productBindingsV185.product-1786401011698-bd5754.landing.url\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416064251\"},{\"source\":\"robotsV130.card-14.Украшение дома\",\"url\":\"ukrashenie-doma\"}]}],\"unmappedLegacyUrls\":[{\"source\":\"card-23.pageRows[0].url\",\"url\":\"https://k-apple.ru/individualnyj_zakaz\",\"reason\":\"У страницы нет стабильной связи с ключом Платформы\"},{\"source\":\"gate4Rsya.catalog_item_1786792591872_51f503.rsya-group-1788714688153-be477b\",\"url\":\"https://k-apple.ru/simvol-2027-koza\",\"reason\":\"Нет product_id\"},{\"source\":\"robotsV130.card-14.На заказ\",\"url\":\"https://k-apple.ru/individualnyj_zakaz\",\"reason\":\"Нет product_id в каталоге\"},{\"source\":\"robotsV130.card-14.Новогодние подарки 2027\",\"url\":\"https://k-apple.ru/novogodnie-podarki-2027\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Страница «Спасибо»\",\"url\":\"http://k-apple.ru/thankyou\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Форма заявки / корзина\",\"url\":\"https://k-apple.ru/contacts\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Посадочная: На заказ\",\"url\":\"https://k-apple.ru/individualnyj_zakaz\",\"reason\":\"Нет product_id в каталоге\"},{\"source\":\"robotsV130.card-14.Посадочная: Украшение дома\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416064251\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Посадочная: Дом и сервировка\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416056631\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Посадочная: Авторская одежда\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416066461\",\"reason\":\"Нет стабильной связи со страницей Платформы\"},{\"source\":\"robotsV130.card-14.Посадочная: Живопись и графика\",\"url\":\"https://k-apple.ru/katalog-podarkov#rec2416060871\",\"reason\":\"Нет стабильной связи со страницей Платформы\"}],\"unresolvedReferences\":[{\"source\":\"linkBank[4].url\",\"url\":\"1\"},{\"source\":\"linkBank[5].url\",\"url\":\"12\"},{\"source\":\"linkBank[6].url\",\"url\":\"123\"},{\"source\":\"linkBank[8].url\",\"url\":\"https://k-apple.ru/robots.txt\"}],\"migratedAt\":\"2026-09-30T15:40:41.762Z\",\"missingCategoryGeneratedIds\":[],\"optionalOnOrderMigratedV2\":true}"
+    }
+  ],
+  "writes": {
+    "same": {
+      "saves": 0,
+      "unchanged": true
+    },
+    "changed": {
+      "saves": 1,
+      "url": "#delivery-changed",
+      "sameNode": true
+    },
+    "duplicateAnswerSaves": 1
+  },
+  "auditLinks": [
+    {
+      "id": "delivery",
+      "target": "card-28",
+      "opened": true
+    },
+    {
+      "id": "company_details",
+      "target": "card-27",
+      "opened": true
+    },
+    {
+      "id": "privacy",
+      "target": "card-29",
+      "opened": true
+    },
+    {
+      "id": "cookie_banner",
+      "target": "card-35",
+      "opened": true
+    },
+    {
+      "id": "data_consent",
+      "target": "card-37",
+      "opened": true
+    },
+    {
+      "id": "offer",
+      "target": "card-28",
+      "opened": true
+    },
+    {
+      "id": "returns",
+      "target": "card-28",
+      "opened": true
+    }
+  ],
+  "passed": true
+}
+platform-legal-structure-smoke: PASS

@@ -1,0 +1,95 @@
+{
+  "renderMs": 24,
+  "first": {
+    "ids": [
+      "stress-competitor-0",
+      "stress-competitor-1",
+      "stress-competitor-2"
+    ],
+    "widths": [
+      364,
+      364,
+      364,
+      364
+    ],
+    "noOverflow": true,
+    "pager": "Конкуренты 1–3 из 164"
+  },
+  "filterLabels": [
+    "Все · 164",
+    "Близкие конкуренты · 4",
+    "Дальние конкуренты · 41",
+    "Соседи по выдаче · 119"
+  ],
+  "close": {
+    "ids": [
+      "stress-competitor-0",
+      "stress-competitor-1",
+      "stress-competitor-2"
+    ],
+    "pager": "Конкуренты 1–3 из 4",
+    "active": "true"
+  },
+  "far": {
+    "ids": [
+      "stress-competitor-4",
+      "stress-competitor-5",
+      "stress-competitor-6"
+    ],
+    "pager": "Конкуренты 1–3 из 41"
+  },
+  "neighbor": {
+    "ids": [
+      "stress-competitor-45",
+      "stress-competitor-46",
+      "stress-competitor-47"
+    ],
+    "pager": "Конкуренты 1–3 из 119"
+  },
+  "atFilters": true,
+  "next": {
+    "ids": [
+      "stress-competitor-3",
+      "stress-competitor-4",
+      "stress-competitor-5"
+    ],
+    "pager": "Конкуренты 4–6 из 164"
+  },
+  "last": {
+    "ids": [
+      "stress-competitor-162",
+      "stress-competitor-163"
+    ],
+    "pager": "Конкуренты 163–164 из 164"
+  },
+  "add": {
+    "appended": true,
+    "ids": [
+      "stress-competitor-162",
+      "stress-competitor-163",
+      "stress-added"
+    ],
+    "pager": "Конкуренты 163–165 из 165"
+  },
+  "remove": {
+    "removed": true,
+    "ids": [
+      "stress-competitor-162",
+      "stress-competitor-163"
+    ],
+    "pager": "Конкуренты 163–164 из 164"
+  },
+  "readOnly": true,
+  "atRender": true,
+  "atNext": true,
+  "atSelect": true,
+  "mismatch": -1,
+  "total": 164,
+  "copy": {
+    "copied": "https://competitor-162.example/",
+    "expected": "https://competitor-162.example/",
+    "feedback": "Скопировано",
+    "icon": "copied",
+    "readOnly": true
+  }
+}

@@ -1,0 +1,79 @@
+[
+  {
+    "action": "gate-0",
+    "before": 776,
+    "current": 7278.800000011921,
+    "fixed": 745.8999999761581,
+    "regressionMs": 6502.800000011921,
+    "regressionPercent": 837.9896907231856,
+    "fixedVsBaselineMs": -30.100000023841858,
+    "fixedVsBaselinePercent": -3.8788659824538496,
+    "improvementPercent": 89.75243171985854
+  },
+  {
+    "action": "gate-1",
+    "before": 3276.300000011921,
+    "current": 13653.199999988079,
+    "fixed": 2403.5999999940395,
+    "regressionMs": 10376.899999976158,
+    "regressionPercent": 316.72618502391117,
+    "fixedVsBaselineMs": -872.7000000178814,
+    "fixedVsBaselinePercent": -26.636754876375978,
+    "improvementPercent": 82.39533589198035
+  },
+  {
+    "action": "gate-2",
+    "before": 297.5,
+    "current": 9441.300000011921,
+    "fixed": 1111.9000000059605,
+    "regressionMs": 9143.800000011921,
+    "regressionPercent": 3073.546218491402,
+    "fixedVsBaselineMs": 814.4000000059605,
+    "fixedVsBaselinePercent": 273.7478991616674,
+    "improvementPercent": 88.22302013489079
+  },
+  {
+    "action": "gate-3",
+    "before": 166.7000000178814,
+    "current": 6827.200000017881,
+    "fixed": 528.3000000119209,
+    "regressionMs": 6660.5,
+    "regressionPercent": 3995.500899391451,
+    "fixedVsBaselineMs": 361.59999999403954,
+    "fixedVsBaselinePercent": 216.91661664982115,
+    "improvementPercent": 92.26183501273528
+  },
+  {
+    "action": "gate-4",
+    "before": 1226.300000011921,
+    "current": 7088.199999988079,
+    "fixed": 1471.9000000059605,
+    "regressionMs": 5861.899999976158,
+    "regressionPercent": 478.01516757067395,
+    "fixedVsBaselineMs": 245.59999999403954,
+    "fixedVsBaselinePercent": 20.027725678190667,
+    "improvementPercent": 79.23450241234113
+  },
+  {
+    "action": "gate-8",
+    "before": 704.3000000119209,
+    "current": 11128.800000011921,
+    "fixed": 1029.2999999821186,
+    "regressionMs": 10424.5,
+    "regressionPercent": 1480.1221070315994,
+    "fixedVsBaselineMs": 324.9999999701977,
+    "fixedVsBaselinePercent": 46.145108613473916,
+    "improvementPercent": 90.75102436937482
+  },
+  {
+    "action": "save-gate-8",
+    "before": 3508.899999976158,
+    "current": 9912.59999999404,
+    "fixed": 3730,
+    "regressionMs": 6403.700000017881,
+    "regressionPercent": 182.49878879595863,
+    "fixedVsBaselineMs": 221.10000002384186,
+    "fixedVsBaselinePercent": 6.301120009841954,
+    "improvementPercent": 62.37112362042004
+  }
+]

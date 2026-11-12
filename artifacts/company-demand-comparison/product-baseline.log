@@ -1,0 +1,8 @@
+file:///Users/vl/Developer/guru-platform/scripts/gate1-comparison-performance-smoke.mjs:158
+    throw Error("Comparison edit or autosave regression: "+JSON.stringify({metrics,persistence}));
+          ^
+
+Error: Comparison edit or autosave regression: {"metrics":{"lookup":{"medianMs":0,"maxMs":0.09999999403953552},"status":{"medianMs":0.09999999403953552,"maxMs":0.19999998807907104},"input":{"medianMs":0.29999998211860657,"maxMs":6.0999999940395355},"changeMs":7.0999999940395355,"stableAfterUrlChange":true,"relevanceMs":20.700000017881393,"selectKeywordMs":15.199999988079071,"stringifyMs":140.90000000596046,"serializedBytes":25909757,"competitorIds":["comparison-product-competitor-1791377477189-b95cae","comparison-product-competitor-1791714233140-0a13aa","comparison-product-competitor-1791723572550-6ca302","comparison-product-competitor-1791729424706-2ba447","comparison-product-competitor-1791730189618-024104","comparison-product-competitor-1791730431711-78f1a5","comparison-product-competitor-1791730532828-a76f6b","comparison-product-competitor-1791730629561-119a8e","comparison-product-competitor-1791741465664-c147fb","comparison-product-competitor-1791750025219-98e071","comparison-product-competitor-1791750307142-a0f08f","comparison-product-competitor-1791750910709-9c0ff1","comparison-product-competitor-1791752711809-abadf7","comparison-product-competitor-1791753638780-4e8c79"]},"persistence":{"writes":0,"bytes":0,"competitorIds":[],"domain":"","relevanceCount":0,"selectedCount":0}}
+    at file:///Users/vl/Developer/guru-platform/scripts/gate1-comparison-performance-smoke.mjs:158:11
+
+Node.js v22.14.0

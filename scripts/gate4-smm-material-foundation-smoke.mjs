@@ -142,7 +142,8 @@ try {
     };
   })()`);
   console.log(JSON.stringify(report, null, 2));
-  assert.deepEqual(report.steps, ["jtbd", "segment", "positioning", "usp", "offer", "landing"]);
+  assert.deepEqual(report.steps, ["jtbd", "segment", "intent", "usp", "offer",
+    "name", "description", "landing", "positioning"]);
   assert.deepEqual(report.segments.map((row) => row.value), ["Частные покупатели", "Корпоративные клиенты"]);
   assert(report.segments.every((row) => row.target.productId === "product-a" &&
     row.target.recordId.startsWith("segment-a-")));

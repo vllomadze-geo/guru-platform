@@ -1,0 +1,46 @@
+[
+  {
+    "project": "Коричное яблоко",
+    "total": 15,
+    "processed": 1,
+    "items": 15,
+    "allStats": true,
+    "opened": true,
+    "arrowMoves": true,
+    "escapeCloses": true,
+    "switched": true,
+    "focusRestored": true,
+    "draftPreserved": true,
+    "unchanged": true,
+    "statusUnchanged": true,
+    "selectedKey": "авторские изделия ручной работы"
+  },
+  {
+    "project": "iCleaning",
+    "total": 23,
+    "processed": 0,
+    "items": 23,
+    "allStats": true,
+    "opened": true,
+    "arrowMoves": true,
+    "escapeCloses": true,
+    "switched": true,
+    "focusRestored": true,
+    "draftPreserved": true,
+    "unchanged": true,
+    "statusUnchanged": true,
+    "selectedKey": "icleaning"
+  },
+  {
+    "missing": true,
+    "project": "SIVRCE",
+    "total": 0,
+    "unchanged": true
+  },
+  {
+    "missing": true,
+    "project": "УНИВЕРСАЛ / ГУРУ",
+    "total": 0,
+    "unchanged": true
+  }
+]

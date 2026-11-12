@@ -260,8 +260,10 @@ function gate1ComparisonProductInjectV306() {
   if (activeGateId !== "gate-1") return;
   const root = els.contentArea?.querySelector?.(".g1-redesign");
   const comparison = root?.querySelector?.(
-    '[data-g1-company-block-v299="seo-audit"] [data-g1-seo-item-v296="project-comparison"]',
+    '[data-g1-seo-item-v296="project-comparison"], [data-g1-company-block-v299="project-comparison"]',
   );
+  // The company comparison has its own scope; product recommendations belong to products.
+  if (comparison?.hasAttribute("data-g1bp-company")) return;
   const body = comparison?.querySelector?.(":scope > .project-comparison-body");
   if (!body || body.querySelector(":scope > [data-g1-comparison-product-summary-v306]"))
     return;

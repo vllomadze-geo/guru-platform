@@ -1,0 +1,225 @@
+{
+  "setup": {
+    "build": "2.3.526+81d96c5da3c8",
+    "goatId": "seo-v298-goat",
+    "horseId": "seo-v298-horse"
+  },
+  "result": {
+    "domTitles": [],
+    "companyBlocks": [
+      "SEO-аудит",
+      "Структура сайта — аудит",
+      "Юриспруденция — аудит",
+      "Целевая аудитория"
+    ],
+    "legacyCompanyWrapper": false,
+    "legacyAuditHeadings": 0,
+    "oldSummaryPanels": 0,
+    "outsideStandalone": 0,
+    "auditCards": 21,
+    "standaloneSitemapAbsent": true,
+    "auditDistribution": {
+      "seo-audit": 5,
+      "site-structure-audit": 12,
+      "legal-audit": 4
+    },
+    "auditTitles": {
+      "seo-audit": [
+        "Robots.txt: доступ поисковых роботов",
+        "Канонический URL и редиректы",
+        "Meta Robots SEO META in 1 CLICK",
+        "CWV PageSpeed Insights",
+        "SSL / HTTPS: безопасность домена"
+      ],
+      "site-structure-audit": [
+        "ГЛАВНАЯ",
+        "КАТАЛОГ (ХАБ)",
+        "КАТЕГОРИЯ",
+        "СТАТЬЯ БЛОГА",
+        "О НАС",
+        "КОНТАКТЫ",
+        "ДОСТАВКА / ГАРАНТИИ",
+        "404",
+        "THANK YOU PAGE ⚠️",
+        "ЛЕНДИНГ",
+        "ХЕДЕР",
+        "Футер: навигация, доверие и юридическая база"
+      ],
+      "legal-audit": [
+        "ПОЛИТИКА",
+        "Cookie-баннер: уведомление и согласие",
+        "Футер: навигация, доверие и юридическая база",
+        "Согласие в формах"
+      ]
+    },
+    "activeLegacyStore": false,
+    "legacyArchived": true,
+    "storage": {
+      "verificationAndErrors": "gate-1.cards[Аудит сайта].webmasterCompanyV298",
+      "sitemap": "gate-1.cards[Robots.txt].robotsV130.yandex.sitemaps",
+      "robots": "gate-1.cards[Robots.txt].robotsV130",
+      "productIndexing": "project.catalogItemsV189[product_id].webmasterV298"
+    },
+    "companyTechnicalLabels": [
+      "Важные URL разрешены",
+      "Служебные URL обработаны",
+      "Яндекс"
+    ],
+    "robotsAggregateSelectorsAbsent": true,
+    "googleSearchConsoleAbsent": true,
+    "companyItems": [
+      true,
+      true,
+      true
+    ],
+    "companySemanticsAtStart": false,
+    "productItems": [
+      "seo-snippet"
+    ],
+    "foundationLevels": 0,
+    "snippetInside": true,
+    "snippetGuidanceInside": false,
+    "webmasterInsidePage": false,
+    "selectorAtProductStart": true,
+    "strategicContextWithSelector": false,
+    "selectorInsideDemand": false,
+    "middleAtSource": 1,
+    "prefinalInDemand": false,
+    "groupFinalsInDemand": 0,
+    "foundationControls": {
+      "middleExport": true,
+      "middleImport": true,
+      "prefinalExport": false,
+      "prefinalImport": false,
+      "prefinalFile": false,
+      "groupExport": false,
+      "groupImport": false
+    },
+    "prefinalExportWorks": false,
+    "keywordSourceTarget": false,
+    "rootGap": 24,
+    "companyGaps": [
+      24,
+      24,
+      24,
+      24
+    ],
+    "productGaps": [
+      24,
+      24,
+      24,
+      24,
+      24,
+      24
+    ],
+    "productPageSnippetCount": 1,
+    "webmasterProductUrl": "",
+    "sitemapUrl": "https://k-apple.ru/sitemap.xml",
+    "verification": "dns",
+    "productIndexing": {
+      "landingIndexed": "yes",
+      "checkedNote": "10.09.2026 · проверено"
+    },
+    "g2": [
+      {
+        "id": "card-107",
+        "status": "ready",
+        "path": "gate-1.cards[Аудит сайта].webmasterCompanyV298.{verificationMethod,verificationStatus}"
+      },
+      {
+        "id": "card-108",
+        "status": "ready",
+        "path": "gate-1.cards[Robots.txt].robotsV130.yandex.sitemaps"
+      },
+      {
+        "id": "card-109",
+        "status": "ready",
+        "path": "gate-1.cards[Robots.txt].robotsV130.yandex"
+      },
+      {
+        "id": "card-110",
+        "status": "in_progress",
+        "path": "project.catalogItemsV189[product_id].webmasterV298.landingIndexed"
+      },
+      {
+        "id": "card-111",
+        "status": "problem",
+        "path": "gate-1.cards[Аудит сайта].webmasterCompanyV298.{crawlErrorsStatus,crawlErrors}"
+      }
+    ],
+    "gate0Status": "",
+    "gate0Derived": false,
+    "jtbdRepaired": 8,
+    "jtbdArtifacts": [],
+    "repairLog": [
+      {
+        "id": "gate1-jtbd-encoding-repair-v298",
+        "at": "2026-10-26T10:25:44.628Z",
+        "status": "completed",
+        "count": 10,
+        "repairs": [
+          {
+            "path": "project.productMainJtbds.Создание лошадок",
+            "before": "Когда выбирают лошадку, клиент хочет порадовать�� ребёнка и не ошибит��ся с выбором.",
+            "after": "Когда выбирают лошадку, клиент хочет порадовать ребёнка и не ошибиться с выбором."
+          },
+          {
+            "path": "project.gate0ScopedValuesV194.0.value",
+            "before": "Когда нужно выбрать подарок, клиент хочет порадовать�� получателя и не ошибит��ся с выбором.",
+            "after": "Когда нужно выбрать подарок, клиент хочет порадовать получателя и не ошибиться с выбором."
+          },
+          {
+            "path": "project.gate0ScopedValuesV194.0.jtbd.situation",
+            "before": "Когда нужно выбрать подарок, клиент хочет порадовать�� получателя и не ошибит��ся с выбором.",
+            "after": "Когда нужно выбрать подарок, клиент хочет порадовать получателя и не ошибиться с выбором."
+          },
+          {
+            "path": "project.productScopedOverridesV194.seo-v298-goat.jtbd.values.0",
+            "before": "Когда нужно выбрать подарок, клиент хочет порадовать�� получателя и не ошибит��ся с выбором.",
+            "after": "Когда нужно выбрать подарок, клиент хочет порадовать получателя и не ошибиться с выбором."
+          },
+          {
+            "path": "project.productBindingsV185.seo-v298-goat.jtbd",
+            "before": "Когда нужно выбрать подарок, клиент хочет порадовать�� получателя и не ошибит��ся с выбором.",
+            "after": "Когда нужно выбрать подарок, клиент хочет порадовать получателя и не ошибиться с выбором."
+          },
+          {
+            "path": "project.productBindingsV185.seo-v298-horse.jtbd",
+            "before": "Когда выбирают лошадку, клиент хочет порадовать�� ребёнка и не ошибит��ся с выбором.",
+            "after": "Когда выбирают лошадку, клиент хочет порадовать ребёнка и не ошибиться с выбором."
+          },
+          {
+            "path": "painV130.productMaps.0.gate0MainJtbd",
+            "before": "Когда нужно выбрать подарок, клиент хочет порадовать�� получателя и не ошибит��ся с выбором.",
+            "after": "Когда нужно выбрать подарок, клиент хочет порадовать получателя и не ошибиться с выбором."
+          },
+          {
+            "path": "painV130.productMaps.0.legacyPageItemsV237.seo-v298-goat.data.semL4Model.mainJtbd",
+            "before": "Когда нужно выбрать подарок, клиент хочет порадовать�� получателя и не ошибит��ся с выбором.",
+            "after": "Когда нужно выбрать подарок, клиент хочет порадовать получателя и не ошибиться с выбором."
+          },
+          {
+            "path": "painV130.productMaps.0.legacyPageItemsV237.seo-v298-goat.data.semL4Model.additionalJtbds.0.desired_action",
+            "before": "Когда нужен необычный декор, клиент хочет не ошибит��ся с размером.",
+            "after": "Когда нужен необычный декор, клиент хочет не ошибиться с размером."
+          },
+          {
+            "path": "painV130.productMaps.0.legacyPageItemsV237.seo-v298-goat.data.semL4Model.additionalJtbds.1.desired_action",
+            "before": "Когда выбирают лошадку, клиент хочет порадовать�� ребёнка и не ошибит��ся с выбором.",
+            "after": "Когда выбирают лошадку, клиент хочет порадовать ребёнка и не ошибиться с выбором."
+          }
+        ]
+      }
+    ],
+    "errors": []
+  }
+}
+file:///Users/vl/Developer/guru-platform/scripts/gate1-seo-central-smoke.mjs:6
+  if (!condition) throw new Error(message);
+                        ^
+
+Error: Unexpected build 2.3.526+81d96c5da3c8
+    at assert (file:///Users/vl/Developer/guru-platform/scripts/gate1-seo-central-smoke.mjs:6:25)
+    at file:///Users/vl/Developer/guru-platform/scripts/gate1-seo-central-smoke.mjs:416:3
+
+Node.js v22.14.0

@@ -1,0 +1,37 @@
+[
+  {
+    "test": "gate2-service-block-smoke.mjs",
+    "status": "PASS",
+    "seconds": 26.36
+  },
+  {
+    "test": "gate2-company-services-smoke.mjs",
+    "status": "PASS",
+    "seconds": 72.04
+  },
+  {
+    "test": "gate2-product-services-step4-smoke.mjs",
+    "status": "PASS",
+    "seconds": 65.16
+  },
+  {
+    "test": "gate2-technical-seo-smoke.mjs",
+    "status": "PASS",
+    "seconds": 82.23
+  },
+  {
+    "test": "gate2-technical-seo-ui-smoke.mjs",
+    "status": "PASS",
+    "seconds": 71.41
+  },
+  {
+    "test": "gate0-webmaster-infrastructure-smoke.mjs",
+    "status": "PASS",
+    "seconds": 23.49
+  },
+  {
+    "test": "gate12-now-readiness-smoke.mjs",
+    "status": "PASS",
+    "seconds": 153.11
+  }
+]

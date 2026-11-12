@@ -1,0 +1,11 @@
+file:///private/tmp/guru-step7-after/scripts/company-manual-economics-gate4-strict-smoke.mjs:53
+    throw new Error(
+          ^
+
+Error: ReferenceError: renderProject is not defined
+    at <anonymous>:2:5
+    at <anonymous>:22:5
+    at evaluate (file:///private/tmp/guru-step7-after/scripts/company-manual-economics-gate4-strict-smoke.mjs:53:11)
+    at async file:///private/tmp/guru-step7-after/scripts/company-manual-economics-gate4-strict-smoke.mjs:358:23
+
+Node.js v22.14.0

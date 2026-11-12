@@ -1,0 +1,304 @@
+{
+  "ok": true,
+  "initial": {
+    "unified": true,
+    "groups": [
+      "Адрес и платформа",
+      "DNS и доступность",
+      "Защита и переадресация"
+    ],
+    "steps": [
+      "address",
+      "platform",
+      "provider",
+      "dns_source",
+      "dns_set",
+      "open",
+      "https",
+      "redirect"
+    ],
+    "openGuides": [
+      "dns_set"
+    ],
+    "oldCompletedLabels": false,
+    "duplicateSummary": false,
+    "status": "Проблема",
+    "expectedStatus": "Проблема",
+    "progress": "5 из 8 шагов",
+    "related": true,
+    "fields": 35,
+    "source": "Адрес сайта из Gate 0URL не указан",
+    "width": 1440,
+    "viewport": 1440,
+    "dataKeys": [
+      "steps",
+      "values",
+      "history",
+      "technicalSeoV1"
+    ]
+  },
+  "allBlocks": null,
+  "panelBlocks": null,
+  "desktop": {
+    "x": 41,
+    "y": 418.78125,
+    "width": 1358,
+    "height": 3317.171875,
+    "pageWidth": 1440,
+    "viewport": 1440,
+    "minTargets": [
+      {
+        "width": 24,
+        "height": 24
+      },
+      {
+        "width": 95.546875,
+        "height": 32
+      },
+      {
+        "width": 24,
+        "height": 24
+      },
+      {
+        "width": 95.546875,
+        "height": 32
+      },
+      {
+        "width": 24,
+        "height": 24
+      },
+      {
+        "width": 95.546875,
+        "height": 32
+      },
+      {
+        "width": 24,
+        "height": 24
+      },
+      {
+        "width": 95.546875,
+        "height": 32
+      },
+      {
+        "width": 24,
+        "height": 24
+      },
+      {
+        "width": 95.546875,
+        "height": 32
+      },
+      {
+        "width": 24,
+        "height": 24
+      },
+      {
+        "width": 95.546875,
+        "height": 32
+      },
+      {
+        "width": 138.65625,
+        "height": 38
+      },
+      {
+        "width": 139.671875,
+        "height": 38
+      },
+      {
+        "width": 139.671875,
+        "height": 38
+      },
+      {
+        "width": 138.65625,
+        "height": 38
+      },
+      {
+        "width": 139.671875,
+        "height": 38
+      },
+      {
+        "width": 139.671875,
+        "height": 38
+      },
+      {
+        "width": 138.65625,
+        "height": 38
+      },
+      {
+        "width": 139.671875,
+        "height": 38
+      },
+      {
+        "width": 139.671875,
+        "height": 38
+      },
+      {
+        "width": 138.65625,
+        "height": 38
+      },
+      {
+        "width": 139.671875,
+        "height": 38
+      },
+      {
+        "width": 139.671875,
+        "height": 38
+      },
+      {
+        "width": 95.546875,
+        "height": 32
+      },
+      {
+        "width": 95.546875,
+        "height": 32
+      },
+      {
+        "width": 1308,
+        "height": 44
+      }
+    ],
+    "overflowingRows": 0
+  },
+  "mobile": {
+    "x": 21,
+    "y": 546.171875,
+    "width": 348,
+    "height": 4599.3125,
+    "pageWidth": 390,
+    "viewport": 390,
+    "minTargets": [
+      {
+        "width": 44,
+        "height": 44
+      },
+      {
+        "width": 95.546875,
+        "height": 44
+      },
+      {
+        "width": 44,
+        "height": 44
+      },
+      {
+        "width": 95.546875,
+        "height": 44
+      },
+      {
+        "width": 44,
+        "height": 44
+      },
+      {
+        "width": 95.546875,
+        "height": 44
+      },
+      {
+        "width": 44,
+        "height": 44
+      },
+      {
+        "width": 95.546875,
+        "height": 44
+      },
+      {
+        "width": 44,
+        "height": 44
+      },
+      {
+        "width": 95.546875,
+        "height": 44
+      },
+      {
+        "width": 44,
+        "height": 44
+      },
+      {
+        "width": 95.546875,
+        "height": 44
+      },
+      {
+        "width": 78.65625,
+        "height": 44
+      },
+      {
+        "width": 79.671875,
+        "height": 44
+      },
+      {
+        "width": 79.671875,
+        "height": 44
+      },
+      {
+        "width": 78.65625,
+        "height": 44
+      },
+      {
+        "width": 79.671875,
+        "height": 44
+      },
+      {
+        "width": 79.671875,
+        "height": 44
+      },
+      {
+        "width": 78.65625,
+        "height": 44
+      },
+      {
+        "width": 79.671875,
+        "height": 44
+      },
+      {
+        "width": 79.671875,
+        "height": 44
+      },
+      {
+        "width": 78.65625,
+        "height": 44
+      },
+      {
+        "width": 79.671875,
+        "height": 44
+      },
+      {
+        "width": 79.671875,
+        "height": 44
+      },
+      {
+        "width": 95.546875,
+        "height": 44
+      },
+      {
+        "width": 95.546875,
+        "height": 44
+      },
+      {
+        "width": 314,
+        "height": 44
+      }
+    ],
+    "overflowingRows": 0
+  },
+  "lightStyles": {
+    "block": "rgb(255, 255, 255)",
+    "input": "rgb(255, 255, 255)",
+    "disabled": false
+  },
+  "darkStyles": {
+    "block": "rgb(33, 31, 28)",
+    "input": "rgb(33, 31, 28)"
+  },
+  "interactions": {
+    "before": false,
+    "after": true,
+    "currentAfter": "open",
+    "stored": "done",
+    "restored": false,
+    "storedSsl": "yes",
+    "priorSsl": "",
+    "autoChanged": "Авто: Ошибка",
+    "relatedOpenable": 1
+  },
+  "wizardInteractions": null,
+  "panelInteractions": null,
+  "panelColors": null,
+  "errors": []
+}

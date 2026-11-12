@@ -260,15 +260,16 @@ try {
 
   assert(Boolean(goat.build), "Interface build is missing");
   assert(
-    goat.steps.join("|") === "jtbd|segment|positioning|usp|offer|landing",
+    goat.steps.join("|") === "jtbd|segment|intent|usp|offer|name|description|landing|positioning",
     "The strategic hierarchy is wrong: " + goat.steps.join("|"),
   );
   assert(
     goat.rows.join("|") === [
       ...(goat.segmentCount > 1
-        ? Array.from({ length: goat.segmentCount }, (_, index) => `Сегмент ${index + 1}`)
-        : ["Сегмент"]),
-      "Позиционирование", "УТП", "Оффер + CTA", "Посадочная страница",
+        ? Array.from({ length: goat.segmentCount }, (_, index) => `Сегмент ЦА ${index + 1}`)
+        : ["Сегмент ЦА"]),
+      "Поисковый интент", "УТП", "Оффер + CTA", "Название продукта/услуги",
+      "Утверждённое описание", "Посадочная страница", "Позиционирование",
     ].join("|") && goat.renderedSegmentCount === goat.segmentCount,
     "The strategic row order is wrong: " + goat.rows.join("|"),
   );

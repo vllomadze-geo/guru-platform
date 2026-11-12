@@ -1,0 +1,372 @@
+{
+  "build": "2.3.526+aec3671beab9",
+  "events": [
+    {
+      "type": "focusin",
+      "key": "{\"megaPlatformRenameProduct\":\"catalog-item-1786792591872-c8b1e9\",\"megaPlatformInitialName\":\"Рубашка Upcycling с кружевом\",\"guruFieldNeutral\":\"\"}",
+      "ms": 1.0999999940395355,
+      "connected": true,
+      "value": "Рубашка Upcycling с кружевом",
+      "active": "<input data-mega-platform-rename-product=\"catalog-item-1786792591872-c8b1e9\" data-mega-platform-initial-name=\"Рубашка Upcycling с кружевом\" data-guru-field-neutral=\"\" val"
+    },
+    {
+      "type": "input",
+      "key": "{\"megaPlatformRenameProduct\":\"catalog-item-1786792591872-c8b1e9\",\"megaPlatformInitialName\":\"Рубашка Upcycling с кружевом\",\"guruFieldNeutral\":\"\"}",
+      "ms": 48.900000005960464,
+      "connected": true,
+      "value": "Рубашка Upcycling с кружевом 1",
+      "active": "<input data-mega-platform-rename-product=\"catalog-item-1786792591872-c8b1e9\" data-mega-platform-initial-name=\"Рубашка Upcycling с кружевом\" data-guru-field-neutral=\"\" val"
+    },
+    {
+      "type": "change",
+      "key": "{\"megaPlatformRenameProduct\":\"catalog-item-1786792591872-c8b1e9\",\"megaPlatformInitialName\":\"Рубашка Upcycling с кружевом\",\"guruFieldNeutral\":\"\"}",
+      "ms": 56.5,
+      "connected": true,
+      "value": "Рубашка Upcycling с кружевом 1",
+      "active": "<input data-mega-card=\"card-7\" data-mega-field=\"url\" data-mega-url-group=\"products\" data-mega-url-id=\"catalog-item-1786792591872-c8b1e9\" data-mega-url-name=\"Рубашка Upcyc"
+    },
+    {
+      "type": "focusout",
+      "key": "{\"megaPlatformRenameProduct\":\"catalog-item-1786792591872-c8b1e9\",\"megaPlatformInitialName\":\"Рубашка Upcycling с кружевом 1\",\"guruFieldNeutral\":\"\"}",
+      "ms": 43.29999998211861,
+      "connected": true,
+      "value": "Рубашка Upcycling с кружевом 1",
+      "active": "<input data-mega-card=\"card-7\" data-mega-field=\"url\" data-mega-url-group=\"products\" data-mega-url-id=\"catalog-item-1786792591872-c8b1e9\" data-mega-url-name=\"Рубашка Upcyc"
+    },
+    {
+      "type": "focusin",
+      "key": "{\"megaCard\":\"card-7\",\"megaField\":\"url\",\"megaUrlGroup\":\"products\",\"megaUrlId\":\"catalog-item-1786792591872-c8b1e9\",\"megaUrlName\":\"Рубашка Upcycling с кружевом\",\"guruFieldNeutral\":\"\"}",
+      "ms": 39.099999994039536,
+      "connected": true,
+      "value": "https://k-apple.ru/polka#rec797841767463",
+      "active": "<input data-mega-card=\"card-7\" data-mega-field=\"url\" data-mega-url-group=\"products\" data-mega-url-id=\"catalog-item-1786792591872-c8b1e9\" data-mega-url-name=\"Рубашка Upcyc"
+    },
+    {
+      "type": "input",
+      "key": "{\"megaCard\":\"card-7\",\"megaField\":\"url\",\"megaUrlGroup\":\"products\",\"megaUrlId\":\"catalog-item-1786792591872-c8b1e9\",\"megaUrlName\":\"Рубашка Upcycling с кружевом\",\"guruFieldNeutral\":\"\"}",
+      "ms": 39.5,
+      "connected": true,
+      "value": "/thttps://k-apple.ru/polka#rec797841767463",
+      "active": "<input data-mega-card=\"card-7\" data-mega-field=\"url\" data-mega-url-group=\"products\" data-mega-url-id=\"catalog-item-1786792591872-c8b1e9\" data-mega-url-name=\"Рубашка Upcyc"
+    },
+    {
+      "type": "change",
+      "key": "{\"megaCard\":\"card-7\",\"megaField\":\"url\",\"megaUrlGroup\":\"products\",\"megaUrlId\":\"catalog-item-1786792591872-c8b1e9\",\"megaUrlName\":\"Рубашка Upcycling с кружевом\",\"guruFieldNeutral\":\"\"}",
+      "ms": 45.099999994039536,
+      "connected": true,
+      "value": "/thttps://k-apple.ru/polka#rec797841767463",
+      "active": "<input data-mega-platform-rename-product=\"catalog-item-1786792591872-98358d\" data-mega-platform-initial-name=\"Летнее платье «Исландка»\" data-guru-field-neutral=\"\" value=\""
+    },
+    {
+      "type": "focusout",
+      "key": "{\"megaCard\":\"card-7\",\"megaField\":\"url\",\"megaUrlGroup\":\"products\",\"megaUrlId\":\"catalog-item-1786792591872-c8b1e9\",\"megaUrlName\":\"Рубашка Upcycling с кружевом\",\"guruFieldNeutral\":\"\"}",
+      "ms": 41.400000005960464,
+      "connected": true,
+      "value": "/thttps://k-apple.ru/polka#rec797841767463",
+      "active": "<input data-mega-platform-rename-product=\"catalog-item-1786792591872-98358d\" data-mega-platform-initial-name=\"Летнее платье «Исландка»\" data-guru-field-neutral=\"\" value=\""
+    },
+    {
+      "type": "focusin",
+      "key": "{\"megaPlatformRenameProduct\":\"catalog-item-1786792591872-98358d\",\"megaPlatformInitialName\":\"Летнее платье «Исландка»\",\"guruFieldNeutral\":\"\"}",
+      "ms": 37.30000001192093,
+      "connected": true,
+      "value": "Летнее платье «Исландка»",
+      "active": "<input data-mega-platform-rename-product=\"catalog-item-1786792591872-98358d\" data-mega-platform-initial-name=\"Летнее платье «Исландка»\" data-guru-field-neutral=\"\" value=\""
+    },
+    {
+      "type": "input",
+      "key": "{\"megaPlatformRenameProduct\":\"catalog-item-1786792591872-98358d\",\"megaPlatformInitialName\":\"Летнее платье «Исландка»\",\"guruFieldNeutral\":\"\"}",
+      "ms": 37.5,
+      "connected": true,
+      "value": " 2Летнее платье «Исландка»",
+      "active": "<input data-mega-platform-rename-product=\"catalog-item-1786792591872-98358d\" data-mega-platform-initial-name=\"Летнее платье «Исландка»\" data-guru-field-neutral=\"\" value=\""
+    },
+    {
+      "type": "change",
+      "key": "{\"megaPlatformRenameProduct\":\"catalog-item-1786792591872-98358d\",\"megaPlatformInitialName\":\"Летнее платье «Исландка»\",\"guruFieldNeutral\":\"\"}",
+      "ms": 45.79999998211861,
+      "connected": true,
+      "value": "2Летнее платье «Исландка»",
+      "active": "<input data-mega-card=\"card-7\" data-mega-field=\"url\" data-mega-url-group=\"products\" data-mega-url-id=\"catalog-item-1786792591872-c8b1e9\" data-mega-url-name=\"Рубашка Upcyc"
+    },
+    {
+      "type": "focusout",
+      "key": "{\"megaPlatformRenameProduct\":\"catalog-item-1786792591872-98358d\",\"megaPlatformInitialName\":\"2Летнее платье «Исландка»\",\"guruFieldNeutral\":\"\"}",
+      "ms": 44.29999998211861,
+      "connected": true,
+      "value": "2Летнее платье «Исландка»",
+      "active": "<input data-mega-card=\"card-7\" data-mega-field=\"url\" data-mega-url-group=\"products\" data-mega-url-id=\"catalog-item-1786792591872-c8b1e9\" data-mega-url-name=\"Рубашка Upcyc"
+    },
+    {
+      "type": "focusin",
+      "key": "{\"megaCard\":\"card-7\",\"megaField\":\"url\",\"megaUrlGroup\":\"products\",\"megaUrlId\":\"catalog-item-1786792591872-c8b1e9\",\"megaUrlName\":\"Рубашка Upcycling с кружевом\",\"guruFieldNeutral\":\"\"}",
+      "ms": 40.5,
+      "connected": true,
+      "value": "/thttps://k-apple.ru/polka#rec797841767463",
+      "active": "<input data-mega-card=\"card-7\" data-mega-field=\"url\" data-mega-url-group=\"products\" data-mega-url-id=\"catalog-item-1786792591872-c8b1e9\" data-mega-url-name=\"Рубашка Upcyc"
+    },
+    {
+      "type": "input",
+      "key": "{\"megaCard\":\"card-7\",\"megaField\":\"url\",\"megaUrlGroup\":\"products\",\"megaUrlId\":\"catalog-item-1786792591872-c8b1e9\",\"megaUrlName\":\"Рубашка Upcycling с кружевом\",\"guruFieldNeutral\":\"\"}",
+      "ms": 39.400000005960464,
+      "connected": true,
+      "value": "/txhttps://k-apple.ru/polka#rec797841767463",
+      "active": "<input data-mega-card=\"card-7\" data-mega-field=\"url\" data-mega-url-group=\"products\" data-mega-url-id=\"catalog-item-1786792591872-c8b1e9\" data-mega-url-name=\"Рубашка Upcyc"
+    },
+    {
+      "type": "change",
+      "key": "{\"megaCard\":\"card-7\",\"megaField\":\"url\",\"megaUrlGroup\":\"products\",\"megaUrlId\":\"catalog-item-1786792591872-c8b1e9\",\"megaUrlName\":\"Рубашка Upcycling с кружевом\",\"guruFieldNeutral\":\"\"}",
+      "ms": 46.099999994039536,
+      "connected": true,
+      "value": "/txhttps://k-apple.ru/polka#rec797841767463",
+      "active": "<input type=\"text\" data-mega-platform-picker-name=\"product-1786401011698-231009\" data-guru-field-neutral=\"\" value=\"\" placeholder=\"Название товара\">"
+    },
+    {
+      "type": "focusout",
+      "key": "{\"megaCard\":\"card-7\",\"megaField\":\"url\",\"megaUrlGroup\":\"products\",\"megaUrlId\":\"catalog-item-1786792591872-c8b1e9\",\"megaUrlName\":\"Рубашка Upcycling с кружевом\",\"guruFieldNeutral\":\"\"}",
+      "ms": 42,
+      "connected": true,
+      "value": "/txhttps://k-apple.ru/polka#rec797841767463",
+      "active": "<input type=\"text\" data-mega-platform-picker-name=\"product-1786401011698-231009\" data-guru-field-neutral=\"\" value=\"\" placeholder=\"Название товара\">"
+    },
+    {
+      "type": "focusin",
+      "key": "{\"megaPlatformPickerName\":\"product-1786401011698-231009\",\"guruFieldNeutral\":\"\"}",
+      "ms": 37.599999994039536,
+      "connected": true,
+      "value": "",
+      "active": "<input type=\"text\" data-mega-platform-picker-name=\"product-1786401011698-231009\" data-guru-field-neutral=\"\" value=\"\" placeholder=\"Название товара\">"
+    },
+    {
+      "type": "input",
+      "key": "{\"megaPlatformPickerName\":\"product-1786401011698-231009\",\"guruFieldNeutral\":\"\"}",
+      "ms": 37.79999998211861,
+      "connected": true,
+      "value": "Н",
+      "active": "<input type=\"text\" data-mega-platform-picker-name=\"product-1786401011698-231009\" data-guru-field-neutral=\"\" value=\"\" placeholder=\"Название товара\">"
+    },
+    {
+      "type": "input",
+      "key": "{\"megaPlatformPickerName\":\"product-1786401011698-231009\",\"guruFieldNeutral\":\"\"}",
+      "ms": 36.900000005960464,
+      "connected": true,
+      "value": "Но",
+      "active": "<input type=\"text\" data-mega-platform-picker-name=\"product-1786401011698-231009\" data-guru-field-neutral=\"\" value=\"\" placeholder=\"Название товара\">"
+    },
+    {
+      "type": "input",
+      "key": "{\"megaPlatformPickerName\":\"product-1786401011698-231009\",\"guruFieldNeutral\":\"\"}",
+      "ms": 36.80000001192093,
+      "connected": true,
+      "value": "Нов",
+      "active": "<input type=\"text\" data-mega-platform-picker-name=\"product-1786401011698-231009\" data-guru-field-neutral=\"\" value=\"\" placeholder=\"Название товара\">"
+    }
+  ],
+  "steps": [
+    {
+      "label": "product-name",
+      "ms": 62,
+      "connected": true,
+      "value": "Рубашка Upcycling с кружевом 1",
+      "tag": "INPUT"
+    },
+    {
+      "label": "focus-url",
+      "ms": 67,
+      "connected": true,
+      "value": "https://k-apple.ru/polka#rec797841767463",
+      "tag": "INPUT"
+    },
+    {
+      "label": "url",
+      "ms": 48,
+      "connected": true,
+      "value": "/thttps://k-apple.ru/polka#rec797841767463",
+      "tag": "INPUT"
+    },
+    {
+      "label": "focus-next-name",
+      "ms": 53,
+      "connected": true,
+      "value": "Летнее платье «Исландка»",
+      "tag": "INPUT"
+    },
+    {
+      "label": "next-name",
+      "ms": 45,
+      "connected": true,
+      "value": " 2Летнее платье «Исландка»",
+      "tag": "INPUT"
+    },
+    {
+      "label": "focus-after-save",
+      "ms": 73,
+      "connected": true,
+      "value": "/thttps://k-apple.ru/polka#rec797841767463",
+      "tag": "INPUT"
+    },
+    {
+      "label": "url-after-save",
+      "ms": 49,
+      "connected": true,
+      "value": "/txhttps://k-apple.ru/polka#rec797841767463",
+      "tag": "INPUT"
+    },
+    {
+      "label": "focus-picker",
+      "ms": 73,
+      "connected": true,
+      "value": "",
+      "tag": "INPUT"
+    },
+    {
+      "label": "picker-1",
+      "ms": 47,
+      "connected": true,
+      "value": "Н",
+      "tag": "INPUT"
+    },
+    {
+      "label": "picker-2",
+      "ms": 45,
+      "connected": true,
+      "value": "Но",
+      "tag": "INPUT"
+    },
+    {
+      "label": "picker-3",
+      "ms": 44,
+      "connected": true,
+      "value": "Нов",
+      "tag": "INPUT"
+    }
+  ],
+  "calls": {
+    "guruReadinessInspect": {
+      "calls": 110,
+      "ms": 342.0999999642372,
+      "max": 11,
+      "stack": "Error\n    at window.<computed> (<anonymous>:7:327)\n    at guruGate0BlockReadiness (http://127.0.0.1:9531/app.js?v=2.3.526%2Baec3671beab9:55629:10)\n    at http://127.0.0.1:9531/now-guide.js?v=2.3.526%2Baec3671beab9:963:32\n    at Array.map (<anonymous>)\n    at guruGateBlockStatuses (http://127.0.0.1:9531/now-guide.js?v=2.3.526%2Baec3671beab9:963:18)\n    at http://127.0.0.1:9531/now-guide.js?v=2.3.526%2Baec3671beab9:1416:22\n    at nowGuideWithReadPass (http://127.0.0.1:9531/now-guide.js?v=2.3.526%2Baec3671beab9:523:16)\n    at http://127.0.0.1:9531/now-guide.js?v=2.3.526%2Baec3671beab9:1412:24"
+    },
+    "guruV194Records": {
+      "calls": 1962,
+      "ms": 504.2999998033047,
+      "max": 2.9000000059604645,
+      "stack": ""
+    },
+    "nowGuideDataVersion": {
+      "calls": 0,
+      "ms": 0,
+      "max": 0,
+      "stack": ""
+    },
+    "nowGuideBuildAllBlocks": {
+      "calls": 0,
+      "ms": 0,
+      "max": 0,
+      "stack": ""
+    },
+    "nowGuideRender": {
+      "calls": 0,
+      "ms": 0,
+      "max": 0,
+      "stack": ""
+    },
+    "guruPersistStateFast": {
+      "calls": 2,
+      "ms": 357.90000000596046,
+      "max": 179.40000000596046,
+      "stack": "Error\n    at window.<computed> (<anonymous>:7:327)\n    at guruAutosaveStateSmooth (http://127.0.0.1:9531/app.js?v=2.3.526%2Baec3671beab9:42646:3)\n    at http://127.0.0.1:9531/app.js?v=2.3.526%2Baec3671beab9:33690:5"
+    },
+    "guruRunDerivedRefresh": {
+      "calls": 20,
+      "ms": 3.600000023841858,
+      "max": 1.4000000059604645,
+      "stack": ""
+    },
+    "guruFinishDerivedRefresh": {
+      "calls": 0,
+      "ms": 0,
+      "max": 0,
+      "stack": ""
+    },
+    "gate0RefreshStatuses": {
+      "calls": 0,
+      "ms": 0,
+      "max": 0,
+      "stack": ""
+    },
+    "recalculateStatusForCard": {
+      "calls": 123,
+      "ms": 376.49999994039536,
+      "max": 66.40000000596046,
+      "stack": "Error\n    at window.<computed> (<anonymous>:7:327)\n    at processSlice (http://127.0.0.1:9531/app.js?v=2.3.526%2Baec3671beab9:42607:7)"
+    },
+    "megaPlatformRefreshManualTable": {
+      "calls": 0,
+      "ms": 0,
+      "max": 0,
+      "stack": ""
+    },
+    "megaPlatformRefreshCommercialTable": {
+      "calls": 0,
+      "ms": 0,
+      "max": 0,
+      "stack": ""
+    },
+    "renderGate": {
+      "calls": 0,
+      "ms": 0,
+      "max": 0,
+      "stack": ""
+    },
+    "megaPlatformSeoUrlFromName": {
+      "calls": 0,
+      "ms": 0,
+      "max": 0,
+      "stack": ""
+    }
+  },
+  "longTasks": [
+    {
+      "start": 15736.399999976158,
+      "ms": 52
+    },
+    {
+      "start": 15798.899999976158,
+      "ms": 52
+    },
+    {
+      "start": 16425,
+      "ms": 179
+    },
+    {
+      "start": 16704,
+      "ms": 64
+    },
+    {
+      "start": 16769.59999999404,
+      "ms": 64
+    },
+    {
+      "start": 16985.29999998212,
+      "ms": 175
+    },
+    {
+      "start": 17624.5,
+      "ms": 178
+    },
+    {
+      "start": 18055.29999998212,
+      "ms": 68
+    },
+    {
+      "start": 18123.399999976158,
+      "ms": 64
+    }
+  ],
+  "picker": "Нов",
+  "active": "Нов",
+  "errors": [],
+  "sourceUnchanged": true
+}

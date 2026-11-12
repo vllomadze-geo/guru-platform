@@ -1,0 +1,16 @@
+Loading fixture: http://127.0.0.1:9531/
+Fixture ready
+node:internal/modules/run_main:122
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Audit card must be revealed
+    at file:///private/tmp/guru-legal-delivery-focused.mjs:120:3 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '=='
+}
+
+Node.js v22.14.0

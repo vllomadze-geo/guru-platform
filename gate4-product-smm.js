@@ -172,8 +172,7 @@ function g4ProductSmmRefreshPairCardsV529(root, idea) {
     .map((node) => node.closest("[data-g4-product-smm-pair-card-v529]").dataset.g4ProductSmmPairCardV529);
   const bucket = g4ProductSmmStoreV523(root.dataset.g4ProductSmmProductIdV523);
   rail.innerHTML = g4ProductSmmPreviewCardsV529(idea, bucket.strategy,
-    g4SmmProductReadOnlyV299(root.dataset.g4ProductSmmProductIdV523),
-    workspace.querySelector(".g4-smm-cta-suggestions-v531 datalist")?.id || "");
+    g4SmmProductReadOnlyV299(root.dataset.g4ProductSmmProductIdV523));
   open.forEach((id) => { const node = rail.querySelector(`[data-g4-product-smm-pair-card-v529="${CSS.escape(id)}"] details`); if (node) node.open = true; });
   rail.scrollLeft = scrollLeft;
   const readiness = g4SmmIdeaReadinessV529(idea);
@@ -325,12 +324,6 @@ document.addEventListener("input", (event) => {
       if (field === "cta") publication.creativeBrief.cta = target.value;
       if (field === "link") publication.link = target.value;
     }
-    if (field === "cta") target.closest("[data-g4-product-smm-pair-workspace-v529]")
-      ?.querySelectorAll("[data-g4-product-smm-cta-suggestion-v531]").forEach((button) => {
-        const selected = button.dataset.g4ProductSmmCtaSuggestionV531 === target.value;
-        button.classList.toggle("is-selected", selected);
-        button.setAttribute("aria-pressed", String(selected));
-      });
   }
   else {
     const platformId = target.dataset.g4ProductSmmPlatformIdV529;
@@ -365,17 +358,6 @@ document.addEventListener("input", (event) => {
     const badge = card?.querySelector(":scope > header em");
     if (badge && item) { badge.textContent = item.ready ? "Готово" : item.reason; badge.className = item.ready ? "is-ready" : "is-pending"; }
   }
-});
-
-document.addEventListener("click", (event) => {
-  const button = event.target.closest?.("[data-g4-product-smm-cta-suggestion-v531]");
-  if (!button) return;
-  const input = button.closest("[data-g4-product-smm-pair-workspace-v529]")
-    ?.querySelector('[data-g4-product-smm-base-field-v529="cta"]');
-  if (!input) return;
-  input.value = button.dataset.g4ProductSmmCtaSuggestionV531;
-  input.dispatchEvent(new Event("input", { bubbles: true }));
-  input.focus();
 });
 
 document.addEventListener("change", async (event) => {
@@ -884,7 +866,10 @@ document.addEventListener("input", (event) => {
   g4ProductSmmPreviewRefreshV523(root, record);
   if (publicationField === "title") {
     const title = root.querySelector(`[data-g4-product-smm-publication-card-v299="${CSS.escape(record.id)}"] [data-g4-product-smm-publication-card-title-v331]`);
-    if (title) title.textContent = g4SmmPublicationCardTitleV331(record, bucket.content.publications.indexOf(record));
+    if (title) {
+      title.textContent = g4SmmPublicationCardTitleV331(record, bucket.content.publications.indexOf(record));
+      window.GuruBlockTitles?.refresh(title);
+    }
   }
   if (resultField) {
     const verdicts = g4ProductSmmWithScopeV523(productId, ({ content }) => {

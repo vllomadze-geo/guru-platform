@@ -1,0 +1,18 @@
+[
+  {
+    "label": "before",
+    "initialProducts": 2,
+    "products": 62,
+    "status": "not_started",
+    "statusMs": 4189.699999988079,
+    "saveMs": 5071.5999999940395
+  },
+  {
+    "label": "after",
+    "initialProducts": 2,
+    "products": 62,
+    "status": "not_started",
+    "statusMs": 95.2000000178814,
+    "saveMs": 7875.799999982119
+  }
+]

@@ -1,0 +1,15 @@
+navigated
+loaded
+bootstrapped
+local project prepared
+project opened
+fixture rendered
+file:///private/tmp/guru-step7-after-middle/scripts/gate4-aware-media-smoke.mjs:9
+  if (!condition) throw new Error(message);
+                        ^
+
+Error: Aware tools: []
+    at assert (file:///private/tmp/guru-step7-after-middle/scripts/gate4-aware-media-smoke.mjs:9:25)
+    at file:///private/tmp/guru-step7-after-middle/scripts/gate4-aware-media-smoke.mjs:205:3
+
+Node.js v22.14.0

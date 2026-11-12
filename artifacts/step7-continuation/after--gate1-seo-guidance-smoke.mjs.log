@@ -1,0 +1,11 @@
+file:///private/tmp/guru-step7-after/scripts/gate1-seo-guidance-smoke.mjs:56
+    throw new Error(
+          ^
+
+Error: TypeError: Cannot set properties of undefined (setting 'result')
+    at <anonymous>:52:88
+    at <anonymous>:86:5
+    at evaluate (file:///private/tmp/guru-step7-after/scripts/gate1-seo-guidance-smoke.mjs:56:11)
+    at async file:///private/tmp/guru-step7-after/scripts/gate1-seo-guidance-smoke.mjs:167:17
+
+Node.js v22.14.0

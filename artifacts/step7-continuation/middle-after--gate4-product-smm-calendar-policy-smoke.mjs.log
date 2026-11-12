@@ -1,0 +1,19 @@
+{
+  "today": "2026-10-24",
+  "yesterday": "2026-10-23",
+  "historicalVisible": true,
+  "pastDropDisabled": true,
+  "pastSavedOptionDisabled": true,
+  "pastExcludedFromMenu": true,
+  "menuRejected": true,
+  "legacyRejected": true,
+  "dropRejected": true,
+  "firstVisible": true,
+  "firstDate": "2026-10-24",
+  "secondDate": "2026-10-24",
+  "oneHeight": 190.5,
+  "twoHeight": 287.5,
+  "inlineCount": 2,
+  "fit": true,
+  "separatePreviewAbsent": true
+}

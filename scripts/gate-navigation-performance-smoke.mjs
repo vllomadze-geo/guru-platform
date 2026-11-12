@@ -164,6 +164,11 @@ try {
   const baseline = await evaluate(page, `(async () => {
     scheduleCloudSync = () => {};
     scheduleProjectsCloudSync = () => {};
+    if (${JSON.stringify(process.env.GURU_NAV_SCOPE_PROBE === "1")}) {
+      const products = guruV189CatalogItems(state);
+      products.push({ id: "navigation-scope-product", name: "Тестовый продукт навигации" });
+      guruV194Ui(state);
+    }
     activeView = "gate";
     activeGateId = "gate-0";
     renderGate();
@@ -291,7 +296,15 @@ try {
         guruRenderedGateId === gateId &&
         document.getElementById("pageTitle")?.textContent.trim() ===
           state.gates.find((gate) => gate.id === gateId)?.title
-      );
+      ).catch((error) => {
+        throw new Error(error.message + ": requested=" + gateId + ", active=" + activeGateId +
+          ", rendered=" + guruRenderedGateId + ", view=" + activeView +
+          ", title=" + document.getElementById("pageTitle")?.textContent.trim() +
+          ", ticket=" + guruNavigationRenderTicket +
+          ", fast=" + guruFastGateNavigation +
+          ", navigating=" + guruGateNavigationInProgress +
+          ", errors=" + JSON.stringify(window.__guruErrors));
+      });
       await new Promise((resolve) => requestAnimationFrame(resolve));
       const finishedAt = performance.now();
       renderGate = originalRenderGate;
@@ -320,13 +333,103 @@ try {
     desktop.push(await navigate("gate-2"));
     desktop.push(await navigate("gate-0"));
     desktop.push(await navigate("gate-2"));
+    let disclosureProbe = null;
+    if (${JSON.stringify(process.env.GURU_NAV_PREF_PROBE === "1")}) {
+      const detail = [...els.contentArea.querySelectorAll("details[data-guru-disclosure-key-v512]")]
+        .find((node) => !node.matches(GURU_OWNED_DETAILS_V512));
+      if (detail) {
+        const key = detail.dataset.guruDisclosureKeyV512;
+        const desired = !detail.open;
+        detail.open = desired;
+        await navigate("gate-1");
+        await navigate("gate-2");
+        const returned = els.contentArea.querySelector(
+          'details[data-guru-disclosure-key-v512="' + CSS.escape(key) + '"]');
+        disclosureProbe = { found: true, key, desired,
+          stored: guruDisclosureOpenStateV512()[key], restored: returned?.open,
+          cached: els.contentArea.dataset.guruViewCache };
+      } else disclosureProbe = { found: false };
+    }
+    let editProbe = null;
+    if (${JSON.stringify(process.env.GURU_NAV_EDIT_PROBE === "1")}) {
+      await navigate("gate-0");
+      const editor = els.contentArea.querySelector('input[data-project-inline="geography"]');
+      if (editor) {
+        const value = "Проверка сохранения при переходе между гейтами 123";
+        editor.value = value;
+        editor.dispatchEvent(new Event("input", { bubbles: true }));
+        const inMemory = state.project.geography;
+        await navigate("gate-1");
+        await navigate("gate-0");
+        const restored = els.contentArea.querySelector('input[data-project-inline="geography"]')?.value;
+        await waitUntil(() => {
+          const saved = localStorage.getItem("guru-platform-workspace-v02-" + activeProjectId);
+          return saved && JSON.parse(saved).project?.geography === value;
+        }, 5000);
+        const saved = JSON.parse(localStorage.getItem("guru-platform-workspace-v02-" + activeProjectId));
+        editProbe = { found: true, inMemory, restored, persisted: saved.project?.geography, value };
+      } else editProbe = { found: false };
+    }
     const allGates = [];
+    const scopeProbe = [];
+    const scopeWarm = [];
+    const scopeRoundTrips = [];
+    let scopePreferenceProbe = null;
     if (${JSON.stringify(profileOnly)}) {
       guruInvalidateGateViewCache();
       for (const gateId of (${JSON.stringify(profileGate)}
         ? [${JSON.stringify(profileGate)}]
         : ["gate-3", "gate-4", "gate-5", "gate-6", "gate-7", "gate-8"])) {
         allGates.push(await navigate(gateId));
+      }
+    }
+    if (${JSON.stringify(process.env.GURU_NAV_SCOPE_PROBE === "1")}) {
+      for (const gateId of ["gate-0", "gate-1", "gate-2", "gate-3", "gate-4", "gate-5", "gate-6", "gate-7", "gate-8"]) {
+        const navigation = activeGateId !== gateId ? await navigate(gateId) : null;
+        const headings = [...els.contentArea.querySelectorAll("[data-gate0-section-heading]")]
+          .map((node) => node.dataset.gate0SectionHeading);
+        scopeProbe.push({ gateId, headings, productId: guruV194SelectedProduct(state)?.id || "",
+          active: activeGateId, cache: els.contentArea.dataset.guruViewCache,
+          totalMs: navigation?.totalMs });
+      }
+      for (const gateId of ["gate-0", "gate-1", "gate-2", "gate-3", "gate-4", "gate-5", "gate-6", "gate-7", "gate-8"])
+        scopeWarm.push(await navigate(gateId));
+      if (activeGateId !== "gate-2") await navigate("gate-2");
+      for (const scope of ["company", "product"])
+        els.contentArea.querySelector('[data-gate0-section-toggle="' + scope + '"]')?.click();
+      await navigate("gate-3");
+      await navigate("gate-2");
+      scopePreferenceProbe = Object.fromEntries(["company", "product"].map((scope) => [scope, {
+        stored: state.ui?.gateScopeOpenV526?.["gate-2"]?.[scope],
+        expanded: els.contentArea.querySelector('[data-gate0-section-toggle="' + scope + '"]')?.getAttribute("aria-expanded"),
+      }]));
+      await waitUntil(() => {
+        const saved = localStorage.getItem("guru-platform-workspace-v02-" + activeProjectId);
+        const preferences = saved && JSON.parse(saved).ui?.gateScopeOpenV526?.["gate-2"];
+        return preferences?.company === false && preferences?.product === false;
+      }, 5000);
+      const savedPreferences = JSON.parse(localStorage.getItem(
+        "guru-platform-workspace-v02-" + activeProjectId)).ui.gateScopeOpenV526["gate-2"];
+      for (const scope of ["company", "product"])
+        scopePreferenceProbe[scope].persisted = savedPreferences[scope];
+      const scopedGates = ["gate-1", "gate-2", "gate-3", "gate-4", "gate-5", "gate-6", "gate-7", "gate-8"];
+      for (let index = 0; index < scopedGates.length; index += 1) {
+        const gateId = scopedGates[index];
+        if (activeGateId !== gateId) await navigate(gateId);
+        const intended = {};
+        for (const scope of ["company", "product"]) {
+          const button = els.contentArea.querySelector('[data-gate0-section-toggle="' + scope + '"]');
+          intended[scope] = button?.getAttribute("aria-expanded") !== "true";
+          button?.click();
+        }
+        await navigate(scopedGates[(index + 1) % scopedGates.length]);
+        await navigate(gateId);
+        scopeRoundTrips.push({ gateId, scopes: Object.fromEntries(
+          ["company", "product"].map((scope) => [scope, {
+            intended: intended[scope],
+            stored: state.ui?.gateScopeOpenV526?.[gateId]?.[scope],
+            expanded: els.contentArea.querySelector('[data-gate0-section-toggle="' + scope + '"]')?.getAttribute("aria-expanded"),
+          }])) });
       }
     }
     let rsyaDisclosure = null;
@@ -480,6 +583,7 @@ try {
     }
     // Моделируем обычный сценарий после редактирования: зависимые снимки
     // сброшены, поэтому оба drawer-перехода обязаны пройти холодный renderer.
+    if (editProbe && activeGateId !== "gate-2") await navigate("gate-2");
     guruInvalidateGateViewCache();
     const drawer = [];
     drawer.push(await navigate("gate-1", true));
@@ -520,8 +624,83 @@ try {
     guruGateReadinessCache = new Map();
     renderGateNav({ recalculate: false });
     g8AnalysisV3 = originalG8Analysis;
+    const blockSwitches = [];
+    if (${JSON.stringify(process.env.GURU_NAV_PROFILE_BLOCKS === "1")}) {
+      const originalClone = guruExportDiagnosticCloneV223;
+      let cloneCalls = 0;
+      let cloneMs = 0;
+      guruExportDiagnosticCloneV223 = function (...args) {
+        const start = performance.now();
+        cloneCalls += 1;
+        try { return originalClone.apply(this, args); }
+        finally { cloneMs += performance.now() - start; }
+      };
+      try {
+        for (const item of nowGuideDisplayedPath.filter(item => item.gateId === "gate-1").slice(0, 2)) {
+          const start = performance.now();
+          nowGuideSelect(item, nowGuideDisplayedPath);
+          const dispatchMs = performance.now() - start;
+          await waitUntil(() => !nowGuideGate1NavigationPending && activeGateId === "gate-1", 30000);
+          blockSwitches.push({ id: item.id, dispatchMs: +(dispatchMs.toFixed(1)),
+            totalMs: +((performance.now() - start).toFixed(1)), cloneCalls,
+            cloneMs: +(cloneMs.toFixed(1)), nodes: els.contentArea.querySelectorAll("*").length });
+          cloneCalls = 0; cloneMs = 0;
+        }
+        const keywordItem = nowGuideDisplayedPath.find(item => item.gateId === "gate-0" &&
+          /Фундамент ключевых слов/i.test(item.title));
+        if (keywordItem) {
+          const start = performance.now();
+          nowGuideSelect(keywordItem, nowGuideDisplayedPath);
+          const dispatchMs = performance.now() - start;
+          await waitUntil(() => activeGateId === "gate-0" &&
+            guruRenderedGateId === "gate-0" && !nowGuideNavigationSnapshotActive, 30000);
+          const node = nowGuideFindNode(keywordItem);
+          blockSwitches.push({ id: keywordItem.id, dispatchMs: +(dispatchMs.toFixed(1)),
+            totalMs: +((performance.now() - start).toFixed(1)), cloneCalls,
+            cloneMs: +(cloneMs.toFixed(1)), nodes: els.contentArea.querySelectorAll("*").length,
+            visible: Boolean(node?.getClientRects().length) });
+        }
+      } finally { guruExportDiagnosticCloneV223 = originalClone; }
+    }
+    let guideContextProbe = null;
+    if (${JSON.stringify(process.env.GURU_NAV_LAYOUT_PROBE === "1")}) {
+      await navigate("gate-8");
+      const virtualizedSections = [...els.contentArea.querySelectorAll(".g8-section")]
+        .filter(element => getComputedStyle(element).contentVisibility !== "visible").length;
+      await navigate("gate-0");
+      const virtualizedCategories = [...els.contentArea.querySelectorAll(".guru-catalog-category-group")]
+        .filter(element => getComputedStyle(element).contentVisibility !== "visible").length;
+      const item = nowGuideDisplayedAllBlocks.find(entry =>
+        entry.gateId === "gate-1" && entry.id === "card-22-hub");
+      if (!item) throw new Error("Catalog guide item is missing");
+      nowGuideContextKey = "outdated-project-and-product-context";
+      nowGuideSelect(item, nowGuideDisplayedPath);
+      await waitUntil(() => activeGateId === "gate-1" &&
+        guruRenderedGateId === "gate-1" && !nowGuideGate1NavigationPending, 30000);
+      const node = nowGuideFindNode(item);
+      const rect = node?.getBoundingClientRect();
+      const emptyLargePanels = [...els.contentArea.querySelectorAll(
+        ".g1-card, .page-structure-card, .goat-product-section-v515")]
+        .filter(element => element.getBoundingClientRect().height > 300 &&
+          element.innerText.trim().length < 12).length;
+      guideContextProbe = {
+        selected: item.key,
+        current: nowGuideCurrent(nowGuideDisplayedPath)?.key,
+        visible: Boolean(rect && rect.height > 0 && rect.top < innerHeight && rect.bottom > 0),
+        hiddenLeaks: [...els.contentArea.querySelectorAll("[hidden]")]
+          .filter(element => getComputedStyle(element).display !== "none").length,
+        emptyLargePanels,
+        virtualizedSections: virtualizedSections + virtualizedCategories,
+      };
+    }
     return {
       desktop,
+      disclosureProbe,
+      editProbe,
+      scopeProbe,
+      scopeWarm,
+      scopeRoundTrips,
+      scopePreferenceProbe,
       allGates,
       rsyaDisclosure,
       rsyaImageActionProbe,
@@ -529,11 +708,61 @@ try {
       drawer,
       rapid,
       readinessAnalysisCalls,
+      blockSwitches,
+      guideContextProbe,
       errors: window.__guruErrors,
     };
   })()`);
 
   console.log(JSON.stringify(baseline, null, 2));
+  if (process.env.GURU_NAV_PREF_PROBE === "1") {
+    assert(baseline.disclosureProbe?.found &&
+      baseline.disclosureProbe.stored === baseline.disclosureProbe.desired &&
+      baseline.disclosureProbe.restored === baseline.disclosureProbe.desired,
+    `Gate disclosure preference was lost during navigation: ${JSON.stringify(baseline.disclosureProbe)}`);
+  }
+  if (process.env.GURU_NAV_EDIT_PROBE === "1") {
+    assert(baseline.editProbe?.found &&
+      [baseline.editProbe.inMemory, baseline.editProbe.restored,
+        baseline.editProbe.persisted].every((value) => value === baseline.editProbe.value),
+    `An edit was lost during gate navigation: ${JSON.stringify(baseline.editProbe)}`);
+  }
+  if (process.env.GURU_NAV_SCOPE_PROBE === "1") {
+    assert(baseline.scopeProbe.length === 9 &&
+      baseline.scopeProbe.every((entry) => entry.active === entry.gateId &&
+        entry.productId === "navigation-scope-product" &&
+        entry.headings.includes("company") && entry.headings.includes("product")),
+    `Company/product scope did not survive gate navigation: ${JSON.stringify(baseline.scopeProbe)}`);
+    assert(baseline.scopeWarm.every((entry) => entry.cache === "hit" && entry.totalMs < 150),
+      `Warm navigation regressed: ${JSON.stringify(baseline.scopeWarm.map((entry) => ({
+        gateId: entry.gateId, cache: entry.cache, totalMs: entry.totalMs,
+      })))}`);
+    assert(["company", "product"].every((scope) =>
+      baseline.scopePreferenceProbe?.[scope]?.stored === false &&
+      baseline.scopePreferenceProbe?.[scope]?.expanded === "false" &&
+      baseline.scopePreferenceProbe?.[scope]?.persisted === false),
+    `Company/product disclosure reset: ${JSON.stringify(baseline.scopePreferenceProbe)}`);
+    assert(baseline.scopeRoundTrips.length === 8 &&
+      baseline.scopeRoundTrips.every((entry) => ["company", "product"].every((scope) =>
+        entry.scopes[scope].stored === entry.scopes[scope].intended &&
+        entry.scopes[scope].expanded === String(entry.scopes[scope].intended))),
+    `Scope preference changed during a gate round trip: ${JSON.stringify(baseline.scopeRoundTrips)}`);
+  }
+  if (process.env.GURU_NAV_PROFILE_BLOCKS === "1") {
+    assert(baseline.blockSwitches.length >= 2 &&
+      baseline.blockSwitches.every((entry) => entry.cloneCalls <= 3),
+    `Block navigation cloned the workspace repeatedly: ${JSON.stringify(baseline.blockSwitches)}`);
+    assert(baseline.blockSwitches.every((entry) => entry.visible !== false),
+      `A selected block is missing from the screen: ${JSON.stringify(baseline.blockSwitches)}`);
+  }
+  if (process.env.GURU_NAV_LAYOUT_PROBE === "1") {
+    assert(baseline.guideContextProbe?.selected === baseline.guideContextProbe?.current &&
+      baseline.guideContextProbe.visible &&
+      baseline.guideContextProbe.hiddenLeaks === 0 &&
+      baseline.guideContextProbe.emptyLargePanels === 0 &&
+      baseline.guideContextProbe.virtualizedSections === 0,
+    `Guide and layout diverged after context change: ${JSON.stringify(baseline.guideContextProbe)}`);
+  }
   if (profileOnly) {
     if (!profileGate || profileGate === "gate-4") {
       assert(

@@ -1,0 +1,19 @@
+file:///private/tmp/guru-step7-before-tail/scripts/gate6-company-strategic-foundation-smoke.mjs:54
+    throw new Error(
+          ^
+
+Error: TypeError: Cannot read properties of undefined (reading 'map')
+    at ensureMegaMarketing (http://127.0.0.1:9502/app.js?v=2.3.526%2B3f52d3b9d9c5:21232:37)
+    at ensureMegaMarketing (http://127.0.0.1:9502/gate1-webmaster-qa.js?v=2.3.526%2B3f52d3b9d9c5:228:60)
+    at g3Gate0Marketing (http://127.0.0.1:9502/app.js?v=2.3.526%2B3f52d3b9d9c5:29851:13)
+    at g4LaunchChannels (http://127.0.0.1:9502/app.js?v=2.3.526%2B3f52d3b9d9c5:32665:13)
+    at g4LaunchChannels (http://127.0.0.1:9502/app.js?v=2.3.526%2B3f52d3b9d9c5:35081:16)
+    at gate6CompanyChannelsV230 (http://127.0.0.1:9502/app.js?v=2.3.526%2B3f52d3b9d9c5:65154:10)
+    at renderGate6Calendar (http://127.0.0.1:9502/app.js?v=2.3.526%2B3f52d3b9d9c5:65202:27)
+    at renderGateTable (http://127.0.0.1:9502/app.js?v=2.3.526%2B3f52d3b9d9c5:15937:5)
+    at renderGateTable (http://127.0.0.1:9502/app.js?v=2.3.526%2B3f52d3b9d9c5:16815:3)
+    at renderGateTable (http://127.0.0.1:9502/app.js?v=2.3.526%2B3f52d3b9d9c5:20228:3)
+    at evaluate (file:///private/tmp/guru-step7-before-tail/scripts/gate6-company-strategic-foundation-smoke.mjs:54:11)
+    at async file:///private/tmp/guru-step7-before-tail/scripts/gate6-company-strategic-foundation-smoke.mjs:189:19
+
+Node.js v22.14.0

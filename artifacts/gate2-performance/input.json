@@ -1,0 +1,182 @@
+{
+  "immediate": {
+    "samples": [
+      8.800000011920929,
+      0.699999988079071,
+      0.7999999970197678,
+      0.7000000029802322,
+      0.8999999910593033,
+      0.5,
+      0.5,
+      0.3999999910593033,
+      0.4000000059604645,
+      0.5
+    ],
+    "saves": 0,
+    "refreshes": 0,
+    "serviceRefreshes": 0,
+    "value": "Gate2 perf",
+    "focused": true,
+    "stored": "Gate2 perf"
+  },
+  "final": {
+    "saves": 0,
+    "refreshes": 1,
+    "serviceRefreshes": 2,
+    "value": "Gate2 perf",
+    "preservedOtherCard": true,
+    "focus": true,
+    "persisted": "Gate2 perf",
+    "status": "Проблема",
+    "expectedStatus": "Проблема"
+  },
+  "service": {
+    "inputMs": 1.7000000029802322,
+    "value": "Gate2",
+    "persisted": "Gate2",
+    "stored": "Gate2"
+  },
+  "check": {
+    "previousChecked": false,
+    "checked": true,
+    "stored": "done",
+    "status": "Проблема",
+    "expectedStatus": "Проблема"
+  },
+  "productCheck": {
+    "shown": "not_started",
+    "expected": "not_started",
+    "optionReady": false,
+    "selectedId": "catalog-item-1790860377305-388c56",
+    "cachedOther": 59
+  },
+  "productSwitch": {
+    "original": "catalog-item-1790860377305-388c56",
+    "newId": "catalog-item-1786792591872-c8b1e9",
+    "intended": "catalog-item-1786792591872-c8b1e9",
+    "renderedId": "catalog-item-1786792591872-c8b1e9",
+    "originalStepPreserved": true
+  },
+  "statusMismatches": [],
+  "serviceById": {
+    "company-domain": {
+      "count": 2,
+      "ms": 5.5999999940395355
+    },
+    "company-safety": {
+      "count": 2,
+      "ms": 0.30000001192092896
+    },
+    "company-vk": {
+      "count": 2,
+      "ms": 1.1000000089406967
+    },
+    "company-webmaster": {
+      "count": 1,
+      "ms": 1.199999988079071
+    },
+    "company-yandex-business": {
+      "count": 1,
+      "ms": 0.10000000894069672
+    },
+    "company-yandex-direct": {
+      "count": 1,
+      "ms": 0.10000000894069672
+    },
+    "company-telegram-ads": {
+      "count": 1,
+      "ms": 0.20000000298023224
+    },
+    "company-meta-ads": {
+      "count": 1,
+      "ms": 0.09999999403953552
+    },
+    "company-ga4": {
+      "count": 1,
+      "ms": 0.09999999403953552
+    },
+    "company-gsc": {
+      "count": 1,
+      "ms": 0.10000000894069672
+    },
+    "company-google-ads": {
+      "count": 1,
+      "ms": 0.09999999403953552
+    },
+    "company-leads": {
+      "count": 1,
+      "ms": 0.20000000298023224
+    },
+    "product-landing": {
+      "count": 2,
+      "ms": 4.800000011920929
+    },
+    "product-counter": {
+      "count": 1,
+      "ms": 0.29999999701976776
+    },
+    "product-goal": {
+      "count": 1,
+      "ms": 0.20000000298023224
+    },
+    "product-vk": {
+      "count": 1,
+      "ms": 0.19999998807907104
+    },
+    "product-lead": {
+      "count": 1,
+      "ms": 0.30000001192092896
+    }
+  },
+  "statusById": {
+    "domain": {
+      "count": 20,
+      "ms": 1322.2999999821186
+    },
+    "safety": {
+      "count": 18,
+      "ms": 0.6000000089406967
+    },
+    "counter": {
+      "count": 21,
+      "ms": 0.9000000208616257
+    },
+    "goal": {
+      "count": 21,
+      "ms": 0.800000011920929
+    },
+    "webmaster": {
+      "count": 15,
+      "ms": 212.80000001192093
+    },
+    "vk": {
+      "count": 16,
+      "ms": 1.7999999672174454
+    },
+    "crm": {
+      "count": 15,
+      "ms": 0.4000000059604645
+    },
+    "landing": {
+      "count": 137,
+      "ms": 922.1999999880791
+    },
+    "productCounter": {
+      "count": 138,
+      "ms": 1.8999999910593033
+    },
+    "productGoal": {
+      "count": 138,
+      "ms": 3.0000000298023224
+    },
+    "productVk": {
+      "count": 134,
+      "ms": 2.399999976158142
+    },
+    "lead": {
+      "count": 134,
+      "ms": 1.1999999731779099
+    }
+  },
+  "errors": []
+}

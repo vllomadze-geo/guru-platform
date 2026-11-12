@@ -113,10 +113,18 @@ try {
     assert(await evaluate(`document.activeElement===${expression}&&${expression}.isConnected`), `${label}: editor was replaced`);
     report.steps.push({ label, type: 'input', ms: Date.now() - start });
   };
+  if (process.env.GURU_INPUT_CPU_PROFILE) {
+    await page.call('Profiler.enable');
+    await page.call('Profiler.start');
+  }
   await focus('window.__name', 'first-name'); await type(' тест', 'window.__name', 'type-name');
   await focus('window.__url', 'name-to-url'); await type('-test', 'window.__url', 'type-url');
   await focus('window.__next', 'url-to-next-name'); await type(' тест', 'window.__next', 'type-next-name');
   await delay(800); await focus('window.__url', 'focus-after-autosave');
+  if (process.env.GURU_INPUT_CPU_PROFILE) {
+    const { profile } = await page.call('Profiler.stop');
+    writeFileSync(process.env.GURU_INPUT_CPU_PROFILE, JSON.stringify(profile));
+  }
   const category = await evaluate(`(()=>{const b=[...document.querySelectorAll('[data-mega-platform-pick-category]')].find(b=>b.dataset.megaPlatformPickCategory!=='__uncategorized__');b.click();return b.dataset.megaPlatformPickCategory})()`);
   await evaluate(`window.__picker=document.querySelector('[data-mega-platform-picker-name="${category}"]');true`);
   await focus('window.__picker', 'new-product-draft');

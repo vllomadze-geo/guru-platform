@@ -1,0 +1,109 @@
+{
+  "elapsedMs": 30620,
+  "exception": null,
+  "result": {
+    "products": 62,
+    "first": "catalog-item-1786885522653-759ff6",
+    "retained": "historical answer",
+    "retired": true,
+    "cards": 72
+  },
+  "topSelfTime": [
+    {
+      "name": "",
+      "url": "app.js?v=2.3.526%2B1b98c471bf26",
+      "line": 52722,
+      "ms": 11527
+    },
+    {
+      "name": "get",
+      "url": "app.js?v=2.3.526%2B1b98c471bf26",
+      "line": 2233,
+      "ms": 2822
+    },
+    {
+      "name": "",
+      "url": "app.js?v=2.3.526%2B1b98c471bf26",
+      "line": 52107,
+      "ms": 2810
+    },
+    {
+      "name": "readOnly",
+      "url": "app.js?v=2.3.526%2B1b98c471bf26",
+      "line": 2226,
+      "ms": 1965
+    },
+    {
+      "name": "guruV247KeywordEntry",
+      "url": "app.js?v=2.3.526%2B1b98c471bf26",
+      "line": 52663,
+      "ms": 1455
+    },
+    {
+      "name": "getOwnPropertyDescriptor",
+      "url": "app.js?v=2.3.526%2B1b98c471bf26",
+      "line": 2238,
+      "ms": 1342
+    },
+    {
+      "name": "set",
+      "url": "app.js?v=2.3.526%2B1b98c471bf26",
+      "line": 2234,
+      "ms": 985
+    },
+    {
+      "name": "guruV194Records",
+      "url": "app.js?v=2.3.526%2B1b98c471bf26",
+      "line": 52707,
+      "ms": 940
+    },
+    {
+      "name": "ownKeys",
+      "url": "app.js?v=2.3.526%2B1b98c471bf26",
+      "line": 2237,
+      "ms": 927
+    },
+    {
+      "name": "(garbage collector)",
+      "url": "",
+      "line": 0,
+      "ms": 791
+    },
+    {
+      "name": "guruV194ExactRecords",
+      "url": "app.js?v=2.3.526%2B1b98c471bf26",
+      "line": 52809,
+      "ms": 520
+    },
+    {
+      "name": "collect",
+      "url": "app.js?v=2.3.526%2B1b98c471bf26",
+      "line": 44308,
+      "ms": 499
+    },
+    {
+      "name": "guruV189CatalogItems",
+      "url": "app.js?v=2.3.526%2B1b98c471bf26",
+      "line": 52100,
+      "ms": 411
+    },
+    {
+      "name": "(program)",
+      "url": "",
+      "line": 0,
+      "ms": 341
+    },
+    {
+      "name": "guruV194Products",
+      "url": "app.js?v=2.3.526%2B1b98c471bf26",
+      "line": 52689,
+      "ms": 276
+    },
+    {
+      "name": "guruV185Text",
+      "url": "app.js?v=2.3.526%2B1b98c471bf26",
+      "line": 50999,
+      "ms": 263
+    }
+  ]
+}

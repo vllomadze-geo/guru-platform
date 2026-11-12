@@ -1,0 +1,17 @@
+checkpoint: start
+checkpoint: pages 1
+checkpoint: connected
+checkpoint: navigated
+checkpoint: isolated storage ready
+checkpoint: isolated functions ready
+file:///private/tmp/guru-step7-after-tail/scripts/product-card-seven-blocks-smoke.mjs:43
+    throw new Error(
+          ^
+
+Error: TypeError: Cannot set properties of null (setting 'value')
+    at <anonymous>:186:23
+    at <anonymous>:380:3
+    at evaluate (file:///private/tmp/guru-step7-after-tail/scripts/product-card-seven-blocks-smoke.mjs:43:11)
+    at async file:///private/tmp/guru-step7-after-tail/scripts/product-card-seven-blocks-smoke.mjs:78:16
+
+Node.js v22.14.0

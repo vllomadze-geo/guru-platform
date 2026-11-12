@@ -1,0 +1,9 @@
+file:///private/tmp/guru-step7-after-middle/scripts/gate4-readiness-product-smoke.mjs:45
+  if (!condition) throw new Error(message);
+                        ^
+
+Error: Expected 62 legacy instruction rows, got 65
+    at assert (file:///private/tmp/guru-step7-after-middle/scripts/gate4-readiness-product-smoke.mjs:45:25)
+    at file:///private/tmp/guru-step7-after-middle/scripts/gate4-readiness-product-smoke.mjs:115:1
+
+Node.js v22.14.0

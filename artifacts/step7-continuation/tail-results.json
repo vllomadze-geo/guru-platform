@@ -1,0 +1,492 @@
+{
+  "workspace-sync-retry-smoke.mjs": {
+    "before": {
+      "status": "FAIL",
+      "seconds": 12.27,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-before--workspace-sync-retry-smoke.mjs.log"
+    },
+    "after": {
+      "status": "FAIL",
+      "seconds": 12.43,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-after--workspace-sync-retry-smoke.mjs.log"
+    }
+  },
+  "workspace-sync-egress-smoke.mjs": {
+    "before": {
+      "status": "PASS",
+      "seconds": 0.41,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/tail-before--workspace-sync-egress-smoke.mjs.log"
+    },
+    "after": {
+      "status": "PASS",
+      "seconds": 0.43,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/tail-after--workspace-sync-egress-smoke.mjs.log"
+    }
+  },
+  "strategic-foundation-segments-smoke.mjs": {
+    "before": {
+      "status": "PASS",
+      "seconds": 2.24,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/tail-before--strategic-foundation-segments-smoke.mjs.log"
+    },
+    "after": {
+      "status": "PASS",
+      "seconds": 2.52,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/tail-after--strategic-foundation-segments-smoke.mjs.log"
+    }
+  },
+  "strategic-foundation-hierarchy-smoke.mjs": {
+    "before": {
+      "status": "TIMEOUT",
+      "seconds": 120.02,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-before--strategic-foundation-hierarchy-smoke.mjs.log"
+    },
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.02,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-after--strategic-foundation-hierarchy-smoke.mjs.log"
+    }
+  },
+  "project-passport-baseline-smoke.mjs": {
+    "before": {
+      "status": "FAIL",
+      "seconds": 4.86,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-before--project-passport-baseline-smoke.mjs.log"
+    },
+    "after": {
+      "status": "PASS",
+      "seconds": 6.87,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/tail-after--project-passport-baseline-smoke.mjs.log"
+    }
+  },
+  "product-card-unified-template-smoke.mjs": {
+    "before": {
+      "status": "PASS",
+      "seconds": 4.3,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/tail-before--product-card-unified-template-smoke.mjs.log"
+    },
+    "after": {
+      "status": "PASS",
+      "seconds": 3.94,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/tail-after--product-card-unified-template-smoke.mjs.log"
+    }
+  },
+  "product-card-seven-blocks-smoke.mjs": {
+    "before": {
+      "status": "FAIL",
+      "seconds": 2.26,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-before--product-card-seven-blocks-smoke.mjs.log"
+    },
+    "after": {
+      "status": "FAIL",
+      "seconds": 2.33,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-after--product-card-seven-blocks-smoke.mjs.log"
+    }
+  },
+  "preflight-now-guide-smoke.mjs": {
+    "before": {
+      "status": "ABSENT",
+      "reason": "No test in bc42b5b",
+      "seconds": 0
+    },
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.03,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-after--preflight-now-guide-smoke.mjs.log"
+    }
+  },
+  "other-project-now-guide-smoke.mjs": {
+    "before": {
+      "status": "ABSENT",
+      "reason": "No test in bc42b5b",
+      "seconds": 0
+    },
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.01,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-after--other-project-now-guide-smoke.mjs.log"
+    }
+  },
+  "now-guide-smoke.mjs": {
+    "before": {
+      "status": "ABSENT",
+      "reason": "No test in bc42b5b",
+      "seconds": 0
+    },
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.04,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-after--now-guide-smoke.mjs.log"
+    }
+  },
+  "navigation-url-smoke.mjs": {
+    "before": {
+      "status": "FAIL",
+      "seconds": 38.68,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-before--navigation-url-smoke.mjs.log"
+    },
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.06,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-after--navigation-url-smoke.mjs.log"
+    }
+  },
+  "local-storage-only-smoke.mjs": {
+    "before": {
+      "status": "FAIL",
+      "seconds": 1.07,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-before--local-storage-only-smoke.mjs.log"
+    },
+    "after": {
+      "status": "FAIL",
+      "seconds": 19.77,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-after--local-storage-only-smoke.mjs.log"
+    }
+  },
+  "gates-3-5-6-7-8-product-scope-smoke.mjs": {
+    "before": {
+      "status": "TIMEOUT",
+      "seconds": 120.04,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-before--gates-3-5-6-7-8-product-scope-smoke.mjs.log"
+    },
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.04,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-after--gates-3-5-6-7-8-product-scope-smoke.mjs.log"
+    }
+  },
+  "gate8-ui-integration-smoke.mjs": {
+    "before": {
+      "status": "PASS",
+      "seconds": 11.07,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/tail-before--gate8-ui-integration-smoke.mjs.log"
+    },
+    "after": {
+      "status": "FAIL",
+      "seconds": 20.91,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-after--gate8-ui-integration-smoke.mjs.log"
+    }
+  },
+  "gate8-compact-workbench-smoke.mjs": {
+    "before": {
+      "status": "TIMEOUT",
+      "seconds": 120.05,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-before--gate8-compact-workbench-smoke.mjs.log"
+    },
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.01,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-after--gate8-compact-workbench-smoke.mjs.log"
+    }
+  },
+  "gate8-browser-smoke.mjs": {
+    "before": {
+      "status": "TIMEOUT",
+      "seconds": 120.01,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-before--gate8-browser-smoke.mjs.log"
+    },
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.04,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-after--gate8-browser-smoke.mjs.log"
+    }
+  },
+  "gate7-company-strategic-foundation-smoke.mjs": {
+    "before": {
+      "status": "FAIL",
+      "seconds": 2.7,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-before--gate7-company-strategic-foundation-smoke.mjs.log"
+    },
+    "after": {
+      "status": "FAIL",
+      "seconds": 6.55,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-after--gate7-company-strategic-foundation-smoke.mjs.log"
+    }
+  },
+  "gate6-company-strategic-foundation-smoke.mjs": {
+    "before": {
+      "status": "FAIL",
+      "seconds": 2.31,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-before--gate6-company-strategic-foundation-smoke.mjs.log"
+    },
+    "after": {
+      "status": "FAIL",
+      "seconds": 21.26,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-after--gate6-company-strategic-foundation-smoke.mjs.log"
+    }
+  },
+  "gate5-snapshot-smoke.mjs": {
+    "before": {
+      "status": "FAIL",
+      "seconds": 5.26,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-before--gate5-snapshot-smoke.mjs.log"
+    },
+    "after": {
+      "status": "FAIL",
+      "seconds": 7.02,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-after--gate5-snapshot-smoke.mjs.log"
+    }
+  },
+  "gate4-upstream-links-smoke.mjs": {
+    "before": {
+      "status": "FAIL",
+      "seconds": 0.65,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-before--gate4-upstream-links-smoke.mjs.log"
+    },
+    "after": {
+      "status": "FAIL",
+      "seconds": 4.91,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-after--gate4-upstream-links-smoke.mjs.log"
+    }
+  },
+  "gate4-upstream-integration-smoke.mjs": {
+    "before": {
+      "status": "FAIL",
+      "seconds": 1.83,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-before--gate4-upstream-integration-smoke.mjs.log"
+    },
+    "after": {
+      "status": "FAIL",
+      "seconds": 5.72,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-after--gate4-upstream-integration-smoke.mjs.log"
+    }
+  },
+  "gate4-stage-explanations-smoke.mjs": {
+    "before": {
+      "status": "TIMEOUT",
+      "seconds": 120.01,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-before--gate4-stage-explanations-smoke.mjs.log"
+    },
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.04,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-after--gate4-stage-explanations-smoke.mjs.log"
+    }
+  },
+  "gate4-smm-strategy-smoke.mjs": {
+    "before": {
+      "status": "TIMEOUT",
+      "seconds": 120.01,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-before--gate4-smm-strategy-smoke.mjs.log"
+    },
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.02,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-after--gate4-smm-strategy-smoke.mjs.log"
+    }
+  },
+  "gate4-smm-scenario-smoke.mjs": {
+    "before": {
+      "status": "ABSENT",
+      "reason": "No test in bc42b5b",
+      "seconds": 0
+    },
+    "after": {
+      "status": "PASS",
+      "seconds": 32.21,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/tail-after--gate4-smm-scenario-smoke.mjs.log"
+    }
+  },
+  "gate4-smm-material-foundation-smoke.mjs": {
+    "before": {
+      "status": "PASS",
+      "seconds": 2.25,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/tail-before--gate4-smm-material-foundation-smoke.mjs.log"
+    },
+    "after": {
+      "status": "PASS",
+      "seconds": 2.42,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/tail-after--gate4-smm-material-foundation-smoke.mjs.log"
+    }
+  },
+  "gate4-smm-digestion-smoke.mjs": {
+    "before": {
+      "status": "PASS",
+      "seconds": 2.58,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/tail-before--gate4-smm-digestion-smoke.mjs.log"
+    },
+    "after": {
+      "status": "PASS",
+      "seconds": 2.64,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/tail-after--gate4-smm-digestion-smoke.mjs.log"
+    }
+  },
+  "gate4-smm-content-system-smoke.mjs": {
+    "before": {
+      "status": "TIMEOUT",
+      "seconds": 120.01,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-before--gate4-smm-content-system-smoke.mjs.log"
+    },
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.01,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-after--gate4-smm-content-system-smoke.mjs.log"
+    }
+  },
+  "gate4-smm-campaign-key-guard-smoke.mjs": {
+    "before": {
+      "status": "TIMEOUT",
+      "seconds": 120.05,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-before--gate4-smm-campaign-key-guard-smoke.mjs.log"
+    },
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.02,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-after--gate4-smm-campaign-key-guard-smoke.mjs.log"
+    }
+  },
+  "gate4-search-save-export-smoke.mjs": {
+    "before": {
+      "status": "TIMEOUT",
+      "seconds": 120.06,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-before--gate4-search-save-export-smoke.mjs.log"
+    },
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.12,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-after--gate4-search-save-export-smoke.mjs.log"
+    }
+  },
+  "gate4-search-launch-visibility-smoke.mjs": {
+    "before": {
+      "status": "FAIL",
+      "seconds": 8.56,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-before--gate4-search-launch-visibility-smoke.mjs.log"
+    },
+    "after": {
+      "status": "FAIL",
+      "seconds": 9.53,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-after--gate4-search-launch-visibility-smoke.mjs.log"
+    }
+  },
+  "gate4-search-launch-summary-period-smoke.mjs": {
+    "before": {
+      "status": "TIMEOUT",
+      "seconds": 120.05,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-before--gate4-search-launch-summary-period-smoke.mjs.log"
+    },
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.06,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-after--gate4-search-launch-summary-period-smoke.mjs.log"
+    }
+  },
+  "gate4-search-jtbd-readiness-smoke.mjs": {
+    "before": {
+      "status": "TIMEOUT",
+      "seconds": 120.07,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-before--gate4-search-jtbd-readiness-smoke.mjs.log"
+    },
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.05,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-after--gate4-search-jtbd-readiness-smoke.mjs.log"
+    }
+  },
+  "gate4-search-jtbd-audience-forecast-smoke.mjs": {
+    "before": {
+      "status": "TIMEOUT",
+      "seconds": 120.12,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-before--gate4-search-jtbd-audience-forecast-smoke.mjs.log"
+    },
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.05,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-after--gate4-search-jtbd-audience-forecast-smoke.mjs.log"
+    }
+  },
+  "gate4-search-group-metrics-import-export-smoke.mjs": {
+    "before": {
+      "status": "TIMEOUT",
+      "seconds": 120.12,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-before--gate4-search-group-metrics-import-export-smoke.mjs.log"
+    }
+  },
+  "gate4-search-group-fixation-smoke.mjs": {
+    "before": {
+      "status": "FAIL",
+      "seconds": 17.84,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/tail-before--gate4-search-group-fixation-smoke.mjs.log"
+    }
+  },
+  "gate4-search-gate1-product-source-smoke.mjs": {
+    "before": {
+      "status": "TIMEOUT",
+      "seconds": 120.11,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-before--gate4-search-gate1-product-source-smoke.mjs.log"
+    }
+  },
+  "gate4-search-duplicate-ownership-smoke.mjs": {
+    "before": {
+      "status": "TIMEOUT",
+      "seconds": 120.05,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/tail-before--gate4-search-duplicate-ownership-smoke.mjs.log"
+    }
+  }
+}

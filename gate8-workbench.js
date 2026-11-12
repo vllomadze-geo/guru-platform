@@ -1761,6 +1761,53 @@ renderGate8Forecast = function () {
 
 let g8ManualScenarioRenderTimerV4 = 0;
 
+function g8RefreshManualScenarioBodyV4(body, analysis) {
+  const nextHtml = g8ScenarioHtmlV3(analysis);
+  const active = document.activeElement;
+  if (!body.contains(active) || !active.matches("[data-g8-v3-manual]")) {
+    body.innerHTML = nextHtml;
+    return;
+  }
+  const template = document.createElement("template");
+  template.innerHTML = nextHtml;
+  const next = template.content;
+  for (const selector of [".g8-scenario-context", ".g8-scenario-note"]) {
+    const currentNode = body.querySelector(`:scope > ${selector}`);
+    const nextNode = next.querySelector(selector);
+    if (currentNode && nextNode) currentNode.replaceWith(nextNode);
+  }
+  const list = body.querySelector(":scope > .g8-scenario-list");
+  const nextList = next.querySelector(".g8-scenario-list");
+  if (!list || !nextList) return;
+  nextList.querySelectorAll("[data-g8-v3-scenario-card]").forEach((nextCard) => {
+    const key = nextCard.dataset.g8V3ScenarioCard;
+    const card = list.querySelector(`[data-g8-v3-scenario-card="${CSS.escape(key)}"]`);
+    if (!card) return;
+    if (!card.contains(active)) { card.replaceWith(nextCard); return; }
+    card.className = nextCard.className;
+    for (const selector of ["header", ".g8-scenario-conditions", ".g8-scenario-metrics"]) {
+      const oldNode = card.querySelector(`:scope > ${selector}`);
+      const newNode = nextCard.querySelector(`:scope > ${selector}`);
+      if (oldNode && newNode) oldNode.replaceWith(newNode);
+    }
+    const oldUnavailable = card.querySelector(":scope > .g8-scenario-unavailable");
+    const newUnavailable = nextCard.querySelector(":scope > .g8-scenario-unavailable");
+    if (oldUnavailable && newUnavailable) oldUnavailable.replaceWith(newUnavailable);
+    else if (oldUnavailable) oldUnavailable.remove();
+    else if (newUnavailable) card.querySelector(":scope > .g8-scenario-metrics")?.before(newUnavailable);
+    nextCard.querySelectorAll("[data-g8-v3-manual]").forEach((nextInput) => {
+      const field = card.querySelector(`[data-g8-v3-manual="${CSS.escape(nextInput.dataset.g8V3Manual)}"]`);
+      const label = field?.closest(".g8-scenario-field");
+      const nextLabel = nextInput.closest(".g8-scenario-field");
+      if (label && nextLabel) {
+        label.className = nextLabel.className;
+        const hint = label.querySelector("small");
+        if (hint) hint.textContent = nextLabel.querySelector("small")?.textContent || "";
+      }
+    });
+  });
+}
+
 function g8UpdateManualScenarioV4(input, renderImmediately = false) {
   const key = input?.dataset?.g8V3Manual;
   if (key === undefined) return;
@@ -1774,21 +1821,12 @@ function g8UpdateManualScenarioV4(input, renderImmediately = false) {
   clearTimeout(g8ManualScenarioRenderTimerV4);
   const commit = () => {
     g8ManualScenarioRenderTimerV4 = 0;
-    guruPersistStateFast({ workspace, projectId, durable: true });
+    guruQueueWorkspaceSave({ workspace, projectId, durable: true });
     if (workspace !== state || projectId !== activeProjectId ||
         activeView !== "gate" || activeGateId !== "gate-8") return;
     const body = document.getElementById("g8-workbench-scenario-body");
     if (!body || body.hidden || body.dataset.g8V3Lazy === "true") return;
-    const keepFocus = document.activeElement === input;
-    const selectionStart = keepFocus ? input.selectionStart : null;
-    const selectionEnd = keepFocus ? input.selectionEnd : null;
-    body.innerHTML = g8ScenarioHtmlV3(g8AnalysisV3());
-    if (keepFocus) {
-      const next = body.querySelector(`[data-g8-v3-manual="${CSS.escape(key)}"]`);
-      next?.focus({ preventScroll: true });
-      if (selectionStart !== null && selectionEnd !== null)
-        next?.setSelectionRange(selectionStart, selectionEnd);
-    }
+    g8RefreshManualScenarioBodyV4(body, g8AnalysisV3());
   };
   if (renderImmediately) commit();
   else g8ManualScenarioRenderTimerV4 = setTimeout(commit, 220);

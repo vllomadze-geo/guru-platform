@@ -1,0 +1,9 @@
+file:///private/tmp/guru-step7-after/scripts/gate0-company-brand-purpose-smoke.mjs:9
+  if (!condition) throw new Error(message);
+                        ^
+
+Error: Company strategy card order is wrong: {"order":[2,4,5,6,7],"ids":["card-1","card-2","gate0-project-goal","gate0-landing-check-v215","gate0-company-brand-purpose","gate0-company-segmentation","gate0-company-positioning","gate0-company-offer","gate0-company-keyword-foundation","card-3","card-4","card-5","card-6","card-7","card-11","card-8","card-9","card-10","gate0-product-diagnostic","card-12"]}
+    at assert (file:///private/tmp/guru-step7-after/scripts/gate0-company-brand-purpose-smoke.mjs:9:25)
+    at file:///private/tmp/guru-step7-after/scripts/gate0-company-brand-purpose-smoke.mjs:177:3
+
+Node.js v22.14.0

@@ -1,0 +1,37 @@
+[
+  {
+    "test": "project-passport-baseline-smoke.mjs",
+    "label": "before",
+    "status": "PASS",
+    "seconds": 6.26,
+    "log": "/Users/vl/Developer/guru-platform/artifacts/step7-continuation/serial-before-project-passport-baseline-smoke.mjs.log"
+  },
+  {
+    "test": "project-passport-baseline-smoke.mjs",
+    "label": "after",
+    "status": "PASS",
+    "seconds": 3.15,
+    "log": "/Users/vl/Developer/guru-platform/artifacts/step7-continuation/serial-after-project-passport-baseline-smoke.mjs.log"
+  },
+  {
+    "test": "gate2-setup-wizard-smoke.mjs",
+    "label": "before",
+    "status": "PASS",
+    "seconds": 26.88,
+    "log": "/Users/vl/Developer/guru-platform/artifacts/step7-continuation/serial-before-gate2-setup-wizard-smoke.mjs.log"
+  },
+  {
+    "test": "gate2-setup-wizard-smoke.mjs",
+    "label": "after",
+    "status": "FAIL",
+    "seconds": 32.09,
+    "log": "/Users/vl/Developer/guru-platform/artifacts/step7-continuation/serial-after-gate2-setup-wizard-smoke.mjs.log"
+  },
+  {
+    "test": "gate8-ui-integration-smoke.mjs",
+    "label": "after",
+    "status": "FAIL",
+    "seconds": 20.27,
+    "log": "/Users/vl/Developer/guru-platform/artifacts/step7-continuation/serial-after-gate8-ui-integration-smoke.mjs.log"
+  }
+]

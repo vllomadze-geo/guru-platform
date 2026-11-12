@@ -1,0 +1,14 @@
+Gate 0 company strategy chain smoke passed {
+  steps: [
+    'brand-purpose',
+    'goals',
+    'segments',
+    'positioning',
+    'offers',
+    'keywords'
+  ],
+  status: 'ready',
+  goalCount: 2,
+  offerCount: 2,
+  keywordCount: '1 ключевое слово'
+}

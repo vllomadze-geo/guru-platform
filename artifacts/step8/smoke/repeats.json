@@ -1,0 +1,20 @@
+[
+  {
+    "test": "gate0-unified-readiness-smoke.mjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "seconds": 37.24,
+    "timeoutSeconds": 300,
+    "log": "/Users/vl/Developer/guru-platform/artifacts/step8/smoke/gate0-unified-readiness-smoke.mjs.repeat.log",
+    "fixture": "/private/tmp/guru-now-korich-workspace.json"
+  },
+  {
+    "test": "gate34-now-readiness-smoke.mjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "seconds": 157.61,
+    "timeoutSeconds": 300,
+    "log": "/Users/vl/Developer/guru-platform/artifacts/step8/smoke/gate34-now-readiness-smoke.mjs.repeat.log",
+    "fixture": "/private/tmp/guru-now-korich-workspace.json"
+  }
+]

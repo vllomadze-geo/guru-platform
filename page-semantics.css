@@ -1,0 +1,49 @@
+.guru-page-semantics-v1 .guru-page-semantic-count-v1 {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.guru-page-semantic-body-v1 {
+  display: grid;
+  gap: 12px;
+}
+
+.guru-page-semantic-toolbar-v1,
+.guru-page-semantic-tools-v1,
+.guru-page-semantic-row-v1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guru-page-semantic-toolbar-v1 { justify-content: space-between; flex-wrap: wrap; }
+.guru-page-semantic-tools-v1 { flex-wrap: wrap; }
+.guru-page-semantic-list-v1 { display: grid; gap: 7px; }
+.guru-page-semantic-value-v1 { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.guru-page-semantic-row-v1 .g1-input { width: 100%; min-width: 0; }
+.guru-page-semantic-metrics-v1 { color: var(--muted); font-size: 11px; line-height: 1.35; }
+
+.guru-page-semantic-icon-v1 {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.guru-page-semantic-icon-v1:hover { background: var(--panel-soft); }
+.guru-page-semantic-empty-v1 { margin: 0; color: var(--muted); font-size: 12px; }
+.guru-page-semantic-empty-v1[hidden] { display: none; }
+
+@media (max-width: 600px) {
+  .guru-page-semantic-toolbar-v1 { align-items: flex-start; flex-wrap: wrap; }
+}

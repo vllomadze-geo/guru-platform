@@ -1,0 +1,65 @@
+.g3ro {
+  --g3ro-line: #ddd5c9;
+  --g3ro-muted: #766f66;
+  display: grid;
+  gap: 26px;
+  color: #201d19;
+}
+.g3ro-map {
+  min-width: 0;
+  padding: 28px 32px;
+  border: 1px solid var(--g3ro-line);
+  border-radius: 20px;
+  background: #fff;
+}
+.g3ro-map-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.g3ro-map-head h2 { margin: 0; font-size: 29px; line-height: 1.25; }
+.g3ro-map-head > strong { font-size: 16px; white-space: nowrap; }
+.g3ro-progress { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; margin: 20px 0 26px; }
+.g3ro-progress > span { height: 8px; border: 1px solid var(--g3ro-line); border-radius: 10px; }
+.g3ro-progress > span.is-done { background: #28241f; border-color: #28241f; }
+.g3ro-picker { display: grid; gap: 7px; max-width: 560px; margin-bottom: 22px; }
+.g3ro-picker > span { font-size: 13px; font-weight: 700; color: var(--g3ro-muted); }
+.g3ro-picker select { width: 100%; min-height: 46px; padding: 8px 14px; color: inherit; background: #fff; border: 1px solid var(--g3ro-line); border-radius: 10px; font: inherit; }
+.g3ro-next { display: grid; grid-template-columns: 130px minmax(0, 1fr) auto; align-items: center; gap: 10px 16px; padding: 16px 0; border-top: 1px solid var(--g3ro-line); border-bottom: 1px solid var(--g3ro-line); }
+.g3ro-next > span { color: var(--g3ro-muted); font-size: 13px; font-weight: 700; }
+.g3ro-next > strong { font-size: 15px; }
+.g3ro-link { display: inline; width: fit-content; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; font-size: 14px; text-align: left; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.g3ro-link:hover { text-decoration-thickness: 2px; }
+.g3ro-link:focus-visible, .g3ro-picker select:focus-visible, .g3ro-stage-head:focus-visible { outline: 2px solid #1e1b18; outline-offset: 3px; }
+.g3ro-stages { margin-top: 12px; }
+.g3ro-stage { border-bottom: 1px solid var(--g3ro-line); }
+.g3ro-stage-head { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto auto; align-items: center; gap: 14px; width: 100%; min-height: 66px; padding: 12px 0; color: inherit; border: 0; background: transparent; text-align: left; font: inherit; cursor: pointer; }
+.g3ro-triangle { display: inline-block; color: var(--g3ro-muted); transition: transform .15s ease; }
+.g3ro-stage.is-open .g3ro-triangle { transform: rotate(90deg); }
+.g3ro-stage-head > strong { font-size: 18px; line-height: 1.3; }
+.g3ro-stage-count { white-space: nowrap; color: var(--g3ro-muted); font-size: 14px; }
+.g3ro-badge { padding: 5px 10px; border-radius: 99px; white-space: nowrap; font-size: 12px; font-weight: 700; }
+.g3ro-stage-head .status-ready { background: #e0f7e6; color: #17652c; }
+.g3ro-stage-head .status-in_progress { background: #f8e7d8; color: #7c4217; }
+.g3ro-stage-body { padding: 0 0 20px 36px; }
+.g3ro-stage-body[hidden] { display: none; }
+.g3ro-stage-body > p { margin: 0 0 8px; color: var(--g3ro-muted); font-size: 14px; }
+.g3ro-item { display: grid; grid-template-columns: 18px minmax(0, 1fr) minmax(180px, 30%); align-items: start; gap: 12px; padding: 13px 0; border-top: 1px solid var(--g3ro-line); }
+.g3ro-item-copy { display: grid; gap: 4px; min-width: 0; }
+.g3ro-item-copy strong { font-size: 15px; line-height: 1.35; overflow-wrap: anywhere; }
+.g3ro-item-copy small { color: var(--g3ro-muted); font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
+.g3ro-check { color: var(--g3ro-muted); font-size: 16px; line-height: 1.25; }
+.g3ro-item.is-done, .g3ro-item.is-archive { color: var(--g3ro-muted); }
+.g3ro-item > .g3ro-link { justify-self: end; max-width: 100%; overflow-wrap: anywhere; }
+.g3ro-no-source { padding: 14px 0; color: var(--g3ro-muted); font-size: 14px; }
+@media (max-width: 700px) {
+  .g3ro { gap: 16px; }
+  .g3ro-map { padding: 18px 16px; border-radius: 14px; }
+  .g3ro-map-head { align-items: start; }
+  .g3ro-map-head h2 { font-size: 23px; }
+  .g3ro-map-head > strong { font-size: 13px; }
+  .g3ro-next { grid-template-columns: 1fr; gap: 5px; }
+  .g3ro-stage-head { grid-template-columns: 18px minmax(0, 1fr) auto; gap: 8px; }
+  .g3ro-stage-head > strong { font-size: 15px; }
+  .g3ro-stage-count { grid-column: 2; }
+  .g3ro-badge { grid-column: 3; grid-row: 1 / 3; }
+  .g3ro-stage-body { padding-left: 26px; }
+  .g3ro-item { grid-template-columns: 16px minmax(0, 1fr); gap: 5px 8px; }
+  .g3ro-item > .g3ro-link { grid-column: 2; justify-self: start; }
+}

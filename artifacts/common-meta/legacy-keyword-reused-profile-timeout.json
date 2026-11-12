@@ -1,0 +1,5 @@
+{
+  "status": "TIMEOUT",
+  "seconds": 120.009,
+  "error": "spawnSync /usr/local/bin/node ETIMEDOUT"
+}

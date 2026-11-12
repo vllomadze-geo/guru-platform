@@ -1,0 +1,37 @@
+{
+  "label": "guru",
+  "build": "2.3.526+39807ad90620",
+  "comparison": {
+    "identical": false,
+    "beforeSha256": "dfc79c0d5b8df3e4a3f14fe3fc4ec3938570b3741812c710fc271cd347f613d9",
+    "afterSha256": "be1bbc3df7b108e91a5c9a28466861b1282a36386fb5943d0efae5513d67e0fe",
+    "bytes": 469038,
+    "updatedAtFields": 4,
+    "uiPreferenceWrites": 0,
+    "differences": [
+      {
+        "path": "workspace.workspace.gates.1.cards.9.pageRows.0.id",
+        "before": "page-1792847897132-53ef68",
+        "after": "page-1792847900090-73fb2a"
+      }
+    ]
+  },
+  "issues": [
+    {
+      "type": "export",
+      "identical": false,
+      "beforeSha256": "dfc79c0d5b8df3e4a3f14fe3fc4ec3938570b3741812c710fc271cd347f613d9",
+      "afterSha256": "be1bbc3df7b108e91a5c9a28466861b1282a36386fb5943d0efae5513d67e0fe",
+      "bytes": 469038,
+      "updatedAtFields": 4,
+      "uiPreferenceWrites": 0,
+      "differences": [
+        {
+          "path": "workspace.workspace.gates.1.cards.9.pageRows.0.id",
+          "before": "page-1792847897132-53ef68",
+          "after": "page-1792847900090-73fb2a"
+        }
+      ]
+    }
+  ]
+}

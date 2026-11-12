@@ -180,6 +180,8 @@ try {
       product_id: categoryId,
       items: {},
     }];
+    // Category membership is stored in Platform, independently of the legacy categoryId.
+    megaPlatformCategoryStore(state).categoryIdsByProduct[productId] = [categoryId];
     const products = guruV194Products(state);
     const product = products.find((candidate) =>
       Boolean(g3ProductJourneyPageSource(candidate)?.row)
@@ -287,7 +289,9 @@ try {
       });
     };
 
+    activeView = "gate";
     activeGateId = "gate-1";
+    getGate1AccordionState().subblocks[GATE1_COMPANY_DEMAND_POSITIONING_SECTION_V357] = true;
     getGate1AccordionState().subblocks.pain_jtbd_offer = true;
     renderGate();
     const root = document.querySelector("[data-pv181-company-demand-v345]");
@@ -351,7 +355,7 @@ try {
   assert(initial.editableCount === 12 && initial.kwControls === 0, "Company demand editability changed");
   assert(!initial.hasRowsAfterRender && !initial.hasArchiveAfterRender, "Read-only render persisted demand rows");
   assert(
-    initial.companyHeading === "Спрос, ценность, позиционирование · Компания",
+    initial.companyHeading === "Спрос",
     `Company heading mismatch: ${initial.companyHeading}`,
   );
   assert(
@@ -360,8 +364,8 @@ try {
     `Product heading mismatch: ${initial.productHeading}`,
   );
   assert(
-    initial.productWebmasterHeading === "Яндекс Вебмастер · Продукт/Услуга",
-    `Product Webmaster heading mismatch: ${initial.productWebmasterHeading}`,
+    initial.productWebmasterHeading === "",
+    `Archived Webmaster unexpectedly rendered in Gate 1: ${initial.productWebmasterHeading}`,
   );
   assert(
     initial.hasExportButton && initial.hasImportButton && initial.hasFileInput,
@@ -375,9 +379,15 @@ try {
   );
 
   const brandIsolation = await evaluate(page, `(() => {
-    const input = document.querySelector("[data-gate1-company-brand-v264]");
+    if (document.querySelector("[data-gate1-company-brand-v264]")) throw Error("Obsolete SMM editor is still visible");
+    // Exercise the retained legacy writer without exposing its editor in the UI.
+    const input = document.createElement("textarea");
+    input.dataset.gate1CompanyBrandV264 = "";
+    input.hidden = true;
+    document.body.append(input);
     input.value = "Новая SMM-фраза\\nЕщё одна SMM-фраза";
     input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.remove();
     const model = gate1CompanyBrandDemandReconcileV345(state);
     const semantics = g4ProductSemantics("");
     return {
@@ -732,8 +742,8 @@ try {
   );
   assert(
     csvSuite.lastImportUiText.includes("обновлено 0") &&
-      csvSuite.lastImportUiText.includes("не сопоставлено 3") &&
-      csvSuite.unmatchedUiText.includes("Не сопоставлено: 3"),
+      csvSuite.lastImportUiText.includes("не импортировано 3") &&
+      csvSuite.unmatchedUiText.includes("Не импортировано: 3"),
     `Company import result is missing in UI: ${csvSuite.lastImportUiText} / ${csvSuite.unmatchedUiText}`,
   );
   assert(
@@ -887,7 +897,9 @@ try {
         demand,
       });
     };
+    activeView = "gate";
     activeGateId = "gate-1";
+    getGate1AccordionState().subblocks[GATE1_COMPANY_DEMAND_POSITIONING_SECTION_V357] = true;
     getGate1AccordionState().subblocks.pain_jtbd_offer = true;
     renderGate();
     const company = gate1CompanySemanticsV264(state);
@@ -959,8 +971,8 @@ try {
     afterReload.importState?.last_import?.file === "company-unmatched.csv" &&
       afterReload.importState?.last_import?.unmatched === 3 &&
       afterReload.importState?.unmatched?.length === 3 &&
-      afterReload.lastImportUiText.includes("не сопоставлено 3") &&
-      afterReload.unmatchedUiText.includes("Не сопоставлено: 3"),
+      afterReload.lastImportUiText.includes("не импортировано 3") &&
+      afterReload.unmatchedUiText.includes("Не импортировано: 3"),
     "Company import report did not survive hard reload",
   );
   assert(

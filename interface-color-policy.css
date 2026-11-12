@@ -1,0 +1,41 @@
+/* Shared visual rule: color belongs to compact status indicators, never to
+   the surface or border of a card, section, table cell, or selected control. */
+:root {
+  --ui-surface: var(--panel);
+  --ui-surface-subtle: var(--panel-soft);
+  --ui-border: var(--line);
+}
+
+:is(.v22-route-section, .goat-product-section-v514, .goat-product-section-v515,
+    .goat-product-service-section-v515, .product-card-block-v253,
+    .robots-system-card-v17, .sitemap-system-card, .server-response-workspace,
+    .ssl-https-workspace)[class*="status-"],
+:is(.robots-system-card-v17, .sitemap-system-card, .server-response-workspace,
+    .ssl-https-workspace):is(.is-ok, .is-attention, .is-issue) {
+  background: var(--ui-surface) !important;
+  border-color: var(--ui-border) !important;
+}
+
+:is(.v22-route-section, .product-card-block-v253)[class*="status-"] > summary {
+  border-left-color: var(--ui-border) !important;
+}
+
+.g1-redesign :is([data-page-source-card="card-22-hub"],
+  [data-page-source-card="card-21"], [data-page-source-card="card-22"])
+  .guru-hub-page-groups-v503 .v22-route-section {
+  --guru-hub-section-bg-v503: var(--ui-surface) !important;
+  --guru-hub-section-border-v503: var(--ui-border) !important;
+}
+
+/* Status remains legible in its badge. The surrounding selected/input state
+   uses a neutral fill and outline in every Gate. */
+:is(.g1-input.is-suggested, .g1-input.is-problem,
+  .g4-v140-neutral-input.has-error, [data-ssl-v130-field].is-problem) {
+  background: var(--ui-surface-subtle) !important;
+  border-color: var(--ui-border) !important;
+}
+
+:is(.g4-jtbd-row.is-checked, .g4-jtbd-row:has(input:checked)) {
+  background: var(--ui-surface-subtle) !important;
+  border-color: var(--ui-border) !important;
+}

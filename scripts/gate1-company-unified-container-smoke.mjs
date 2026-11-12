@@ -311,8 +311,6 @@ try {
           status: completion.status,
           completed: completion.completed,
           total: completion.total,
-          strategicFoundationReady: completion.strategicFoundationReady,
-          keywordFoundationReady: completion.keywordFoundationReady,
           demandReady: completion.demandReady,
         },
         productCompletion: {
@@ -402,7 +400,7 @@ try {
       `Product container title changed at ${stage}: ${snapshot.productTitle}`,
     );
   };
-  const assertCompanyStage = (snapshot, completed, status, label) => {
+  const assertCompanyStage = (snapshot, completed, total, status, label) => {
     assert(snapshot.sectionCount === 1, `Company container count is not one at ${label}`);
     assert(snapshot.hasCompanyMarker, `Company container marker is missing at ${label}`);
     assert(snapshot.topLevelSection, `Company container is not one top-level node at ${label}`);
@@ -410,11 +408,11 @@ try {
     assert(snapshot.foundationAdjacent, `Strategic foundation placement changed at ${label}`);
     assert(snapshot.semanticsInside, `Company demand escaped the frame at ${label}`);
     assert(
-      snapshot.title === "Спрос, ценность, позиционирование · Компания",
+      snapshot.title === "Спрос",
       `Wrong company title at ${label}: ${snapshot.title}`,
     );
     assert(
-      snapshot.completion.completed === completed && snapshot.completion.total === 3,
+      snapshot.completion.completed === completed && snapshot.completion.total === total,
       `Wrong company completion at ${label}: ${JSON.stringify(snapshot.completion)}`,
     );
     assert(
@@ -422,7 +420,7 @@ try {
       `Wrong company status at ${label}: ${snapshot.completion.status}`,
     );
     assert(
-      snapshot.progress === `${completed} из 3 блоков готово`,
+      snapshot.progress === (total ? `Метрики заполнены: ${completed} из ${total} слов` : "Добавьте ключевые слова"),
       `Wrong company progress at ${label}: ${snapshot.progress}`,
     );
     assert(
@@ -437,13 +435,8 @@ try {
       expectedProduct.status === "ready",
     `Product control fixture is not 3/3: ${JSON.stringify(expectedProduct)}`,
   );
-  assertCompanyStage(setup.first, 0, "not_started", "0/3");
-  assert(
-    !setup.first.completion.strategicFoundationReady &&
-      !setup.first.completion.keywordFoundationReady &&
-      !setup.first.completion.demandReady,
-    "Empty company completion has a ready sub-block",
-  );
+  assertCompanyStage(setup.first, 0, 0, "not_started", "empty demand");
+  assert(!setup.first.completion.demandReady, "Empty demand is ready");
 
   const partialStrategy = await evaluate(page, `(() => {
     guruV349ProjectBrandPurposeRecord(state, true).value = "Цель бренда";
@@ -451,25 +444,15 @@ try {
     guruV308ProjectPositioningRecord(state, true).value = "Единое позиционирование";
     return window.__renderAndAuditCompanyContainerV357();
   })()`);
-  assertCompanyStage(partialStrategy, 0, "in_progress", "partial strategy");
-  assert(
-    !partialStrategy.completion.strategicFoundationReady,
-    "Three of four strategy formulations incorrectly completed the strategy block",
-  );
+  assertCompanyStage(partialStrategy, 0, 0, "not_started", "strategy does not fill demand");
 
   const unlinkedOffer = await evaluate(page, `(() => {
     guruV347ProjectCompanyOfferRecord(state, true).value = "Единый оффер компании";
     return window.__renderAndAuditCompanyContainerV357();
   })()`);
-  assertCompanyStage(unlinkedOffer, 0, "in_progress", "unlinked offer");
-  assert(
-    !unlinkedOffer.completion.strategicFoundationReady &&
-      !unlinkedOffer.completion.keywordFoundationReady &&
-      !unlinkedOffer.completion.demandReady,
-    "Offer without a segment link and CTA completed the strategy block",
-  );
+  assertCompanyStage(unlinkedOffer, 0, 0, "not_started", "offer does not fill demand");
 
-  const oneOfThree = await evaluate(page, `(() => {
+  const keywordOnly = await evaluate(page, `(() => {
     const record = guruCompanyKeywordFoundationRecordV351(state, true);
     record.keywords = [{
       id: "company-keyword-control-v357",
@@ -479,15 +462,10 @@ try {
     }];
     return window.__renderAndAuditCompanyContainerV357();
   })()`);
-  assertCompanyStage(oneOfThree, 1, "in_progress", "1/3");
-  assert(
-    !oneOfThree.completion.strategicFoundationReady &&
-      oneOfThree.completion.keywordFoundationReady &&
-      !oneOfThree.completion.demandReady,
-    "Confirmed keyword did not produce the expected 1/3 stage",
-  );
+  assertCompanyStage(keywordOnly, 0, 1, "in_progress", "keyword without metrics");
+  assert(!keywordOnly.completion.demandReady, "Keyword without metrics is ready");
 
-  const twoOfThree = await evaluate(page, `(() => {
+  const completeStrategy = await evaluate(page, `(() => {
     const segment = guruV309ProjectSegmentRecord(state, true);
     segment.segment_name = "Контрольный сегмент";
     const offer = guruV347ProjectCompanyOfferRecord(state, true);
@@ -504,15 +482,9 @@ try {
     });
     return window.__renderAndAuditCompanyContainerV357();
   })()`);
-  assertCompanyStage(twoOfThree, 2, "in_progress", "2/3");
-  assert(
-    twoOfThree.completion.strategicFoundationReady &&
-      twoOfThree.completion.keywordFoundationReady &&
-      !twoOfThree.completion.demandReady,
-    "Complete segment, linked offer, CTA, goal, and keyword did not produce 2/3",
-  );
+  assertCompanyStage(completeStrategy, 0, 1, "in_progress", "complete strategy does not fill metrics");
 
-  const threeOfThree = await evaluate(page, `(() => {
+  const completeMetrics = await evaluate(page, `(() => {
     const model = gate1CompanyBrandDemandReconcileV345(state, { create: true });
     if (model.rows.length !== 1) throw new Error("Company demand row was not reconciled");
     Object.assign(model.rows[0], {
@@ -526,13 +498,8 @@ try {
     saveState();
     return window.__renderAndAuditCompanyContainerV357();
   })()`);
-  assertCompanyStage(threeOfThree, 3, "ready", "3/3");
-  assert(
-    threeOfThree.completion.strategicFoundationReady &&
-      threeOfThree.completion.keywordFoundationReady &&
-      threeOfThree.completion.demandReady,
-    "All company sub-blocks are not ready at 3/3",
-  );
+  assertCompanyStage(completeMetrics, 1, 1, "ready", "all metrics filled");
+  assert(completeMetrics.completion.demandReady, "Filled demand is not ready");
 
   const screenshot = await captureElement(
     "[data-gate1-company-demand-positioning-v357]",
@@ -628,9 +595,9 @@ try {
   })()`);
 
   assert(
-    afterReload.company.completed === 3 && afterReload.company.total === 3 &&
+    afterReload.company.completed === 1 && afterReload.company.total === 1 &&
       afterReload.company.status === "ready",
-    `Company 3/3 did not survive reload: ${JSON.stringify(afterReload.company)}`,
+    `Company metrics completion did not survive reload: ${JSON.stringify(afterReload.company)}`,
   );
   assert(
     afterReload.stateOpen && afterReload.expanded === "true" &&
@@ -656,16 +623,16 @@ try {
     transitions: {
       zero: setup.first.completion,
       partialStrategy: partialStrategy.completion,
-      one: oneOfThree.completion,
-      two: twoOfThree.completion,
-      three: threeOfThree.completion,
+      keywordOnly: keywordOnly.completion,
+      strategyOnly: completeStrategy.completion,
+      completeMetrics: completeMetrics.completion,
     },
     frame: {
-      title: threeOfThree.title,
-      sectionCount: threeOfThree.sectionCount,
-      hasFrame: threeOfThree.hasFrame,
-      foundationAdjacent: threeOfThree.foundationAdjacent,
-      semanticsInside: threeOfThree.semanticsInside,
+      title: completeMetrics.title,
+      sectionCount: completeMetrics.sectionCount,
+      hasFrame: completeMetrics.hasFrame,
+      foundationAdjacent: completeMetrics.foundationAdjacent,
+      semanticsInside: completeMetrics.semanticsInside,
       screenshot,
     },
     toggle,

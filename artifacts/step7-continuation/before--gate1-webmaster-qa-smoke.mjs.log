@@ -1,0 +1,11 @@
+file:///private/tmp/guru-step7-before/scripts/gate1-webmaster-qa-smoke.mjs:53
+    throw new Error(
+          ^
+
+Error: QuotaExceededError: Failed to execute 'setItem' on 'Storage': Setting the value of 'guru-platform-workspace-v02-gate1-webmaster-v295-smoke' exceeded the quota.
+    at <anonymous>:11:18
+    at <anonymous>:30:5
+    at evaluate (file:///private/tmp/guru-step7-before/scripts/gate1-webmaster-qa-smoke.mjs:53:11)
+    at async file:///private/tmp/guru-step7-before/scripts/gate1-webmaster-qa-smoke.mjs:105:3
+
+Node.js v22.14.0

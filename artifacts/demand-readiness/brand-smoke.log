@@ -1,0 +1,479 @@
+{
+  "initial": {
+    "keywords": [
+      "Коричное яблоко",
+      "купить коричное яблоко"
+    ],
+    "duplicateWarning": "Повторяющиеся подтверждённые фразы не включены в расчёт: КОРИЧНОЕ ЯБЛОКО",
+    "editableCount": 12,
+    "kwControls": 0,
+    "hasRowsAfterRender": false,
+    "hasArchiveAfterRender": false,
+    "companyHeading": "Спрос",
+    "productHeading": "Спрос, ценность, позиционирование · Продукт/Услуга",
+    "productWebmasterHeading": "",
+    "hasExportButton": true,
+    "hasImportButton": true,
+    "hasFileInput": true,
+    "productScopeBefore": "{\"gate0\":[{\"id\":\"gate0-value-1793022619689-ce8928\",\"project_id\":\"gate1-company-brand-demand-v356-smoke\",\"category_id\":\"\",\"product_id\":\"product-sentinel-v356\",\"scope\":\"product\",\"field\":\"keyword_foundation\",\"value\":\"\",\"keywords\":[{\"id\":\"product-gate0-sentinel-v356\",\"value\":\"товарный кандидат не менять\",\"source\":\"manual\",\"status\":\"confirmed\"}],\"source\":{\"type\":\"manual\",\"label\":\"Gate 0 · стратегия продукта\"},\"confirmation_status\":\"draft\",\"created_at\":\"2026-10-26T13:50:19.689Z\",\"updated_at\":\"2026-10-26T13:50:19.689Z\"}],\"gate1Middle\":[{\"gateIndex\":1,\"gateId\":\"gate-1\",\"cardIndex\":11,\"cardId\":\"card-24\",\"rowIndex\":0,\"rowId\":\"product-page-sentinel-v356\",\"productId\":\"product-sentinel-v356\",\"record\":{\"id\":\"gate1-middle-keyword-1793022619689-19563b\",\"product_id\":\"product-sentinel-v356\",\"keywords\":[{\"id\":\"product-middle-sentinel-v356\",\"value\":\"товарный middle кандидат не менять\",\"source\":\"manual\",\"status\":\"confirmed\"}],\"created_at\":\"2026-10-26T13:50:19.689Z\",\"updated_at\":\"2026-10-26T13:50:19.689Z\"}}],\"demand\":[{\"mapIndex\":0,\"mapProductId\":\"product-category-sentinel-v356\",\"productId\":\"product-sentinel-v356\",\"demandRowsPresent\":true,\"demandRows\":[{\"id\":\"product-demand-sentinel-v356\",\"kw\":\"товарный кандидат не менять\",\"vol\":\"901\",\"queryCount\":\"902\",\"forecastClicks\":\"903\",\"clickPrice\":\"904\",\"bid\":\"905\",\"forecastBudget\":\"906\",\"originStage\":\"gate1\"}],\"importStatePresent\":true,\"finalKeywordFoundationV259\":{\"unmatched\":[{\"phrase\":\"товарная служебная строка\",\"reason\":\"smoke\"}],\"last_import\":{\"file\":\"product-sentinel.csv\",\"matched\":1}}}]}",
+    "productScopeCounts": {
+      "gate0": 1,
+      "middle": 1,
+      "demand": 1
+    },
+    "errors": []
+  },
+  "brandIsolation": {
+    "brandPhrases": "Новая SMM-фраза\nЕщё одна SMM-фраза",
+    "demandKeywords": [
+      "Коричное яблоко",
+      "купить коричное яблоко"
+    ],
+    "gate4BrandPhrases": [
+      "Новая SMM-фраза",
+      "Ещё одна SMM-фраза"
+    ]
+  },
+  "exactOnly": {
+    "rows": [
+      {
+        "id": "legacy-exact-row",
+        "kw": "Коричное яблоко",
+        "vol": "100",
+        "queryCount": "40",
+        "forecastClicks": "20",
+        "clickPrice": "10",
+        "bid": "12",
+        "forecastBudget": "200",
+        "candidate_id": "company-candidate-a"
+      },
+      {
+        "id": "brand-demand-1t9fbz8",
+        "candidate_id": "company-candidate-b",
+        "kw": "купить коричное яблоко",
+        "vol": "",
+        "queryCount": "",
+        "forecastClicks": "",
+        "clickPrice": "",
+        "bid": "",
+        "forecastBudget": ""
+      }
+    ],
+    "archived": [
+      {
+        "id": "legacy-positional-row",
+        "kw": "совсем другая старая фраза",
+        "vol": "999",
+        "queryCount": "999",
+        "forecastClicks": "999",
+        "clickPrice": "999",
+        "bid": "999",
+        "forecastBudget": "999",
+        "archivedAt": "2026-10-26T13:50:22.419Z",
+        "archivedReason": "removed_from_company_keyword_foundation",
+        "sourceIndex": 1
+      }
+    ]
+  },
+  "stableIdAndNoPosition": {
+    "renamed": {
+      "id": "legacy-exact-row",
+      "kw": "Коричное яблоко официальный сайт",
+      "vol": "100",
+      "queryCount": "40",
+      "forecastClicks": "20",
+      "clickPrice": "10",
+      "bid": "12",
+      "forecastBudget": "200",
+      "candidate_id": "company-candidate-a"
+    },
+    "replacement": {
+      "id": "brand-demand-8m1a1c",
+      "candidate_id": "company-candidate-new-same-position",
+      "kw": "новая фраза на той же позиции",
+      "vol": "",
+      "queryCount": "",
+      "forecastClicks": "",
+      "clickPrice": "",
+      "bid": "",
+      "forecastBudget": ""
+    },
+    "archivedB": {
+      "id": "brand-demand-1t9fbz8",
+      "candidate_id": "company-candidate-b",
+      "kw": "купить коричное яблоко",
+      "vol": "222",
+      "queryCount": "22",
+      "forecastClicks": "",
+      "clickPrice": "",
+      "bid": "",
+      "forecastBudget": "",
+      "archivedAt": "2026-10-26T13:50:22.457Z",
+      "archivedReason": "removed_from_company_keyword_foundation",
+      "sourceIndex": 1
+    },
+    "active": [
+      {
+        "id": "legacy-exact-row",
+        "kw": "Коричное яблоко официальный сайт",
+        "vol": "100",
+        "queryCount": "40",
+        "forecastClicks": "20",
+        "clickPrice": "10",
+        "bid": "12",
+        "forecastBudget": "200",
+        "candidate_id": "company-candidate-a"
+      },
+      {
+        "id": "brand-demand-8m1a1c",
+        "candidate_id": "company-candidate-new-same-position",
+        "kw": "новая фраза на той же позиции",
+        "vol": "",
+        "queryCount": "",
+        "forecastClicks": "",
+        "clickPrice": "",
+        "bid": "",
+        "forecastBudget": ""
+      }
+    ],
+    "archived": [
+      {
+        "id": "legacy-positional-row",
+        "kw": "совсем другая старая фраза",
+        "vol": "999",
+        "queryCount": "999",
+        "forecastClicks": "999",
+        "clickPrice": "999",
+        "bid": "999",
+        "forecastBudget": "999",
+        "archivedAt": "2026-10-26T13:50:22.419Z",
+        "archivedReason": "removed_from_company_keyword_foundation",
+        "sourceIndex": 1
+      },
+      {
+        "id": "brand-demand-1t9fbz8",
+        "candidate_id": "company-candidate-b",
+        "kw": "купить коричное яблоко",
+        "vol": "222",
+        "queryCount": "22",
+        "forecastClicks": "",
+        "clickPrice": "",
+        "bid": "",
+        "forecastBudget": "",
+        "archivedAt": "2026-10-26T13:50:22.457Z",
+        "archivedReason": "removed_from_company_keyword_foundation",
+        "sourceIndex": 1
+      }
+    ],
+    "productScopeAfter": "{\"gate0\":[{\"id\":\"gate0-value-1793022619689-ce8928\",\"project_id\":\"gate1-company-brand-demand-v356-smoke\",\"category_id\":\"\",\"product_id\":\"product-sentinel-v356\",\"scope\":\"product\",\"field\":\"keyword_foundation\",\"value\":\"\",\"keywords\":[{\"id\":\"product-gate0-sentinel-v356\",\"value\":\"товарный кандидат не менять\",\"source\":\"manual\",\"status\":\"confirmed\"}],\"source\":{\"type\":\"manual\",\"label\":\"Gate 0 · стратегия продукта\"},\"confirmation_status\":\"draft\",\"created_at\":\"2026-10-26T13:50:19.689Z\",\"updated_at\":\"2026-10-26T13:50:19.689Z\"}],\"gate1Middle\":[{\"gateIndex\":1,\"gateId\":\"gate-1\",\"cardIndex\":11,\"cardId\":\"card-24\",\"rowIndex\":0,\"rowId\":\"product-page-sentinel-v356\",\"productId\":\"product-sentinel-v356\",\"record\":{\"id\":\"gate1-middle-keyword-1793022619689-19563b\",\"product_id\":\"product-sentinel-v356\",\"keywords\":[{\"id\":\"product-middle-sentinel-v356\",\"value\":\"товарный middle кандидат не менять\",\"source\":\"manual\",\"status\":\"confirmed\"}],\"created_at\":\"2026-10-26T13:50:19.689Z\",\"updated_at\":\"2026-10-26T13:50:19.689Z\"}}],\"demand\":[{\"mapIndex\":0,\"mapProductId\":\"product-category-sentinel-v356\",\"productId\":\"product-sentinel-v356\",\"demandRowsPresent\":true,\"demandRows\":[{\"id\":\"product-demand-sentinel-v356\",\"kw\":\"товарный кандидат не менять\",\"vol\":\"901\",\"queryCount\":\"902\",\"forecastClicks\":\"903\",\"clickPrice\":\"904\",\"bid\":\"905\",\"forecastBudget\":\"906\",\"originStage\":\"gate1\"}],\"importStatePresent\":true,\"finalKeywordFoundationV259\":{\"unmatched\":[{\"phrase\":\"товарная служебная строка\",\"reason\":\"smoke\"}],\"last_import\":{\"file\":\"product-sentinel.csv\",\"matched\":1}}}]}"
+  },
+  "csvSuite": {
+    "exportFileName": "brand-demand-company-gate-1-company-foundation-demand-smoke.csv",
+    "exportCsv": "Ключевое слово,Объём показов/мес,Примерное количество запросов,Переходы/мес,\"Цена клика, руб.\",\"Ставка, руб.\",\"Примерный бюджет, руб.\"\r\nКоричное яблоко официальный сайт,100,40,20,10,12,200\r\nновая фраза на той же позиции,,,,,,",
+    "exportRows": [
+      [
+        "Ключевое слово",
+        "Объём показов/мес",
+        "Примерное количество запросов",
+        "Переходы/мес",
+        "Цена клика, руб.",
+        "Ставка, руб.",
+        "Примерный бюджет, руб."
+      ],
+      [
+        "Коричное яблоко официальный сайт",
+        "100",
+        "40",
+        "20",
+        "10",
+        "12",
+        "200"
+      ],
+      [
+        "новая фраза на той же позиции",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ]
+    ],
+    "exportEntryCount": 2,
+    "fullParsedCount": 2,
+    "fullMatched": 2,
+    "fullUnmatched": 0,
+    "fullMetrics": {
+      "company-candidate-a": {
+        "vol": "101",
+        "queryCount": "102",
+        "forecastClicks": "103",
+        "clickPrice": "104",
+        "bid": "105",
+        "forecastBudget": "106"
+      },
+      "company-candidate-new-same-position": {
+        "vol": "201",
+        "queryCount": "202",
+        "forecastClicks": "203",
+        "clickPrice": "204",
+        "bid": "205",
+        "forecastBudget": "206"
+      }
+    },
+    "partialMatched": 1,
+    "partialUnmatched": 0,
+    "partialRow": {
+      "id": "legacy-exact-row",
+      "kw": "Коричное яблоко официальный сайт",
+      "vol": "101",
+      "queryCount": "777",
+      "forecastClicks": "103",
+      "clickPrice": "104",
+      "bid": "105",
+      "forecastBudget": "106",
+      "candidate_id": "company-candidate-a"
+    },
+    "duplicateParsedCount": 1,
+    "duplicateMatched": 1,
+    "duplicateRow": {
+      "id": "legacy-exact-row",
+      "kw": "Коричное яблоко официальный сайт",
+      "vol": "101",
+      "queryCount": "888",
+      "forecastClicks": "103",
+      "clickPrice": "104",
+      "bid": "105",
+      "forecastBudget": "106",
+      "candidate_id": "company-candidate-a"
+    },
+    "unmatchedCount": 3,
+    "unmatchedPhrases": [
+      "совершенно неизвестная фраза",
+      "черновая компанийная фраза",
+      "купить коричное яблоко"
+    ],
+    "candidatesUnchanged": true,
+    "identitiesUnchanged": true,
+    "archivesUnchanged": true,
+    "rowCountBefore": 2,
+    "rowCountAfter": 2,
+    "candidateCountBefore": 4,
+    "candidateCountAfter": 4,
+    "importState": {
+      "unmatched": [
+        {
+          "phrase": "совершенно неизвестная фраза",
+          "values": [
+            "совершенно неизвестная фраза",
+            "301"
+          ],
+          "row": null,
+          "reason": "not_current_confirmed_company_candidate"
+        },
+        {
+          "phrase": "черновая компанийная фраза",
+          "values": [
+            "черновая компанийная фраза",
+            "302"
+          ],
+          "row": null,
+          "reason": "not_current_confirmed_company_candidate"
+        },
+        {
+          "phrase": "купить коричное яблоко",
+          "values": [
+            "купить коричное яблоко",
+            "303"
+          ],
+          "row": null,
+          "reason": "not_current_confirmed_company_candidate"
+        }
+      ],
+      "last_import": {
+        "at": "2026-10-26T13:50:22.944Z",
+        "file": "company-unmatched.csv",
+        "rows": 3,
+        "matched": 0,
+        "unmatched": 3,
+        "volume_column": "",
+        "query_count_column": "Примерное количество запросов",
+        "click_price_column": "",
+        "bid_column": "",
+        "monthly_clicks_column": "",
+        "budget_column": "",
+        "traffic_volume_column": "",
+        "traffic_volume": "",
+        "traffic_volume_values": [],
+        "traffic_volume_anomaly": false,
+        "header_row": 1,
+        "service_rows": 0,
+        "scope": "company",
+        "project_id": "gate1-company-brand-demand-v356-smoke",
+        "created": 0,
+        "applied": 0
+      }
+    },
+    "unmatchedUiText": "Не импортировано: 3\n      совершенно неизвестная фразачерновая компанийная фразакупить коричное яблоко\n      Эти строки файла не обновили метрики: фразы нет в текущем списке или метрики не распознаны. Проверьте список слов и значения в файле.",
+    "lastImportUiText": "Последний импорт: обновлено 0; не импортировано 3.",
+    "productUnchanged": true,
+    "productBytesBefore": 1653,
+    "productBytesAfter": 1653,
+    "errors": []
+  },
+  "projectSwitchGuard": {
+    "applyCalls": 0,
+    "saveCalls": 0,
+    "alerts": [
+      "Во время чтения файла был переключён проект. Импорт отменён — выберите файл ещё раз в нужном проекте."
+    ],
+    "originalUnchanged": true,
+    "otherUnchanged": true
+  },
+  "afterReload": {
+    "rows": [
+      {
+        "id": "legacy-exact-row",
+        "kw": "Коричное яблоко официальный сайт",
+        "vol": "101",
+        "queryCount": "888",
+        "forecastClicks": "103",
+        "clickPrice": "104",
+        "bid": "105",
+        "forecastBudget": "106",
+        "candidate_id": "company-candidate-a"
+      },
+      {
+        "id": "brand-demand-8m1a1c",
+        "candidate_id": "company-candidate-new-same-position",
+        "kw": "новая фраза на той же позиции",
+        "vol": "201",
+        "queryCount": "202",
+        "forecastClicks": "203",
+        "clickPrice": "204",
+        "bid": "205",
+        "forecastBudget": "206"
+      }
+    ],
+    "archived": [
+      {
+        "id": "legacy-positional-row",
+        "kw": "совсем другая старая фраза",
+        "vol": "999",
+        "queryCount": "999",
+        "forecastClicks": "999",
+        "clickPrice": "999",
+        "bid": "999",
+        "forecastBudget": "999",
+        "archivedAt": "2026-10-26T13:50:22.419Z",
+        "archivedReason": "removed_from_company_keyword_foundation",
+        "sourceIndex": 1
+      },
+      {
+        "id": "brand-demand-1t9fbz8",
+        "candidate_id": "company-candidate-b",
+        "kw": "купить коричное яблоко",
+        "vol": "222",
+        "queryCount": "22",
+        "forecastClicks": "",
+        "clickPrice": "",
+        "bid": "",
+        "forecastBudget": "",
+        "archivedAt": "2026-10-26T13:50:22.457Z",
+        "archivedReason": "removed_from_company_keyword_foundation",
+        "sourceIndex": 1
+      }
+    ],
+    "rowsByCandidate": {
+      "company-candidate-a": {
+        "id": "legacy-exact-row",
+        "kw": "Коричное яблоко официальный сайт",
+        "vol": "101",
+        "queryCount": "888",
+        "forecastClicks": "103",
+        "clickPrice": "104",
+        "bid": "105",
+        "forecastBudget": "106",
+        "candidate_id": "company-candidate-a"
+      },
+      "company-candidate-new-same-position": {
+        "id": "brand-demand-8m1a1c",
+        "candidate_id": "company-candidate-new-same-position",
+        "kw": "новая фраза на той же позиции",
+        "vol": "201",
+        "queryCount": "202",
+        "forecastClicks": "203",
+        "clickPrice": "204",
+        "bid": "205",
+        "forecastBudget": "206"
+      }
+    },
+    "rendered": [
+      "Коричное яблоко официальный сайт",
+      "новая фраза на той же позиции"
+    ],
+    "brandPhrases": "Новая SMM-фраза\nЕщё одна SMM-фраза",
+    "importState": {
+      "unmatched": [
+        {
+          "phrase": "совершенно неизвестная фраза",
+          "values": [
+            "совершенно неизвестная фраза",
+            "301"
+          ],
+          "row": null,
+          "reason": "not_current_confirmed_company_candidate"
+        },
+        {
+          "phrase": "черновая компанийная фраза",
+          "values": [
+            "черновая компанийная фраза",
+            "302"
+          ],
+          "row": null,
+          "reason": "not_current_confirmed_company_candidate"
+        },
+        {
+          "phrase": "купить коричное яблоко",
+          "values": [
+            "купить коричное яблоко",
+            "303"
+          ],
+          "row": null,
+          "reason": "not_current_confirmed_company_candidate"
+        }
+      ],
+      "last_import": {
+        "at": "2026-10-26T13:50:22.944Z",
+        "file": "company-unmatched.csv",
+        "rows": 3,
+        "matched": 0,
+        "unmatched": 3,
+        "volume_column": "",
+        "query_count_column": "Примерное количество запросов",
+        "click_price_column": "",
+        "bid_column": "",
+        "monthly_clicks_column": "",
+        "budget_column": "",
+        "traffic_volume_column": "",
+        "traffic_volume": "",
+        "traffic_volume_values": [],
+        "traffic_volume_anomaly": false,
+        "header_row": 1,
+        "service_rows": 0,
+        "scope": "company",
+        "project_id": "gate1-company-brand-demand-v356-smoke",
+        "created": 0,
+        "applied": 0
+      }
+    },
+    "unmatchedUiText": "Не импортировано: 3\n      совершенно неизвестная фразачерновая компанийная фразакупить коричное яблоко\n      Эти строки файла не обновили метрики: фразы нет в текущем списке или метрики не распознаны. Проверьте список слов и значения в файле.",
+    "lastImportUiText": "Последний импорт: обновлено 0; не импортировано 3.",
+    "companyHeading": "Спрос",
+    "productHeading": "Спрос, ценность, позиционирование · Продукт/Услуга",
+    "productWebmasterHeading": "",
+    "productScopeAfterReload": "{\"gate0\":[{\"id\":\"gate0-value-1793022619689-ce8928\",\"project_id\":\"gate1-company-brand-demand-v356-smoke\",\"category_id\":\"\",\"product_id\":\"product-sentinel-v356\",\"scope\":\"product\",\"field\":\"keyword_foundation\",\"value\":\"\",\"keywords\":[{\"id\":\"product-gate0-sentinel-v356\",\"value\":\"товарный кандидат не менять\",\"source\":\"manual\",\"status\":\"confirmed\"}],\"source\":{\"type\":\"manual\",\"label\":\"Gate 0 · стратегия продукта\"},\"confirmation_status\":\"draft\",\"created_at\":\"2026-10-26T13:50:19.689Z\",\"updated_at\":\"2026-10-26T13:50:19.689Z\"}],\"gate1Middle\":[{\"gateIndex\":1,\"gateId\":\"gate-1\",\"cardIndex\":11,\"cardId\":\"card-24\",\"rowIndex\":0,\"rowId\":\"product-page-sentinel-v356\",\"productId\":\"product-sentinel-v356\",\"record\":{\"id\":\"gate1-middle-keyword-1793022619689-19563b\",\"product_id\":\"product-sentinel-v356\",\"keywords\":[{\"id\":\"product-middle-sentinel-v356\",\"value\":\"товарный middle кандидат не менять\",\"source\":\"manual\",\"status\":\"confirmed\"}],\"created_at\":\"2026-10-26T13:50:19.689Z\",\"updated_at\":\"2026-10-26T13:50:19.689Z\"}}],\"demand\":[{\"mapIndex\":0,\"mapProductId\":\"product-category-sentinel-v356\",\"productId\":\"product-sentinel-v356\",\"demandRowsPresent\":true,\"demandRows\":[{\"id\":\"product-demand-sentinel-v356\",\"kw\":\"товарный кандидат не менять\",\"vol\":\"901\",\"queryCount\":\"902\",\"forecastClicks\":\"903\",\"clickPrice\":\"904\",\"bid\":\"905\",\"forecastBudget\":\"906\",\"originStage\":\"gate1\"}],\"importStatePresent\":true,\"finalKeywordFoundationV259\":{\"unmatched\":[{\"phrase\":\"товарная служебная строка\",\"reason\":\"smoke\"}],\"last_import\":{\"file\":\"product-sentinel.csv\",\"matched\":1}}}]}",
+    "errors": []
+  }
+}
+gate1 company brand demand smoke: OK

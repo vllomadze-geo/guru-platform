@@ -1,0 +1,20 @@
+node:internal/modules/run_main:122
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ 'gate2_service_readiness'
+- 'gate2_setup_wizard'
+           ^
+
+    at file:///private/tmp/guru-step7-after-middle/scripts/gate2-metrika-company-source-smoke.mjs:150:10 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 'gate2_service_readiness',
+  expected: 'gate2_setup_wizard',
+  operator: 'strictEqual'
+}
+
+Node.js v22.14.0

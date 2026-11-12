@@ -1,0 +1,32 @@
+[
+  {
+    "test": "gate1-company-brand-demand-copy-smoke",
+    "result": "PASS",
+    "seconds": 9.3
+  },
+  {
+    "test": "gate1-company-brand-demand-smoke",
+    "result": "PASS",
+    "seconds": 8.9
+  },
+  {
+    "test": "gate1-comparison-performance-smoke",
+    "result": "PASS",
+    "seconds": 28.6
+  },
+  {
+    "test": "product-baseline-corrected",
+    "result": "PASS",
+    "seconds": 28.8
+  },
+  {
+    "test": "gate1-company-analysis-smoke",
+    "result": "PASS",
+    "seconds": 28.8
+  },
+  {
+    "test": "gate1-company-analysis-projects-smoke",
+    "result": "PASS",
+    "seconds": 20.5
+  }
+]

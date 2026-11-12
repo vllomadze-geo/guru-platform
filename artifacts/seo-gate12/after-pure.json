@@ -1,0 +1,973 @@
+{
+  "apple": {
+    "build": "2.3.526+f21d9abc29f3",
+    "project": "Коричное яблоко",
+    "productId": "catalog-item-1786792591872-51f503",
+    "products": [
+      {
+        "id": "catalog-item-1790860377305-388c56",
+        "name": "Коза & Ёлка"
+      },
+      {
+        "id": "catalog-item-1786792591872-c8b1e9",
+        "name": "Рубашка Upcycling с кружевом"
+      },
+      {
+        "id": "catalog-item-1786792591872-98358d",
+        "name": "Летнее платье «Исландка»"
+      },
+      {
+        "id": "catalog-item-1786792591872-5f848a",
+        "name": "Платье из льна"
+      },
+      {
+        "id": "catalog-item-1786792591872-3be8f9",
+        "name": "Лонгслив «Мак» с аппликацией"
+      },
+      {
+        "id": "catalog-item-1786792591872-1d1d3c",
+        "name": "Свитшот с медведем для Михаила"
+      },
+      {
+        "id": "catalog-item-1786792591872-c45ce3",
+        "name": "Свитшот «Яра» с авторской аппликацией"
+      },
+      {
+        "id": "catalog-item-1786792591872-52046c",
+        "name": "Льняное демисезонное пальто"
+      },
+      {
+        "id": "catalog-item-1786792591872-51f503",
+        "name": "Символ 2027 года «Коза»"
+      },
+      {
+        "id": "catalog-item-1790936932674-197964",
+        "name": "Шапка Коза"
+      },
+      {
+        "id": "catalog-item-1790937546522-78edcc",
+        "name": "ТЕРМОС в свитере"
+      },
+      {
+        "id": "catalog-item-1790937556174-6ad07b",
+        "name": "ТЕРМОС в чехле"
+      },
+      {
+        "id": "catalog-item-1790937575672-8f423f",
+        "name": "Текстильная ёлочка"
+      },
+      {
+        "id": "catalog-item-1790937587589-b751ba",
+        "name": "Новогодние подарочные наборы"
+      }
+    ],
+    "gate1": [
+      {
+        "id": "company_demand_positioning",
+        "title": "Спрос, ценность, позиционирование · Компания",
+        "status": "in_progress"
+      },
+      {
+        "id": "project-comparison",
+        "title": "Сравнение проекта",
+        "status": "in_progress"
+      },
+      {
+        "id": "interactive-tool",
+        "title": "Собственный интерактивный инструмент",
+        "status": "not_started"
+      },
+      {
+        "id": "card-21",
+        "title": "ГЛАВНАЯ",
+        "status": "ready"
+      },
+      {
+        "id": "card-22-hub",
+        "title": "КАТАЛОГ (ХАБ)",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-22",
+        "title": "КАТЕГОРИЯ",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-25",
+        "title": "СТАТЬЯ БЛОГА",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-26",
+        "title": "О НАС",
+        "status": "not_started"
+      },
+      {
+        "id": "card-27",
+        "title": "КОНТАКТЫ",
+        "status": "not_started"
+      },
+      {
+        "id": "card-28",
+        "title": "ДОСТАВКА / ГАРАНТИИ",
+        "status": "not_started"
+      },
+      {
+        "id": "card-30",
+        "title": "404",
+        "status": "not_started"
+      },
+      {
+        "id": "card-31",
+        "title": "THANK YOU PAGE ⚠️",
+        "status": "not_started"
+      },
+      {
+        "id": "card-32",
+        "title": "ЛЕНДИНГ",
+        "status": "not_started"
+      },
+      {
+        "id": "card-site-header-v497",
+        "title": "ХЕДЕР",
+        "status": "not_started"
+      },
+      {
+        "id": "card-site-footer-v497",
+        "title": "Футер: навигация, доверие и юридическая база",
+        "status": "not_started"
+      },
+      {
+        "id": "card-29",
+        "title": "ПОЛИТИКА",
+        "status": "not_started"
+      },
+      {
+        "id": "card-35",
+        "title": "Cookie-баннер: уведомление и согласие",
+        "status": "not_started"
+      },
+      {
+        "id": "card-36",
+        "title": "Футер: навигация, доверие и юридическая база",
+        "status": "not_started"
+      },
+      {
+        "id": "card-37",
+        "title": "Согласие в формах",
+        "status": "not_started"
+      },
+      {
+        "id": "target-audience",
+        "title": "Целевая аудитория",
+        "status": "ready"
+      },
+      {
+        "id": "gate1-blog-v304-company",
+        "title": "Блог · Компания",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-24",
+        "title": "КАРТОЧКА ТОВАРА",
+        "status": "ready"
+      },
+      {
+        "id": "pain_jtbd_offer",
+        "title": "Спрос, ценность, позиционирование · Продукт/Услуга",
+        "status": "ready"
+      },
+      {
+        "id": "gate1-blog-v304-product",
+        "title": "Блог · Продукт/Услуга",
+        "status": "not_started"
+      },
+      {
+        "id": "unit-economics",
+        "title": "Юнит-экономика",
+        "status": "not_started"
+      }
+    ],
+    "summary1": {
+      "total": 25,
+      "done": 4,
+      "ready": 4,
+      "notRequired": 0,
+      "inProgress": 6,
+      "problem": 0,
+      "notStarted": 15,
+      "percent": 28
+    },
+    "gate2": [
+      {
+        "id": "company-domain",
+        "status": "problem"
+      },
+      {
+        "id": "company-counter",
+        "status": "not_started"
+      },
+      {
+        "id": "company-goal",
+        "status": "not_started"
+      },
+      {
+        "id": "company-webmaster",
+        "status": "problem"
+      },
+      {
+        "id": "company-yandex-business",
+        "status": "not_needed"
+      },
+      {
+        "id": "company-yandex-direct",
+        "status": "not_started"
+      },
+      {
+        "id": "company-vk",
+        "status": "in_progress"
+      },
+      {
+        "id": "company-telegram-ads",
+        "status": "not_started"
+      },
+      {
+        "id": "company-meta-ads",
+        "status": "not_needed"
+      },
+      {
+        "id": "company-ga4",
+        "status": "not_started"
+      },
+      {
+        "id": "company-gsc",
+        "status": "not_needed"
+      },
+      {
+        "id": "company-google-ads",
+        "status": "not_needed"
+      },
+      {
+        "id": "company-leads",
+        "status": "not_started"
+      },
+      {
+        "id": "company-safety",
+        "status": "not_started"
+      },
+      {
+        "id": "product-landing",
+        "status": "problem"
+      },
+      {
+        "id": "product-counter",
+        "status": "not_started"
+      },
+      {
+        "id": "product-goal",
+        "status": "not_started"
+      },
+      {
+        "id": "product-vk",
+        "status": "not_started"
+      },
+      {
+        "id": "product-lead",
+        "status": "not_started"
+      }
+    ],
+    "summary2": {
+      "total": 19,
+      "done": 4,
+      "ready": 0,
+      "notRequired": 4,
+      "inProgress": 1,
+      "problem": 3,
+      "notStarted": 11,
+      "percent": 32
+    },
+    "pathTotal": 90,
+    "step": 8,
+    "first": "card-7",
+    "readOnly": true,
+    "sha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37"
+  },
+  "icleaning": {
+    "build": "2.3.526+f21d9abc29f3",
+    "project": "iCleaning",
+    "productId": "catalog-item-1786885522654-b659e1",
+    "products": [
+      {
+        "id": "catalog-item-1786885522653-759ff6",
+        "name": "Без названия"
+      },
+      {
+        "id": "catalog-item-1786885522654-b437c0",
+        "name": "Без названия"
+      },
+      {
+        "id": "catalog-item-1786885522654-b659e1",
+        "name": "направление - Обувь - Химчистка, ремонт и реставрация обуви"
+      },
+      {
+        "id": "catalog-item-1786885522654-a3955f",
+        "name": "Уход за вашими любимыми аксессуарами: от шелкового платка до брендовой сумки"
+      }
+    ],
+    "gate1": [
+      {
+        "id": "company_demand_positioning",
+        "title": "Спрос, ценность, позиционирование · Компания",
+        "status": "in_progress"
+      },
+      {
+        "id": "project-comparison",
+        "title": "Сравнение проекта",
+        "status": "not_started"
+      },
+      {
+        "id": "interactive-tool",
+        "title": "Собственный интерактивный инструмент",
+        "status": "not_started"
+      },
+      {
+        "id": "card-21",
+        "title": "ГЛАВНАЯ",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-22-hub",
+        "title": "КАТАЛОГ (ХАБ)",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-22",
+        "title": "КАТЕГОРИЯ",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-25",
+        "title": "СТАТЬЯ БЛОГА",
+        "status": "not_required"
+      },
+      {
+        "id": "card-26",
+        "title": "О НАС",
+        "status": "not_started"
+      },
+      {
+        "id": "card-27",
+        "title": "КОНТАКТЫ",
+        "status": "not_started"
+      },
+      {
+        "id": "card-28",
+        "title": "ДОСТАВКА / ГАРАНТИИ",
+        "status": "not_required"
+      },
+      {
+        "id": "card-30",
+        "title": "404",
+        "status": "not_started"
+      },
+      {
+        "id": "card-31",
+        "title": "THANK YOU PAGE ⚠️",
+        "status": "not_started"
+      },
+      {
+        "id": "card-32",
+        "title": "ЛЕНДИНГ",
+        "status": "not_required"
+      },
+      {
+        "id": "card-site-header-v497",
+        "title": "ХЕДЕР",
+        "status": "not_started"
+      },
+      {
+        "id": "card-site-footer-v497",
+        "title": "Футер: навигация, доверие и юридическая база",
+        "status": "not_started"
+      },
+      {
+        "id": "card-29",
+        "title": "ПОЛИТИКА",
+        "status": "not_started"
+      },
+      {
+        "id": "card-35",
+        "title": "Cookie-баннер: уведомление и согласие",
+        "status": "not_started"
+      },
+      {
+        "id": "card-36",
+        "title": "Футер: навигация, доверие и юридическая база",
+        "status": "not_started"
+      },
+      {
+        "id": "card-37",
+        "title": "Согласие в формах",
+        "status": "not_started"
+      },
+      {
+        "id": "target-audience",
+        "title": "Целевая аудитория",
+        "status": "in_progress"
+      },
+      {
+        "id": "gate1-blog-v304-company",
+        "title": "Блог · Компания",
+        "status": "not_started"
+      },
+      {
+        "id": "card-23",
+        "title": "СТРАНИЦА УСЛУГИ",
+        "status": "ready"
+      },
+      {
+        "id": "card-24",
+        "title": "КАРТОЧКА ТОВАРА",
+        "status": "not_started"
+      },
+      {
+        "id": "pain_jtbd_offer",
+        "title": "Спрос, ценность, позиционирование · Продукт/Услуга",
+        "status": "in_progress"
+      },
+      {
+        "id": "gate1-blog-v304-product",
+        "title": "Блог · Продукт/Услуга",
+        "status": "not_started"
+      },
+      {
+        "id": "unit-economics",
+        "title": "Юнит-экономика",
+        "status": "not_started"
+      }
+    ],
+    "summary1": {
+      "total": 26,
+      "done": 4,
+      "ready": 1,
+      "notRequired": 3,
+      "inProgress": 6,
+      "problem": 0,
+      "notStarted": 16,
+      "percent": 27
+    },
+    "gate2": [
+      {
+        "id": "company-domain",
+        "status": "problem"
+      },
+      {
+        "id": "company-counter",
+        "status": "not_started"
+      },
+      {
+        "id": "company-goal",
+        "status": "not_started"
+      },
+      {
+        "id": "company-webmaster",
+        "status": "not_started"
+      },
+      {
+        "id": "company-yandex-business",
+        "status": "not_started"
+      },
+      {
+        "id": "company-yandex-direct",
+        "status": "not_started"
+      },
+      {
+        "id": "company-vk",
+        "status": "not_started"
+      },
+      {
+        "id": "company-telegram-ads",
+        "status": "not_started"
+      },
+      {
+        "id": "company-meta-ads",
+        "status": "not_needed"
+      },
+      {
+        "id": "company-ga4",
+        "status": "not_started"
+      },
+      {
+        "id": "company-gsc",
+        "status": "not_started"
+      },
+      {
+        "id": "company-google-ads",
+        "status": "not_needed"
+      },
+      {
+        "id": "company-leads",
+        "status": "not_started"
+      },
+      {
+        "id": "company-safety",
+        "status": "not_started"
+      },
+      {
+        "id": "product-landing",
+        "status": "not_started"
+      },
+      {
+        "id": "product-counter",
+        "status": "not_started"
+      },
+      {
+        "id": "product-goal",
+        "status": "not_started"
+      },
+      {
+        "id": "product-vk",
+        "status": "not_started"
+      },
+      {
+        "id": "product-lead",
+        "status": "not_started"
+      }
+    ],
+    "summary2": {
+      "total": 19,
+      "done": 2,
+      "ready": 0,
+      "notRequired": 2,
+      "inProgress": 0,
+      "problem": 1,
+      "notStarted": 16,
+      "percent": 13
+    },
+    "pathTotal": 91,
+    "step": 3,
+    "first": "gate0-company-brand-purpose",
+    "readOnly": true,
+    "sha256": "a1baa877f77727f7813f80cc0749763bd5122f8f56d48136fa1527542ea19c71"
+  },
+  "sivrce": {
+    "build": "2.3.526+f21d9abc29f3",
+    "project": "SIVRCE",
+    "products": [],
+    "gate1": [
+      {
+        "id": "company_demand_positioning",
+        "title": "Спрос, ценность, позиционирование · Компания",
+        "status": "in_progress"
+      },
+      {
+        "id": "project-comparison",
+        "title": "Сравнение проекта",
+        "status": "not_started"
+      },
+      {
+        "id": "interactive-tool",
+        "title": "Собственный интерактивный инструмент",
+        "status": "not_started"
+      },
+      {
+        "id": "card-21",
+        "title": "ГЛАВНАЯ",
+        "status": "not_started"
+      },
+      {
+        "id": "card-22-hub",
+        "title": "КАТАЛОГ (ХАБ)",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-22",
+        "title": "КАТЕГОРИЯ",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-25",
+        "title": "СТАТЬЯ БЛОГА",
+        "status": "not_started"
+      },
+      {
+        "id": "card-26",
+        "title": "О НАС",
+        "status": "not_started"
+      },
+      {
+        "id": "card-27",
+        "title": "КОНТАКТЫ",
+        "status": "not_started"
+      },
+      {
+        "id": "card-28",
+        "title": "ДОСТАВКА / ГАРАНТИИ",
+        "status": "not_started"
+      },
+      {
+        "id": "card-30",
+        "title": "404",
+        "status": "not_started"
+      },
+      {
+        "id": "card-31",
+        "title": "THANK YOU PAGE ⚠️",
+        "status": "not_started"
+      },
+      {
+        "id": "card-32",
+        "title": "ЛЕНДИНГ",
+        "status": "not_started"
+      },
+      {
+        "id": "card-site-header-v497",
+        "title": "ХЕДЕР",
+        "status": "not_started"
+      },
+      {
+        "id": "card-site-footer-v497",
+        "title": "Футер: навигация, доверие и юридическая база",
+        "status": "not_started"
+      },
+      {
+        "id": "card-29",
+        "title": "ПОЛИТИКА",
+        "status": "not_started"
+      },
+      {
+        "id": "card-35",
+        "title": "Cookie-баннер: уведомление и согласие",
+        "status": "not_started"
+      },
+      {
+        "id": "card-36",
+        "title": "Футер: навигация, доверие и юридическая база",
+        "status": "not_started"
+      },
+      {
+        "id": "card-37",
+        "title": "Согласие в формах",
+        "status": "not_started"
+      },
+      {
+        "id": "target-audience",
+        "title": "Целевая аудитория",
+        "status": "in_progress"
+      },
+      {
+        "id": "gate1-blog-v304-company",
+        "title": "Блог · Компания",
+        "status": "not_started"
+      },
+      {
+        "id": "card-23",
+        "title": "СТРАНИЦА УСЛУГИ",
+        "status": "not_started"
+      },
+      {
+        "id": "card-24",
+        "title": "КАРТОЧКА ТОВАРА",
+        "status": "not_started"
+      },
+      {
+        "id": "unit-economics",
+        "title": "Юнит-экономика",
+        "status": "not_started"
+      }
+    ],
+    "summary1": {
+      "total": 24,
+      "done": 0,
+      "ready": 0,
+      "notRequired": 0,
+      "inProgress": 4,
+      "problem": 0,
+      "notStarted": 20,
+      "percent": 8
+    },
+    "gate2": [
+      {
+        "id": "company-domain",
+        "status": "problem"
+      },
+      {
+        "id": "company-counter",
+        "status": "not_started"
+      },
+      {
+        "id": "company-goal",
+        "status": "not_started"
+      },
+      {
+        "id": "company-webmaster",
+        "status": "not_needed"
+      },
+      {
+        "id": "company-yandex-business",
+        "status": "not_needed"
+      },
+      {
+        "id": "company-yandex-direct",
+        "status": "not_needed"
+      },
+      {
+        "id": "company-vk",
+        "status": "not_needed"
+      },
+      {
+        "id": "company-telegram-ads",
+        "status": "not_needed"
+      },
+      {
+        "id": "company-meta-ads",
+        "status": "not_needed"
+      },
+      {
+        "id": "company-ga4",
+        "status": "not_started"
+      },
+      {
+        "id": "company-gsc",
+        "status": "not_started"
+      },
+      {
+        "id": "company-google-ads",
+        "status": "not_needed"
+      },
+      {
+        "id": "company-leads",
+        "status": "not_started"
+      },
+      {
+        "id": "company-safety",
+        "status": "not_started"
+      }
+    ],
+    "summary2": {
+      "total": 14,
+      "done": 7,
+      "ready": 0,
+      "notRequired": 7,
+      "inProgress": 0,
+      "problem": 1,
+      "notStarted": 6,
+      "percent": 54
+    },
+    "pathTotal": 47,
+    "step": 1,
+    "first": "card-1",
+    "readOnly": true,
+    "sha256": "59c7656d64ab0f86da8791c2531768249d6feb64b40673ed174654ea650c413c"
+  },
+  "guru": {
+    "build": "2.3.526+f21d9abc29f3",
+    "project": "УНИВЕРСАЛ / ГУРУ",
+    "products": [],
+    "gate1": [
+      {
+        "id": "company_demand_positioning",
+        "title": "Спрос, ценность, позиционирование · Компания",
+        "status": "not_started"
+      },
+      {
+        "id": "project-comparison",
+        "title": "Сравнение проекта",
+        "status": "not_started"
+      },
+      {
+        "id": "interactive-tool",
+        "title": "Собственный интерактивный инструмент",
+        "status": "not_started"
+      },
+      {
+        "id": "card-21",
+        "title": "ГЛАВНАЯ",
+        "status": "not_started"
+      },
+      {
+        "id": "card-22-hub",
+        "title": "КАТАЛОГ (ХАБ)",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-22",
+        "title": "КАТЕГОРИЯ",
+        "status": "not_started"
+      },
+      {
+        "id": "card-25",
+        "title": "СТАТЬЯ БЛОГА",
+        "status": "not_started"
+      },
+      {
+        "id": "card-26",
+        "title": "О НАС",
+        "status": "not_started"
+      },
+      {
+        "id": "card-27",
+        "title": "КОНТАКТЫ",
+        "status": "not_started"
+      },
+      {
+        "id": "card-28",
+        "title": "ДОСТАВКА / ГАРАНТИИ",
+        "status": "not_started"
+      },
+      {
+        "id": "card-30",
+        "title": "404",
+        "status": "not_started"
+      },
+      {
+        "id": "card-31",
+        "title": "THANK YOU PAGE ⚠️",
+        "status": "not_started"
+      },
+      {
+        "id": "card-32",
+        "title": "ЛЕНДИНГ",
+        "status": "not_started"
+      },
+      {
+        "id": "card-site-header-v497",
+        "title": "ХЕДЕР",
+        "status": "not_started"
+      },
+      {
+        "id": "card-site-footer-v497",
+        "title": "Футер: навигация, доверие и юридическая база",
+        "status": "not_started"
+      },
+      {
+        "id": "card-29",
+        "title": "ПОЛИТИКА",
+        "status": "not_started"
+      },
+      {
+        "id": "card-35",
+        "title": "Cookie-баннер: уведомление и согласие",
+        "status": "not_started"
+      },
+      {
+        "id": "card-36",
+        "title": "Футер: навигация, доверие и юридическая база",
+        "status": "not_started"
+      },
+      {
+        "id": "card-37",
+        "title": "Согласие в формах",
+        "status": "not_started"
+      },
+      {
+        "id": "target-audience",
+        "title": "Целевая аудитория",
+        "status": "not_started"
+      },
+      {
+        "id": "gate1-blog-v304-company",
+        "title": "Блог · Компания",
+        "status": "not_started"
+      },
+      {
+        "id": "card-23",
+        "title": "СТРАНИЦА УСЛУГИ",
+        "status": "not_started"
+      },
+      {
+        "id": "card-24",
+        "title": "КАРТОЧКА ТОВАРА",
+        "status": "not_started"
+      },
+      {
+        "id": "unit-economics",
+        "title": "Юнит-экономика",
+        "status": "not_started"
+      }
+    ],
+    "summary1": {
+      "total": 24,
+      "done": 0,
+      "ready": 0,
+      "notRequired": 0,
+      "inProgress": 1,
+      "problem": 0,
+      "notStarted": 23,
+      "percent": 2
+    },
+    "gate2": [
+      {
+        "id": "company-domain",
+        "status": "problem"
+      },
+      {
+        "id": "company-counter",
+        "status": "not_started"
+      },
+      {
+        "id": "company-goal",
+        "status": "not_started"
+      },
+      {
+        "id": "company-webmaster",
+        "status": "not_started"
+      },
+      {
+        "id": "company-yandex-business",
+        "status": "not_started"
+      },
+      {
+        "id": "company-yandex-direct",
+        "status": "not_started"
+      },
+      {
+        "id": "company-vk",
+        "status": "not_started"
+      },
+      {
+        "id": "company-telegram-ads",
+        "status": "not_started"
+      },
+      {
+        "id": "company-meta-ads",
+        "status": "not_started"
+      },
+      {
+        "id": "company-ga4",
+        "status": "not_started"
+      },
+      {
+        "id": "company-gsc",
+        "status": "not_started"
+      },
+      {
+        "id": "company-google-ads",
+        "status": "not_started"
+      },
+      {
+        "id": "company-leads",
+        "status": "not_started"
+      },
+      {
+        "id": "company-safety",
+        "status": "not_started"
+      }
+    ],
+    "summary2": {
+      "total": 14,
+      "done": 0,
+      "ready": 0,
+      "notRequired": 0,
+      "inProgress": 0,
+      "problem": 1,
+      "notStarted": 13,
+      "percent": 4
+    },
+    "pathTotal": 47,
+    "step": 1,
+    "first": "card-1",
+    "readOnly": false,
+    "sha256": "847765127374ca95d9db93631e5c416b1d1b2518e56f6754a6b7b6ae058a2360"
+  }
+}

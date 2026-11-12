@@ -135,7 +135,11 @@ await page.call("Page.enable");
 await page.call("Page.addScriptToEvaluateOnNewDocument", {
   source: `{
     const nativeFetch = window.fetch.bind(window);
-    window.fetch = (input, init) => String(input).includes("/api/")
+    window.fetch = (input, init) => String(input).includes("/__guru-save-export")
+      // The local-mode save route would write into ~/Downloads; answer like a
+      // host without it so the browser-download path is what this smoke checks.
+      ? Promise.resolve(new Response("", { status: 404 }))
+      : String(input).includes("/api/")
       ? Promise.resolve(new Response(JSON.stringify({ ok: true, isolatedSmokeTest: true }), { status: 200, headers: { "Content-Type": "application/json" } }))
       : nativeFetch(input, init);
   }`,
@@ -465,8 +469,21 @@ const projectPayload = projectDownload.payload;
 const expectedGateIds = Array.from({ length: 9 }, (_, index) => `gate-${index}`);
 if (JSON.stringify(projectPayload.gates.map((gate) => gate.exportedGateId)) !== JSON.stringify(expectedGateIds) ||
     JSON.stringify(Object.keys(projectPayload.diagnostics.gates)) !== JSON.stringify(expectedGateIds) ||
-    projectPayload.gates.some((gate) => gate.format !== "guru-gate-content-v1" || !gate.gate || !gate.structure || !gate.content)) {
+    projectPayload.gates.some((gate) => gate.format !== "guru-gate-content-v1" || !gate.structure ||
+      gate.navigation?.id !== gate.exportedGateId || !gate.navigation?.title ||
+      !Array.isArray(gate.contentKeys) || !gate.contentKeys.includes("project") ||
+      gate.contentKeys.some((key) => !(key in projectPayload.workspace)))) {
   throw new Error("Whole-project export does not contain all nine Gates");
+}
+// Former per-Gate copies are referenced, not duplicated: content lives in
+// workspace[contentKeys], diagnostics in diagnostics.gates[exportedGateId].
+if (projectPayload.gates.some((gate) => "gate" in gate || "content" in gate || "diagnostics" in gate || "codeReferences" in gate)) {
+  throw new Error("Whole-project export duplicates per-Gate content or diagnostics again");
+}
+const exportRecord = await evaluate("window.__guruLastProjectContentExport");
+if (exportRecord.savedVia !== "browser-download" || exportRecord.sizeBytes !== projectDownload.bytes ||
+    !(await evaluate('document.getElementById("guruExportResult")?.innerText || ""')).includes(projectDownload.filename)) {
+  throw new Error(`Whole-project export result is not shown: ${JSON.stringify(exportRecord)}`);
 }
 if (projectPayload.globalStores.gate0ScopedValuesV194[0]?.value !== "scope-ok" ||
     projectPayload.globalStores.productRegistryV185[0]?.id !== "export-category" ||

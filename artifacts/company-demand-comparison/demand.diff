@@ -1,0 +1,73 @@
+--- before/app.js
++++ after/app.js
+@@ -70779,7 +70779,8 @@
+   { create = false } = {},
+ ) {
+   if (!workspace) return { rows: [], archivedRows: [], duplicates: [] };
+-  const company = gate1CompanySemanticsV264(workspace);
++  const company = create ? gate1CompanySemanticsV264(workspace)
++    : workspace.painV130?.companySemanticsV264 || {};
+   const parsed = gate1CompanyKeywordFoundationDemandSourceV351(workspace);
+   const current = Array.isArray(company.demandRows)
+     ? company.demandRows.filter((row) => row && typeof row === "object")
+@@ -71045,7 +71046,7 @@
+         : `<textarea class="g1-input ${filledClass}" aria-label="${escapeAttr(label)}" data-pv181-company-demand-input-v345 data-pv181-company-demand-row-id-v345="${escapeAttr(rowId)}" data-pv181-company-demand-source-index-v345="${index}" data-pv181-company-demand-field-v345="${escapeAttr(field)}" rows="1" inputmode="decimal" placeholder="${escapeAttr(label)}">${escapeHtml(value)}</textarea>`;
+       return `<label class="g1-field pv181-demand-cell-v263"><span class="pv181-demand-cell-label-v263">${escapeHtml(label)}</span>${control}</label>`;
+     }).join("");
+-    return `<div class="pv181-demand-row" data-pv181-company-demand-row-v345="${escapeAttr(rowId)}">${cells}<span class="pv181-demand-row-action-spacer-v272" aria-hidden="true"></span></div>`;
++    return `<div class="pv181-demand-row" data-pv181-company-demand-row-v345="${escapeAttr(rowId)}">${cells}<button type="button" class="small-btn danger-mini" data-company-demand-remove="${escapeAttr(row.candidate_id)}" data-company-demand-phrase="${escapeAttr(row.kw)}" aria-label="Удалить ключевое слово ${escapeAttr(row.kw)}" title="Удалить ключевое слово компании">×</button></div>`;
+   }).join("");
+ }
+ 
+@@ -71086,8 +71087,8 @@
+   const lastImport = importState?.last_import || null;
+   const unmatched = importState?.unmatched || [];
+   return `<section class="pv181-demand-level-v266" data-pv181-company-demand data-pv181-company-demand-v345>
+-    <div class="pv140-section-title" style="margin-top:14px;">Спрос по брендовым фразам</div>
+-    <small style="display:block;color:var(--muted);font-size:11px;">Фразы берутся из подтверждённых кандидатов карточки «Фундамент ключевых слов · Компания» в Gate 0. Ключевое слово в таблице доступно только для чтения.</small>
++    <div class="pv140-section-title" style="margin-top:14px;">Ключевые слова компании</div>
++    <small style="display:block;color:var(--muted);font-size:11px;">Единый список с «Фундаментом ключевых слов · Компания» в Gate 0. Добавление и удаление слов действует в обоих блоках. Метрики удалённых слов сохраняются в архиве.</small>
+     <div class="gate0-keyword-foundation-actions-v247">
+       <button type="button" class="small-btn" data-pv181-company-demand-export-v356 ${entries.length ? "" : "disabled"}>Экспорт CSV</button>
+       <button type="button" class="small-btn" data-pv181-company-demand-import-v356>Импорт CSV / XLS / XLSX с метриками</button>
+@@ -71101,6 +71102,11 @@
+       <small>Эти строки не изменили список фраз и не создали новых кандидатов.</small>
+     </details>` : ""}
+     ${duplicateWarning}
++    <form class="gate0-keyword-foundation-actions-v247" data-company-demand-add-form>
++      <label class="g1-field"><span>Новое ключевое слово</span><input class="g1-input" name="keyword" data-company-demand-new autocomplete="off" placeholder="Введите ключевое слово" /></label>
++      <button type="submit" class="small-btn">+ Добавить слово</button>
++      <small role="status" data-company-demand-feedback></small>
++    </form>
+     <details data-pv181-company-demand-details-v345>
+       <summary>Показать строки · ${entries.length}</summary>
+       <div class="pv181-demand-view-controls-v262" style="margin-top:10px;">
+@@ -71110,7 +71116,7 @@
+         ${pv181DemandTableHeadHtmlV272()}
+         <div data-pv181-company-demand-rows-v345>${visibleEntries.length
+           ? gate1CompanyBrandDemandRowsHtmlV345(visibleEntries)
+-          : '<div class="pv181-demand-origin-empty">Подтвердите хотя бы одну фразу в компанийном Фундаменте ключевых слов Gate 0.</div>'}</div>
++          : '<div class="pv181-demand-origin-empty">Добавьте ключевое слово компании или подтвердите фразу в Gate 0.</div>'}</div>
+       </div>
+     </details>
+     <div class="pv181-demand-table-v263" style="margin-top:10px;" data-pv181-company-demand-totals-wrap-v345>
+@@ -71290,17 +71296,9 @@
+ }
+ 
+ function gate1CompanySemanticsHtmlV264(workspace = state) {
+-  const company = gate1CompanySemanticsV264(workspace);
+-  const value = String(company.brandPhrases || "");
++  // Historical brandPhrases remain available to their existing SMM readers.
+   return `<section class="gate1-company-semantics-v264" data-gate1-company-semantics-v264>
+-    <div class="g1-card gate1-company-brand-card-v264">
+-      <label class="g1-field">
+-        <span>Уровень 1 — Брендовый</span>
+-        <small>Брендовые фразы для Gate 4 SMM · одна фраза на строку · единое значение для всего проекта</small>
+-        <textarea class="g1-input ${value.trim() ? "is-filled" : "is-empty"}" data-gate1-company-brand-v264 rows="1" placeholder="Введите брендовые фразы, по одной на строку">${escapeHtml(value)}</textarea>
+-      </label>
+-      ${gate1CompanyBrandDemandHtmlV345(workspace)}
+-    </div>
++    <div class="g1-card gate1-company-brand-card-v264">${gate1CompanyBrandDemandHtmlV345(workspace)}</div>
+   </section>`;
+ }
+ 

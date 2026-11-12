@@ -312,11 +312,11 @@ function g2MetrikaProductCardHtmlV367(card) {
   const productId = product?.id || "";
   const row = g2MetrikaProductRowV367(card, productId) || {};
   const status = g2MetrikaProductStatusV367(card, productId);
-  return `<article id="${escapeAttr(card.id)}" class="g2-check-row g2-mp-card-v367" data-card="${escapeAttr(card.id)}" data-g2-scope-kind="product">
-    <div class="g2-check-title"><span>${escapeHtml(definition.title)}</span><span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span></div>
-    ${productId ? `<div class="g2-mp-fields-v367" data-g2-mp-fields="${escapeAttr(productId)}">${g2MetrikaProductFieldsV367(card, productId, row)}</div>` :
-      '<p class="g2-metrika-hint-v360">Выберите товар в общем селекторе выше, чтобы заполнить проверку.</p>'}
-  </article>`;
+  const body = productId
+    ? `<div class="g2-mp-fields-v367" data-g2-mp-fields="${escapeAttr(productId)}">${g2MetrikaProductFieldsV367(card, productId, row)}</div>`
+    : '<p class="g2-metrika-hint-v360">Выберите товар в общем селекторе выше, чтобы заполнить проверку.</p>';
+  return g2UnifiedCardPanelHtml({ card, scope: "product", status, title: definition.title,
+    body, className: "g2-mp-card-v367 g2u-product-audit" });
 }
 
 const __g2MetrikaProductPrevCardHtmlV367 = g2CardHtml;
@@ -382,7 +382,11 @@ function g2MetrikaProductRefreshV367(card) {
   const element = document.querySelector(`[data-card="${CSS.escape(card.id)}"]`);
   const status = g2MetrikaProductStatusV367(card);
   const pill = element?.querySelector(":scope > .g2-check-title .status-pill");
-  if (pill) { pill.className = `status-pill status-${status}`; pill.textContent = STATUS_LABELS[status] || status; }
+  if (pill) {
+    pill.className = `g2sb-status status-pill status-${status}`;
+    pill.dataset.status = status;
+    pill.textContent = STATUS_LABELS[status] || status;
+  }
   const section = element?.closest(".g2-open-section");
   const cards = [...(section?.querySelectorAll(".g2-mp-card-v367") || [])]
     .map((node) => state.gates.find((gate) => gate.id === "gate-2")?.cards.find((item) => item.id === node.dataset.card))

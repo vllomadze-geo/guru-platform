@@ -1,0 +1,27 @@
+.strategic-cta-field-v1 { position: relative; }
+.strategic-cta-field-v1 > :is(input, textarea)[data-strategic-cta-input-v1] { padding-right: 32px !important; }
+.strategic-cta-field-v1 > select[data-strategic-cta-input-v1] { appearance: none; padding-right: 32px !important; }
+.strategic-cta-trigger-v1 {
+  position: absolute; right: 5px; bottom: 5px; width: 26px; height: 26px;
+  border: 0; border-radius: var(--r-sm); background: transparent;
+  color: var(--muted); font: inherit; font-size: 17px; line-height: 1;
+  cursor: pointer; z-index: 1;
+}
+.strategic-cta-trigger-v1:hover, .strategic-cta-trigger-v1:focus-visible {
+  background: var(--panel-soft); color: var(--text);
+}
+.strategic-cta-picker-v1 {
+  position: fixed; z-index: 10000; width: min(340px, calc(100vw - 16px));
+  max-height: min(360px, calc(100vh - 16px)); overflow-y: auto;
+  padding: 8px; background: var(--panel); color: var(--text);
+  border: .5px solid var(--line); border-radius: var(--r-md);
+  box-shadow: 0 8px 30px rgba(0,0,0,.12);
+}
+.strategic-cta-picker-v1 > strong { display: block; padding: 7px 8px; font-size: 12px; font-weight: 500; }
+.strategic-cta-picker-v1 > button { display: flex; flex-direction: column; align-items: flex-start;
+  width: 100%; gap: 3px; padding: 9px 8px; border: 0; border-radius: 5px;
+  background: transparent; color: inherit; text-align: left; font: inherit; cursor: pointer; }
+.strategic-cta-picker-v1 > button:hover, .strategic-cta-picker-v1 > button:focus-visible { background: var(--panel-soft); }
+.strategic-cta-picker-v1 > button:disabled { opacity: .5; cursor: default; }
+.strategic-cta-picker-v1 small, .strategic-cta-picker-v1 p { color: var(--muted); font-size: 12px; }
+.strategic-cta-picker-v1 p { margin: 8px; }

@@ -1,0 +1,29 @@
+{
+  "count": 8,
+  "tests": [
+    "company-manual-economics-gate4-strict-smoke.mjs",
+    "gate2-metrika-company-product-v361-smoke.mjs",
+    "gate2-metrika-company-source-smoke.mjs",
+    "gate2-metrika-goals-quality-smoke.mjs",
+    "gate2-metrika-product-audit-smoke.mjs",
+    "gate2-setup-wizard-smoke.mjs",
+    "gate2-status-propagation-smoke.mjs",
+    "gate8-ui-integration-smoke.mjs"
+  ],
+  "categories": {
+    "staleMetrikaContract": [
+      "gate2-metrika-company-product-v361-smoke.mjs",
+      "gate2-metrika-company-source-smoke.mjs",
+      "gate2-metrika-goals-quality-smoke.mjs",
+      "gate2-metrika-product-audit-smoke.mjs",
+      "gate2-status-propagation-smoke.mjs"
+    ],
+    "testReloadRace": [
+      "company-manual-economics-gate4-strict-smoke.mjs"
+    ],
+    "applicationPerformance": [
+      "gate2-setup-wizard-smoke.mjs",
+      "gate8-ui-integration-smoke.mjs"
+    ]
+  }
+}

@@ -1,0 +1,705 @@
+{
+  "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+  "before": {
+    "baseline": {
+      "answers": [
+        {
+          "key": "collectsPersonalDataV1",
+          "present": false,
+          "value": null
+        },
+        {
+          "key": "siteCheckoutV1",
+          "present": false,
+          "value": null
+        }
+      ],
+      "readiness": {
+        "total": 9,
+        "done": 8,
+        "ready": 8,
+        "notRequired": 0,
+        "inProgress": 1,
+        "problem": 0,
+        "notStarted": 0,
+        "percent": 94
+      },
+      "step": 8,
+      "M": 95,
+      "current": "gate-0:card::card-7",
+      "rows": [
+        {
+          "id": "card-1",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-project-goal",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-company-brand-purpose",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-company-segmentation",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-company-positioning",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-company-offer",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-company-keyword-foundation",
+          "status": "ready"
+        },
+        {
+          "id": "card-7",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-2",
+          "status": "ready"
+        }
+      ],
+      "missing": [
+        "Доставка и оплата: URL"
+      ]
+    },
+    "cases": [
+      {
+        "personal": true,
+        "order": true,
+        "answers": [
+          {
+            "key": "collectsPersonalDataV1",
+            "present": true,
+            "value": true
+          },
+          {
+            "key": "siteCheckoutV1",
+            "present": true,
+            "value": true
+          }
+        ],
+        "readiness": {
+          "total": 9,
+          "done": 8,
+          "ready": 8,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 0,
+          "percent": 94
+        },
+        "step": 8,
+        "M": 95,
+        "current": "gate-0:card::card-7",
+        "rows": [
+          {
+            "id": "card-1",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-project-goal",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-brand-purpose",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-segmentation",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-positioning",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-offer",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-keyword-foundation",
+            "status": "ready"
+          },
+          {
+            "id": "card-7",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-2",
+            "status": "ready"
+          }
+        ],
+        "missing": [
+          "Доставка и оплата: URL"
+        ]
+      },
+      {
+        "personal": true,
+        "order": false,
+        "answers": [
+          {
+            "key": "collectsPersonalDataV1",
+            "present": true,
+            "value": true
+          },
+          {
+            "key": "siteCheckoutV1",
+            "present": true,
+            "value": false
+          }
+        ],
+        "readiness": {
+          "total": 9,
+          "done": 8,
+          "ready": 8,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 0,
+          "percent": 94
+        },
+        "step": 8,
+        "M": 95,
+        "current": "gate-0:card::card-7",
+        "rows": [
+          {
+            "id": "card-1",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-project-goal",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-brand-purpose",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-segmentation",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-positioning",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-offer",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-keyword-foundation",
+            "status": "ready"
+          },
+          {
+            "id": "card-7",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-2",
+            "status": "ready"
+          }
+        ],
+        "missing": [
+          "Доставка и оплата: URL"
+        ]
+      },
+      {
+        "personal": false,
+        "order": true,
+        "answers": [
+          {
+            "key": "collectsPersonalDataV1",
+            "present": true,
+            "value": false
+          },
+          {
+            "key": "siteCheckoutV1",
+            "present": true,
+            "value": true
+          }
+        ],
+        "readiness": {
+          "total": 9,
+          "done": 8,
+          "ready": 8,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 0,
+          "percent": 94
+        },
+        "step": 8,
+        "M": 95,
+        "current": "gate-0:card::card-7",
+        "rows": [
+          {
+            "id": "card-1",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-project-goal",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-brand-purpose",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-segmentation",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-positioning",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-offer",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-keyword-foundation",
+            "status": "ready"
+          },
+          {
+            "id": "card-7",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-2",
+            "status": "ready"
+          }
+        ],
+        "missing": [
+          "Доставка и оплата: URL"
+        ]
+      },
+      {
+        "personal": false,
+        "order": false,
+        "answers": [
+          {
+            "key": "collectsPersonalDataV1",
+            "present": true,
+            "value": false
+          },
+          {
+            "key": "siteCheckoutV1",
+            "present": true,
+            "value": false
+          }
+        ],
+        "readiness": {
+          "total": 9,
+          "done": 8,
+          "ready": 8,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 0,
+          "percent": 94
+        },
+        "step": 8,
+        "M": 95,
+        "current": "gate-0:card::card-7",
+        "rows": [
+          {
+            "id": "card-1",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-project-goal",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-brand-purpose",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-segmentation",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-positioning",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-offer",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-keyword-foundation",
+            "status": "ready"
+          },
+          {
+            "id": "card-7",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-2",
+            "status": "ready"
+          }
+        ],
+        "missing": [
+          "Доставка и оплата: URL"
+        ]
+      }
+    ],
+    "build": "2.3.526+2ed02ce31302"
+  },
+  "after": {
+    "baseline": {
+      "answers": [
+        {
+          "key": "collectsPersonalDataV1",
+          "present": false,
+          "value": null
+        },
+        {
+          "key": "siteCheckoutV1",
+          "present": false,
+          "value": null
+        }
+      ],
+      "readiness": {
+        "total": 9,
+        "done": 8,
+        "ready": 8,
+        "notRequired": 0,
+        "inProgress": 1,
+        "problem": 0,
+        "notStarted": 0,
+        "percent": 94
+      },
+      "step": 8,
+      "M": 95,
+      "current": "gate-0:card::card-7",
+      "rows": [
+        {
+          "id": "card-1",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-project-goal",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-company-brand-purpose",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-company-segmentation",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-company-positioning",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-company-offer",
+          "status": "ready"
+        },
+        {
+          "id": "gate0-company-keyword-foundation",
+          "status": "ready"
+        },
+        {
+          "id": "card-7",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-2",
+          "status": "ready"
+        }
+      ],
+      "missing": [
+        "Доставка и оплата: URL"
+      ]
+    },
+    "cases": [
+      {
+        "personal": true,
+        "order": true,
+        "answers": [
+          {
+            "key": "collectsPersonalDataV1",
+            "present": true,
+            "value": true
+          },
+          {
+            "key": "siteCheckoutV1",
+            "present": true,
+            "value": true
+          }
+        ],
+        "readiness": {
+          "total": 9,
+          "done": 8,
+          "ready": 8,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 0,
+          "percent": 94
+        },
+        "step": 8,
+        "M": 95,
+        "current": "gate-0:card::card-7",
+        "rows": [
+          {
+            "id": "card-1",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-project-goal",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-brand-purpose",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-segmentation",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-positioning",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-offer",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-keyword-foundation",
+            "status": "ready"
+          },
+          {
+            "id": "card-7",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-2",
+            "status": "ready"
+          }
+        ],
+        "missing": [
+          "Доставка и оплата: URL"
+        ]
+      },
+      {
+        "personal": true,
+        "order": false,
+        "answers": [
+          {
+            "key": "collectsPersonalDataV1",
+            "present": true,
+            "value": true
+          },
+          {
+            "key": "siteCheckoutV1",
+            "present": true,
+            "value": false
+          }
+        ],
+        "readiness": {
+          "total": 9,
+          "done": 8,
+          "ready": 8,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 0,
+          "percent": 94
+        },
+        "step": 8,
+        "M": 95,
+        "current": "gate-0:card::card-7",
+        "rows": [
+          {
+            "id": "card-1",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-project-goal",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-brand-purpose",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-segmentation",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-positioning",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-offer",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-keyword-foundation",
+            "status": "ready"
+          },
+          {
+            "id": "card-7",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-2",
+            "status": "ready"
+          }
+        ],
+        "missing": []
+      },
+      {
+        "personal": false,
+        "order": true,
+        "answers": [
+          {
+            "key": "collectsPersonalDataV1",
+            "present": true,
+            "value": false
+          },
+          {
+            "key": "siteCheckoutV1",
+            "present": true,
+            "value": true
+          }
+        ],
+        "readiness": {
+          "total": 9,
+          "done": 8,
+          "ready": 8,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 0,
+          "percent": 94
+        },
+        "step": 8,
+        "M": 95,
+        "current": "gate-0:card::card-7",
+        "rows": [
+          {
+            "id": "card-1",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-project-goal",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-brand-purpose",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-segmentation",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-positioning",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-offer",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-keyword-foundation",
+            "status": "ready"
+          },
+          {
+            "id": "card-7",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-2",
+            "status": "ready"
+          }
+        ],
+        "missing": [
+          "Доставка и оплата: URL"
+        ]
+      },
+      {
+        "personal": false,
+        "order": false,
+        "answers": [
+          {
+            "key": "collectsPersonalDataV1",
+            "present": true,
+            "value": false
+          },
+          {
+            "key": "siteCheckoutV1",
+            "present": true,
+            "value": false
+          }
+        ],
+        "readiness": {
+          "total": 9,
+          "done": 8,
+          "ready": 8,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 0,
+          "percent": 94
+        },
+        "step": 8,
+        "M": 95,
+        "current": "gate-0:card::card-7",
+        "rows": [
+          {
+            "id": "card-1",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-project-goal",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-brand-purpose",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-segmentation",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-positioning",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-offer",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-keyword-foundation",
+            "status": "ready"
+          },
+          {
+            "id": "card-7",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-2",
+            "status": "ready"
+          }
+        ],
+        "missing": []
+      }
+    ],
+    "build": "2.3.526+d8a3a0c209c5"
+  }
+}

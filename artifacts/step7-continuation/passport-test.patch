@@ -1,0 +1,35 @@
+diff --git a/scripts/project-passport-baseline-smoke.mjs b/scripts/project-passport-baseline-smoke.mjs
+index bb6c8ee..3ec04d0 100644
+--- a/scripts/project-passport-baseline-smoke.mjs
++++ b/scripts/project-passport-baseline-smoke.mjs
+@@ -102,8 +102,28 @@ try {
+       card('card-12').querySelector('[data-control-fixation-key]').value === '2026-10-15' &&
+       card('card-10').querySelector('[data-cr-meta-field="positionId"]').value === 'passport-product-a';
+     const gate0 = state.gates.find((gate) => gate.id === 'gate-0');
+-    const progressMoved = __guruPassportPrevGateBlockStatusesV527(gate0).length -
+-      guruGateBlockStatuses(gate0).length === ids.length;
++    let beforeMovedCount;
++    let movedIdsExcluded = true;
++    if (typeof nowGuideGate0Cards === 'function') {
++      // Compare the same visible-block registry with and without the passport
++      // exclusion. Other visibility rules must remain identical in both counts.
++      const isMoved = guruPassportMovedGate0CardV527;
++      let beforeMovedIds;
++      try {
++        guruPassportMovedGate0CardV527 = () => false;
++        beforeMovedIds = nowGuideGate0Cards(gate0).map((entry) => entry.id);
++      } finally {
++        guruPassportMovedGate0CardV527 = isMoved;
++      }
++      const afterMovedIds = nowGuideGate0Cards(gate0).map((entry) => entry.id);
++      beforeMovedCount = beforeMovedIds.length;
++      movedIdsExcluded = ids.every((id) => beforeMovedIds.includes(id) && !afterMovedIds.includes(id)) &&
++        JSON.stringify(beforeMovedIds.filter((id) => !ids.includes(id))) === JSON.stringify(afterMovedIds);
++    } else {
++      beforeMovedCount = __guruPassportPrevGateBlockStatusesV527(gate0).length;
++    }
++    const progressMoved = movedIdsExcluded &&
++      beforeMovedCount - guruGateBlockStatuses(gate0).length === ids.length;
+     renderGate();
+     const absentFromGate0 = ids.every((id) => !document.querySelector('.gate0-vertical [data-card-row="' + id + '"]'));
+     await new Promise((resolve) => setTimeout(resolve, 350));

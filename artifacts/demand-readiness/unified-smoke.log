@@ -1,0 +1,155 @@
+{
+  "transitions": {
+    "zero": {
+      "status": "not_started",
+      "completed": 0,
+      "total": 0,
+      "demandReady": false
+    },
+    "partialStrategy": {
+      "status": "not_started",
+      "completed": 0,
+      "total": 0,
+      "demandReady": false
+    },
+    "keywordOnly": {
+      "status": "in_progress",
+      "completed": 0,
+      "total": 1,
+      "demandReady": false
+    },
+    "strategyOnly": {
+      "status": "in_progress",
+      "completed": 0,
+      "total": 1,
+      "demandReady": false
+    },
+    "completeMetrics": {
+      "status": "ready",
+      "completed": 1,
+      "total": 1,
+      "demandReady": true
+    }
+  },
+  "frame": {
+    "title": "Спрос",
+    "sectionCount": 1,
+    "hasFrame": true,
+    "foundationAdjacent": true,
+    "semanticsInside": true,
+    "screenshot": {
+      "filename": "artifacts/gate1-company-demand-positioning-v357.png",
+      "x": 341,
+      "y": 1080.9609375,
+      "width": 1538,
+      "height": 470
+    }
+  },
+  "toggle": {
+    "afterClose": {
+      "completion": {
+        "status": "ready",
+        "completed": 1,
+        "total": 1,
+        "demandReady": true
+      },
+      "productCompletion": {
+        "productId": "company-container-product-v357",
+        "status": "ready",
+        "completed": 3,
+        "total": 3,
+        "foundationReady": true,
+        "demandReady": true,
+        "jtbdReady": true,
+        "demandRows": 1
+      },
+      "sectionCount": 1,
+      "hasCompanyMarker": true,
+      "topLevelSection": true,
+      "title": "Спрос",
+      "progress": "Метрики заполнены: 1 из 1 слов",
+      "statusText": "Готово",
+      "statusClass": "status-pill status-ready",
+      "expanded": "false",
+      "openClass": false,
+      "bodyHidden": true,
+      "hasFrame": true,
+      "foundationAdjacent": true,
+      "semanticsInside": true,
+      "productSectionCount": 1,
+      "productTitle": "Спрос, ценность, позиционирование · Продукт/Услуга"
+    },
+    "afterOpen": {
+      "completion": {
+        "status": "ready",
+        "completed": 1,
+        "total": 1,
+        "demandReady": true
+      },
+      "productCompletion": {
+        "productId": "company-container-product-v357",
+        "status": "ready",
+        "completed": 3,
+        "total": 3,
+        "foundationReady": true,
+        "demandReady": true,
+        "jtbdReady": true,
+        "demandRows": 1
+      },
+      "sectionCount": 1,
+      "hasCompanyMarker": true,
+      "topLevelSection": true,
+      "title": "Спрос",
+      "progress": "Метрики заполнены: 1 из 1 слов",
+      "statusText": "Готово",
+      "statusClass": "status-pill status-ready",
+      "expanded": "true",
+      "openClass": true,
+      "bodyHidden": false,
+      "hasFrame": true,
+      "foundationAdjacent": true,
+      "semanticsInside": true,
+      "productSectionCount": 1,
+      "productTitle": "Спрос, ценность, позиционирование · Продукт/Услуга"
+    },
+    "storedOpen": true
+  },
+  "productControl": {
+    "productId": "company-container-product-v357",
+    "status": "ready",
+    "completed": 3,
+    "total": 3,
+    "foundationReady": true,
+    "demandReady": true,
+    "jtbdReady": true,
+    "demandRows": 1
+  },
+  "afterReload": {
+    "company": {
+      "status": "ready",
+      "completed": 1,
+      "total": 1
+    },
+    "product": {
+      "productId": "company-container-product-v357",
+      "status": "ready",
+      "completed": 3,
+      "total": 3,
+      "foundationReady": true,
+      "demandReady": true,
+      "jtbdReady": true,
+      "demandRows": 1
+    },
+    "stateOpen": true,
+    "expanded": "true",
+    "openClass": true,
+    "bodyHidden": false,
+    "foundationAdjacent": true,
+    "semanticsInside": true,
+    "companySectionCount": 1,
+    "hasCompanyMarker": true,
+    "productSectionCount": 1,
+    "errors": []
+  }
+}
+gate1 company unified container smoke: OK

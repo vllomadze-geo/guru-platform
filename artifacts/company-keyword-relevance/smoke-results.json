@@ -1,0 +1,238 @@
+{
+  "report": [
+    {
+      "project": "Коричное яблоко",
+      "fixtureSha256": "ddc6de490e31c8d2bb8c71963bacb8dd53236e83b0f02105b053447ef3fffe5c",
+      "projectBeforeSha256": "f956fdb538a366f466be0b65ef52d1f8e660f6f3513db34532bf7977d54f5254",
+      "projectAfterSha256": "f956fdb538a366f466be0b65ef52d1f8e660f6f3513db34532bf7977d54f5254",
+      "projectIdentical": true,
+      "guide": {
+        "gate1": {
+          "total": 23,
+          "done": 4,
+          "ready": 4,
+          "notRequired": 0,
+          "inProgress": 5,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 28
+        },
+        "step": "gate-1:comparison::project-comparison",
+        "missing": "<div class=\"now-guide-missing\" aria-live=\"polite\"><span>Не хватает:</span><ul><li><button type=\"button\" data-now-missing=\"0\">Гавань мастеровУдалить\n    Тип: Дальний конкурент\n    Ссылка на сайт целиком: не заполнено у 18 из 28 записей</button></li><li><button type=\"button\" data-now-missing=\"1\">Ярмарка МастеровУдалить\n    Тип: Дальний конкурент\n    Ссылка на сайт целиком: не заполнено у 18 из 28 записей</button></li><li><button type=\"button\" data-now-missing=\"2\">avitoУдалить\n    Тип: Дальний конкурент\n    Ссылка на сайт целиком: не заполнено у 18 из 28 записей</button></li></ul></div>",
+        "launch": {
+          "total": 87,
+          "done": 28,
+          "ready": 23,
+          "notRequired": 5,
+          "inProgress": 24,
+          "problem": 3,
+          "notStarted": 32,
+          "percent": 48
+        }
+      },
+      "competitors": 25,
+      "phrases": 15,
+      "types": [
+        "Сосед по выдаче",
+        "Дальний конкурент"
+      ],
+      "relevances": [
+        {
+          "key": "unrated",
+          "label": "Не оценена",
+          "count": 14
+        },
+        {
+          "key": "low",
+          "label": "Низкая",
+          "count": 1
+        }
+      ],
+      "counts": [
+        2,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "linked": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "project": "iCleaning",
+      "fixtureSha256": "a1baa877f77727f7813f80cc0749763bd5122f8f56d48136fa1527542ea19c71",
+      "projectBeforeSha256": "995293c2846721665dbb9db698bfd6c1acda09a9d64425b60af0049d96b128e8",
+      "projectAfterSha256": "995293c2846721665dbb9db698bfd6c1acda09a9d64425b60af0049d96b128e8",
+      "projectIdentical": true,
+      "guide": {
+        "gate1": {
+          "total": 24,
+          "done": 4,
+          "ready": 1,
+          "notRequired": 3,
+          "inProgress": 5,
+          "problem": 0,
+          "notStarted": 15,
+          "percent": 27
+        },
+        "step": "gate-0:card::gate0-company-brand-purpose",
+        "missing": "<div class=\"now-guide-missing\" aria-live=\"polite\"><span>Не хватает:</span><ul><li><button type=\"button\" data-now-missing=\"0\">Функциональная цель</button></li><li><button type=\"button\" data-now-missing=\"1\">Высшая цель</button></li><li><button type=\"button\" data-now-missing=\"2\">Единая формулировка цели бренда</button></li></ul></div>",
+        "launch": {
+          "total": 89,
+          "done": 18,
+          "ready": 13,
+          "notRequired": 5,
+          "inProgress": 26,
+          "problem": 2,
+          "notStarted": 43,
+          "percent": 36
+        }
+      },
+      "competitors": 3,
+      "phrases": 0,
+      "types": [
+        "Не классифицирован"
+      ],
+      "relevances": [],
+      "counts": [
+        0,
+        0,
+        0
+      ],
+      "linked": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "project": "SIVRCE",
+      "fixtureSha256": "59c7656d64ab0f86da8791c2531768249d6feb64b40673ed174654ea650c413c",
+      "projectBeforeSha256": "c3d076b4d19e61833fb74de61921252ce8bc5f767cf6b354fbd6c04023bfe2af",
+      "projectAfterSha256": "c3d076b4d19e61833fb74de61921252ce8bc5f767cf6b354fbd6c04023bfe2af",
+      "projectIdentical": true,
+      "guide": {
+        "gate1": {
+          "total": 22,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 3,
+          "problem": 0,
+          "notStarted": 19,
+          "percent": 7
+        },
+        "step": "gate-0:card::card-1",
+        "missing": "<div class=\"now-guide-missing\" aria-live=\"polite\"><span>Не хватает:</span><ul><li><button type=\"button\" data-now-missing=\"0\">Заполните блок</button></li></ul></div>",
+        "launch": {
+          "total": 45,
+          "done": 7,
+          "ready": 0,
+          "notRequired": 7,
+          "inProgress": 6,
+          "problem": 1,
+          "notStarted": 31,
+          "percent": 23
+        }
+      },
+      "competitors": 3,
+      "phrases": 0,
+      "types": [
+        "Не классифицирован"
+      ],
+      "relevances": [],
+      "counts": [
+        0,
+        0,
+        0
+      ],
+      "linked": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "project": "УНИВЕРСАЛ / ГУРУ",
+      "fixtureSha256": "847765127374ca95d9db93631e5c416b1d1b2518e56f6754a6b7b6ae058a2360",
+      "projectBeforeSha256": "b1c1ccc6f36d62177d45f69d54d43cfd707326365cc62d438063c234df20b416",
+      "projectAfterSha256": "b1c1ccc6f36d62177d45f69d54d43cfd707326365cc62d438063c234df20b416",
+      "projectIdentical": true,
+      "guide": {
+        "gate1": {
+          "total": 22,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 21,
+          "percent": 2
+        },
+        "step": "gate-0:card::card-1",
+        "missing": "<div class=\"now-guide-missing\" aria-live=\"polite\"><span>Не хватает:</span><ul><li><button type=\"button\" data-now-missing=\"0\">Заполните блок</button></li></ul></div>",
+        "launch": {
+          "total": 45,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 3,
+          "problem": 1,
+          "notStarted": 41,
+          "percent": 4
+        }
+      },
+      "competitors": 0,
+      "phrases": 0,
+      "types": [],
+      "relevances": [],
+      "counts": [],
+      "linked": []
+    }
+  ]
+}

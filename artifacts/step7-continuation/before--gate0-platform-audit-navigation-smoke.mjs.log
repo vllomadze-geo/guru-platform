@@ -1,0 +1,106 @@
+{
+  "seedAuditRow": true,
+  "clickMs": 19.599999994039536,
+  "navigationMs": 258.90000000596046,
+  "activeGateId": "gate-1",
+  "hasCard": true,
+  "hasRow": true,
+  "productScopeOpen": "false",
+  "companyScopeOpen": "true",
+  "sections": [
+    [
+      "__g1_divider_company",
+      "divider",
+      false
+    ],
+    [
+      "site_audit",
+      "",
+      true
+    ],
+    [
+      "__g1_divider_product",
+      "divider",
+      false
+    ],
+    [
+      "__g1_product_pages",
+      "",
+      false
+    ],
+    [
+      "demand_semantics",
+      "",
+      false
+    ],
+    [
+      "pain_jtbd_offer",
+      "",
+      false
+    ],
+    [
+      "unit_economics",
+      "",
+      false
+    ]
+  ],
+  "rowVisible": true,
+  "rowTop": 0,
+  "rowExpanded": true,
+  "selectedCategoryId": "author-clothes",
+  "savedScopeOpen": true,
+  "savedCategoryOpen": true
+}
+{
+  "seedAuditRow": false,
+  "clickMs": 4.9000000059604645,
+  "navigationMs": 72,
+  "activeGateId": "gate-1",
+  "hasCard": true,
+  "hasRow": true,
+  "productScopeOpen": "false",
+  "companyScopeOpen": "true",
+  "sections": [
+    [
+      "__g1_divider_company",
+      "divider",
+      false
+    ],
+    [
+      "site_audit",
+      "",
+      true
+    ],
+    [
+      "__g1_divider_product",
+      "divider",
+      false
+    ],
+    [
+      "__g1_product_pages",
+      "",
+      false
+    ],
+    [
+      "demand_semantics",
+      "",
+      false
+    ],
+    [
+      "pain_jtbd_offer",
+      "",
+      false
+    ],
+    [
+      "unit_economics",
+      "",
+      false
+    ]
+  ],
+  "rowVisible": true,
+  "rowTop": 0,
+  "rowExpanded": true,
+  "selectedCategoryId": "author-clothes",
+  "savedScopeOpen": true,
+  "savedCategoryOpen": true
+}

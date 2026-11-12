@@ -1,0 +1,72 @@
+{
+  "beforeBuild": "2.3.526+90afe2181bf6",
+  "afterBuild": "2.3.526+f27a5eb44659",
+  "conditions": "Same export and isolated Chrome, real mouse and text events, no CPU throttling. Medians across events in one identical scenario per build.",
+  "comparison": [
+    {
+      "name": "fields",
+      "before": {
+        "min": 227,
+        "max": 249,
+        "median": 231
+      },
+      "after": {
+        "min": 45,
+        "max": 64,
+        "median": 49
+      },
+      "improvementPercent": 79
+    },
+    {
+      "name": "focus",
+      "before": {
+        "min": 453,
+        "max": 667,
+        "median": 468
+      },
+      "after": {
+        "min": 79,
+        "max": 84,
+        "median": 83
+      },
+      "improvementPercent": 82
+    },
+    {
+      "name": "draft",
+      "before": {
+        "min": 221,
+        "max": 290,
+        "median": 260
+      },
+      "after": {
+        "min": 14,
+        "max": 17,
+        "median": 15
+      },
+      "improvementPercent": 94
+    }
+  ],
+  "duringInput": {
+    "before": {
+      "versionInDispatch": 11,
+      "registryInDispatch": 0,
+      "gate0FullInDispatch": 3
+    },
+    "after": {
+      "versionInDispatch": 0,
+      "registryInDispatch": 0,
+      "gate0FullInDispatch": 0
+    }
+  },
+  "integrity": {
+    "name": true,
+    "url": true,
+    "next": true,
+    "draft": true,
+    "focused": true,
+    "connected": true,
+    "gate": "gate-0"
+  },
+  "workerUsed": true,
+  "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37"
+}

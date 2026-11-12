@@ -159,11 +159,11 @@ try {
   assert.deepEqual(actual.order.slice(0, 6), ["company-domain", "counter", "goal",
     "company-webmaster", "company-yandex-business", "company-yandex-direct"]);
   assert.deepEqual(actual.order.slice(6, 14), ids);
-  assert.deepEqual(actual.steps, [7, 4, 4, 5, 2, 4, 7, 5]);
+  assert.deepEqual(actual.steps, [1, 4, 4, 5, 2, 4, 7, 5]);
   assert.equal(actual.siteUrl, "https://icleaning.ru/");
   assert.equal(actual.privacyUrl, "https://icleaning.ru/privacy-policy");
   assert.equal(actual.crm, "АГБИС");
-  assert.deepEqual(actual.vkFields, ["vkAccount", "pixelId"]);
+  assert.deepEqual(actual.vkFields, []);
   assert.equal(actual.legalHttpsInputs, 0);
   assert.ok(actual.legalPolicyText.includes(actual.privacyUrl));
   assert.ok(actual.metaNotice.includes("21.03.2022"));
@@ -235,69 +235,25 @@ try {
   assert.equal(preservation.ready, "ready");
   assert.equal(preservation.stale, "in_progress", "changing HTTPS must invalidate the safety check");
 
-  const vkFlow = await evaluate(`(() => {
-    const marketing = g2c2Marketing();
-    marketing.infra.find((row) => row.name === 'VK Ads').status = 'not_started';
-    for (const row of marketing.channels.filter((row) => row.platform === 'VK Ads'))
-      row.status = 'not_started';
+  const vkScaffold = await evaluate(`(() => {
     const def = g2wDef('vk');
-    const record = g2wRecord(def, '', true);
+    const before = JSON.stringify(g2wRecord(def));
     const block = document.querySelector('[data-g2sb-id="company-vk"]');
-    const ids = [...block.querySelectorAll('[data-g2sb-step-id]')].map((node) => node.dataset.g2sbStepId);
-    const sources = [...block.querySelectorAll('[data-g2sb-step-id]')]
-      .map((node) => Boolean(node.querySelector('.g2sb-help[href]')));
-    const oldRoute = block.textContent.includes('VK Реклама → «Сайты»');
     const productBlock = document.querySelector('[data-g2sb-id="product-vk"]');
     const productSources = [...productBlock.querySelectorAll('[data-g2sb-step-id]')]
       .map((node) => Boolean(node.querySelector('.g2sb-help[href]')));
-    const productOldRoute = productBlock.textContent.includes('VK Реклама → «Сайты»');
-    const idOnly = g2wCanConfirm(def);
-    for (const step of def.steps) record.steps[step[0]] = {
-      step_id: step[0], result: 'done', params: {}, checked_at: new Date().toISOString()
-    };
-    record.verification = { result: 'passed', fingerprint: g2wInputs(def),
-      checked_at: new Date().toISOString(), verification_type: 'manual' };
-    const checkboxOnly = g2wStatus(def);
-    const canConfirmCheckboxOnly = g2wCanConfirm(def);
-    const visitControl = block.querySelector('[data-g2sb-step="visit"]');
-    visitControl.value = 'Визит виден в Real-Time, 14:32';
-    visitControl.dispatchEvent(new Event('change', { bubbles: true }));
-    const withReportBeforeVerification = g2wStatus(def);
-    const canConfirmWithReport = g2wCanConfirm(def);
-    const searchControl = block.querySelector('[data-g2sb-step="existing"]');
-    searchControl.value = 'Найден существующий ID 123456789';
-    searchControl.dispatchEvent(new Event('change', { bubbles: true }));
-    const canConfirmWithSearchAndReport = g2wCanConfirm(def);
-    const source = block.querySelector('[data-g2w-source]');
-    source.value = 'top.mail.ru → Мои счётчики → Real-Time → Обзор';
-    block.querySelector('[data-g2w-verify="passed"]').click();
-    const withReport = g2wStatus(def);
-    renderGate();
-    const savedSearch = g2wRecord(def)?.steps.existing?.params?.value;
-    const savedVisit = g2wRecord(def)?.steps.visit?.params?.value;
-    const savedId = g2wValue(def, '', 'pixelId');
-    return { ids, sources, oldRoute, productSources, productOldRoute, idOnly, checkboxOnly, canConfirmCheckboxOnly,
-      withReportBeforeVerification, canConfirmWithReport, canConfirmWithSearchAndReport,
-      withReport, savedSearch, savedVisit, savedId,
-      visitInput: visitControl.type, searchInput: searchControl.type };
+    return { title: block.querySelector('.g2sb-title')?.textContent.trim(),
+      steps: block.querySelectorAll('[data-g2sb-step-id]').length,
+      fields: block.querySelectorAll('input, select, textarea').length,
+      recordUnchanged: before === JSON.stringify(g2wRecord(def)),
+      savedId: g2wValue(def, '', 'pixelId'), productSources };
   })()`);
-  assert.deepEqual(vkFlow.ids, ['account', 'existing', 'pixel', 'id', 'install', 'publish', 'visit']);
-  assert.ok(vkFlow.sources.every(Boolean), 'every VK step needs a source link');
-  assert.ok(vkFlow.productSources.every(Boolean), 'every product VK step needs a source link');
-  assert.equal(vkFlow.oldRoute, false);
-  assert.equal(vkFlow.productOldRoute, false);
-  assert.equal(vkFlow.idOnly, false);
-  assert.equal(vkFlow.checkboxOnly, 'in_progress');
-  assert.equal(vkFlow.canConfirmCheckboxOnly, false);
-  assert.equal(vkFlow.withReportBeforeVerification, 'in_progress');
-  assert.equal(vkFlow.canConfirmWithReport, false);
-  assert.equal(vkFlow.canConfirmWithSearchAndReport, true);
-  assert.equal(vkFlow.withReport, 'ready');
-  assert.equal(vkFlow.savedSearch, 'Найден существующий ID 123456789');
-  assert.equal(vkFlow.savedVisit, 'Визит виден в Real-Time, 14:32');
-  assert.equal(vkFlow.savedId, '123456789');
-  assert.equal(vkFlow.visitInput, 'text');
-  assert.equal(vkFlow.searchInput, 'text');
+  assert.equal(vkScaffold.title, 'VK · Компания');
+  assert.equal(vkScaffold.steps, 1);
+  assert.equal(vkScaffold.fields, 0);
+  assert.equal(vkScaffold.recordUnchanged, true);
+  assert.equal(vkScaffold.savedId, '123456789');
+  assert.ok(vkScaffold.productSources.every(Boolean), 'product VK source links remain available');
 
   const skipped = await evaluate(`(() => {
     const marketing = g2c2Marketing();
@@ -312,10 +268,12 @@ try {
     return ${JSON.stringify(ids)}.map((id) => {
       const block = document.querySelector('[data-g2sb-id="' + id + '"]');
       return { id, gray: block.classList.contains('is-not-needed'),
-        label: block.querySelector('[data-g2sb-status]').textContent };
+        label: block.querySelector('[data-g2sb-status]')?.textContent || '' };
     });
   })()`);
-  assert.ok(skipped.slice(0, 7).every((item) => item.gray));
+  assert.equal(skipped[0].gray, false);
+  assert.equal(skipped[0].label, 'Не начато');
+  assert.ok(skipped.slice(1, 7).every((item) => item.gray));
   assert.equal(skipped.find((item) => item.id === 'company-meta-ads').label,
     'Не требуется: все каналы отмечены «Не требуется» в Gate 0');
   assert.equal(skipped.find((item) => item.id === 'company-google-ads').label,

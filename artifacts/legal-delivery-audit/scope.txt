@@ -1,0 +1,4 @@
+В этой задаче изменены app.js и scripts/platform-legal-structure-smoke.mjs.
+styles.css уже был изменён ранее, здесь не менялся.
+now-guide.js и содержимое карточек Gate 1-8 не менялись.
+Общий обработчик openAuditPageCard дополнен раскрытием фактической группы карточки.

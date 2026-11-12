@@ -1,0 +1,60 @@
+.g2yp-group { margin-top: 20px; }
+.g2yp-blocks { padding: 0 24px; }
+.g2yp-block { border-top: 1px solid var(--line); min-width: 0; }
+.g2yp-block:first-child { border-top: 0; }
+.g2yp-block > summary { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 86px; padding: 16px 0; cursor: pointer; list-style: none; }
+.g2yp-block > summary::-webkit-details-marker { display: none; }
+.g2yp-block > summary::after { content: ""; flex: none; width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); }
+.g2yp-block[open] > summary::after { transform: rotate(225deg); }
+.g2yp-block > summary > div { min-width: 0; flex: 1; }
+.g2yp-block h4 { margin: 0; font-size: 18px; line-height: 1.35; }
+.g2yp-block > summary p { margin: 4px 0 6px; font-size: 13px; color: var(--muted); }
+.g2yp-block > summary > div > span { display: block; font-size: 13px; color: var(--muted); }
+.g2yp-progress { width: min(390px, 100%); height: 3px; margin-top: 7px; background: var(--line); }
+.g2yp-progress > span { display: block; height: 100%; background: var(--text); }
+.g2yp-block > summary > .status-pill { flex: none; }
+.g2yp-step { border-top: 1px solid var(--line); padding: 20px 0 24px; min-width: 0; }
+.g2yp-step-head { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: start; gap: 10px 16px; }
+.g2yp-step-head small, .g2yp-source > span, .g2yp-field > span { display: block; color: var(--muted); font-size: 12px; font-weight: 700; }
+.g2yp-number { color: var(--muted); font-size: 13px; font-weight: 700; padding-top: 3px; }
+.g2yp-step-head h5 { margin: 3px 0 0; font-size: 16px; line-height: 1.4; }
+.g2yp-step-head p { margin: 5px 0 0; font-size: 14px; line-height: 1.45; }
+.g2yp-step-content { display: grid; gap: 12px; max-width: 720px; margin: 16px 0 0 44px; }
+.g2yp-source { display: grid; gap: 3px; overflow-wrap: anywhere; font-size: 13px; }
+.g2yp-source strong { font-weight: 600; }
+.g2yp-source a, .g2yp-guide a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.g2yp-source button { justify-self: start; min-height: 36px; padding: 0; border: 0; background: transparent; color: var(--text); font: inherit; text-align: left; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.g2yp-field { display: grid; gap: 5px; max-width: 480px; }
+.g2yp-field input, .g2yp-field select { box-sizing: border-box; width: 100%; min-height: 40px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--panel); color: var(--text); font: inherit; }
+.g2yp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+.g2yp-actions button { min-height: 36px; padding: 4px 0; border: 0; background: transparent; color: var(--text); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.g2yp-actions button:hover { text-decoration: underline; }
+.g2yp-actions button:disabled { opacity: .45; cursor: default; text-decoration: none; }
+.g2yp-actions span, .g2yp-recheck { color: var(--muted); font-size: 12px; }
+.g2yp-guide { border-top: 1px solid var(--line); }
+.g2yp-guide > summary { display: flex; align-items: center; min-height: 36px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.g2yp-guide > div { padding: 4px 0 12px; font-size: 13px; line-height: 1.55; }
+.g2yp-guide h6 { margin: 10px 0 4px; font-size: 13px; }
+.g2yp-guide ol { margin: 0 0 8px; padding-left: 20px; }
+.g2yp-guide li + li { margin-top: 4px; }
+.g2yp-index-owner [data-g2seo-status] { display: none; }
+.g2yp-index-owner .g1-webmaster-fields-v295 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; max-width: 480px; }
+.g2yp-index-owner .g1-webmaster-fields-v295 label { display: grid; gap: 5px; }
+.g2yp-index-owner input, .g2yp-index-owner select { background: var(--panel); color: var(--text); border-color: var(--line); }
+.g2yp-history { border-top: 1px solid var(--line); padding: 6px 0 20px; }
+.g2yp-history > summary { display: flex; align-items: center; min-height: 36px; cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 700; }
+.g2yp-history dl { display: grid; gap: 8px; max-width: 720px; margin: 0; }
+.g2yp-history dl > div { display: grid; gap: 3px; padding: 8px 0; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.g2yp-history dt { color: var(--muted); font-size: 12px; }
+.g2yp-history dd { margin: 0; font-size: 13px; }
+@media (max-width: 560px) {
+  .g2yp-blocks { padding: 0 16px; }
+  .g2yp-block > summary { align-items: start; flex-direction: column; gap: 8px; min-height: 44px; }
+  .g2yp-step-head { grid-template-columns: 24px minmax(0, 1fr); gap: 8px; }
+  .g2yp-step-head .status-pill { grid-column: 2; justify-self: start; }
+  .g2yp-step-content { margin-left: 0; }
+  .g2yp-actions button, .g2yp-guide > summary { min-height: 44px; }
+  .g2yp-history > summary { min-height: 44px; }
+  .g2yp-field input, .g2yp-field select { min-height: 44px; }
+  .g2yp-source button { min-height: 44px; }
+}

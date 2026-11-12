@@ -1,0 +1,40 @@
+{
+  "passed": true,
+  "build": "2.3.526+1a457c3324a2",
+  "purity": {
+    "same": true,
+    "noLegacy": true,
+    "add": true,
+    "previews": true,
+    "status": {
+      "status": "not_started",
+      "filled": 0,
+      "total": 0
+    }
+  },
+  "keywords": {
+    "removed": true,
+    "archived": "123",
+    "restored": "123",
+    "duplicates": 1,
+    "feedback": "Это слово уже есть в списке",
+    "foundation": true,
+    "companyGroup": true,
+    "brandSame": true,
+    "productsSame": true
+  },
+  "comparison": {
+    "retained": true,
+    "live": true,
+    "collapsed": true,
+    "type": "direct",
+    "productsSame": true,
+    "status": "in_progress",
+    "badge": "В работе"
+  },
+  "companyPhoto": {
+    "name": "company.png",
+    "previews": 2,
+    "productsSame": true
+  }
+}

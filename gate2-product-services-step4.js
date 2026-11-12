@@ -71,42 +71,6 @@ g2ServiceBlockRegister({
 });
 
 g2ServiceBlockRegister({
-  id: "product-counter", cardId: "g2-metrika-product-counter", scope: "product", wizardUnitId: "productCounter",
-  title: "Метрика продукта · визит", serviceUrl: "https://metrika.yandex.ru/",
-  statusResolver: g2s4WizardStatus("productCounter"), gate0Applicability: g2s4WizardApplicability("productCounter"),
-  steps: [
-    g2s4Step("inherit", "Сверьте ID общего счётчика с блоком «Яндекс Метрика · Компания».",
-      "ID показан справа.", "ID совпадает.", G2S4_DOC.counter, { context: g2s4CounterContext }),
-    g2s4Step("open", "Откройте страницу выбранного продукта.", "Адрес из «Платформы».",
-      "Страница открыта.", G2S4_DOC.counter, { context: g2s4UrlContext }),
-    g2s4Step("code", "Проверьте, что счётчик установлен на странице.",
-      "Метрика → «Мои счётчики».", "Код счётчика найден.", G2S4_DOC.counter),
-    g2s4Step("visit", "Выполните контрольный визит.", "Браузер.", "Визит совершён.", G2S4_DOC.counter),
-    g2s4Step("report", "Подтвердите регистрацию визита.", "Метрика → отчёты.",
-      "Визит виден.", G2S4_DOC.counter),
-  ],
-});
-
-g2ServiceBlockRegister({
-  id: "product-goal", cardId: "g2-metrika-goals-primary", scope: "product", wizardUnitId: "productGoal",
-  title: "Метрика продукта · цель", serviceUrl: "https://metrika.yandex.ru/",
-  statusResolver: g2s4WizardStatus("productGoal"), gate0Applicability: g2s4WizardApplicability("productGoal"),
-  steps: [
-    g2s4Step("action", "Укажите основное целевое действие продукта.", "Поле справа.",
-      "Действие названо.", G2S4_DOC.goals, { existingFields: ["mainAction"] }),
-    g2s4Step("select", "Выберите цель компании, которая соответствует действию.",
-      "Список реальных целей компании справа.", "Цель выбрана.", G2S4_DOC.goals,
-      { customField: g2s4GoalField }),
-    g2s4Step("id", "Сверьте ID выбранной цели с Метрикой.", "Метрика → Цели.",
-      "ID совпадает.", G2S4_DOC.goals, { context: g2s4GoalContext }),
-    g2s4Step("test", "Выполните реальное тестовое действие на странице продукта.", "Сайт.",
-      "Действие выполнено.", G2S4_DOC.goalCheck),
-    g2s4Step("report", "Проверьте регистрацию конверсии.", "Метрика → отчёты и отладка.",
-      "Цель засчитана.", G2S4_DOC.goalCheck),
-  ],
-});
-
-g2ServiceBlockRegister({
   id: "product-vk", cardId: "g2-marketing-vk-ads", scope: "product", wizardUnitId: "productVk",
   title: "События VK Рекламы", serviceUrl: "https://ads.vk.com/",
   statusResolver: g2s4WizardStatus("productVk"), gate0Applicability: g2s4WizardApplicability("productVk"),
@@ -198,7 +162,8 @@ document.addEventListener("change", (event) => {
   if (!g2wCanEdit(def, productId)) return;
   g2wSetValue(def, productId, "goalRefId", target.value);
   g2wSave();
-  g2wRefresh();
+  g2wRefresh({ changedCardId: def.id, field: "goalRefId" });
+  g2wRefreshProductSelectorIfNeeded(def.id, "goalRefId");
 });
 
 const G2S4_REPLACED = Object.freeze({
@@ -231,14 +196,12 @@ const G2S4_CONTEXT_CARDS = Object.freeze({
     "g2-metrika-goals-widgets", "g2-metrika-goals-kpi"],
   "company-yandex-direct": ["card-105", "card-116", "card-117", "card-118", "card-119", "card-120",
     "card-132", "g2-marketing-yandex-direct"],
-  "company-webmaster": ["card-107", "card-108", "card-109", "card-110", "card-111", "g2-canonical"],
   "company-yandex-business": ["card-113", "card-114"],
   "company-leads": ["card-122", "card-123", "card-124", "card-126", "card-127", "card-128", "card-129", "card-131"],
   "company-safety": ["card-134", "card-135", "card-136"],
   "company-ga4": ["g2-marketing-ga4"],
   "company-gsc": ["g2-marketing-gsc"],
   "company-google-ads": ["g2-marketing-google-ads"],
-  "company-vk": ["g2-marketing-vk-ads"],
   "company-meta-ads": ["g2-marketing-meta-ads"],
   "company-telegram-ads": ["g2-marketing-telegram-ads"],
 });
@@ -258,9 +221,9 @@ function g2s4MoveLegacyCards() {
       const card = workspace.querySelector(`.g2w-additional [data-card="${CSS.escape(cardId)}"]`);
       if (!card) continue;
       if (!related) {
-        related = document.createElement("section");
-        related.className = "g2s4-related";
-        related.innerHTML = "<h4>Связанные настройки</h4>";
+        related = document.createElement("details");
+        related.className = "g2s4-related g2u-related";
+        related.innerHTML = "<summary>Связанные настройки</summary>";
         body.append(related);
       }
       related.append(card);
@@ -339,9 +302,14 @@ function g2s4Units(workspace = state) {
   });
   const services = [...G2_SERVICE_BLOCK_CONFIGS.values()]
     .filter((config) => config.scope === "company" || productId)
-    .map((config) => ({ id: config.id, title: config.title, scope: config.scope,
-      productId: config.scope === "product" ? productId : "", cardId: g2ServiceBlockCardId(config),
-      status: g2ServiceBlockStatus(config, config.scope === "product" ? productId : "", workspace), config }));
+    .map((baseConfig) => {
+      const scopedProductId = baseConfig.scope === "product" ? productId : "";
+      const config = typeof g2StepServiceConfig === "function"
+        ? g2StepServiceConfig(baseConfig, scopedProductId, workspace) : baseConfig;
+      return { id: config.id, title: config.title, scope: config.scope,
+        productId: scopedProductId, cardId: g2ServiceBlockCardId(config),
+        status: g2ServiceBlockStatus(config, scopedProductId, workspace), config };
+    });
   const ordered = [];
   for (const unit of companyMetrika) {
     ordered.push(...services.filter((service) => service.config.beforeUnit === unit.def.id));
@@ -364,6 +332,46 @@ function g2s4Readiness(workspace = state) {
 function g2s4CountedUnits(workspace = state) {
   return g2s4Readiness(workspace).units;
 }
+// The product picker needs every product's readiness on first render. During
+// editing, only the selected product changes; keep the other results until a
+// company source or the product catalogue changes.
+const G2S4_PRODUCT_READY_CACHE = new WeakMap();
+const g2s4PreviousProductReadinessMap = guruV194ProductReadinessMapV1;
+guruV194ProductReadinessMapV1 = function (workspace = state, gateId = "gate-0") {
+  if (gateId !== "gate-2" || workspace !== state || activeGateId !== "gate-2")
+    return g2s4PreviousProductReadinessMap.apply(this, arguments);
+  const productIds = guruV194Products(workspace).map((product) => product.id).join("\u0000");
+  const cached = G2S4_PRODUCT_READY_CACHE.get(workspace);
+  if (cached?.productIds === productIds) return cached.readiness;
+  const readiness = g2s4PreviousProductReadinessMap.apply(this, arguments);
+  G2S4_PRODUCT_READY_CACHE.set(workspace, { productIds, readiness: new Map(readiness) });
+  return readiness;
+};
+const G2S4_VISIBLE_READINESS_CACHE = new WeakMap();
+function g2s4ScreenReadiness(options = {}) {
+  const workspace = document.querySelector(".g2w-workspace");
+  const cached = workspace && G2S4_VISIBLE_READINESS_CACHE.get(workspace);
+  if (cached && !options.forceFull && !options.changedCardId) return cached;
+  if (cached && options.changedCardId) {
+    const affected = g2wAffectedIds(options.changedCardId, options.field);
+    const allUnits = cached.allUnits.map((unit) => {
+      const changed = unit.config
+        ? affected.has(unit.config.wizardUnitId) || unit.id === options.changedServiceId
+        : affected.has(unit.def.id);
+      if (!changed) return unit;
+      const status = unit.config
+        ? g2ServiceBlockStatus(unit.config, unit.productId)
+        : g2wStatus(unit.def, unit.productId);
+      return { ...unit, status };
+    });
+    const result = { allUnits, summary: guruReadinessFromStatuses(allUnits.map((unit) => unit.status)) };
+    G2S4_VISIBLE_READINESS_CACHE.set(workspace, result);
+    return result;
+  }
+  const result = g2s4Readiness();
+  if (workspace) G2S4_VISIBLE_READINESS_CACHE.set(workspace, result);
+  return result;
+}
 const g2s4PreviousStatuses = guruGateBlockStatuses;
 guruGateBlockStatuses = function (gate) {
   if (gate?.id !== "gate-2") return g2s4PreviousStatuses.apply(this, arguments);
@@ -374,13 +382,34 @@ g2wUpdateNav = function () {
   if (activeGateId !== "gate-2") return;
   const label = els.gateNav?.querySelector('[data-gate-id="gate-2"] .small');
   if (!label) return;
-  const { total, percent } = g2s4Readiness().summary;
+  const { total, percent } = g2s4ScreenReadiness().summary;
   label.textContent = `${total} блоков, прогресс ${percent}%`;
 };
 
-function g2s4UpdateScopeSummaries() {
+function g2s4UpdateScopeSummaries(options = {}) {
   if (activeGateId !== "gate-2") return;
-  const { allUnits, summary } = g2s4Readiness();
+  const priorUnits = G2S4_VISIBLE_READINESS_CACHE.get(document.querySelector(".g2w-workspace"))?.allUnits;
+  const { allUnits, summary } = g2s4ScreenReadiness(options);
+  if (options.forceFull) G2S4_PRODUCT_READY_CACHE.delete(state);
+  else if (options.changedCardId) {
+    const changedDef = G2W_CARDS.find((def) => def.id === options.changedCardId);
+    const changedService = G2_SERVICE_BLOCK_CONFIGS.get(options.changedServiceId);
+    if (changedDef?.scope === "company" && g2wAffectsProductReadiness(changedDef.id, options.field)) {
+      // Product steps depend on company steps reaching "ready". A manual
+      // checkmark that only changes progress does not invalidate 59 products.
+      const sameReadyDependencies = priorUnits && priorUnits.filter(unit => unit.scope === "company")
+        .every(unit => (unit.status === "ready") ===
+          (allUnits.find(next => next.id === unit.id)?.status === "ready"));
+      if (!options.stepToggle || !sameReadyDependencies) G2S4_PRODUCT_READY_CACHE.delete(state);
+    }
+    else if (changedDef?.scope === "product" || changedService?.scope === "product") {
+      const cached = G2S4_PRODUCT_READY_CACHE.get(state);
+      const selectedId = guruV194SelectedProduct(state)?.id;
+      if (cached && selectedId) cached.readiness.set(selectedId,
+        guruV194ProductGateStatusesV1(allUnits.filter((unit) => unit.scope === "product")
+          .map((unit) => unit.status)));
+    }
+  }
   for (const scope of ["company", "product"]) {
     const subset = allUnits.filter((unit) => unit.scope === scope);
     const counted = subset.filter((unit) => unit.status !== "not_needed");
@@ -399,15 +428,22 @@ g2ServiceBlockMountRegistered = function () {
   g2s4UpdateScopeSummaries();
   return result;
 };
+const g2s4PreviousRenderForCache = renderGate2Redesign;
+renderGate2Redesign = function (gate) {
+  if (gate?.id === "gate-2") G2S4_PRODUCT_READY_CACHE.delete(state);
+  return g2s4PreviousRenderForCache.apply(this, arguments);
+};
 const g2s4PreviousRefresh = g2wRefresh;
-g2wRefresh = function () {
+g2wRefresh = function (options = {}) {
   const parentCache = guruRenderReadCacheV470;
   if (!parentCache) guruRenderReadCacheV470 = guruCreateRenderReadCacheV470();
   try {
-    const result = g2s4PreviousRefresh.apply(this, arguments);
-    g2s4UpdateScopeSummaries();
-    g2wUpdateNav();
-    return result;
+    return nowGuideWithReadPass(() => {
+      const result = g2s4PreviousRefresh.apply(this, arguments);
+      g2s4UpdateScopeSummaries({ ...options, forceFull: !options.changedCardId });
+      g2wUpdateNav();
+      return result;
+    });
   } finally {
     if (!parentCache) guruRenderReadCacheV470 = null;
   }
@@ -435,7 +471,7 @@ guruExportRuntimeModelV223 = function (gateId) {
         progress: item.config ? item.config.steps.filter((step) =>
           g2ServiceBlockStepDone(item.config, step, record, item.productId)).length :
           item.def.steps.filter((step) => record?.steps?.[step[0]]?.result === "done").length,
-        total: item.config?.steps.length || item.def.steps.length,
+        total: item.config ? item.config.steps.length : item.def.steps.length,
         steps: item.config ? item.config.steps.map((step) => ({
           step_id: step.step_id,
           what: g2ServiceBlockStepValue(item.config, step, "what", item.productId),

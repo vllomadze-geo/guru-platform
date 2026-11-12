@@ -1,0 +1,8 @@
+/* Only the technical editors embedded in the three existing Gate 2 services. */
+.g2sb-existing-field:has(> [data-g2seo-editor]) { grid-column: 1 / -1; min-width: 0; }
+[data-g2seo-editor] { display: grid; gap: 12px; min-width: 0; max-width: 100%; }
+[data-g2seo-editor] > [data-g2seo-status] { justify-self: start; }
+[data-g2seo-editor] .g1-input { box-sizing: border-box; max-width: 100%; }
+[data-g2seo-editor] .g1-table-scroll,
+[data-g2seo-editor] .rv2-system-body { max-width: 100%; overflow-x: auto; }
+[data-g2seo-editor] .instruction-text { min-width: 0; }

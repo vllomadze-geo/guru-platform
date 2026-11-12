@@ -1,0 +1,32 @@
+[
+  {
+    "label": "icleaning",
+    "id": "project-1783068059197-798d26",
+    "origin": "https://guru-platform-navy.vercel.app/",
+    "name": "iCleaning",
+    "updatedAt": "2026-10-13T13:36:19.457Z",
+    "file": "/private/tmp/guru-step6-icleaning-workspace.json",
+    "readAt": "2026-10-24T13:00:56.971Z",
+    "profile": "Profile 2"
+  },
+  {
+    "label": "sivrce",
+    "id": "project-1782674551414-146f62",
+    "origin": "https://guru-platform-navy.vercel.app/",
+    "name": "SIVRCE",
+    "updatedAt": "2026-09-01T14:47:32.662Z",
+    "file": "/private/tmp/guru-step6-sivrce-workspace.json",
+    "readAt": "2026-10-24T13:00:56.978Z",
+    "profile": "Profile 2"
+  },
+  {
+    "label": "guru",
+    "id": "project-default",
+    "origin": "http://localhost:3000/",
+    "name": "УНИВЕРСАЛ / ГУРУ",
+    "updatedAt": "2026-07-12T19:15:57.120Z",
+    "file": "/private/tmp/guru-step6-guru-workspace.json",
+    "readAt": "2026-10-24T13:00:55.661Z",
+    "profile": "Profile 2"
+  }
+]

@@ -1,0 +1,28 @@
+icleaning [{"id":"gate-0","total":9,"done":2,"path":9,"all":9},{"id":"gate-1","total":31,"done":4,"path":31,"all":31},{"id":"gate-2","total":19,"done":2,"path":19,"all":19},{"id":"gate-3","total":5,"done":2,"path":5,"all":5},{"id":"gate-4","total":50,"done":12,"path":32,"all":50},{"id":"gate-5","total":6,"done":0,"path":0,"all":6},{"id":"gate-6","total":27,"done":0,"path":0,"all":27},{"id":"gate-7","total":41,"done":20,"path":0,"all":41},{"id":"gate-8","total":1,"done":0,"path":0,"all":1}]
+icleaning: initial checks complete
+icleaning: screenshot saved
+icleaning: export identical
+icleaning: selecting transition 1 gate0-second
+icleaning: transition 1 gate0-second gate-0 top=90
+icleaning: selecting transition 2 next
+icleaning: transition 2 next gate-0 top=90
+icleaning: selecting transition 3 prev
+icleaning: transition 3 prev gate-0 top=90
+icleaning: selecting transition 4 current
+icleaning: transition 4 current gate-0 top=90
+icleaning: selecting transition 5 gate4-first
+icleaning: transition 5 gate4-first gate-4 top=90
+icleaning: selecting transition 6 prev
+icleaning: transition 6 prev gate-3 top=90
+icleaning: selecting transition 7 next
+icleaning: transition 7 next gate-4 top=90
+icleaning: selecting transition 8 current
+icleaning: transition 8 current gate-0 top=90
+icleaning: selecting transition 9 gate4-last
+icleaning: transition 9 gate4-last gate-4 top=90
+icleaning: selecting transition 10 prev
+icleaning: transition 10 prev gate-4 top=90
+icleaning: ten transitions export {"same":true,"beforeBytes":1121412,"afterBytes":1121412,"firstDifferentByte":-1,"beforeExcerpt":"","afterExcerpt":""}
+icleaning: navigation selection {"initial":40,"second":"gate-2:wizard::company-counter","reset":"gate-0:card::gate0-company-brand-purpose","nextNeutral":true}
+icleaning: export after Gate 0 {"same":true,"at":0,"before":"","after":""}
+icleaning: M=96, done=18, diagnostics=189/42

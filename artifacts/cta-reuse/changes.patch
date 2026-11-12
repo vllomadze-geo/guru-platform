@@ -1,0 +1,231 @@
+--- a/app.js
++++ b/app.js
+@@ -53777,11 +53777,166 @@
+   const unifiedHtml = `<label class="gate0-offer-unified-v237"><strong>${unifiedTitle}</strong><small>Одно предложение, синтез трёх линз выше. Ориентир: 12-20 слов, ~80-140 символов.</small><span class="gate0-unified-example-v246">Пример (Sears, розничная торговля по каталогу, XIX век): «Удовлетворение гарантировано — или вернём деньги».</span><textarea class="passport-v116-input passport-v116-autosize ${unified ? "is-filled" : "is-empty"}" ${inputAttributes("offer")} rows="3" placeholder="Сформулируйте единый оффер одним предложением">${escapeHtml(unified)}</textarea><i class="gate0-offer-arrow-v194" aria-hidden="true">↓</i></label>`;
+   const ctaHtml = `<div class="gate0-cta-levels-v2">${GURU_GATE0_CTA_LEVELS_V2.map(([key, title, hint, example]) => {
+         const value = parts.ctaV2[key];
+-        return `<div class="gate0-cta-level-v2"><label><strong>${escapeHtml(title)}</strong><small>${escapeHtml(hint)}</small><input class="passport-v116-input ${value ? "is-filled" : "is-empty"}" ${inputAttributes(`cta_${key}`)} value="${escapeAttr(value)}" placeholder="${escapeAttr(example)}" autocomplete="off"></label><span class="gate0-cta-preview-row-v2"><span class="gate0-cta-preview-label-v2">Превью</span><button type="button" class="gate0-cta-preview-v2 is-${key}" data-gate0-cta-preview="${key}">${escapeHtml(value || example)}</button></span></div>`;
++        const inputId = `gate0-cta-${company ? "company" : "product"}-${record.id}-${key}`;
++        const heading = company ? "" : `<div class="gate0-cta-field-head"><label for="${escapeAttr(inputId)}"><strong>${escapeHtml(title)}</strong></label><button type="button" class="small-btn gate0-cta-reuse" data-gate0-cta-reuse="${key}" aria-haspopup="dialog" aria-expanded="false" aria-label="${escapeAttr(title)}: из существующих">Из существующих</button></div>`;
++        return `<div class="gate0-cta-level-v2">${heading}<label>${company ? `<strong>${escapeHtml(title)}</strong>` : ""}<small>${escapeHtml(hint)}</small><input id="${escapeAttr(inputId)}" class="passport-v116-input ${value ? "is-filled" : "is-empty"}" ${inputAttributes(`cta_${key}`)} value="${escapeAttr(value)}" placeholder="${escapeAttr(example)}" autocomplete="off"></label><span class="gate0-cta-preview-row-v2"><span class="gate0-cta-preview-label-v2">Превью</span><button type="button" class="gate0-cta-preview-v2 is-${key}" data-gate0-cta-preview="${key}">${escapeHtml(value || example)}</button></span></div>`;
+       }).join("")}</div>`;
+   return `<div class="gate0-offer-parts-v194">${lensHtml}${unifiedHtml}${ctaHtml}</div>`;
++}
++
++// Read canonical offer records directly: opening suggestions must not normalize
++// records, create defaults, change timestamps or mix CTA roles.
++function guruOfferCtaChoices(role, targetId, workspace = state) {
++  if (!GURU_GATE0_CTA_LEVELS_V2.some(([key]) => key === role)) return [];
++  const project = workspace?.project || {};
++  const records = Array.isArray(project.gate0ScopedValuesV194) ? project.gate0ScopedValuesV194 : [];
++  const products = new Map((project.catalogItemsV189 || []).map(item => [item.id, item.name]));
++  const categories = new Map((project.productRegistryV185 || []).map(item => [item.id, item.name]));
++  const target = records.find(record => record.id === targetId);
++  const choices = new Map();
++  const counts = new Map();
++  records.forEach(record => {
++    if (record.archived_at || (record.project_id && record.project_id !== project.id)) return;
++    const company = record.scope === "project" && ["company_offer", "offers"].includes(record.field);
++    if (!company && (record.field !== "offers" || !["product", "category"].includes(record.scope))) return;
++    const ownerId = company ? "company" : record.scope === "product" ? record.product_id : record.category_id;
++    const ownerName = company ? "Компания" : (record.scope === "product" ? products : categories).get(ownerId);
++    if (!ownerName) return;
++    const group = company ? "company" : `${record.scope}:${ownerId}`;
++    const ordinal = (counts.get(group) || 0) + 1;
++    counts.set(group, ordinal);
++    if (record.id === targetId) return;
++    const value = guruV194OfferParts(record).ctaV2[role];
++    if (!value) return;
++    const key = `${group}\u0000${value.toLocaleLowerCase("ru-RU").replace(/\s+/g, " ")}`;
++    if (choices.has(key)) return;
++    choices.set(key, {
++      value, group, scope: company ? "company" : record.scope, ownerId,
++      name: company ? "Компания" : record.scope === "category" ? `Категория · ${ownerName}` : ownerName,
++      source: `${company && record.field === "offers" ? "Общие офферы проекта" : "Оффер"} ${ordinal}`,
++      rank: company ? 3 : record.scope === "category" ? 2 : record.product_id === target?.product_id ? 0 : 1,
++    });
++  });
++  return [...choices.values()].sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name, "ru"));
+ }
+ 
++let guruOfferCtaPicker = null;
++
++function guruOfferCtaPickerClose(restoreFocus = false) {
++  const current = guruOfferCtaPicker;
++  if (!current) return;
++  guruOfferCtaPicker = null;
++  current.button.setAttribute("aria-expanded", "false");
++  current.button.removeAttribute("aria-controls");
++  current.button.popoverTargetElement = null;
++  current.panel.remove();
++  if (restoreFocus && current.button.isConnected) current.button.focus({ preventScroll: true });
++}
++
++function guruOfferCtaPickerPosition() {
++  const current = guruOfferCtaPicker;
++  if (!current) return;
++  if (!current.button.isConnected) return guruOfferCtaPickerClose();
++  const { button, panel } = current;
++  const anchor = button.getBoundingClientRect();
++  const height = panel.getBoundingClientRect().height;
++  panel.style.left = `${Math.max(12, Math.min(anchor.right - panel.offsetWidth, innerWidth - panel.offsetWidth - 12))}px`;
++  panel.style.top = `${Math.max(12, Math.min(anchor.bottom + 8, innerHeight - height - 12))}px`;
++}
++
++function guruOfferCtaPickerOpen(button) {
++  const wasOpen = guruOfferCtaPicker?.button === button;
++  guruOfferCtaPickerClose();
++  if (wasOpen) return;
++  const input = button.closest(".gate0-cta-level-v2")?.querySelector("input[data-gate0-scope-record]");
++  const role = button.dataset.gate0CtaReuse;
++  const title = GURU_GATE0_CTA_LEVELS_V2.find(([key]) => key === role)?.[1];
++  if (!input || !title) return;
++  const choices = guruOfferCtaChoices(role, input.dataset.gate0ScopeRecord);
++  const panel = document.createElement("div");
++  panel.id = "gate0-cta-picker";
++  panel.className = "gate0-cta-picker";
++  panel.setAttribute("role", "dialog");
++  panel.setAttribute("aria-labelledby", "gate0-cta-picker-title");
++  panel.innerHTML = `<div class="gate0-cta-picker-head"><strong id="gate0-cta-picker-title">${escapeHtml(title)} · Из существующих</strong><button type="button" class="small-btn" data-cta-picker-close aria-label="Закрыть выбор CTA">Закрыть</button></div><p>Выбор заменит только это поле. Источник останется без изменений.</p><label class="gate0-cta-picker-search"><span>Поиск по CTA или источнику</span><input type="search" autocomplete="off" placeholder="Найти CTA" data-cta-picker-search></label><div class="gate0-cta-picker-results" data-cta-picker-results></div><span class="gate0-cta-picker-count" role="status" aria-live="polite"></span>`;
++  const search = panel.querySelector("[data-cta-picker-search]");
++  const results = panel.querySelector("[data-cta-picker-results]");
++  const render = () => {
++    const query = search.value.trim().toLocaleLowerCase("ru-RU");
++    const visible = choices.map((choice, index) => ({ ...choice, index })).filter(choice =>
++      `${choice.value} ${choice.name} ${choice.source}`.toLocaleLowerCase("ru-RU").includes(query));
++    const groups = new Map();
++    visible.forEach(choice => {
++      const group = choice.scope === "company" ? "Компания" : choice.scope === "category" ? "Категории продуктов и услуг" : "Продукты и услуги";
++      if (!groups.has(group)) groups.set(group, []);
++      groups.get(group).push(choice);
++    });
++    results.innerHTML = [...groups].map(([group, items]) => `<section><h3>${group}</h3>${items.map(choice => {
++      const selected = choice.value === input.value.trim();
++      return `<button type="button" class="gate0-cta-choice" data-cta-choice="${choice.index}" ${selected ? "disabled" : ""}><strong>${escapeHtml(choice.value)}</strong><small>${escapeHtml(choice.name)} · ${escapeHtml(choice.source)}${selected ? " · Уже в поле" : ""}</small></button>`;
++    }).join("")}</section>`).join("") || `<p class="gate0-cta-picker-empty">${query ? "Ничего не найдено. Попробуйте другой запрос." : "Сохранённых вариантов этого уровня пока нет. Введите CTA в поле."}</p>`;
++    panel.querySelector('[role="status"]').textContent = `Вариантов: ${visible.length}`;
++    guruOfferCtaPickerPosition();
++  };
++  guruOfferCtaPicker = { button, panel, input, projectId: state.project.id };
++  search.addEventListener("input", render);
++  panel.addEventListener("click", event => {
++    if (event.target.closest("[data-cta-picker-close]")) return guruOfferCtaPickerClose(true);
++    const choiceButton = event.target.closest("[data-cta-choice]");
++    if (!choiceButton || choiceButton.disabled) return;
++    const choice = choices[Number(choiceButton.dataset.ctaChoice)];
++    if (!choice || !input.isConnected || guruOfferCtaPicker?.projectId !== state.project.id) return guruOfferCtaPickerClose();
++    guruOfferCtaPickerClose();
++    input.focus({ preventScroll: true });
++    if (input.value !== choice.value) {
++      input.value = choice.value;
++      input.dispatchEvent(new Event("input", { bubbles: true }));
++    }
++  });
++  document.body.appendChild(panel);
++  if (typeof panel.showPopover === "function") {
++    panel.setAttribute("popover", "auto");
++    button.popoverTargetElement = panel;
++    panel.addEventListener("toggle", event => {
++      if (event.newState === "closed" && guruOfferCtaPicker?.panel === panel) guruOfferCtaPickerClose();
++    });
++    panel.showPopover();
++  }
++  button.setAttribute("aria-expanded", "true");
++  button.setAttribute("aria-controls", panel.id);
++  render();
++  search.focus({ preventScroll: true });
++}
++
++document.addEventListener("click", event => {
++  const button = event.target?.closest?.("[data-gate0-cta-reuse]");
++  if (!button) return;
++  event.preventDefault();
++  guruOfferCtaPickerOpen(button);
++});
++document.addEventListener("pointerdown", event => {
++  if (guruOfferCtaPicker && !guruOfferCtaPicker.panel.contains(event.target) &&
++      !event.target.closest?.("[data-gate0-cta-reuse]")) guruOfferCtaPickerClose();
++}, true);
++document.addEventListener("keydown", event => {
++  if (event.key === "Escape" && guruOfferCtaPicker) {
++    event.preventDefault();
++    guruOfferCtaPickerClose(true);
++  }
++}, true);
++let guruOfferCtaPositionFrame = 0;
++function guruOfferCtaPickerSchedulePosition() {
++  if (!guruOfferCtaPicker || guruOfferCtaPositionFrame) return;
++  guruOfferCtaPositionFrame = requestAnimationFrame(() => {
++    guruOfferCtaPositionFrame = 0;
++    guruOfferCtaPickerPosition();
++  });
++}
++window.addEventListener("resize", guruOfferCtaPickerSchedulePosition);
++document.addEventListener("scroll", event => {
++  if (guruOfferCtaPicker && !guruOfferCtaPicker.panel.contains(event.target)) guruOfferCtaPickerSchedulePosition();
++}, true);
++
+ function guruV194OfferRecordHtml(record, product) {
+   return `<article class="gate0-scope-value-v194 gate0-offer-value-v194" data-gate0-scope-record-row="${escapeAttr(record.id)}">
+     <button type="button" class="small-btn danger-mini gate0-scope-value-remove-v194" data-gate0-scope-record-remove="${escapeAttr(record.id)}" title="Удалить оффер">×</button>
+--- a/styles.css
++++ b/styles.css
+@@ -6026,6 +6026,58 @@
+ .gate0-offer-parts-v194 .gate0-cta-level-v2 { display: grid; gap: 5px; min-width: 0; }
+ .gate0-cta-level-v2 small { color: var(--muted); font-weight: var(--w-regular); }
+ .gate0-cta-level-v2 input.passport-v116-input { height: var(--control-h); min-height: var(--control-h); }
++.gate0-cta-field-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
++.gate0-cta-field-head > label { min-width: 0; }
++.gate0-cta-reuse { flex-shrink: 0; font-size: 12px; min-height: 32px; }
++.gate0-cta-picker {
++  position: fixed;
++  inset: auto;
++  z-index: 10000;
++  box-sizing: border-box;
++  width: min(440px, calc(100vw - 24px));
++  max-height: min(540px, calc(100dvh - 24px));
++  margin: 0;
++  padding: 16px;
++  overflow: auto;
++  border: 1px solid var(--line);
++  border-radius: 16px;
++  color: var(--text);
++  background: var(--panel, #fff);
++  box-shadow: 0 12px 40px rgba(0, 0, 0, .16);
++  font-size: 13px;
++}
++.gate0-cta-picker::backdrop { background: transparent; }
++.gate0-cta-picker-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
++.gate0-cta-picker-head > strong { font-size: 14px; }
++.gate0-cta-picker p { margin: 8px 0 12px; color: var(--muted); line-height: 1.45; }
++.gate0-cta-picker-search { display: grid; gap: 5px; color: var(--muted); font-size: 12px; }
++.gate0-cta-picker-search input { width: 100%; min-height: 36px; box-sizing: border-box; }
++.gate0-cta-picker-results { margin-top: 12px; }
++.gate0-cta-picker-results h3 { margin: 16px 0 6px; color: var(--muted); font-size: 12px; }
++.gate0-cta-choice {
++  display: grid;
++  gap: 4px;
++  width: 100%;
++  margin: 3px 0;
++  padding: 10px;
++  border: 1px solid transparent;
++  border-radius: 9px;
++  background: transparent;
++  color: var(--text);
++  text-align: left;
++  cursor: pointer;
++  overflow-wrap: anywhere;
++}
++.gate0-cta-choice small { color: var(--muted); font-size: 11px; }
++.gate0-cta-choice:hover:not(:disabled) { background: rgba(0, 0, 0, .05); }
++.gate0-cta-choice:disabled { opacity: .6; cursor: default; }
++.gate0-cta-choice:focus-visible,
++.gate0-cta-reuse:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
++.gate0-cta-picker-count { display: block; margin-top: 12px; font-size: 11px; color: var(--muted); }
++@media (max-width: 600px) {
++  .gate0-cta-field-head { flex-wrap: wrap; gap: 6px; }
++  .gate0-cta-field-head > label { flex-basis: 100%; }
++}
+ .gate0-cta-preview-row-v2 { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-height: 30px; }
+ .gate0-cta-preview-label-v2 { color: var(--muted); font-size: 10px; }
+ .gate0-cta-preview-v2 {

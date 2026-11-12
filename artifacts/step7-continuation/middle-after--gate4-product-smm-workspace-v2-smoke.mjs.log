@@ -1,0 +1,267 @@
+{
+  "setup": {
+    "projectId": "product-smm-v2-1792851740343",
+    "productId": "smm-v2-product",
+    "formatId": "g4-smm-format-v298-1",
+    "topicId": "g4-smm-topic-v298-6",
+    "before": [
+      1,
+      0,
+      6,
+      6
+    ],
+    "rootHeight": 1724.078125,
+    "ideasTop": 716.75,
+    "topics": 14,
+    "buttons": 14,
+    "topicButtonGap": 6,
+    "initialPlan": "1 / 3",
+    "rows": 6,
+    "oldRenderer": false,
+    "legacyLabels": false,
+    "platformChips": 31,
+    "ideaCollapsed": true,
+    "ideaNumber": "№1",
+    "ideaFormat": "Короткое вертикальное видео",
+    "ideaFormatIcon": "▶",
+    "ideaTitle": "Кроссовки",
+    "ideaPlan": "1 / 3 идеи",
+    "bankAfterCards": true,
+    "calendarAfterBank": true,
+    "noSeparateDayPanel": true,
+    "ideaFields": [
+      "Основная задача",
+      "Тема",
+      "Площадки",
+      "Готовность",
+      "План формата"
+    ],
+    "genericSubtitleHidden": true,
+    "backup": true
+  },
+  "mobile": {
+    "pageWidth": 390,
+    "viewport": 390,
+    "menuVisible": true,
+    "platformsVisible": true,
+    "tableScrollable": true
+  },
+  "lazyDetail": {
+    "emptyBefore": true,
+    "stageCount": 6,
+    "stageOrder": [
+      "collection",
+      "digestion",
+      "incubation",
+      "insight",
+      "preview",
+      "verification"
+    ],
+    "finalStageTitles": [
+      "5. Предпросмотр в соцсети",
+      "6. Проверка и доработка"
+    ],
+    "inertBefore": true,
+    "stageTimings": {
+      "collection": 1,
+      "digestion": 2,
+      "incubation": 0,
+      "insight": 1,
+      "preview": 13,
+      "verification": 251
+    },
+    "stageImmediateTimings": {
+      "collection": 0,
+      "digestion": 0,
+      "incubation": 0,
+      "insight": 0,
+      "preview": 0,
+      "verification": 0
+    },
+    "noDuplicateHeader": true,
+    "loadedAfter": true,
+    "allStagesOpen": true,
+    "stagesReloaded": true,
+    "restoredStages": 6,
+    "previewText": "▶КлипыТренд / реактивный контентКлипы♡◌↗SVSMM V2 smokeVK КлипыПроцесс ухода за кроссовками",
+    "previewReused": true
+  },
+  "summaryMath": {
+    "plan": 3,
+    "ideas": 3,
+    "fact": 1,
+    "status": "Запланировано · опубликовано 1/3",
+    "quarter": 1,
+    "futureTopic": "Запланировано",
+    "futurePlatform": "Запланировано"
+  },
+  "flow": {
+    "inherited": {
+      "productId": "smm-v2-product",
+      "formatId": "g4-smm-format-v298-1",
+      "topicId": "g4-smm-topic-v298-6",
+      "open": true
+    },
+    "twoWeekPlan": "1 / 6",
+    "firstDate": "2026-10-24",
+    "shiftedDate": "2026-10-26",
+    "shiftedPlan": "0 / 3",
+    "futurePlanningPeriodStart": "2026-10-26",
+    "futureImmediatePlan": "1 / 3",
+    "futureIdeaPlan": "1 / 3 идеи",
+    "priorIdeaOutsidePeriod": "Вне периода",
+    "menuOpenWithoutExpanding": true,
+    "futureInCalendarBank": true,
+    "futureDraftScheduled": true,
+    "draftInCalendarBank": true,
+    "liveCalendarTitle": "Новая идея",
+    "dayCount": "1",
+    "scheduledInDay": true,
+    "scheduledInBank": false,
+    "plannedImmediately": "1 запланировано",
+    "followedMovedIdea": true,
+    "openedFromCalendar": true,
+    "switchedDay": "2026-10-25",
+    "scheduledDate": "2026-10-24",
+    "planningPeriodStart": "2026-10-19",
+    "immediatePlan": "2 / 3",
+    "firstIdeaPlan": "1 / 3 идеи",
+    "immediateIdeaPlan": "2 / 3 идеи",
+    "ideaNumbersAfterAdd": [
+      "№1",
+      "№2"
+    ],
+    "liveIdeaSubtitle": "Новая идея",
+    "immediateHeader": "2 / 10 идей",
+    "immediateSummaryIdeas": "2",
+    "immediateStatus": "● Недобор 1",
+    "immediateScheduled": "0 запланировано",
+    "openStageAfterConvert": true,
+    "tableStableOnName": true,
+    "tableStableWhileTyping": true,
+    "publication": {
+      "formatId": "g4-smm-format-v298-1",
+      "formatLabel": "Короткое вертикальное видео",
+      "topicId": "g4-smm-topic-v298-6",
+      "topicLabel": "Тренд / реактивный контент",
+      "platforms": [
+        "VK Клипы",
+        "RUTUBE Shorts",
+        "Instagram Reels",
+        "TikTok",
+        "YouTube Shorts"
+      ]
+    },
+    "after": [
+      2,
+      1,
+      6,
+      6
+    ],
+    "stored": true
+  },
+  "publishedFlow": {
+    "fact": "1",
+    "previewLive": true,
+    "previewAfterStatus": true,
+    "quarter": "1 / 60",
+    "status": "published"
+  },
+  "expandedLayout": {
+    "scrollX": 0,
+    "rootLeft": 160,
+    "pageWidth": 1440,
+    "viewport": 1440
+  },
+  "reloaded": {
+    "idea": [
+      "smm-v2-product",
+      "g4-smm-format-v298-1",
+      "g4-smm-topic-v298-6",
+      "2026-10-19"
+    ],
+    "publication": [
+      "g4-smm-format-v298-1",
+      "g4-smm-topic-v298-6"
+    ],
+    "counts": [
+      2,
+      1,
+      6,
+      6
+    ]
+  },
+  "deletion": {
+    "editorVisible": true,
+    "stageVisible": true,
+    "deleteMenuVisible": true,
+    "canceled": true,
+    "renumbered": "№1",
+    "linkedRemoved": true,
+    "publicationKept": true,
+    "orphanVisible": true,
+    "empty": true,
+    "savedCounts": [
+      0,
+      1
+    ]
+  },
+  "calendarMobile": {
+    "pageWidth": 390,
+    "viewport": 390,
+    "weekScrollable": true,
+    "cardFits": true
+  },
+  "pairFlow": {
+    "matrixOnly": true,
+    "inherited": true,
+    "cards": 5,
+    "shared": true,
+    "railStableWhileTyping": true,
+    "inheritedWithoutCopy": true,
+    "isolated": true,
+    "overrideRemoved": true,
+    "selectionReversible": true,
+    "partial": [
+      4,
+      5
+    ],
+    "complete": [
+      5,
+      5
+    ],
+    "preserved": true,
+    "mediaStored": true,
+    "uploadedIdeaPhoto": true,
+    "initialPhotoHydrated": true,
+    "ideaPhotoReady": true,
+    "bankPhotoReady": true,
+    "calendarPhotoReady": true,
+    "noStaleIdeaPhoto": true,
+    "missingPhotoFallsBack": true
+  },
+  "ctaFlow": {
+    "proposed": [
+      "Оформить заказ",
+      "Посмотреть подробнее",
+      "Задать вопрос"
+    ],
+    "customSaved": true,
+    "chosen": true,
+    "overrideHasOptions": true,
+    "live": true,
+    "isolated": true,
+    "sourceReadOnly": true
+  },
+  "ctaMobile": {
+    "viewport": 390,
+    "pageWidth": 390,
+    "buttonsFit": true
+  },
+  "screenshotPath": "/tmp/g4-product-smm-v2-1440.png",
+  "mobilePath": "/tmp/g4-product-smm-v2-1440-mobile.png",
+  "previewPath": "/tmp/g4-product-smm-v2-1440-preview.png",
+  "calendarPath": "/tmp/g4-product-smm-v2-1440-calendar.png",
+  "calendarMobilePath": "/tmp/g4-product-smm-v2-1440-calendar-mobile.png",
+  "expandedPath": "/tmp/g4-product-smm-v2-1440-expanded.png"
+}

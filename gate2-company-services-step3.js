@@ -1,8 +1,5 @@
 /* Gate 2 company services added in step 3. Existing wizard cards remain the storage source. */
 const G2S3_DOC = Object.freeze({
-  vkGuide: "https://object2-ac.vk-apps.com/vk-education-0554ff56-27eb-4093-a702-685722cef6d9/media/ad/79ad8eafc5324d46a3c153cd5e9a2a32.pdf",
-  vkCounter: "https://help-ru.tilda.cc/statistics/mail-ru",
-  tildaPublish: "https://help-ru.tilda.cc/folders",
   telegram: "https://ads.telegram.org/faq",
   meta: "https://help-ru.tilda.cc/facebook-pixel",
   ga4: "https://support.google.com/analytics/answer/9304153",
@@ -51,43 +48,14 @@ function g2s3DomainHttpsDone(workspace = state) {
 function g2s3DomainHttpsLabel(workspace = state) {
   return g2s3DomainHttpsDone(workspace) ? "Выполнено" : "Не выполнено";
 }
-function g2s3VkStep(id, what, where, how, sourceUrl = G2S3_DOC.vkGuide) {
-  return { step_id: id, what, where, how, source_url: sourceUrl };
-}
-
 g2ServiceBlockRegister({
-  id: "company-vk", cardId: "g2-marketing-vk-ads", scope: "company", wizardUnitId: "vk",
-  title: "VK Реклама и пиксель", afterUnit: "goal", serviceUrl: "https://ads.vk.com/",
-  gate0Applicability: ({ workspace }) => g2s3Applicability("VK Ads", "VK Ads", workspace),
-  statusResolver: () => g2wStatus(g2wDef("vk")),
-  steps: [
-    { ...g2s3VkStep("account", "Откройте VK Рекламу и выберите рекламный кабинет.",
-      "ads.vk.com → «Перейти в кабинет» → авторизоваться через VK ID или email → выбрать нужный рекламный кабинет.",
-      "В верхней части кабинета показано нужное имя или ID кабинета."), existingFields: ["vkAccount"] },
-    { ...g2s3VkStep("existing", "Сначала найдите пиксель для домена из Gate 0. Сверьте домен и ID; если он принадлежит другому кабинету, запросите доступ у владельца.",
-      "VK Реклама → «Конверсии» → вкладка «Пиксели» → список пикселей. Если нужного домена нет в списке: «Добавить пиксель» → «Домен сайта» → ввести домен → проверить окно «Найдены привязанные к сайту пиксели».",
-      "Зафиксировано, есть ли пиксель для этого домена и доступен ли он в выбранном кабинете."),
-      context: g2s3SiteContext, resultType: "text", resultLabel: "Результат поиска по домену",
-      resultPlaceholder: "Найден ID 123... / пиксель для домена не найден", requireEvidence: true },
-    { ...g2s3VkStep("pixel", "Используйте пиксель найденного домена. Создайте новый только если подходящего пикселя нет; при чужом пикселе сначала запросите доступ.",
-      "VK Реклама → «Конверсии» → «Пиксели» → выбрать существующий. Если не найден: «Добавить пиксель» → «Домен сайта» → ввести домен → «Создать новый пиксель».",
-      "В списке «Пиксели» найден выбранный для домена пиксель; новый не создан, если существующий подходит."),
-      context: g2s3SiteContext },
-    { ...g2s3VkStep("id", "Откройте выбранный пиксель и скопируйте только числовой ID счётчика top.mail.ru из кода пикселя.",
-      "VK Реклама → «Конверсии» → «Пиксели» → выбранный пиксель → «Настройка» → «Код пикселя».",
-      "Числовой ID в коде совпадает с ID, сохранённым в поле справа.", G2S3_DOC.vkGuide),
-      existingFields: ["pixelId"] },
-    g2s3VkStep("install", "В Tilda вставьте сохранённый числовой ID в поле счётчика и нажмите «Сохранить». Не вставляйте весь код пикселя в поле ID.",
-      "Tilda → ваш сайт → «Настройки сайта» → «Аналитика» → «MAIL.RU COUNTER ID (VK PIXEL)» → «Сохранить».",
-      "После повторного открытия настроек в этом поле сохранён тот же ID, что в VK Рекламе.", G2S3_DOC.vkCounter),
-    g2s3VkStep("publish", "После сохранения ID опубликуйте все страницы сайта.",
-      "Tilda → ваш сайт → список страниц → «Опубликовать все страницы».",
-      "Откройте опубликованную страницу и убедитесь, что в её исходном коде есть счётчик с нужным ID.", G2S3_DOC.tildaPublish),
-    { ...g2s3VkStep("visit", "Откройте опубликованный сайт в браузере и проверьте поступление тестового посещения. Запишите увиденный статус и время визита.",
-      "Сайт → открыть страницу; затем top.mail.ru → «Мои счётчики» → нужный ID → Real-Time → «Обзор». В VK Рекламе: «Конверсии» → «Пиксели» → выбранный пиксель.",
-      "В отчёте выбранного счётчика появилось тестовое посещение. ID или отметка шага сами по себе работу пикселя не подтверждают.", G2S3_DOC.vkCounter),
-      resultType: "text", resultLabel: "Статус и время визита", resultPlaceholder: "Например: визит виден в Real-Time, 14:32", requireEvidence: true },
-  ],
+  id: "company-vk", cardId: "g2-marketing-vk-ads", scope: "company",
+  title: "VK", afterUnit: "goal", serviceUrl: "https://vk.ru/",
+  // A community can be used independently of the VK Ads account in Gate 0.
+  gate0Applicability: () => "required",
+  statusResolver: () => "not_started",
+  emptyStepScaffold: true,
+  steps: [],
 });
 
 g2ServiceBlockRegister({

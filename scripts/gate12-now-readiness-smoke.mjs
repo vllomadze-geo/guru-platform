@@ -5,7 +5,7 @@ const port = process.env.GURU_CHROME_DEBUG_PORT || "9431";
 const appUrl = process.env.GURU_APP_URL || "http://127.0.0.1:3000/";
 const fixture = JSON.parse(readFileSync(process.env.GURU_GATE0_FIXTURE ||
   "/private/tmp/guru-now-korich-workspace.json", "utf8"));
-const artifact = process.env.GURU_GATE12_QUICK === "1" ? "/private/tmp/guru-step3-quick" : "artifacts/gate12-now-readiness";
+const artifact = process.env.GURU_GATE12_ARTIFACT || (process.env.GURU_GATE12_QUICK === "1" ? "/private/tmp/guru-step3-quick" : "artifacts/gate12-now-readiness");
 const copyId = "gate12-now-readiness-smoke";
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -185,13 +185,10 @@ try {
       if (gate) gate.scrollIntoView({ block: "nearest", behavior: "instant" });
       return true;
     })()`);
-    page.frame = null;
-    await page.call("Page.startScreencast", { format: "png", maxWidth: 1800, maxHeight: 1000, everyNthFrame: 1 });
-    for (let attempt = 0; attempt < 30 && !page.frame?.data; attempt++) await wait(100);
-    assert(page.frame?.data);
+    const frame = await page.call("Page.captureScreenshot", { format: "png", captureBeyondViewport: false });
+    assert(frame.data);
     const filename = `${artifact}-${label}.png`;
-    writeFileSync(filename, Buffer.from(page.frame.data, "base64"));
-    await page.call("Page.stopScreencast");
+    writeFileSync(filename, Buffer.from(frame.data, "base64"));
     evidence.screenshots.push(filename);
   };
   await evaluate(page, `(() => {

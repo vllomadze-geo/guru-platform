@@ -1,0 +1,9 @@
+file:///private/tmp/guru-step7-before/scripts/gate2-company-product-smoke.mjs:41
+  if (!condition) throw new Error(message);
+                        ^
+
+Error: Expected 8 products, got 14
+    at assert (file:///private/tmp/guru-step7-before/scripts/gate2-company-product-smoke.mjs:41:25)
+    at file:///private/tmp/guru-step7-before/scripts/gate2-company-product-smoke.mjs:89:1
+
+Node.js v22.14.0

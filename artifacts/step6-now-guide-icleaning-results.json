@@ -1,0 +1,6045 @@
+{
+  "project": "iCleaning",
+  "label": "icleaning",
+  "source": {
+    "label": "icleaning",
+    "id": "project-1783068059197-798d26",
+    "origin": "https://guru-platform-navy.vercel.app/",
+    "name": "iCleaning",
+    "updatedAt": "2026-10-13T13:36:19.457Z",
+    "file": "/private/tmp/guru-step6-icleaning-workspace.json",
+    "readAt": "2026-10-24T13:00:56.971Z",
+    "profile": "Profile 2"
+  },
+  "products": [
+    {
+      "product_id": "catalog-item-1786885522653-759ff6",
+      "name": "Без названия",
+      "summary": {
+        "total": 96,
+        "done": 11,
+        "ready": 6,
+        "notRequired": 5,
+        "inProgress": 19,
+        "problem": 3,
+        "notStarted": 63,
+        "percent": 23
+      },
+      "rows": [
+        {
+          "gate": "gate-0",
+          "id": "card-1",
+          "title": "Проект: базовые сведения",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-project-goal",
+          "title": "Цель проекта и ограничения",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-brand-purpose",
+          "title": "Цель бренда",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-segmentation",
+          "title": "Сегментация · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-positioning",
+          "title": "Позиционирование · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-offer",
+          "title": "Оффер и CTA · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-keyword-foundation",
+          "title": "Фундамент ключевых слов · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-0",
+          "id": "card-7",
+          "title": "Текущее состояние маркетинговой системы · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-0",
+          "id": "card-2",
+          "title": "Продукт, сегмент и задача клиента",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "company_demand_positioning",
+          "title": "Спрос, ценность, позиционирование · Компания",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-14",
+          "title": "Robots.txt: доступ поисковых роботов",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-16",
+          "title": "Канонический URL и редиректы",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-20",
+          "title": "SSL / HTTPS: безопасность домена",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Проблема",
+          "pageStatus": "problem",
+          "pathStatus": "problem"
+        },
+        {
+          "gate": "gate-1",
+          "id": "project-comparison",
+          "title": "Сравнение проекта",
+          "kind": "comparison",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "gate1-seo-v300-company-webmaster",
+          "title": "Яндекс Вебмастер · Компания",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "interactive-tool",
+          "title": "Собственный интерактивный инструмент",
+          "kind": "gate1-tool",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-21",
+          "title": "ГЛАВНАЯ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-22-hub",
+          "title": "КАТАЛОГ (ХАБ)",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-22",
+          "title": "КАТЕГОРИЯ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-25",
+          "title": "СТАТЬЯ БЛОГА",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-26",
+          "title": "О НАС",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-27",
+          "title": "КОНТАКТЫ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-28",
+          "title": "ДОСТАВКА / ГАРАНТИИ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-30",
+          "title": "404",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-31",
+          "title": "THANK YOU PAGE ⚠️",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-32",
+          "title": "ЛЕНДИНГ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-site-header-v497",
+          "title": "ХЕДЕР",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-site-footer-v497",
+          "title": "Футер: навигация, доверие и юридическая база",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-29",
+          "title": "ПОЛИТИКА",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-35",
+          "title": "Cookie-баннер: уведомление и согласие",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-36",
+          "title": "Футер: навигация, доверие и юридическая база",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-37",
+          "title": "Согласие в формах",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "target-audience",
+          "title": "Целевая аудитория",
+          "kind": "audience",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "gate1-blog-v304-company",
+          "title": "Блог · Компания",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-23",
+          "title": "СТРАНИЦА УСЛУГИ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-24",
+          "title": "КАРТОЧКА ТОВАРА",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "gate1-seo-v300-product-webmaster",
+          "title": "Яндекс Вебмастер · Продукт/Услуга",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "pain_jtbd_offer",
+          "title": "Спрос, ценность, позиционирование · Продукт/Услуга",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "gate1-blog-v304-product",
+          "title": "Блог · Продукт/Услуга",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "unit-economics",
+          "title": "Юнит-экономика",
+          "kind": "unit",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-domain",
+          "title": "Домен и HTTPS",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-counter",
+          "title": "Яндекс Метрика · счётчик",
+          "kind": "wizard",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-goal",
+          "title": "Яндекс Метрика · конверсионная цель",
+          "kind": "wizard",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-webmaster",
+          "title": "Яндекс Вебмастер",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-yandex-business",
+          "title": "Яндекс Бизнес",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-yandex-direct",
+          "title": "Яндекс Директ · кабинет",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-vk",
+          "title": "VK Реклама и пиксель",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-telegram-ads",
+          "title": "Telegram Ads · кабинет",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-meta-ads",
+          "title": "Meta Ads · кабинет и пиксель",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется: все каналы отмечены «Не требуется» в Gate 0",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-ga4",
+          "title": "Google Analytics 4",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-gsc",
+          "title": "Google Search Console",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-google-ads",
+          "title": "Google Ads · конверсии",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется: все каналы отмечены «Не требуется» в Gate 0",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-leads",
+          "title": "Приём заявок",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-safety",
+          "title": "Юридическая защита",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-landing",
+          "title": "Посадочная товара",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-counter",
+          "title": "Метрика продукта · визит",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-goal",
+          "title": "Метрика продукта · цель",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-vk",
+          "title": "События VK Рекламы",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-lead",
+          "title": "Сквозная проверка заявки",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-3",
+          "id": "aware",
+          "title": "Узнал (Aware)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-3",
+          "id": "appeal",
+          "title": "Понравился (Appeal)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-3",
+          "id": "ask",
+          "title": "Изучает (Ask)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Проблема",
+          "pageStatus": "problem",
+          "pathStatus": "problem"
+        },
+        {
+          "gate": "gate-3",
+          "id": "act",
+          "title": "Покупает (Act)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-3",
+          "id": "advocate",
+          "title": "Рекомендует (Advocate)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Проблема",
+          "pageStatus": "problem",
+          "pathStatus": "problem"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-148",
+          "title": "Единая карта запуска",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-151",
+          "title": "Целевое действие выбрано",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-152",
+          "title": "Посадочная страница собрана под сегмент",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-153",
+          "title": "Смысловой каркас страницы собран",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-154",
+          "title": "Архитектура психослоев на посадочной",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-155",
+          "title": "Формы и контакты работают",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-156",
+          "title": "Мобильная версия не ломает конверсию",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-157",
+          "title": "Метрика и базовые цели подклю��ены",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-158",
+          "title": "UTM и разметка готовы",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-159",
+          "title": "Передача лидов и статусов не теряется",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-160",
+          "title": "Креативная рамка зафиксирована",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-161",
+          "title": "Креативная матрица 3×3",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-162",
+          "title": "Собран минимальный пакет креативов",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-163",
+          "title": "Креативы связаны со страницей",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-164",
+          "title": "Стартовые рекламные сущности собраны",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-165",
+          "title": "Посадки привязаны к типу спроса",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-166",
+          "title": "Бюджет и критерий остановки заданы",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-167",
+          "title": "Предзапусковый QA пройден",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-168",
+          "title": "Менеджерская обработка готова",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-169",
+          "title": "Запусковая готовность подтверждена",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "smm_vk_контент_11",
+          "title": "Контент · VK",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "smm_telegram_контент_посевы_12",
+          "title": "Канал и посевы · Telegram",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "smm_instagram_reels_stories_13",
+          "title": "Контент · Instagram / Reels / Stories",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "smm_youtube_shorts_pre_roll_14",
+          "title": "Видео · YouTube / Shorts / Pre-roll",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_vk_ads_таргет_5",
+          "title": "Таргет · VK Реклама",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_telegram_ads_посевы_ads_7",
+          "title": "Telegram Ads · Telegram Ads",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_meta_ads_feed_reels_6",
+          "title": "Таргет · Meta Ads / Feed / Reels",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_яндекс_директ_рся_1",
+          "title": "Яндекс Директ / РСЯ",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_яндекс_директ_мастер_кампаний_2",
+          "title": "Яндекс Директ / Мастер кампаний",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_google_ads_display_4",
+          "title": "Медийная реклама · Google Ads / Display",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_яндекс_директ_поиск_0",
+          "title": "Яндекс Директ / Поиск",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_google_ads_search_3",
+          "title": "Поисковая реклама · Google Ads / Search",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522653-759ff6",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        }
+      ],
+      "gates": [
+        {
+          "id": "gate-0",
+          "preflight": {
+            "total": 9,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 0,
+            "notStarted": 4,
+            "percent": 39
+          },
+          "full": {
+            "total": 9,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 0,
+            "notStarted": 4,
+            "percent": 39
+          },
+          "navigationReadiness": {
+            "total": 9,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 0,
+            "notStarted": 4,
+            "percent": 39
+          },
+          "registry": {
+            "total": 9,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 0,
+            "notStarted": 4,
+            "percent": 39
+          }
+        },
+        {
+          "id": "gate-1",
+          "preflight": {
+            "total": 31,
+            "done": 3,
+            "ready": 0,
+            "notRequired": 3,
+            "inProgress": 5,
+            "problem": 1,
+            "notStarted": 22,
+            "percent": 19
+          },
+          "full": {
+            "total": 31,
+            "done": 3,
+            "ready": 0,
+            "notRequired": 3,
+            "inProgress": 5,
+            "problem": 1,
+            "notStarted": 22,
+            "percent": 19
+          },
+          "navigationReadiness": {
+            "total": 31,
+            "done": 3,
+            "ready": 0,
+            "notRequired": 3,
+            "inProgress": 5,
+            "problem": 1,
+            "notStarted": 22,
+            "percent": 19
+          },
+          "registry": {
+            "total": 31,
+            "done": 3,
+            "ready": 0,
+            "notRequired": 3,
+            "inProgress": 5,
+            "problem": 1,
+            "notStarted": 22,
+            "percent": 19
+          }
+        },
+        {
+          "id": "gate-2",
+          "preflight": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 0,
+            "notStarted": 17,
+            "percent": 11
+          },
+          "full": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 0,
+            "notStarted": 17,
+            "percent": 11
+          },
+          "navigationReadiness": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 0,
+            "notStarted": 17,
+            "percent": 11
+          },
+          "registry": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 0,
+            "notStarted": 17,
+            "percent": 11
+          }
+        },
+        {
+          "id": "gate-3",
+          "preflight": {
+            "total": 5,
+            "done": 0,
+            "ready": 0,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 2,
+            "notStarted": 0,
+            "percent": 50
+          },
+          "full": {
+            "total": 5,
+            "done": 0,
+            "ready": 0,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 2,
+            "notStarted": 0,
+            "percent": 50
+          },
+          "navigationReadiness": {
+            "total": 5,
+            "done": 0,
+            "ready": 0,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 2,
+            "notStarted": 0,
+            "percent": 50
+          },
+          "registry": {
+            "total": 5,
+            "done": 0,
+            "ready": 0,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 2,
+            "notStarted": 0,
+            "percent": 50
+          }
+        },
+        {
+          "id": "gate-4",
+          "preflight": {
+            "total": 32,
+            "done": 4,
+            "ready": 4,
+            "notRequired": 0,
+            "inProgress": 8,
+            "problem": 0,
+            "notStarted": 20,
+            "percent": 25
+          },
+          "full": {
+            "total": 50,
+            "done": 5,
+            "ready": 5,
+            "notRequired": 0,
+            "inProgress": 8,
+            "problem": 0,
+            "notStarted": 37,
+            "percent": 18
+          },
+          "navigationReadiness": {
+            "total": 50,
+            "done": 5,
+            "ready": 5,
+            "notRequired": 0,
+            "inProgress": 8,
+            "problem": 0,
+            "notStarted": 37,
+            "percent": 18
+          },
+          "registry": {
+            "total": 50,
+            "done": 5,
+            "ready": 5,
+            "notRequired": 0,
+            "inProgress": 8,
+            "problem": 0,
+            "notStarted": 37,
+            "percent": 18
+          }
+        }
+      ],
+      "hintErrors": []
+    },
+    {
+      "product_id": "catalog-item-1786885522654-b437c0",
+      "name": "Без названия",
+      "summary": {
+        "total": 96,
+        "done": 11,
+        "ready": 6,
+        "notRequired": 5,
+        "inProgress": 19,
+        "problem": 3,
+        "notStarted": 63,
+        "percent": 23
+      },
+      "rows": [
+        {
+          "gate": "gate-0",
+          "id": "card-1",
+          "title": "Проект: базовые сведения",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-project-goal",
+          "title": "Цель проекта и ограничения",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-brand-purpose",
+          "title": "Цель бренда",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-segmentation",
+          "title": "Сегментация · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-positioning",
+          "title": "Позиционирование · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-offer",
+          "title": "Оффер и CTA · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-keyword-foundation",
+          "title": "Фундамент ключевых слов · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-0",
+          "id": "card-7",
+          "title": "Текущее состояние маркетинговой системы · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-0",
+          "id": "card-2",
+          "title": "Продукт, сегмент и задача клиента",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "company_demand_positioning",
+          "title": "Спрос, ценность, позиционирование · Компания",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-14",
+          "title": "Robots.txt: доступ поисковых роботов",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-16",
+          "title": "Канонический URL и редиректы",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-20",
+          "title": "SSL / HTTPS: безопасность домена",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Проблема",
+          "pageStatus": "problem",
+          "pathStatus": "problem"
+        },
+        {
+          "gate": "gate-1",
+          "id": "project-comparison",
+          "title": "Сравнение проекта",
+          "kind": "comparison",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "gate1-seo-v300-company-webmaster",
+          "title": "Яндекс Вебмастер · Компания",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "interactive-tool",
+          "title": "Собственный интерактивный инструмент",
+          "kind": "gate1-tool",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-21",
+          "title": "ГЛАВНАЯ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-22-hub",
+          "title": "КАТАЛОГ (ХАБ)",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-22",
+          "title": "КАТЕГОРИЯ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-25",
+          "title": "СТАТЬЯ БЛОГА",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-26",
+          "title": "О НАС",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-27",
+          "title": "КОНТАКТЫ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-28",
+          "title": "ДОСТАВКА / ГАРАНТИИ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-30",
+          "title": "404",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-31",
+          "title": "THANK YOU PAGE ⚠️",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-32",
+          "title": "ЛЕНДИНГ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-site-header-v497",
+          "title": "ХЕДЕР",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-site-footer-v497",
+          "title": "Футер: навигация, доверие и юридическая база",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-29",
+          "title": "ПОЛИТИКА",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-35",
+          "title": "Cookie-баннер: уведомление и согласие",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-36",
+          "title": "Футер: навигация, доверие и юридическая база",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-37",
+          "title": "Согласие в формах",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "target-audience",
+          "title": "Целевая аудитория",
+          "kind": "audience",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "gate1-blog-v304-company",
+          "title": "Блог · Компания",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-23",
+          "title": "СТРАНИЦА УСЛУГИ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-24",
+          "title": "КАРТОЧКА ТОВАРА",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "gate1-seo-v300-product-webmaster",
+          "title": "Яндекс Вебмастер · Продукт/Услуга",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "pain_jtbd_offer",
+          "title": "Спрос, ценность, позиционирование · Продукт/Услуга",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "gate1-blog-v304-product",
+          "title": "Блог · Продукт/Услуга",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "unit-economics",
+          "title": "Юнит-экономика",
+          "kind": "unit",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-domain",
+          "title": "Домен и HTTPS",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-counter",
+          "title": "Яндекс Метрика · счётчик",
+          "kind": "wizard",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-goal",
+          "title": "Яндекс Метрика · конверсионная цель",
+          "kind": "wizard",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-webmaster",
+          "title": "Яндекс Вебмастер",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-yandex-business",
+          "title": "Яндекс Бизнес",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-yandex-direct",
+          "title": "Яндекс Директ · кабинет",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-vk",
+          "title": "VK Реклама и пиксель",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-telegram-ads",
+          "title": "Telegram Ads · кабинет",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-meta-ads",
+          "title": "Meta Ads · кабинет и пиксель",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется: все каналы отмечены «Не требуется» в Gate 0",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-ga4",
+          "title": "Google Analytics 4",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-gsc",
+          "title": "Google Search Console",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-google-ads",
+          "title": "Google Ads · конверсии",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется: все каналы отмечены «Не требуется» в Gate 0",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-leads",
+          "title": "Приём заявок",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-safety",
+          "title": "Юридическая защита",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-landing",
+          "title": "Посадочная товара",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-counter",
+          "title": "Метрика продукта · визит",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-goal",
+          "title": "Метрика продукта · цель",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-vk",
+          "title": "События VK Рекламы",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-lead",
+          "title": "Сквозная проверка заявки",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-3",
+          "id": "aware",
+          "title": "Узнал (Aware)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-3",
+          "id": "appeal",
+          "title": "Понравился (Appeal)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-3",
+          "id": "ask",
+          "title": "Изучает (Ask)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Проблема",
+          "pageStatus": "problem",
+          "pathStatus": "problem"
+        },
+        {
+          "gate": "gate-3",
+          "id": "act",
+          "title": "Покупает (Act)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-3",
+          "id": "advocate",
+          "title": "Рекомендует (Advocate)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Проблема",
+          "pageStatus": "problem",
+          "pathStatus": "problem"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-148",
+          "title": "Единая карта запуска",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-151",
+          "title": "Целевое действие выбрано",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-152",
+          "title": "Посадочная страница собрана под сегмент",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-153",
+          "title": "Смысловой каркас страницы собран",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-154",
+          "title": "Архитектура психослоев на посадочной",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-155",
+          "title": "Формы и контакты работают",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-156",
+          "title": "Мобильная версия не ломает конверсию",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-157",
+          "title": "Метрика и базовые цели подклю��ены",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-158",
+          "title": "UTM и разметка готовы",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-159",
+          "title": "Передача лидов и статусов не теряется",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-160",
+          "title": "Креативная рамка зафиксирована",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-161",
+          "title": "Креативная матрица 3×3",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-162",
+          "title": "Собран минимальный пакет креативов",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-163",
+          "title": "Креативы связаны со страницей",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-164",
+          "title": "Стартовые рекламные сущности собраны",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-165",
+          "title": "Посадки привязаны к типу спроса",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-166",
+          "title": "Бюджет и критерий остановки заданы",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-167",
+          "title": "Предзапусковый QA пройден",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-168",
+          "title": "Менеджерская обработка готова",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-169",
+          "title": "Запусковая готовность подтверждена",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "smm_vk_контент_11",
+          "title": "Контент · VK",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "smm_telegram_контент_посевы_12",
+          "title": "Канал и посевы · Telegram",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "smm_instagram_reels_stories_13",
+          "title": "Контент · Instagram / Reels / Stories",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "smm_youtube_shorts_pre_roll_14",
+          "title": "Видео · YouTube / Shorts / Pre-roll",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_vk_ads_таргет_5",
+          "title": "Таргет · VK Реклама",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_telegram_ads_посевы_ads_7",
+          "title": "Telegram Ads · Telegram Ads",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_meta_ads_feed_reels_6",
+          "title": "Таргет · Meta Ads / Feed / Reels",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_яндекс_директ_рся_1",
+          "title": "Яндекс Директ / РСЯ",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_яндекс_директ_мастер_кампаний_2",
+          "title": "Яндекс Директ / Мастер кампаний",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_google_ads_display_4",
+          "title": "Медийная реклама · Google Ads / Display",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_яндекс_директ_поиск_0",
+          "title": "Яндекс Директ / Поиск",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_google_ads_search_3",
+          "title": "Поисковая реклама · Google Ads / Search",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b437c0",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        }
+      ],
+      "gates": [
+        {
+          "id": "gate-0",
+          "preflight": {
+            "total": 9,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 0,
+            "notStarted": 4,
+            "percent": 39
+          },
+          "full": {
+            "total": 9,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 0,
+            "notStarted": 4,
+            "percent": 39
+          },
+          "navigationReadiness": {
+            "total": 9,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 0,
+            "notStarted": 4,
+            "percent": 39
+          },
+          "registry": {
+            "total": 9,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 0,
+            "notStarted": 4,
+            "percent": 39
+          }
+        },
+        {
+          "id": "gate-1",
+          "preflight": {
+            "total": 31,
+            "done": 3,
+            "ready": 0,
+            "notRequired": 3,
+            "inProgress": 5,
+            "problem": 1,
+            "notStarted": 22,
+            "percent": 19
+          },
+          "full": {
+            "total": 31,
+            "done": 3,
+            "ready": 0,
+            "notRequired": 3,
+            "inProgress": 5,
+            "problem": 1,
+            "notStarted": 22,
+            "percent": 19
+          },
+          "navigationReadiness": {
+            "total": 31,
+            "done": 3,
+            "ready": 0,
+            "notRequired": 3,
+            "inProgress": 5,
+            "problem": 1,
+            "notStarted": 22,
+            "percent": 19
+          },
+          "registry": {
+            "total": 31,
+            "done": 3,
+            "ready": 0,
+            "notRequired": 3,
+            "inProgress": 5,
+            "problem": 1,
+            "notStarted": 22,
+            "percent": 19
+          }
+        },
+        {
+          "id": "gate-2",
+          "preflight": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 0,
+            "notStarted": 17,
+            "percent": 11
+          },
+          "full": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 0,
+            "notStarted": 17,
+            "percent": 11
+          },
+          "navigationReadiness": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 0,
+            "notStarted": 17,
+            "percent": 11
+          },
+          "registry": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 0,
+            "notStarted": 17,
+            "percent": 11
+          }
+        },
+        {
+          "id": "gate-3",
+          "preflight": {
+            "total": 5,
+            "done": 0,
+            "ready": 0,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 2,
+            "notStarted": 0,
+            "percent": 50
+          },
+          "full": {
+            "total": 5,
+            "done": 0,
+            "ready": 0,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 2,
+            "notStarted": 0,
+            "percent": 50
+          },
+          "navigationReadiness": {
+            "total": 5,
+            "done": 0,
+            "ready": 0,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 2,
+            "notStarted": 0,
+            "percent": 50
+          },
+          "registry": {
+            "total": 5,
+            "done": 0,
+            "ready": 0,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 2,
+            "notStarted": 0,
+            "percent": 50
+          }
+        },
+        {
+          "id": "gate-4",
+          "preflight": {
+            "total": 32,
+            "done": 4,
+            "ready": 4,
+            "notRequired": 0,
+            "inProgress": 8,
+            "problem": 0,
+            "notStarted": 20,
+            "percent": 25
+          },
+          "full": {
+            "total": 50,
+            "done": 5,
+            "ready": 5,
+            "notRequired": 0,
+            "inProgress": 8,
+            "problem": 0,
+            "notStarted": 37,
+            "percent": 18
+          },
+          "navigationReadiness": {
+            "total": 50,
+            "done": 5,
+            "ready": 5,
+            "notRequired": 0,
+            "inProgress": 8,
+            "problem": 0,
+            "notStarted": 37,
+            "percent": 18
+          },
+          "registry": {
+            "total": 50,
+            "done": 5,
+            "ready": 5,
+            "notRequired": 0,
+            "inProgress": 8,
+            "problem": 0,
+            "notStarted": 37,
+            "percent": 18
+          }
+        }
+      ],
+      "hintErrors": []
+    },
+    {
+      "product_id": "catalog-item-1786885522654-b659e1",
+      "name": "направление - Обувь - Химчистка, ремонт и реставрация обуви",
+      "summary": {
+        "total": 96,
+        "done": 18,
+        "ready": 13,
+        "notRequired": 5,
+        "inProgress": 27,
+        "problem": 2,
+        "notStarted": 49,
+        "percent": 34
+      },
+      "rows": [
+        {
+          "gate": "gate-0",
+          "id": "card-1",
+          "title": "Проект: базовые сведения",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-project-goal",
+          "title": "Цель проекта и ограничения",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-brand-purpose",
+          "title": "Цель бренда",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-segmentation",
+          "title": "Сегментация · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-positioning",
+          "title": "Позиционирование · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-offer",
+          "title": "Оффер и CTA · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-keyword-foundation",
+          "title": "Фундамент ключевых слов · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-0",
+          "id": "card-7",
+          "title": "Текущее состояние маркетинговой системы · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-0",
+          "id": "card-2",
+          "title": "Продукт, сегмент и задача клиента",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "company_demand_positioning",
+          "title": "Спрос, ценность, позиционирование · Компания",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-14",
+          "title": "Robots.txt: доступ поисковых роботов",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-16",
+          "title": "Канонический URL и редиректы",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-20",
+          "title": "SSL / HTTPS: безопасность домена",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Проблема",
+          "pageStatus": "problem",
+          "pathStatus": "problem"
+        },
+        {
+          "gate": "gate-1",
+          "id": "project-comparison",
+          "title": "Сравнение проекта",
+          "kind": "comparison",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "gate1-seo-v300-company-webmaster",
+          "title": "Яндекс Вебмастер · Компания",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "interactive-tool",
+          "title": "Собственный интерактивный инструмент",
+          "kind": "gate1-tool",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-21",
+          "title": "ГЛАВНАЯ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-22-hub",
+          "title": "КАТАЛОГ (ХАБ)",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-22",
+          "title": "КАТЕГОРИЯ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-25",
+          "title": "СТАТЬЯ БЛОГА",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-26",
+          "title": "О НАС",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-27",
+          "title": "КОНТАКТЫ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-28",
+          "title": "ДОСТАВКА / ГАРАНТИИ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-30",
+          "title": "404",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-31",
+          "title": "THANK YOU PAGE ⚠️",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-32",
+          "title": "ЛЕНДИНГ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-site-header-v497",
+          "title": "ХЕДЕР",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-site-footer-v497",
+          "title": "Футер: навигация, доверие и юридическая база",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-29",
+          "title": "ПОЛИТИКА",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-35",
+          "title": "Cookie-баннер: уведомление и согласие",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-36",
+          "title": "Футер: навигация, доверие и юридическая база",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-37",
+          "title": "Согласие в формах",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "target-audience",
+          "title": "Целевая аудитория",
+          "kind": "audience",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "gate1-blog-v304-company",
+          "title": "Блог · Компания",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-23",
+          "title": "СТРАНИЦА УСЛУГИ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-24",
+          "title": "КАРТОЧКА ТОВАРА",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "gate1-seo-v300-product-webmaster",
+          "title": "Яндекс Вебмастер · Продукт/Услуга",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "pain_jtbd_offer",
+          "title": "Спрос, ценность, позиционирование · Продукт/Услуга",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "gate1-blog-v304-product",
+          "title": "Блог · Продукт/Услуга",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "unit-economics",
+          "title": "Юнит-экономика",
+          "kind": "unit",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-domain",
+          "title": "Домен и HTTPS",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-counter",
+          "title": "Яндекс Метрика · счётчик",
+          "kind": "wizard",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-goal",
+          "title": "Яндекс Метрика · конверсионная цель",
+          "kind": "wizard",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-webmaster",
+          "title": "Яндекс Вебмастер",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-yandex-business",
+          "title": "Яндекс Бизнес",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-yandex-direct",
+          "title": "Яндекс Директ · кабинет",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-vk",
+          "title": "VK Реклама и пиксель",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-telegram-ads",
+          "title": "Telegram Ads · кабинет",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-meta-ads",
+          "title": "Meta Ads · кабинет и пиксель",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется: все каналы отмечены «Не требуется» в Gate 0",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-ga4",
+          "title": "Google Analytics 4",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-gsc",
+          "title": "Google Search Console",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-google-ads",
+          "title": "Google Ads · конверсии",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется: все каналы отмечены «Не требуется» в Gate 0",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-leads",
+          "title": "Приём заявок",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-safety",
+          "title": "Юридическая защита",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-landing",
+          "title": "Посадочная товара",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-counter",
+          "title": "Метрика продукта · визит",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-goal",
+          "title": "Метрика продукта · цель",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-vk",
+          "title": "События VK Рекламы",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-lead",
+          "title": "Сквозная проверка заявки",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-3",
+          "id": "aware",
+          "title": "Узнал (Aware)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-3",
+          "id": "appeal",
+          "title": "Понравился (Appeal)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-3",
+          "id": "ask",
+          "title": "Изучает (Ask)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-3",
+          "id": "act",
+          "title": "Покупает (Act)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-3",
+          "id": "advocate",
+          "title": "Рекомендует (Advocate)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Проблема",
+          "pageStatus": "problem",
+          "pathStatus": "problem"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-148",
+          "title": "Единая карта запуска",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-151",
+          "title": "Целевое действие выбрано",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-152",
+          "title": "Посадочная страница собрана под сегмент",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-153",
+          "title": "Смысловой каркас страницы собран",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-154",
+          "title": "Архитектура психослоев на посадочной",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-155",
+          "title": "Формы и контакты работают",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-156",
+          "title": "Мобильная версия не ломает конверсию",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-157",
+          "title": "Метрика и базовые цели подклю��ены",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-158",
+          "title": "UTM и разметка готовы",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-159",
+          "title": "Передача лидов и статусов не теряется",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-160",
+          "title": "Креативная рамка зафиксирована",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-161",
+          "title": "Креативная матрица 3×3",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-162",
+          "title": "Собран минимальный пакет креативов",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-163",
+          "title": "Креативы связаны со страницей",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-164",
+          "title": "Стартовые рекламные сущности собраны",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-165",
+          "title": "Посадки привязаны к типу спроса",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-166",
+          "title": "Бюджет и критерий остановки заданы",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-167",
+          "title": "Предзапусковый QA пройден",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-168",
+          "title": "Менеджерская обработка готова",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-169",
+          "title": "Запусковая готовность подтверждена",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "smm_vk_контент_11",
+          "title": "Контент · VK",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "smm_telegram_контент_посевы_12",
+          "title": "Канал и посевы · Telegram",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "smm_instagram_reels_stories_13",
+          "title": "Контент · Instagram / Reels / Stories",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "smm_youtube_shorts_pre_roll_14",
+          "title": "Видео · YouTube / Shorts / Pre-roll",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_vk_ads_таргет_5",
+          "title": "Таргет · VK Реклама",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_telegram_ads_посевы_ads_7",
+          "title": "Telegram Ads · Telegram Ads",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_meta_ads_feed_reels_6",
+          "title": "Таргет · Meta Ads / Feed / Reels",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_яндекс_директ_рся_1",
+          "title": "Яндекс Директ / РСЯ",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_яндекс_директ_мастер_кампаний_2",
+          "title": "Яндекс Директ / Мастер кампаний",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_google_ads_display_4",
+          "title": "Медийная реклама · Google Ads / Display",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_яндекс_директ_поиск_0",
+          "title": "Яндекс Директ / Поиск",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_google_ads_search_3",
+          "title": "Поисковая реклама · Google Ads / Search",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-b659e1",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        }
+      ],
+      "gates": [
+        {
+          "id": "gate-0",
+          "preflight": {
+            "total": 9,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 0,
+            "notStarted": 4,
+            "percent": 39
+          },
+          "full": {
+            "total": 9,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 0,
+            "notStarted": 4,
+            "percent": 39
+          },
+          "navigationReadiness": {
+            "total": 9,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 0,
+            "notStarted": 4,
+            "percent": 39
+          },
+          "registry": {
+            "total": 9,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 3,
+            "problem": 0,
+            "notStarted": 4,
+            "percent": 39
+          }
+        },
+        {
+          "id": "gate-1",
+          "preflight": {
+            "total": 31,
+            "done": 4,
+            "ready": 1,
+            "notRequired": 3,
+            "inProgress": 6,
+            "problem": 1,
+            "notStarted": 20,
+            "percent": 24
+          },
+          "full": {
+            "total": 31,
+            "done": 4,
+            "ready": 1,
+            "notRequired": 3,
+            "inProgress": 6,
+            "problem": 1,
+            "notStarted": 20,
+            "percent": 24
+          },
+          "navigationReadiness": {
+            "total": 31,
+            "done": 4,
+            "ready": 1,
+            "notRequired": 3,
+            "inProgress": 6,
+            "problem": 1,
+            "notStarted": 20,
+            "percent": 24
+          },
+          "registry": {
+            "total": 31,
+            "done": 4,
+            "ready": 1,
+            "notRequired": 3,
+            "inProgress": 6,
+            "problem": 1,
+            "notStarted": 20,
+            "percent": 24
+          }
+        },
+        {
+          "id": "gate-2",
+          "preflight": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 0,
+            "notStarted": 17,
+            "percent": 11
+          },
+          "full": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 0,
+            "notStarted": 17,
+            "percent": 11
+          },
+          "navigationReadiness": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 0,
+            "notStarted": 17,
+            "percent": 11
+          },
+          "registry": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 0,
+            "notStarted": 17,
+            "percent": 11
+          }
+        },
+        {
+          "id": "gate-3",
+          "preflight": {
+            "total": 5,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 2,
+            "problem": 1,
+            "notStarted": 0,
+            "percent": 70
+          },
+          "full": {
+            "total": 5,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 2,
+            "problem": 1,
+            "notStarted": 0,
+            "percent": 70
+          },
+          "navigationReadiness": {
+            "total": 5,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 2,
+            "problem": 1,
+            "notStarted": 0,
+            "percent": 70
+          },
+          "registry": {
+            "total": 5,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 2,
+            "problem": 1,
+            "notStarted": 0,
+            "percent": 70
+          }
+        },
+        {
+          "id": "gate-4",
+          "preflight": {
+            "total": 32,
+            "done": 8,
+            "ready": 8,
+            "notRequired": 0,
+            "inProgress": 16,
+            "problem": 0,
+            "notStarted": 8,
+            "percent": 50
+          },
+          "full": {
+            "total": 50,
+            "done": 12,
+            "ready": 12,
+            "notRequired": 0,
+            "inProgress": 16,
+            "problem": 0,
+            "notStarted": 22,
+            "percent": 40
+          },
+          "navigationReadiness": {
+            "total": 50,
+            "done": 12,
+            "ready": 12,
+            "notRequired": 0,
+            "inProgress": 16,
+            "problem": 0,
+            "notStarted": 22,
+            "percent": 40
+          },
+          "registry": {
+            "total": 50,
+            "done": 12,
+            "ready": 12,
+            "notRequired": 0,
+            "inProgress": 16,
+            "problem": 0,
+            "notStarted": 22,
+            "percent": 40
+          }
+        }
+      ],
+      "hintErrors": []
+    },
+    {
+      "product_id": "catalog-item-1786885522654-a3955f",
+      "name": "Уход за вашими любимыми аксессуарами: от шелкового платка до брендовой сумки",
+      "summary": {
+        "total": 96,
+        "done": 19,
+        "ready": 14,
+        "notRequired": 5,
+        "inProgress": 26,
+        "problem": 2,
+        "notStarted": 49,
+        "percent": 34
+      },
+      "rows": [
+        {
+          "gate": "gate-0",
+          "id": "card-1",
+          "title": "Проект: базовые сведения",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-project-goal",
+          "title": "Цель проекта и ограничения",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-brand-purpose",
+          "title": "Цель бренда",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-segmentation",
+          "title": "Сегментация · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-positioning",
+          "title": "Позиционирование · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-offer",
+          "title": "Оффер и CTA · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-0",
+          "id": "gate0-company-keyword-foundation",
+          "title": "Фундамент ключевых слов · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-0",
+          "id": "card-7",
+          "title": "Текущее состояние маркетинговой системы · Компания",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-0",
+          "id": "card-2",
+          "title": "Продукт, сегмент и задача клиента",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-1",
+          "id": "company_demand_positioning",
+          "title": "Спрос, ценность, позиционирование · Компания",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-14",
+          "title": "Robots.txt: доступ поисковых роботов",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-16",
+          "title": "Канонический URL и редиректы",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-20",
+          "title": "SSL / HTTPS: безопасность домена",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Проблема",
+          "pageStatus": "problem",
+          "pathStatus": "problem"
+        },
+        {
+          "gate": "gate-1",
+          "id": "project-comparison",
+          "title": "Сравнение проекта",
+          "kind": "comparison",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "gate1-seo-v300-company-webmaster",
+          "title": "Яндекс Вебмастер · Компания",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "interactive-tool",
+          "title": "Собственный интерактивный инструмент",
+          "kind": "gate1-tool",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-21",
+          "title": "ГЛАВНАЯ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-22-hub",
+          "title": "КАТАЛОГ (ХАБ)",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-22",
+          "title": "КАТЕГОРИЯ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-25",
+          "title": "СТАТЬЯ БЛОГА",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-26",
+          "title": "О НАС",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-27",
+          "title": "КОНТАКТЫ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-28",
+          "title": "ДОСТАВКА / ГАРАНТИИ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-30",
+          "title": "404",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-31",
+          "title": "THANK YOU PAGE ⚠️",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-32",
+          "title": "ЛЕНДИНГ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-site-header-v497",
+          "title": "ХЕДЕР",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-site-footer-v497",
+          "title": "Футер: навигация, доверие и юридическая база",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-29",
+          "title": "ПОЛИТИКА",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-35",
+          "title": "Cookie-баннер: уведомление и согласие",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-36",
+          "title": "Футер: навигация, доверие и юридическая база",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-37",
+          "title": "Согласие в формах",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "target-audience",
+          "title": "Целевая аудитория",
+          "kind": "audience",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "gate1-blog-v304-company",
+          "title": "Блог · Компания",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-23",
+          "title": "СТРАНИЦА УСЛУГИ",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-1",
+          "id": "card-24",
+          "title": "КАРТОЧКА ТОВАРА",
+          "kind": "card",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "gate1-seo-v300-product-webmaster",
+          "title": "Яндекс Вебмастер · Продукт/Услуга",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "pain_jtbd_offer",
+          "title": "Спрос, ценность, позиционирование · Продукт/Услуга",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-1",
+          "id": "gate1-blog-v304-product",
+          "title": "Блог · Продукт/Услуга",
+          "kind": "gate1-section",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-1",
+          "id": "unit-economics",
+          "title": "Юнит-экономика",
+          "kind": "unit",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-domain",
+          "title": "Домен и HTTPS",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-counter",
+          "title": "Яндекс Метрика · счётчик",
+          "kind": "wizard",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-goal",
+          "title": "Яндекс Метрика · конверсионная цель",
+          "kind": "wizard",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-webmaster",
+          "title": "Яндекс Вебмастер",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-yandex-business",
+          "title": "Яндекс Бизнес",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-yandex-direct",
+          "title": "Яндекс Директ · кабинет",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-vk",
+          "title": "VK Реклама и пиксель",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-telegram-ads",
+          "title": "Telegram Ads · кабинет",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-meta-ads",
+          "title": "Meta Ads · кабинет и пиксель",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется: все каналы отмечены «Не требуется» в Gate 0",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-ga4",
+          "title": "Google Analytics 4",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-gsc",
+          "title": "Google Search Console",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-google-ads",
+          "title": "Google Ads · конверсии",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не требуется: все каналы отмечены «Не требуется» в Gate 0",
+          "pageStatus": "not_required",
+          "pathStatus": "not_required"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-leads",
+          "title": "Приём заявок",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "company-safety",
+          "title": "Юридическая защита",
+          "kind": "service",
+          "product_id": null,
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-landing",
+          "title": "Посадочная товара",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-counter",
+          "title": "Метрика продукта · визит",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-goal",
+          "title": "Метрика продукта · цель",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-vk",
+          "title": "События VK Рекламы",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-2",
+          "id": "product-lead",
+          "title": "Сквозная проверка заявки",
+          "kind": "service",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-3",
+          "id": "aware",
+          "title": "Узнал (Aware)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-3",
+          "id": "appeal",
+          "title": "Понравился (Appeal)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-3",
+          "id": "ask",
+          "title": "Изучает (Ask)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-3",
+          "id": "act",
+          "title": "Покупает (Act)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-3",
+          "id": "advocate",
+          "title": "Рекомендует (Advocate)",
+          "kind": "stage",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Проблема",
+          "pageStatus": "problem",
+          "pathStatus": "problem"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-148",
+          "title": "Единая карта запуска",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-151",
+          "title": "Целевое действие выбрано",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-152",
+          "title": "Посадочная страница собрана под сегмент",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-153",
+          "title": "Смысловой каркас страницы собран",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-154",
+          "title": "Архитектура психослоев на посадочной",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-155",
+          "title": "Формы и контакты работают",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-156",
+          "title": "Мобильная версия не ломает конверсию",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-157",
+          "title": "Метрика и базовые цели подклю��ены",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-158",
+          "title": "UTM и разметка готовы",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-159",
+          "title": "Передача лидов и статусов не теряется",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-160",
+          "title": "Креативная рамка зафиксирована",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-161",
+          "title": "Креативная матрица 3×3",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-162",
+          "title": "Собран минимальный пакет креативов",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-163",
+          "title": "Креативы связаны со страницей",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-164",
+          "title": "Стартовые рекламные сущности собраны",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-165",
+          "title": "Посадки привязаны к типу спроса",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-166",
+          "title": "Бюджет и критерий остановки заданы",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-167",
+          "title": "Предзапусковый QA пройден",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-168",
+          "title": "Менеджерская обработка готова",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Готово",
+          "pageStatus": "ready",
+          "pathStatus": "ready"
+        },
+        {
+          "gate": "gate-4",
+          "id": "card-169",
+          "title": "Запусковая готовность подтверждена",
+          "kind": "gate4-readiness",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "smm_vk_контент_11",
+          "title": "Контент · VK",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "smm_telegram_контент_посевы_12",
+          "title": "Канал и посевы · Telegram",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "smm_instagram_reels_stories_13",
+          "title": "Контент · Instagram / Reels / Stories",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "smm_youtube_shorts_pre_roll_14",
+          "title": "Видео · YouTube / Shorts / Pre-roll",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_vk_ads_таргет_5",
+          "title": "Таргет · VK Реклама",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_telegram_ads_посевы_ads_7",
+          "title": "Telegram Ads · Telegram Ads",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_meta_ads_feed_reels_6",
+          "title": "Таргет · Meta Ads / Feed / Reels",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_яндекс_директ_рся_1",
+          "title": "Яндекс Директ / РСЯ",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_яндекс_директ_мастер_кампаний_2",
+          "title": "Яндекс Директ / Мастер кампаний",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_google_ads_display_4",
+          "title": "Медийная реклама · Google Ads / Display",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_яндекс_директ_поиск_0",
+          "title": "Яндекс Директ / Поиск",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "Не начато",
+          "pageStatus": "not_started",
+          "pathStatus": "not_started"
+        },
+        {
+          "gate": "gate-4",
+          "id": "платная_реклама_google_ads_search_3",
+          "title": "Поисковая реклама · Google Ads / Search",
+          "kind": "channel",
+          "product_id": "catalog-item-1786885522654-a3955f",
+          "found": true,
+          "pageBadge": "В работе",
+          "pageStatus": "in_progress",
+          "pathStatus": "in_progress"
+        }
+      ],
+      "gates": [
+        {
+          "id": "gate-0",
+          "preflight": {
+            "total": 9,
+            "done": 3,
+            "ready": 3,
+            "notRequired": 0,
+            "inProgress": 2,
+            "problem": 0,
+            "notStarted": 4,
+            "percent": 44
+          },
+          "full": {
+            "total": 9,
+            "done": 3,
+            "ready": 3,
+            "notRequired": 0,
+            "inProgress": 2,
+            "problem": 0,
+            "notStarted": 4,
+            "percent": 44
+          },
+          "navigationReadiness": {
+            "total": 9,
+            "done": 3,
+            "ready": 3,
+            "notRequired": 0,
+            "inProgress": 2,
+            "problem": 0,
+            "notStarted": 4,
+            "percent": 44
+          },
+          "registry": {
+            "total": 9,
+            "done": 3,
+            "ready": 3,
+            "notRequired": 0,
+            "inProgress": 2,
+            "problem": 0,
+            "notStarted": 4,
+            "percent": 44
+          }
+        },
+        {
+          "id": "gate-1",
+          "preflight": {
+            "total": 31,
+            "done": 4,
+            "ready": 1,
+            "notRequired": 3,
+            "inProgress": 6,
+            "problem": 1,
+            "notStarted": 20,
+            "percent": 24
+          },
+          "full": {
+            "total": 31,
+            "done": 4,
+            "ready": 1,
+            "notRequired": 3,
+            "inProgress": 6,
+            "problem": 1,
+            "notStarted": 20,
+            "percent": 24
+          },
+          "navigationReadiness": {
+            "total": 31,
+            "done": 4,
+            "ready": 1,
+            "notRequired": 3,
+            "inProgress": 6,
+            "problem": 1,
+            "notStarted": 20,
+            "percent": 24
+          },
+          "registry": {
+            "total": 31,
+            "done": 4,
+            "ready": 1,
+            "notRequired": 3,
+            "inProgress": 6,
+            "problem": 1,
+            "notStarted": 20,
+            "percent": 24
+          }
+        },
+        {
+          "id": "gate-2",
+          "preflight": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 0,
+            "notStarted": 17,
+            "percent": 11
+          },
+          "full": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 0,
+            "notStarted": 17,
+            "percent": 11
+          },
+          "navigationReadiness": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 0,
+            "notStarted": 17,
+            "percent": 11
+          },
+          "registry": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 0,
+            "notStarted": 17,
+            "percent": 11
+          }
+        },
+        {
+          "id": "gate-3",
+          "preflight": {
+            "total": 5,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 2,
+            "problem": 1,
+            "notStarted": 0,
+            "percent": 70
+          },
+          "full": {
+            "total": 5,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 2,
+            "problem": 1,
+            "notStarted": 0,
+            "percent": 70
+          },
+          "navigationReadiness": {
+            "total": 5,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 2,
+            "problem": 1,
+            "notStarted": 0,
+            "percent": 70
+          },
+          "registry": {
+            "total": 5,
+            "done": 2,
+            "ready": 2,
+            "notRequired": 0,
+            "inProgress": 2,
+            "problem": 1,
+            "notStarted": 0,
+            "percent": 70
+          }
+        },
+        {
+          "id": "gate-4",
+          "preflight": {
+            "total": 32,
+            "done": 8,
+            "ready": 8,
+            "notRequired": 0,
+            "inProgress": 16,
+            "problem": 0,
+            "notStarted": 8,
+            "percent": 50
+          },
+          "full": {
+            "total": 50,
+            "done": 11,
+            "ready": 11,
+            "notRequired": 0,
+            "inProgress": 16,
+            "problem": 0,
+            "notStarted": 23,
+            "percent": 38
+          },
+          "navigationReadiness": {
+            "total": 50,
+            "done": 11,
+            "ready": 11,
+            "notRequired": 0,
+            "inProgress": 16,
+            "problem": 0,
+            "notStarted": 23,
+            "percent": 38
+          },
+          "registry": {
+            "total": 50,
+            "done": 11,
+            "ready": 11,
+            "notRequired": 0,
+            "inProgress": 16,
+            "problem": 0,
+            "notStarted": 23,
+            "percent": 38
+          }
+        }
+      ],
+      "hintErrors": []
+    }
+  ],
+  "transitions": [
+    {
+      "id": "card-1",
+      "gate": "gate-0",
+      "visible": true,
+      "highlight": true,
+      "expanded": true,
+      "action": "Прямой переход",
+      "inPath": true,
+      "back": {
+        "id": "card-1",
+        "gate": "gate-0",
+        "visible": true,
+        "highlight": true,
+        "expanded": true
+      },
+      "current": {
+        "id": "gate0-company-brand-purpose",
+        "gate": "gate-0",
+        "visible": true,
+        "highlight": true,
+        "expanded": true
+      }
+    },
+    {
+      "id": "company-domain",
+      "gate": "gate-2",
+      "visible": true,
+      "highlight": true,
+      "expanded": true,
+      "action": "Далее",
+      "inPath": true,
+      "back": {
+        "id": "company-domain",
+        "gate": "gate-2",
+        "visible": true,
+        "highlight": true,
+        "expanded": true
+      },
+      "current": {
+        "id": "gate0-company-brand-purpose",
+        "gate": "gate-0",
+        "visible": true,
+        "highlight": true,
+        "expanded": true
+      }
+    },
+    {
+      "id": "card-148",
+      "gate": "gate-4",
+      "visible": true,
+      "highlight": true,
+      "expanded": true,
+      "action": "Далее",
+      "inPath": true,
+      "back": {
+        "id": "card-148",
+        "gate": "gate-4",
+        "visible": true,
+        "highlight": true,
+        "expanded": true
+      },
+      "current": {
+        "id": "gate0-company-brand-purpose",
+        "gate": "gate-0",
+        "visible": true,
+        "highlight": true,
+        "expanded": true
+      }
+    }
+  ],
+  "screenshots": [
+    "artifacts/step6-now-guide-icleaning.png"
+  ],
+  "issues": [],
+  "productCount": 4,
+  "default": {
+    "selectedProductId": "catalog-item-1786885522654-b659e1",
+    "summary": {
+      "total": 96,
+      "done": 18,
+      "ready": 13,
+      "notRequired": 5,
+      "inProgress": 27,
+      "problem": 2,
+      "notStarted": 49,
+      "percent": 34
+    },
+    "gates": [
+      {
+        "id": "gate-0",
+        "preflight": {
+          "total": 9,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 3,
+          "problem": 0,
+          "notStarted": 4,
+          "percent": 39
+        },
+        "full": {
+          "total": 9,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 3,
+          "problem": 0,
+          "notStarted": 4,
+          "percent": 39
+        }
+      },
+      {
+        "id": "gate-1",
+        "preflight": {
+          "total": 31,
+          "done": 4,
+          "ready": 1,
+          "notRequired": 3,
+          "inProgress": 6,
+          "problem": 1,
+          "notStarted": 20,
+          "percent": 24
+        },
+        "full": {
+          "total": 31,
+          "done": 4,
+          "ready": 1,
+          "notRequired": 3,
+          "inProgress": 6,
+          "problem": 1,
+          "notStarted": 20,
+          "percent": 24
+        }
+      },
+      {
+        "id": "gate-2",
+        "preflight": {
+          "total": 19,
+          "done": 2,
+          "ready": 0,
+          "notRequired": 2,
+          "inProgress": 0,
+          "problem": 0,
+          "notStarted": 17,
+          "percent": 11
+        },
+        "full": {
+          "total": 19,
+          "done": 2,
+          "ready": 0,
+          "notRequired": 2,
+          "inProgress": 0,
+          "problem": 0,
+          "notStarted": 17,
+          "percent": 11
+        }
+      },
+      {
+        "id": "gate-3",
+        "preflight": {
+          "total": 5,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 2,
+          "problem": 1,
+          "notStarted": 0,
+          "percent": 70
+        },
+        "full": {
+          "total": 5,
+          "done": 2,
+          "ready": 2,
+          "notRequired": 0,
+          "inProgress": 2,
+          "problem": 1,
+          "notStarted": 0,
+          "percent": 70
+        }
+      },
+      {
+        "id": "gate-4",
+        "preflight": {
+          "total": 32,
+          "done": 8,
+          "ready": 8,
+          "notRequired": 0,
+          "inProgress": 16,
+          "problem": 0,
+          "notStarted": 8,
+          "percent": 50
+        },
+        "full": {
+          "total": 50,
+          "done": 12,
+          "ready": 12,
+          "notRequired": 0,
+          "inProgress": 16,
+          "problem": 0,
+          "notStarted": 22,
+          "percent": 40
+        }
+      }
+    ],
+    "path": [
+      {
+        "gate": "gate-0",
+        "id": "card-1",
+        "product_id": null,
+        "status": "ready"
+      },
+      {
+        "gate": "gate-0",
+        "id": "gate0-project-goal",
+        "product_id": null,
+        "status": "ready"
+      },
+      {
+        "gate": "gate-0",
+        "id": "gate0-company-brand-purpose",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-0",
+        "id": "gate0-company-segmentation",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-0",
+        "id": "gate0-company-positioning",
+        "product_id": null,
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-0",
+        "id": "gate0-company-offer",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-0",
+        "id": "gate0-company-keyword-foundation",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-0",
+        "id": "card-7",
+        "product_id": null,
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-0",
+        "id": "card-2",
+        "product_id": null,
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-1",
+        "id": "company_demand_positioning",
+        "product_id": null,
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-14",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-16",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-20",
+        "product_id": null,
+        "status": "problem"
+      },
+      {
+        "gate": "gate-1",
+        "id": "project-comparison",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "gate1-seo-v300-company-webmaster",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "interactive-tool",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-21",
+        "product_id": null,
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-22-hub",
+        "product_id": null,
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-22",
+        "product_id": null,
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-25",
+        "product_id": null,
+        "status": "not_required"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-26",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-27",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-28",
+        "product_id": null,
+        "status": "not_required"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-30",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-31",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-32",
+        "product_id": null,
+        "status": "not_required"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-site-header-v497",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-site-footer-v497",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-29",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-35",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-36",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-37",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "target-audience",
+        "product_id": null,
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-1",
+        "id": "gate1-blog-v304-company",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-23",
+        "product_id": null,
+        "status": "ready"
+      },
+      {
+        "gate": "gate-1",
+        "id": "card-24",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "gate1-seo-v300-product-webmaster",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "pain_jtbd_offer",
+        "product_id": null,
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-1",
+        "id": "gate1-blog-v304-product",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-1",
+        "id": "unit-economics",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "company-domain",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "company-counter",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "company-goal",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "company-webmaster",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "company-yandex-business",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "company-yandex-direct",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "company-vk",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "company-telegram-ads",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "company-meta-ads",
+        "product_id": null,
+        "status": "not_required"
+      },
+      {
+        "gate": "gate-2",
+        "id": "company-ga4",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "company-gsc",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "company-google-ads",
+        "product_id": null,
+        "status": "not_required"
+      },
+      {
+        "gate": "gate-2",
+        "id": "company-leads",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "company-safety",
+        "product_id": null,
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "product-landing",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "product-counter",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "product-goal",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "product-vk",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-2",
+        "id": "product-lead",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-3",
+        "id": "aware",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "gate": "gate-3",
+        "id": "appeal",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "gate": "gate-3",
+        "id": "ask",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-3",
+        "id": "act",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-3",
+        "id": "advocate",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "problem"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-148",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-151",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-152",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-153",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-154",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-155",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-156",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-157",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-158",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-159",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-160",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-161",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-162",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-163",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-164",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-165",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-166",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-167",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-168",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "gate": "gate-4",
+        "id": "card-169",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-4",
+        "id": "smm_vk_контент_11",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-4",
+        "id": "smm_telegram_контент_посевы_12",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-4",
+        "id": "smm_instagram_reels_stories_13",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-4",
+        "id": "smm_youtube_shorts_pre_roll_14",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-4",
+        "id": "платная_реклама_vk_ads_таргет_5",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-4",
+        "id": "платная_реклама_telegram_ads_посевы_ads_7",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-4",
+        "id": "платная_реклама_meta_ads_feed_reels_6",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-4",
+        "id": "платная_реклама_яндекс_директ_рся_1",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-4",
+        "id": "платная_реклама_яндекс_директ_мастер_кампаний_2",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-4",
+        "id": "платная_реклама_google_ads_display_4",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "gate": "gate-4",
+        "id": "платная_реклама_яндекс_директ_поиск_0",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "gate": "gate-4",
+        "id": "платная_реклама_google_ads_search_3",
+        "product_id": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      }
+    ],
+    "emptyGates": [],
+    "missingGates": [],
+    "card": "Сейчас\nШаг 3 из 96\nНе начато\nГотовность к запуску: 34%\nготово 18 из 96\nЦель бренда\nНе хватает:\nФункциональная цель\nВысшая цель\nЕдиная формулировка цели бренда\nGate 0 · Компания\n◀ Назад\nДалее ▶\nК текущему"
+  },
+  "edgeCases": [
+    {
+      "scenario": "без Gate 4 и Gate 7",
+      "summary": {
+        "total": 64,
+        "done": 10,
+        "ready": 5,
+        "notRequired": 5,
+        "inProgress": 11,
+        "problem": 2,
+        "notStarted": 41,
+        "percent": 26
+      },
+      "gate4InPath": 0,
+      "gate7InPath": 0,
+      "card": "Сейчас\nШаг 3 из 64\nНе начато\nГотовность к запуску: 26%\nготово 10 из 64\nЦель бренда\nНе хватает:\nФункциональная цель\nВысшая цель\nЕдиная формулировка цели бренда\nGate 0 · Компания\n◀ Назад\nДалее ▶\nК текущему"
+    },
+    {
+      "scenario": "пустые карточки Gate 4",
+      "summary": {
+        "total": 76,
+        "done": 10,
+        "ready": 5,
+        "notRequired": 5,
+        "inProgress": 22,
+        "problem": 2,
+        "notStarted": 42,
+        "percent": 29
+      },
+      "gate4InPath": 12,
+      "gate7InPath": 0,
+      "card": "Сейчас\nШаг 3 из 76\nНе начато\nГотовность к запуску: 29%\nготово 10 из 76\nЦель бренда\nНе хватает:\nФункциональная цель\nВысшая цель\nЕдиная формулировка цели бренда\nGate 0 · Компания\n◀ Назад\nДалее ▶\nК текущему"
+    },
+    {
+      "scenario": "пустой путь",
+      "summary": {
+        "total": 0,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 0,
+        "problem": 0,
+        "notStarted": 0,
+        "percent": 0
+      },
+      "gate4InPath": 0,
+      "gate7InPath": 0,
+      "card": "Сейчас\nГотовность к запуску: 0%\nготово 0 из 0\nПредполётный путь пока пуст"
+    }
+  ],
+  "phaseDifferences": [
+    {
+      "phase": "после матрицы и render",
+      "paths": []
+    },
+    {
+      "phase": "gate-0",
+      "paths": []
+    },
+    {
+      "phase": "gate-2",
+      "paths": []
+    },
+    {
+      "phase": "gate-4",
+      "paths": []
+    }
+  ],
+  "comparison": {
+    "identical": true,
+    "beforeSha256": "3e0e3fcf5447d8f662905cfec51a1e20d14cd25d75312df5604540c122c39003",
+    "afterSha256": "3e0e3fcf5447d8f662905cfec51a1e20d14cd25d75312df5604540c122c39003",
+    "bytes": 1499492,
+    "updatedAtFields": 107,
+    "uiPreferenceWrites": 0,
+    "differences": []
+  },
+  "consoleErrors": [],
+  "build": "2.3.526+1b98c471bf26",
+  "sourceHashBefore": "a1baa877f77727f7813f80cc0749763bd5122f8f56d48136fa1527542ea19c71",
+  "sourceHashAfter": "a1baa877f77727f7813f80cc0749763bd5122f8f56d48136fa1527542ea19c71",
+  "passed": true
+}

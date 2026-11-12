@@ -1,0 +1,7 @@
+[
+  {
+    "test": "gate2-service-block-smoke.mjs",
+    "status": "FAIL",
+    "seconds": 18.16
+  }
+]

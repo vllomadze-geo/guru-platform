@@ -1,0 +1,17 @@
+[
+  {
+    "test": "gate0-merged-readiness",
+    "status": "PASS",
+    "seconds": 20.608
+  },
+  {
+    "test": "gate0-now-missing",
+    "status": "PASS",
+    "seconds": 34.348
+  },
+  {
+    "test": "gate0-unified-readiness",
+    "status": "PASS",
+    "seconds": 32.124
+  }
+]

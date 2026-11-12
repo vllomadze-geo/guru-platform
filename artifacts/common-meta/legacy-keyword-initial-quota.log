@@ -1,0 +1,11 @@
+file:///Users/vl/Developer/guru-platform/scripts/gate0-keyword-foundation-smoke.mjs:57
+    throw new Error(
+          ^
+
+Error: QuotaExceededError: Failed to execute 'setItem' on 'Storage': Setting the value of 'guru-platform-workspace-v02-gate0-keyword-foundation-smoke' exceeded the quota.
+    at <anonymous>:11:20
+    at <anonymous>:30:7
+    at evaluate (file:///Users/vl/Developer/guru-platform/scripts/gate0-keyword-foundation-smoke.mjs:57:11)
+    at async file:///Users/vl/Developer/guru-platform/scripts/gate0-keyword-foundation-smoke.mjs:114:3
+
+Node.js v22.14.0

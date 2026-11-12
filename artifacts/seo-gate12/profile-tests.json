@@ -1,0 +1,18 @@
+[
+  {
+    "test": "gate2-service-block-smoke.mjs",
+    "result": "FAIL"
+  },
+  {
+    "test": "gate2-company-services-smoke.mjs",
+    "result": "FAIL"
+  },
+  {
+    "test": "gate2-product-services-step4-smoke.mjs",
+    "result": "FAIL"
+  },
+  {
+    "test": "gate12-now-readiness-smoke.mjs",
+    "result": "FAIL"
+  }
+]

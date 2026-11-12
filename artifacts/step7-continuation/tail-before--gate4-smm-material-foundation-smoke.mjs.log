@@ -1,0 +1,47 @@
+{
+  "steps": [
+    "jtbd",
+    "segment",
+    "positioning",
+    "usp",
+    "offer",
+    "landing"
+  ],
+  "segments": [
+    {
+      "value": "Частные покупатели",
+      "target": {
+        "gateId": "gate-0",
+        "kind": "gate0-scoped",
+        "productId": "product-a",
+        "field": "segments",
+        "scope": "product",
+        "recordId": "segment-a-1"
+      }
+    },
+    {
+      "value": "Корпоративные клиенты",
+      "target": {
+        "gateId": "gate-0",
+        "kind": "gate0-scoped",
+        "productId": "product-a",
+        "field": "segments",
+        "scope": "product",
+        "recordId": "segment-a-2"
+      }
+    }
+  ],
+  "parity": true,
+  "jtbd": 2,
+  "mainJtbd": true,
+  "ctas": [
+    "Основной CTAОформить заказ",
+    "Вторичный CTAПодробнее"
+  ],
+  "landing": true,
+  "creation": true,
+  "updated": true,
+  "other": true,
+  "archivedCompanyExcluded": true,
+  "sourceUntouched": true
+}

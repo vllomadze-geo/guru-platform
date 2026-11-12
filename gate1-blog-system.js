@@ -1,5 +1,5 @@
 /* ================================================================
-   Gate 1 · Блог как система (v304).
+   Gate 4 · Блог как система (хранилище v304 сохранено).
 
    Это отдельная модель планирования блога. Она не добавляет карточки в
    gate-1.cards и не меняет card-25 «СТАТЬЯ БЛОГА» или данные других Gate.
@@ -25,7 +25,8 @@ function gate1BlogIdV304(prefix) {
     : `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function gate1BlogStoreV304(workspace = state) {
+function gate1BlogStoreV304(workspace = state, readOnly = false) {
+  if (readOnly) workspace = { gate1BlogV304: structuredClone(workspace?.gate1BlogV304 || {}) };
   if (!workspace || typeof workspace !== "object") return null;
   const store = workspace.gate1BlogV304 && typeof workspace.gate1BlogV304 === "object"
     ? workspace.gate1BlogV304
@@ -37,27 +38,27 @@ function gate1BlogStoreV304(workspace = state) {
   store.hub.path = gate1BlogTextV304(store.hub.path) || "/blog";
   store.hub.description = String(store.hub.description || "");
   store.articles = Array.isArray(store.articles) ? store.articles : [];
-  store.articles = store.articles.map((article) => {
+  store.articles = store.articles.map((article, index) => {
     const normalized = article && typeof article === "object" ? article : {};
-    normalized.id = gate1BlogTextV304(normalized.id) || gate1BlogIdV304("gate1-blog-article");
+    normalized.id = gate1BlogTextV304(normalized.id) || `gate1-blog-article-legacy-${index}`;
     normalized.title = String(normalized.title || "");
     normalized.summary = String(normalized.summary || "");
     normalized.publication_date = String(normalized.publication_date || "");
     normalized.updated_date = String(normalized.updated_date || "");
     normalized.reading_minutes = String(normalized.reading_minutes || "");
     normalized.toc = Array.isArray(normalized.toc) && normalized.toc.length
-      ? normalized.toc.map((entry) => ({
-          id: gate1BlogTextV304(entry?.id) || gate1BlogIdV304("gate1-blog-toc"),
+      ? normalized.toc.map((entry, index) => ({
+          id: gate1BlogTextV304(entry?.id) || `${normalized.id}-toc-${index}`,
           title: String(entry?.title || ""),
         }))
-      : [{ id: gate1BlogIdV304("gate1-blog-toc"), title: "" }];
+      : [{ id: `${normalized.id}-toc-0`, title: "" }];
     normalized.faq = Array.isArray(normalized.faq) && normalized.faq.length
-      ? normalized.faq.map((entry) => ({
-          id: gate1BlogTextV304(entry?.id) || gate1BlogIdV304("gate1-blog-faq"),
+      ? normalized.faq.map((entry, index) => ({
+          id: gate1BlogTextV304(entry?.id) || `${normalized.id}-faq-${index}`,
           question: String(entry?.question || ""),
           answer: String(entry?.answer || ""),
         }))
-      : [{ id: gate1BlogIdV304("gate1-blog-faq"), question: "", answer: "" }];
+      : [{ id: `${normalized.id}-faq-0`, question: "", answer: "" }];
     normalized.author = normalized.author && typeof normalized.author === "object"
       ? normalized.author
       : {};
@@ -155,20 +156,44 @@ function gate1BlogAccordionV304(scope) {
 }
 
 function gate1BlogSectionV304(scope, title, note, status, body) {
-  const accordion = gate1BlogAccordionV304(scope);
-  const section = document.createElement("section");
-  section.className = `g1-section gate1-blog-section-v304 ${accordion.open ? "is-open" : ""}`;
+  const section = document.createElement("details");
+  section.className = "g1-section gate1-blog-section-v304 is-open";
+  section.open = true;
+  section.dataset.gate4BlogScope = scope;
   section.dataset[`gate1Blog${scope === "company" ? "Company" : "Product"}V304`] = "1";
-  section.innerHTML = `<button type="button" class="g1-section-header" data-gate1-toggle-section="${escapeAttr(accordion.key)}" aria-expanded="${accordion.open ? "true" : "false"}">
+  section.innerHTML = `<summary class="g1-section-header">
     <span class="g1-section-left">
       <span class="g1-section-title">${escapeHtml(title)}</span>
       <span class="g1-section-progress">${escapeHtml(note)}</span>
     </span>
     <span class="status-pill status-${escapeAttr(status)}">${escapeHtml(STATUS_LABELS[status] || status)}</span>
-    <span class="g1-section-toggle">${accordion.open ? "Закрыть" : "Открыть"}</span>
-  </button>
-  <div class="g1-section-body gate1-blog-body-v304"${accordion.open ? "" : " hidden"}>${body}</div>`;
+    <span class="gate4-blog-disclosure" aria-hidden="true"></span>
+  </summary>
+  <div class="g1-section-body gate1-blog-body-v304">${body}</div>`;
   return section;
+}
+
+// Gate 4 owns the editor location. The existing storage key and product links
+// stay unchanged, so moving the workspace requires no data migration.
+function gate4BlogHtmlV304(scope, product = null) {
+  if (scope === "product" && !product?.id) return "";
+  const store = gate1BlogStoreV304(state, true);
+  const linked = product ? store.articles.filter(article =>
+    article.product_links.some(link => link.product_id === product.id)) : [];
+  const block = gate1BlogSectionV304(scope,
+    scope === "company" ? "Блог · Компания" : "Блог · Продукт/Услуга",
+    scope === "company" ? `${store.articles.length} статей · архитектура хаба и шаблон`
+      : `${product.name} · ${linked.length} связанных статей`,
+    scope === "company" ? gate1BlogCompanyStatusV304(store)
+      : gate1BlogProductStatusV304(store.articles, product.id),
+    scope === "company" ? gate1BlogCompanyHtmlV304(store)
+      : gate1BlogProductHtmlV304(store, product));
+  if (scope === "product" && typeof gate1SeoGuideBlogProductV307 === "function") {
+    const host = document.createElement("div");
+    host.append(block);
+    gate1SeoGuideBlogProductV307(host);
+  }
+  return block.outerHTML;
 }
 
 function gate1BlogProductsV304() {
@@ -366,9 +391,8 @@ function gate1BlogOrderProductSectionsV368(root) {
     ...landings,
     root.querySelector(':scope > [data-g1-seo-central-v298="product"]'),
     section("pain_jtbd_offer"),
-    root.querySelector(":scope > [data-gate1-blog-product-v304]"),
-    section("unit_economics"),
     root.querySelector(":scope > .project-comparison-product-v309"),
+    section("unit_economics"),
   ];
   let anchor = selector;
   sequence.filter((node) => node && node.parentElement === root).forEach((node) => {
@@ -379,51 +403,21 @@ function gate1BlogOrderProductSectionsV368(root) {
 
 function gate1BlogInjectV304() {
   if (activeGateId !== "gate-1") return;
-  const root = els.contentArea?.querySelector?.(".g1-redesign");
-  if (!root || root.querySelector("[data-gate1-blog-company-v304]")) return;
-  const store = gate1BlogStoreV304(state);
-  const product = gate1BlogSelectedProductV304();
-  const companyBlock = gate1BlogSectionV304(
-    "company",
-    "Блог · Компания",
-    `${store.articles.length} статей · архитектура хаба и шаблон`,
-    gate1BlogCompanyStatusV304(store),
-    gate1BlogCompanyHtmlV304(store),
-  );
-  const linked = product
-    ? store.articles.filter((article) =>
-        article.product_links.some((link) => link.product_id === product.id),
-      )
-    : [];
-  const productBlock = gate1BlogSectionV304(
-    "product",
-    "Блог · Продукт/Услуга",
-    product ? `${product.name} · ${linked.length} связанных статей` : "Выберите категорию и товар",
-    product ? gate1BlogProductStatusV304(store.articles, product.id) : "not_started",
-    gate1BlogProductHtmlV304(store, product),
-  );
-  const productDivider = gate1BlogFindDividerV304(root, "Продукт / Услуга");
-  if (productDivider) productDivider.insertAdjacentElement("beforebegin", companyBlock);
-  else root.prepend(companyBlock);
-  const productSeo = root.querySelector(':scope > [data-g1-seo-central-v298="product"]');
-  const selector = root.querySelector(':scope > [data-guru-product-context="gate1-product-pages"]');
-  if (productSeo) productSeo.insertAdjacentElement("afterend", productBlock);
-  else if (selector) selector.insertAdjacentElement("afterend", productBlock);
-  else if (productDivider) productDivider.insertAdjacentElement("afterend", productBlock);
-  else root.append(productBlock);
-  gate1BlogOrderProductSectionsV368(root);
-  root.dataset.gate1BlogSystemV304 = "1";
-  bindGate1Accordion();
+  gate1BlogOrderProductSectionsV368(els.contentArea?.querySelector?.(".g1-redesign"));
 }
 
 function gate1BlogRefreshV304() {
-  if (activeGateId !== "gate-1") return;
-  const root = els.contentArea?.querySelector?.(".g1-redesign");
-  if (!root) return;
-  root.querySelector(":scope > [data-gate1-blog-company-v304]")?.remove();
-  root.querySelector(":scope > [data-gate1-blog-product-v304]")?.remove();
-  delete root.dataset.gate1BlogSystemV304;
-  gate1BlogInjectV304();
+  if (activeGateId !== "gate-4") return;
+  const product = g4ProductPickSelected(state);
+  els.contentArea.querySelectorAll("[data-gate4-blog-scope]").forEach(block => {
+    const template = document.createElement("template");
+    template.innerHTML = gate4BlogHtmlV304(block.dataset.gate4BlogScope, product);
+    const next = template.content.firstElementChild;
+    if (next) { next.open = block.open; block.replaceWith(next); }
+  });
+  // Click actions (create/link/remove) do not emit an input event. Publish the
+  // same readiness update as normal editing, without rebuilding Gate 4.
+  nowGuideScheduleGate12Refresh({ target: els.contentArea });
 }
 
 const __gate1BlogPrevRenderV304 = renderGate1Accordion;

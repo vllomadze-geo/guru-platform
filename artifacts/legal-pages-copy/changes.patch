@@ -1,0 +1,20 @@
+--- before/app.js
++++ after/app.js
+@@ -22846,14 +22846,14 @@
+ // Reading an older project does not create defaults or migrate its data.
+ const MEGA_PLATFORM_LEGAL_QUESTIONS = [
+   { key: "collectsPersonalDataV1", label: "Сайт собирает персональные данные?", hint: "Формы, заказ или подписка. Определяет необходимость согласия." },
+-  { key: "siteCheckoutV1", label: "Заказ и оплата проходят на сайте?", hint: "Определяет необходимость оферты и условий возврата." },
++  { key: "siteCheckoutV1", label: "Заказ оформляется на сайте?", hint: "Заказ через сайт: корзина, форма заказа, заявка на покупку. Оплата на сайте не обязательна." },
+ ];
+ const MEGA_PLATFORM_LEGAL_HELP = {
+   company_details: ["Продавец указывает наименование, адрес, телефон и email (ст. 26.1 Закона о защите прав потребителей). Для сайта без продаж физлицам требует уточнения.", "https://44.rospotrebnadzor.ru/zacshita_prav_potreb/1671/"],
+   privacy: ["Счётчики и cookie считаются обработкой персональных данных, политика должна быть на сайте (ст. 18.1 152-ФЗ). По пересказу, требует сверки с текстом закона.", "https://saby.ru/articles/contragents/kak_vypolnit_trebovaniya_zakona_o_persdannyh_na_sayte"],
+   data_consent: ["Отдельным документом, ссылка рядом с кнопкой, галочка не предустановлена (ст. 9 152-ФЗ). По пересказу, требует сверки с текстом закона.", "https://saby.ru/articles/contragents/kak_vypolnit_trebovaniya_zakona_o_persdannyh_na_sayte"],
+-  offer: ["Покупатель до заказа видит условия договора. Требует сверки с юристом.", "https://44.rospotrebnadzor.ru/zacshita_prav_potreb/1671/"],
+-  returns: ["Без письменных условий срок возврата 3 месяца вместо 7 дней. Товар надлежащего качества с индивидуальными свойствами вернуть нельзя (п. 4 ст. 26.1): если есть товары на заказ, укажите это.", "https://44.rospotrebnadzor.ru/zacshita_prav_potreb/1671/"],
++  offer: ["Нужна, если заказ оформляется на сайте", "https://44.rospotrebnadzor.ru/zacshita_prav_potreb/1671/"],
++  returns: ["Нужна, если заказ оформляется на сайте", "https://44.rospotrebnadzor.ru/zacshita_prav_potreb/1671/"],
+ };
+ function megaPlatformLegalRequirement(item, pv2) {
+   const id = MEGA_PLATFORM_LEGAL_KEYS[item.name];

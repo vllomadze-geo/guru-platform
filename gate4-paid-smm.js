@@ -164,20 +164,9 @@ function g4PaidSmmStoreV1(productId, workspace = state, create = false) {
 
 function g4PaidSmmSourceOptionsV1(product, kind, workspace = state) {
   if (kind === "cta") {
-    const offers = g4SmmScopedRecordsReadOnlyV299(product, "offers", workspace);
-    const fromOffers = offers.records.flatMap((record) => {
-      const parts = guruV194OfferParts(record).ctaV2;
-      return ["primary", "secondary", "alternative"].flatMap((key) =>
-        parts[key] ? [{ id: record.id + "::" + key,
-          scope: offers.scope,
-          value: ({ primary: "Основной", secondary: "Вторичный", alternative: "Альтернативный" })[key] +
-            " · " + parts[key] }] : []);
-    });
-    const cta = g4SmmScopedRecordsReadOnlyV299(product, "cta", workspace);
-    const legacy = cta.records
-      .filter((record) => guruV185Text(record.value))
-      .map((record) => ({ id: record.id, value: record.value, scope: cta.scope }));
-    return [...fromOffers, ...legacy];
+    return guruStrategicCtaChoicesV1("product", product?.id, workspace, { dedupe: false })
+      .map((choice) => ({ id: choice.id, scope: choice.scope,
+        value: `${choice.label} · ${choice.value}` }));
   }
   const resolved = g4SmmScopedRecordsReadOnlyV299(product, kind, workspace);
   return resolved.records.map((record) => ({
@@ -512,12 +501,13 @@ function g4PaidSmmCreativeHtmlV1(product, platform, card, open, resolved = null)
   };
   const sourceSelect = (key, label, kind) => {
     const options = g4PaidSmmSourceOptionsV1(product, kind)
-      .filter((item) => key !== "primaryCTARef" || !item.id.includes("::") ||
-        item.id.endsWith("::primary"));
+      .filter((item) => key !== "primaryCTARef" || item.id.includes("::"));
     const selected = card[key] || options[0]?.id || "";
+    const missing = selected && !options.some((item) => item.id === selected);
     return '<label class="g4-paid-field-v1"><span>' + label +
       '</span><select data-g4-paid-card-field-v1="' + key + '">' +
       g4PaidSmmOptionHtmlV1([["", "Выбрать из Gate 0"],
+        ...(missing ? [[selected, "Ранее выбранный CTA · источник недоступен"]] : []),
         ...options.map((item) => [item.id, item.value])], selected) + '</select>' +
       (!card[key] && selected ? '<small class="g4-paid-origin-v1">↳ Gate 0 · ' +
         g4PaidSmmSourceLabelV1(options[0]?.scope) + '</small>' : "") + '</label>';
@@ -538,7 +528,7 @@ function g4PaidSmmCreativeHtmlV1(product, platform, card, open, resolved = null)
       '</select></label>' +
     field("creativeAngle", "Креативный угол") +
     sourceSelect("offerRef", "Оффер из Gate 0", "offers") +
-    sourceSelect("primaryCTARef", "Основной CTA из Gate 0", "cta") +
+    sourceSelect("primaryCTARef", "CTA из Gate 0", "cta") +
     (platform === "telegram" ? "" : field("asset", "Визуал / ссылка на файл")) +
     field("text", platform === "telegram" ? "Sponsored message · до 160 символов" : "Текст", "textarea") +
     (platform === "telegram" ? "" : field("headline", "Заголовок")) +

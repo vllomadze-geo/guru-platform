@@ -1,0 +1,26 @@
+[
+  {
+    "project": "Коричное яблоко",
+    "before": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+    "after": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+    "identical": true
+  },
+  {
+    "project": "iCleaning",
+    "before": "a1baa877f77727f7813f80cc0749763bd5122f8f56d48136fa1527542ea19c71",
+    "after": "a1baa877f77727f7813f80cc0749763bd5122f8f56d48136fa1527542ea19c71",
+    "identical": true
+  },
+  {
+    "project": "SIVRCE",
+    "before": "59c7656d64ab0f86da8791c2531768249d6feb64b40673ed174654ea650c413c",
+    "after": "59c7656d64ab0f86da8791c2531768249d6feb64b40673ed174654ea650c413c",
+    "identical": true
+  },
+  {
+    "project": "УНИВЕРСАЛ / ГУРУ",
+    "before": "847765127374ca95d9db93631e5c416b1d1b2518e56f6754a6b7b6ae058a2360",
+    "after": "847765127374ca95d9db93631e5c416b1d1b2518e56f6754a6b7b6ae058a2360",
+    "identical": true
+  }
+]

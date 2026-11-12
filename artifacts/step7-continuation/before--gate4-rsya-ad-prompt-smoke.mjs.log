@@ -1,0 +1,9 @@
+file:///private/tmp/guru-step7-before/scripts/gate4-rsya-ad-prompt-smoke.mjs:14
+  if (!condition) throw new Error(message);
+                        ^
+
+Error: Goat group.jtbd is empty
+    at assert (file:///private/tmp/guru-step7-before/scripts/gate4-rsya-ad-prompt-smoke.mjs:14:25)
+    at file:///private/tmp/guru-step7-before/scripts/gate4-rsya-ad-prompt-smoke.mjs:59:3
+
+Node.js v22.14.0

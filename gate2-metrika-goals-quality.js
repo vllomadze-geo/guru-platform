@@ -570,9 +570,7 @@ function g2MetrikaQualityCardHtmlV360(card) {
   const data = g2MetrikaQualityDataV360(card);
   const status = g2MetrikaQualityStatusV360(card, state);
   const product = definition.scope === "product";
-  return `<article class="g2-check-row g2-metrika-card-v360" data-card="${escapeAttr(card.id)}" data-g2-scope-kind="${product ? "product" : "company"}">
-    <div class="g2-check-title"><span>${escapeHtml(card.title)}</span><span class="status-pill status-${escapeAttr(status)}">${escapeHtml(STATUS_LABELS[status] || status)}</span></div>
-    <div class="g2-metrika-grid-v360">
+  const body = `<div class="g2-metrika-grid-v360">
       ${definition.optional ? g2MetrikaQualitySelectV360(card, "applicability", "Применимость", data.applicability || "", [["", "Не определено"], ["required", "Используется"], ["not_needed", "Не требуется"]]) : ""}
       ${definition.optional ? g2MetrikaQualityFieldV360(card, "applicabilityReason", "Почему не требуется (если применимо)", data.applicabilityReason) : ""}
       ${g2MetrikaQualitySpecificFieldsV360(card, data)}
@@ -582,8 +580,9 @@ function g2MetrikaQualityCardHtmlV360(card) {
         ${g2MetrikaQualityFieldV360(card, "testedAt", "Когда проверено", data.testedAt, "datetime-local")}
         <label class="g2-metrika-field-v360 g2-metrika-wide-v360"><span>Комментарий</span><textarea data-g2-metrika-card-v360="${escapeAttr(card.id)}" data-g2-metrika-field-v360="comment" rows="2">${escapeHtml(data.comment || "")}</textarea></label>`}
     </div>
-    ${g2MetrikaQualityLegacyHtmlV361(card, data)}
-  </article>`;
+    ${g2MetrikaQualityLegacyHtmlV361(card, data)}`;
+  return g2UnifiedCardPanelHtml({ card, scope: product ? "product" : "company", status,
+    title: card.title, hint: definition.hint, body, className: "g2-metrika-card-v360 g2u-quality" });
 }
 
 const __g2MetrikaPrevCardHtmlV360 = g2CardHtml;
@@ -637,6 +636,8 @@ function g2MetrikaQualityRefreshV360(card) {
   const pill = row?.querySelector(".g2-check-title .status-pill");
   if (pill) {
     pill.className = `status-pill status-${status}`;
+    pill.classList.add("g2sb-status");
+    pill.dataset.status = status;
     pill.textContent = STATUS_LABELS[status] || status;
   }
   const section = row?.closest("[data-g2-metrika-quality-section-v360]");

@@ -1,0 +1,17 @@
+Коричное яблоко: тестовая копия загружена
+Девять значков совпадают {"productId":"catalog-item-1786792591872-51f503","rows":[{"id":"card-1","title":"Проект: базовые сведения","pageStatus":"ready","pageBadge":"Готово","pathStatus":"ready"},{"id":"gate0-project-goal","title":"Цель проекта и ограничения","pageStatus":"ready","pageBadge":"Готово","pathStatus":"ready"},{"id":"gate0-company-brand-purpose","title":"Цель бренда","pageStatus":"ready","pageBadge":"Готово","pathStatus":"ready"},{"id":"gate0-company-segmentation","title":"Сегментация · Компания","pageStatus":"ready","pageBadge":"Готово","pathStatus":"ready"},{"id":"gate0-company-positioning","title":"Позиционирование · Компания","pageStatus":"ready","pageBadge":"Готово","pathStatus":"ready"},{"id":"gate0-company-offer","title":"Оффер и CTA · Компания","pageStatus":"ready","pageBadge":"Готово","pathStatus":"ready"},{"id":"gate0-company-keyword-foundation","title":"Фундамент ключевых слов · Компания","pageStatus":"ready","pageBadge":"Готово","pathStatus":"ready"},{"id":"card-7","title":"Текущее состояние маркетинговой системы · Компания","pageStatus":"in_progress","pageBadge":"В работе","pathStatus":"in_progress"},{"id":"card-2","title":"Продукт, сегмент и задача клиента","pageStatus":"ready","pageBadge":"Готово","pathStatus":"ready"}],"summary":{"total":9,"done":8,"ready":8,"notRequired":0,"inProgress":1,"problem":0,"notStarted":0,"percent":94},"menu":"0. Точка отсчёта\n9 блоков, прогресс 94%"}
+Сравнение экспорта {"default":{"schedules":[],"linkWrites":[],"differences":[],"identical":true,"beforeBytes":28082057,"afterBytes":28082057,"beforeSha256":"df81e271bcac4954b89622947c464506f26c3e8a5157d35154d9aab0ab76cf4b","afterSha256":"df81e271bcac4954b89622947c464506f26c3e8a5157d35154d9aab0ab76cf4b","updatedAtFields":259,"uiPreferenceWrites":0},"incomplete":{"schedules":[],"linkWrites":[],"differences":[],"identical":true,"beforeBytes":28081868,"afterBytes":28081868,"beforeSha256":"f4211b8bfe4edab4b464daddbad9886d93030a84cb4a72788eb0b48fb61ff911","afterSha256":"f4211b8bfe4edab4b464daddbad9886d93030a84cb4a72788eb0b48fb61ff911","updatedAtFields":259,"uiPreferenceWrites":0}}
+node:fs:442
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open 'artifacts/gate0-now-missing-results.json'
+    at readFileSync (node:fs:442:20)
+    at file:///Users/vl/Developer/guru-platform/scripts/gate0-unified-readiness-smoke.mjs:344:42 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'artifacts/gate0-now-missing-results.json'
+}
+
+Node.js v22.14.0

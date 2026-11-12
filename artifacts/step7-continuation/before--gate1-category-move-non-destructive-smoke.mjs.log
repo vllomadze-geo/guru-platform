@@ -1,0 +1,17 @@
+evalmachine.<anonymous>:62
+    [guruV247KeywordNormalize(row?.kw), row]).filter(([key]) => key));
+    ^
+
+ReferenceError: guruV247KeywordNormalize is not defined
+    at evalmachine.<anonymous>:62:5
+    at Array.map (<anonymous>)
+    at gate1PainMergeMovedKeywordStateV566 (evalmachine.<anonymous>:61:36)
+    at evalmachine.<anonymous>:436:9
+    at Array.forEach (<anonymous>)
+    at evalmachine.<anonymous>:425:56
+    at Array.forEach (<anonymous>)
+    at gate1PainMigrateWorkspaceV237 (evalmachine.<anonymous>:424:28)
+    at file:///private/tmp/guru-step7-before/scripts/gate1-category-move-non-destructive-smoke.mjs:62:15
+    at ModuleJob.run (node:internal/modules/esm/module_job:271:25)
+
+Node.js v22.14.0

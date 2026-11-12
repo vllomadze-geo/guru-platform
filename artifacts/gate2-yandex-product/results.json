@@ -1,0 +1,123 @@
+{
+  "chosen": {
+    "id": "catalog-item-1790936932674-197964",
+    "name": "Шапка Коза"
+  },
+  "snapshot": {
+    "group": true,
+    "blocks": [
+      {
+        "id": "product-yandex-metrika",
+        "steps": 3,
+        "status": "not_started"
+      },
+      {
+        "id": "product-yandex-webmaster",
+        "steps": 1,
+        "status": "not_started"
+      },
+      {
+        "id": "product-yandex-direct",
+        "steps": 1,
+        "status": "not_started"
+      }
+    ],
+    "old": [
+      0,
+      0
+    ],
+    "oldVisibleCards": [],
+    "independent": [
+      true,
+      true,
+      true
+    ],
+    "oldRecords": [
+      {
+        "id": "g2-metrika-product-counter",
+        "exists": true,
+        "fields": 194
+      },
+      {
+        "id": "g2-metrika-goals-primary",
+        "exists": true,
+        "fields": 269
+      },
+      {
+        "id": "g2-metrika-product-goals",
+        "exists": true,
+        "fields": 85
+      }
+    ],
+    "readinessIds": [
+      "product-landing",
+      "product-vk",
+      "product-lead",
+      "product-yandex-metrika",
+      "product-yandex-webmaster",
+      "product-yandex-direct"
+    ],
+    "otherLegacyRows": "[{\"id\":\"g2-metrika-product-counter\",\"rows\":[{\"product_id\":\"catalog-item-1786792591872-51f503\",\"result\":\"yes\",\"counterId\":\"\",\"visitAt\":\"2026-09-17T18:27\"}]},{\"id\":\"g2-metrika-product-goals\",\"rows\":[]},{\"id\":\"g2-metrika-goals-primary\",\"rows\":[{\"product_id\":\"catalog-item-1786792591872-51f503\",\"goalId\":\"ID 573230679\",\"thankYouUrl\":\"http://k-apple.ru/thankyou\",\"goalRefId\":\"company-goal-1\",\"testConversionAt\":\"2026-09-17T18:30\"}]}]",
+    "url": "",
+    "counter": "105213127",
+    "goalOptions": 2,
+    "instructions": true
+  },
+  "mobile": {
+    "overflow": false,
+    "width": 390,
+    "viewport": 390,
+    "blocks": 3
+  },
+  "platformNavigation": {
+    "navigated": true,
+    "sectionFound": true
+  },
+  "flows": {
+    "counterStatus": "ready",
+    "staleStatus": "recheck",
+    "otherReview": false,
+    "fingerprintPreserved": true,
+    "oldGoalFieldsRetained": true,
+    "originalTestPreserved": true,
+    "indexSaved": true,
+    "historyCount": 2,
+    "oldVisibleAfter": 0,
+    "directWithNoCampaign": "in_progress"
+  },
+  "moreFlows": {
+    "webmasterReady": "ready",
+    "directReady": "ready",
+    "nonSite": [
+      "not_needed",
+      "not_needed",
+      "not_needed"
+    ],
+    "otherProduct": {
+      "selected": "catalog-item-1790860377305-388c56",
+      "blocks": 3,
+      "reviews": {},
+      "oldVisible": 0
+    },
+    "restored": true,
+    "otherLegacyRowsUnchanged": true,
+    "groupOrder": {
+      "landingY": 3040.65625,
+      "yandexY": 3329.15625,
+      "landingParent": "g2-scope-v226 g2-product-scope-v226",
+      "yandexParent": "g2-scope-v226 g2-product-scope-v226"
+    }
+  },
+  "persistence": {
+    "selected": "catalog-item-1790936932674-197964",
+    "group": true,
+    "blocks": 3,
+    "oldVisible": 0,
+    "legacyStored": 3,
+    "action": "Оформление заказа",
+    "reviewCount": 3,
+    "historyCount": 2,
+    "indexed": "yes"
+  },
+  "errors": []
+}

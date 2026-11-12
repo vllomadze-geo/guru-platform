@@ -1,0 +1,11 @@
+file:///private/tmp/guru-step7-after-middle/scripts/gate4-rsya-group-card-smoke.mjs:106
+    throw new Error(
+          ^
+
+Error: TypeError: Cannot read properties of undefined (reading 'id')
+    at <anonymous>:123:25
+    at <anonymous>:235:5
+    at evaluate (file:///private/tmp/guru-step7-after-middle/scripts/gate4-rsya-group-card-smoke.mjs:106:11)
+    at async file:///private/tmp/guru-step7-after-middle/scripts/gate4-rsya-group-card-smoke.mjs:128:17
+
+Node.js v22.14.0

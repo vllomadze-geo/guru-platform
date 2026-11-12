@@ -1,0 +1,11 @@
+file:///Users/vl/Developer/guru-platform/scripts/gate1-company-brand-demand-smoke.mjs:51
+    throw new Error(
+          ^
+
+Error: Error: Product Gate 1 demand fixture is missing
+    at <anonymous>:70:13
+    at <anonymous>:202:5
+    at evaluate (file:///Users/vl/Developer/guru-platform/scripts/gate1-company-brand-demand-smoke.mjs:51:11)
+    at async file:///Users/vl/Developer/guru-platform/scripts/gate1-company-brand-demand-smoke.mjs:141:19
+
+Node.js v22.14.0

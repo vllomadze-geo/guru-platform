@@ -1,0 +1,15 @@
+Loaded test page
+Created isolated test project
+Opened isolated test project
+Checking restored editors
+file:///private/tmp/guru-step7-before/scripts/gate0-product-editors-restore-smoke.mjs:39
+    throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
+          ^
+
+Error: Error: {"fields":["jtbd","segments","positioning","usp","offers","keyword_foundation"],"selectors":0,"segment":"Москва","keyword":"авторская коза","storedRows":7,"hiddenEditorCard":true}
+    at <anonymous>:54:21
+    at <anonymous>:71:5
+    at evaluate (file:///private/tmp/guru-step7-before/scripts/gate0-product-editors-restore-smoke.mjs:39:11)
+    at async file:///private/tmp/guru-step7-before/scripts/gate0-product-editors-restore-smoke.mjs:82:18
+
+Node.js v22.14.0

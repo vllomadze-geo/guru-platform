@@ -1,0 +1,287 @@
+{
+  "report": [
+    {
+      "project": "Коричное яблоко",
+      "sourceSha256": "ddc6de490e31c8d2bb8c71963bacb8dd53236e83b0f02105b053447ef3fffe5c",
+      "beforeSha256": "3b42ca7f49ec1bfa4f554f6286fff39c457e7dabc0dac24107da9a0ad05444b6",
+      "afterSha256": "3b42ca7f49ec1bfa4f554f6286fff39c457e7dabc0dac24107da9a0ad05444b6",
+      "identical": true,
+      "guide": {
+        "gate1": {
+          "total": 23,
+          "done": 5,
+          "ready": 5,
+          "notRequired": 0,
+          "inProgress": 4,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 30
+        },
+        "step": "gate-1:card::card-22-hub",
+        "missing": "<div class=\"now-guide-missing\" aria-live=\"polite\"><span>Не хватает:</span><ul><li><button type=\"button\" data-now-missing=\"0\">Заполните блок</button></li></ul></div>",
+        "launch": {
+          "total": 87,
+          "done": 29,
+          "ready": 24,
+          "notRequired": 5,
+          "inProgress": 23,
+          "problem": 3,
+          "notStarted": 32,
+          "percent": 48
+        }
+      },
+      "companies": 25,
+      "queries": 15,
+      "ratings": {
+        "low": 1,
+        "unrated": 14
+      },
+      "types": [
+        "Сосед по выдаче",
+        "Дальний конкурент"
+      ],
+      "typeCounts": {
+        "Сосед по выдаче": 22,
+        "Дальний конкурент": 3
+      },
+      "companyOrder": [
+        2,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "queryOrder": [
+        {
+          "key": "подарки ручной работы",
+          "relevance": "low",
+          "found": 19
+        },
+        {
+          "key": "изделия ручной работы москва",
+          "relevance": "unrated",
+          "found": 7
+        },
+        {
+          "key": "авторские изделия ручной работы",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские изделия на заказ",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "изделия ручной работы на заказ",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторская мастерская подарков",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "мастерская подарков ручной работы",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские подарки ручной работы",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские подарки на заказ",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "подарки ручной работы на заказ",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторский подарок москва",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские подарки москва",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "подарки ручной работы москва",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские изделия москва",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские предметы для дома",
+          "relevance": "unrated",
+          "found": 0
+        }
+      ],
+      "pure": true
+    },
+    {
+      "project": "iCleaning",
+      "sourceSha256": "a1baa877f77727f7813f80cc0749763bd5122f8f56d48136fa1527542ea19c71",
+      "beforeSha256": "22b3c3bcd3c36f1d8fe9a2cfa5cba15d595df087cf8c97663b70ee8b918c9e9f",
+      "afterSha256": "22b3c3bcd3c36f1d8fe9a2cfa5cba15d595df087cf8c97663b70ee8b918c9e9f",
+      "identical": true,
+      "guide": {
+        "gate1": {
+          "total": 23,
+          "done": 4,
+          "ready": 1,
+          "notRequired": 3,
+          "inProgress": 5,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 28
+        },
+        "step": "gate-0:card::gate0-company-brand-purpose",
+        "missing": "<div class=\"now-guide-missing\" aria-live=\"polite\"><span>Не хватает:</span><ul><li><button type=\"button\" data-now-missing=\"0\">Функциональная цель</button></li><li><button type=\"button\" data-now-missing=\"1\">Высшая цель</button></li><li><button type=\"button\" data-now-missing=\"2\">Единая формулировка цели бренда</button></li></ul></div>",
+        "launch": {
+          "total": 88,
+          "done": 18,
+          "ready": 13,
+          "notRequired": 5,
+          "inProgress": 26,
+          "problem": 2,
+          "notStarted": 42,
+          "percent": 36
+        }
+      },
+      "companies": 3,
+      "queries": 0,
+      "ratings": {},
+      "types": [
+        "Не классифицирован"
+      ],
+      "typeCounts": {
+        "Не классифицирован": 3
+      },
+      "companyOrder": [
+        0,
+        0,
+        0
+      ],
+      "queryOrder": [],
+      "pure": true
+    },
+    {
+      "project": "SIVRCE",
+      "sourceSha256": "59c7656d64ab0f86da8791c2531768249d6feb64b40673ed174654ea650c413c",
+      "beforeSha256": "ed28bb514a6ada48932f9353af8f80603d7db944abfe67a6ca4fab74a0a090b0",
+      "afterSha256": "ed28bb514a6ada48932f9353af8f80603d7db944abfe67a6ca4fab74a0a090b0",
+      "identical": true,
+      "guide": {
+        "gate1": {
+          "total": 21,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 3,
+          "problem": 0,
+          "notStarted": 18,
+          "percent": 7
+        },
+        "step": "gate-0:card::card-1",
+        "missing": "<div class=\"now-guide-missing\" aria-live=\"polite\"><span>Не хватает:</span><ul><li><button type=\"button\" data-now-missing=\"0\">Заполните блок</button></li></ul></div>",
+        "launch": {
+          "total": 44,
+          "done": 7,
+          "ready": 0,
+          "notRequired": 7,
+          "inProgress": 6,
+          "problem": 1,
+          "notStarted": 30,
+          "percent": 24
+        }
+      },
+      "companies": 3,
+      "queries": 0,
+      "ratings": {},
+      "types": [
+        "Не классифицирован"
+      ],
+      "typeCounts": {
+        "Не классифицирован": 3
+      },
+      "companyOrder": [
+        0,
+        0,
+        0
+      ],
+      "queryOrder": [],
+      "pure": true
+    },
+    {
+      "project": "УНИВЕРСАЛ / ГУРУ",
+      "sourceSha256": "847765127374ca95d9db93631e5c416b1d1b2518e56f6754a6b7b6ae058a2360",
+      "beforeSha256": "907cf3cd43f9e1fc459f8028dc644d54554c714e4ad397b3bcbca22036ff3c9a",
+      "afterSha256": "907cf3cd43f9e1fc459f8028dc644d54554c714e4ad397b3bcbca22036ff3c9a",
+      "identical": true,
+      "guide": {
+        "gate1": {
+          "total": 21,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 20,
+          "percent": 2
+        },
+        "step": "gate-0:card::card-1",
+        "missing": "<div class=\"now-guide-missing\" aria-live=\"polite\"><span>Не хватает:</span><ul><li><button type=\"button\" data-now-missing=\"0\">Заполните блок</button></li></ul></div>",
+        "launch": {
+          "total": 44,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 3,
+          "problem": 1,
+          "notStarted": 40,
+          "percent": 5
+        }
+      },
+      "companies": 0,
+      "queries": 0,
+      "ratings": {},
+      "types": [],
+      "typeCounts": {},
+      "companyOrder": [],
+      "queryOrder": [],
+      "pure": true
+    }
+  ]
+}

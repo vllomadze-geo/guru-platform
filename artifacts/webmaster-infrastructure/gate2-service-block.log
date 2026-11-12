@@ -1,0 +1,14 @@
+node:fs:442
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open 'artifacts/gate2-service-before-metrika.html'
+    at readFileSync (node:fs:442:20)
+    at file:///Users/vl/Developer/guru-platform/scripts/gate2-service-block-smoke.mjs:125:26 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'artifacts/gate2-service-before-metrika.html'
+}
+
+Node.js v22.14.0

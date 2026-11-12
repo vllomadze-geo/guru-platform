@@ -1,0 +1,47 @@
+{
+  "setup": {
+    "goatId": "gate1-blog-goat-v304",
+    "horseId": "gate1-blog-horse-v304",
+    "count": 84
+  },
+  "result": {
+    "beforeCount": 84,
+    "afterCount": 84,
+    "allCardsUnchanged": true,
+    "card25Unchanged": true,
+    "card25Title": "СТАТЬЯ БЛОГА",
+    "otherGatesUnchanged": true,
+    "separateStorage": true,
+    "companyBeforeProductDivider": true,
+    "productOrder": true,
+    "blocks": true,
+    "hubRow": true,
+    "requiredTemplate": true,
+    "faqCount": 1,
+    "author": {
+      "name": "Анна Авторова",
+      "role": "Редактор блога",
+      "credentials": "Эксперт по авторским подаркам",
+      "social_url": "https://example.com/author"
+    },
+    "productIds": [
+      "gate1-blog-goat-v304",
+      "gate1-blog-horse-v304"
+    ],
+    "goatStatus": "published",
+    "linkedVisible": true,
+    "contextText": "Живой контекст выбранного товараЧитается из существующих JTBD, сегментов и стратегии; повторного ввода нет.JTBDКогда нужен памятный подарок, клиент хочет выбрать авторскую Козу.СегментПокупатели необычных подарков",
+    "errors": []
+  }
+}
+file:///Users/vl/Developer/guru-platform/scripts/gate1-blog-system-smoke.mjs:50
+    throw new Error(
+          ^
+
+Error: ReferenceError: state is not defined
+    at <anonymous>:1:17
+    at evaluate (file:///Users/vl/Developer/guru-platform/scripts/gate1-blog-system-smoke.mjs:50:11)
+    at async waitFor (file:///Users/vl/Developer/guru-platform/scripts/gate1-blog-system-smoke.mjs:60:9)
+    at async file:///Users/vl/Developer/guru-platform/scripts/gate1-blog-system-smoke.mjs:321:3
+
+Node.js v22.14.0

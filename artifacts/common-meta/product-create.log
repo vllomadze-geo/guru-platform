@@ -1,0 +1,81 @@
+{
+  "renderReadOnly": true,
+  "created": [
+    {
+      "field": "jtbd",
+      "scope": "product",
+      "product_id": "meta-product-a",
+      "source": {
+        "type": "manual",
+        "label": "Введено вручную"
+      },
+      "confirmation_status": "confirmed"
+    },
+    {
+      "field": "segments",
+      "scope": "product",
+      "product_id": "meta-product-a",
+      "source": {
+        "type": "manual",
+        "label": "Введено вручную"
+      },
+      "confirmation_status": "confirmed"
+    },
+    {
+      "field": "offers",
+      "scope": "product",
+      "product_id": "meta-product-a",
+      "source": {
+        "type": "manual",
+        "label": "Введено вручную"
+      },
+      "confirmation_status": "confirmed"
+    }
+  ],
+  "focusCorrect": true,
+  "oldRecordsUnchanged": true,
+  "metaUnchanged": true,
+  "other": {
+    "scope": "product",
+    "product_id": "meta-product-b",
+    "source": {
+      "type": "manual",
+      "label": "Введено вручную"
+    },
+    "confirmation_status": "confirmed"
+  },
+  "draft": {
+    "scope": "product",
+    "product_id": "meta-product-b",
+    "source": {
+      "type": "manual",
+      "label": "Введено вручную"
+    },
+    "confirmation_status": "confirmed"
+  },
+  "keywords": {
+    "generatedCount": 15,
+    "generatedDraft": true,
+    "confirmed": {
+      "source": "generated",
+      "status": "confirmed"
+    },
+    "manual": {
+      "source": "manual",
+      "status": "confirmed"
+    },
+    "imported": {
+      "source": "imported",
+      "status": "draft"
+    },
+    "roundTrip": true,
+    "exportReadOnly": true,
+    "badges": {
+      "generated": true,
+      "confirmed": true
+    }
+  },
+  "panelCount": 0,
+  "build": "2.3.526+81d96c5da3c8"
+}
+Product creation smoke: PASS

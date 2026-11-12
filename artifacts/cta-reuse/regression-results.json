@@ -1,0 +1,12 @@
+[
+  {
+    "test": "gate0-offer-foundation-source",
+    "status": "PASS",
+    "seconds": 12.699
+  },
+  {
+    "test": "gate0-company-offer",
+    "status": "FAIL",
+    "seconds": 2.999
+  }
+]

@@ -1,0 +1,11 @@
+file:///private/tmp/guru-step7-before-tail/scripts/gate5-snapshot-smoke.mjs:34
+  if (response.exceptionDetails) throw new Error(response.exceptionDetails.exception?.description || response.exceptionDetails.text);
+                                       ^
+
+Error: TypeError: Cannot read properties of null (reading 'gates')
+    at <anonymous>:3:34
+    at <anonymous>:23:3
+    at evaluate (file:///private/tmp/guru-step7-before-tail/scripts/gate5-snapshot-smoke.mjs:34:40)
+    at async file:///private/tmp/guru-step7-before-tail/scripts/gate5-snapshot-smoke.mjs:55:20
+
+Node.js v22.14.0

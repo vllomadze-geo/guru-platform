@@ -1,0 +1,20 @@
+[
+  {
+    "label": "after",
+    "status": "PASS",
+    "seconds": 8.05,
+    "log": "artifacts/step7-continuation/repeat-1-after-manual-economics.log"
+  },
+  {
+    "label": "before",
+    "status": "PASS",
+    "seconds": 6.06,
+    "log": "artifacts/step7-continuation/repeat-2-before-manual-economics.log"
+  },
+  {
+    "label": "after",
+    "status": "PASS",
+    "seconds": 11.56,
+    "log": "artifacts/step7-continuation/repeat-3-after-manual-economics.log"
+  }
+]

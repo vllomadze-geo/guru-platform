@@ -1,0 +1,15 @@
+node:internal/fs/promises:638
+  return new FileHandle(await PromisePrototypeThen(
+                        ^
+
+Error: ENOENT: no such file or directory, open '/tmp/guru-rsya-search-baseline.json'
+    at async open (node:internal/fs/promises:638:25)
+    at async readFile (node:internal/fs/promises:1242:14)
+    at async file:///private/tmp/guru-step7-after-middle/scripts/gate4-rsya-group-launch-v537-smoke.mjs:7:35 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/tmp/guru-rsya-search-baseline.json'
+}
+
+Node.js v22.14.0

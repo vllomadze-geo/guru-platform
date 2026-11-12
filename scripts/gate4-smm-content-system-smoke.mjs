@@ -731,7 +731,7 @@ try {
         strategyFormatExcluded: !initialMaterial.includes("Общее · живьём из SMM-стратегии") && !initialMaterial.includes("Короткое вертикальное видео"),
         strategyTopicExcluded: !initialMaterial.includes("Темы") && !initialMaterial.includes("Проблема → решение"),
         sourceCaptionGateOnly: initialMaterial.includes("Только live read-only: Gate 0–3") && !initialMaterial.includes("Gate 0–3 и SMM-стратегия"),
-        exactOrder: JSON.stringify(materialOrder) === JSON.stringify(["jtbd", "segment", "positioning", "usp", "offer", "landing"]),
+        exactOrder: JSON.stringify(materialOrder) === JSON.stringify(["jtbd", "segment", "intent", "usp", "offer", "name", "description", "landing", "positioning"]),
         jtbdLabels: JSON.stringify(jtbdLabels) === JSON.stringify(["№1 · Основной JTBD", "№2 · Дополнительный JTBD", "№3 · Дополнительный JTBD"]),
         primaryInitiallyOpen,
         additionalInitiallyClosed,

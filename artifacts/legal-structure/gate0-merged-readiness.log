@@ -1,0 +1,83 @@
+Коричное яблоко: тестовая копия загружена
+{"summary":{"total":9,"done":8,"ready":8,"notRequired":0,"inProgress":1,"problem":0,"notStarted":0,"percent":94}}
+{
+  "before": {
+    "total": 9,
+    "done": 8,
+    "ready": 8,
+    "notRequired": 0,
+    "inProgress": 1,
+    "problem": 0,
+    "notStarted": 0,
+    "percent": 94
+  },
+  "after": {
+    "total": 9,
+    "done": 8,
+    "ready": 8,
+    "notRequired": 0,
+    "inProgress": 1,
+    "problem": 0,
+    "notStarted": 0,
+    "percent": 94
+  },
+  "exportComparison": {
+    "identical": true,
+    "beforeBytes": 28081889,
+    "afterBytes": 28081889,
+    "beforeSha256": "b6ffb1c77e07118d86265aef78b73ab9b0378c12372a41d17041bccee568f1b8",
+    "afterSha256": "b6ffb1c77e07118d86265aef78b73ab9b0378c12372a41d17041bccee568f1b8",
+    "updatedAtFields": 259,
+    "menu": "0. Точка отсчёта\n9 блоков, прогресс 94%",
+    "guide": "Сейчас\nШаг 9 из 95\nГотово\nГотовность к запуску: 46%\nготово 29 из 95\nПродукт, сегмент и задача клиента\nВсё заполнено\nGate 0 · Компания\n◀ Назад\nДалее ▶\nК текущему",
+    "readiness": {
+      "total": 9,
+      "done": 8,
+      "ready": 8,
+      "notRequired": 0,
+      "inProgress": 1,
+      "problem": 0,
+      "notStarted": 0,
+      "percent": 94
+    },
+    "path": [
+      {
+        "id": "card-1",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-project-goal",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-brand-purpose",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-segmentation",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-positioning",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-offer",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-keyword-foundation",
+        "status": "ready"
+      },
+      {
+        "id": "card-7",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-2",
+        "status": "ready"
+      }
+    ]
+  }
+}
+Gate 0 merged readiness smoke: PASS

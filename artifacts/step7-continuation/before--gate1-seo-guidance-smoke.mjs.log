@@ -1,0 +1,13 @@
+file:///private/tmp/guru-step7-before/scripts/gate1-seo-guidance-smoke.mjs:56
+    throw new Error(
+          ^
+
+Error: TypeError: Cannot read properties of undefined (reading 'map')
+    at ensureMegaMarketing (http://127.0.0.1:9500/app.js?v=2.3.526%2B3f52d3b9d9c5:21232:37)
+    at ensureMegaMarketing (http://127.0.0.1:9500/gate1-webmaster-qa.js?v=2.3.526%2B3f52d3b9d9c5:228:60)
+    at <anonymous>:27:22
+    at <anonymous>:86:5
+    at evaluate (file:///private/tmp/guru-step7-before/scripts/gate1-seo-guidance-smoke.mjs:56:11)
+    at async file:///private/tmp/guru-step7-before/scripts/gate1-seo-guidance-smoke.mjs:167:17
+
+Node.js v22.14.0

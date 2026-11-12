@@ -1,0 +1,11 @@
+file:///private/tmp/guru-step7-after-middle/scripts/gate4-rsya-guidance-smoke.mjs:44
+  if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
+                                     ^
+
+Error: TypeError: Cannot set properties of null (setting 'value')
+    at <anonymous>:65:19
+    at <anonymous>:128:5
+    at evaluate (file:///private/tmp/guru-step7-after-middle/scripts/gate4-rsya-guidance-smoke.mjs:44:38)
+    at async file:///private/tmp/guru-step7-after-middle/scripts/gate4-rsya-guidance-smoke.mjs:76:18
+
+Node.js v22.14.0

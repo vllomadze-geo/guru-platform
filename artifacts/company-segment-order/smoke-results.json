@@ -1,0 +1,287 @@
+{
+  "report": [
+    {
+      "project": "Коричное яблоко",
+      "sourceSha256": "ddc6de490e31c8d2bb8c71963bacb8dd53236e83b0f02105b053447ef3fffe5c",
+      "beforeSha256": "e109fe7de01a0deb8de35386b1e2eab864e7ab41e5f0e897d5c69d51f9a75119",
+      "afterSha256": "e109fe7de01a0deb8de35386b1e2eab864e7ab41e5f0e897d5c69d51f9a75119",
+      "identical": true,
+      "guide": {
+        "gate1": {
+          "total": 23,
+          "done": 4,
+          "ready": 4,
+          "notRequired": 0,
+          "inProgress": 5,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 28
+        },
+        "step": "gate-1:comparison::project-comparison",
+        "missing": "<div class=\"now-guide-missing\" aria-live=\"polite\"><span>Не хватает:</span><ul><li><button type=\"button\" data-now-missing=\"0\">Гавань мастеровУдалить\n    Тип: Дальний конкурент\n    Ссылка на сайт целиком: не заполнено у 18 из 28 записей</button></li><li><button type=\"button\" data-now-missing=\"1\">Ярмарка МастеровУдалить\n    Тип: Дальний конкурент\n    Ссылка на сайт целиком: не заполнено у 18 из 28 записей</button></li><li><button type=\"button\" data-now-missing=\"2\">avitoУдалить\n    Тип: Дальний конкурент\n    Ссылка на сайт целиком: не заполнено у 18 из 28 записей</button></li></ul></div>",
+        "launch": {
+          "total": 87,
+          "done": 28,
+          "ready": 23,
+          "notRequired": 5,
+          "inProgress": 24,
+          "problem": 3,
+          "notStarted": 32,
+          "percent": 48
+        }
+      },
+      "companies": 25,
+      "queries": 15,
+      "ratings": {
+        "low": 1,
+        "unrated": 14
+      },
+      "types": [
+        "Сосед по выдаче",
+        "Дальний конкурент"
+      ],
+      "typeCounts": {
+        "Сосед по выдаче": 22,
+        "Дальний конкурент": 3
+      },
+      "companyOrder": [
+        2,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "queryOrder": [
+        {
+          "key": "подарки ручной работы",
+          "relevance": "low",
+          "found": 19
+        },
+        {
+          "key": "изделия ручной работы москва",
+          "relevance": "unrated",
+          "found": 7
+        },
+        {
+          "key": "авторские изделия ручной работы",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские изделия на заказ",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "изделия ручной работы на заказ",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторская мастерская подарков",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "мастерская подарков ручной работы",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские подарки ручной работы",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские подарки на заказ",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "подарки ручной работы на заказ",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторский подарок москва",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские подарки москва",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "подарки ручной работы москва",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские изделия москва",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские предметы для дома",
+          "relevance": "unrated",
+          "found": 0
+        }
+      ],
+      "pure": true
+    },
+    {
+      "project": "iCleaning",
+      "sourceSha256": "a1baa877f77727f7813f80cc0749763bd5122f8f56d48136fa1527542ea19c71",
+      "beforeSha256": "c742dde386d2b5212359929b51e34c138fe5daa4fd6d8ccd86036113c5a840e8",
+      "afterSha256": "c742dde386d2b5212359929b51e34c138fe5daa4fd6d8ccd86036113c5a840e8",
+      "identical": true,
+      "guide": {
+        "gate1": {
+          "total": 24,
+          "done": 4,
+          "ready": 1,
+          "notRequired": 3,
+          "inProgress": 5,
+          "problem": 0,
+          "notStarted": 15,
+          "percent": 27
+        },
+        "step": "gate-0:card::gate0-company-brand-purpose",
+        "missing": "<div class=\"now-guide-missing\" aria-live=\"polite\"><span>Не хватает:</span><ul><li><button type=\"button\" data-now-missing=\"0\">Функциональная цель</button></li><li><button type=\"button\" data-now-missing=\"1\">Высшая цель</button></li><li><button type=\"button\" data-now-missing=\"2\">Единая формулировка цели бренда</button></li></ul></div>",
+        "launch": {
+          "total": 89,
+          "done": 18,
+          "ready": 13,
+          "notRequired": 5,
+          "inProgress": 26,
+          "problem": 2,
+          "notStarted": 43,
+          "percent": 36
+        }
+      },
+      "companies": 3,
+      "queries": 0,
+      "ratings": {},
+      "types": [
+        "Не классифицирован"
+      ],
+      "typeCounts": {
+        "Не классифицирован": 3
+      },
+      "companyOrder": [
+        0,
+        0,
+        0
+      ],
+      "queryOrder": [],
+      "pure": true
+    },
+    {
+      "project": "SIVRCE",
+      "sourceSha256": "59c7656d64ab0f86da8791c2531768249d6feb64b40673ed174654ea650c413c",
+      "beforeSha256": "5ad3eed8f7061119710a8522fef32c9ca386e5ee2a21758f537ccce2f70e14e4",
+      "afterSha256": "5ad3eed8f7061119710a8522fef32c9ca386e5ee2a21758f537ccce2f70e14e4",
+      "identical": true,
+      "guide": {
+        "gate1": {
+          "total": 22,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 3,
+          "problem": 0,
+          "notStarted": 19,
+          "percent": 7
+        },
+        "step": "gate-0:card::card-1",
+        "missing": "<div class=\"now-guide-missing\" aria-live=\"polite\"><span>Не хватает:</span><ul><li><button type=\"button\" data-now-missing=\"0\">Заполните блок</button></li></ul></div>",
+        "launch": {
+          "total": 45,
+          "done": 7,
+          "ready": 0,
+          "notRequired": 7,
+          "inProgress": 6,
+          "problem": 1,
+          "notStarted": 31,
+          "percent": 23
+        }
+      },
+      "companies": 3,
+      "queries": 0,
+      "ratings": {},
+      "types": [
+        "Не классифицирован"
+      ],
+      "typeCounts": {
+        "Не классифицирован": 3
+      },
+      "companyOrder": [
+        0,
+        0,
+        0
+      ],
+      "queryOrder": [],
+      "pure": true
+    },
+    {
+      "project": "УНИВЕРСАЛ / ГУРУ",
+      "sourceSha256": "847765127374ca95d9db93631e5c416b1d1b2518e56f6754a6b7b6ae058a2360",
+      "beforeSha256": "ec8bee48d663fd516d9bb9a0f953ee4a609c108e247f8dc0c344e5ca993aafad",
+      "afterSha256": "ec8bee48d663fd516d9bb9a0f953ee4a609c108e247f8dc0c344e5ca993aafad",
+      "identical": true,
+      "guide": {
+        "gate1": {
+          "total": 22,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 21,
+          "percent": 2
+        },
+        "step": "gate-0:card::card-1",
+        "missing": "<div class=\"now-guide-missing\" aria-live=\"polite\"><span>Не хватает:</span><ul><li><button type=\"button\" data-now-missing=\"0\">Заполните блок</button></li></ul></div>",
+        "launch": {
+          "total": 45,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 3,
+          "problem": 1,
+          "notStarted": 41,
+          "percent": 4
+        }
+      },
+      "companies": 0,
+      "queries": 0,
+      "ratings": {},
+      "types": [],
+      "typeCounts": {},
+      "companyOrder": [],
+      "queryOrder": [],
+      "pure": true
+    }
+  ]
+}

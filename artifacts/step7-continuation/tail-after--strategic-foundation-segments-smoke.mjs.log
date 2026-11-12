@@ -1,0 +1,88 @@
+{
+  "first": [
+    {
+      "id": "segment-a-1",
+      "label": "Сегмент 1",
+      "value": "Частные покупатели",
+      "status": "Готово",
+      "source": {
+        "gateId": "gate-0",
+        "kind": "gate0-scoped",
+        "productId": "product-a",
+        "field": "segments",
+        "scope": "product",
+        "recordId": "segment-a-1"
+      }
+    },
+    {
+      "id": "segment-a-2",
+      "label": "Сегмент 2",
+      "value": "Корпоративные клиенты",
+      "status": "Готово",
+      "source": {
+        "gateId": "gate-0",
+        "kind": "gate0-scoped",
+        "productId": "product-a",
+        "field": "segments",
+        "scope": "product",
+        "recordId": "segment-a-2"
+      }
+    }
+  ],
+  "other": [
+    {
+      "id": "segment-b-1",
+      "label": "Сегмент",
+      "value": "Коллекционеры",
+      "status": "Готово",
+      "source": {
+        "gateId": "gate-0",
+        "kind": "gate0-scoped",
+        "productId": "product-b",
+        "field": "segments",
+        "scope": "product",
+        "recordId": "segment-b-1"
+      }
+    }
+  ],
+  "empty": 1,
+  "preserved": true,
+  "linkedSelectionUnchanged": true,
+  "updated": [
+    {
+      "id": "segment-a-1",
+      "label": "Сегмент 1",
+      "value": "Частные покупатели",
+      "status": "Готово",
+      "source": {
+        "gateId": "gate-0",
+        "kind": "gate0-scoped",
+        "productId": "product-a",
+        "field": "segments",
+        "scope": "product",
+        "recordId": "segment-a-1"
+      }
+    },
+    {
+      "id": "segment-a-2",
+      "label": "Сегмент 2",
+      "value": "Команды компаний",
+      "status": "Готово",
+      "source": {
+        "gateId": "gate-0",
+        "kind": "gate0-scoped",
+        "productId": "product-a",
+        "field": "segments",
+        "scope": "product",
+        "recordId": "segment-a-2"
+      }
+    }
+  ],
+  "allFive": [
+    "segment-a-1",
+    "segment-a-2",
+    "segment-a-3",
+    "segment-a-4",
+    "segment-a-5"
+  ]
+}

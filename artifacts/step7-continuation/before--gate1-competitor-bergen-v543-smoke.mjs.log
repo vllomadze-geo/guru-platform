@@ -1,0 +1,127 @@
+{
+  "ok": true,
+  "competitorIds": {
+    "before": [
+      "comparison-product-competitor-1791377477189-b95cae"
+    ],
+    "after": [
+      "comparison-product-competitor-1791377477189-b95cae",
+      "comparison-product-competitor-1792850383891-d85f12"
+    ]
+  },
+  "phraseCounts": [
+    81,
+    14,
+    10
+  ],
+  "phrasePlacement": {
+    "rows": 3,
+    "afterGroup": true,
+    "inOwnColumn": true,
+    "noJtbdCheckboxes": true,
+    "fullText": true,
+    "phrases": [
+      81,
+      14,
+      10
+    ],
+    "copyButtons": 105,
+    "noOldCards": true
+  },
+  "expanded": {
+    "open": true,
+    "count": 1
+  },
+  "relevance": {
+    "indexes": [
+      80,
+      5,
+      1
+    ],
+    "saved": [
+      "high",
+      "medium",
+      "low"
+    ],
+    "positions": [
+      0,
+      1,
+      80
+    ],
+    "sorted": true,
+    "tiersOrdered": true,
+    "sourceUnchanged": true,
+    "focused": true,
+    "summary": "Фраз: 81 · оценено: 3 · выбрано: 1"
+  },
+  "listScroll": {
+    "allRows": 81,
+    "scrollable": true,
+    "reachedEnd": true
+  },
+  "copied": {
+    "text": "текстильная коза ручной работы",
+    "pasted": "текстильная коза ручной работы"
+  },
+  "ratingsAfterRerender": [
+    "high",
+    "medium",
+    "low"
+  ],
+  "keywordSelection": {
+    "key": "купить козу москва",
+    "shown": [
+      true,
+      true
+    ],
+    "selected": true,
+    "pressed": "true",
+    "foundUnchanged": true,
+    "summary": "Фраз: 81 · оценено: 3 · выбрано: 2"
+  },
+  "keywordMatch": {
+    "before": {
+      "first": true,
+      "second": false
+    },
+    "after": {
+      "first": true,
+      "second": false,
+      "selected": true
+    },
+    "originalId": "comparison-product-competitor-1791377477189-b95cae",
+    "oldFirstKey": true
+  },
+  "horizontal": {
+    "scrollable": true,
+    "scrollLeft": 500,
+    "ownLeft": 1,
+    "widths": [
+      720,
+      720,
+      720,
+      720,
+      720,
+      720
+    ]
+  },
+  "narrow": {
+    "widths": [
+      480,
+      480,
+      480,
+      480,
+      480,
+      480
+    ],
+    "scrollable": true,
+    "ownLeft": 1
+  },
+  "deletion": {
+    "cancelled": true,
+    "archived": true,
+    "firstId": "comparison-product-competitor-1791377477189-b95cae",
+    "secondVisible": false
+  },
+  "errors": []
+}

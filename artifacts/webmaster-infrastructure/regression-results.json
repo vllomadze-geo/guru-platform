@@ -1,0 +1,18 @@
+[
+  {
+    "test": "gate0-unified-readiness",
+    "status": "PASS",
+    "seconds": 32.018
+  },
+  {
+    "test": "gate2-company-services",
+    "status": "PASS",
+    "seconds": 33.167
+  },
+  {
+    "test": "gate2-service-block",
+    "status": "PASS",
+    "firstAttempt": "Не найден эталон artifacts/gate2-service-before-metrika.html в изолированной папке",
+    "rerun": "С сохранённым эталоном репозитория, тест не изменялся"
+  }
+]

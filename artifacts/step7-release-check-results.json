@@ -1,0 +1,829 @@
+{
+  "beforeCommit": "bc42b5b058983ae74231649be035c5e066c80b1d",
+  "afterCommit": "b14370cb3010ee3e979f947acfbf0af951f21986",
+  "beforeLocalVersion": "2.3.526+3f52d3b9d9c5",
+  "afterLocalVersion": "2.3.526+1b98c471bf26",
+  "timeoutSeconds": 120,
+  "publication": "STOP",
+  "pushPerformed": false,
+  "deploymentPerformed": false,
+  "inventory": {
+    "before": 122,
+    "after": 137,
+    "newScripts": 15
+  },
+  "runs": [
+    {
+      "test": "gate1-category-move-non-destructive-smoke.mjs",
+      "version": "before",
+      "status": "FAIL",
+      "exitCode": 1,
+      "seconds": 0.17,
+      "output": "evalmachine.<anonymous>:62\n    [guruV247KeywordNormalize(row?.kw), row]).filter(([key]) => key));\n    ^\n\nReferenceError: guruV247KeywordNormalize is not defined\n    at evalmachine.<anonymous>:62:5\n    at Array.map (<anonymous>)\n    at gate1PainMergeMovedKeywordStateV566 (evalmachine.<anonymous>:61:36)\n    at evalmachine.<anonymous>:436:9\n    at Array.forEach (<anonymous>)\n    at evalmachine.<anonymous>:425:56\n    at Array.forEach (<anonymous>)\n    at gate1PainMigrateWorkspaceV237 (evalmachine.<anonymous>:424:28)\n    at file:///private/tmp/guru-step7-before/scripts/gate1-category-move-non-destructive-smoke.mjs:62:15\n    at ModuleJob.run (node:internal/modules/esm/module_job:271:25)\n\nNode.js v22.14.0\n"
+    },
+    {
+      "test": "gate1-category-move-non-destructive-smoke.mjs",
+      "version": "after",
+      "status": "FAIL",
+      "exitCode": 1,
+      "seconds": 0.11,
+      "output": "evalmachine.<anonymous>:62\n    [guruV247KeywordNormalize(row?.kw), row]).filter(([key]) => key));\n    ^\n\nReferenceError: guruV247KeywordNormalize is not defined\n    at evalmachine.<anonymous>:62:5\n    at Array.map (<anonymous>)\n    at gate1PainMergeMovedKeywordStateV566 (evalmachine.<anonymous>:61:36)\n    at evalmachine.<anonymous>:436:9\n    at Array.forEach (<anonymous>)\n    at evalmachine.<anonymous>:425:56\n    at Array.forEach (<anonymous>)\n    at gate1PainMigrateWorkspaceV237 (evalmachine.<anonymous>:424:28)\n    at file:///private/tmp/guru-step7-after/scripts/gate1-category-move-non-destructive-smoke.mjs:62:15\n    at ModuleJob.run (node:internal/modules/esm/module_job:271:25)\n\nNode.js v22.14.0\n"
+    },
+    {
+      "test": "gate4-jtbd-link-id-smoke.mjs",
+      "version": "before",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.37,
+      "output": "{\n  \"productId\": \"catalog-item-1786792591872-51f503\",\n  \"legacy\": {\n    \"catalog-item-1786792591872-51f503::__jtbd__\": [\n      0,\n      2,\n      1\n    ]\n  },\n  \"resolvedJtbdIds\": [\n    \"primary:catalog-item-1786792591872-51f503\",\n    \"additional-jtbd-1788615285799-9a35ef\",\n    \"additional-jtbd-1788609074828-88a3f1\"\n  ],\n  \"sourceUnchanged\": true\n}\n"
+    },
+    {
+      "test": "gate4-jtbd-link-id-smoke.mjs",
+      "version": "after",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.48,
+      "output": "{\n  \"productId\": \"catalog-item-1786792591872-51f503\",\n  \"legacy\": {\n    \"catalog-item-1786792591872-51f503::__jtbd__\": [\n      0,\n      2,\n      1\n    ]\n  },\n  \"resolvedJtbdIds\": [\n    \"primary:catalog-item-1786792591872-51f503\",\n    \"additional-jtbd-1788615285799-9a35ef\",\n    \"additional-jtbd-1788609074828-88a3f1\"\n  ],\n  \"sourceUnchanged\": true\n}\n"
+    },
+    {
+      "test": "gate4-upstream-links-smoke.mjs",
+      "version": "before",
+      "status": "FAIL",
+      "exitCode": 1,
+      "seconds": 1.17,
+      "output": "node:internal/modules/run_main:122\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n0 !== 83\n\n    at file:///private/tmp/guru-step7-before/scripts/gate4-upstream-links-smoke.mjs:22:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:271:25)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:578:26)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:116:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 0,\n  expected: 83,\n  operator: 'strictEqual'\n}\n\nNode.js v22.14.0\n"
+    },
+    {
+      "test": "gate4-upstream-links-smoke.mjs",
+      "version": "after",
+      "status": "FAIL",
+      "exitCode": 1,
+      "seconds": 0.55,
+      "output": "node:internal/modules/run_main:122\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n0 !== 83\n\n    at file:///private/tmp/guru-step7-after/scripts/gate4-upstream-links-smoke.mjs:22:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:271:25)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:578:26)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:116:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 0,\n  expected: 83,\n  operator: 'strictEqual'\n}\n\nNode.js v22.14.0\n"
+    },
+    {
+      "test": "workspace-sync-egress-smoke.mjs",
+      "version": "before",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.08,
+      "output": "workspace-sync egress: обычный POST 2 запроса (короткий RPC + запись); конфликт RPC + полный GET; без миграции запись остановлена\n"
+    },
+    {
+      "test": "workspace-sync-egress-smoke.mjs",
+      "version": "after",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.08,
+      "output": "workspace-sync egress: обычный POST 2 запроса (короткий RPC + запись); конфликт RPC + полный GET; без миграции запись остановлена\n"
+    },
+    {
+      "test": "project-passport-baseline-smoke.mjs",
+      "version": "before",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 3.05,
+      "output": "{\n  \"inPassport\": true,\n  \"companyBeforeProductSelector\": true,\n  \"companyScopeOnly\": true,\n  \"companyUnaffectedByProduct\": true,\n  \"open\": true,\n  \"switched\": true,\n  \"diagnosticFollowsProduct\": true,\n  \"rerendered\": true,\n  \"progressMoved\": true,\n  \"absentFromGate0\": true,\n  \"dataPreserved\": true,\n  \"errors\": []\n}\n"
+    },
+    {
+      "test": "project-passport-baseline-smoke.mjs",
+      "version": "after",
+      "status": "FAIL",
+      "exitCode": 1,
+      "seconds": 3.05,
+      "output": "{\n  \"inPassport\": true,\n  \"companyBeforeProductSelector\": true,\n  \"companyScopeOnly\": true,\n  \"companyUnaffectedByProduct\": true,\n  \"open\": true,\n  \"switched\": true,\n  \"diagnosticFollowsProduct\": true,\n  \"rerendered\": true,\n  \"progressMoved\": false,\n  \"absentFromGate0\": true,\n  \"dataPreserved\": true,\n  \"errors\": []\n}\nnode:internal/modules/run_main:122\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: progressMoved\n\nfalse !== true\n\n    at file:///private/tmp/guru-step7-after/scripts/project-passport-baseline-smoke.mjs:122:12 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual'\n}\n\nNode.js v22.14.0\n"
+    },
+    {
+      "test": "gate0-company-strategic-foundation-smoke.mjs",
+      "version": "before",
+      "status": "ОКРУЖЕНИЕ",
+      "exitCode": 1,
+      "seconds": 0.26,
+      "output": "node:internal/deps/undici/undici:13502\n      Error.captureStackTrace(err);\n            ^\n\nTypeError: fetch failed\n    at node:internal/deps/undici/undici:13502:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async file:///private/tmp/guru-step7-before/scripts/gate0-company-strategy-chain-smoke.mjs:6:22 {\n  [cause]: Error: connect EPERM 127.0.0.1:9362 - Local (0.0.0.0:0)\n      at internalConnect (node:net:1115:16)\n      at defaultTriggerAsyncIdScope (node:internal/async_hooks:464:18)\n      at node:net:1353:9\n      at process.processTicksAndRejections (node:internal/process/task_queues:85:11) {\n    errno: -1,\n    code: 'EPERM',\n    syscall: 'connect',\n    address: '127.0.0.1',\n    port: 9362\n  }\n}\n\nNode.js v22.14.0\n"
+    },
+    {
+      "test": "gate0-company-strategic-foundation-smoke.mjs",
+      "version": "after",
+      "status": "ОКРУЖЕНИЕ",
+      "exitCode": 1,
+      "seconds": 0.29,
+      "output": "node:internal/deps/undici/undici:13502\n      Error.captureStackTrace(err);\n            ^\n\nTypeError: fetch failed\n    at node:internal/deps/undici/undici:13502:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async file:///private/tmp/guru-step7-after/scripts/gate0-company-strategy-chain-smoke.mjs:6:22 {\n  [cause]: Error: connect EPERM 127.0.0.1:9362 - Local (0.0.0.0:0)\n      at internalConnect (node:net:1115:16)\n      at defaultTriggerAsyncIdScope (node:internal/async_hooks:464:18)\n      at node:net:1353:9\n      at process.processTicksAndRejections (node:internal/process/task_queues:85:11) {\n    errno: -1,\n    code: 'EPERM',\n    syscall: 'connect',\n    address: '127.0.0.1',\n    port: 9362\n  }\n}\n\nNode.js v22.14.0\n"
+    }
+  ],
+  "matrix": [
+    {
+      "test": "category-input-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "company-manual-economics-gate4-strict-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "export-diagnostics-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate-navigation-performance-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate0-card7-card11-scope-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate0-company-brand-purpose-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate0-company-keyword-foundation-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate0-company-multiplicity-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate0-company-offer-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate0-company-segmentation-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate0-company-strategic-foundation-smoke.mjs",
+      "before": "ОКРУЖЕНИЕ",
+      "after": "ОКРУЖЕНИЕ"
+    },
+    {
+      "test": "gate0-company-strategy-chain-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate0-gate1-jtbd-source-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate0-keyword-foundation-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate0-merged-readiness-smoke.mjs",
+      "before": "Отсутствовал",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate0-now-missing-smoke.mjs",
+      "before": "Отсутствовал",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate0-offer-foundation-source-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate0-platform-audit-navigation-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate0-product-editors-restore-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate0-product-scope-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate0-unified-readiness-smoke.mjs",
+      "before": "Отсутствовал",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-blog-system-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-catalog-audit-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-category-list-preview-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-category-move-non-destructive-smoke.mjs",
+      "before": "FAIL",
+      "after": "FAIL"
+    },
+    {
+      "test": "gate1-company-brand-demand-copy-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-company-brand-demand-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-company-strategic-foundation-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-company-unified-container-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-comparison-performance-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-competitor-bergen-v543-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-competitor-table-v540-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-competitor-workflow-v539-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-export-self-contained-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-final-keyword-foundation-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-imported-candidates-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-pain-product-id-migration-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-project-comparison-product-card-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-rsya-competitor-domains-v538-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-seo-central-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-seo-guidance-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-seo-interactive-tool-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-seo-panel-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate1-webmaster-qa-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate12-now-readiness-smoke.mjs",
+      "before": "Отсутствовал",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate12-readiness-audit-smoke.mjs",
+      "before": "Отсутствовал",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate2-company-product-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate2-company-services-smoke.mjs",
+      "before": "Отсутствовал",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate2-company-services-step3-smoke.mjs",
+      "before": "Отсутствовал",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate2-company-strategic-foundation-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate2-metrika-company-product-v361-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate2-metrika-company-source-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate2-metrika-goals-quality-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate2-metrika-product-audit-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate2-product-services-step4-smoke.mjs",
+      "before": "Отсутствовал",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate2-service-block-smoke.mjs",
+      "before": "Отсутствовал",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate2-setup-wizard-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate2-status-propagation-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate3-execution-map-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate3-gate4-structure-sync-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate3-product-journey-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate3-stage-explanations-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate34-now-decisions-smoke.mjs",
+      "before": "Отсутствовал",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate34-now-readiness-smoke.mjs",
+      "before": "Отсутствовал",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-aware-media-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-aware-navigation-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-company-product-foundation-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-company-strategic-foundation-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-duplicate-audit-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-five-a-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-funnel-readiness-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-jtbd-link-id-smoke.mjs",
+      "before": "PASS",
+      "after": "PASS"
+    },
+    {
+      "test": "gate4-paid-smm-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-product-id-migration-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-product-smm-calendar-policy-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-product-smm-scope-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-product-smm-workspace-v2-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-readiness-product-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-ad-prompt-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-assets-prompt-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-builder-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-direct-form-v534-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-direct-panel-v533-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-exclusions-v536-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-foundation-source-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-gate1-defaults-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-group-card-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-group-launch-v537-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-guidance-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-jtbd-groups-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-launch-checklist-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-launch-v528-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-launch-v541-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-metrika-link-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-product-id-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-project-photo-delete-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-promotion-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-start-method-v532-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-strategy-v531-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-rsya-two-step-workflow-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-search-duplicate-ownership-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-search-gate1-product-source-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-search-group-fixation-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-search-group-metrics-import-export-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-search-jtbd-audience-forecast-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-search-jtbd-readiness-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-search-launch-summary-period-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-search-launch-visibility-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-search-save-export-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-smm-campaign-key-guard-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-smm-content-system-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-smm-digestion-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-smm-material-foundation-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-smm-scenario-smoke.mjs",
+      "before": "Отсутствовал",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-smm-strategy-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-stage-explanations-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-upstream-integration-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate4-upstream-links-smoke.mjs",
+      "before": "FAIL",
+      "after": "FAIL"
+    },
+    {
+      "test": "gate5-snapshot-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate6-company-strategic-foundation-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate7-company-strategic-foundation-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate8-browser-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate8-compact-workbench-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gate8-ui-integration-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "gates-3-5-6-7-8-product-scope-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "local-storage-only-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "navigation-url-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "now-guide-smoke.mjs",
+      "before": "Отсутствовал",
+      "after": "СТОП"
+    },
+    {
+      "test": "other-project-now-guide-smoke.mjs",
+      "before": "Отсутствовал",
+      "after": "СТОП"
+    },
+    {
+      "test": "preflight-now-guide-smoke.mjs",
+      "before": "Отсутствовал",
+      "after": "СТОП"
+    },
+    {
+      "test": "product-card-seven-blocks-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "product-card-unified-template-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "project-passport-baseline-smoke.mjs",
+      "before": "PASS",
+      "after": "FAIL"
+    },
+    {
+      "test": "strategic-foundation-hierarchy-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "strategic-foundation-segments-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    },
+    {
+      "test": "workspace-sync-egress-smoke.mjs",
+      "before": "PASS",
+      "after": "PASS"
+    },
+    {
+      "test": "workspace-sync-retry-smoke.mjs",
+      "before": "СТОП",
+      "after": "СТОП"
+    }
+  ],
+  "newFailures": [
+    {
+      "test": "project-passport-baseline-smoke.mjs",
+      "before": "PASS",
+      "after": "FAIL"
+    }
+  ],
+  "diagnostic": {
+    "test": "project-passport-baseline-smoke.mjs",
+    "before": {
+      "previous": 20,
+      "current": 15,
+      "moved": 5,
+      "progressMoved": true
+    },
+    "after": {
+      "previous": 20,
+      "current": 9,
+      "moved": 5,
+      "progressMoved": false
+    }
+  },
+  "notChecked": [
+    "Remaining smoke tests after STOP",
+    "Part A item 3 exports for outside-guide actions",
+    "Part B commits relative to fresh remote refs",
+    "Deployment process and rollback point",
+    "Production version and screenshots"
+  ]
+}

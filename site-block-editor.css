@@ -1,0 +1,465 @@
+/* Gate 1 site page editors share one visual system. The page mockups and their
+   content keep their own composition; these rules affect editing chrome only. */
+.g1-redesign [data-g1-company-block-v299="site-structure-audit"] .g1-card-body > .card-fields {
+  max-width: none !important;
+  margin-inline: 0 !important;
+}
+.g1-redesign .guru-site-page-editor-v542,
+.g1-redesign .guru-site-page-editor-v542 .route-sections,
+.g1-redesign .guru-site-page-editor-v542 .product-card-seven-v253,
+.g1-redesign .guru-site-page-editor-v542 .guru-hub-inline-editor-v507,
+.g1-redesign .guru-site-page-editor-v542 .guru-hub-preview-page-v504,
+.g1-redesign .guru-site-page-editor-v542 .guru-hub-inline-compact-v507,
+.g1-redesign .guru-site-page-editor-v542 .guru-site-chrome-v497,
+.g1-redesign .guru-site-page-editor-v542 .goat-product-page-frame-v515 {
+  box-sizing: border-box;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0;
+  margin-inline: 0 !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .product-card-group-v253 {
+  padding: 18px 0 0 !important;
+  border: 0 !important;
+  border-top: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .product-card-group-v253:first-child {
+  padding-top: 0 !important;
+  border-top: 0 !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .product-card-group-v253 > h3 {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .065em;
+  line-height: 1.35;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 {
+  min-width: 0;
+  border: 1px solid var(--line) !important;
+  border-radius: 11px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 > summary {
+  display: flex;
+  align-items: center;
+  min-height: 50px;
+  gap: 10px;
+  padding: 12px 16px !important;
+  border-left: 0 !important;
+  background: #fff !important;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.35;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 > summary :is(.v22-section-title, strong) {
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+  line-height: 1.35;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542[open] > summary {
+  border-bottom: 1px solid var(--line) !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 > .v22-section-body {
+  min-width: 0;
+  gap: 16px !important;
+  padding: 18px 20px 20px !important;
+  border-top: 0 !important;
+  background: #fff !important;
+}
+.g1-redesign .guru-site-page-editor-v542 :is(.guru-hub-preview-page-v504, .goat-product-page-frame-v515) {
+  border-color: var(--line);
+  border-radius: 11px;
+  box-shadow: none;
+}
+.g1-redesign .guru-site-page-editor-v542 :is(.guru-hub-inline-compact-v507, .goat-product-compact-row-v515) {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  padding: 12px 0 0 !important;
+  margin-top: 2px !important;
+  border: 0 !important;
+  border-top: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--muted);
+  font-size: 11px;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-field-caption-v542 {
+  position: static;
+  display: flex !important;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 7px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 0 5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0;
+  line-height: 1.4;
+  text-align: left;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-field-caption-v542 strong {
+  color: var(--text);
+  font: inherit;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-field-caption-v542 small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-hub-inline-edit-v507:not(.guru-hub-inline-button-v507) > textarea {
+  min-height: 52px !important;
+  padding: 8px 10px !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 8px;
+  background: #fff !important;
+  line-height: 1.45;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .goat-product-field-v514 > textarea {
+  min-height: 44px !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-hub-inline-button-v507:not(.guru-home-segment-cta-v541) {
+  width: fit-content !important;
+  min-width: min(100%, 180px);
+  max-width: min(100%, 320px);
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-hub-inline-button-v507 > input {
+  min-height: 40px;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 :is(
+  .guru-hub-inline-edit-v507 > input,
+  .guru-hub-inline-edit-v507 > textarea,
+  .goat-product-field-v514 > input,
+  .goat-product-field-v514 > textarea,
+  .route-field > input,
+  .route-field > textarea,
+  .route-field > select
+):focus-visible {
+  outline: 2px solid var(--text) !important;
+  outline-offset: 2px;
+}
+@media (max-width: 700px) {
+  .g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 > .v22-section-body {
+    padding: 14px !important;
+  }
+  .g1-redesign .guru-site-page-editor-v542 .product-card-group-v253 {
+    padding-top: 14px !important;
+  }
+}
+
+/* All page templates now use the same editor primitives. The existing page
+   layout and data-bound controls stay in place; only their chrome is shared. */
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 {
+  --guru-editor-text: #292826;
+  --guru-editor-muted: #77746f;
+  --guru-editor-surface: #fff;
+  --guru-editor-soft: #f2f2f0;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-canvas-v543 {
+  color: var(--guru-editor-text) !important;
+  background: var(--guru-editor-surface) !important;
+  border-color: var(--line) !important;
+  box-shadow: none !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-canvas-v543 > section {
+  min-height: 0 !important;
+  padding: clamp(20px, 2.2vw, 34px) !important;
+  background: var(--guru-editor-surface) !important;
+  color: var(--guru-editor-text) !important;
+  text-align: left !important;
+  border: 0 !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-canvas-v543 > section.guru-hub-preview-cta-v504 {
+  justify-items: start !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-canvas-v543 .guru-hub-preview-kicker-v504 {
+  display: none !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-canvas-v543 :is(h1, h2, h3) {
+  color: var(--guru-editor-text) !important;
+  letter-spacing: -.025em;
+  line-height: 1.2;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-canvas-v543 h2 {
+  font-size: clamp(24px, 2.2vw, 32px) !important;
+  font-weight: 700 !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-canvas-v543 > section > p {
+  max-width: 800px;
+  line-height: 1.5;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-field-v543 {
+  min-width: 0;
+  color: var(--guru-editor-text) !important;
+  text-align: left !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-field-v543 > .guru-site-field-caption-v542 {
+  margin: 0 0 5px !important;
+  color: var(--guru-editor-text) !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+  line-height: 1.4 !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-field-v543 > .guru-site-field-caption-v542 small {
+  color: var(--guru-editor-muted) !important;
+  font-weight: 400 !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-field-v543 > :where(input:not([type="file"]), textarea, select) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 9px 11px !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  color: var(--guru-editor-text) !important;
+  box-shadow: none !important;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-field-v543 > textarea {
+  min-height: 52px !important;
+  resize: vertical !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-field-v543 > :where(input, textarea)::placeholder {
+  color: var(--guru-editor-muted) !important;
+  opacity: 1;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-field-v543:focus-within > :where(input, textarea, select) {
+  outline: 2px solid var(--guru-editor-text) !important;
+  outline-offset: 2px;
+}
+.goat-product-breadcrumbs-v549 {
+  min-width: 0;
+}
+.goat-product-breadcrumbs-v549 > .guru-site-field-caption-v542 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 7px;
+  margin-bottom: 5px;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.goat-product-breadcrumbs-v549 > .guru-site-field-caption-v542 small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+.goat-product-breadcrumb-path-v549 {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.goat-product-breadcrumb-path-v549 a {
+  color: inherit;
+  text-decoration: none;
+}
+.goat-product-breadcrumb-path-v549 a:hover {
+  text-decoration: underline;
+}
+.goat-product-breadcrumb-path-v549 a:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+.goat-product-breadcrumb-separator-v549 {
+  color: var(--muted);
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-canvas-v543 :is(h1, h2, h3) > .guru-site-editor-field-v543 > :is(input, textarea) {
+  min-height: 44px;
+  padding: 2px 4px !important;
+  border-color: var(--line) !important;
+  background: #fff !important;
+  color: var(--guru-editor-text) !important;
+  font-size: clamp(24px, 2.2vw, 32px) !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  letter-spacing: inherit;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-canvas-v543 h1 > .guru-site-editor-field-v543 > :is(input, textarea) {
+  font-size: clamp(28px, 3vw, 40px) !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-canvas-v543 h3 > .guru-site-editor-field-v543 > :is(input, textarea) {
+  font-size: 20px !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-canvas-v543 :is(h1, h2, h3) > .guru-site-editor-field-v543 > :is(input, textarea):placeholder-shown {
+  border-color: var(--line) !important;
+  background: #fff !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-canvas-v543 :is(h1, h2, h3) > .guru-site-editor-field-v543 > :is(input, textarea):focus {
+  border-color: var(--line) !important;
+  background: #fff !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-collection-v543 {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  align-items: stretch;
+  width: 100%;
+  gap: 20px !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-item-v543 {
+  min-width: 0;
+  border: 1px solid var(--line) !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-item-v543:not(.guru-hub-preview-category-v504) {
+  padding: 20px !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-hub-preview-category-v504 .guru-hub-preview-category-copy-v504 {
+  padding: 20px 22px 22px !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-item-v543 .guru-hub-inline-source-v507 > small {
+  display: none !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-cta-v543 {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 7px;
+  width: fit-content !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  min-height: 38px;
+  margin: 0;
+  padding: 9px 14px !important;
+  border: 1px solid var(--accent) !important;
+  border-radius: 7px !important;
+  background: var(--accent) !important;
+  color: var(--panel) !important;
+  box-shadow: none !important;
+  text-align: left !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-cta-v543.is-secondary {
+  background: var(--panel) !important;
+  color: var(--accent) !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-cta-v543.is-primary:hover,
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-cta-v543.is-primary:focus-within {
+  background: color-mix(in srgb, var(--accent) 88%, white) !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-cta-v543.is-secondary:hover,
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-cta-v543.is-secondary:focus-within {
+  background: color-mix(in srgb, var(--accent) 5%, var(--panel)) !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-cta-v543::after {
+  content: "→";
+  flex: none;
+  color: inherit;
+  font-size: 17px;
+  line-height: 1;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-cta-v543 > .guru-site-field-caption-v542 {
+  display: block !important;
+  width: auto !important;
+  margin: 0 !important;
+  color: inherit !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-cta-v543 > :is(input, textarea) {
+  flex: none !important;
+  width: min(var(--guru-site-cta-width-v543, 18ch), 60vw) !important;
+  min-width: 0 !important;
+  max-width: min(42ch, 60vw) !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  text-align: left !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-cta-v543 .strategic-cta-trigger-v1 {
+  color: inherit;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-cta-v543.is-primary .strategic-cta-trigger-v1:hover,
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-cta-v543.is-primary .strategic-cta-trigger-v1:focus-visible {
+  background: color-mix(in srgb, var(--panel) 18%, transparent);
+  color: var(--panel);
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-category-lead-actions-v510 {
+  justify-content: flex-start !important;
+  flex-wrap: wrap !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .goat-product-button-preview-v514 {
+  flex: 0 1 auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--guru-editor-text) !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .goat-product-final-cta-buttons-v514 .guru-site-editor-cta-v543 {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  width: max-content !important;
+  max-width: min(100%, 480px) !important;
+  min-height: 40px;
+  white-space: nowrap;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .goat-product-final-cta-buttons-v514 .guru-site-editor-cta-v543 > .guru-site-field-caption-v542 {
+  flex: none;
+  width: auto !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .goat-product-final-cta-buttons-v514 .guru-site-editor-cta-v543 > input {
+  flex: none !important;
+  width: min(var(--guru-site-cta-width-v543, 18ch), 60vw) !important;
+  min-width: 0 !important;
+  max-width: min(42ch, 60vw) !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-hub-preview-trust-v504 blockquote {
+  max-width: 800px;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-hub-preview-links-v504 li {
+  border-radius: 12px !important;
+  background: #fff !important;
+}
+.g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-hub-preview-empty-v504 {
+  background: #fff !important;
+  border-style: solid !important;
+}
+@media (max-width: 760px) {
+  .g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-collection-v543 {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 14px !important;
+  }
+  .g1-redesign .guru-site-page-editor-v542 .guru-site-block-editor-v542 .guru-site-editor-canvas-v543 > section {
+    padding: 18px !important;
+  }
+}

@@ -1,0 +1,2314 @@
+{
+  "projects": {
+    "apple": {
+      "rows": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "project-comparison",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "card-21",
+          "status": "ready",
+          "header": true,
+          "badge": "Готово"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "card-25",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "target-audience",
+          "status": "ready",
+          "header": true,
+          "badge": "Готово"
+        },
+        {
+          "id": "gate1-blog-v304-company",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "card-24",
+          "status": "ready",
+          "header": true,
+          "badge": "Готово"
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "status": "ready",
+          "header": true,
+          "badge": "Готово"
+        },
+        {
+          "id": "gate1-blog-v304-product",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        }
+      ],
+      "pure": true,
+      "seoGroup": false,
+      "tool": false,
+      "comparison": true,
+      "otherGates": [
+        {
+          "id": "aware",
+          "gate": "gate-3",
+          "status": "ready",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "appeal",
+          "gate": "gate-3",
+          "status": "ready",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "ask",
+          "gate": "gate-3",
+          "status": "ready",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "act",
+          "gate": "gate-3",
+          "status": "ready",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "advocate",
+          "gate": "gate-3",
+          "status": "problem",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "pr_publications",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "articles_cases",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "yandex_organization",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "google_organization",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "online_chat",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "online_payment",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "abandoned_cart",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "email_crm",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "review_collection",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "referral",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": ""
+        },
+        {
+          "id": "loyalty",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "card-148",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-151",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-152",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-153",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-154",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-155",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-156",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-157",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-158",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-159",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-160",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-161",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-162",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-163",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-164",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-165",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-166",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-167",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-168",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "card-169",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "smm_vk_контент_11",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "smm_telegram_контент_посевы_12",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "smm_instagram_reels_stories_13",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "smm_youtube_shorts_pre_roll_14",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "платная_реклама_vk_ads_таргет_5",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "платная_реклама_telegram_ads_посевы_ads_7",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "платная_реклама_meta_ads_feed_reels_6",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "платная_реклама_яндекс_директ_рся_1",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "платная_реклама_яндекс_директ_мастер_кампаний_2",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "платная_реклама_google_ads_display_4",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "content_creatives",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "promo_landing",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "платная_реклама_яндекс_директ_поиск_0",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "product_gallery",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "платная_реклама_google_ads_search_3",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "seo",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "retargeting",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "vk_retargeting",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "buyer_retargeting",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786792591872-51f503"
+        },
+        {
+          "id": "setup",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "input",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "ad",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "bridge",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "finance",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "journal",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__new_year",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__christmas",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__old_new_year",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__epiphany",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__tatiana",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__valentine",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__maslenitsa_q1",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__defender_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__march_8",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__april_1",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__cosmonautics",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__easter_q2",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__may_1",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__may_9",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__russia_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__june_22",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__youth_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__family_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__flag_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__knowledge_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__icleaning_birthday",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__moscow_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__autumn_control",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__unity_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__black_friday",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__constitution_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__new_year_preparation",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "0",
+          "gate": "gate-8",
+          "status": "in_progress"
+        }
+      ]
+    },
+    "icleaning": {
+      "rows": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "project-comparison",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-21",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "card-25",
+          "status": "not_required",
+          "header": true,
+          "badge": "Не требуется"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-28",
+          "status": "not_required",
+          "header": true,
+          "badge": "Не требуется"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-32",
+          "status": "not_required",
+          "header": true,
+          "badge": "Не требуется"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "target-audience",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "gate1-blog-v304-company",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-23",
+          "status": "ready",
+          "header": true,
+          "badge": "Готово"
+        },
+        {
+          "id": "card-24",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "gate1-blog-v304-product",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        }
+      ],
+      "pure": true,
+      "seoGroup": false,
+      "tool": false,
+      "comparison": true,
+      "otherGates": [
+        {
+          "id": "aware",
+          "gate": "gate-3",
+          "status": "ready",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "appeal",
+          "gate": "gate-3",
+          "status": "ready",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "ask",
+          "gate": "gate-3",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "act",
+          "gate": "gate-3",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "advocate",
+          "gate": "gate-3",
+          "status": "problem",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "pr_publications",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "articles_cases",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": ""
+        },
+        {
+          "id": "yandex_organization",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "google_organization",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "online_chat",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "online_payment",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "abandoned_cart",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "email_crm",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "review_collection",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "referral",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "loyalty",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "card-148",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-151",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-152",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-153",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-154",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-155",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-156",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-157",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-158",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-159",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-160",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-161",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-162",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-163",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-164",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-165",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-166",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-167",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-168",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "card-169",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "smm_vk_контент_11",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "smm_telegram_контент_посевы_12",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "smm_instagram_reels_stories_13",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "smm_youtube_shorts_pre_roll_14",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "платная_реклама_vk_ads_таргет_5",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "платная_реклама_telegram_ads_посевы_ads_7",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "платная_реклама_meta_ads_feed_reels_6",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "платная_реклама_яндекс_директ_рся_1",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "платная_реклама_яндекс_директ_мастер_кампаний_2",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "платная_реклама_google_ads_display_4",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "content_creatives",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "promo_landing",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "платная_реклама_яндекс_директ_поиск_0",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "product_gallery",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "платная_реклама_google_ads_search_3",
+          "gate": "gate-4",
+          "status": "in_progress",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "seo",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "retargeting",
+          "gate": "gate-4",
+          "status": "ready",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "vk_retargeting",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "buyer_retargeting",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": "catalog-item-1786885522654-b659e1"
+        },
+        {
+          "id": "setup",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "input",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "ad",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "bridge",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "finance",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "journal",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__new_year",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__christmas",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__old_new_year",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__epiphany",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__tatiana",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__valentine",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__maslenitsa_q1",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__defender_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__march_8",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__april_1",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__cosmonautics",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__easter_q2",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__may_1",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__may_9",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__russia_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__june_22",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__youth_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__family_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__flag_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__knowledge_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__icleaning_birthday",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__moscow_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__autumn_control",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__unity_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__black_friday",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__constitution_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__new_year_preparation",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784715884061-535782",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784717925977-5de53f",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784721781301-3aea46",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784718322113-48405b",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784715891526-d3c925",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784717365445-05106a",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784717493198-8bb9e9",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784717501655-d90e6b",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784717511459-cd8116",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784717518037-e8db1c",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784717528004-5ff198",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784717540454-e84d3c",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784717547463-af7ddd",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784717559390-67979d",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784717568694-ffd01b",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784717576312-36a260",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784717009351-b7e947",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784717016715-811093",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784717347751-3e2cd1",
+          "gate": "gate-7",
+          "status": "not_started"
+        },
+        {
+          "id": "g7-task-1784737353973-6603a1",
+          "gate": "gate-7",
+          "status": "in_progress"
+        },
+        {
+          "id": "g7-task-1784721342904-226933",
+          "gate": "gate-7",
+          "status": "in_progress"
+        },
+        {
+          "id": "g7-task-1785516316767-eafdbc",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1785516313547-8193f5",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1784721744517-9612d3",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1784740204473-27aee0",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1784718297430-cd116e",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1785311165726-70b5bf",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1785307704771-4e4761",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1784903467327-8e7d2f",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1784903463857-0eea59",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1784717892766-ef19df",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1784815710277-7e81e6",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1784799904262-a6c96a",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1784718284014-4a4be5",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1784795702296-2fb89f",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1784740181483-dc8ebb",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1784740178328-6eea6a",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1784734085733-35288e",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1784721742278-b9393d",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1783598005121-d7f8d0",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "g7-task-1783189702910-fb0782",
+          "gate": "gate-7",
+          "status": "ready"
+        },
+        {
+          "id": "0",
+          "gate": "gate-8",
+          "status": "not_started"
+        }
+      ]
+    },
+    "sivrce": {
+      "rows": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "project-comparison",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-21",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "card-25",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "target-audience",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "gate1-blog-v304-company",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-23",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-24",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        }
+      ],
+      "pure": true,
+      "seoGroup": false,
+      "tool": false,
+      "comparison": true,
+      "otherGates": [
+        {
+          "id": "pr_publications",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "articles_cases",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "yandex_organization",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "google_organization",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "online_chat",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "online_payment",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "abandoned_cart",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "email_crm",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "review_collection",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "referral",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "loyalty",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "setup",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "input",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "ad",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "bridge",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "finance",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "journal",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__new_year",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__christmas",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__old_new_year",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__epiphany",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__tatiana",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__valentine",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__maslenitsa_q1",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__defender_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__march_8",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__april_1",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__cosmonautics",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__easter_q2",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__may_1",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__may_9",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__russia_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__june_22",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__youth_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__family_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__flag_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__knowledge_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__icleaning_birthday",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__moscow_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__autumn_control",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__unity_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__black_friday",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__constitution_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__new_year_preparation",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "0",
+          "gate": "gate-8",
+          "status": "not_started"
+        }
+      ]
+    },
+    "guru": {
+      "rows": [
+        {
+          "id": "company_demand_positioning",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "project-comparison",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-21",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "card-22",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-25",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "target-audience",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "gate1-blog-v304-company",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-23",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-24",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        }
+      ],
+      "pure": true,
+      "seoGroup": false,
+      "tool": false,
+      "comparison": true,
+      "otherGates": [
+        {
+          "id": "pr_publications",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "articles_cases",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "yandex_organization",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "google_organization",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "online_chat",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "online_payment",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "abandoned_cart",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "email_crm",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "review_collection",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "referral",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "loyalty",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "setup",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "input",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "ad",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "bridge",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "finance",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "journal",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__new_year",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__christmas",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__old_new_year",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__epiphany",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__tatiana",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__valentine",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__maslenitsa_q1",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__defender_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__march_8",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__april_1",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__cosmonautics",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__easter_q2",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__may_1",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__may_9",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__russia_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__june_22",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__youth_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__family_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__flag_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__knowledge_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__icleaning_birthday",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__moscow_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__autumn_control",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__unity_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__black_friday",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__constitution_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__new_year_preparation",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "0",
+          "gate": "gate-8",
+          "status": "not_started"
+        }
+      ]
+    }
+  },
+  "gate1Screenshot": {
+    "top": 189.78125,
+    "bottom": 316.0625,
+    "height": 126.28125
+  },
+  "gate2Screenshot": {
+    "top": 189.890625,
+    "bottom": 272.390625,
+    "height": 82.5
+  },
+  "gate0Screenshot": {
+    "top": 100.1640625,
+    "bottom": 940.359375,
+    "height": 840.1953125
+  },
+  "infra": {
+    "value": "broken",
+    "status": "broken",
+    "badge": "Не работает",
+    "derived": "Не работает"
+  },
+  "build": "2.3.526+b7f15c203e87",
+  "passed": true
+}

@@ -1,0 +1,11 @@
+/* Direct uses the same numbered section and step layout as Webmaster. */
+.g2direct-block .g2mu-guide { max-width: 820px; }
+.g2direct-block .g2mu-actions button:disabled { opacity: .55; cursor: default; }
+.g2direct-block .g2direct-legacy { border-top: 1px solid var(--line); padding: 14px 0; }
+.g2direct-block .g2direct-legacy > summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+.g2direct-block .g2direct-legacy pre { max-width: 100%; overflow-wrap: anywhere; white-space: pre-wrap; color: var(--muted); font-size: 12px; }
+.g2direct-project-data { margin: 18px 0; padding: 12px 0; border-top: 1px solid var(--line); }
+.g2direct-project-data h5 { margin: 0 0 8px; }
+.g2direct-project-data p { margin: 5px 0; overflow-wrap: anywhere; }
+.g2direct-main-account-copy table { max-width: 100%; }
+.g2direct-main-account-copy td { overflow-wrap: anywhere; }

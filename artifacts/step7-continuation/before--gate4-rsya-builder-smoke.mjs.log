@@ -1,0 +1,11 @@
+file:///private/tmp/guru-step7-before/scripts/gate4-rsya-builder-smoke.mjs:53
+    throw new Error(response.exceptionDetails.exception?.description || response.exceptionDetails.text);
+          ^
+
+Error: ReferenceError: g4RsyaProjectFillV289 is not defined
+    at <anonymous>:41:5
+    at <anonymous>:166:5
+    at evaluate (file:///private/tmp/guru-step7-before/scripts/gate4-rsya-builder-smoke.mjs:53:11)
+    at async file:///private/tmp/guru-step7-before/scripts/gate4-rsya-builder-smoke.mjs:82:18
+
+Node.js v22.14.0

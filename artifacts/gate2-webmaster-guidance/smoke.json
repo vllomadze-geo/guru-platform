@@ -1,0 +1,127 @@
+{
+  "steps": [
+    "open",
+    "rights",
+    "robots",
+    "sitemap",
+    "pages",
+    "advice",
+    "meta",
+    "images",
+    "cwv"
+  ],
+  "labels": [
+    [
+      "Где нажать / Как проверить",
+      "Сверка"
+    ],
+    [
+      "Где нажать / Как проверить",
+      "Сверка"
+    ],
+    [
+      "Где нажать / Как проверить",
+      "Сверка"
+    ],
+    [
+      "Где нажать / Как проверить",
+      "Сверка"
+    ],
+    [
+      "Где нажать / Как проверить",
+      "Сверка"
+    ],
+    [
+      "Где нажать / Как проверить",
+      "Сверка"
+    ],
+    [
+      "Где нажать / Как проверить",
+      "Сверка"
+    ],
+    [
+      "Где нажать / Как проверить",
+      "Сверка"
+    ],
+    [
+      "Где нажать / Как проверить",
+      "Сверка"
+    ]
+  ],
+  "actions": [
+    4,
+    5,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    3
+  ],
+  "status": "Проблема",
+  "completed": "0 из 9 шагов",
+  "dataCheck": {
+    "allOpen": true,
+    "stable": true,
+    "countAfterRender": 9,
+    "firstUrl": "Откройте https://webmaster.yandex.ru/ и войдите через рабочий Яндекс ID.На странице «Мои сайты» найдите основной адрес из Gate 0: https://k-apple.ru/.Если сайт найден, откройте его. Если нет, нажмите «Добавить сайт», вставьте полный URL из Gate 0 с правильным https/http и www и нажмите «Добавить».Убедитесь, что сайт появился в списке «Мои сайты».",
+    "rightsTilda": "В Вебмастере выберите сайт https://k-apple.ru/ и откройте «Права доступа». Проверьте, подтверждены ли права вашего аккаунта; если да, перейдите к сверке.В Яндекс Вебмастере выберите способ «Tilda» и скопируйте предложенный метатег.В Tilda откройте нужный проект → «Настройки сайта» → «Ещё» → «Подтверждение прав». Вставьте метатег в поле «Подтверждение домена для Яндекса через мета-тег» согласно подсказке Tilda.Сохраните настройки и заново опубликуйте все страницы сайта. Вернитесь в Вебмастер и нажмите «Подтвердить».Проверьте показанный Вебмастером результат подтверждения."
+  },
+  "otherPlatform": {
+    "hasWordPress": true,
+    "hasTildaPath": false,
+    "restored": true
+  },
+  "persistedAfterReload": true,
+  "technicalSeoRepair": [
+    {
+      "path": "technicalSeo.cards.card-19.instruction",
+      "before": "Суть: \nУ в��ех картинок зап��лнен Alt - робот понимает что на фото. \n\nИдеал: \nКолонка Alt без пустых",
+      "after": "Суть: \nУ всех картинок заполнен Alt - робот понимает что на фото. \n\nИдеал: \nКолонка Alt без пустых п"
+    }
+  ],
+  "links": [
+    "https://yandex.ru/support/webmaster/ru/service/quick-start",
+    "https://yandex.ru/support/webmaster/ru/service/rights",
+    "https://help-ru.tilda.cc/domain-confirm",
+    "https://yandex.ru/support/webmaster/ru/indexing-options/robots-txt-analyzer",
+    "https://yandex.ru/support/webmaster/ru/indexing-options/sitemap",
+    "https://www.yandex.ru/support/webmaster/ru/site-indexing/page-indexing-analysis",
+    "https://yandex.ru/support/webmaster/ru/service/check-url",
+    "https://yandex.ru/support/webmaster/ru/service/site-diagnostics",
+    "https://www.yandex.ru/support/webmaster/ru/site-indexing/page-indexing-analysis",
+    "https://help-ru.tilda.cc/search-engine",
+    "https://yandex.ru/support/webmaster/ru/recommendations/using-graphics",
+    "https://help-ru.tilda.cc/search-engine",
+    "https://developers.google.com/speed/docs/insights/v5/about",
+    "https://web.dev/articles/vitals"
+  ],
+  "screenshots": [
+    {
+      "path": "artifacts/gate2-webmaster-guidance/webmaster-rights-1440.png",
+      "dimensions": {
+        "pageWidth": 1440,
+        "viewport": 1440,
+        "x": 66,
+        "y": 0.453125,
+        "width": 1308,
+        "height": 725.625,
+        "visibleTitle": "Подтвердите право текущего Яндекс ID управлять сайтом."
+      }
+    },
+    {
+      "path": "artifacts/gate2-webmaster-guidance/webmaster-rights-390.png",
+      "dimensions": {
+        "pageWidth": 390,
+        "viewport": 390,
+        "x": 38,
+        "y": 0.421875,
+        "width": 314,
+        "height": 1289.1875,
+        "visibleTitle": "Подтвердите право текущего Яндекс ID управлять сайтом."
+      }
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,474 @@
+{
+  "gate12-readiness-audit-smoke.mjs": {
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.02,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/middle-after--gate12-readiness-audit-smoke.mjs.log"
+    }
+  },
+  "gate2-company-product-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 0.43,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate2-company-product-smoke.mjs.log"
+    }
+  },
+  "gate2-company-services-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 60.45,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate2-company-services-smoke.mjs.log"
+    }
+  },
+  "gate2-company-services-step3-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 32.32,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate2-company-services-step3-smoke.mjs.log"
+    }
+  },
+  "gate2-company-strategic-foundation-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 5.17,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate2-company-strategic-foundation-smoke.mjs.log"
+    }
+  },
+  "gate2-metrika-company-product-v361-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 2.87,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate2-metrika-company-product-v361-smoke.mjs.log"
+    }
+  },
+  "gate2-metrika-company-source-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 2.74,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate2-metrika-company-source-smoke.mjs.log"
+    }
+  },
+  "gate2-metrika-goals-quality-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 3.09,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate2-metrika-goals-quality-smoke.mjs.log"
+    }
+  },
+  "gate2-metrika-product-audit-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 2.72,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate2-metrika-product-audit-smoke.mjs.log"
+    }
+  },
+  "gate2-product-services-step4-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 32.34,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate2-product-services-step4-smoke.mjs.log"
+    }
+  },
+  "gate2-service-block-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 32.47,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate2-service-block-smoke.mjs.log"
+    }
+  },
+  "gate2-setup-wizard-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 32.18,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate2-setup-wizard-smoke.mjs.log"
+    }
+  },
+  "gate2-status-propagation-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 2.83,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate2-status-propagation-smoke.mjs.log"
+    }
+  },
+  "gate3-execution-map-smoke.mjs": {
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.02,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/middle-after--gate3-execution-map-smoke.mjs.log"
+    }
+  },
+  "gate3-gate4-structure-sync-smoke.mjs": {
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.02,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/middle-after--gate3-gate4-structure-sync-smoke.mjs.log"
+    }
+  },
+  "gate3-product-journey-smoke.mjs": {
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.12,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/middle-after--gate3-product-journey-smoke.mjs.log"
+    }
+  },
+  "gate3-stage-explanations-smoke.mjs": {
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.01,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/middle-after--gate3-stage-explanations-smoke.mjs.log"
+    }
+  },
+  "gate34-now-decisions-smoke.mjs": {
+    "after": {
+      "status": "PASS",
+      "seconds": 65.33,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/middle-after--gate34-now-decisions-smoke.mjs.log"
+    }
+  },
+  "gate34-now-readiness-smoke.mjs": {
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.02,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/middle-after--gate34-now-readiness-smoke.mjs.log"
+    }
+  },
+  "gate4-aware-media-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 3.17,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-aware-media-smoke.mjs.log"
+    }
+  },
+  "gate4-aware-navigation-smoke.mjs": {
+    "after": {
+      "status": "PASS",
+      "seconds": 3.7,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/middle-after--gate4-aware-navigation-smoke.mjs.log"
+    }
+  },
+  "gate4-company-product-foundation-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 18.88,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-company-product-foundation-smoke.mjs.log"
+    }
+  },
+  "gate4-company-strategic-foundation-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 4.33,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-company-strategic-foundation-smoke.mjs.log"
+    }
+  },
+  "gate4-duplicate-audit-smoke.mjs": {
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.04,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/middle-after--gate4-duplicate-audit-smoke.mjs.log"
+    }
+  },
+  "gate4-five-a-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 0.26,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-five-a-smoke.mjs.log"
+    }
+  },
+  "gate4-funnel-readiness-smoke.mjs": {
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.03,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/middle-after--gate4-funnel-readiness-smoke.mjs.log"
+    }
+  },
+  "gate4-jtbd-link-id-smoke.mjs": {
+    "after": {
+      "status": "PASS",
+      "seconds": 1.07,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/middle-after--gate4-jtbd-link-id-smoke.mjs.log"
+    }
+  },
+  "gate4-paid-smm-smoke.mjs": {
+    "after": {
+      "status": "PASS",
+      "seconds": 4.29,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/middle-after--gate4-paid-smm-smoke.mjs.log"
+    }
+  },
+  "gate4-product-id-migration-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 0.88,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-product-id-migration-smoke.mjs.log"
+    }
+  },
+  "gate4-product-smm-calendar-policy-smoke.mjs": {
+    "after": {
+      "status": "PASS",
+      "seconds": 3.03,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/middle-after--gate4-product-smm-calendar-policy-smoke.mjs.log"
+    }
+  },
+  "gate4-product-smm-scope-smoke.mjs": {
+    "after": {
+      "status": "PASS",
+      "seconds": 4.48,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/middle-after--gate4-product-smm-scope-smoke.mjs.log"
+    }
+  },
+  "gate4-product-smm-workspace-v2-smoke.mjs": {
+    "after": {
+      "status": "PASS",
+      "seconds": 10.05,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/middle-after--gate4-product-smm-workspace-v2-smoke.mjs.log"
+    }
+  },
+  "gate4-readiness-product-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 0.73,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-readiness-product-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-ad-prompt-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 0.67,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-ad-prompt-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-assets-prompt-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 7.25,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-assets-prompt-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-builder-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 3.26,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-builder-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-direct-form-v534-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 0.85,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-direct-form-v534-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-direct-panel-v533-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 0.91,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-direct-panel-v533-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-exclusions-v536-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 0.86,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-exclusions-v536-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-foundation-source-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 3.57,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-foundation-source-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-gate1-defaults-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 3.56,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-gate1-defaults-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-group-card-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 5.21,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-group-card-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-group-launch-v537-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 1.08,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-group-launch-v537-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-guidance-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 1.95,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-guidance-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-jtbd-groups-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 4.27,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-jtbd-groups-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-launch-checklist-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 6.77,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-launch-checklist-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-launch-v528-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 0.46,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-launch-v528-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-launch-v541-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 0.41,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-launch-v541-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-metrika-link-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 5.13,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-metrika-link-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-product-id-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 0.44,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-product-id-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-project-photo-delete-smoke.mjs": {
+    "after": {
+      "status": "PASS",
+      "seconds": 3.13,
+      "exit_code": 0,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-project-photo-delete-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-promotion-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 2.52,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-promotion-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-start-method-v532-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 0.41,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-start-method-v532-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-strategy-v531-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 0.48,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-strategy-v531-smoke.mjs.log"
+    }
+  },
+  "gate4-rsya-two-step-workflow-smoke.mjs": {
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.05,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/middle-after--gate4-rsya-two-step-workflow-smoke.mjs.log"
+    }
+  },
+  "gate4-search-duplicate-ownership-smoke.mjs": {
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.05,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/middle-after--gate4-search-duplicate-ownership-smoke.mjs.log"
+    }
+  },
+  "gate4-search-gate1-product-source-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 0.1,
+      "exit_code": 85,
+      "log": "artifacts/step7-continuation/middle-after--gate4-search-gate1-product-source-smoke.mjs.log"
+    }
+  },
+  "gate4-search-group-fixation-smoke.mjs": {
+    "after": {
+      "status": "FAIL",
+      "seconds": 7.32,
+      "exit_code": 1,
+      "log": "artifacts/step7-continuation/middle-after--gate4-search-group-fixation-smoke.mjs.log"
+    }
+  },
+  "gate4-search-group-metrics-import-export-smoke.mjs": {
+    "after": {
+      "status": "TIMEOUT",
+      "seconds": 120.05,
+      "exit_code": -9,
+      "log": "artifacts/step7-continuation/middle-after--gate4-search-group-metrics-import-export-smoke.mjs.log"
+    }
+  }
+}

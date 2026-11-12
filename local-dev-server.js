@@ -1,6 +1,8 @@
 const fs = require('fs');
 const http = require('http');
+const os = require('os');
 const path = require('path');
+const { readUtf8RequestBody } = require('./text-integrity.js');
 const { currentBuildVersion, renderIndex, renderBuildInfo } = require('./scripts/build-version.cjs');
 
 const root = __dirname;
@@ -60,6 +62,57 @@ function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.end(JSON.stringify(payload));
+}
+
+// «Экспорт всего проекта» in local mode: the page posts the finished JSON
+// here and the file is written into ~/Downloads. Embedded browser panes can
+// leave a blob download as an unfinished temporary file; this path reports
+// the real file name, location and byte count back to the page. Existing
+// files are never overwritten. Same-origin requests only.
+function saveProjectExport(req, res, url) {
+  if (req.method !== 'POST' || req.headers['x-guru-export'] !== '1') {
+    sendJson(res, 400, { ok: false, error: 'bad_request' });
+    return;
+  }
+  const origin = req.headers.origin;
+  if (origin && origin !== `http://${req.headers.host}`) {
+    sendJson(res, 403, { ok: false, error: 'foreign_origin' });
+    return;
+  }
+  const requested = path.basename(String(url.searchParams.get('name') || ''));
+  if (!/^guru-project-[\p{L}\p{N}._-]+\.json$/u.test(requested)) {
+    sendJson(res, 400, { ok: false, error: 'invalid_name' });
+    return;
+  }
+  const directory = path.join(os.homedir(), 'Downloads');
+  const stem = requested.slice(0, -'.json'.length);
+  let target = path.join(directory, requested);
+  for (let index = 1; fs.existsSync(target); index += 1)
+    target = path.join(directory, `${stem} (${index}).json`);
+  const temporary = `${target}.part`;
+  let bytes = 0;
+  let failed = false;
+  const fail = (error) => {
+    if (failed) return;
+    failed = true;
+    fs.rm(temporary, { force: true }, () => {});
+    sendJson(res, 500, { ok: false, error: error?.message || 'write_failed' });
+  };
+  fs.mkdirSync(directory, { recursive: true });
+  const output = fs.createWriteStream(temporary, { flags: 'wx' });
+  req.on('data', (chunk) => { bytes += chunk.length; });
+  req.on('error', fail);
+  output.on('error', fail);
+  output.on('finish', () => {
+    if (failed) return;
+    try {
+      fs.renameSync(temporary, target);
+      sendJson(res, 200, { ok: true, path: target, name: path.basename(target), bytes });
+    } catch (error) {
+      fail(error);
+    }
+  });
+  req.pipe(output);
 }
 
 function serveLiveReload(req, res) {
@@ -137,14 +190,6 @@ function decorateResponse(res) {
   };
 }
 
-function readBody(req) {
-  return new Promise(resolve => {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', () => resolve(body));
-  });
-}
-
 async function serveApi(req, res, url) {
   const route = path.basename(url.pathname);
   const file = path.join(root, 'api', `${route}.js`);
@@ -155,11 +200,17 @@ async function serveApi(req, res, url) {
 
   decorateResponse(res);
   req.query = Object.fromEntries(url.searchParams.entries());
-  const rawBody = await readBody(req);
+  let rawBody;
+  try { rawBody = await readUtf8RequestBody(req); }
+  catch (_) {
+    sendJson(res, 400, { ok: false, error: 'invalid_utf8' });
+    return;
+  }
   try {
     req.body = rawBody ? JSON.parse(rawBody) : {};
-  } catch (error) {
-    req.body = {};
+  } catch (_) {
+    sendJson(res, 400, { ok: false, error: 'invalid_json' });
+    return;
   }
 
   try {
@@ -214,6 +265,10 @@ const server = http.createServer((req, res) => {
   }
   if (url.pathname === '/__live-reload') {
     serveLiveReload(req, res);
+    return;
+  }
+  if (url.pathname === '/__guru-save-export') {
+    saveProjectExport(req, res, url);
     return;
   }
   if (url.pathname.startsWith('/api/')) {

@@ -1,0 +1,125 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "project": "Коричное яблоко",
+      "queries": 15,
+      "total": 15,
+      "outcome": {
+        "close": 0,
+        "other": 2,
+        "empty": 13
+      },
+      "groups": [
+        [
+          "low",
+          1
+        ],
+        [
+          "unrated",
+          14
+        ]
+      ],
+      "companies": 25,
+      "hint": "Сверху компании, которые чаще всего встречаются в ваших запросах, сначала близкие.",
+      "defaultSort": "Близкие ↓",
+      "groupHeadings": [
+        "Низкая · 1",
+        "Не оценена · 14"
+      ],
+      "searchStable": true,
+      "empty": "Ничего не найдено. Сбросьте фильтр.",
+      "mediumActive": false,
+      "farDesc": true,
+      "farAsc": true,
+      "restored": true,
+      "expanded": true,
+      "stateSame": true,
+      "companySame": true,
+      "sourceSha256": "ddc6de490e31c8d2bb8c71963bacb8dd53236e83b0f02105b053447ef3fffe5c",
+      "exportBeforeSha256": "567149342207e960aca9f93e55f58b42c5d4eda09ad5bfc668f6a847be631ff4",
+      "exportAfterSha256": "567149342207e960aca9f93e55f58b42c5d4eda09ad5bfc668f6a847be631ff4"
+    },
+    {
+      "project": "iCleaning",
+      "queries": 0,
+      "total": 0,
+      "outcome": {
+        "close": 0,
+        "other": 0,
+        "empty": 0
+      },
+      "groups": [],
+      "companies": 3,
+      "hint": "Сверху компании, которые чаще всего встречаются в ваших запросах, сначала близкие.",
+      "defaultSort": "Близкие ↓",
+      "groupHeadings": [],
+      "searchStable": true,
+      "empty": "Ничего не найдено. Сбросьте фильтр.",
+      "mediumActive": false,
+      "farDesc": true,
+      "farAsc": true,
+      "restored": true,
+      "expanded": false,
+      "stateSame": true,
+      "companySame": true,
+      "sourceSha256": "a1baa877f77727f7813f80cc0749763bd5122f8f56d48136fa1527542ea19c71",
+      "exportBeforeSha256": "9cd45370403d1e00612e22f455563b045bc8cf23f7f87b71d7da4ab060e0899b",
+      "exportAfterSha256": "9cd45370403d1e00612e22f455563b045bc8cf23f7f87b71d7da4ab060e0899b"
+    },
+    {
+      "project": "SIVRCE",
+      "queries": 0,
+      "total": 0,
+      "outcome": {
+        "close": 0,
+        "other": 0,
+        "empty": 0
+      },
+      "groups": [],
+      "companies": 3,
+      "hint": "Сверху компании, которые чаще всего встречаются в ваших запросах, сначала близкие.",
+      "defaultSort": "Близкие ↓",
+      "groupHeadings": [],
+      "searchStable": true,
+      "empty": "Ничего не найдено. Сбросьте фильтр.",
+      "mediumActive": false,
+      "farDesc": true,
+      "farAsc": true,
+      "restored": true,
+      "expanded": false,
+      "stateSame": true,
+      "companySame": true,
+      "sourceSha256": "59c7656d64ab0f86da8791c2531768249d6feb64b40673ed174654ea650c413c",
+      "exportBeforeSha256": "57a41a2e8e24d60e2f2f555c75614d601e24ea3f733a0f658a4830570d9c6d63",
+      "exportAfterSha256": "57a41a2e8e24d60e2f2f555c75614d601e24ea3f733a0f658a4830570d9c6d63"
+    },
+    {
+      "project": "УНИВЕРСАЛ / ГУРУ",
+      "queries": 0,
+      "total": 0,
+      "outcome": {
+        "close": 0,
+        "other": 0,
+        "empty": 0
+      },
+      "groups": [],
+      "companies": 0,
+      "hint": "Сверху компании, которые чаще всего встречаются в ваших запросах, сначала близкие.",
+      "defaultSort": "Близкие ↓",
+      "groupHeadings": [],
+      "searchStable": true,
+      "empty": "Ничего не найдено. Сбросьте фильтр.",
+      "mediumActive": false,
+      "farDesc": true,
+      "farAsc": true,
+      "restored": true,
+      "expanded": false,
+      "stateSame": true,
+      "companySame": true,
+      "sourceSha256": "847765127374ca95d9db93631e5c416b1d1b2518e56f6754a6b7b6ae058a2360",
+      "exportBeforeSha256": "1c892f6dd941d0d93ec394744b6c15b726c3775f9640a1ff94547d92e3f802b3",
+      "exportAfterSha256": "1c892f6dd941d0d93ec394744b6c15b726c3775f9640a1ff94547d92e3f802b3"
+    }
+  ]
+}

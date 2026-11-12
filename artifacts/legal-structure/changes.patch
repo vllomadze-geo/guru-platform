@@ -1,0 +1,267 @@
+--- before/app.js
++++ after/app.js
+@@ -21502,6 +21502,9 @@
+ 
+ function megaPlatformSetUrl(group, id, value, workspace = state) {
+   if (!id) return false;
++  const existing = workspace?.gates?.find(gate => gate.id === "gate-0")?.cards
++    ?.find(isMegaMarketingCard)?.megaMarketing?.platformV2?.urlsV1;
++  if (String(existing?.[group]?.[id] ?? "").trim() === String(value ?? "").trim()) return false;
+   const store = megaPlatformUrlStore(workspace);
+   if (group === "categories" && store?.missingCategoryGeneratedIds?.includes(id)) return false;
+   if (!store?.[group]) return false;
+@@ -21942,10 +21945,10 @@
+     (intent.secondary?.length ? ` +${intent.secondary.length}` : "");
+ }
+ 
+-function megaPlatformIntentCellV1(group, id, name) {
++function megaPlatformIntentCellV1(group, id, name, workspace = state) {
+   if (!id) return '<span class="mega-platform-intent-unresolved">Требует проверки</span>';
+-  const page = { group, id, name, url: megaPlatformUrl(group, id) };
+-  const intent = megaPlatformIntentSyncV1(page);
++  const page = { group, id, name, url: megaPlatformUrl(group, id, workspace) };
++  const intent = megaPlatformIntentSyncV1(page, workspace);
+   const label = megaPlatformIntentLabelV1(intent);
+   if (label === "—") return '<span class="mega-platform-intent-unresolved">—</span>';
+   const tone = intent?.confidence >= 60 && MEGA_SEARCH_INTENTS_V1[intent.primary]
+@@ -22822,9 +22825,8 @@
+   button.setAttribute("aria-label", `Сформировать SEO-адрес страницы «${name}»`);
+ }
+ 
+-function megaPlatformUrlInput(cardId, group, id, name = "") {
++function megaPlatformUrlInput(cardId, group, id, name = "", value = megaPlatformUrl(group, id)) {
+   if (!id) return `<span>URL не указан</span>`;
+-  const value = megaPlatformUrl(group, id);
+   const action = group === "fixed" && ["home", "on_order"].includes(id) ? ""
+     : `<button type="button" class="mega-platform-url-action" data-mega-url-from-name title="Сформировать SEO-адрес из названия страницы" aria-label="${escapeAttr(`Сформировать SEO-адрес страницы «${name}»`)}" ${value.trim() || !guruCategoryUrlSlugV494(name) ? "hidden" : ""}>Из названия</button>`;
+   return `<div class="mega-platform-url-field">${action}<input data-mega-card="${escapeAttr(cardId)}" data-mega-field="url" data-mega-url-group="${escapeAttr(group)}" data-mega-url-id="${escapeAttr(id)}" data-mega-url-name="${escapeAttr(name)}" data-guru-field-neutral aria-label="${escapeAttr(`URL страницы «${name}»`)}" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" value="${escapeAttr(value)}" placeholder="Вставьте ссылку" /></div>`;
+@@ -22854,40 +22856,110 @@
+   data_consent: ["Отдельным документом, ссылка рядом с кнопкой, галочка не предустановлена (ст. 9 152-ФЗ). По пересказу, требует сверки с текстом закона.", "https://saby.ru/articles/contragents/kak_vypolnit_trebovaniya_zakona_o_persdannyh_na_sayte"],
+   offer: ["Нужна, если заказ оформляется на сайте", "https://44.rospotrebnadzor.ru/zacshita_prav_potreb/1671/"],
+   returns: ["Нужна, если заказ оформляется на сайте", "https://44.rospotrebnadzor.ru/zacshita_prav_potreb/1671/"],
++  delivery: ["Нужна, если заказ оформляется на сайте", "https://44.rospotrebnadzor.ru/zacshita_prav_potreb/1671/"],
++  cookie_banner: ["Нужен, если сайт собирает персональные данные. Настройте баннер в Gate 1.", "https://saby.ru/articles/contragents/kak_vypolnit_trebovaniya_zakona_o_persdannyh_na_sayte"],
+ };
+ function megaPlatformLegalRequirement(item, pv2) {
+-  const id = MEGA_PLATFORM_LEGAL_KEYS[item.name];
+-  const key = id === "data_consent" ? "collectsPersonalDataV1"
+-    : ["offer", "returns"].includes(id) ? "siteCheckoutV1" : null;
++  const id = item.id || MEGA_PLATFORM_LEGAL_KEYS[item.name];
++  const key = ["data_consent", "cookie_banner"].includes(id) ? "collectsPersonalDataV1"
++    : ["offer", "returns", "delivery"].includes(id) ? "siteCheckoutV1" : null;
+   const answer = key ? pv2[key] : true;
+   return { id, needed: answer !== false, label: !key ? "Обязательна"
+     : answer === true ? "Нужна" : answer === false ? "Не нужна" : "Зависит от ответа" };
+ }
++// One pure, project-level model. No ensure helpers, defaults written to state,
++// timestamps, caches or persistence. Even an uninitialised workspace is read only.
++function deriveLegalPages(workspace) {
++  const platform = workspace?.gates?.find(gate => gate.id === "gate-0")?.cards
++    ?.find(isMegaMarketingCard)?.megaMarketing?.platformV2 || {};
++  const fixed = platform.urlsV1?.fixed || {};
++  const base = Object.entries(MEGA_PLATFORM_LEGAL_KEYS).map(([name, id]) => ({ name, id }));
++  const rows = [...base.slice(0, 2), { id: "cookie_banner", name: "Cookie-баннер", kind: "banner" },
++    ...base.slice(2), { id: "delivery", name: "Доставка и оплата", kind: "reference" }]
++    .filter(item => item.id !== "cookie_banner" || platform.collectsPersonalDataV1 === true)
++    .map(item => ({ ...item, ...megaPlatformLegalRequirement(item, platform),
++      url: item.kind === "banner" ? "" : String(fixed[item.id] || ""),
++      filled: item.kind !== "banner" && Boolean(String(fixed[item.id] || "").trim()),
++      selector: `[data-mega-url-group="fixed"][data-mega-url-id="${item.id}"]` }));
++  const pages = rows.filter(row => row.needed && row.kind !== "banner");
++  const questions = MEGA_PLATFORM_LEGAL_QUESTIONS.map(question => ({ ...question,
++    filled: typeof platform[question.key] === "boolean",
++    answer: platform[question.key] === true ? "Да" : platform[question.key] === false ? "Нет" : "Нет ответа" }));
++  const done = pages.filter(row => row.filled).length;
++  return { rows, pages, questions, total: pages.length, done,
++    ready: done === pages.length && questions.every(question => question.filled),
++    summary: `Нужно страниц: ${pages.length} · URL указан: ${done} из ${pages.length}`,
++    answers: `Персональные данные: ${questions[0].answer} · Заказ на сайте: ${questions[1].answer}`,
++    checks: [...pages.map(row => ({ filled: row.filled, target: { label: `${row.name}: URL`,
++      group: { key: "legal-url", label: "Юридические страницы: URL не указан", row: row.name, total: pages.length }, selector: row.selector } })),
++      ...questions.map(question => ({ filled: question.filled, target: { label: question.label,
++        selector: `[data-mega-legal-answer="${question.key}"]` } }))] };
++}
+ function megaPlatformLegalSummary(pv2, workspace = state) {
+-  if (MEGA_PLATFORM_LEGAL_QUESTIONS.some(({ key }) => typeof pv2[key] !== "boolean")) return "Ответьте на вопросы";
+-  const rows = (pv2.legal || []).filter(item => megaPlatformLegalRequirement(item, pv2).needed);
+-  const filled = rows.filter(item => String(megaPlatformUrl("fixed", MEGA_PLATFORM_LEGAL_KEYS[item.name], workspace) || "").trim()).length;
+-  return `Нужно страниц: ${rows.length} · URL указан: ${filled} из ${rows.length}`;
+-}
+-function megaPlatformLegalQuestionsHtml(cardId, pv2) {
+-  return `<div class="mega-platform-legal-setup"><p class="mega-platform-legal-intro">Условия работы сайта</p><div class="mega-platform-legal-questions">${MEGA_PLATFORM_LEGAL_QUESTIONS.map(({ key, label, hint }) =>
++  return deriveLegalPages(workspace).summary;
++}
++function megaPlatformLegalQuestionsHtml(cardId, pv2, workspace = state) {
++  const model = deriveLegalPages(workspace);
++  return `<details class="mega-platform-legal-disclosure"><summary><span class="mega-platform-legal-summary" aria-live="polite">${escapeHtml(model.summary)}</span><span class="mega-platform-legal-answers">${escapeHtml(model.answers)}</span></summary><div class="mega-platform-legal-setup"><p class="mega-platform-legal-intro">Условия работы сайта</p><div class="mega-platform-legal-questions">${MEGA_PLATFORM_LEGAL_QUESTIONS.map(({ key, label, hint }) =>
+     `<div class="mega-platform-legal-question"><div class="mega-platform-legal-question-copy"><span id="legal-question-${escapeAttr(cardId)}-${key}">${escapeHtml(label)}</span><small id="legal-hint-${escapeAttr(cardId)}-${key}">${escapeHtml(hint)}</small></div><div class="mega-platform-legal-segments" role="group" aria-labelledby="legal-question-${escapeAttr(cardId)}-${key}" aria-describedby="legal-hint-${escapeAttr(cardId)}-${key}">${[true, false].map(value =>
+-      `<button type="button" data-mega-card="${escapeAttr(cardId)}" data-mega-legal-answer="${key}" data-mega-legal-value="${value}" aria-pressed="${pv2[key] === value}">${value ? "Да" : "Нет"}</button>`).join("")}</div></div>`).join("")}</div></div><div class="mega-platform-legal-summary" aria-live="polite">${megaPlatformLegalSummary(pv2)}</div>`;
++      `<button type="button" data-mega-card="${escapeAttr(cardId)}" data-mega-legal-answer="${key}" data-mega-legal-value="${value}" aria-pressed="${pv2[key] === value}">${value ? "Да" : "Нет"}</button>`).join("")}</div></div>`).join("")}</div></div></details>`;
++}
++function megaPlatformLegalValueHtml(cardId, row) {
++  if (!row.needed) return "Не требуется";
++  if (row.kind === "banner") return '<button type="button" class="small-btn" data-open-audit-page="card-35">Блок «Cookie-баннер» в Gate 1</button>';
++  if (row.kind === "reference") return row.url.trim()
++    ? `<span class="mega-platform-legal-reference">${escapeHtml(row.url)}</span>` : "URL не указан";
++  return megaPlatformUrlInput(cardId, "fixed", row.id, row.name, row.url);
++}
++function megaPlatformLegalRowHtml(cardId, row, workspace = state) {
++  const help = MEGA_PLATFORM_LEGAL_HELP[row.id];
++  const helpId = `legal-help-${cardId}-${row.id}`;
++  const mode = !row.needed ? "unneeded" : row.kind || "input";
++  const intent = row.kind === "banner" ? "Баннер"
++    : guruReadinessInspect(workspace, view => megaPlatformIntentCellV1("fixed", row.id, row.name, view)).status || "";
++  return `<tr data-mega-legal-row="${escapeAttr(row.id)}" class="${row.needed ? "" : "mega-platform-legal-unneeded"}">
++    <td class="cr-label"><div class="mega-platform-page-name">${escapeHtml(row.name)}</div>
++      <div class="mega-platform-legal-meta"><span data-mega-legal-status>${escapeHtml(row.label)}</span> · <button type="button" data-mega-legal-help aria-label="${escapeAttr(`Когда нужна страница «${row.name}»`)}" aria-expanded="false" aria-controls="${escapeAttr(helpId)}">Когда нужна</button></div>
++      <div class="mega-platform-legal-explanation" id="${escapeAttr(helpId)}" hidden>${escapeHtml(help[0])} <a href="${escapeAttr(help[1])}" target="_blank" rel="noopener noreferrer">Источник</a></div></td>
++    <td data-mega-legal-value data-mega-legal-mode="${mode}">${megaPlatformLegalValueHtml(cardId, row)}</td>
++    <td>${intent}</td><td></td></tr>`;
++}
++function megaPlatformLegalHtml(cardId, workspace) {
++  const platform = workspace?.gates?.find(gate => gate.id === "gate-0")?.cards
++    ?.find(isMegaMarketingCard)?.megaMarketing?.platformV2 || {};
++  const model = deriveLegalPages(workspace);
++  return `<div class="mega-subsection" data-mega-legal-block="${escapeAttr(cardId)}"><div class="mega-subsection-title">Юридически обязательные страницы</div>
++    ${megaPlatformLegalQuestionsHtml(cardId, platform, workspace)}
++    <table class="cr-table mega-platform-table"><thead><tr><th>Страница</th><th>URL</th><th>Интент</th><th>Источник</th></tr></thead><tbody>${model.rows.map(row => megaPlatformLegalRowHtml(cardId, row, workspace)).join("")}</tbody></table>
++    <small class="mega-platform-note">Справочная информация, не юридическая консультация</small></div>`;
+ }
+ function megaPlatformRefreshLegal(card, workspace = state) {
+   const pv2 = card?.megaMarketing?.platformV2;
+   if (!pv2) return;
++  const model = deriveLegalPages(workspace);
+   document.querySelectorAll("[data-mega-legal-block]").forEach(block => {
+     if (block.dataset.megaLegalBlock !== card.id) return;
+-    block.querySelector(".mega-platform-legal-summary").textContent = megaPlatformLegalSummary(pv2, workspace);
++    block.querySelector(".mega-platform-legal-summary").textContent = model.summary;
++    block.querySelector(".mega-platform-legal-answers").textContent = model.answers;
+     block.querySelectorAll("[data-mega-legal-answer]").forEach(button =>
+       button.setAttribute("aria-pressed", String(pv2[button.dataset.megaLegalAnswer] === (button.dataset.megaLegalValue === "true"))));
+-    block.querySelectorAll("[data-mega-legal-row]").forEach(row => {
+-      const item = pv2.legal.find(item => MEGA_PLATFORM_LEGAL_KEYS[item.name] === row.dataset.megaLegalRow);
+-      if (!item) return;
+-      const requirement = megaPlatformLegalRequirement(item, pv2);
+-      row.classList.toggle("mega-platform-legal-unneeded", !requirement.needed);
+-      row.querySelector("[data-mega-legal-status]").textContent = requirement.label;
++    const body = block.querySelector("tbody");
++    body.querySelectorAll("[data-mega-legal-row]").forEach(row => {
++      if (!model.rows.some(item => item.id === row.dataset.megaLegalRow)) row.remove();
++    });
++    model.rows.forEach((item, index) => {
++      let row = body.querySelector(`[data-mega-legal-row="${item.id}"]`);
++      if (!row) {
++        const template = document.createElement("template"); template.innerHTML = megaPlatformLegalRowHtml(card.id, item);
++        row = template.content.firstElementChild; body.insertBefore(row, body.children[index] || null);
++      }
++      row.classList.toggle("mega-platform-legal-unneeded", !item.needed);
++      row.querySelector("[data-mega-legal-status]").textContent = item.label;
++      const cell = row.querySelector("[data-mega-legal-value]");
++      const mode = !item.needed ? "unneeded" : item.kind || "input";
++      if (mode !== cell.dataset.megaLegalMode || mode === "reference") {
++        cell.innerHTML = megaPlatformLegalValueHtml(card.id, item); cell.dataset.megaLegalMode = mode;
++      }
+     });
+   });
+ }
+@@ -22928,12 +23000,8 @@
+   const urlGroup = group === "extra" ? "custom" : "fixed";
+   const urlId = group === "legal" ? MEGA_PLATFORM_LEGAL_KEYS[item.name]
+     : group === "onOrder" ? "on_order" : group === "service" ? item.urlId : item.id;
+-  const legal = group === "legal" && pv2 ? megaPlatformLegalRequirement(item, pv2) : null;
+-  const help = legal ? MEGA_PLATFORM_LEGAL_HELP[legal.id] : null;
+-  const helpId = `legal-help-${cardId}-${urlId}`;
+-  const legalNote = legal ? `<div class="mega-platform-legal-meta"><span data-mega-legal-status>${legal.label}</span> · <button type="button" data-mega-legal-help aria-label="${escapeAttr(`Когда нужна страница «${item.name}»`)}" aria-expanded="false" aria-controls="${escapeAttr(helpId)}">Когда нужна</button></div><div class="mega-platform-legal-explanation" id="${escapeAttr(helpId)}" hidden>${escapeHtml(help[0])} <a href="${escapeAttr(help[1])}" target="_blank" rel="noopener noreferrer">Источник</a></div>` : "";
+-  return `<tr${legal ? ` data-mega-legal-row="${escapeAttr(urlId)}" class="${legal.needed ? "" : "mega-platform-legal-unneeded"}"` : ""}>
+-    <td class="cr-label"><div class="mega-platform-page-name">${escapeHtml(item.name)}${removable ? `<button type="button" class="v116-multi-remove" data-mega-card="${escapeAttr(cardId)}" data-mega-pv2-remove="${index}" title="Удалить">×</button>` : ""}</div>${legalNote}${note ? `<small class="mega-platform-note">${escapeHtml(note)}</small>` : ""}</td>
++  return `<tr>
++    <td class="cr-label"><div class="mega-platform-page-name">${escapeHtml(item.name)}${removable ? `<button type="button" class="v116-multi-remove" data-mega-card="${escapeAttr(cardId)}" data-mega-pv2-remove="${index}" title="Удалить">×</button>` : ""}</div>${note ? `<small class="mega-platform-note">${escapeHtml(note)}</small>` : ""}</td>
+     <td>${megaPlatformUrlInput(cardId, urlGroup, urlId, item.name)}</td>
+     <td>${megaPlatformIntentCellV1(urlGroup, urlId, item.name)}</td>
+     <td></td>
+@@ -23845,10 +23913,7 @@
+       ${megaPlatformCommercialTable(cardId, auto, commercialAudit, commercialCustom)}
+       <button type="button" class="v116-multi-add" data-mega-card="${escapeAttr(cardId)}" data-mega-add-page-group="commercial">+ Добавить страницу</button>
+     </div>
+-    <div class="mega-subsection" data-mega-legal-block="${escapeAttr(cardId)}"><div class="mega-subsection-title">Юридически обязательные страницы</div>
+-      ${megaPlatformLegalQuestionsHtml(cardId, pv2)}
+-      ${table((pv2.legal || []).map((item, index) => megaPlatformManualRow(cardId, item, "legal", index, false, "", pv2)))}
+-      <small class="mega-platform-note">Справочная информация, не юридическая консультация</small></div>
++    ${megaPlatformLegalHtml(cardId, state)}
+     <div class="mega-subsection"><div class="mega-subsection-title">Страницы, усиливающие конверсию</div>
+       ${table([...auto.conversion.map((item) => megaPlatformReadonlyRow(item, cardId)),
+         ...conversionAudit.map((item) => megaPlatformReadonlyRow(item, cardId)),
+@@ -23892,7 +23957,8 @@
+   if (!m) return "not_started";
+   const pv2 = m.platformV2 || {};
+   const auto = megaPlatformAutoRows(workspace);
+-  const autoRows = [...auto.required, ...auto.conversion];
++  const legal = deriveLegalPages(workspace);
++  const autoRows = [...auto.required, ...auto.conversion].filter(item => !(item.urlGroup === "fixed" && item.urlId === "delivery"));
+   const autoTotals = autoRows.reduce((totals, item) => ({ ...totals, [item.urlGroup]: (totals[item.urlGroup] || 0) + 1 }), {});
+   const autoItems = autoRows.map((item) => ({
+     status: guruReadinessValue(megaPlatformUrl(item.urlGroup, item.urlId, workspace),
+@@ -23900,10 +23966,8 @@
+         group: { key: `catalog-url-${item.urlGroup}`, label: item.urlGroup === "products" ? "Каталог: URL не указан" : "Страницы: URL не указан", row: item.urlId, total: autoTotals[item.urlGroup] },
+         selector: `[data-mega-url-group="${item.urlGroup}"][data-mega-url-id="${item.urlId}"]` }) ? "works" : "",
+   }));
+-  const neededLegal = (Array.isArray(pv2.legal) ? pv2.legal : []).filter(item => megaPlatformLegalRequirement(item, pv2).needed);
+-  const legalItems = neededLegal.map((item) => ({
+-    status: guruReadinessValue(megaPlatformUrl("fixed", MEGA_PLATFORM_LEGAL_KEYS[item.name], workspace),
+-      { label: `${item.name}: URL`, group: { key: "legal-url", label: "Юридические страницы: URL не указан", row: item.name, total: neededLegal.length }, selector: `[data-mega-url-group="fixed"][data-mega-url-id="${MEGA_PLATFORM_LEGAL_KEYS[item.name]}"]` }) ? "works" : "",
++  const legalItems = legal.checks.map(check => ({
++    status: guruReadinessValue(check.filled, check.target) ? "works" : "",
+   }));
+   const extraItems = (Array.isArray(pv2.extra) ? pv2.extra : []).filter((item) =>
+     !item.promotedV2 && !megaPlatformHiddenLegacyExtra(item))
+@@ -23912,8 +23976,6 @@
+   const allItems = [
+     ...autoItems,
+     ...legalItems,
+-    ...MEGA_PLATFORM_LEGAL_QUESTIONS.map(({ key, label }) => ({ status: guruReadinessValue(
+-      typeof pv2[key] === "boolean", { label, selector: `[data-mega-legal-answer="${key}"]` }) ? "works" : "" })),
+     ...extraItems,
+     ...(Array.isArray(m.infra) ? m.infra : []),
+     ...(Array.isArray(m.channels) ? m.channels : []),
+@@ -23932,7 +23994,6 @@
+ function updateMegaMarketing(target) {
+   const card = findCard(target.dataset.megaCard);
+   if (!card) return;
+-  const m = ensureMegaMarketing(card, state);
+   const section = target.dataset.megaSection;
+   const pv2 = target.dataset.megaPv2;
+   const idx = Number(target.dataset.megaIdx);
+@@ -23941,7 +24002,7 @@
+   if (target.dataset.megaUrlGroup && field === "url") {
+     const group = target.dataset.megaUrlGroup;
+     const id = target.dataset.megaUrlId;
+-    megaPlatformSetUrl(group, id, target.value, state);
++    if (!megaPlatformSetUrl(group, id, target.value, state)) return;
+     document.querySelectorAll(`[data-mega-url-group="${CSS.escape(group)}"][data-mega-url-id="${CSS.escape(id)}"]`)
+       .forEach((input) => {
+         if (input !== target) input.value = target.value;
+@@ -23952,6 +24013,7 @@
+     flashSaving();
+     return;
+   }
++  const m = ensureMegaMarketing(card, state);
+   if (pv2 === "fundamental" && m.platformV2?.fundamental?.[idx]) {
+     m.platformV2.fundamental[idx][field] = target.value;
+   } else if (pv2 === "legal" && m.platformV2?.legal?.[idx]) {
+--- before/styles.css
++++ after/styles.css
+@@ -24191,3 +24191,14 @@
+   [data-mega-legal-block] .mega-platform-legal-question { gap: 12px; align-items: flex-start; }
+   [data-mega-legal-block] .mega-platform-legal-segments button { min-height: 44px; min-width: 44px; }
+ }
++
++/* The legal summary alone controls disclosure; opening it never persists data. */
++[data-mega-legal-block] .mega-platform-legal-disclosure { margin: 10px 0 14px; }
++[data-mega-legal-block] .mega-platform-legal-disclosure > summary { position: relative; list-style: none; cursor: pointer; padding: 8px 0 8px 20px; }
++[data-mega-legal-block] .mega-platform-legal-disclosure > summary::-webkit-details-marker { display: none; }
++[data-mega-legal-block] .mega-platform-legal-disclosure > summary::before { content: ""; position: absolute; left: 3px; top: 14px; width: 6px; height: 6px; border-right: 1px solid currentColor; border-bottom: 1px solid currentColor; transform: rotate(-45deg); }
++[data-mega-legal-block] .mega-platform-legal-disclosure[open] > summary::before { transform: rotate(45deg); }
++[data-mega-legal-block] .mega-platform-legal-disclosure .mega-platform-legal-summary { display: block; margin: 0 0 4px; }
++[data-mega-legal-block] .mega-platform-legal-answers { display: block; font-size: 11px; line-height: 1.5; color: var(--muted, #77736c); }
++[data-mega-legal-block] .mega-platform-legal-reference { overflow-wrap: anywhere; }
++[data-mega-legal-block] .mega-platform-legal-disclosure > summary:focus-visible { outline: 2px solid var(--text, #33312d); outline-offset: 3px; border-radius: 4px; }

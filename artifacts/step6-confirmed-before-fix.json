@@ -1,0 +1,236 @@
+{
+  "icleaning": {
+    "comparison": {
+      "identical": false,
+      "beforeSha256": "5fc30f2de13393abcd872ba94fc244eb5638eaff877a9270978eaa3ac09b6d06",
+      "afterSha256": "a2c9d2b39cfdd9f624716a41493dfea90b1fc63cb52faf6a53832ee6698473e5",
+      "bytes": 1499964,
+      "updatedAtFields": 107,
+      "uiPreferenceWrites": 0,
+      "differences": [
+        {
+          "path": "workspace.workspace.ui.g1DisclosureOpenV512",
+          "after": {}
+        },
+        {
+          "path": "workspace.workspace.ui.gate1LandingContinuumV234",
+          "after": {
+            "byProduct": {
+              "catalog-item-1786885522654-b659e1": {
+                "product_id": "catalog-item-1786885522654-b659e1",
+                "continuum": "",
+                "cards": {
+                  "card-24": true,
+                  "card-23": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "path": "workspace.workspace.gates.2.cards.0.fields.g2Check",
+          "after": ""
+        },
+        {
+          "path": "workspace.workspace.gates.2.cards.0.fields.g2Source",
+          "after": ""
+        },
+        {
+          "path": "workspace.workspace.gates.2.cards.6.fields.g2Check",
+          "after": ""
+        },
+        {
+          "path": "workspace.workspace.gates.2.cards.6.fields.g2Source",
+          "after": ""
+        },
+        {
+          "path": "workspace.workspace.gates.2.cards.10.fields.g2Check",
+          "after": ""
+        },
+        {
+          "path": "workspace.workspace.gates.2.cards.10.fields.g2Source",
+          "after": ""
+        },
+        {
+          "path": "workspace.workspace.gates.2.cards.29.fields.g2Check",
+          "after": ""
+        },
+        {
+          "path": "workspace.workspace.gates.2.cards.29.fields.g2Source",
+          "after": ""
+        }
+      ]
+    },
+    "issues": [
+      {
+        "type": "export",
+        "identical": false,
+        "beforeSha256": "5fc30f2de13393abcd872ba94fc244eb5638eaff877a9270978eaa3ac09b6d06",
+        "afterSha256": "a2c9d2b39cfdd9f624716a41493dfea90b1fc63cb52faf6a53832ee6698473e5",
+        "bytes": 1499964,
+        "updatedAtFields": 107,
+        "uiPreferenceWrites": 0,
+        "differences": [
+          {
+            "path": "workspace.workspace.ui.g1DisclosureOpenV512",
+            "after": {}
+          },
+          {
+            "path": "workspace.workspace.ui.gate1LandingContinuumV234",
+            "after": {
+              "byProduct": {
+                "catalog-item-1786885522654-b659e1": {
+                  "product_id": "catalog-item-1786885522654-b659e1",
+                  "continuum": "",
+                  "cards": {
+                    "card-24": true,
+                    "card-23": true
+                  }
+                }
+              }
+            }
+          },
+          {
+            "path": "workspace.workspace.gates.2.cards.0.fields.g2Check",
+            "after": ""
+          },
+          {
+            "path": "workspace.workspace.gates.2.cards.0.fields.g2Source",
+            "after": ""
+          },
+          {
+            "path": "workspace.workspace.gates.2.cards.6.fields.g2Check",
+            "after": ""
+          },
+          {
+            "path": "workspace.workspace.gates.2.cards.6.fields.g2Source",
+            "after": ""
+          },
+          {
+            "path": "workspace.workspace.gates.2.cards.10.fields.g2Check",
+            "after": ""
+          },
+          {
+            "path": "workspace.workspace.gates.2.cards.10.fields.g2Source",
+            "after": ""
+          },
+          {
+            "path": "workspace.workspace.gates.2.cards.29.fields.g2Check",
+            "after": ""
+          },
+          {
+            "path": "workspace.workspace.gates.2.cards.29.fields.g2Source",
+            "after": ""
+          }
+        ]
+      }
+    ],
+    "build": "2.3.526+863cd49d9312"
+  },
+  "sivrce": {
+    "comparison": {
+      "identical": false,
+      "beforeSha256": "0e4cc2380cd47b22d158e70e1e80d245d24d544ad661394786d5ed14fd273513",
+      "afterSha256": "f43a160f957eb2f9af6c8c6f122ead8f0dadb711a793abe0b9ef02ecae7429c1",
+      "bytes": 596487,
+      "updatedAtFields": 33,
+      "uiPreferenceWrites": 0,
+      "differences": [
+        {
+          "path": "workspace.workspace.ui.g1DisclosureOpenV512",
+          "after": {}
+        },
+        {
+          "path": "workspace.workspace.gates.0.cards.3.gateId",
+          "after": "gate-0"
+        },
+        {
+          "path": "workspace.workspace.gates.0.cards.3.gateTitle",
+          "after": "0. Точка отсчёта"
+        },
+        {
+          "path": "workspace.workspace.gates.0.cards.4.gateId",
+          "after": "gate-0"
+        },
+        {
+          "path": "workspace.workspace.gates.0.cards.4.gateTitle",
+          "after": "0. Точка отсчёта"
+        },
+        {
+          "path": "workspace.workspace.gates.0.cards.5.gateId",
+          "after": "gate-0"
+        },
+        {
+          "path": "workspace.workspace.gates.0.cards.5.gateTitle",
+          "after": "0. Точка отсчёта"
+        },
+        {
+          "path": "workspace.workspace.gates.0.cards.6.gateId",
+          "after": "gate-0"
+        },
+        {
+          "path": "workspace.workspace.gates.0.cards.6.gateTitle",
+          "after": "0. Точка отсчёта"
+        },
+        {
+          "path": "workspace.workspace.gates.0.cards.7.gateId",
+          "after": "gate-0"
+        }
+      ]
+    },
+    "issues": [
+      {
+        "type": "export",
+        "identical": false,
+        "beforeSha256": "0e4cc2380cd47b22d158e70e1e80d245d24d544ad661394786d5ed14fd273513",
+        "afterSha256": "f43a160f957eb2f9af6c8c6f122ead8f0dadb711a793abe0b9ef02ecae7429c1",
+        "bytes": 596487,
+        "updatedAtFields": 33,
+        "uiPreferenceWrites": 0,
+        "differences": [
+          {
+            "path": "workspace.workspace.ui.g1DisclosureOpenV512",
+            "after": {}
+          },
+          {
+            "path": "workspace.workspace.gates.0.cards.3.gateId",
+            "after": "gate-0"
+          },
+          {
+            "path": "workspace.workspace.gates.0.cards.3.gateTitle",
+            "after": "0. Точка отсчёта"
+          },
+          {
+            "path": "workspace.workspace.gates.0.cards.4.gateId",
+            "after": "gate-0"
+          },
+          {
+            "path": "workspace.workspace.gates.0.cards.4.gateTitle",
+            "after": "0. Точка отсчёта"
+          },
+          {
+            "path": "workspace.workspace.gates.0.cards.5.gateId",
+            "after": "gate-0"
+          },
+          {
+            "path": "workspace.workspace.gates.0.cards.5.gateTitle",
+            "after": "0. Точка отсчёта"
+          },
+          {
+            "path": "workspace.workspace.gates.0.cards.6.gateId",
+            "after": "gate-0"
+          },
+          {
+            "path": "workspace.workspace.gates.0.cards.6.gateTitle",
+            "after": "0. Точка отсчёта"
+          },
+          {
+            "path": "workspace.workspace.gates.0.cards.7.gateId",
+            "after": "gate-0"
+          }
+        ]
+      }
+    ],
+    "build": "2.3.526+863cd49d9312"
+  }
+}

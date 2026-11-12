@@ -1,0 +1,257 @@
+{
+  "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+  "initial": {
+    "build": "2.3.526+f5429ab3aecd",
+    "recordId": "gate0-value-1788262115042-791390",
+    "rendered": true
+  },
+  "readOnly": {
+    "unchanged": true,
+    "choices": [
+      [
+        "primary",
+        [
+          {
+            "value": "Смотреть подарок / В корзину",
+            "group": "category:product-1786401011698-231009",
+            "scope": "category",
+            "ownerId": "product-1786401011698-231009",
+            "name": "Категория · Авторская одежда",
+            "source": "Оффер 1",
+            "rank": 2
+          },
+          {
+            "value": "Смотреть подарок / В корзину",
+            "group": "category:product-1786401011698-9e81ee",
+            "scope": "category",
+            "ownerId": "product-1786401011698-9e81ee",
+            "name": "Категория · Дизайнерские подарки",
+            "source": "Оффер 1",
+            "rank": 2
+          },
+          {
+            "value": "Смотреть подарок / В корзину",
+            "group": "category:product-1786401011698-96355e",
+            "scope": "category",
+            "ownerId": "product-1786401011698-96355e",
+            "name": "Категория · Дом и сервировка",
+            "source": "Оффер 1",
+            "rank": 2
+          },
+          {
+            "value": "Смотреть подарок / В корзину",
+            "group": "category:product-1786401011698-981bb3",
+            "scope": "category",
+            "ownerId": "product-1786401011698-981bb3",
+            "name": "Категория · Живопись и графика",
+            "source": "Оффер 1",
+            "rank": 2
+          },
+          {
+            "value": "Смотреть подарок / В корзину",
+            "group": "category:product-1786401011698-bf5af0",
+            "scope": "category",
+            "ownerId": "product-1786401011698-bf5af0",
+            "name": "Категория · На заказ",
+            "source": "Оффер 1",
+            "rank": 2
+          },
+          {
+            "value": "Смотреть подарок / В корзину",
+            "group": "category:product-1786401011698-bd5754",
+            "scope": "category",
+            "ownerId": "product-1786401011698-bd5754",
+            "name": "Категория · Украшение дома",
+            "source": "Оффер 1",
+            "rank": 2
+          },
+          {
+            "value": "Оформить заказ",
+            "group": "company",
+            "scope": "company",
+            "ownerId": "company",
+            "name": "Компания",
+            "source": "Оффер 1",
+            "rank": 3
+          }
+        ]
+      ],
+      [
+        "secondary",
+        [
+          {
+            "value": "Смотреть изделия",
+            "group": "company",
+            "scope": "company",
+            "ownerId": "company",
+            "name": "Компания",
+            "source": "Оффер 1",
+            "rank": 3
+          }
+        ]
+      ],
+      [
+        "alternative",
+        [
+          {
+            "value": "Задать вопрос",
+            "group": "company",
+            "scope": "company",
+            "ownerId": "company",
+            "name": "Компания",
+            "source": "Оффер 1",
+            "rank": 3
+          }
+        ]
+      ]
+    ],
+    "ms": 54,
+    "groups": [
+      "Компания"
+    ],
+    "focused": true
+  },
+  "isolation": {
+    "unchanged": true,
+    "primary": [
+      {
+        "value": "Legacy primary",
+        "group": "product:catalog-item-1786792591872-51f503",
+        "scope": "product",
+        "ownerId": "catalog-item-1786792591872-51f503",
+        "name": "Символ 2027 года «Коза»",
+        "source": "Оффер 2",
+        "rank": 0
+      },
+      {
+        "value": "Buy",
+        "group": "product:catalog-item-1790860377305-388c56",
+        "scope": "product",
+        "ownerId": "catalog-item-1790860377305-388c56",
+        "name": "Коза & Ёлка",
+        "source": "Оффер 1",
+        "rank": 1
+      },
+      {
+        "value": "Buy",
+        "group": "company",
+        "scope": "company",
+        "ownerId": "company",
+        "name": "Компания",
+        "source": "Оффер 1",
+        "rank": 3
+      }
+    ],
+    "secondary": [
+      {
+        "value": "Learn",
+        "group": "product:catalog-item-1790860377305-388c56",
+        "scope": "product",
+        "ownerId": "catalog-item-1790860377305-388c56",
+        "name": "Коза & Ёлка",
+        "source": "Оффер 1",
+        "rank": 1
+      },
+      {
+        "value": "Company learn",
+        "group": "company",
+        "scope": "company",
+        "ownerId": "company",
+        "name": "Компания",
+        "source": "Оффер 1",
+        "rank": 3
+      }
+    ],
+    "alternative": [
+      {
+        "value": "Ask",
+        "group": "product:catalog-item-1790860377305-388c56",
+        "scope": "product",
+        "ownerId": "catalog-item-1790860377305-388c56",
+        "name": "Коза & Ёлка",
+        "source": "Оффер 1",
+        "rank": 1
+      },
+      {
+        "value": "Company ask",
+        "group": "company",
+        "scope": "company",
+        "ownerId": "company",
+        "name": "Компания",
+        "source": "Оффер 1",
+        "rank": 3
+      }
+    ],
+    "invalid": []
+  },
+  "selection": {
+    "before": {
+      "id": "gate0-value-1788262115042-791390",
+      "field": "offers",
+      "offer": {
+        "cta": "Заказать подарок",
+        "social": "Авторская ручная работа показывает, что подарок выбирали специально, а не купили формально",
+        "rational": "Авторская текстильная Коза ручной работы в подарочной упаковке, которая после праздника остаётся интерьерным декором",
+        "irrational": "Уверенность, что подарок не будет банальным и вызовет приятные эмоции",
+        "legacy_value": "Готовые идеи для тёплого, личного и небанального подарка. Здесь собраны вещи, которые помогают сказать важное без лишних слов",
+        "ctaV2": {
+          "primary": "Оформить заказ",
+          "secondary": "Посмотреть подробнее",
+          "alternative": "Задать вопрос"
+        },
+        "ctaV2Migrated": true
+      },
+      "scope": "product",
+      "value": "Особенный подарок: авторский текстильный арт-объект «Коза» под заказ, символ 2027 года",
+      "source": {
+        "type": "inheritance_override",
+        "label": "Введено вручную",
+        "inherited_from_id": "gate0-value-1787592562067-ee147e"
+      },
+      "created_at": "2026-09-01T11:28:35.043Z",
+      "product_id": "catalog-item-1786792591872-51f503",
+      "project_id": "project-1783243907480-ec7d8c",
+      "updated_at": "2026-10-15T17:09:27.400Z",
+      "category_id": "product-1786401011698-9e81ee",
+      "confirmation_status": "confirmed"
+    },
+    "after": {
+      "id": "gate0-value-1788262115042-791390",
+      "field": "offers",
+      "offer": {
+        "cta": "Заказать подарок",
+        "social": "Авторская ручная работа показывает, что подарок выбирали специально, а не купили формально",
+        "rational": "Авторская текстильная Коза ручной работы в подарочной упаковке, которая после праздника остаётся интерьерным декором",
+        "irrational": "Уверенность, что подарок не будет банальным и вызовет приятные эмоции",
+        "legacy_value": "Готовые идеи для тёплого, личного и небанального подарка. Здесь собраны вещи, которые помогают сказать важное без лишних слов",
+        "ctaV2": {
+          "primary": "Оформить заказ",
+          "secondary": "Смотреть изделия",
+          "alternative": "Задать вопрос"
+        },
+        "ctaV2Migrated": true
+      },
+      "scope": "product",
+      "value": "Особенный подарок: авторский текстильный арт-объект «Коза» под заказ, символ 2027 года",
+      "source": {
+        "type": "inheritance_override",
+        "label": "Введено вручную",
+        "inherited_from_id": "gate0-value-1787592562067-ee147e"
+      },
+      "created_at": "2026-09-01T11:28:35.043Z",
+      "product_id": "catalog-item-1786792591872-51f503",
+      "project_id": "project-1783243907480-ec7d8c",
+      "updated_at": "2026-10-28T09:06:54.324Z",
+      "category_id": "product-1786401011698-9e81ee",
+      "confirmation_status": "confirmed"
+    },
+    "value": "Смотреть изделия",
+    "othersUnchanged": true,
+    "preview": "Смотреть изделия",
+    "closed": true,
+    "focused": true
+  },
+  "autosaved": true,
+  "roundTrip": true,
+  "passed": true
+}

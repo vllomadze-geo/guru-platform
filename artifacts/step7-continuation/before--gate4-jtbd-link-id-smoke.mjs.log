@@ -1,0 +1,16 @@
+{
+  "productId": "catalog-item-1786792591872-51f503",
+  "legacy": {
+    "catalog-item-1786792591872-51f503::__jtbd__": [
+      0,
+      2,
+      1
+    ]
+  },
+  "resolvedJtbdIds": [
+    "primary:catalog-item-1786792591872-51f503",
+    "additional-jtbd-1788615285799-9a35ef",
+    "additional-jtbd-1788609074828-88a3f1"
+  ],
+  "sourceUnchanged": true
+}

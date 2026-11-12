@@ -1,0 +1,42 @@
+[
+  {
+    "test": "now-guide-smoke.mjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "seconds": 55.29,
+    "timeoutSeconds": 120,
+    "log": "/Users/vl/Developer/guru-platform/artifacts/step8/smoke/now-guide-smoke.mjs.log"
+  },
+  {
+    "test": "gate0-unified-readiness-smoke.mjs",
+    "status": "FAIL",
+    "exitCode": 1,
+    "seconds": 36.91,
+    "timeoutSeconds": 120,
+    "log": "/Users/vl/Developer/guru-platform/artifacts/step8/smoke/gate0-unified-readiness-smoke.mjs.log"
+  },
+  {
+    "test": "gate12-now-readiness-smoke.mjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "seconds": 113.22,
+    "timeoutSeconds": 120,
+    "log": "/Users/vl/Developer/guru-platform/artifacts/step8/smoke/gate12-now-readiness-smoke.mjs.log"
+  },
+  {
+    "test": "gate34-now-readiness-smoke.mjs",
+    "status": "TIMEOUT",
+    "exitCode": null,
+    "seconds": 120.02,
+    "timeoutSeconds": 120,
+    "log": "/Users/vl/Developer/guru-platform/artifacts/step8/smoke/gate34-now-readiness-smoke.mjs.log"
+  },
+  {
+    "test": "preflight-now-guide-smoke.mjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "seconds": 74.56,
+    "timeoutSeconds": 120,
+    "log": "/Users/vl/Developer/guru-platform/artifacts/step8/smoke/preflight-now-guide-smoke.mjs.log"
+  }
+]

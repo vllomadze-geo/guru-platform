@@ -169,7 +169,8 @@ try {
     assert.equal(preview.steps, 3);
     assert.equal(preview.autoMounted, true);
     assert.equal(preview.mountedAfterRender, 1);
-    assert.equal(preview.legacyAfterRender, 71);
+    // Nine technical duplicates are archived in data, hidden on the screen.
+    assert.equal(preview.legacyAfterRender, 62);
     assert.equal(preview.selects, 0);
     assert.equal(preview.controls, 3);
     assert.equal(preview.hasEmDash, false);
@@ -227,6 +228,9 @@ try {
     })()`);
     assert.equal(savedLive, '12345678', 'text input must save without a Save button');
 
+    // CDP can leave a new context in the background. Focus events drive the
+    // existing history boundary, so activate the test page before editing.
+    await page.call("Page.bringToFront");
     const isolation = await evaluate(`(() => {
       const input = document.querySelector('#g2sb-smoke-preview [data-g2sb-step="check_counter"]');
       input.dispatchEvent(new Event('change', { bubbles: true }));

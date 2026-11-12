@@ -15,9 +15,14 @@ const context = vm.createContext({
   URL, Date, Promise, setTimeout, clearTimeout, Worker: TestWorker,
   window: { addEventListener: (type, callback) => { listeners[type] = callback; } },
   document: { querySelector: () => ({ src: 'https://guru.invalid/base/app.js?v=test' }) },
-  localStorage: { setItem: (key, value) => storage.set(key, value) },
+  localStorage: {
+    setItem: (key, value) => storage.set(key, value),
+    getItem: (key) => storage.get(key) ?? null,
+    removeItem: (key) => storage.delete(key),
+  },
   reportStorageFailure: (_key, error) => { throw error; },
-  WORKSPACE_STORAGE_PREFIX: 'workspace:', PLATFORM_VERSION: 'test-schema', GURU_TAB_ID: 'test-tab',
+  WORKSPACE_STORAGE_PREFIX: 'workspace:', WORKSPACE_IDB_MARKER_PREFIX: 'idb:',
+  PLATFORM_VERSION: 'test-schema', GURU_TAB_ID: 'test-tab',
   GURU_BUILD_INFO: { version: 'test-build' }, _guruTabDirty: false,
   els: { saveStatus: { textContent: '' }, autosaveDot: { style: {} } },
 });
@@ -59,11 +64,15 @@ report.synchronousSaveWins = true;
 
 const editedAgain = run('guruQueueWorkspaceSave()');
 context.els.saveStatus.textContent = 'Сохраняю...';
+context._guruTabDirty = true;
 run('guruInvalidateQueuedWorkspaceSave("workspace:a")');
 finish(0); assert.equal(await editedAgain, false);
 assert.equal(context.els.saveStatus.textContent, 'Сохраняю...');
+assert.equal(context._guruTabDirty, true);
 const latestEdit = run('guruQueueWorkspaceSave()'); finish(0); assert.equal(await latestEdit, true);
+assert.equal(context._guruTabDirty, false);
 report.newEditInvalidatesSnapshot = true;
+report.confirmedSaveClearsUnloadDirtyFlag = true;
 
 const external = run('guruQueueWorkspaceSave()');
 storage.set('workspace:a', '{"external":"newer"}'); listeners.storage({ key: 'workspace:a' });
@@ -116,6 +125,22 @@ vm.runInNewContext(workerSource, { self: {
 receive({ data: { id: 7, workspace: structuredClone(context.state) } });
 assert.equal(response.id, 7); assert.equal(response.serialized, JSON.stringify(context.state));
 report.workerContract = true;
+const idb = new Map();
+let idbReads = 0;
+context.guruWorkspaceIdbWriteV1 = async (id, serialized) => { idb.set(id, { serialized }); return true; };
+context.guruWorkspaceIdbReadV1 = async (id) => { idbReads += 1; return idb.get(id) || null; };
+storage.set('workspace:c', '{"previous":"local copy"}');
+const migrated = await run('guruWorkspaceIdbCommit("c", "{\\"new\\":true}", "workspace:c", guruInvalidateQueuedWorkspaceSave("workspace:c"))');
+assert.equal(migrated, true);
+assert.equal(idbReads, 1);
+assert.equal(storage.has('workspace:c'), false);
+assert.equal(run('guruWorkspaceIdbMode.has("c")'), true);
+const repeated = await run('guruWorkspaceIdbCommit("c", "{\\"new\\":2}", "workspace:c", guruInvalidateQueuedWorkspaceSave("workspace:c"))');
+assert.equal(repeated, true);
+assert.equal(idbReads, 1, 'Established IndexedDB saves read the full workspace back');
+assert.equal(idb.get('c').serialized, '{"new":2}');
+report.idbMigrationVerifiedOnce = true;
+report.idbRepeatWritesAvoidReadback = true;
 report.passed = true;
 mkdirSync('artifacts/input-lag', { recursive: true });
 writeFileSync('artifacts/input-lag/workspace-save-worker-results.json', JSON.stringify(report, null, 2));

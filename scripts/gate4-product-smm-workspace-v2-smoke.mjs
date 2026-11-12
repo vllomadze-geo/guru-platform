@@ -668,27 +668,31 @@ try {
     const slot = stage.querySelector('[data-g4-product-smm-stage-body-v2]');
     slot.innerHTML = g4ProductSmmSocialPreviewV2(idea, bucket.content, bucket.strategy, product);
     const input = slot.querySelector('[data-g4-product-smm-base-field-v529="cta"]');
-    const proposed = [...slot.querySelectorAll('[data-g4-product-smm-cta-suggestion-v531]')]
-      .map((button) => button.dataset.g4ProductSmmCtaSuggestionV531);
+    input.click();
+    const proposed = [...document.querySelectorAll('[data-strategic-cta-choice-v1]')]
+      .map((button) => button.querySelector('span').textContent);
     input.value = 'Мой собственный CTA';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     const customSaved = idea.base.cta === 'Мой собственный CTA';
-    slot.querySelectorAll('[data-g4-product-smm-cta-suggestion-v531]')[1].click();
+    input.click();
+    document.querySelectorAll('[data-strategic-cta-choice-v1]')[1].click();
     const chosen = idea.base.cta === 'Посмотреть подробнее' &&
-      input.value === 'Посмотреть подробнее' &&
-      slot.querySelectorAll('[data-g4-product-smm-cta-suggestion-v531]')[1]
-        .getAttribute('aria-pressed') === 'true';
+      input.value === 'Посмотреть подробнее';
     const override = slot.querySelector('[data-g4-product-smm-override-field-v529="cta"]');
+    override?.click();
     const overrideHasOptions = !override ||
-      override.getAttribute('list') === slot.querySelector('datalist')?.id;
+      [...document.querySelectorAll('[data-strategic-cta-choice-v1]')]
+        .map((button) => button.querySelector('span').textContent).join() === proposed.join();
     const sourceReadOnly = JSON.stringify(offer) === sourceBefore;
     offer.offer.ctaV2.secondary = 'Новый CTA';
     slot.innerHTML = g4ProductSmmSocialPreviewV2(idea, bucket.content, bucket.strategy, product);
-    const live = [...slot.querySelectorAll('[data-g4-product-smm-cta-suggestion-v531]')]
-      .some((button) => button.dataset.g4ProductSmmCtaSuggestionV531 === 'Новый CTA') &&
+    slot.querySelector('[data-g4-product-smm-base-field-v529="cta"]').click();
+    const live = [...document.querySelectorAll('[data-strategic-cta-choice-v1]')]
+      .some((button) => button.querySelector('span').textContent === 'Новый CTA') &&
       slot.querySelector('[data-g4-product-smm-base-field-v529="cta"]').value === 'Посмотреть подробнее';
     return { proposed, customSaved, chosen, overrideHasOptions, live,
-      isolated: g4ProductSmmCtaSuggestionsV531(otherProduct).map((row) => row.value).join() === 'Чужой CTA',
+      isolated: guruStrategicCtaChoicesV1('product', otherProduct.id)
+        .map((row) => row.value).join() === 'Чужой CTA',
       sourceReadOnly };
   })()`);
   assert.deepEqual(ctaFlow.proposed, ['Оформить заказ', 'Посмотреть подробнее', 'Задать вопрос']);
@@ -697,11 +701,14 @@ try {
     `CTA suggestions are not scoped or saved correctly: ${JSON.stringify(ctaFlow)}`);
   await call('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: false });
   const ctaMobile = await evaluate(`(() => {
-    const suggestions = document.querySelector('.g4-smm-cta-suggestions-v531');
-    const bounds = suggestions.getBoundingClientRect();
+    const input = document.querySelector('[data-g4-product-smm-base-field-v529="cta"]');
+    input.click();
+    const picker = document.querySelector('.strategic-cta-picker-v1');
+    const bounds = picker.getBoundingClientRect();
     return { viewport: innerWidth, pageWidth: document.documentElement.scrollWidth,
-      buttonsFit: [...suggestions.querySelectorAll('button')].every((button) =>
-        button.getBoundingClientRect().right <= bounds.right + 1) };
+      buttonsFit: bounds.left >= 0 && bounds.right <= innerWidth + 1 &&
+        [...picker.querySelectorAll('button')].every((button) =>
+          button.getBoundingClientRect().right <= bounds.right + 1) };
   })()`);
   assert(ctaMobile.pageWidth <= ctaMobile.viewport + 2 && ctaMobile.buttonsFit,
     `Mobile CTA suggestions overflow: ${JSON.stringify(ctaMobile)}`);

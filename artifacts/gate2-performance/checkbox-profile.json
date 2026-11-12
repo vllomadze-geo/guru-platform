@@ -1,0 +1,886 @@
+{
+  "samples": [
+    {
+      "kind": "wizard",
+      "synchronousMs": 103.20000000298023,
+      "before": true,
+      "after": false,
+      "persisted": "pending",
+      "cache": {
+        "products": 59,
+        "screen": true
+      },
+      "productReadinessRecalculations": 1,
+      "ui": "4 из 5 шагов"
+    },
+    {
+      "kind": "service",
+      "synchronousMs": 4.0999999940395355,
+      "before": false,
+      "after": true,
+      "persisted": "done",
+      "cache": {
+        "products": 59,
+        "screen": true
+      },
+      "productReadinessRecalculations": 1,
+      "ui": "6 из 8 шагов"
+    }
+  ],
+  "metrics": {
+    "g2wCard": {
+      "count": 6907,
+      "ms": 7.500000059604645,
+      "maxMs": 0.20000000298023224,
+      "byId": {
+        "counter": {
+          "count": 23,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "domain": {
+          "count": 195,
+          "ms": 0.30000002682209015,
+          "maxMs": 0.10000000894069672
+        },
+        "vk": {
+          "count": 132,
+          "ms": 0.699999988079071,
+          "maxMs": 0.10000000894069672
+        },
+        "crm": {
+          "count": 66,
+          "ms": 0.20000001788139343,
+          "maxMs": 0.10000000894069672
+        },
+        "landing": {
+          "count": 609,
+          "ms": 0.20000000298023224,
+          "maxMs": 0.10000000894069672
+        },
+        "webmaster": {
+          "count": 66,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "goal": {
+          "count": 23,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "productCounter": {
+          "count": 128,
+          "ms": 0.3999999761581421,
+          "maxMs": 0.09999999403953552
+        },
+        "productGoal": {
+          "count": 254,
+          "ms": 0.09999999403953552,
+          "maxMs": 0.09999999403953552
+        },
+        "safety": {
+          "count": 8,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "productVk": {
+          "count": 177,
+          "ms": 0.6000000238418579,
+          "maxMs": 0.20000000298023224
+        },
+        "lead": {
+          "count": 118,
+          "ms": 0,
+          "maxMs": 0
+        }
+      }
+    },
+    "g2wRecord": {
+      "count": 6781,
+      "ms": 17.400000125169754,
+      "maxMs": 0.30000001192092896,
+      "byId": {
+        "counter": {
+          "count": 23,
+          "ms": 0.09999999403953552,
+          "maxMs": 0.09999999403953552
+        },
+        "domain": {
+          "count": 195,
+          "ms": 0.5000000298023224,
+          "maxMs": 0.10000000894069672
+        },
+        "vk": {
+          "count": 132,
+          "ms": 0.7999999970197678,
+          "maxMs": 0.10000000894069672
+        },
+        "crm": {
+          "count": 66,
+          "ms": 0.5000000298023224,
+          "maxMs": 0.20000000298023224
+        },
+        "landing": {
+          "count": 609,
+          "ms": 1.4000000059604645,
+          "maxMs": 0.30000001192092896
+        },
+        "webmaster": {
+          "count": 66,
+          "ms": 0.09999999403953552,
+          "maxMs": 0.09999999403953552
+        },
+        "goal": {
+          "count": 23,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "productCounter": {
+          "count": 128,
+          "ms": 0.5999999791383743,
+          "maxMs": 0.10000000894069672
+        },
+        "productGoal": {
+          "count": 128,
+          "ms": 0.29999998211860657,
+          "maxMs": 0.09999999403953552
+        },
+        "safety": {
+          "count": 8,
+          "ms": 0.09999999403953552,
+          "maxMs": 0.09999999403953552
+        },
+        "productVk": {
+          "count": 177,
+          "ms": 0.8000000268220901,
+          "maxMs": 0.20000000298023224
+        },
+        "lead": {
+          "count": 118,
+          "ms": 0.20000000298023224,
+          "maxMs": 0.10000000894069672
+        }
+      }
+    },
+    "g2wSave": {
+      "count": 1,
+      "ms": 0.09999999403953552,
+      "maxMs": 0.09999999403953552,
+      "byId": {}
+    },
+    "guruV194Products": {
+      "count": 3734,
+      "ms": 42.49999991059303,
+      "maxMs": 10.799999997019768,
+      "byId": {}
+    },
+    "g2wApplicability": {
+      "count": 560,
+      "ms": 2.9000000059604645,
+      "maxMs": 0.10000000894069672,
+      "byId": {
+        "counter": {
+          "count": 5,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "goal": {
+          "count": 5,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "productCounter": {
+          "count": 124,
+          "ms": 0.800000011920929,
+          "maxMs": 0.10000000894069672
+        },
+        "productGoal": {
+          "count": 124,
+          "ms": 0.5,
+          "maxMs": 0.10000000894069672
+        },
+        "domain": {
+          "count": 4,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "safety": {
+          "count": 3,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "landing": {
+          "count": 118,
+          "ms": 0.29999999701976776,
+          "maxMs": 0.10000000894069672
+        },
+        "productVk": {
+          "count": 118,
+          "ms": 1.1000000089406967,
+          "maxMs": 0.10000000894069672
+        },
+        "lead": {
+          "count": 59,
+          "ms": 0.19999998807907104,
+          "maxMs": 0.09999999403953552
+        }
+      }
+    },
+    "g2wCompanyValue": {
+      "count": 695,
+      "ms": 2.5000000596046448,
+      "maxMs": 0.10000000894069672,
+      "byId": {}
+    },
+    "g2wValue": {
+      "count": 1096,
+      "ms": 4.9000000804662704,
+      "maxMs": 0.20000000298023224,
+      "byId": {
+        "counter": {
+          "count": 15,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "domain": {
+          "count": 179,
+          "ms": 0.8000000268220901,
+          "maxMs": 0.10000000894069672
+        },
+        "landing": {
+          "count": 559,
+          "ms": 2.0999999940395355,
+          "maxMs": 0.10000000894069672
+        },
+        "vk": {
+          "count": 66,
+          "ms": 0.4000000059604645,
+          "maxMs": 0.10000000894069672
+        },
+        "crm": {
+          "count": 66,
+          "ms": 0.6000000387430191,
+          "maxMs": 0.20000000298023224
+        },
+        "goal": {
+          "count": 23,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "productGoal": {
+          "count": 126,
+          "ms": 0.5999999940395355,
+          "maxMs": 0.10000000894069672
+        },
+        "safety": {
+          "count": 3,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "productVk": {
+          "count": 59,
+          "ms": 0.40000002086162567,
+          "maxMs": 0.20000000298023224
+        }
+      }
+    },
+    "g2wStepChecks": {
+      "count": 320,
+      "ms": 98.09999985992908,
+      "maxMs": 12.5,
+      "byId": {
+        "counter": {
+          "count": 5,
+          "ms": 0.30000001192092896,
+          "maxMs": 0.10000000894069672
+        },
+        "goal": {
+          "count": 5,
+          "ms": 0.09999999403953552,
+          "maxMs": 0.09999999403953552
+        },
+        "productCounter": {
+          "count": 63,
+          "ms": 1.5999999791383743,
+          "maxMs": 0.10000000894069672
+        },
+        "productGoal": {
+          "count": 63,
+          "ms": 3.2999999672174454,
+          "maxMs": 0.7999999970197678
+        },
+        "domain": {
+          "count": 4,
+          "ms": 12.700000002980232,
+          "maxMs": 12.5
+        },
+        "safety": {
+          "count": 3,
+          "ms": 0.09999999403953552,
+          "maxMs": 0.09999999403953552
+        },
+        "landing": {
+          "count": 59,
+          "ms": 75.89999990165234,
+          "maxMs": 4.5
+        },
+        "productVk": {
+          "count": 59,
+          "ms": 3.2000000178813934,
+          "maxMs": 1.7000000029802322
+        },
+        "lead": {
+          "count": 59,
+          "ms": 0.8999999910593033,
+          "maxMs": 0.10000000894069672
+        }
+      }
+    },
+    "megaPlatformUrl": {
+      "count": 882,
+      "ms": 2.999999985098839,
+      "maxMs": 0.10000000894069672,
+      "byId": {}
+    },
+    "g2wRoute": {
+      "count": 314,
+      "ms": 1.1000000089406967,
+      "maxMs": 0.30000001192092896,
+      "byId": {}
+    },
+    "g2wInputs": {
+      "count": 66,
+      "ms": 10.600000068545341,
+      "maxMs": 0.7999999970197678,
+      "byId": {
+        "counter": {
+          "count": 4,
+          "ms": 0.5999999940395355,
+          "maxMs": 0.20000000298023224
+        },
+        "domain": {
+          "count": 3,
+          "ms": 0.6000000238418579,
+          "maxMs": 0.30000001192092896
+        },
+        "landing": {
+          "count": 59,
+          "ms": 9.400000050663948,
+          "maxMs": 0.7999999970197678
+        }
+      }
+    },
+    "g2wStatus": {
+      "count": 315,
+      "ms": 414.89999997615814,
+      "maxMs": 255.6000000089407,
+      "byId": {
+        "counter": {
+          "count": 4,
+          "ms": 0.9000000059604645,
+          "maxMs": 0.29999999701976776
+        },
+        "goal": {
+          "count": 4,
+          "ms": 0.09999999403953552,
+          "maxMs": 0.09999999403953552
+        },
+        "productCounter": {
+          "count": 62,
+          "ms": 2.499999985098839,
+          "maxMs": 0.20000000298023224
+        },
+        "productGoal": {
+          "count": 62,
+          "ms": 3.9999999701976776,
+          "maxMs": 0.7999999970197678
+        },
+        "domain": {
+          "count": 3,
+          "ms": 258.30000001192093,
+          "maxMs": 255.6000000089407
+        },
+        "safety": {
+          "count": 3,
+          "ms": 0.19999998807907104,
+          "maxMs": 0.09999999403953552
+        },
+        "landing": {
+          "count": 59,
+          "ms": 143.29999999701977,
+          "maxMs": 7.299999997019768
+        },
+        "productVk": {
+          "count": 59,
+          "ms": 4.100000038743019,
+          "maxMs": 1.7999999970197678
+        },
+        "lead": {
+          "count": 59,
+          "ms": 1.4999999850988388,
+          "maxMs": 0.10000000894069672
+        }
+      }
+    },
+    "g2ServiceBlockStepDone": {
+      "count": 1934,
+      "ms": 88.69999988377094,
+      "maxMs": 12.399999991059303,
+      "byId": {
+        "inherit": {
+          "count": 126,
+          "ms": 0.30000002682209015,
+          "maxMs": 0.10000000894069672
+        },
+        "open": {
+          "count": 192,
+          "ms": 0.10000000894069672,
+          "maxMs": 0.10000000894069672
+        },
+        "code": {
+          "count": 66,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "visit": {
+          "count": 66,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "report": {
+          "count": 191,
+          "ms": 0.09999999403953552,
+          "maxMs": 0.09999999403953552
+        },
+        "action": {
+          "count": 185,
+          "ms": 0.09999999403953552,
+          "maxMs": 0.09999999403953552
+        },
+        "select": {
+          "count": 66,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "id": {
+          "count": 66,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "test": {
+          "count": 131,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "dns_set": {
+          "count": 9,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "address": {
+          "count": 8,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "platform": {
+          "count": 8,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "provider": {
+          "count": 8,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "dns_source": {
+          "count": 8,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "https": {
+          "count": 13,
+          "ms": 14.799999997019768,
+          "maxMs": 12.399999991059303
+        },
+        "redirect": {
+          "count": 6,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "policy": {
+          "count": 6,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "consent": {
+          "count": 6,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "spam": {
+          "count": 6,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "route": {
+          "count": 59,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "url": {
+          "count": 59,
+          "ms": 0.10000000894069672,
+          "maxMs": 0.10000000894069672
+        },
+        "mobile": {
+          "count": 59,
+          "ms": 0.20000000298023224,
+          "maxMs": 0.10000000894069672
+        },
+        "cta": {
+          "count": 59,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "indexing": {
+          "count": 59,
+          "ms": 72.29999987781048,
+          "maxMs": 4.4000000059604645
+        },
+        "meta": {
+          "count": 59,
+          "ms": 0.09999999403953552,
+          "maxMs": 0.09999999403953552
+        },
+        "images": {
+          "count": 59,
+          "ms": 0.09999999403953552,
+          "maxMs": 0.09999999403953552
+        },
+        "cwv": {
+          "count": 59,
+          "ms": 0.29999998211860657,
+          "maxMs": 0.09999999403953552
+        },
+        "event": {
+          "count": 59,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "install": {
+          "count": 59,
+          "ms": 0.20000000298023224,
+          "maxMs": 0.10000000894069672
+        },
+        "receive": {
+          "count": 59,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "source": {
+          "count": 59,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "compare": {
+          "count": 59,
+          "ms": 0,
+          "maxMs": 0
+        }
+      }
+    },
+    "g2MetrikaProductRowV367": {
+      "count": 126,
+      "ms": 0.29999999701976776,
+      "maxMs": 0.10000000894069672,
+      "byId": {
+        "g2-metrika-goals-primary": {
+          "count": 126,
+          "ms": 0.29999999701976776,
+          "maxMs": 0.10000000894069672
+        }
+      }
+    },
+    "g2ServiceBlockStatus": {
+      "count": 303,
+      "ms": 160.99999997019768,
+      "maxMs": 7.4000000059604645,
+      "byId": {
+        "product-counter": {
+          "count": 61,
+          "ms": 3.5999999940395355,
+          "maxMs": 0.20000000298023224
+        },
+        "product-goal": {
+          "count": 61,
+          "ms": 4.099999949336052,
+          "maxMs": 0.7999999970197678
+        },
+        "company-domain": {
+          "count": 2,
+          "ms": 2.7000000029802322,
+          "maxMs": 1.4000000059604645
+        },
+        "company-safety": {
+          "count": 2,
+          "ms": 0.09999999403953552,
+          "maxMs": 0.09999999403953552
+        },
+        "product-landing": {
+          "count": 59,
+          "ms": 143.50000001490116,
+          "maxMs": 7.4000000059604645
+        },
+        "product-vk": {
+          "count": 59,
+          "ms": 5.000000029802322,
+          "maxMs": 1.7999999970197678
+        },
+        "product-lead": {
+          "count": 59,
+          "ms": 1.9999999850988388,
+          "maxMs": 0.20000000298023224
+        }
+      }
+    },
+    "g2UnifiedStepState": {
+      "count": 32,
+      "ms": 0.20000001788139343,
+      "maxMs": 0.10000000894069672,
+      "byId": {
+        "inherit": {
+          "count": 2,
+          "ms": 0.10000000894069672,
+          "maxMs": 0.10000000894069672
+        },
+        "open": {
+          "count": 3,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "code": {
+          "count": 1,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "visit": {
+          "count": 1,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "report": {
+          "count": 2,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "action": {
+          "count": 2,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "select": {
+          "count": 1,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "id": {
+          "count": 1,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "test": {
+          "count": 2,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "address": {
+          "count": 2,
+          "ms": 0.10000000894069672,
+          "maxMs": 0.10000000894069672
+        },
+        "platform": {
+          "count": 2,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "provider": {
+          "count": 2,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "dns_source": {
+          "count": 2,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "dns_set": {
+          "count": 2,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "https": {
+          "count": 3,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "redirect": {
+          "count": 1,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "policy": {
+          "count": 1,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "consent": {
+          "count": 1,
+          "ms": 0,
+          "maxMs": 0
+        },
+        "spam": {
+          "count": 1,
+          "ms": 0,
+          "maxMs": 0
+        }
+      }
+    },
+    "g2ServiceBlockRefresh": {
+      "count": 4,
+      "ms": 6.700000002980232,
+      "maxMs": 4.5,
+      "byId": {
+        "product-counter": {
+          "count": 1,
+          "ms": 1,
+          "maxMs": 1
+        },
+        "product-goal": {
+          "count": 1,
+          "ms": 0.7000000029802322,
+          "maxMs": 0.7000000029802322
+        },
+        "company-domain": {
+          "count": 1,
+          "ms": 4.5,
+          "maxMs": 4.5
+        },
+        "company-safety": {
+          "count": 1,
+          "ms": 0.5,
+          "maxMs": 0.5
+        }
+      }
+    },
+    "g2s4UpdateScopeSummaries": {
+      "count": 2,
+      "ms": 3.2999999970197678,
+      "maxMs": 2.0999999940395355,
+      "byId": {}
+    },
+    "g2wRefresh": {
+      "count": 2,
+      "ms": 375.4000000208616,
+      "maxMs": 312.1000000089407,
+      "byId": {}
+    },
+    "guruV194ProductReadinessMapV1": {
+      "count": 1,
+      "ms": 0.09999999403953552,
+      "maxMs": 0.09999999403953552,
+      "byId": {}
+    },
+    "guruV194RefreshProductSelectorsV1": {
+      "count": 1,
+      "ms": 1.7000000029802322,
+      "maxMs": 1.7000000029802322,
+      "byId": {}
+    },
+    "guruPrepareWorkspaceSave": {
+      "count": 5,
+      "ms": 0.20000000298023224,
+      "maxMs": 0.10000000894069672,
+      "byId": {}
+    },
+    "guruPersistStateFast": {
+      "count": 2,
+      "ms": 488.5,
+      "maxMs": 255.90000000596046,
+      "byId": {}
+    },
+    "g2ServiceBlockValue": {
+      "count": 1,
+      "ms": 0,
+      "maxMs": 0,
+      "byId": {}
+    },
+    "g2ServiceBlockStepValue": {
+      "count": 1,
+      "ms": 0,
+      "maxMs": 0,
+      "byId": {
+        "dns_set": {
+          "count": 1,
+          "ms": 0,
+          "maxMs": 0
+        }
+      }
+    },
+    "nowGuidePrivateView": {
+      "count": 64,
+      "ms": 637.6999999880791,
+      "maxMs": 395.79999999701977,
+      "byId": {}
+    },
+    "g2SeoProject": {
+      "count": 63,
+      "ms": 59.10000003874302,
+      "maxMs": 2.5,
+      "byId": {}
+    },
+    "g2SeoRead": {
+      "count": 123,
+      "ms": 487.5999998897314,
+      "maxMs": 255.6000000089407,
+      "byId": {}
+    },
+    "g2SeoSnapshot": {
+      "count": 312,
+      "ms": 87.29999986290932,
+      "maxMs": 12.399999991059303,
+      "byId": {}
+    },
+    "nowGuideGate12Read": {
+      "count": 64,
+      "ms": 961.7000000029802,
+      "maxMs": 557.8999999910593,
+      "byId": {}
+    }
+  },
+  "longTasks": [
+    105,
+    135,
+    132,
+    233,
+    110,
+    104,
+    466,
+    365,
+    50
+  ],
+  "initialCache": {
+    "products": 59,
+    "screen": true
+  },
+  "readinessMatches": true,
+  "products": 59,
+  "workspaceBytes": 24111166,
+  "errors": [],
+  "durability": {
+    "saved": true,
+    "wizardResult": "pending",
+    "serviceResult": "done",
+    "products": 59
+  },
+  "exceptions": []
+}

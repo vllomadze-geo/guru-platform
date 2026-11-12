@@ -1,0 +1,9 @@
+file:///Users/vl/Developer/guru-platform/scripts/gate0-company-offer-smoke.mjs:11
+  if (!condition) throw new Error(message);
+                        ^
+
+Error: Company offer card must contain all five inputs
+    at assert (file:///Users/vl/Developer/guru-platform/scripts/gate0-company-offer-smoke.mjs:11:25)
+    at file:///Users/vl/Developer/guru-platform/scripts/gate0-company-offer-smoke.mjs:168:3
+
+Node.js v22.14.0

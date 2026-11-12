@@ -1,0 +1,8 @@
+file:///private/tmp/guru-step7-after/scripts/gate1-export-self-contained-smoke.mjs:389
+    result.robots.data.yandex.urlResults[0].result === "Разрешено",
+                                            ^
+
+TypeError: Cannot read properties of undefined (reading 'result')
+    at file:///private/tmp/guru-step7-after/scripts/gate1-export-self-contained-smoke.mjs:389:45
+
+Node.js v22.14.0

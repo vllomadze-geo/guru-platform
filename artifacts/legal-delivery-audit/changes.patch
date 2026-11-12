@@ -1,0 +1,56 @@
+--- before/app.js
++++ after/app.js
+@@ -8377,6 +8377,13 @@
+     }
+   }
+   if (section && !section.bare) acc.subblocks[section.key] = true;
++  // Company audit cards are regrouped after the base Gate 1 render.
++  // Open the actual destination as well as its original source section.
++  if (section?.key === "site_audit" && typeof gate1CompanyAuditGroupV299 === "function" &&
++      typeof gate1SeoAccordionKeyV300 === "function") {
++    const scopes = { seo: "seo-audit", structure: "site-structure-audit", legal: "legal-audit" };
++    acc.subblocks[gate1SeoAccordionKeyV300(scopes[gate1CompanyAuditGroupV299(card)])] = true;
++  }
+   acc.cards[cardId] = true;
+   if (cardScope) guruGateScopeOpenStateV526("gate-1")[cardScope] = true;
+ 
+@@ -22874,8 +22881,8 @@
+     ?.find(isMegaMarketingCard)?.megaMarketing?.platformV2 || {};
+   const fixed = platform.urlsV1?.fixed || {};
+   const base = Object.entries(MEGA_PLATFORM_LEGAL_KEYS).map(([name, id]) => ({ name, id }));
+-  const rows = [...base.slice(0, 2), { id: "cookie_banner", name: "Cookie-баннер", kind: "banner" },
+-    ...base.slice(2), { id: "delivery", name: "Доставка и оплата", kind: "reference" }]
++  const rows = [{ id: "delivery", name: "Доставка и оплата" }, ...base.slice(0, 2),
++    { id: "cookie_banner", name: "Cookie-баннер", kind: "banner" }, ...base.slice(2)]
+     .filter(item => item.id !== "cookie_banner" || platform.collectsPersonalDataV1 === true)
+     .map(item => ({ ...item, ...megaPlatformLegalRequirement(item, platform),
+       url: item.kind === "banner" ? "" : String(fixed[item.id] || ""),
+@@ -22914,6 +22921,10 @@
+ function megaPlatformLegalRowHtml(cardId, row, workspace = state) {
+   const help = MEGA_PLATFORM_LEGAL_HELP[row.id];
+   const helpId = `legal-help-${cardId}-${row.id}`;
++  const auditCardId = { delivery: "card-28", company_details: "card-27",
++    privacy: "card-29", cookie_banner: "card-35", data_consent: "card-37",
++    offer: "card-28", returns: "card-28" }[row.id];
++  const source = auditCardId ? megaPlatformCommercialSource({ sourceCardId: auditCardId, sourceText: "Карточка аудита" }) : "";
+   const mode = !row.needed ? "unneeded" : row.kind || "input";
+   const intent = row.kind === "banner" ? "Баннер"
+     : guruReadinessInspect(workspace, view => megaPlatformIntentCellV1("fixed", row.id, row.name, view)).status || "";
+@@ -22922,7 +22933,7 @@
+       <div class="mega-platform-legal-meta"><span data-mega-legal-status>${escapeHtml(row.label)}</span> · <button type="button" data-mega-legal-help aria-label="${escapeAttr(`Когда нужна страница «${row.name}»`)}" aria-expanded="false" aria-controls="${escapeAttr(helpId)}">Когда нужна</button></div>
+       <div class="mega-platform-legal-explanation" id="${escapeAttr(helpId)}" hidden>${escapeHtml(help[0])} <a href="${escapeAttr(help[1])}" target="_blank" rel="noopener noreferrer">Источник</a></div></td>
+     <td data-mega-legal-value data-mega-legal-mode="${mode}">${megaPlatformLegalValueHtml(cardId, row)}</td>
+-    <td>${intent}</td><td></td></tr>`;
++    <td>${intent}</td><td>${source}</td></tr>`;
+ }
+ function megaPlatformLegalHtml(cardId, workspace) {
+   const platform = workspace?.gates?.find(gate => gate.id === "gate-0")?.cards
+@@ -23896,7 +23907,7 @@
+   const custom = (pv2.extra || []).map((item, index) => ({ item, index }))
+     .filter(({ item }) => !item.promotedV2 && !megaPlatformHiddenLegacyExtra(item));
+   const fixedRequired = (id) => auto.required.find((item) => item.urlGroup === "fixed" && item.urlId === id);
+-  const fundamental = ["home", "contacts", "delivery"].map(fixedRequired).filter(Boolean);
++  const fundamental = ["home", "contacts"].map(fixedRequired).filter(Boolean);
+   const commercialAudit = auto.supplemental.filter((item) => item.sourceCardId === "card-32");
+   const conversionAudit = auto.supplemental.filter((item) => item.sourceCardId === "card-25");
+   const service = auto.supplemental.filter((item) =>

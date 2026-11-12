@@ -1,0 +1,201 @@
+{
+  "setup": {
+    "competitorIds": [
+      "comparison-product-competitor-1791377477189-b95cae",
+      "comparison-product-competitor-1791714233140-0a13aa",
+      "comparison-product-competitor-1791723572550-6ca302",
+      "comparison-product-competitor-1791729424706-2ba447",
+      "comparison-product-competitor-1791730189618-024104",
+      "comparison-product-competitor-1791730431711-78f1a5",
+      "comparison-product-competitor-1791730532828-a76f6b",
+      "comparison-product-competitor-1791730629561-119a8e",
+      "comparison-product-competitor-1791741465664-c147fb",
+      "comparison-product-competitor-1791750025219-98e071",
+      "comparison-product-competitor-1791750307142-a0f08f",
+      "comparison-product-competitor-1791750910709-9c0ff1",
+      "comparison-product-competitor-1791752711809-abadf7",
+      "comparison-product-competitor-1791753638780-4e8c79"
+    ],
+    "phraseCounts": [
+      33,
+      28,
+      13
+    ],
+    "groupMapIndex": 6,
+    "groupCount": 4
+  },
+  "metrics": {
+    "lookup": {
+      "medianMs": 0,
+      "maxMs": 0.20000001788139343
+    },
+    "status": {
+      "medianMs": 0.09999999403953552,
+      "maxMs": 0.19999998807907104
+    },
+    "input": {
+      "medianMs": 0.30000001192092896,
+      "maxMs": 6.799999982118607
+    },
+    "changeMs": 8.099999994039536,
+    "stableAfterUrlChange": true,
+    "relevanceMs": 20.799999982118607,
+    "selectKeywordMs": 15.400000005960464,
+    "stringifyMs": 150.59999999403954,
+    "serializedBytes": 25909757,
+    "competitorIds": [
+      "comparison-product-competitor-1791377477189-b95cae",
+      "comparison-product-competitor-1791714233140-0a13aa",
+      "comparison-product-competitor-1791723572550-6ca302",
+      "comparison-product-competitor-1791729424706-2ba447",
+      "comparison-product-competitor-1791730189618-024104",
+      "comparison-product-competitor-1791730431711-78f1a5",
+      "comparison-product-competitor-1791730532828-a76f6b",
+      "comparison-product-competitor-1791730629561-119a8e",
+      "comparison-product-competitor-1791741465664-c147fb",
+      "comparison-product-competitor-1791750025219-98e071",
+      "comparison-product-competitor-1791750307142-a0f08f",
+      "comparison-product-competitor-1791750910709-9c0ff1",
+      "comparison-product-competitor-1791752711809-abadf7",
+      "comparison-product-competitor-1791753638780-4e8c79"
+    ]
+  },
+  "persistence": {
+    "writes": 1,
+    "bytes": 19115428,
+    "competitorIds": [
+      "comparison-product-competitor-1791377477189-b95cae",
+      "comparison-product-competitor-1791714233140-0a13aa",
+      "comparison-product-competitor-1791723572550-6ca302",
+      "comparison-product-competitor-1791729424706-2ba447",
+      "comparison-product-competitor-1791730189618-024104",
+      "comparison-product-competitor-1791730431711-78f1a5",
+      "comparison-product-competitor-1791730532828-a76f6b",
+      "comparison-product-competitor-1791730629561-119a8e",
+      "comparison-product-competitor-1791741465664-c147fb",
+      "comparison-product-competitor-1791750025219-98e071",
+      "comparison-product-competitor-1791750307142-a0f08f",
+      "comparison-product-competitor-1791750910709-9c0ff1",
+      "comparison-product-competitor-1791752711809-abadf7",
+      "comparison-product-competitor-1791753638780-4e8c79"
+    ],
+    "domain": "https://example.test/product?ref=123",
+    "relevanceCount": 85,
+    "selectedCount": 1
+  },
+  "keywordActions": {
+    "scoped": [
+      {
+        "scope": "primary",
+        "rows": 33,
+        "copies": 33,
+        "ratings": 33,
+        "header": [
+          "Ключевое слово",
+          "Объём показов/мес",
+          "Примерное количество запросов",
+          "Переходы/мес",
+          "Цена клика, руб.",
+          "Ставка, руб.",
+          "Примерный бюджет, руб.",
+          "Копировать",
+          "Релевантность",
+          "Перенести в",
+          ""
+        ]
+      },
+      {
+        "scope": "additional:additional-jtbd-1788609074828-88a3f1",
+        "rows": 28,
+        "copies": 28,
+        "ratings": 28,
+        "header": [
+          "Ключевое слово",
+          "Объём показов/мес",
+          "Примерное количество запросов",
+          "Переходы/мес",
+          "Цена клика, руб.",
+          "Ставка, руб.",
+          "Примерный бюджет, руб.",
+          "Копировать",
+          "Релевантность",
+          "Перенести в",
+          ""
+        ]
+      },
+      {
+        "scope": "additional:additional-jtbd-1788615285799-9a35ef",
+        "rows": 13,
+        "copies": 13,
+        "ratings": 13,
+        "header": [
+          "Ключевое слово",
+          "Объём показов/мес",
+          "Примерное количество запросов",
+          "Переходы/мес",
+          "Цена клика, руб.",
+          "Ставка, руб.",
+          "Примерный бюджет, руб.",
+          "Копировать",
+          "Релевантность",
+          "Перенести в",
+          ""
+        ]
+      },
+      {
+        "scope": "additional:isolated-check",
+        "rows": 3,
+        "copies": 3,
+        "ratings": 3,
+        "header": [
+          "Ключевое слово",
+          "Объём показов/мес",
+          "Примерное количество запросов",
+          "Переходы/мес",
+          "Цена клика, руб.",
+          "Ставка, руб.",
+          "Примерный бюджет, руб.",
+          "Копировать",
+          "Релевантность",
+          "Перенести в",
+          ""
+        ]
+      }
+    ],
+    "phrase": "символ 2027 года купить",
+    "pasted": "символ 2027 года купить",
+    "copyClickMs": 1.5999999940395355,
+    "copySaveCalls": 0,
+    "comparisonChangeEvents": 0,
+    "syncTimings": {
+      "groupUiMs": 1.399999976158142,
+      "comparisonUiMs": 3.199999988079071,
+      "saveDispatchMs": 0.09999999403953552
+    },
+    "fromGroupMs": 6,
+    "fromComparisonMs": 21.099999994039536,
+    "comparisonAfterGroup": "low",
+    "groupAfterComparison": "medium",
+    "groupStable": true,
+    "groupsAfterLow": [
+      true,
+      true,
+      true,
+      true
+    ],
+    "duplicateRatings": [
+      "medium",
+      "medium"
+    ],
+    "rapidGroupSorted": true,
+    "afterRerender": "medium",
+    "sourceUnchanged": true,
+    "competitorIdsUnchanged": true,
+    "savedRating": "medium",
+    "savedWrites": 2
+  },
+  "saveScheduling": {
+    "relevanceOnlySkipsDerived": true,
+    "mixedEditKeepsDerived": true
+  }
+}

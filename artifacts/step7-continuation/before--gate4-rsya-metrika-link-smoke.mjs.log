@@ -1,0 +1,11 @@
+file:///private/tmp/guru-step7-before/scripts/gate4-rsya-metrika-link-smoke.mjs:128
+    throw new Error(
+          ^
+
+Error: TypeError: Cannot set properties of null (setting 'value')
+    at <anonymous>:82:19
+    at <anonymous>:147:5
+    at evaluate (file:///private/tmp/guru-step7-before/scripts/gate4-rsya-metrika-link-smoke.mjs:128:11)
+    at async file:///private/tmp/guru-step7-before/scripts/gate4-rsya-metrika-link-smoke.mjs:150:17
+
+Node.js v22.14.0

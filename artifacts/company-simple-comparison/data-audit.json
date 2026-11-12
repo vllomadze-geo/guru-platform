@@ -1,0 +1,65 @@
+[
+  {
+    "project": "Коричное яблоко",
+    "file": "/private/tmp/guru-now-korich-workspace.json",
+    "sha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+    "active": 1,
+    "archived": 0,
+    "nonemptyBergenFields": {},
+    "foundPhraseKeysRows": 0,
+    "classificationRows": 0,
+    "nonemptyLegacyCriteria": 0,
+    "nonemptyLegacyStepFields": 0
+  },
+  {
+    "project": "iCleaning",
+    "file": "/private/tmp/guru-step6-icleaning-workspace.json",
+    "sha256": "a1baa877f77727f7813f80cc0749763bd5122f8f56d48136fa1527542ea19c71",
+    "active": 3,
+    "archived": 0,
+    "nonemptyBergenFields": {},
+    "foundPhraseKeysRows": 0,
+    "classificationRows": 0,
+    "nonemptyLegacyCriteria": 0,
+    "nonemptyLegacyStepFields": 0
+  },
+  {
+    "project": "SIVRCE",
+    "file": "/private/tmp/guru-step6-sivrce-workspace.json",
+    "sha256": "59c7656d64ab0f86da8791c2531768249d6feb64b40673ed174654ea650c413c",
+    "active": 3,
+    "archived": 0,
+    "nonemptyBergenFields": {},
+    "foundPhraseKeysRows": 0,
+    "classificationRows": 0,
+    "nonemptyLegacyCriteria": 0,
+    "nonemptyLegacyStepFields": 0
+  },
+  {
+    "project": "УНИВЕРСАЛ / ГУРУ",
+    "file": "/private/tmp/guru-step6-guru-workspace.json",
+    "sha256": "847765127374ca95d9db93631e5c416b1d1b2518e56f6754a6b7b6ae058a2360",
+    "active": 0,
+    "archived": 0,
+    "nonemptyBergenFields": {},
+    "foundPhraseKeysRows": 0,
+    "classificationRows": 0,
+    "nonemptyLegacyCriteria": 0,
+    "nonemptyLegacyStepFields": 0
+  },
+  {
+    "project": "Коричное яблоко",
+    "file": "/private/tmp/guru-competitor-recovery-original.json",
+    "sha256": "ddc6de490e31c8d2bb8c71963bacb8dd53236e83b0f02105b053447ef3fffe5c",
+    "active": 25,
+    "archived": 2,
+    "nonemptyBergenFields": {
+      "advertisements": 25,
+      "similarity": 25
+    },
+    "foundPhraseKeysRows": 19,
+    "classificationRows": 25,
+    "nonemptyLegacyCriteria": 0,
+    "nonemptyLegacyStepFields": 0
+  }
+]

@@ -1,0 +1,9 @@
+file:///private/tmp/guru-step7-after-middle/scripts/gate2-company-strategic-foundation-smoke.mjs:9
+  if (!condition) throw new Error(message);
+                        ^
+
+Error: Company foundation must render exactly once in Gate 2
+    at assert (file:///private/tmp/guru-step7-after-middle/scripts/gate2-company-strategic-foundation-smoke.mjs:9:25)
+    at file:///private/tmp/guru-step7-after-middle/scripts/gate2-company-strategic-foundation-smoke.mjs:269:3
+
+Node.js v22.14.0

@@ -1,0 +1,61 @@
+{
+  "result": {
+    "initial": {
+      "title": "Сценарий короткого видео",
+      "rows": 5,
+      "headings": [
+        "Время",
+        "Часть и назначение",
+        "Кадр и текст на экране",
+        "Звук / озвучка"
+      ]
+    },
+    "typedWithoutRefresh": true,
+    "shortStored": "Готовая пара крупным планом",
+    "added": true,
+    "addedStored": "Деталь",
+    "carouselTitle": "Сценарий карусели",
+    "restored": "Готовая пара крупным планом",
+    "extrasRestored": 6,
+    "carouselStored": "Обложка: проблема",
+    "allFormats": [
+      {
+        "title": "Сценарий короткого видео",
+        "rows": 6
+      },
+      {
+        "title": "Сценарий фото / кейса",
+        "rows": 4
+      },
+      {
+        "title": "Сценарий карусели",
+        "rows": 5
+      },
+      {
+        "title": "План экспертного текста",
+        "rows": 5
+      },
+      {
+        "title": "Сценарий Stories",
+        "rows": 4
+      },
+      {
+        "title": "Сценарий длинного видео",
+        "rows": 5
+      }
+    ],
+    "persistedShort": "Готовая пара крупным планом",
+    "persistedCarousel": "Обложка: проблема"
+  },
+  "mobile": {
+    "page": 390,
+    "viewport": 390,
+    "rows": 6
+  },
+  "company": {
+    "visual": "Первый кадр",
+    "name": "Исходная идея",
+    "insight": "Суть публикации",
+    "count": 1
+  }
+}

@@ -1,0 +1,494 @@
+{
+  "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+  "steps": [
+    {
+      "label": "company-first-open",
+      "syncMs": 149.69999998807907,
+      "paintMs": 236.10000002384186,
+      "calls": {
+        "guruExportDiagnosticCloneV223": {
+          "count": 1,
+          "ms": 126.89999997615814
+        }
+      }
+    },
+    {
+      "label": "company-close",
+      "syncMs": 2.100000023841858,
+      "paintMs": 76.60000002384186,
+      "calls": {}
+    },
+    {
+      "label": "company-reopen",
+      "syncMs": 6.800000011920929,
+      "paintMs": 90.30000001192093,
+      "calls": {}
+    },
+    {
+      "label": "demand-open",
+      "syncMs": 1.5999999642372131,
+      "paintMs": 50.19999998807907,
+      "calls": {}
+    },
+    {
+      "label": "demand-type-0",
+      "syncMs": 31.19999998807907,
+      "paintMs": 192.4000000357628,
+      "calls": {
+        "gate1CompanyDemandPositioningCompletionV357": {
+          "count": 1,
+          "ms": 0.6000000238418579
+        },
+        "renderGateNav": {
+          "count": 1,
+          "ms": 0.10000002384185791
+        },
+        "guruReadinessInspect": {
+          "count": 10,
+          "ms": 49.499999940395355
+        },
+        "guruV194Records": {
+          "count": 13,
+          "ms": 38.800000071525574
+        },
+        "guruGateBlockStatuses": {
+          "count": 1,
+          "ms": 47.5
+        }
+      }
+    },
+    {
+      "label": "demand-type-1",
+      "syncMs": 9.900000035762787,
+      "paintMs": 89.70000004768372,
+      "calls": {
+        "gate1CompanyDemandPositioningCompletionV357": {
+          "count": 1,
+          "ms": 0.6000000238418579
+        },
+        "renderGateNav": {
+          "count": 1,
+          "ms": 0
+        },
+        "guruReadinessInspect": {
+          "count": 10,
+          "ms": 31.700000047683716
+        },
+        "guruV194Records": {
+          "count": 13,
+          "ms": 25.400000035762787
+        },
+        "guruGateBlockStatuses": {
+          "count": 1,
+          "ms": 30.5
+        }
+      }
+    },
+    {
+      "label": "demand-type-2",
+      "syncMs": 9.900000035762787,
+      "paintMs": 206.5,
+      "calls": {
+        "gate1CompanyDemandPositioningCompletionV357": {
+          "count": 1,
+          "ms": 0.30000001192092896
+        },
+        "renderGateNav": {
+          "count": 1,
+          "ms": 0
+        },
+        "guruReadinessInspect": {
+          "count": 10,
+          "ms": 32.69999998807907
+        },
+        "guruV194Records": {
+          "count": 13,
+          "ms": 26.100000083446503
+        },
+        "guruGateBlockStatuses": {
+          "count": 1,
+          "ms": 31.099999964237213
+        }
+      }
+    },
+    {
+      "label": "cell-switch",
+      "syncMs": 17.200000047683716,
+      "paintMs": 133,
+      "calls": {
+        "guruReadinessInspect": {
+          "count": 10,
+          "ms": 67.49999994039536
+        },
+        "guruV194Records": {
+          "count": 13,
+          "ms": 57.79999989271164
+        },
+        "guruGateBlockStatuses": {
+          "count": 1,
+          "ms": 65.69999998807907
+        }
+      }
+    },
+    {
+      "label": "audience-open",
+      "syncMs": 165.19999998807907,
+      "paintMs": 308.5,
+      "calls": {
+        "ensureTargetAudience": {
+          "count": 1,
+          "ms": 42.60000002384186
+        },
+        "guruQueueWorkspaceSave": {
+          "count": 1,
+          "ms": 83.89999997615814
+        }
+      }
+    },
+    {
+      "label": "audience-type-0",
+      "syncMs": 36.89999997615814,
+      "paintMs": 184.30000001192093,
+      "calls": {
+        "ensureTargetAudience": {
+          "count": 1,
+          "ms": 34.80000001192093
+        },
+        "guruReadinessInspect": {
+          "count": 10,
+          "ms": 34.30000001192093
+        },
+        "guruV194Records": {
+          "count": 13,
+          "ms": 27.799999952316284
+        },
+        "guruGateBlockStatuses": {
+          "count": 1,
+          "ms": 32.89999997615814
+        },
+        "guruQueueWorkspaceSave": {
+          "count": 1,
+          "ms": 90.79999995231628
+        }
+      }
+    },
+    {
+      "label": "audience-type-1",
+      "syncMs": 30.19999998807907,
+      "paintMs": 81.19999998807907,
+      "calls": {
+        "ensureTargetAudience": {
+          "count": 1,
+          "ms": 27.700000047683716
+        },
+        "guruReadinessInspect": {
+          "count": 10,
+          "ms": 33.69999998807907
+        },
+        "guruV194Records": {
+          "count": 13,
+          "ms": 27.19999998807907
+        },
+        "guruGateBlockStatuses": {
+          "count": 1,
+          "ms": 32.19999998807907
+        }
+      }
+    },
+    {
+      "label": "audience-type-2",
+      "syncMs": 32.19999998807907,
+      "paintMs": 113.39999997615814,
+      "calls": {
+        "ensureTargetAudience": {
+          "count": 1,
+          "ms": 30
+        },
+        "guruReadinessInspect": {
+          "count": 10,
+          "ms": 32.60000002384186
+        },
+        "guruV194Records": {
+          "count": 13,
+          "ms": 26.600000023841858
+        },
+        "guruGateBlockStatuses": {
+          "count": 1,
+          "ms": 31.200000047683716
+        }
+      }
+    },
+    {
+      "label": "lazy-pain_jtbd_offer",
+      "syncMs": 403.5,
+      "paintMs": 472.89999997615814,
+      "calls": {
+        "guruExportDiagnosticCloneV223": {
+          "count": 1,
+          "ms": 114.60000002384186
+        },
+        "guruV194Records": {
+          "count": 307,
+          "ms": 50.499999940395355
+        },
+        "guruQueueWorkspaceSave": {
+          "count": 1,
+          "ms": 82.5
+        }
+      }
+    },
+    {
+      "label": "lazy-unit_economics",
+      "syncMs": 732.5,
+      "paintMs": 852.5,
+      "calls": {
+        "guruQueueWorkspaceSave": {
+          "count": 1,
+          "ms": 263.9000000357628
+        },
+        "guruExportDiagnosticCloneV223": {
+          "count": 1,
+          "ms": 296.80000001192093
+        },
+        "guruV194Records": {
+          "count": 271,
+          "ms": 96.8000003695488
+        }
+      }
+    },
+    {
+      "label": "lazy-card",
+      "syncMs": 441.5,
+      "paintMs": 706.6000000238419,
+      "calls": {
+        "guruV194Records": {
+          "count": 271,
+          "ms": 44.30000019073486
+        },
+        "guruExportDiagnosticCloneV223": {
+          "count": 1,
+          "ms": 208.70000004768372
+        },
+        "guruQueueWorkspaceSave": {
+          "count": 1,
+          "ms": 123.69999998807907
+        }
+      }
+    }
+  ],
+  "demandIntegrity": {
+    "aConnected": true,
+    "bConnected": true,
+    "focused": true,
+    "value": "785111",
+    "expected": "785111",
+    "visible": true
+  },
+  "demandStable": true,
+  "audienceStable": true,
+  "deferredCalls": {
+    "guruExportDiagnosticCloneV223": {
+      "count": 3,
+      "ms": 434.6000000834465
+    },
+    "guruV194Records": {
+      "count": 2722,
+      "ms": 382.3000010251999
+    },
+    "gate1CompanyDemandPositioningCompletionV357": {
+      "count": 1,
+      "ms": 0.30000001192092896
+    },
+    "ensureTargetAudience": {
+      "count": 1,
+      "ms": 49.40000003576279
+    },
+    "guruGateBlockStatuses": {
+      "count": 2,
+      "ms": 633.5
+    },
+    "nowGuideGate1Refresh": {
+      "count": 1,
+      "ms": 1.300000011920929
+    },
+    "guruReadinessInspect": {
+      "count": 1,
+      "ms": 2.199999988079071
+    },
+    "nowGuideRender": {
+      "count": 1,
+      "ms": 10.100000023841858
+    },
+    "guruQueueWorkspaceSave": {
+      "count": 1,
+      "ms": 90.70000004768372
+    },
+    "guruPersistStateFast": {
+      "count": 1,
+      "ms": 0.3999999761581421
+    }
+  },
+  "saved": {
+    "demand": "785111",
+    "expectedDemand": "785111",
+    "audience": "Ноить одежду, которой нет у других\nПодарить вещь с личным смыслом и историей\nНайти подарок, который не выглядит массовым и формальным\nСделать дом более тёплым и уютным\nВоплотить собственную идею в единственном экземпляре\nКогда человек не находит подходящую вещь, он хочет создать свою, чтобы получить именно то, что искалттт",
+    "expectedAudience": "Ноить одежду, которой нет у других\nПодарить вещь с личным смыслом и историей\nНайти подарок, который не выглядит массовым и формальным\nСделать дом более тёплым и уютным\nВоплотить собственную идею в единственном экземпляре\nКогда человек не находит подходящую вещь, он хочет создать свою, чтобы получить именно то, что искалттт"
+  },
+  "matrix": {
+    "rows": [
+      {
+        "id": "company_demand_positioning",
+        "status": "in_progress",
+        "badge": "in_progress"
+      },
+      {
+        "id": "project-comparison",
+        "status": "not_started",
+        "badge": "not_started"
+      },
+      {
+        "id": "target-audience",
+        "status": "ready",
+        "badge": "ready"
+      },
+      {
+        "id": "card-21",
+        "status": "ready",
+        "badge": "ready"
+      },
+      {
+        "id": "card-22-hub",
+        "status": "in_progress",
+        "badge": "in_progress"
+      },
+      {
+        "id": "card-22",
+        "status": "in_progress",
+        "badge": "in_progress"
+      },
+      {
+        "id": "card-25",
+        "status": "in_progress",
+        "badge": "in_progress"
+      },
+      {
+        "id": "card-26",
+        "status": "not_started",
+        "badge": "not_started"
+      },
+      {
+        "id": "card-27",
+        "status": "not_started",
+        "badge": "not_started"
+      },
+      {
+        "id": "card-28",
+        "status": "not_started",
+        "badge": "not_started"
+      },
+      {
+        "id": "card-30",
+        "status": "not_started",
+        "badge": "not_started"
+      },
+      {
+        "id": "card-31",
+        "status": "not_started",
+        "badge": "not_started"
+      },
+      {
+        "id": "card-32",
+        "status": "not_started",
+        "badge": "not_started"
+      },
+      {
+        "id": "card-site-header-v497",
+        "status": "not_started",
+        "badge": "not_started"
+      },
+      {
+        "id": "card-site-footer-v497",
+        "status": "not_started",
+        "badge": "not_started"
+      },
+      {
+        "id": "card-29",
+        "status": "not_started",
+        "badge": "not_started"
+      },
+      {
+        "id": "card-35",
+        "status": "not_started",
+        "badge": "not_started"
+      },
+      {
+        "id": "card-36",
+        "status": "not_started",
+        "badge": "not_started"
+      },
+      {
+        "id": "card-37",
+        "status": "not_started",
+        "badge": "not_started"
+      },
+      {
+        "id": "card-24",
+        "status": "ready",
+        "badge": "ready"
+      },
+      {
+        "id": "pain_jtbd_offer",
+        "status": "ready",
+        "badge": "ready"
+      },
+      {
+        "id": "project-comparison-product",
+        "status": "not_started",
+        "badge": "not_started"
+      },
+      {
+        "id": "unit-economics",
+        "status": "not_started",
+        "badge": "not_started"
+      }
+    ],
+    "summary": {
+      "total": 23,
+      "done": 4,
+      "ready": 4,
+      "notRequired": 0,
+      "inProgress": 4,
+      "problem": 0,
+      "notStarted": 15,
+      "percent": 26
+    },
+    "menu": "23 блоков, прогресс 26%"
+  },
+  "final": {
+    "build": "2.3.526+3edabf5c5240",
+    "gate": "gate-1",
+    "errors": [],
+    "status": "23 блоков, прогресс 26%",
+    "step": "Сейчас\nШаг 8 из 88\nВ работе\nГотовность к запуску: 47%\nготово 28 из 88\nТекущее состояние маркетинговой системы · Компания"
+  },
+  "nativeInput": {
+    "connected": true,
+    "value": "Ноить одежду, которой нет у других\nПодарить вещь с личным смыслом и историей\nНайти подарок, который не выглядит массовым и формальным\nСделать дом более тёплым и уютным\nВоплотить собственную идею в единственном экземпляре\nКогда человек не находит подходящую вещь, он хочет создать свою, чтобы получить именно то, что искалттт Проверка ввода",
+    "expected": "Ноить одежду, которой нет у других\nПодарить вещь с личным смыслом и историей\nНайти подарок, который не выглядит массовым и формальным\nСделать дом более тёплым и уютным\nВоплотить собственную идею в единственном экземпляре\nКогда человек не находит подходящую вещь, он хочет создать свою, чтобы получить именно то, что искалттт Проверка ввода",
+    "focusMoved": true
+  },
+  "lazy": [
+    {
+      "key": "pain_jtbd_offer",
+      "mounted": true,
+      "open": true,
+      "previousEditorKept": true
+    },
+    {
+      "key": "unit_economics",
+      "mounted": true,
+      "open": true,
+      "previousEditorKept": true
+    }
+  ]
+}

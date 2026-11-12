@@ -1,0 +1,18 @@
+[
+  {
+    "test": "gate1-company-brand-demand",
+    "status": "FAIL"
+  },
+  {
+    "test": "gate1-company-unified-container",
+    "status": "PASS"
+  },
+  {
+    "test": "gate1-seo-central",
+    "status": "FAIL"
+  },
+  {
+    "test": "gate12-now-readiness",
+    "status": "PASS"
+  }
+]

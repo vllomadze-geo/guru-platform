@@ -1,0 +1,107 @@
+{
+  "setup": {
+    "hubId": "page-1793620141857-97f521",
+    "categoryId": "cat-a",
+    "refs": [
+      {
+        "pageKey": "categories:cat-b"
+      },
+      {
+        "legacyIndex": 1
+      }
+    ],
+    "legacy": "Одежда -> https://old.test/odezhda/\nНеизвестная -> /unknown",
+    "count": 15
+  },
+  "check": {
+    "before": {
+      "hub": "ready",
+      "category": "in_progress"
+    },
+    "after": "ready",
+    "path": "/odezhda",
+    "partialLegacy": [
+      {
+        "pageKey": "fixed:blog"
+      },
+      {
+        "pageKey": "categories:cat-c"
+      }
+    ]
+  },
+  "interaction": {
+    "afterAdd": [
+      {
+        "pageKey": "categories:cat-a"
+      }
+    ],
+    "afterSelect": [
+      {
+        "pageKey": "fixed:catalog"
+      }
+    ],
+    "options": [
+      "categories:cat-a",
+      "fixed:catalog",
+      "categories:cat-c",
+      "products:product-0",
+      "products:product-1",
+      "products:product-2",
+      "products:product-3",
+      "products:product-4",
+      "products:product-5",
+      "products:product-6",
+      "products:product-7",
+      "products:product-8",
+      "products:product-9",
+      "products:product-10",
+      "products:product-11",
+      "products:product-12",
+      "products:product-13",
+      "products:product-14",
+      "fixed:home",
+      "fixed:contacts",
+      "fixed:delivery",
+      "fixed:about",
+      "fixed:blog",
+      "fixed:not_found",
+      "fixed:thank_you",
+      "fixed:company_details",
+      "fixed:privacy",
+      "fixed:data_consent",
+      "fixed:offer",
+      "fixed:returns",
+      "custom:audit:page-1793620141858-9c2fdd"
+    ],
+    "afterRemove": [],
+    "original": "",
+    "legacyAfter": ""
+  },
+  "sync": {
+    "first": true,
+    "updated": true,
+    "missing": "in_progress",
+    "notNeeded": {
+      "label": "Не нужна",
+      "status": "ready"
+    },
+    "legacyPreserved": true
+  },
+  "modeUi": {
+    "value": "not_needed",
+    "label": "Не нужна"
+  },
+  "navigation": {
+    "button": true,
+    "gate": "gate-0"
+  },
+  "runtimeErrors": [],
+  "shots": [
+    "01-hub",
+    "02-category",
+    "03-empty-suggestions",
+    "04-missing-platform-url",
+    "05-unmatched",
+    "06-pagination-15"
+  ]
+}

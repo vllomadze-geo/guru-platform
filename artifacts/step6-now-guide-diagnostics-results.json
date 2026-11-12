@@ -1,0 +1,114 @@
+[
+  {
+    "label": "icleaning",
+    "project": "iCleaning",
+    "pathTotal": 96,
+    "pathDone": 18,
+    "diagnosticTotal": 189,
+    "diagnosticDone": 42,
+    "registryTotal": 189,
+    "registryDone": 42,
+    "launchReadiness": {
+      "total": 96,
+      "done": 18,
+      "ready": 13,
+      "notRequired": 5,
+      "inProgress": 27,
+      "problem": 2,
+      "notStarted": 49,
+      "percent": 34
+    },
+    "perGate": [
+      {
+        "id": "gate-0",
+        "total": 9,
+        "done": 2,
+        "path": 9,
+        "all": 9
+      },
+      {
+        "id": "gate-1",
+        "total": 31,
+        "done": 4,
+        "path": 31,
+        "all": 31
+      },
+      {
+        "id": "gate-2",
+        "total": 19,
+        "done": 2,
+        "path": 19,
+        "all": 19
+      },
+      {
+        "id": "gate-3",
+        "total": 5,
+        "done": 2,
+        "path": 5,
+        "all": 5
+      },
+      {
+        "id": "gate-4",
+        "total": 50,
+        "done": 12,
+        "path": 32,
+        "all": 50
+      },
+      {
+        "id": "gate-5",
+        "total": 6,
+        "done": 0,
+        "path": 0,
+        "all": 6
+      },
+      {
+        "id": "gate-6",
+        "total": 27,
+        "done": 0,
+        "path": 0,
+        "all": 27
+      },
+      {
+        "id": "gate-7",
+        "total": 41,
+        "done": 20,
+        "path": 0,
+        "all": 41
+      },
+      {
+        "id": "gate-8",
+        "total": 1,
+        "done": 0,
+        "path": 0,
+        "all": 1
+      }
+    ],
+    "hiddenGate0InPath": [],
+    "hiddenGate1InPath": false,
+    "card": "Сейчас\nШаг 3 из 96\nНе начато\nГотовность к запуску: 34%\nготово 18 из 96\nЦель бренда\nНе хватает:\nФункциональная цель\nВысшая цель\nЕдиная формулировка цели бренда\nGate 0 · Компания\n◀ Назад\nДалее ▶\nК текущему",
+    "errors": [],
+    "productId": "catalog-item-1786885522654-b659e1",
+    "products": [
+      {
+        "id": "catalog-item-1786885522653-759ff6",
+        "name": "Без названия",
+        "categoryId": "product-1786885522612-eb869c"
+      },
+      {
+        "id": "catalog-item-1786885522654-b437c0",
+        "name": "Без названия",
+        "categoryId": "product-1786885522612-c57431"
+      },
+      {
+        "id": "catalog-item-1786885522654-b659e1",
+        "name": "направление - Обувь - Химчистка, ремонт и реставрация обуви",
+        "categoryId": "product-1786885522612-2fc8c8"
+      },
+      {
+        "id": "catalog-item-1786885522654-a3955f",
+        "name": "Уход за вашими любимыми аксессуарами: от шелкового платка до брендовой сумки",
+        "categoryId": "product-1786885522612-b45894"
+      }
+    ]
+  }
+]

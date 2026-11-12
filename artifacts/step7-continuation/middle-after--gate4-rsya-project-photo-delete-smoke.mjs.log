@@ -1,0 +1,60 @@
+{
+  "migratedNames": {
+    "name": "Символ 2027 года «Коза» — фото 1.PNG",
+    "originalName": "8EB0B6C9-4BCF-4E2B-85FA-F6C6E2660461.PNG",
+    "adName": "Символ 2027 года «Коза» — фото 1.PNG"
+  },
+  "before": {
+    "projectCount": 2,
+    "ghostCandidate": true,
+    "originalName": "Фото товара Коза ручной работы — оригинальное имя файла.PNG",
+    "storedName": "Фото товара Коза ручной работы — оригинальное имя файла.PNG",
+    "ghostDisplayName": "Символ 2027 года «Коза» — фото 1.PNG",
+    "ghostOriginalName": "8EB0B6C9-4BCF-4E2B-85FA-F6C6E2660461.PNG"
+  },
+  "afterRename": {
+    "projectName": "Коза — исходное название.jpg",
+    "adCopyName": "Коза — исходное название.jpg",
+    "originalName": "8EB0B6C9-4BCF-4E2B-85FA-F6C6E2660461.PNG"
+  },
+  "afterGhostDelete": {
+    "projectCount": 1,
+    "ghostCandidate": false,
+    "secondAdImages": 0,
+    "secondAdPreview": ""
+  },
+  "afterSelectedDelete": {
+    "projectCount": 0,
+    "firstAdImages": 0,
+    "firstAdPreview": "",
+    "keepCandidate": false,
+    "mainPhotoId": ""
+  },
+  "afterGate1Delete": {
+    "projectCount": 0,
+    "imageNames": [
+      "Личный файл.PNG"
+    ],
+    "previewImageId": "independent-file-v488"
+  },
+  "afterLegacyCleanup": [
+    "Личный файл.PNG"
+  ],
+  "directRenamed": "Коза — отдельное фото.PNG",
+  "uploadNamePreserved": true,
+  "uploadNameLength": 182,
+  "uuidUploadName": "Символ 2027 года «Коза» — фото 3.PNG",
+  "uuidOriginalName": "8EB0B6C9-4BCF-4E2B-85FA-F6C6E2660461.PNG",
+  "rsyaUploaded": [
+    {
+      "name": "Символ 2027 года «Коза» — фото 1.PNG",
+      "originalName": "8EB0B6C9-4BCF-4E2B-85FA-F6C6E2660461.PNG"
+    }
+  ],
+  "gate1Uploaded": [
+    {
+      "name": "Символ 2027 года «Коза» — фото 1.PNG",
+      "originalName": "8EB0B6C9-4BCF-4E2B-85FA-F6C6E2660461.PNG"
+    }
+  ]
+}

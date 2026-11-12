@@ -1,0 +1,1555 @@
+{
+  "project": "icleaning",
+  "baseline": true,
+  "beforeHash": "a33a1e677d7c2414b6bf3f63e5bbfe7b1aca3b2c17f071f1b2064202cf738d69",
+  "snapshot": {
+    "blocks": [
+      {
+        "id": "card-1",
+        "gateId": "gate-0",
+        "title": "Проект: базовые сведения",
+        "kind": "card",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-project-goal",
+        "gateId": "gate-0",
+        "title": "Цель проекта и ограничения",
+        "kind": "card",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-brand-purpose",
+        "gateId": "gate-0",
+        "title": "Цель бренда",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "gate0-company-segmentation",
+        "gateId": "gate-0",
+        "title": "Сегментация · Компания",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "gate0-company-positioning",
+        "gateId": "gate-0",
+        "title": "Позиционирование · Компания",
+        "kind": "card",
+        "status": "in_progress"
+      },
+      {
+        "id": "gate0-company-offer",
+        "gateId": "gate-0",
+        "title": "Оффер и CTA · Компания",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "gate0-company-keyword-foundation",
+        "gateId": "gate-0",
+        "title": "Фундамент ключевых слов · Компания",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-7",
+        "gateId": "gate-0",
+        "title": "Текущее состояние маркетинговой системы · Компания",
+        "kind": "card",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-2",
+        "gateId": "gate-0",
+        "title": "Продукт, сегмент и задача клиента",
+        "kind": "card",
+        "status": "in_progress"
+      },
+      {
+        "id": "company_demand_positioning",
+        "gateId": "gate-1",
+        "title": "Спрос, ценность, позиционирование · Компания",
+        "kind": "gate1-section",
+        "status": "in_progress"
+      },
+      {
+        "id": "project-comparison",
+        "gateId": "gate-1",
+        "title": "Сравнение проектов · Компания",
+        "kind": "comparison",
+        "status": "not_started"
+      },
+      {
+        "id": "card-21",
+        "gateId": "gate-1",
+        "title": "ГЛАВНАЯ",
+        "kind": "card",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-22-hub",
+        "gateId": "gate-1",
+        "title": "КАТАЛОГ (ХАБ)",
+        "kind": "card",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-22",
+        "gateId": "gate-1",
+        "title": "КАТЕГОРИЯ",
+        "kind": "card",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-25",
+        "gateId": "gate-1",
+        "title": "СТАТЬЯ БЛОГА",
+        "kind": "card",
+        "status": "not_required"
+      },
+      {
+        "id": "card-26",
+        "gateId": "gate-1",
+        "title": "О НАС",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-27",
+        "gateId": "gate-1",
+        "title": "КОНТАКТЫ",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-28",
+        "gateId": "gate-1",
+        "title": "ДОСТАВКА / ГАРАНТИИ",
+        "kind": "card",
+        "status": "not_required"
+      },
+      {
+        "id": "card-30",
+        "gateId": "gate-1",
+        "title": "404",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-31",
+        "gateId": "gate-1",
+        "title": "THANK YOU PAGE ⚠️",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-32",
+        "gateId": "gate-1",
+        "title": "ЛЕНДИНГ",
+        "kind": "card",
+        "status": "not_required"
+      },
+      {
+        "id": "card-site-header-v497",
+        "gateId": "gate-1",
+        "title": "ХЕДЕР",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-site-footer-v497",
+        "gateId": "gate-1",
+        "title": "Футер: навигация, доверие и юридическая база",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-29",
+        "gateId": "gate-1",
+        "title": "ПОЛИТИКА",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-35",
+        "gateId": "gate-1",
+        "title": "Cookie-баннер: уведомление и согласие",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-36",
+        "gateId": "gate-1",
+        "title": "Футер: навигация, доверие и юридическая база",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-37",
+        "gateId": "gate-1",
+        "title": "Согласие в формах",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "target-audience",
+        "gateId": "gate-1",
+        "title": "Целевая аудитория",
+        "kind": "audience",
+        "status": "in_progress"
+      },
+      {
+        "id": "gate1-blog-v304-company",
+        "gateId": "gate-1",
+        "title": "Блог · Компания",
+        "kind": "gate1-section",
+        "status": "not_started"
+      },
+      {
+        "id": "card-23",
+        "gateId": "gate-1",
+        "title": "СТРАНИЦА УСЛУГИ",
+        "kind": "card",
+        "status": "ready"
+      },
+      {
+        "id": "card-24",
+        "gateId": "gate-1",
+        "title": "КАРТОЧКА ТОВАРА",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "pain_jtbd_offer",
+        "gateId": "gate-1",
+        "title": "Спрос, ценность, позиционирование · Продукт/Услуга",
+        "kind": "gate1-section",
+        "status": "in_progress"
+      },
+      {
+        "id": "gate1-blog-v304-product",
+        "gateId": "gate-1",
+        "title": "Блог · Продукт/Услуга",
+        "kind": "gate1-section",
+        "status": "not_started"
+      },
+      {
+        "id": "unit-economics",
+        "gateId": "gate-1",
+        "title": "Юнит-экономика",
+        "kind": "unit",
+        "status": "not_started"
+      },
+      {
+        "id": "company-domain",
+        "gateId": "gate-2",
+        "title": "Домен и HTTPS",
+        "kind": "service",
+        "productId": "",
+        "status": "problem"
+      },
+      {
+        "id": "company-counter",
+        "gateId": "gate-2",
+        "title": "Яндекс Метрика · счётчик",
+        "kind": "wizard",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "company-goal",
+        "gateId": "gate-2",
+        "title": "Яндекс Метрика · конверсионная цель",
+        "kind": "wizard",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "company-webmaster",
+        "gateId": "gate-2",
+        "title": "Яндекс Вебмастер",
+        "kind": "service",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "company-yandex-business",
+        "gateId": "gate-2",
+        "title": "Яндекс Бизнес",
+        "kind": "service",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "company-yandex-direct",
+        "gateId": "gate-2",
+        "title": "Яндекс Директ · кабинет",
+        "kind": "service",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "company-vk",
+        "gateId": "gate-2",
+        "title": "VK Реклама и пиксель",
+        "kind": "service",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "company-telegram-ads",
+        "gateId": "gate-2",
+        "title": "Telegram Ads · кабинет",
+        "kind": "service",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "company-meta-ads",
+        "gateId": "gate-2",
+        "title": "Meta Ads · кабинет и пиксель",
+        "kind": "service",
+        "productId": "",
+        "status": "not_required"
+      },
+      {
+        "id": "company-ga4",
+        "gateId": "gate-2",
+        "title": "Google Analytics 4",
+        "kind": "service",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "company-gsc",
+        "gateId": "gate-2",
+        "title": "Google Search Console",
+        "kind": "service",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "company-google-ads",
+        "gateId": "gate-2",
+        "title": "Google Ads · конверсии",
+        "kind": "service",
+        "productId": "",
+        "status": "not_required"
+      },
+      {
+        "id": "company-leads",
+        "gateId": "gate-2",
+        "title": "Приём заявок",
+        "kind": "service",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "company-safety",
+        "gateId": "gate-2",
+        "title": "Юридическая защита",
+        "kind": "service",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "product-landing",
+        "gateId": "gate-2",
+        "title": "Посадочная товара",
+        "kind": "service",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "product-counter",
+        "gateId": "gate-2",
+        "title": "Метрика продукта · визит",
+        "kind": "service",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "product-goal",
+        "gateId": "gate-2",
+        "title": "Метрика продукта · цель",
+        "kind": "service",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "product-vk",
+        "gateId": "gate-2",
+        "title": "События VK Рекламы",
+        "kind": "service",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "product-lead",
+        "gateId": "gate-2",
+        "title": "Сквозная проверка заявки",
+        "kind": "service",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "aware",
+        "gateId": "gate-3",
+        "title": "Узнал (Aware)",
+        "kind": "stage",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "id": "appeal",
+        "gateId": "gate-3",
+        "title": "Понравился (Appeal)",
+        "kind": "stage",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "id": "ask",
+        "gateId": "gate-3",
+        "title": "Изучает (Ask)",
+        "kind": "stage",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "act",
+        "gateId": "gate-3",
+        "title": "Покупает (Act)",
+        "kind": "stage",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "advocate",
+        "gateId": "gate-3",
+        "title": "Рекомендует (Advocate)",
+        "kind": "stage",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "problem"
+      },
+      {
+        "id": "pr_publications",
+        "gateId": "gate-4",
+        "title": "PR-публикации · Сервис требует выбора",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "articles_cases",
+        "gateId": "gate-4",
+        "title": "Статьи / кейсы · Tilda Потоки",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "ready"
+      },
+      {
+        "id": "yandex_organization",
+        "gateId": "gate-4",
+        "title": "Карточка организации · Яндекс Бизнес / Яндекс Карты",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "google_organization",
+        "gateId": "gate-4",
+        "title": "Карточка организации · Google Business Profile",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "online_chat",
+        "gateId": "gate-4",
+        "title": "Онлайн-чат · JivoChat (виджет Tilda)",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "online_payment",
+        "gateId": "gate-4",
+        "title": "Онлайн-оплата · ЮKassa / CloudPayments / Т-Банк / Робокасса",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "abandoned_cart",
+        "gateId": "gate-4",
+        "title": "Письма о брошенной корзине · Внешний сервис — требует выбора",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "email_crm",
+        "gateId": "gate-4",
+        "title": "Email-рассылки · Unisender",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "review_collection",
+        "gateId": "gate-4",
+        "title": "Сбор отзывов · Яндекс Отзывы и Яндекс Карты",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "referral",
+        "gateId": "gate-4",
+        "title": "Реферальная программа · Промокоды Tilda",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "loyalty",
+        "gateId": "gate-4",
+        "title": "Программа лояльности · Внешний сервис — требует выбора",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "card-148",
+        "gateId": "gate-4",
+        "title": "Единая карта запуска",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "card-151",
+        "gateId": "gate-4",
+        "title": "Целевое действие выбрано",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-152",
+        "gateId": "gate-4",
+        "title": "Посадочная страница собрана под сегмент",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "id": "card-153",
+        "gateId": "gate-4",
+        "title": "Смысловой каркас страницы собран",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "id": "card-154",
+        "gateId": "gate-4",
+        "title": "Архитектура психослоев на посадочной",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "id": "card-155",
+        "gateId": "gate-4",
+        "title": "Формы и контакты работают",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "id": "card-156",
+        "gateId": "gate-4",
+        "title": "Мобильная версия не ломает конверсию",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "id": "card-157",
+        "gateId": "gate-4",
+        "title": "Метрика и базовые цели подклю��ены",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "id": "card-158",
+        "gateId": "gate-4",
+        "title": "UTM и разметка готовы",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-159",
+        "gateId": "gate-4",
+        "title": "Передача лидов и статусов не теряется",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "id": "card-160",
+        "gateId": "gate-4",
+        "title": "Креативная рамка зафиксирована",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "card-161",
+        "gateId": "gate-4",
+        "title": "Креативная матрица 3×3",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "card-162",
+        "gateId": "gate-4",
+        "title": "Собран минимальный пакет креативов",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "card-163",
+        "gateId": "gate-4",
+        "title": "Креативы связаны со страницей",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "card-164",
+        "gateId": "gate-4",
+        "title": "Стартовые рекламные сущности собраны",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-165",
+        "gateId": "gate-4",
+        "title": "Посадки привязаны к типу спроса",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "card-166",
+        "gateId": "gate-4",
+        "title": "Бюджет и критерий остановки заданы",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-167",
+        "gateId": "gate-4",
+        "title": "Предзапусковый QA пройден",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "card-168",
+        "gateId": "gate-4",
+        "title": "Менеджерская обработка готова",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "id": "card-169",
+        "gateId": "gate-4",
+        "title": "Запусковая готовность подтверждена",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "smm_vk_контент_11",
+        "gateId": "gate-4",
+        "title": "Контент · VK",
+        "kind": "channel",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "smm_telegram_контент_посевы_12",
+        "gateId": "gate-4",
+        "title": "Канал и посевы · Telegram",
+        "kind": "channel",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "smm_instagram_reels_stories_13",
+        "gateId": "gate-4",
+        "title": "Контент · Instagram / Reels / Stories",
+        "kind": "channel",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "smm_youtube_shorts_pre_roll_14",
+        "gateId": "gate-4",
+        "title": "Видео · YouTube / Shorts / Pre-roll",
+        "kind": "channel",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "платная_реклама_vk_ads_таргет_5",
+        "gateId": "gate-4",
+        "title": "Таргет · VK Реклама",
+        "kind": "channel",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "платная_реклама_telegram_ads_посевы_ads_7",
+        "gateId": "gate-4",
+        "title": "Telegram Ads · Telegram Ads",
+        "kind": "channel",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "платная_реклама_meta_ads_feed_reels_6",
+        "gateId": "gate-4",
+        "title": "Таргет · Meta Ads / Feed / Reels",
+        "kind": "channel",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "платная_реклама_яндекс_директ_рся_1",
+        "gateId": "gate-4",
+        "title": "Яндекс Директ / РСЯ",
+        "kind": "channel",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "платная_реклама_яндекс_директ_мастер_кампаний_2",
+        "gateId": "gate-4",
+        "title": "Яндекс Директ / Мастер кампаний",
+        "kind": "channel",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "платная_реклама_google_ads_display_4",
+        "gateId": "gate-4",
+        "title": "Медийная реклама · Google Ads / Display",
+        "kind": "channel",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "content_creatives",
+        "gateId": "gate-4",
+        "title": "Контент и креативы · Яндекс Директ / РСЯ",
+        "kind": "gate4-tool",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "id": "promo_landing",
+        "gateId": "gate-4",
+        "title": "ПромоСтраница / контентная посадочная · Tilda",
+        "kind": "gate4-tool",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "платная_реклама_яндекс_директ_поиск_0",
+        "gateId": "gate-4",
+        "title": "Яндекс Директ / Поиск",
+        "kind": "channel",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "product_gallery",
+        "gateId": "gate-4",
+        "title": "Товарная галерея · Яндекс Директ, ЕПК с товарными объявлениями",
+        "kind": "gate4-tool",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "платная_реклама_google_ads_search_3",
+        "gateId": "gate-4",
+        "title": "Поисковая реклама · Google Ads / Search",
+        "kind": "channel",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "in_progress"
+      },
+      {
+        "id": "seo",
+        "gateId": "gate-4",
+        "title": "SEO / Страницы сайта · Яндекс Вебмастер",
+        "kind": "gate4-tool",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "id": "retargeting",
+        "gateId": "gate-4",
+        "title": "Ретаргетинг · Яндекс Директ",
+        "kind": "gate4-tool",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "ready"
+      },
+      {
+        "id": "vk_retargeting",
+        "gateId": "gate-4",
+        "title": "Ретаргетинг · VK Реклама",
+        "kind": "gate4-tool",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "buyer_retargeting",
+        "gateId": "gate-4",
+        "title": "Ретаргетинг на покупателей · Яндекс Директ / VK Реклама",
+        "kind": "gate4-tool",
+        "productId": "catalog-item-1786885522654-b659e1",
+        "status": "not_started"
+      },
+      {
+        "id": "setup",
+        "gateId": "gate-5",
+        "title": "Настройка отчётности",
+        "kind": "gate5",
+        "status": "not_started"
+      },
+      {
+        "id": "input",
+        "gateId": "gate-5",
+        "title": "Импорт данных и снимки периодов",
+        "kind": "gate5",
+        "status": "not_started"
+      },
+      {
+        "id": "ad",
+        "gateId": "gate-5",
+        "title": "Рекламная оценка",
+        "kind": "gate5",
+        "status": "not_started"
+      },
+      {
+        "id": "bridge",
+        "gateId": "gate-5",
+        "title": "Связка с бизнесом",
+        "kind": "gate5",
+        "status": "not_started"
+      },
+      {
+        "id": "finance",
+        "gateId": "gate-5",
+        "title": "Финансовая оценка",
+        "kind": "gate5",
+        "status": "not_started"
+      },
+      {
+        "id": "journal",
+        "gateId": "gate-5",
+        "title": "Журнал изменений",
+        "kind": "gate5",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__new_year",
+        "gateId": "gate-6",
+        "title": "Новый год",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__christmas",
+        "gateId": "gate-6",
+        "title": "Рождество",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__old_new_year",
+        "gateId": "gate-6",
+        "title": "Старый Новый год",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__epiphany",
+        "gateId": "gate-6",
+        "title": "Крещение",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__tatiana",
+        "gateId": "gate-6",
+        "title": "Татьянин день",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__valentine",
+        "gateId": "gate-6",
+        "title": "День святого Валентина",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__maslenitsa_q1",
+        "gateId": "gate-6",
+        "title": "Масленица",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__defender_day",
+        "gateId": "gate-6",
+        "title": "День защитника Отечества",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__march_8",
+        "gateId": "gate-6",
+        "title": "Международный женский день",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q2__april_1",
+        "gateId": "gate-6",
+        "title": "День смеха",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q2__cosmonautics",
+        "gateId": "gate-6",
+        "title": "День космонавтики",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q2__easter_q2",
+        "gateId": "gate-6",
+        "title": "Пасха",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q2__may_1",
+        "gateId": "gate-6",
+        "title": "Праздник Весны и Труда",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q2__may_9",
+        "gateId": "gate-6",
+        "title": "День Победы",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q2__russia_day",
+        "gateId": "gate-6",
+        "title": "День России",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q2__june_22",
+        "gateId": "gate-6",
+        "title": "День памяти и скорби",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q2__youth_day",
+        "gateId": "gate-6",
+        "title": "День молодёжи",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q3__family_day",
+        "gateId": "gate-6",
+        "title": "День семьи, любви и верности",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q3__flag_day",
+        "gateId": "gate-6",
+        "title": "День флага России",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q3__knowledge_day",
+        "gateId": "gate-6",
+        "title": "День знаний",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q3__icleaning_birthday",
+        "gateId": "gate-6",
+        "title": "День рождения iCleaning",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q3__moscow_day",
+        "gateId": "gate-6",
+        "title": "День города Москвы",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q4__autumn_control",
+        "gateId": "gate-6",
+        "title": "Подготовка к зимнему сезону",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q4__unity_day",
+        "gateId": "gate-6",
+        "title": "День народного единства",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q4__black_friday",
+        "gateId": "gate-6",
+        "title": "Чёрная пятница",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q4__constitution_day",
+        "gateId": "gate-6",
+        "title": "День Конституции РФ",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q4__new_year_preparation",
+        "gateId": "gate-6",
+        "title": "Подготовка к Новому году",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784715884061-535782",
+        "gateId": "gate-7",
+        "title": "Перейти на реализацию привилегии клиентов",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784717925977-5de53f",
+        "gateId": "gate-7",
+        "title": "Партнерская програма",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784721781301-3aea46",
+        "gateId": "gate-7",
+        "title": "Остров",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784718322113-48405b",
+        "gateId": "gate-7",
+        "title": "Актуализировать информацию о подарочном сертификате",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784715891526-d3c925",
+        "gateId": "gate-7",
+        "title": "Артём: Подготовить презентацию для продажи рекламных площадей",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784717365445-05106a",
+        "gateId": "gate-7",
+        "title": "Создать тейбл-тенты для отзывов и обращений в Службу качества",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784717493198-8bb9e9",
+        "gateId": "gate-7",
+        "title": "Подготовить персональные подарочные наборы для 300 VIP-клиентов: \nсувенирная продукция, благодарственное письмо и пакет предложений от партнёров. Организовать вручение каждому клиенту лично в руки.",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784717501655-d90e6b",
+        "gateId": "gate-7",
+        "title": "Отчеты АГБИС",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784717511459-cd8116",
+        "gateId": "gate-7",
+        "title": "Nika: Добавить баннер принудительного обновления приложения",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784717518037-e8db1c",
+        "gateId": "gate-7",
+        "title": "Nika: Интегрировать фотографии в описание заказа.",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784717528004-5ff198",
+        "gateId": "gate-7",
+        "title": "Nika + AGBIS: настроить пересылку негативных отзывов в рабочий чат.",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784717540454-e84d3c",
+        "gateId": "gate-7",
+        "title": "Nika + Лука: Создать структуру кейса «Было / Стало» для сайта.  + Добавить в кейс цифры, скриншоты и графики.",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784717547463-af7ddd",
+        "gateId": "gate-7",
+        "title": "Подготовить контент, кото��ый показывает сложность и ценно��ть производственного процесса. Две фотографии и два видео в неделю, с актальным заказаом ",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784717559390-67979d",
+        "gateId": "gate-7",
+        "title": "Подготовить вывески для отделения на Ленинском проспекте, 62",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784717568694-ffd01b",
+        "gateId": "gate-7",
+        "title": "Подготовить концепцию пакетов с хохломой",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784717576312-36a260",
+        "gateId": "gate-7",
+        "title": "Проработать процесс реализации брендированных шоперов",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784717009351-b7e947",
+        "gateId": "gate-7",
+        "title": "проверка почты",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784717016715-811093",
+        "gateId": "gate-7",
+        "title": "реестр отзывов + Яндекс Бизнес + 2ГИС",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784717347751-3e2cd1",
+        "gateId": "gate-7",
+        "title": "Яндекс Вебвизор + ГУРУ",
+        "kind": "task",
+        "status": "not_started"
+      },
+      {
+        "id": "g7-task-1784737353973-6603a1",
+        "gateId": "gate-7",
+        "title": "Перезаписала видео крепление меток. Нужно помнять",
+        "kind": "task",
+        "status": "in_progress"
+      },
+      {
+        "id": "g7-task-1784721342904-226933",
+        "gateId": "gate-7",
+        "title": "Имейл Агбис",
+        "kind": "task",
+        "status": "in_progress"
+      },
+      {
+        "id": "g7-task-1785516316767-eafdbc",
+        "gateId": "gate-7",
+        "title": "реестр отзывов + Яндекс Бизнес + 2ГИС",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1785516313547-8193f5",
+        "gateId": "gate-7",
+        "title": "проверка почты",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1784721744517-9612d3",
+        "gateId": "gate-7",
+        "title": "Пакеты",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1784740204473-27aee0",
+        "gateId": "gate-7",
+        "title": "создать счёт по поддержке и по макетом",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1784718297430-cd116e",
+        "gateId": "gate-7",
+        "title": "С 1 по 10 августа переезд в башне iQ - позаботиться об уведомлении ",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1785311165726-70b5bf",
+        "gateId": "gate-7",
+        "title": "Разобраться с Ботам макс",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1785307704771-4e4761",
+        "gateId": "gate-7",
+        "title": "проверка почты",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1784903467327-8e7d2f",
+        "gateId": "gate-7",
+        "title": "реестр отзывов + Яндекс Бизнес + 2ГИС",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1784903463857-0eea59",
+        "gateId": "gate-7",
+        "title": "проверка почты",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1784717892766-ef19df",
+        "gateId": "gate-7",
+        "title": "Отзывы - выслать обновленную статистику Татьяне ",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1784815710277-7e81e6",
+        "gateId": "gate-7",
+        "title": "Статья про Олега",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1784799904262-a6c96a",
+        "gateId": "gate-7",
+        "title": "Проверьте Ленинский 38, там сняли ограничения на вывески? Мы исчезли из списков?",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1784718284014-4a4be5",
+        "gateId": "gate-7",
+        "title": "Учебное пособие - Татьяна",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1784795702296-2fb89f",
+        "gateId": "gate-7",
+        "title": "проверка почты",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1784740181483-dc8ebb",
+        "gateId": "gate-7",
+        "title": "Яндекс Вебвизор + ГУРУ",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1784740178328-6eea6a",
+        "gateId": "gate-7",
+        "title": "реестр отзывов + Яндекс Бизнес + 2ГИС",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1784734085733-35288e",
+        "gateId": "gate-7",
+        "title": "проверка почты",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1784721742278-b9393d",
+        "gateId": "gate-7",
+        "title": "вазап счет",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1783598005121-d7f8d0",
+        "gateId": "gate-7",
+        "title": "Реализация Фотоальбома + фильма",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "g7-task-1783189702910-fb0782",
+        "gateId": "gate-7",
+        "title": "Запустить Бота в Макс и Телеграм",
+        "kind": "task",
+        "status": "ready"
+      },
+      {
+        "id": "0",
+        "gateId": "gate-8",
+        "title": "Прогноз проекта",
+        "kind": "forecast",
+        "status": "not_started"
+      }
+    ],
+    "readiness": {
+      "gate-0": {
+        "total": 9,
+        "done": 2,
+        "ready": 2,
+        "notRequired": 0,
+        "inProgress": 3,
+        "problem": 0,
+        "notStarted": 4,
+        "percent": 39
+      },
+      "gate-1": {
+        "total": 25,
+        "done": 4,
+        "ready": 1,
+        "notRequired": 3,
+        "inProgress": 6,
+        "problem": 0,
+        "notStarted": 15,
+        "percent": 28
+      },
+      "gate-2": {
+        "total": 19,
+        "done": 2,
+        "ready": 0,
+        "notRequired": 2,
+        "inProgress": 0,
+        "problem": 1,
+        "notStarted": 16,
+        "percent": 13
+      },
+      "gate-3": {
+        "total": 5,
+        "done": 2,
+        "ready": 2,
+        "notRequired": 0,
+        "inProgress": 2,
+        "problem": 1,
+        "notStarted": 0,
+        "percent": 70
+      },
+      "gate-4": {
+        "total": 50,
+        "done": 12,
+        "ready": 12,
+        "notRequired": 0,
+        "inProgress": 16,
+        "problem": 0,
+        "notStarted": 22,
+        "percent": 40
+      },
+      "gate-5": {
+        "total": 6,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 0,
+        "problem": 0,
+        "notStarted": 6,
+        "percent": 0
+      },
+      "gate-6": {
+        "total": 27,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 0,
+        "problem": 0,
+        "notStarted": 27,
+        "percent": 0
+      },
+      "gate-7": {
+        "total": 41,
+        "done": 20,
+        "ready": 20,
+        "notRequired": 0,
+        "inProgress": 2,
+        "problem": 0,
+        "notStarted": 19,
+        "percent": 51
+      },
+      "gate-8": {
+        "total": 1,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 0,
+        "problem": 0,
+        "notStarted": 1,
+        "percent": 0
+      }
+    },
+    "path": {
+      "total": 90,
+      "done": 18,
+      "ready": 13,
+      "notRequired": 5,
+      "inProgress": 27,
+      "problem": 2,
+      "notStarted": 43,
+      "percent": 36
+    },
+    "current": "gate0-company-brand-purpose",
+    "step": 3,
+    "productId": "catalog-item-1786885522654-b659e1",
+    "blog": null
+  },
+  "dom": [
+    {
+      "key": "",
+      "title": "Компания",
+      "blog": false
+    },
+    {
+      "key": "",
+      "title": "",
+      "blog": false
+    },
+    {
+      "key": "company_demand_positioning",
+      "title": "Спрос, ценность, позиционирование · Компания",
+      "blog": false
+    },
+    {
+      "key": "project-comparison",
+      "title": "Сравнение проектов · Компания",
+      "blog": false
+    },
+    {
+      "key": "site-structure-audit",
+      "title": "Структура сайта — аудит",
+      "blog": false
+    },
+    {
+      "key": "legal-audit",
+      "title": "Юриспруденция — аудит",
+      "blog": false
+    },
+    {
+      "key": "target-audience",
+      "title": "",
+      "blog": false
+    },
+    {
+      "key": "gate1-blog-v304-company",
+      "title": "Блог · Компания",
+      "blog": true
+    },
+    {
+      "key": "",
+      "title": "Продукт / Услуга",
+      "blog": false
+    },
+    {
+      "key": "gate1-product-pages",
+      "title": "",
+      "blog": false
+    },
+    {
+      "key": "card-23",
+      "title": "СТРАНИЦА УСЛУГИ",
+      "blog": false
+    },
+    {
+      "key": "card-24",
+      "title": "КАРТОЧКА ТОВАРА",
+      "blog": false
+    },
+    {
+      "key": "pain_jtbd_offer",
+      "title": "Спрос, ценность, позиционирование · Продукт/Услуга",
+      "blog": false
+    },
+    {
+      "key": "gate1-blog-v304-product",
+      "title": "Блог · Продукт/Услуга",
+      "blog": true
+    },
+    {
+      "key": "unit_economics",
+      "title": "Юнит-экономика: целевые CPA/DRR, AOV/LTV, маржинальность",
+      "blog": false
+    },
+    {
+      "key": "catalog-item-1786885522654-b659e1",
+      "title": "Сравнение проектов · Продукт/Услуга",
+      "blog": false
+    }
+  ],
+  "afterHash": "a33a1e677d7c2414b6bf3f63e5bbfe7b1aca3b2c17f071f1b2064202cf738d69",
+  "build": "2.3.526+b7f15c203e87",
+  "passed": true
+}

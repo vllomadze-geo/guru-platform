@@ -1,0 +1,75 @@
+{
+  "groups": "content_smm,paid_social,media",
+  "organicRows": "organic_strategy,organic_vk,organic_telegram,organic_instagram,organic_youtube",
+  "paidRows": "paid_vk,paid_telegram_ads,paid_telegram_seeding,paid_meta",
+  "mediaRows": "media_yandex,media_google,media_youtube",
+  "headings": "Органический контент · Продукт/Услуга|Рекламный контент · Продукт/Услуга|Медийная реклама",
+  "routingCounts": [
+    [
+      "organic_telegram",
+      1
+    ],
+    [
+      "paid_telegram_seeding",
+      1
+    ],
+    [
+      "organic_youtube",
+      1
+    ],
+    [
+      "media_youtube",
+      1
+    ]
+  ],
+  "routingSource": [
+    [
+      "Платная реклама Telegram Ads Посевы / Ads",
+      false,
+      false
+    ],
+    [
+      "SMM Telegram Контент / посевы",
+      true,
+      false
+    ],
+    [
+      "SMM YouTube Shorts / Pre-roll",
+      false,
+      true
+    ]
+  ],
+  "navigationVisible": true,
+  "allInitiallyClosed": true,
+  "groupsInitiallyClosed": true,
+  "groupOpens": true,
+  "groupCloses": true,
+  "groupsIndependent": true,
+  "groupsRestore": true,
+  "strategyIntact": true,
+  "platformsIntact": true,
+  "dedicatedSeeding": true,
+  "dedicatedPreRoll": true,
+  "protectedRsya": true,
+  "sourceUnchanged": true,
+  "campaignOpensInPlace": true,
+  "campaignClosesInPlace": true,
+  "campaignReusesBody": true,
+  "rsyaLocal": true,
+  "searchLocal": true,
+  "strategyOpens": true,
+  "strategyCloses": true,
+  "paidOpens": true,
+  "paidStillEdits": true,
+  "paidStatusLive": true,
+  "nativeNavigationStyle": true,
+  "preparationInitiallyOpen": true,
+  "preparationCloses": true,
+  "preparationRerenderClosed": true,
+  "preparationReopens": true,
+  "productIsolation": true,
+  "navigationSaved": true,
+  "preparationSaved": true,
+  "scopeClosesInPlace": true,
+  "scopeReopensInPlace": true
+}

@@ -1,0 +1,10 @@
+file:///private/tmp/guru-step7-after/scripts/gate2-company-services-step3-smoke.mjs:37
+      const timer = setTimeout(() => reject(new Error(`CDP timeout: ${method}`)), 30000);
+                                            ^
+
+Error: CDP timeout: Runtime.evaluate
+    at Timeout._onTimeout (file:///private/tmp/guru-step7-after/scripts/gate2-company-services-step3-smoke.mjs:37:45)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+
+Node.js v22.14.0

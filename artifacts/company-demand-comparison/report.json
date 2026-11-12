@@ -1,0 +1,694 @@
+{
+  "purity": {
+    "same": true,
+    "noLegacy": true,
+    "add": true,
+    "previews": true,
+    "status": {
+      "status": "not_started",
+      "filled": 0,
+      "total": 0
+    }
+  },
+  "before": {
+    "gates": [
+      {
+        "gate": 0,
+        "total": 9,
+        "done": 8,
+        "statuses": [
+          [
+            "card-1",
+            "ready"
+          ],
+          [
+            "gate0-project-goal",
+            "ready"
+          ],
+          [
+            "gate0-company-brand-purpose",
+            "ready"
+          ],
+          [
+            "gate0-company-segmentation",
+            "ready"
+          ],
+          [
+            "gate0-company-positioning",
+            "ready"
+          ],
+          [
+            "gate0-company-offer",
+            "ready"
+          ],
+          [
+            "gate0-company-keyword-foundation",
+            "ready"
+          ],
+          [
+            "card-7",
+            "in_progress"
+          ],
+          [
+            "card-2",
+            "ready"
+          ]
+        ]
+      },
+      {
+        "gate": 1,
+        "total": 23,
+        "done": 4,
+        "statuses": [
+          [
+            "company_demand_positioning",
+            "in_progress"
+          ],
+          [
+            "project-comparison",
+            "not_started"
+          ],
+          [
+            "target-audience",
+            "ready"
+          ],
+          [
+            "card-21",
+            "ready"
+          ],
+          [
+            "card-22-hub",
+            "in_progress"
+          ],
+          [
+            "card-22",
+            "in_progress"
+          ],
+          [
+            "card-25",
+            "in_progress"
+          ],
+          [
+            "card-26",
+            "not_started"
+          ],
+          [
+            "card-27",
+            "not_started"
+          ],
+          [
+            "card-28",
+            "not_started"
+          ],
+          [
+            "card-30",
+            "not_started"
+          ],
+          [
+            "card-31",
+            "not_started"
+          ],
+          [
+            "card-32",
+            "not_started"
+          ],
+          [
+            "card-site-header-v497",
+            "not_started"
+          ],
+          [
+            "card-site-footer-v497",
+            "not_started"
+          ],
+          [
+            "card-29",
+            "not_started"
+          ],
+          [
+            "card-35",
+            "not_started"
+          ],
+          [
+            "card-36",
+            "not_started"
+          ],
+          [
+            "card-37",
+            "not_started"
+          ],
+          [
+            "card-24",
+            "ready"
+          ],
+          [
+            "pain_jtbd_offer",
+            "ready"
+          ],
+          [
+            "project-comparison-product",
+            "not_started"
+          ],
+          [
+            "unit-economics",
+            "not_started"
+          ]
+        ]
+      },
+      {
+        "gate": 2,
+        "total": 19,
+        "done": 4,
+        "statuses": [
+          [
+            "company-domain",
+            "problem"
+          ],
+          [
+            "company-counter",
+            "not_started"
+          ],
+          [
+            "company-goal",
+            "not_started"
+          ],
+          [
+            "company-webmaster",
+            "problem"
+          ],
+          [
+            "company-yandex-business",
+            "not_required"
+          ],
+          [
+            "company-yandex-direct",
+            "not_started"
+          ],
+          [
+            "company-vk",
+            "in_progress"
+          ],
+          [
+            "company-telegram-ads",
+            "not_started"
+          ],
+          [
+            "company-meta-ads",
+            "not_required"
+          ],
+          [
+            "company-ga4",
+            "not_started"
+          ],
+          [
+            "company-gsc",
+            "not_required"
+          ],
+          [
+            "company-google-ads",
+            "not_required"
+          ],
+          [
+            "company-leads",
+            "not_started"
+          ],
+          [
+            "company-safety",
+            "not_started"
+          ],
+          [
+            "product-landing",
+            "problem"
+          ],
+          [
+            "product-counter",
+            "not_started"
+          ],
+          [
+            "product-goal",
+            "not_started"
+          ],
+          [
+            "product-vk",
+            "not_started"
+          ],
+          [
+            "product-lead",
+            "not_started"
+          ]
+        ]
+      },
+      {
+        "gate": 3,
+        "total": 5,
+        "done": 4,
+        "statuses": [
+          [
+            "aware",
+            "ready"
+          ],
+          [
+            "appeal",
+            "ready"
+          ],
+          [
+            "ask",
+            "ready"
+          ],
+          [
+            "act",
+            "ready"
+          ],
+          [
+            "advocate",
+            "problem"
+          ]
+        ]
+      },
+      {
+        "gate": 4,
+        "total": 52,
+        "done": 11,
+        "statuses": [
+          [
+            "pr_publications",
+            "not_started"
+          ],
+          [
+            "articles_cases",
+            "not_started"
+          ],
+          [
+            "yandex_organization",
+            "not_started"
+          ],
+          [
+            "google_organization",
+            "not_started"
+          ],
+          [
+            "online_chat",
+            "not_started"
+          ],
+          [
+            "online_payment",
+            "not_started"
+          ],
+          [
+            "abandoned_cart",
+            "not_started"
+          ],
+          [
+            "email_crm",
+            "not_started"
+          ],
+          [
+            "review_collection",
+            "not_started"
+          ],
+          [
+            "referral",
+            "in_progress"
+          ],
+          [
+            "loyalty",
+            "not_started"
+          ],
+          [
+            "gate1-blog-v304-company",
+            "in_progress"
+          ],
+          [
+            "card-148",
+            "not_started"
+          ],
+          [
+            "card-151",
+            "in_progress"
+          ],
+          [
+            "card-152",
+            "ready"
+          ],
+          [
+            "card-153",
+            "ready"
+          ],
+          [
+            "card-154",
+            "ready"
+          ],
+          [
+            "card-155",
+            "ready"
+          ],
+          [
+            "card-156",
+            "ready"
+          ],
+          [
+            "card-157",
+            "ready"
+          ],
+          [
+            "card-158",
+            "in_progress"
+          ],
+          [
+            "card-159",
+            "ready"
+          ],
+          [
+            "card-160",
+            "not_started"
+          ],
+          [
+            "card-161",
+            "not_started"
+          ],
+          [
+            "card-162",
+            "not_started"
+          ],
+          [
+            "card-163",
+            "not_started"
+          ],
+          [
+            "card-164",
+            "in_progress"
+          ],
+          [
+            "card-165",
+            "not_started"
+          ],
+          [
+            "card-166",
+            "in_progress"
+          ],
+          [
+            "card-167",
+            "not_started"
+          ],
+          [
+            "card-168",
+            "ready"
+          ],
+          [
+            "card-169",
+            "in_progress"
+          ],
+          [
+            "smm_vk_контент_11",
+            "in_progress"
+          ],
+          [
+            "smm_telegram_контент_посевы_12",
+            "in_progress"
+          ],
+          [
+            "smm_instagram_reels_stories_13",
+            "in_progress"
+          ],
+          [
+            "smm_youtube_shorts_pre_roll_14",
+            "in_progress"
+          ],
+          [
+            "платная_реклама_vk_ads_таргет_5",
+            "in_progress"
+          ],
+          [
+            "платная_реклама_telegram_ads_посевы_ads_7",
+            "in_progress"
+          ],
+          [
+            "платная_реклама_meta_ads_feed_reels_6",
+            "in_progress"
+          ],
+          [
+            "платная_реклама_яндекс_директ_рся_1",
+            "in_progress"
+          ],
+          [
+            "платная_реклама_яндекс_директ_мастер_кампаний_2",
+            "in_progress"
+          ],
+          [
+            "платная_реклама_google_ads_display_4",
+            "in_progress"
+          ],
+          [
+            "content_creatives",
+            "ready"
+          ],
+          [
+            "promo_landing",
+            "not_started"
+          ],
+          [
+            "платная_реклама_яндекс_директ_поиск_0",
+            "in_progress"
+          ],
+          [
+            "product_gallery",
+            "not_started"
+          ],
+          [
+            "платная_реклама_google_ads_search_3",
+            "in_progress"
+          ],
+          [
+            "seo",
+            "ready"
+          ],
+          [
+            "retargeting",
+            "ready"
+          ],
+          [
+            "vk_retargeting",
+            "not_started"
+          ],
+          [
+            "buyer_retargeting",
+            "not_started"
+          ],
+          [
+            "gate1-blog-v304-product",
+            "not_started"
+          ]
+        ]
+      },
+      {
+        "gate": 5,
+        "total": 6,
+        "done": 0,
+        "statuses": [
+          [
+            "setup",
+            "not_started"
+          ],
+          [
+            "input",
+            "not_started"
+          ],
+          [
+            "ad",
+            "not_started"
+          ],
+          [
+            "bridge",
+            "not_started"
+          ],
+          [
+            "finance",
+            "not_started"
+          ],
+          [
+            "journal",
+            "not_started"
+          ]
+        ]
+      },
+      {
+        "gate": 6,
+        "total": 27,
+        "done": 0,
+        "statuses": [
+          [
+            "q1__new_year",
+            "not_started"
+          ],
+          [
+            "q1__christmas",
+            "not_started"
+          ],
+          [
+            "q1__old_new_year",
+            "not_started"
+          ],
+          [
+            "q1__epiphany",
+            "not_started"
+          ],
+          [
+            "q1__tatiana",
+            "not_started"
+          ],
+          [
+            "q1__valentine",
+            "not_started"
+          ],
+          [
+            "q1__maslenitsa_q1",
+            "not_started"
+          ],
+          [
+            "q1__defender_day",
+            "not_started"
+          ],
+          [
+            "q1__march_8",
+            "not_started"
+          ],
+          [
+            "q2__april_1",
+            "not_started"
+          ],
+          [
+            "q2__cosmonautics",
+            "not_started"
+          ],
+          [
+            "q2__easter_q2",
+            "not_started"
+          ],
+          [
+            "q2__may_1",
+            "not_started"
+          ],
+          [
+            "q2__may_9",
+            "not_started"
+          ],
+          [
+            "q2__russia_day",
+            "not_started"
+          ],
+          [
+            "q2__june_22",
+            "not_started"
+          ],
+          [
+            "q2__youth_day",
+            "not_started"
+          ],
+          [
+            "q3__family_day",
+            "not_started"
+          ],
+          [
+            "q3__flag_day",
+            "not_started"
+          ],
+          [
+            "q3__knowledge_day",
+            "not_started"
+          ],
+          [
+            "q3__icleaning_birthday",
+            "not_started"
+          ],
+          [
+            "q3__moscow_day",
+            "not_started"
+          ],
+          [
+            "q4__autumn_control",
+            "not_started"
+          ],
+          [
+            "q4__unity_day",
+            "not_started"
+          ],
+          [
+            "q4__black_friday",
+            "not_started"
+          ],
+          [
+            "q4__constitution_day",
+            "not_started"
+          ],
+          [
+            "q4__new_year_preparation",
+            "not_started"
+          ]
+        ]
+      },
+      {
+        "gate": 7,
+        "total": 0,
+        "done": 0,
+        "statuses": []
+      },
+      {
+        "gate": 8,
+        "total": 1,
+        "done": 0,
+        "statuses": [
+          [
+            "0",
+            "in_progress"
+          ]
+        ]
+      }
+    ],
+    "launch": {
+      "total": 88,
+      "done": 28,
+      "ready": 24,
+      "notRequired": 4,
+      "inProgress": 23,
+      "problem": 4,
+      "notStarted": 33,
+      "percent": 47
+    }
+  },
+  "keywords": {
+    "removed": true,
+    "archived": "123",
+    "restored": "123",
+    "duplicates": 1,
+    "feedback": "Это слово уже есть в списке",
+    "foundation": true,
+    "companyGroup": true,
+    "brandSame": true,
+    "productsSame": true
+  },
+  "comparison": {
+    "retained": true,
+    "live": true,
+    "collapsed": true,
+    "type": "direct",
+    "productsSame": true,
+    "status": "in_progress",
+    "total": 22,
+    "previousTotal": 23,
+    "badge": "В работе"
+  },
+  "companyPreview": {
+    "noRemovedControls": true,
+    "companyName": true,
+    "companyAbout": true,
+    "unchanged": true,
+    "productsSame": true
+  },
+  "afterStatus": {
+    "path": "in_progress",
+    "block": "in_progress"
+  },
+  "reload": true,
+  "fixtureHash": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+  "build": "2.3.526+09bedca6d603",
+  "passed": true
+}

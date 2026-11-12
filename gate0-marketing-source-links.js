@@ -8,6 +8,7 @@ const G0_MARKETING_INFRA_SOURCES = Object.freeze({
   "UTM-разметка": { gate: "gate-2", card: "card-105", label: "UTM-разметка" },
   "Коллтрекинг": { gate: "gate-2", card: "card-129", label: "Коллтрекинг" },
   "Уведомления о заявках": { gate: "gate-2", card: "card-127", label: "Email-уведомления" },
+  "Яндекс Вебмастер": { gate: "gate-2", card: "card-107", label: "Яндекс Вебмастер" },
   "Google Search Console": { gate: "gate-2", card: "g2-marketing-gsc", label: "Google Search Console" },
   "Яндекс Директ": { gate: "gate-2", card: "g2-marketing-yandex-direct", label: "Яндекс Директ · рекламный кабинет" },
   "Google Ads": { gate: "gate-2", card: "g2-marketing-google-ads", label: "Google Ads · рекламный кабинет" },
@@ -155,7 +156,6 @@ function g0MarketingChannelPresentationV1(item) {
 function g0MarketingSourceForRowV1(section, item) {
   if (item._custom) return null;
   if (section === "infra") {
-    if (item.name === "Яндекс Вебмастер") return { gate: "gate-1", label: "Яндекс Вебмастер" };
     return Object.hasOwn(G0_MARKETING_INFRA_SOURCES, item.name) ? G0_MARKETING_INFRA_SOURCES[item.name] : null;
   }
   const match = G0_MARKETING_CHANNEL_SOURCES[`${item.platform}|${item.type}`];
@@ -169,11 +169,6 @@ function g0MarketingEditableV1(cardId, section, index, field, value, placeholder
 }
 
 function g0MarketingStatusV1(cardId, section, index, item) {
-  if (section === "infra" && item.name === "Яндекс Вебмастер" && !item._custom) {
-    const overall = gate1WebmasterOverallV295(state);
-    const status = overall.readiness === "not_started" ? "Не начато" : guruStatusLabel(overall.infraStatus);
-    return `<span class="mega-system-status-shell-v1" data-status="${escapeAttr(overall.infraStatus || "unselected")}" title="Автоматически из Gate 1"><span class="mega-system-status-v1">${escapeHtml(status)}</span></span>`;
-  }
   const status = guruCanonStatus(item.status);
   return `<span class="mega-system-status-shell-v1" data-status="${escapeAttr(status || "unselected")}"><span class="mega-system-status-v1" aria-hidden="true">${escapeHtml(status ? guruStatusLabel(status) : "Выбрать")}</span><select class="mega-system-status-select-v1" data-mega-card="${escapeAttr(cardId)}" data-mega-section="${section}" data-mega-idx="${index}" data-mega-field="status" aria-label="Статус: ${escapeAttr(item.name || item.type || item.platform || "элемент")}">${guruStatusOptionsHtml(item.status)}</select></span>`;
 }
@@ -187,9 +182,7 @@ function g0MarketingSystemTableV1({ cardId, section, title, subtitle, rows, addL
     previousGroup = group;
     const view = section === "infra" ? g0MarketingInfraPresentationV1(item) : g0MarketingChannelPresentationV1(item);
     const source = g0MarketingSourceForRowV1(section, item);
-    const sourceHtml = source?.gate === "gate-1"
-      ? `<button type="button" class="mega-system-source-v1" data-g1-webmaster-open-v295="company" title="Открыть: Gate 1 · Яндекс Вебмастер" aria-label="Открыть: Gate 1 · Яндекс Вебмастер">Gate 1 ↗</button>`
-      : g0MarketingSourceButton(source);
+    const sourceHtml = g0MarketingSourceButton(source);
     const remove = item._custom ? `<button class="v116-multi-remove mega-system-remove-v1" type="button" data-mega-card="${escapeAttr(cardId)}" data-mega-section="${section}" data-mega-remove="${index}" title="Удалить" aria-label="Удалить ${escapeAttr(view.name || "элемент")}">×</button>` : "";
     const nameHtml = section === "channels" && item._custom
       ? g0MarketingEditableV1(cardId, section, index, "type", item.type, "Название канала")
@@ -245,8 +238,15 @@ document.addEventListener("change", (event) => {
 
 function g0MarketingFindTarget(target) {
   const esc = CSS.escape;
-  if (target.gate === "gate-2")
+  if (target.gate === "gate-2") {
+    // Service blocks retain the historic card ID in the existing registry.
+    const service = typeof G2_SERVICE_BLOCK_CONFIGS !== "undefined"
+      ? [...G2_SERVICE_BLOCK_CONFIGS.values()].find(config => g2ServiceBlockCardId(config) === target.card)
+      : null;
+    const serviceNode = service && document.querySelector(`[data-g2sb-id="${esc(service.id)}"]`);
+    if (serviceNode) return serviceNode;
     return document.querySelector(`[data-g2-scope="company"] [data-card="${esc(target.card)}"], [data-g2-scope="product"] [data-card="${esc(target.card)}"]`);
+  }
   if (target.requiresProduct)
     return document.querySelector('.guru-gate-scope-v230[data-gate-scope="product"]');
   if (target.scope === "company")
@@ -255,6 +255,10 @@ function g0MarketingFindTarget(target) {
 }
 
 function g0MarketingScrollTarget(node) {
+  if (node.matches("details")) {
+    guruDisclosureOpenStateV512()[guruDisclosureKeyV512(node)] = true;
+    node.open = true;
+  }
   const tall = node.getBoundingClientRect().height > window.innerHeight - 144;
   node.scrollIntoView({ behavior: "instant", block: tall ? "start" : "center" });
 }

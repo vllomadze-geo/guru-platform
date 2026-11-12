@@ -1,0 +1,139 @@
+--- a/app.js
++++ b/app.js
+@@ -58185,7 +58185,7 @@
+     return first(
+       target.focus === "additional" && target.jtbdId &&
+         `[data-pv181-additional-jtbd-v268="${esc(target.jtbdId)}"]`,
+-      target.focus === "pending" && ".pv181-pending-jtbd-card-v273",
++      target.focus === "pending" && ".pv181-pending-jtbd-card-v273 > summary",
+       target.focus === "primary" && ".pv181-primary-jtbd-group-v267",
+       ["jtbd", "primary", "additional", "pending"].includes(target.focus) &&
+         ".pv181-jtbd-level",
+@@ -72804,11 +72804,11 @@
+     })),
+     { sortQueryCount: "desc" },
+   );
+-  return `<section class="pv181-pending-jtbd-card-v273" data-pv181-pending-jtbd-card-v273 data-pv181-jtbd-drop-target-v274="pending" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}">
+-    <header>
++  return `<details class="pv181-pending-jtbd-card-v273" data-pv181-pending-jtbd-card-v273 data-pv181-jtbd-drop-target-v274="pending" data-pv181-map-i="${mapIndex}" data-pv181-item-i="${escapeAttr(itemId)}" data-ui-keeper-key="jtbd-pending:${escapeAttr(activeProjectId)}:${escapeAttr(itemId)}" open>
++    <summary>
+       <div><strong>Ждут распределения в JTBD</strong><small>Не относятся к Основному JTBD и ещё не закреплены за подтверждённой дополнительной JTBD-группой</small></div>
+       <span>${entries.length} ${entries.length === 1 ? "фраза" : entries.length >= 2 && entries.length <= 4 ? "фразы" : "фраз"}</span>
+-    </header>
++    </summary>
+     ${entries.length
+       ? `<div class="pv181-demand-table-v263 pv181-pending-jtbd-demand-table-v273">
+           ${pv181DemandTableHeadHtmlV272()}
+@@ -72826,7 +72826,7 @@
+           })}
+         </div>`
+       : `<div class="pv181-keyword-empty">Все ключевые слова распределены по JTBD.</div>`}
+-  </section>`;
++  </details>`;
+ }
+ 
+ function guruGate1AdditionalJtbdDemandV274(itemId, itemData, additionalId) {
+@@ -74041,6 +74041,7 @@
+         context.mapIndex, context.itemId, context.itemData).trim();
+       const next = template.content.firstElementChild;
+       const scrollLeft = current.querySelector(".pv181-demand-table-v263")?.scrollLeft || 0;
++      next.open = current.open;
+       current.replaceWith(next);
+       const nextTable = next.querySelector(".pv181-demand-table-v263");
+       if (nextTable) nextTable.scrollLeft = scrollLeft;
+@@ -86992,6 +86993,8 @@
+   ".g4-v166-jtbd:not(.is-orphaned)",
+   "[data-g1-competitor-step-v539]",
+   "[data-gate1-demand-level-product-v556]",
++  // This disclosure is view-only. uiKeeper preserves it during a redraw.
++  "[data-pv181-pending-jtbd-card-v273]",
+   "[data-g8-company-section]",
+   "[data-g8-company-subdetail]",
+ ].join(",");
+--- a/styles.css
++++ b/styles.css
+@@ -1648,8 +1648,7 @@
+ }
+ 
+ .pv181-pending-jtbd-card-v273 {
+-  display: grid;
+-  gap: 9px;
++  display: block;
+   margin-top: 10px;
+   padding: 12px;
+   border: 1px solid var(--line);
+@@ -1657,24 +1656,57 @@
+   background: var(--panel);
+ }
+ 
+-.pv181-pending-jtbd-card-v273 > header {
++.pv181-pending-jtbd-card-v273 > summary {
+   display: flex;
+   align-items: flex-start;
+   justify-content: space-between;
+   gap: 12px;
+-}
+-
+-.pv181-pending-jtbd-card-v273 > header > div {
++  cursor: pointer;
++  list-style: none;
++}
++
++.pv181-pending-jtbd-card-v273 > summary::-webkit-details-marker {
++  display: none;
++}
++
++.pv181-pending-jtbd-card-v273 > summary::after {
++  content: "";
++  width: 6px;
++  height: 6px;
++  flex-shrink: 0;
++  margin: 4px 3px 0 0;
++  border-right: 1.5px solid currentColor;
++  border-bottom: 1.5px solid currentColor;
++  color: var(--muted);
++  transform: rotate(-45deg);
++}
++
++.pv181-pending-jtbd-card-v273[open] > summary::after {
++  transform: rotate(45deg);
++}
++
++.pv181-pending-jtbd-card-v273 > summary:focus-visible {
++  outline: 2px solid currentColor;
++  outline-offset: 4px;
++  border-radius: 2px;
++}
++
++.pv181-pending-jtbd-card-v273[open] > summary {
++  margin-bottom: 9px;
++}
++
++.pv181-pending-jtbd-card-v273 > summary > div {
+   display: grid;
+   gap: 2px;
+-}
+-
+-.pv181-pending-jtbd-card-v273 > header strong {
++  flex: 1;
++}
++
++.pv181-pending-jtbd-card-v273 > summary strong {
+   font-size: 12px;
+ }
+ 
+-.pv181-pending-jtbd-card-v273 > header small,
+-.pv181-pending-jtbd-card-v273 > header > span {
++.pv181-pending-jtbd-card-v273 > summary small,
++.pv181-pending-jtbd-card-v273 > summary > span {
+   color: var(--muted);
+   font-size: 10px;
+ }
+@@ -1866,7 +1898,6 @@
+ 
+ @media (max-width: 760px) {
+   .pv181-primary-jtbd-group-v267 > header,
+-  .pv181-pending-jtbd-card-v273 > header,
+   .pv181-additional-jtbd-keywords-v274 > header,
+   .pv181-group-jtbd-v267 > header,
+   .gate1-group-final-foundation-v279 {

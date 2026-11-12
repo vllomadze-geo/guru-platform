@@ -1,0 +1,174 @@
+{
+  "build": "2.3.526+f27a5eb44659",
+  "filesChangedForThisTask": [
+    "app.js",
+    "now-guide.js",
+    "workspace-save-worker.js",
+    "scripts/platform-input-performance-smoke.mjs",
+    "scripts/workspace-save-worker-smoke.mjs"
+  ],
+  "causes": [
+    "Full-project JSON.stringify in every guide input/change cycle",
+    "Duplicate full Gate 0 recalculation on field blur",
+    "Synchronous JSON preparation during autosave"
+  ],
+  "checks": {
+    "input": {
+      "passed": true,
+      "build": "2.3.526+f27a5eb44659",
+      "workerUsed": true
+    },
+    "worker": {
+      "passed": true,
+      "cases": [
+        "sameJsonFormat",
+        "outOfOrderResponses",
+        "synchronousSaveWins",
+        "newEditInvalidatesSnapshot",
+        "externalWriteWins",
+        "externalClearWins",
+        "deletedProjectNotRestored",
+        "projectIsolation",
+        "feedbackAfterCoalescing",
+        "workerFailureFallback",
+        "unavailableWorkerFallback",
+        "workerContract"
+      ]
+    },
+    "gate0": {
+      "passed": true,
+      "build": "2.3.526+f27a5eb44659"
+    },
+    "gate12": {
+      "passed": true,
+      "build": "2.3.526+f27a5eb44659",
+      "mode": "quick, complete status matrices and selected navigation checks"
+    },
+    "build": "PASS, 42 matching HTML assets; dynamic worker loaded and used",
+    "syntax": "PASS",
+    "diffCheck": "PASS"
+  },
+  "comparison": {
+    "beforeBuild": "2.3.526+90afe2181bf6",
+    "afterBuild": "2.3.526+f27a5eb44659",
+    "conditions": "Same export and isolated Chrome, real mouse and text events, no CPU throttling. Medians across events in one identical scenario per build.",
+    "comparison": [
+      {
+        "name": "fields",
+        "before": {
+          "min": 227,
+          "max": 249,
+          "median": 231
+        },
+        "after": {
+          "min": 45,
+          "max": 64,
+          "median": 49
+        },
+        "improvementPercent": 79
+      },
+      {
+        "name": "focus",
+        "before": {
+          "min": 453,
+          "max": 667,
+          "median": 468
+        },
+        "after": {
+          "min": 79,
+          "max": 84,
+          "median": 83
+        },
+        "improvementPercent": 82
+      },
+      {
+        "name": "draft",
+        "before": {
+          "min": 221,
+          "max": 290,
+          "median": 260
+        },
+        "after": {
+          "min": 14,
+          "max": 17,
+          "median": 15
+        },
+        "improvementPercent": 94
+      }
+    ],
+    "duringInput": {
+      "before": {
+        "versionInDispatch": 11,
+        "registryInDispatch": 0,
+        "gate0FullInDispatch": 3
+      },
+      "after": {
+        "versionInDispatch": 0,
+        "registryInDispatch": 0,
+        "gate0FullInDispatch": 0
+      }
+    },
+    "integrity": {
+      "name": true,
+      "url": true,
+      "next": true,
+      "draft": true,
+      "focused": true,
+      "connected": true,
+      "gate": "gate-0"
+    },
+    "workerUsed": true,
+    "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37"
+  },
+  "data": {
+    "sourceUnchanged": true,
+    "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+    "editsAndSaves": "Only isolated copies, memory storage, cloud API stubbed",
+    "gate0DefaultExport": {
+      "schedules": [],
+      "linkWrites": [],
+      "differences": [],
+      "identical": true,
+      "beforeBytes": 28082057,
+      "afterBytes": 28082057,
+      "beforeSha256": "f8f409241ddf3e85ae9ef62412d8e9e10e9461c353ec1a1f931508e96f582cae",
+      "afterSha256": "f8f409241ddf3e85ae9ef62412d8e9e10e9461c353ec1a1f931508e96f582cae",
+      "updatedAtFields": 259,
+      "uiPreferenceWrites": 0
+    },
+    "gate0OtherProductExport": {
+      "schedules": [],
+      "linkWrites": [],
+      "differences": [],
+      "identical": true,
+      "beforeBytes": 28081868,
+      "afterBytes": 28081868,
+      "beforeSha256": "f82fbd387f1b77778ca2fc046feed1d7f85be7dd923c09ed79c14caffa8ef6f6",
+      "afterSha256": "f82fbd387f1b77778ca2fc046feed1d7f85be7dd923c09ed79c14caffa8ef6f6",
+      "updatedAtFields": 259,
+      "uiPreferenceWrites": 0
+    },
+    "gate12Export": {
+      "identical": true,
+      "differences": [],
+      "beforeBytes": 28081553,
+      "afterBytes": 28081553,
+      "beforeSha256": "3cf6fd286cc02877a0d7de386f01bea4201604241cc0eaa9c0dea80232e0f211",
+      "afterSha256": "3cf6fd286cc02877a0d7de386f01bea4201604241cc0eaa9c0dea80232e0f211",
+      "updatedAtFields": 259,
+      "uiPreferenceWrites": 0,
+      "passiveCalculators": true
+    }
+  },
+  "docs": [
+    "https://developer.mozilla.org/en-US/docs/Web/API/Worker/postMessage",
+    "https://developer.mozilla.org/en-US/docs/Web/API/Worker/error_event"
+  ],
+  "notChecked": [
+    "Safari",
+    "production",
+    "real browser storage quota with the large export",
+    "other project exports in this task"
+  ],
+  "published": false
+}

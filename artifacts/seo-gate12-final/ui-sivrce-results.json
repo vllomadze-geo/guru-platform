@@ -1,0 +1,390 @@
+{
+  "projects": {
+    "sivrce": {
+      "rows": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "project-comparison",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-21",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "card-25",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "target-audience",
+          "status": "in_progress",
+          "header": true,
+          "badge": "В работе"
+        },
+        {
+          "id": "gate1-blog-v304-company",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-23",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "card-24",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started",
+          "header": true,
+          "badge": "Не начато"
+        }
+      ],
+      "pure": true,
+      "seoGroup": false,
+      "tool": false,
+      "comparison": true,
+      "otherGates": [
+        {
+          "id": "pr_publications",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "articles_cases",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "yandex_organization",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "google_organization",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "online_chat",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "online_payment",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "abandoned_cart",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "email_crm",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "review_collection",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "referral",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "loyalty",
+          "gate": "gate-4",
+          "status": "not_started",
+          "productId": ""
+        },
+        {
+          "id": "setup",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "input",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "ad",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "bridge",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "finance",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "journal",
+          "gate": "gate-5",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__new_year",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__christmas",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__old_new_year",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__epiphany",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__tatiana",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__valentine",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__maslenitsa_q1",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__defender_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q1__march_8",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__april_1",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__cosmonautics",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__easter_q2",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__may_1",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__may_9",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__russia_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__june_22",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q2__youth_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__family_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__flag_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__knowledge_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__icleaning_birthday",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q3__moscow_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__autumn_control",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__unity_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__black_friday",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__constitution_day",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "q4__new_year_preparation",
+          "gate": "gate-6",
+          "status": "not_started"
+        },
+        {
+          "id": "0",
+          "gate": "gate-8",
+          "status": "not_started"
+        }
+      ]
+    }
+  },
+  "build": "2.3.526+b7f15c203e87",
+  "passed": true
+}

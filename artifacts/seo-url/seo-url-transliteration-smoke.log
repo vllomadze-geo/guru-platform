@@ -1,0 +1,52 @@
+{
+  "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+  "checks": {
+    "passiveView": true,
+    "autosave": true,
+    "replacedTable": {
+      "preserved": true,
+      "offered": true,
+      "regenerated": true,
+      "manual": true,
+      "renamePreserves": true
+    },
+    "categoriesAndManualPages": {
+      "category": "https://k-apple.ru/novaya-kategoriya",
+      "hiddenWithoutName": true,
+      "offered": true,
+      "manual": "https://k-apple.ru/stranica-yolka",
+      "fixed": "https://k-apple.ru/dostavka-i-oplata"
+    }
+  },
+  "calculation": {
+    "values": [
+      "https://example.ru/letnee-plate-islandka",
+      "https://example.ru/simvol-2027-goda-koza",
+      "https://example.ru/yolka-i-shchyotka",
+      "https://example.ru/obyom-syomka",
+      "https://example.ru/upcycling-s-kruzhevom",
+      "https://example.ru/yolka"
+    ],
+    "duplicate": "https://example.ru/letnee-plate-islandka-2",
+    "relative": "/letnee-plate-islandka",
+    "empty": "",
+    "home": ""
+  },
+  "target": {
+    "id": "catalog-item-1786792591872-98358d",
+    "name": "Летнее платье «Исландка»",
+    "buttonVisible": true,
+    "home": "https://k-apple.ru/"
+  },
+  "generated": {
+    "value": "https://k-apple.ru/letnee-plate-islandka",
+    "stored": "https://k-apple.ru/letnee-plate-islandka",
+    "buttonHidden": true,
+    "focused": true,
+    "caret": 40
+  },
+  "build": "2.3.526+90afe2181bf6",
+  "errors": [],
+  "passed": true
+}
+seo-url-transliteration-smoke: PASS

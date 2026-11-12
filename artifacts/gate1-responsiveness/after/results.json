@@ -1,0 +1,247 @@
+{
+  "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+  "steps": [
+    {
+      "label": "company-first-open",
+      "syncMs": 139.10000002384186,
+      "paintMs": 488.30000001192093,
+      "calls": {
+        "guruExportDiagnosticCloneV223": {
+          "count": 1,
+          "ms": 114.09999999403954
+        },
+        "guruV194Records": {
+          "count": 1,
+          "ms": 0.30000001192092896
+        },
+        "guruPersistStateFast": {
+          "count": 1,
+          "ms": 191.10000002384186
+        }
+      }
+    },
+    {
+      "label": "company-close",
+      "syncMs": 1.9000000059604645,
+      "paintMs": 48.099999994039536,
+      "calls": {}
+    },
+    {
+      "label": "company-reopen",
+      "syncMs": 1.5,
+      "paintMs": 58,
+      "calls": {}
+    },
+    {
+      "label": "demand-open",
+      "syncMs": 1.800000011920929,
+      "paintMs": 33.69999998807907,
+      "calls": {}
+    },
+    {
+      "label": "demand-type-0",
+      "syncMs": 15.200000017881393,
+      "paintMs": 78.40000000596046,
+      "calls": {
+        "guruV194Records": {
+          "count": 27,
+          "ms": 23.000000059604645
+        },
+        "gate1CompanyDemandPositioningCompletionV357": {
+          "count": 1,
+          "ms": 2.699999988079071
+        },
+        "renderGateNav": {
+          "count": 1,
+          "ms": 0.09999999403953552
+        },
+        "guruReadinessInspect": {
+          "count": 10,
+          "ms": 25.900000005960464
+        },
+        "guruGateBlockStatuses": {
+          "count": 1,
+          "ms": 24.80000001192093
+        }
+      }
+    },
+    {
+      "label": "demand-type-1",
+      "syncMs": 6,
+      "paintMs": 68,
+      "calls": {
+        "guruV194Records": {
+          "count": 27,
+          "ms": 22.70000010728836
+        },
+        "gate1CompanyDemandPositioningCompletionV357": {
+          "count": 1,
+          "ms": 2.5
+        },
+        "renderGateNav": {
+          "count": 1,
+          "ms": 0
+        },
+        "guruReadinessInspect": {
+          "count": 10,
+          "ms": 25.19999998807907
+        },
+        "guruGateBlockStatuses": {
+          "count": 1,
+          "ms": 24
+        }
+      }
+    },
+    {
+      "label": "demand-type-2",
+      "syncMs": 7.199999988079071,
+      "paintMs": 244.09999999403954,
+      "calls": {
+        "guruV194Records": {
+          "count": 27,
+          "ms": 32.39999997615814
+        },
+        "gate1CompanyDemandPositioningCompletionV357": {
+          "count": 1,
+          "ms": 2.9000000059604645
+        },
+        "renderGateNav": {
+          "count": 1,
+          "ms": 0
+        },
+        "guruReadinessInspect": {
+          "count": 10,
+          "ms": 35.19999998807907
+        },
+        "guruGateBlockStatuses": {
+          "count": 1,
+          "ms": 34.099999994039536
+        },
+        "guruPersistStateFast": {
+          "count": 1,
+          "ms": 154.7999999821186
+        }
+      }
+    },
+    {
+      "label": "cell-switch",
+      "syncMs": 11.199999988079071,
+      "paintMs": 62.69999998807907,
+      "calls": {
+        "guruReadinessInspect": {
+          "count": 10,
+          "ms": 25.900000005960464
+        },
+        "guruV194Records": {
+          "count": 13,
+          "ms": 21.09999993443489
+        },
+        "guruGateBlockStatuses": {
+          "count": 1,
+          "ms": 24.80000001192093
+        }
+      }
+    },
+    {
+      "label": "audience-open",
+      "syncMs": 100.5,
+      "paintMs": 155.40000000596046,
+      "calls": {
+        "ensureTargetAudience": {
+          "count": 1,
+          "ms": 20
+        }
+      }
+    },
+    {
+      "label": "audience-type-0",
+      "syncMs": 20.900000005960464,
+      "paintMs": 272.7999999821186,
+      "calls": {
+        "ensureTargetAudience": {
+          "count": 1,
+          "ms": 18.80000001192093
+        },
+        "guruReadinessInspect": {
+          "count": 10,
+          "ms": 31.19999998807907
+        },
+        "guruV194Records": {
+          "count": 13,
+          "ms": 24.599999964237213
+        },
+        "guruGateBlockStatuses": {
+          "count": 1,
+          "ms": 29.69999998807907
+        },
+        "guruPersistStateFast": {
+          "count": 1,
+          "ms": 198.09999999403954
+        }
+      }
+    },
+    {
+      "label": "audience-type-1",
+      "syncMs": 25.100000023841858,
+      "paintMs": 64.2000000178814,
+      "calls": {
+        "ensureTargetAudience": {
+          "count": 1,
+          "ms": 23.099999994039536
+        },
+        "guruReadinessInspect": {
+          "count": 10,
+          "ms": 25.600000023841858
+        },
+        "guruV194Records": {
+          "count": 13,
+          "ms": 20.600000023841858
+        },
+        "guruGateBlockStatuses": {
+          "count": 1,
+          "ms": 24.400000005960464
+        }
+      }
+    },
+    {
+      "label": "audience-type-2",
+      "syncMs": 35.5,
+      "paintMs": 89.09999999403954,
+      "calls": {
+        "ensureTargetAudience": {
+          "count": 1,
+          "ms": 32.89999997615814
+        },
+        "guruReadinessInspect": {
+          "count": 10,
+          "ms": 38.400000005960464
+        },
+        "guruV194Records": {
+          "count": 13,
+          "ms": 32.19999995827675
+        },
+        "guruGateBlockStatuses": {
+          "count": 1,
+          "ms": 37.19999998807907
+        }
+      }
+    }
+  ],
+  "demandIntegrity": {
+    "aConnected": true,
+    "bConnected": true,
+    "focused": true,
+    "value": "111",
+    "expected": "111",
+    "visible": true
+  },
+  "demandStable": true,
+  "audienceStable": true,
+  "final": {
+    "build": "2.3.526+5d83bfc8a343",
+    "gate": "gate-1",
+    "errors": [],
+    "status": "30 блоков, прогресс 33%",
+    "step": "Сейчас\nШаг 8 из 95\nВ работе\nГотовность к запуску: 46%\nготово 29 из 95\nТекущее состояние маркетинговой системы · Компания"
+  }
+}

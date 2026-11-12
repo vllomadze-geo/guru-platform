@@ -1,0 +1,122 @@
+{
+  "init": {
+    "renderMs": 3447.699999988079,
+    "title": "Яндекс Вебмастер · Компания",
+    "ids": [
+      "open",
+      "rights",
+      "robots",
+      "sitemap",
+      "meta",
+      "access",
+      "pages",
+      "advice",
+      "recommendations",
+      "images",
+      "cwv"
+    ],
+    "sections": [
+      "1. Подключение сайта",
+      "2. Управление индексированием",
+      "3. Проверка страниц",
+      "4. Диагностика сайта",
+      "5. Качество страниц"
+    ],
+    "count": 5,
+    "sitemapEditors": 1,
+    "robotsEditors": 1,
+    "tables": 2,
+    "copyButtons": 2,
+    "duplicateDomainFields": 0,
+    "sitemapControls": 14,
+    "pageCount": 59,
+    "overview": "0 из 11 шагов"
+  },
+  "interactions": {
+    "tableOpened": true,
+    "tableClosed": true,
+    "before": "Готово",
+    "sourceStable": true,
+    "productsStable": true,
+    "review": "passed",
+    "status": "Проблема",
+    "guideCount": 11,
+    "docs": [
+      "https://yandex.ru/support/webmaster/ru/service/quick-start",
+      "https://yandex.ru/support/webmaster/ru/service/rights",
+      "https://help-ru.tilda.cc/domain-confirm",
+      "https://yandex.ru/support/webmaster/ru/indexing-options/robots-txt-analyzer",
+      "https://yandex.ru/support/webmaster/ru/indexing-options/sitemap",
+      "https://www.yandex.ru/support/webmaster/ru/site-indexing/page-indexing-analysis",
+      "https://help-ru.tilda.cc/search-engine",
+      "https://www.yandex.ru/support/webmaster/ru/site-indexing/page-indexing-analysis",
+      "https://www.yandex.ru/support/webmaster/ru/site-indexing/page-indexing-analysis",
+      "https://yandex.ru/support/webmaster/ru/service/check-url",
+      "https://yandex.ru/support/webmaster/ru/service/site-diagnostics",
+      "https://yandex.ru/support/webmaster/ru/service/site-diagnostics",
+      "https://yandex.ru/support/webmaster/ru/recommendations/using-graphics",
+      "https://help-ru.tilda.cc/search-engine",
+      "https://developers.google.com/speed/docs/insights/v5/about",
+      "https://web.dev/articles/vitals"
+    ],
+    "sourceLinks": 0,
+    "width": 1440,
+    "viewport": 1440
+  },
+  "durability": {
+    "reviewRetained": true,
+    "sourceStable": true,
+    "productsStable": true,
+    "statusAfterAddressChange": "recheck",
+    "pagesStatus": "in_progress"
+  },
+  "edit": {
+    "groups": 5,
+    "steps": 11,
+    "added": 5
+  },
+  "migration": {
+    "count": 5,
+    "preserved": true,
+    "idempotent": true,
+    "ids": [
+      "open",
+      "rights",
+      "custom_old",
+      "robots",
+      "sitemap",
+      "meta",
+      "access",
+      "pages",
+      "advice",
+      "recommendations",
+      "images",
+      "cwv"
+    ]
+  },
+  "mobile": {
+    "viewport": 390,
+    "width": 390,
+    "count": 5,
+    "sourcesStable": true
+  },
+  "sitemapEdit": {
+    "addWorked": true,
+    "saved": "https://k-apple.ru/test-sitemap.xml",
+    "restored": true,
+    "attrs": {
+      "data-rv2-sitemap-field": "url",
+      "data-rv2-sitemap-idx": "3"
+    }
+  },
+  "switching": {
+    "openedOther": true,
+    "openedFirst": true,
+    "otherReview": "",
+    "firstReview": "passed",
+    "firstSource": true,
+    "firstSourceDiff": "",
+    "repairedTextFields": 1
+  },
+  "errors": []
+}

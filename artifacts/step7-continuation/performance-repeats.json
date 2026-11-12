@@ -1,0 +1,30 @@
+[
+  {
+    "test": "gate8-ui-integration-smoke.mjs",
+    "label": "before",
+    "status": "PASS",
+    "seconds": 35.95,
+    "log": "/Users/vl/Developer/guru-platform/artifacts/step7-continuation/performance-repeat-before-gate8-ui-integration-smoke.mjs.log"
+  },
+  {
+    "test": "gate8-ui-integration-smoke.mjs",
+    "label": "after",
+    "status": "FAIL",
+    "seconds": 82.32,
+    "log": "/Users/vl/Developer/guru-platform/artifacts/step7-continuation/performance-repeat-after-gate8-ui-integration-smoke.mjs.log"
+  },
+  {
+    "test": "gate2-setup-wizard-smoke.mjs",
+    "label": "before",
+    "status": "PASS",
+    "seconds": 72.17,
+    "log": "/Users/vl/Developer/guru-platform/artifacts/step7-continuation/performance-repeat-before-gate2-setup-wizard-smoke.mjs.log"
+  },
+  {
+    "test": "gate2-setup-wizard-smoke.mjs",
+    "label": "after",
+    "status": "FAIL",
+    "seconds": 32.19,
+    "log": "/Users/vl/Developer/guru-platform/artifacts/step7-continuation/performance-repeat-after-gate2-setup-wizard-smoke.mjs.log"
+  }
+]

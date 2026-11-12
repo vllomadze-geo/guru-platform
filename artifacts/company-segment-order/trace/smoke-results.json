@@ -1,0 +1,154 @@
+{
+  "report": [
+    {
+      "project": "Коричное яблоко",
+      "sourceSha256": "ddc6de490e31c8d2bb8c71963bacb8dd53236e83b0f02105b053447ef3fffe5c",
+      "beforeSha256": "b0aa4adf192b994e1d1e94c6d49d4dedde010dabeae4466ca552465bd991e44e",
+      "afterSha256": "b0aa4adf192b994e1d1e94c6d49d4dedde010dabeae4466ca552465bd991e44e",
+      "identical": true,
+      "guide": {
+        "gate1": {
+          "total": 23,
+          "done": 4,
+          "ready": 4,
+          "notRequired": 0,
+          "inProgress": 5,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 28
+        },
+        "step": "gate-1:comparison::project-comparison",
+        "missing": "<div class=\"now-guide-missing\" aria-live=\"polite\"><span>Не хватает:</span><ul><li><button type=\"button\" data-now-missing=\"0\">Гавань мастеровУдалить\n    Тип: Дальний конкурент\n    Ссылка на сайт целиком: не заполнено у 18 из 28 записей</button></li><li><button type=\"button\" data-now-missing=\"1\">Ярмарка МастеровУдалить\n    Тип: Дальний конкурент\n    Ссылка на сайт целиком: не заполнено у 18 из 28 записей</button></li><li><button type=\"button\" data-now-missing=\"2\">avitoУдалить\n    Тип: Дальний конкурент\n    Ссылка на сайт целиком: не заполнено у 18 из 28 записей</button></li></ul></div>",
+        "launch": {
+          "total": 87,
+          "done": 28,
+          "ready": 23,
+          "notRequired": 5,
+          "inProgress": 24,
+          "problem": 3,
+          "notStarted": 32,
+          "percent": 48
+        }
+      },
+      "companies": 25,
+      "queries": 15,
+      "ratings": {
+        "low": 1,
+        "unrated": 14
+      },
+      "types": [
+        "Сосед по выдаче",
+        "Дальний конкурент"
+      ],
+      "typeCounts": {
+        "Сосед по выдаче": 22,
+        "Дальний конкурент": 3
+      },
+      "companyOrder": [
+        2,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "queryOrder": [
+        {
+          "key": "подарки ручной работы",
+          "relevance": "low",
+          "found": 19
+        },
+        {
+          "key": "изделия ручной работы москва",
+          "relevance": "unrated",
+          "found": 7
+        },
+        {
+          "key": "авторские изделия ручной работы",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские изделия на заказ",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "изделия ручной работы на заказ",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторская мастерская подарков",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "мастерская подарков ручной работы",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские подарки ручной работы",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские подарки на заказ",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "подарки ручной работы на заказ",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторский подарок москва",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские подарки москва",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "подарки ручной работы москва",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские изделия москва",
+          "relevance": "unrated",
+          "found": 0
+        },
+        {
+          "key": "авторские предметы для дома",
+          "relevance": "unrated",
+          "found": 0
+        }
+      ],
+      "pure": true
+    }
+  ]
+}

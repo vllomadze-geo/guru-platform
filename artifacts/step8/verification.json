@@ -1,0 +1,24 @@
+{
+  "registriesAndHintsIdentical": true,
+  "products": 2,
+  "registryRows": 294,
+  "nativeGate8FactsIdentical": true,
+  "nativeGate8FactCount": 27,
+  "sourceFiles": {
+    "/Users/vl/Downloads/guru-project-korichnoe-yabloko-all.json": {
+      "before": "5269733980f22755daf4824d2845726d8d8be04e6abcceebf837cf76943f6ee0",
+      "after": "5269733980f22755daf4824d2845726d8d8be04e6abcceebf837cf76943f6ee0",
+      "identical": true
+    },
+    "/private/tmp/guru-step8-workspace.json": {
+      "before": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+      "after": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+      "identical": true
+    },
+    "/private/tmp/guru-now-korich-workspace.json": {
+      "before": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+      "after": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+      "identical": true
+    }
+  }
+}

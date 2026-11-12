@@ -1,0 +1,261 @@
+{
+  "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+  "before": {
+    "heads": [
+      "Страница",
+      "URL",
+      "Интент",
+      "Источник"
+    ],
+    "widths": [
+      523,
+      523,
+      231,
+      261
+    ],
+    "names": [
+      "Реквизиты компании",
+      "Политика конфиденциальности",
+      "Согласие на обработку данных",
+      "Публичная оферта",
+      "Условия возврата"
+    ],
+    "urls": [
+      "",
+      "https://k-apple.ru/politika",
+      "",
+      "",
+      ""
+    ]
+  },
+  "after": {
+    "heads": [
+      "Страница",
+      "URL",
+      "Интент",
+      "Источник"
+    ],
+    "widths": [
+      523,
+      523,
+      231,
+      261
+    ],
+    "names": [
+      "Реквизиты компании",
+      "Политика конфиденциальности",
+      "Согласие на обработку данных",
+      "Публичная оферта",
+      "Условия возврата"
+    ],
+    "urls": [
+      "",
+      "https://k-apple.ru/politika",
+      "",
+      "",
+      ""
+    ]
+  },
+  "passive": {
+    "identical": true,
+    "exportAfterRead": true,
+    "keys": [],
+    "selected": 0,
+    "summary": "Ответьте на вопросы",
+    "missing": [
+      {
+        "label": "Реквизиты компании: URL",
+        "group": {
+          "key": "legal-url",
+          "label": "Юридические страницы: URL не указан",
+          "row": "Реквизиты компании",
+          "total": 5
+        },
+        "selector": "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"company_details\"]",
+        "cardId": "card-7"
+      },
+      {
+        "label": "Согласие на обработку данных: URL",
+        "group": {
+          "key": "legal-url",
+          "label": "Юридические страницы: URL не указан",
+          "row": "Согласие на обработку данных",
+          "total": 5
+        },
+        "selector": "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"data_consent\"]",
+        "cardId": "card-7"
+      },
+      {
+        "label": "Публичная оферта: URL",
+        "group": {
+          "key": "legal-url",
+          "label": "Юридические страницы: URL не указан",
+          "row": "Публичная оферта",
+          "total": 5
+        },
+        "selector": "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"offer\"]",
+        "cardId": "card-7"
+      },
+      {
+        "label": "Условия возврата: URL",
+        "group": {
+          "key": "legal-url",
+          "label": "Юридические страницы: URL не указан",
+          "row": "Условия возврата",
+          "total": 5
+        },
+        "selector": "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"returns\"]",
+        "cardId": "card-7"
+      }
+    ]
+  },
+  "clarity": {
+    "hints": [
+      "Формы, заказ или подписка. Определяет необходимость согласия.",
+      "Определяет необходимость оферты и условий возврата."
+    ],
+    "compact": true,
+    "unknown": [
+      "Зависит от ответа",
+      "Зависит от ответа",
+      "Зависит от ответа"
+    ],
+    "described": true
+  },
+  "answerDiff": true,
+  "saved": true,
+  "exportHashes": {
+    "before": "3ed866ef9b2ad56f399e835ffe7562129d0bc7f306f9fca9b443d7d310f96bf1",
+    "afterRead": "3ed866ef9b2ad56f399e835ffe7562129d0bc7f306f9fca9b443d7d310f96bf1",
+    "sourceAfter": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37"
+  },
+  "readinessCases": {
+    "no": "ready",
+    "yes": "in_progress",
+    "unanswered": "in_progress"
+  },
+  "yes": {
+    "summary": "Нужно страниц: 5 · URL указан: 1 из 5",
+    "statuses": [
+      "Обязательна",
+      "Обязательна",
+      "Нужна",
+      "Нужна",
+      "Нужна"
+    ],
+    "dim": 0,
+    "missing": [
+      {
+        "label": "Реквизиты компании: URL",
+        "group": {
+          "key": "legal-url",
+          "label": "Юридические страницы: URL не указан",
+          "row": "Реквизиты компании",
+          "total": 5
+        },
+        "selector": "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"company_details\"]",
+        "cardId": "card-7"
+      },
+      {
+        "label": "Согласие на обработку данных: URL",
+        "group": {
+          "key": "legal-url",
+          "label": "Юридические страницы: URL не указан",
+          "row": "Согласие на обработку данных",
+          "total": 5
+        },
+        "selector": "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"data_consent\"]",
+        "cardId": "card-7"
+      },
+      {
+        "label": "Публичная оферта: URL",
+        "group": {
+          "key": "legal-url",
+          "label": "Юридические страницы: URL не указан",
+          "row": "Публичная оферта",
+          "total": 5
+        },
+        "selector": "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"offer\"]",
+        "cardId": "card-7"
+      },
+      {
+        "label": "Условия возврата: URL",
+        "group": {
+          "key": "legal-url",
+          "label": "Юридические страницы: URL не указан",
+          "row": "Условия возврата",
+          "total": 5
+        },
+        "selector": "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"returns\"]",
+        "cardId": "card-7"
+      }
+    ],
+    "guide": "Сейчас\nШаг 8 из 95\nВ работе\nГотовность к запуску: 46%\nготово 29 из 95\nТекущее состояние маркетинговой системы · Компания\nНе хватает:\nКаталог: URL не указан у 12 товаров\nСтраницы: URL не указан у 2 из 6 записей\nЮридические страницы: URL не указан у 4 из 5 записей\nGate 0 · Компания\n◀ Назад\nДалее ▶\nК текущему",
+    "status": "in_progress",
+    "badge": "in_progress",
+    "urls": [
+      "",
+      "https://k-apple.ru/politika",
+      "",
+      "",
+      ""
+    ],
+    "editors": true
+  },
+  "no": {
+    "summary": "Нужно страниц: 2 · URL указан: 1 из 2",
+    "statuses": [
+      "Обязательна",
+      "Обязательна",
+      "Не нужна",
+      "Не нужна",
+      "Не нужна"
+    ],
+    "dim": 3,
+    "missing": [
+      {
+        "label": "Реквизиты компании: URL",
+        "group": {
+          "key": "legal-url",
+          "label": "Юридические страницы: URL не указан",
+          "row": "Реквизиты компании",
+          "total": 2
+        },
+        "selector": "[data-mega-url-group=\"fixed\"][data-mega-url-id=\"company_details\"]",
+        "cardId": "card-7"
+      }
+    ],
+    "guide": "Сейчас\nШаг 8 из 95\nВ работе\nГотовность к запуску: 46%\nготово 29 из 95\nТекущее состояние маркетинговой системы · Компания\nНе хватает:\nКаталог: URL не указан у 12 товаров\nСтраницы: URL не указан у 2 из 6 записей\nРеквизиты компании: URL\nGate 0 · Компания\n◀ Назад\nДалее ▶\nК текущему",
+    "status": "in_progress",
+    "badge": "in_progress",
+    "urls": [
+      "",
+      "https://k-apple.ru/politika",
+      "",
+      "",
+      ""
+    ],
+    "editors": true
+  },
+  "expandedWidths": [
+    523,
+    523,
+    231,
+    261
+  ],
+  "exclusiveHelp": {
+    "expanded": 1,
+    "firstHidden": true,
+    "secondVisible": true,
+    "unchanged": true
+  },
+  "keyboard": true,
+  "anchor": {
+    "stored": "#offer",
+    "summary": "Нужно страниц: 4 · URL указан: 2 из 4",
+    "inputSame": true,
+    "dim": 1
+  },
+  "build": "2.3.526+3bb7a5ca2a59",
+  "passed": true
+}

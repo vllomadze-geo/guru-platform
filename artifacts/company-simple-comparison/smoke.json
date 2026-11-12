@@ -1,0 +1,27 @@
+{
+  "passed": true,
+  "projects": [
+    "Коричное яблоко",
+    "iCleaning",
+    "SIVRCE",
+    "УНИВЕРСАЛ / ГУРУ"
+  ],
+  "layout": {
+    "labels": [
+      "Коричное яблоко",
+      "Мастерская Север",
+      "Подарки Города",
+      "Витрина идей"
+    ],
+    "columns": 4,
+    "noHorizontalScroll": true,
+    "noOldSections": true,
+    "ownReadOnly": true,
+    "directFields": true,
+    "neighborFields": true,
+    "optionalUncounted": true,
+    "optionalSaved": true,
+    "companyReadOnly": true,
+    "productOldTable": true
+  }
+}

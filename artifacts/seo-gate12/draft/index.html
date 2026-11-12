@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GURU</title>
+    <link rel="icon" type="image/png" href="/favicon.png?v=3" />
+    <link rel="stylesheet" href="styles.css?v=2.3.526%2B84bcd752a74c" />
+    <link rel="stylesheet" href="gate2-setup-wizard.css?v=2.3.526%2B84bcd752a74c" />
+    <link rel="stylesheet" href="gate2-service-block.css?v=2.3.526%2B84bcd752a74c" />
+    <link rel="stylesheet" href="gate2-product-services-step4.css?v=2.3.526%2B84bcd752a74c" />
+    <link rel="stylesheet" href="gate2-technical-seo.css" />
+    <link rel="stylesheet" href="gate1-competitor-workflow.css?v=2.3.526%2B84bcd752a74c" />
+    <link rel="stylesheet" href="gate1-competitor-table-v540.css?v=2.3.526%2B84bcd752a74c" />
+    <link rel="stylesheet" href="gate4-five-a.css?v=2.3.526%2B84bcd752a74c" />
+    <link rel="stylesheet" href="gate4-product-smm-workspace-v2.css?v=2.3.526%2B84bcd752a74c" />
+    <link rel="stylesheet" href="gate4-paid-smm.css?v=2.3.526%2B84bcd752a74c" />
+  </head>
+  <body class="access-locked">
+    <section
+      class="access-gate"
+      id="accessGate"
+      aria-labelledby="accessTitle"
+      aria-describedby="accessHint"
+    >
+      <div class="access-card">
+        <div class="access-kicker">GURU</div>
+        <h1 id="accessTitle">Код доступа</h1>
+        <p id="accessHint">
+          Введите код, чтобы открыть проекты, Gates, отчёты и настройки
+          платформы.
+        </p>
+        <form class="access-form" id="accessForm" autocomplete="off">
+          <label for="accessCodeInput">Код</label>
+          <input
+            id="accessCodeInput"
+            type="password"
+            inputmode="numeric"
+            maxlength="4"
+            aria-describedby="accessError"
+          />
+          <button type="submit" class="btn primary">Открыть платформу</button>
+          <p class="access-error" id="accessError" hidden>
+            Неверный код. Попробуйте ещё раз.
+          </p>
+        </form>
+      </div>
+    </section>
+
+    <section class="project-launcher" id="projectLauncher">
+      <div class="launcher-inner">
+        <div class="launcher-kicker" data-guru-build-label>РАБОЧАЯ ВЕРСИЯ MVP · СБОРКА</div>
+        <h1>Выберите проект</h1>
+        <p class="launcher-lead">
+          Откройте рабочий интерфейс нужного проекта или создайте новый проект.
+        </p>
+        <div class="launcher-actions" aria-label="Фильтр проектов">
+          <button
+            type="button"
+            class="launcher-filter is-active"
+            data-project-filter="active"
+          >
+            Активные <span data-filter-count>0</span>
+          </button>
+          <button
+            type="button"
+            class="launcher-filter"
+            data-project-filter="archive"
+          >
+            Архив <span data-filter-count>0</span>
+          </button>
+        </div>
+        <div class="project-grid" id="projectGrid"></div>
+      </div>
+    </section>
+
+    <div class="modal-backdrop" id="newProjectModal" hidden>
+      <div class="modal-card">
+        <div class="modal-head">
+          <div>
+            <div class="eyebrow">Новый проект</div>
+            <h2>Создать проект</h2>
+          </div>
+          <button class="icon-btn" id="closeProjectModal" aria-label="Закрыть">
+            ×
+          </button>
+        </div>
+        <div class="form-grid">
+          <label
+            >Название проекта<input
+              id="newProjectName"
+              placeholder="Например: iCleaning"
+          /></label>
+          <label
+            >Тип / ниша проекта<input
+              id="newProjectType"
+              placeholder="Сайт, реклама, бренд, премиальная химчистка"
+          /></label>
+          <label
+            >География<input
+              id="newProjectGeography"
+              placeholder="Москва, Грузия, онлайн"
+          /></label>
+          <label
+            >Главный CTA<input
+              id="newProjectMainCta"
+              placeholder="Например: Рассчитать стоимость"
+          /></label>
+          <label
+            >Иконка / буква<input
+              id="newProjectIcon"
+              maxlength="2"
+              placeholder="G"
+          /></label>
+          <label class="full"
+            >УТП<textarea
+              id="newProjectUsp"
+              rows="3"
+              placeholder="Главное отличие проекта"
+            ></textarea>
+          </label>
+          <label class="full"
+            >Оффер<textarea
+              id="newProjectOffer"
+              rows="3"
+              placeholder="Что получает клиент"
+            ></textarea>
+          </label>
+          <label class="full"
+            >Короткое описание<textarea
+              id="newProjectDescription"
+              rows="3"
+              placeholder="Для чего нужен этот проект"
+            ></textarea>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="btn secondary" id="cancelProjectCreate">Отмена</button>
+          <button class="btn primary" id="createProjectConfirm">
+            Создать проект
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="projectDeleteModal" hidden>
+      <div class="modal-card danger-modal">
+        <div class="modal-head">
+          <div>
+            <div class="eyebrow">Опасное действие</div>
+            <h2>Удалить проект?</h2>
+          </div>
+          <button
+            class="icon-btn"
+            id="closeProjectDeleteModal"
+            aria-label="Закрыть"
+          >
+            ×
+          </button>
+        </div>
+        <div class="danger-copy">
+          <p>
+            Вы собираетесь удалить проект
+            <strong id="deleteProjectName"></strong>.
+          </p>
+          <p>
+            Будут удалены паспорт проекта, Gate, заполненные блоки, глобальные
+            поля, отчёты, календарь и журнал выполнения.
+          </p>
+          <p>
+            Перед удалением рекомендуется экспортировать диагностику проекта.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="btn secondary"
+          id="exportProjectBeforeDelete"
+        >
+          Экспортировать проект
+        </button>
+        <label class="delete-confirm-label"
+          >Введите точное название проекта для подтверждения
+          <input id="deleteProjectConfirmName" autocomplete="off" />
+        </label>
+        <div class="modal-actions">
+          <button class="btn secondary" id="cancelProjectDelete">Отмена</button>
+          <button class="btn danger" id="confirmProjectDelete" disabled>
+            Удалить навсегда
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-shell ui-quiet" id="appShell" hidden>
+      <button
+        type="button"
+        class="sidebar-toggle"
+        id="sidebarToggle"
+        aria-label="Открыть меню"
+        aria-controls="appSidebar"
+        aria-expanded="false"
+      >
+        ☰
+      </button>
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <aside class="sidebar" id="appSidebar">
+        <button
+          type="button"
+          class="sidebar-close"
+          id="sidebarClose"
+          aria-label="Закрыть меню"
+        >
+          ×
+        </button>
+        <div class="brand-block">
+          <div class="brand-mark" id="brandMark">G</div>
+          <div>
+            <div class="brand-title" id="brandTitle">GURU</div>
+            <div class="brand-subtitle">маркетинговая платформа</div>
+          </div>
+        </div>
+
+        <section id="nowGuide" class="now-guide" aria-label="Сейчас"></section>
+
+        <button class="side-action" id="switchProjectBtn">
+          ← Выбор проекта
+        </button>
+        <button class="side-action" id="projectBtn">Паспорт проекта</button>
+        <button class="side-action quick-task-action" id="quickTaskBtn" type="button">
+          + Новая задача
+        </button>
+        <div class="quick-task-composer" id="quickTaskComposer" hidden>
+          <label for="quickTaskInput">Новая задача</label>
+          <textarea id="quickTaskInput" rows="3" placeholder="Что нужно сделать?"></textarea>
+          <div class="quick-task-composer-actions">
+            <button class="quick-task-save" id="quickTaskSaveBtn" type="button">Сохранить</button>
+            <button class="quick-task-close" id="quickTaskCloseBtn" type="button">Закрыть</button>
+          </div>
+        </div>
+
+        <div class="side-section-title">Gate</div>
+        <nav id="gateNav" class="gate-nav"></nav>
+
+        <div class="side-footer">
+          <div class="autosave-dot" id="autosaveDot"></div>
+          <span id="saveStatus">Автосохранение локально</span>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="topbar-meta">
+            <div class="eyebrow" data-guru-build-label>РАБОЧАЯ ВЕРСИЯ MVP · СБОРКА</div>
+            <div id="supabaseStatus" class="supabase-status is-connected">
+              Локальный режим · данные в этом браузере
+            </div>
+          </div>
+          <h1 id="pageTitle">Платформа</h1>
+        </header>
+
+        <section class="workspace">
+          <div class="workspace-toolbar" id="workspaceToolbar">
+            <div class="search-wrap">
+              <input
+                id="searchInput"
+                class="search-input"
+                placeholder="Поиск по блокам, инструкциям, доказательствам"
+              />
+            </div>
+            <select id="statusFilter" class="select-input">
+              <option value="all">Все статусы</option>
+              <option value="not_started">Не начато</option>
+              <option value="in_progress">В работе</option>
+              <option value="ready">Готово</option>
+              <option value="needs_review">Проверить</option>
+            </select>
+            <span class="view-lock">Режим: таблица</span>
+          </div>
+
+          <div id="contentArea" class="content-area"></div>
+        </section>
+      </main>
+    </div>
+
+    <template id="projectTemplate">
+      <div data-project-overview></div>
+    </template>
+
+    <template id="metricsTemplate">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Метрики проекта</h2>
+            <p class="muted">
+              Здесь фиксируются данные из Метрики, Директа, CRM и других
+              источников.
+            </p>
+          </div>
+          <button class="btn primary" id="addMetricRow">Добавить строку</button>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table" id="metricsTable">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Канал</th>
+                <th>Показы</th>
+                <th>Клики</th>
+                <th>Расход</th>
+                <th>Лиды</th>
+                <th>CTR</th>
+                <th>CPA</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="chart-card">
+          <h3>Расход и лиды по каналам</h3>
+          <div id="metricsChart" class="chart"></div>
+        </div>
+      </div>
+    </template>
+
+    <script defer src="build-info.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="seed-data.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="platform-relations.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate4-upstream-links.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="app.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="platform-deletion.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate4-funnel-readiness.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate1-webmaster-qa.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate1-seo-panel.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate1-seo-central.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate1-project-comparison-product-card.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate1-competitor-workflow.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate1-competitor-table-v540.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate1-seo-interactive-tool.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate1-blog-system.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate1-seo-guidance.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate8-workbench.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate8-company.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate8-audit.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate2-metrika-goals-quality.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate2-metrika-company-source.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate2-metrika-product-audit.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate2-setup-wizard.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate2-service-block.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate4-product-smm.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate4-product-smm-workspace-v2.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate4-paid-smm.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate4-five-a.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate0-marketing-source-links.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate2-company-services.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate2-company-services-step3.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate2-product-services-step4.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="now-guide.js?v=2.3.526%2B84bcd752a74c"></script>
+    <script defer src="gate2-technical-seo.js"></script>
+  </body>
+</html>

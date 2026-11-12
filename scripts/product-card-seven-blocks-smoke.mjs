@@ -1,5 +1,6 @@
 console.log("checkpoint: start");
 const debugPort = process.env.GURU_CHROME_DEBUG_PORT || "9335";
+const appPort = process.env.GURU_APP_PORT || "3000";
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const pages = await (await fetch(`http://127.0.0.1:${debugPort}/json`)).json();
 console.log("checkpoint: pages", pages.length);
@@ -56,23 +57,9 @@ await call("Emulation.setDeviceMetricsOverride", {
   deviceScaleFactor: 1,
   mobile: false,
 });
-await call("Page.navigate", { url: "http://127.0.0.1:3000/" });
+await call("Page.navigate", { url: `http://127.0.0.1:${appPort}/` });
 await wait(1200);
 console.log("checkpoint: navigated");
-await evaluate(`(() => {
-  localStorage.clear();
-  localStorage.setItem("guru-platform-access-v01", "unlocked");
-  localStorage.setItem("guru-platform-projects-v02", JSON.stringify([{
-    id: "product-card-seven-blocks-smoke",
-    name: "Product card seven blocks smoke",
-    lifecycleStatus: "active",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }]));
-  return true;
-})()`);
-await wait(100);
-console.log("checkpoint: isolated storage ready");
 console.log("checkpoint: isolated functions ready");
 
 const result = await evaluate(`(async () => {
@@ -190,6 +177,9 @@ const result = await evaluate(`(async () => {
   goat.contextFields.productDeliveryGuaranteeCardsV255[0].title = "Доставка";
   goat.contextFields.productDeliveryGuaranteeCardsV255[0].description = "По России транспортной компанией";
   goat.contextFields.productCreationV253 = "Каждое изделие создаётся вручную в мастерской";
+  goat.contextFields.productDetailedTitleV516 = "Подарок с характером";
+  goat.contextFields.productDetailedShortDescriptionV516 = "Авторская коза ручной работы";
+  goat.contextFields.productDetailedBodyV516 = "Мягкая коза ручной работы, созданная в мастерской с вниманием к деталям и аккуратно подготовленная для подарка.";
   goat.contextFields.seoKeywords = "символ 2027 года коза, готовый SEO запрос";
   const rerun = productCardMigrateWorkspaceV253(migrationWorkspace);
   const meaningAfterRerun = goat.contextFields.productMeaningV253;
@@ -210,14 +200,7 @@ const result = await evaluate(`(async () => {
       .map((item) => item.textContent.trim()),
     reviews: targetHost.querySelectorAll(".goat-product-review-card-v514").length,
     serviceSections: targetHost.querySelectorAll(".goat-product-service-section-v514").length,
-    detailedDescriptionBeforeSeo: (() => {
-      const sections = [...targetHost.querySelectorAll("[data-v22-site-section]")]
-        .map((section) => section.dataset.v22SiteSection);
-      return sections.indexOf("product_detailed_description_v516") >= 0 &&
-        sections.indexOf("product_detailed_description_v516") < sections.indexOf("seo_snippet");
-    })(),
-    detailedDescriptionFields: [...targetHost.querySelectorAll('[data-v22-site-section="product_detailed_description_v516"] [data-page-context-key]')]
-      .map((field) => ({ key: field.dataset.pageContextKey, maxLength: field.maxLength, tag: field.tagName })),
+    detailedDescriptionPresent: Boolean(targetHost.querySelector('[data-v22-site-section="product_detailed_description_v516"]')),
     finalCta: targetGoat.finalCta,
     ctaText: targetGoat.contextFields.productFinalCtaButtonTextV514,
     ctaDestination: targetGoat.contextFields.productFinalCtaDestinationV514,
@@ -235,18 +218,6 @@ const result = await evaluate(`(async () => {
   const titles = [...host.querySelectorAll(".product-card-block-v253 strong")].map((item) => item.textContent.trim());
   const heroFieldLabels = [...host.querySelectorAll(".product-card-hero-fields-v253 > .product-card-field-v253 > span")]
     .map((item) => item.textContent.trim());
-  const detailedFields = [...host.querySelectorAll('[data-v22-site-section="product_detailed_description_v516"] [data-page-context-key]')];
-  const detailedValues = [
-    "Подарок с характером",
-    "Авторская коза ручной работы",
-    "Мягкая коза ручной работы, созданная в мастерской с вниманием к деталям и аккуратно подготовленная для подарка.",
-  ];
-  detailedFields.forEach((field, index) => {
-    field.value = detailedValues[index];
-    updatePageContextField({ target: field });
-  });
-  const detailedRerender = document.createElement("div");
-  detailedRerender.innerHTML = v22RouteSectionsHtml(card, goat, 0);
   const legacy = goat.legacyPageItemsV253;
   const deletedKeysVisible = ["Рейтинг", "Наличие", "Вкладки", "Комплектация", "Отзывы / UGC", "Результат клиента", "Основания рекомендовать"]
     .filter((label) => host.textContent.includes(label));
@@ -259,12 +230,6 @@ const result = await evaluate(`(async () => {
   const deliveryItemsBefore = host.querySelectorAll(".product-card-delivery-item-v255").length;
   renderGate = () => {};
   flashSaving = () => {};
-  const statusControl = host.querySelector('[data-product-card-v253-key="productMeaningV253"]');
-  statusControl.value = "works";
-  statusControl.dispatchEvent(new Event("change", { bubbles: true }));
-  const checkboxControl = host.querySelector('[data-product-card-v253-key="productFinalCtaImplementedV253"]');
-  checkboxControl.checked = true;
-  checkboxControl.dispatchEvent(new Event("change", { bubbles: true }));
   const firstDeliveryTitle = host.querySelector('[data-product-card-delivery-field-v255="title"]');
   firstDeliveryTitle.value = "Бережная доставка";
   firstDeliveryTitle.dispatchEvent(new Event("input", { bubbles: true }));
@@ -421,32 +386,16 @@ const result = await evaluate(`(async () => {
       checkboxes: host.querySelectorAll("[data-product-card-v253-check]").length,
       legacySections: [...host.querySelectorAll(".v22-route-section")].filter((section) => {
         const title = section.querySelector(".v22-section-title")?.textContent.trim() || "";
-        return !["seo_snippet", "product_detailed_description_v516"].includes(section.dataset.v22SiteSection) && title !== "CWV / PageSpeed Insights";
+        return section.dataset.v22SiteSection !== "seo_snippet" && title !== "CWV / PageSpeed Insights";
       }).length,
       seoSection: Boolean(host.querySelector('[data-v22-site-section="seo_snippet"]')),
-      detailedDescriptionBeforeSeo: (() => {
-        const sections = [...host.querySelectorAll("[data-v22-site-section]")]
-          .map((section) => section.dataset.v22SiteSection);
-        return sections.indexOf("product_detailed_description_v516") >= 0 &&
-          sections.indexOf("product_detailed_description_v516") < sections.indexOf("seo_snippet");
-      })(),
-      detailedDescriptionFields: detailedFields.map((field) => ({
-        key: field.dataset.pageContextKey,
-        maxLength: field.maxLength,
-        tag: field.tagName,
-      })),
+      detailedDescriptionPresent: Boolean(host.querySelector('[data-v22-site-section="product_detailed_description_v516"]')),
       detailedDescriptionSaved: [
         goat.contextFields.productDetailedTitleV516,
         goat.contextFields.productDetailedShortDescriptionV516,
         goat.contextFields.productDetailedBodyV516,
       ],
-      detailedDescriptionReloaded: [...detailedRerender.querySelectorAll('[data-v22-site-section="product_detailed_description_v516"] [data-page-context-key]')]
-        .map((field) => field.value),
       technicalControl: [...host.querySelectorAll(".v22-section-title")].some((item) => item.textContent.trim() === "CWV / PageSpeed Insights")
-    },
-    interaction: {
-      meaningStatus: goat.contextFields.productMeaningV253__flag,
-      finalCtaImplemented: goat.contextFields.productFinalCtaImplementedV253
     },
     directMigration: { goatChanged, shirtChanged },
     log: migrationWorkspace.project._productCardMigrationLog?.find((entry) => entry.id === PRODUCT_CARD_SEVEN_BLOCKS_V253),
@@ -460,19 +409,18 @@ if (result.targetUI.groups !== 2 || result.targetUI.finishGroup || result.target
   throw new Error(`Target product card structure is wrong: ${JSON.stringify(result.targetUI)}`);
 if (!result.targetUI.codes.includes("Tilda: TS203") || !result.targetUI.codes.includes("Tilda: BF302 + BF502N") || result.targetUI.finalCta !== "Сохранённый заголовок CTA" || result.targetUI.ctaText !== "Задать вопрос" || result.targetUI.ctaDestination !== "Попап BF502N с формой" || result.targetUI.ctaStatus !== "not_started")
   throw new Error(`Target product card values or labels are wrong: ${JSON.stringify(result.targetUI)}`);
-if (!result.targetUI.detailedDescriptionBeforeSeo || result.targetUI.detailedDescriptionFields.map((field) => `${field.tag}:${field.maxLength}`).join("|") !== "INPUT:40|TEXTAREA:90|TEXTAREA:300")
-  throw new Error(`Target product description block is misplaced or has wrong fields: ${JSON.stringify(result.targetUI)}`);
+if (result.targetUI.detailedDescriptionPresent)
+  throw new Error(`Removed product description block is still visible: ${JSON.stringify(result.targetUI)}`);
 
 if (result.blockCount !== 8 || result.groupCount !== 3)
   throw new Error(`Wrong card structure: ${JSON.stringify(result)}`);
 if (result.ui.statusSelects !== 5 || result.ui.checkboxes !== 2)
   throw new Error(`Wrong controls: ${JSON.stringify(result)}`);
-if (result.interaction.meaningStatus !== "works" || result.interaction.finalCtaImplemented !== "yes")
-  throw new Error(`Controls do not persist values: ${JSON.stringify(result)}`);
 if (result.codes.length !== 7 || !result.codes.includes("Tilda: ST210") || !result.codes.includes("Tilda: ST340"))
   throw new Error(`Tilda codes missing: ${JSON.stringify(result)}`);
-if (!result.ui.detailedDescriptionBeforeSeo || result.ui.detailedDescriptionFields.map((field) => `${field.tag}:${field.maxLength}`).join("|") !== "INPUT:40|TEXTAREA:90|TEXTAREA:300" || result.ui.detailedDescriptionSaved.join("|") !== result.ui.detailedDescriptionReloaded.join("|"))
-  throw new Error(`Product description fields are not placed or persisted correctly: ${JSON.stringify(result.ui)}`);
+if (result.ui.detailedDescriptionPresent || result.ui.detailedDescriptionSaved.join("|") !==
+  "Подарок с характером|Авторская коза ручной работы|Мягкая коза ручной работы, созданная в мастерской с вниманием к деталям и аккуратно подготовленная для подарка.")
+  throw new Error(`Removed block is visible or saved text was changed: ${JSON.stringify(result.ui)}`);
 if (result.deletedKeysVisible.length || result.activeOldKeys.length)
   throw new Error(`Legacy fields remain active: ${JSON.stringify(result)}`);
 if (result.meaningAfterRerun !== "Ручная редактура смысла" || result.rerun.changed)

@@ -1,0 +1,16 @@
+{
+  "defaultsSeparate": true,
+  "separateProducts": true,
+  "threw": true,
+  "renderDidNotWriteProduct": true,
+  "companyUnchanged": true,
+  "otherGatesUnchanged": true,
+  "companyAttrsAbsent": true,
+  "firstIdea": "Коза: идея продукта",
+  "secondIdea": "Другой товар: другая идея",
+  "publicationHook": "Подарок с характером",
+  "publicationCaption": "Коза: уникальная подпись",
+  "restoredFirstProduct": true,
+  "emptyFieldsNeutral": true,
+  "emptySelectLabels": true
+}

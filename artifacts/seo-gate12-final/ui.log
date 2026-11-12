@@ -1,0 +1,15 @@
+apple visible headers, badges, archive-only tool, unchanged Gate 3-8 PASS
+node:internal/modules/run_main:122
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: icleaning Gate 1 navigation changed data
+    at file:///Users/vl/Developer/guru-platform/scripts/gate2-technical-seo-ui-smoke.mjs:80:3 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '=='
+}
+
+Node.js v22.14.0

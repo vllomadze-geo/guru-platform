@@ -1,0 +1,104 @@
+{
+  "firstMigration": {
+    "changed": true
+  },
+  "secondMigration": {
+    "changed": false
+  },
+  "fieldsPreserved": true,
+  "controlCount": 85,
+  "snapshots": [
+    {
+      "steps": [
+        "passport",
+        "working",
+        "buyers",
+        "keywords",
+        "snippet",
+        "technical",
+        "indexing"
+      ],
+      "groups": 6,
+      "sections": 8,
+      "serviceSections": 2,
+      "legacyStatusSelects": 0,
+      "blankSelects": 0,
+      "h1": "Символ 2027 года «Коза»",
+      "meaning": "Сохранённый смысл товара",
+      "detailedDescription": true,
+      "seoSnippet": true,
+      "heroStatus": "ready",
+      "ctaText": "Своя кнопка",
+      "foundation": true,
+      "passportKeywords": "авторская коза",
+      "webmaster": true,
+      "problemHeading": {
+        "text": "2. Галерея изделия",
+        "color": "rgb(31, 27, 22)",
+        "parentColor": "rgb(31, 27, 22)"
+      }
+    },
+    {
+      "steps": [
+        "passport",
+        "working",
+        "buyers",
+        "keywords",
+        "snippet",
+        "technical",
+        "indexing"
+      ],
+      "groups": 6,
+      "sections": 8,
+      "serviceSections": 2,
+      "legacyStatusSelects": 0,
+      "blankSelects": 0,
+      "h1": "Шапка Коза",
+      "meaning": "Сохранённый смысл товара",
+      "detailedDescription": true,
+      "seoSnippet": true,
+      "heroStatus": "problem",
+      "ctaText": "Своя кнопка",
+      "foundation": false,
+      "passportKeywords": "Ключевые слова не указаны",
+      "webmaster": false,
+      "problemHeading": {
+        "text": "1. Герой товара",
+        "color": "rgb(31, 27, 22)",
+        "parentColor": "rgb(31, 27, 22)"
+      }
+    }
+  ],
+  "updatedName": "Шапка Коза — новое название",
+  "projectChecks": [
+    {
+      "name": "Коричное яблоко",
+      "steps": 7,
+      "h1": "Символ 2027 года «Коза»",
+      "url": "https://k-apple.ru/simvol-2027-koza",
+      "cta": "Своя кнопка"
+    },
+    {
+      "name": "iCleaning",
+      "steps": 7,
+      "h1": "Символ 2027 года «Коза»",
+      "url": "https://k-apple.ru/simvol-2027-koza",
+      "cta": "Своя кнопка"
+    },
+    {
+      "name": "SIVRCE",
+      "steps": 7,
+      "h1": "Символ 2027 года «Коза»",
+      "url": "https://k-apple.ru/simvol-2027-koza",
+      "cta": "Своя кнопка"
+    },
+    {
+      "name": "ГУРУ",
+      "steps": 7,
+      "h1": "Символ 2027 года «Коза»",
+      "url": "https://k-apple.ru/simvol-2027-koza",
+      "cta": "Своя кнопка"
+    }
+  ]
+}
+Screenshot: artifacts/gate1-product-goat-steps-0-6-test-copy.png

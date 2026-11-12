@@ -1,0 +1,239 @@
+[
+  {
+    "name": "Коричное яблоко",
+    "hashBefore": "71f228b39b2625fee64137f7dbfd291dfaf5393575096ec354064ad9d13dc1d2",
+    "hashAfter": "71f228b39b2625fee64137f7dbfd291dfaf5393575096ec354064ad9d13dc1d2",
+    "baseline": {
+      "oldFilled": 5,
+      "oldTotal": 8,
+      "newStatus": {
+        "status": "in_progress",
+        "filled": 4,
+        "total": 6
+      },
+      "corrupt": [
+        {
+          "index": 1,
+          "field": "problem"
+        }
+      ]
+    },
+    "readiness": {
+      "gate1": {
+        "total": 22,
+        "done": 3,
+        "ready": 3,
+        "notRequired": 0,
+        "inProgress": 5,
+        "problem": 0,
+        "notStarted": 14,
+        "percent": 25
+      },
+      "launch": {
+        "total": 87,
+        "done": 27,
+        "ready": 23,
+        "notRequired": 4,
+        "inProgress": 24,
+        "problem": 4,
+        "notStarted": 32,
+        "percent": 47
+      },
+      "oldAudienceStatus": "in_progress",
+      "newAudienceStatus": "in_progress"
+    },
+    "pure": {
+      "rows": 11,
+      "tabs": 1,
+      "hasOld": false,
+      "zones": [
+        {
+          "key": "need",
+          "sign": "",
+          "title": "Потребность"
+        },
+        {
+          "key": "benefits",
+          "sign": "+",
+          "title": "Выгоды"
+        },
+        {
+          "key": "result",
+          "sign": "=",
+          "title": "Единый оффер компании"
+        }
+      ],
+      "linked": false
+    }
+  },
+  {
+    "name": "iCleaning",
+    "hashBefore": "54d5e60a2b06abd3c23b4d13d2bba0ee1675fa077b06ccb8bcdbde917b0282db",
+    "hashAfter": "54d5e60a2b06abd3c23b4d13d2bba0ee1675fa077b06ccb8bcdbde917b0282db",
+    "baseline": {
+      "oldFilled": 0,
+      "oldTotal": 8,
+      "newStatus": {
+        "status": "not_started",
+        "filled": 0,
+        "total": 6
+      },
+      "corrupt": []
+    },
+    "readiness": {
+      "gate1": {
+        "total": 23,
+        "done": 4,
+        "ready": 1,
+        "notRequired": 3,
+        "inProgress": 4,
+        "problem": 0,
+        "notStarted": 15,
+        "percent": 26
+      },
+      "launch": {
+        "total": 88,
+        "done": 18,
+        "ready": 13,
+        "notRequired": 5,
+        "inProgress": 25,
+        "problem": 2,
+        "notStarted": 43,
+        "percent": 36
+      },
+      "oldAudienceStatus": "not_started",
+      "newAudienceStatus": "not_started"
+    },
+    "pure": {
+      "rows": 11,
+      "tabs": 1,
+      "hasOld": false,
+      "zones": [
+        {
+          "key": "need",
+          "sign": "",
+          "title": "Потребность"
+        },
+        {
+          "key": "benefits",
+          "sign": "+",
+          "title": "Выгоды"
+        },
+        {
+          "key": "result",
+          "sign": "=",
+          "title": "Единый оффер компании"
+        }
+      ],
+      "linked": false
+    }
+  },
+  {
+    "name": "SIVRCE",
+    "hashBefore": "0596edd286cea0024547c7bb4d089bd1ea1dffa3c39f4d5b36aeaf47606de6a2",
+    "hashAfter": "0596edd286cea0024547c7bb4d089bd1ea1dffa3c39f4d5b36aeaf47606de6a2",
+    "baseline": {
+      "oldFilled": 0,
+      "oldTotal": 8,
+      "newStatus": {
+        "status": "not_started",
+        "filled": 0,
+        "total": 6
+      },
+      "corrupt": []
+    },
+    "readiness": {
+      "gate1": {
+        "total": 21,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 2,
+        "problem": 0,
+        "notStarted": 19,
+        "percent": 5
+      },
+      "launch": {
+        "total": 44,
+        "done": 7,
+        "ready": 0,
+        "notRequired": 7,
+        "inProgress": 5,
+        "problem": 1,
+        "notStarted": 31,
+        "percent": 23
+      },
+      "oldAudienceStatus": "not_started",
+      "newAudienceStatus": "not_started"
+    },
+    "pure": {
+      "rows": 11,
+      "tabs": 1,
+      "hasOld": false,
+      "zones": [
+        {
+          "key": "need",
+          "sign": "",
+          "title": "Потребность"
+        },
+        {
+          "key": "benefits",
+          "sign": "+",
+          "title": "Выгоды"
+        },
+        {
+          "key": "result",
+          "sign": "=",
+          "title": "Единый оффер компании"
+        }
+      ],
+      "linked": false
+    }
+  },
+  {
+    "name": "УНИВЕРСАЛ / ГУРУ",
+    "hashBefore": "b60c5e9cc4a8eca612090523ba27be0b460f25cdac628a75e0cb6ef1bb6e04af",
+    "hashAfter": "b60c5e9cc4a8eca612090523ba27be0b460f25cdac628a75e0cb6ef1bb6e04af",
+    "baseline": {
+      "oldFilled": 0,
+      "oldTotal": 0,
+      "newStatus": {
+        "status": "not_started",
+        "filled": 0,
+        "total": 0
+      },
+      "corrupt": []
+    },
+    "readiness": {
+      "gate1": {
+        "total": 21,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 1,
+        "problem": 0,
+        "notStarted": 20,
+        "percent": 2
+      },
+      "launch": {
+        "total": 44,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 3,
+        "problem": 1,
+        "notStarted": 40,
+        "percent": 5
+      },
+      "oldAudienceStatus": "not_started",
+      "newAudienceStatus": "not_started"
+    },
+    "pure": {
+      "rows": 0,
+      "tabs": 0,
+      "hasOld": false,
+      "zones": [],
+      "linked": false
+    }
+  }
+]

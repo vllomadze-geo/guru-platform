@@ -1,0 +1,9 @@
+file:///private/tmp/guru-step7-before/scripts/gate1-final-keyword-foundation-smoke.mjs:16
+  if (!condition) throw new Error(message);
+                        ^
+
+Error: Expected six Gate 0 direction landings in fixture
+    at assert (file:///private/tmp/guru-step7-before/scripts/gate1-final-keyword-foundation-smoke.mjs:16:25)
+    at file:///private/tmp/guru-step7-before/scripts/gate1-final-keyword-foundation-smoke.mjs:83:1
+
+Node.js v22.14.0

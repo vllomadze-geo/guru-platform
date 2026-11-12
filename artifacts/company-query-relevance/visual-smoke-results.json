@@ -1,0 +1,46 @@
+{
+  "report": [
+    {
+      "project": "Коричное яблоко",
+      "sourceSha256": "ddc6de490e31c8d2bb8c71963bacb8dd53236e83b0f02105b053447ef3fffe5c",
+      "beforeSha256": "0387e8fbbecdb55acae8615680637e3dc25acc350dceac4259ca28c059cc9e7a",
+      "afterSha256": "0387e8fbbecdb55acae8615680637e3dc25acc350dceac4259ca28c059cc9e7a",
+      "identical": true,
+      "guide": {
+        "gate1": {
+          "total": 23,
+          "done": 4,
+          "ready": 4,
+          "notRequired": 0,
+          "inProgress": 5,
+          "problem": 0,
+          "notStarted": 14,
+          "percent": 28
+        },
+        "step": "gate-1:comparison::project-comparison",
+        "missing": "<div class=\"now-guide-missing\" aria-live=\"polite\"><span>Не хватает:</span><ul><li><button type=\"button\" data-now-missing=\"0\">Гавань мастеровУдалить\n    Тип: Дальний конкурент\n    Ссылка на сайт целиком: не заполнено у 18 из 28 записей</button></li><li><button type=\"button\" data-now-missing=\"1\">Ярмарка МастеровУдалить\n    Тип: Дальний конкурент\n    Ссылка на сайт целиком: не заполнено у 18 из 28 записей</button></li><li><button type=\"button\" data-now-missing=\"2\">avitoУдалить\n    Тип: Дальний конкурент\n    Ссылка на сайт целиком: не заполнено у 18 из 28 записей</button></li></ul></div>",
+        "launch": {
+          "total": 87,
+          "done": 28,
+          "ready": 23,
+          "notRequired": 5,
+          "inProgress": 24,
+          "problem": 3,
+          "notStarted": 32,
+          "percent": 48
+        }
+      },
+      "companies": 25,
+      "queries": 15,
+      "ratings": {
+        "unrated": 14,
+        "low": 1
+      },
+      "types": [
+        "Сосед по выдаче",
+        "Дальний конкурент"
+      ],
+      "pure": true
+    }
+  ]
+}

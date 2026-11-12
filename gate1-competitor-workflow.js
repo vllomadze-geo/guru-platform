@@ -289,22 +289,6 @@ function g1CompetitorDirectCardV539(candidate, entry, ctx) {
   </section>`;
 }
 
-function g1CompetitorSummaryValueV539(criterion, candidate) {
-  const step = candidate.stepsV539 || {};
-  const result = criterion.coreKey === "jtbd" ? [step[5]?.jtbdFunctional, step[5]?.jtbdSocial, step[5]?.jtbdEmotional, step[5]?.segment]
-    : criterion.coreKey === "product_characteristics" ? [step[3]?.analogName, step[3]?.analogUrl, step[3]?.characteristics]
-      : criterion.coreKey === "price" ? [step[4]?.priceAnalog, step[4]?.priceMin, step[4]?.priceMax]
-        : criterion.coreKey === "presentation_sales" ? [step[9]?.landingStructure, step[9]?.cta, step[9]?.payment, step[9]?.channels, step[9]?.trafficSources]
-          : criterion.coreKey === "strengths_weaknesses" ? [step[12]?.strength1, step[12]?.strength2, step[12]?.strength3, step[12]?.weakness1, step[12]?.weakness2, step[12]?.weakness3, step[12]?.takeaway, step[12]?.legacySummary]
-            : [];
-  return result.map((value) => String(value || "").trim()).filter(Boolean).join("\n") || projectComparisonCell(criterion, candidate.id).text;
-}
-
-function g1CompetitorSummaryV539(entry, ctx) {
-  const criteria = entry.criteria.filter((row) => G1_COMPETITOR_LEGACY_MAP_V539[row.coreKey]);
-  return `<section class="g1-competitor-summary-v539"><h3>Сводная таблица</h3><p>Только чтение · значения конкурентов берутся из шагов 3, 4, 5, 9 и 12.</p><div class="project-comparison-scroll" tabindex="0"><table style="--comparison-columns:${entry.competitors.length}"><thead><tr><th class="project-comparison-criterion-sticky">Критерий продукта</th><th class="project-comparison-own-sticky">Наш продукт<br><strong>${escapeHtml(ctx.product.name)}</strong></th>${entry.competitors.map((row) => `<th>${escapeHtml(row.name || row.siteDomainV538 || "Конкурент")}</th>`).join("")}</tr></thead><tbody>${criteria.map((criterion) => `<tr><th class="project-comparison-criterion-sticky">${escapeHtml(criterion.name)}</th><td class="project-comparison-own-sticky">${escapeHtml(projectComparisonProductAutoValue(criterion, ctx.product) || "Не заполнено в источнике")}</td>${entry.competitors.map((row) => `<td>${escapeHtml(g1CompetitorSummaryValueV539(criterion, row) || "Не заполнено")}</td>`).join("")}</tr>`).join("")}</tbody></table></div></section>`;
-}
-
 function g1CompetitorOverallStatusV539(entry, ctx) {
   const source = g1CompetitorSourceGridV539(ctx).status;
   const all = g1CompetitorCandidatesV539(entry);
@@ -323,27 +307,6 @@ projectComparisonProductStatus = function (entry) {
   const product = guruV194Product(entry.product_id, state);
   return product ? g1CompetitorOverallStatusV539(entry, g1CompetitorContextV539(product))
     : { status: "not_started", filled: 0, total: 0 };
-};
-
-projectComparisonProductHtml = function (product = guruV194SelectedProduct(state)) {
-  if (!product?.id) return `<section class="project-comparison project-comparison-product-v309 g1-section"><div class="project-comparison-heading"><b>Сравнение проектов · Продукт/Услуга</b></div><div class="project-comparison-body"><p>Выберите продукт.</p></div></section>`;
-  Object.values(state.projectComparison?.productsById || {}).forEach(g1CompetitorMigrateV539);
-  const entry = g1CompetitorMigrateV539(ensureProjectComparisonProduct(product.id));
-  const ctx = g1CompetitorContextV539(product);
-  const source = g1CompetitorSourceGridV539(ctx);
-  const status = g1CompetitorOverallStatusV539(entry, ctx);
-  const statusKey = `project-comparison-product-${product.id}`;
-  return `<section class="project-comparison project-comparison-product-v309 g1-section g1-competitor-workflow-v539 ${entry.open ? "is-open" : ""}" data-project-comparison-product="${escapeAttr(product.id)}" data-g1-competitor-workflow-v539="${escapeAttr(product.id)}">
-    <button type="button" class="project-comparison-heading" data-project-comparison-product-toggle data-project-comparison-product-id="${escapeAttr(product.id)}" aria-expanded="${entry.open ? "true" : "false"}"><span><b>Сравнение проектов · Продукт/Услуга</b><small>${escapeHtml(product.name)}</small></span><span class="project-comparison-heading-meta">${g1CompetitorStatusPillV539(status.status)}<span data-status-block-meta="${escapeAttr(statusKey)}">${status.filled}/${status.total} шагов · ${entry.competitors.length} прямых</span></span><i>${entry.open ? "Свернуть ↑" : "Развернуть ↓"}</i></button>
-    <div class="project-comparison-body" ${entry.open ? "" : "hidden"}>
-      <div class="g1-competitor-workflow-intro-v539">Сначала соберите и классифицируйте кандидатов. Шаги 3–12 появляются только у прямых конкурентов этого product_id.</div>
-      ${g1CompetitorStepV539(0, "Система отсчёта", source.status, "Сверьте исходные данные своего продукта перед исследованием конкурентов.", "", "Данные читаются из Gate 0/1 и здесь не редактируются.", source.html, entry)}
-      ${g1CompetitorCandidatesStepV539(entry, ctx)}
-      ${g1CompetitorClassificationStepV539(entry, ctx)}
-      ${entry.competitors.map((candidate) => g1CompetitorDirectCardV539(candidate, entry, ctx)).join("")}
-      ${g1CompetitorSummaryV539(entry, ctx)}
-    </div>
-  </section>`;
 };
 
 function g1CompetitorFindV539(productId, candidateId) {

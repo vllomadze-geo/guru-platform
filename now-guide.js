@@ -228,6 +228,14 @@ function nowGuideGate12WithView(calculate, view) {
   const frame = window.requestAnimationFrame;
   const idle = window.requestIdleCallback;
   const preferences = guruScheduleUiPreferenceSave;
+  // A product selector overlays the selected product on an already isolated
+  // Gate 1/2 view. Nested readiness readers must reuse that private overlay:
+  // cloning the entire workspace for every product blocks the main thread.
+  if (nowGuideReadPass) {
+    let privateViews = nowGuideReadPass.get("gate12-private-views");
+    if (!privateViews) nowGuideReadPass.set("gate12-private-views", privateViews = new WeakSet());
+    privateViews.add(view);
+  }
   state = view;
   window.queueMicrotask = () => {};
   window.requestAnimationFrame = () => 0;
@@ -247,23 +255,12 @@ function nowGuideGate12Read(calculate, workspace = state) {
   const missing = [];
   try {
     return nowGuideWithReadPass(() => {
-      // A proxy per block defeated the render cache and normalised the same
-      // scoped records repeatedly. Share one private view for this pass.
-      let views = nowGuideReadPass.get("gate12-views");
-      if (!views) nowGuideReadPass.set("gate12-views", views = new WeakMap());
-      const ui = workspace?.project?.gate0ScopeUiV194;
-      const context = `${ui?.selectedProductId || ""}:${ui?.selectedCategoryId || ""}`;
-      let entry = views.get(workspace);
-      if (!entry || entry.context !== context) {
-        entry = { context, view: guruExportDiagnosticCloneV223(workspace) };
-        views.set(workspace, entry);
-        views.set(entry.view, entry);
-      }
+      const view = nowGuidePrivateView(workspace);
       const status = guruExportWithoutPersistenceV223(() =>
         nowGuideGate12WithView((view) => {
           guruReadinessCollector = missing;
           return calculate(view);
-        }, entry.view));
+        }, view));
       return { status, missing };
     });
   } catch (_) {
@@ -284,22 +281,33 @@ function nowGuideGate1Items(gate) {
     const section = (id, title, calculate) => ({ id, title, kind: "gate1-section", calculate });
     const productId = workspace.project?.gate0ScopeUiV194?.selectedProductId || "";
     const items = [
-      section("company_demand_positioning", "Спрос, ценность, позиционирование · Компания", "company-demand"),
+      section("company_demand_positioning", "Спрос", "company-demand"),
       ...groups.seo,
-      { id: "project-comparison", title: "Сравнение проекта", kind: "comparison" },
+      ...(projectComparisonStatus().total
+        ? [{ id: "project-comparison", title: "Сравнение проекта", kind: "comparison" }]
+        : []),
       section("gate1-seo-v300-company-webmaster", "Яндекс Вебмастер · Компания", "webmaster-company"),
       { id: "interactive-tool", title: "Собственный интерактивный инструмент", kind: "gate1-tool" },
-      ...groups.structure, ...groups.legal,
       { id: "target-audience", title: "Целевая аудитория", kind: "audience" },
-      section("gate1-blog-v304-company", "Блог · Компания", "blog-company"),
+      ...groups.structure, ...groups.legal,
       ...sections.filter((entry) => entry.bare).flatMap((entry) => entry.allInnerCards || [])
         .filter((card) => !card._merged && getGate1CardMode(card)).map(descriptor),
     ];
     if (productId) items.push(
       section("gate1-seo-v300-product-webmaster", "Яндекс Вебмастер · Продукт/Услуга", "webmaster-product"),
       section("pain_jtbd_offer", "Спрос, ценность, позиционирование · Продукт/Услуга", "product-demand"),
-      section("gate1-blog-v304-product", "Блог · Продукт/Услуга", "blog-product"),
+      { id: "project-comparison-product", title: "Сравнение проектов · Продукт/Услуга", kind: "product-comparison", productId },
     );
+    const productRow = productId && source.cards.find((card) => card.id === "card-24")?.pageRows
+      ?.find((row) => row.catalogItemIdV189 === productId);
+    if (productRow) {
+      GOAT_PRODUCT_COUNTED_SECTIONS_V553.forEach((section, index) => {
+        if (!goatProductSectionExcludedV553(productRow, section)) items.push({
+          id: `card-24:${section}`, title: GOAT_PRODUCT_COUNTED_SECTION_TITLES_V553[index], kind: "product-card-section",
+          section, productId,
+        });
+      });
+    }
     if (sections.some((entry) => entry.key === "unit_economics"))
       items.push({ id: "unit-economics", title: "Юнит-экономика", kind: "unit" });
     return [...new Map(items.map((item) => [`${item.kind}:${item.id}`, item])).values()];
@@ -330,14 +338,15 @@ function nowGuideGate1EditorHtml(item) {
     if (item.kind === "card") return cardUserFieldsHtml(workspace.gates.find((gate) => gate.id === "gate-1").cards.find((card) => card.id === item.id));
     if (item.kind === "gate1-tool") return gate1SeoInteractiveToolHtmlV305(gate1SeoInteractiveToolStoreV305(workspace));
     if (item.kind === "comparison") return projectComparisonHtml();
+    if (item.kind === "product-comparison") return projectComparisonProductHtml();
     if (item.kind === "audience") return targetAudienceHtml();
     if (item.kind === "unit") return g1RenderUnitEconomics();
     if (item.calculate === "company-demand") return gate1CompanySemanticsHtmlV264(workspace);
     if (item.calculate === "product-demand") return g1RenderPainOffer();
     if (item.calculate === "webmaster-company") return gate1WebmasterCompanyHtmlV295();
     if (item.calculate === "webmaster-product") return gate1WebmasterProductHtmlV295();
-    if (item.calculate === "blog-company") return gate1BlogCompanyHtmlV304(gate1BlogStoreV304(workspace));
-    if (item.calculate === "blog-product") return gate1BlogProductHtmlV304(gate1BlogStoreV304(workspace), guruV194SelectedProduct(workspace));
+    if (item.calculate === "blog-company") return gate1BlogCompanyHtmlV304(gate1BlogStoreV304(workspace, true));
+    if (item.calculate === "blog-product") return gate1BlogProductHtmlV304(gate1BlogStoreV304(workspace, true), guruV194SelectedProduct(workspace));
     return "";
   }).status || "";
 }
@@ -346,6 +355,13 @@ function nowGuideGate1Assessment(item, workspace = state) {
   return nowGuideGate12Read((view) => {
     const previous = nowGuideGate1Trace;
     try {
+      if (item.kind === "product-card-section") {
+        const row = view.gates.find((gate) => gate.id === "gate-1")?.cards
+          .find((card) => card.id === "card-24")?.pageRows
+          ?.find((entry) => entry.catalogItemIdV189 === item.productId);
+        return row && !goatProductSectionExcludedV553(row, item.section)
+          ? goatProductCardStatusV514(row, item.section) : null;
+      }
       if (item.kind === "card") {
         const card = view.gates.find((gate) => gate.id === "gate-1")?.cards.find((card) => card.id === item.id);
         if (!card) return null;
@@ -362,6 +378,7 @@ function nowGuideGate1Assessment(item, workspace = state) {
       }
       if (item.kind === "gate1-tool") return gate1SeoInteractiveToolStatusV305(gate1SeoInteractiveToolStoreV305(view));
       if (item.kind === "comparison") return projectComparisonStatus().status;
+      if (item.kind === "product-comparison") return projectComparisonProductStatus(ensureProjectComparisonProduct(item.productId)).status;
       if (item.kind === "audience") return targetAudienceStatus(ensureTargetAudience()).status;
       if (item.kind === "unit") {
         const id = view.project?.gate0ScopeUiV194?.selectedProductId;
@@ -381,15 +398,19 @@ function nowGuideGate1Assessment(item, workspace = state) {
           { selector: '[data-g1-webmaster-product-v295="landingIndexed"]', label: "Результат" });
         return value === "yes" ? "ready" : value === "no" ? "problem" : "not_started";
       }
-      if (item.calculate === "blog-company") return gate1BlogCompanyStatusV304(gate1BlogStoreV304(view));
+      if (item.calculate === "blog-company") return gate1BlogCompanyStatusV304(gate1BlogStoreV304(view, true));
       if (item.calculate === "blog-product") return gate1BlogProductStatusV304(
-        gate1BlogStoreV304(view).articles, view.project?.gate0ScopeUiV194?.selectedProductId || "");
+        gate1BlogStoreV304(view, true).articles, view.project?.gate0ScopeUiV194?.selectedProductId || "");
       return null;
     } finally { nowGuideGate1Trace = previous; }
   }, workspace);
 }
 
 function nowGuideGate1Missing(item) {
+  if (item.kind === "product-card-section") return {
+    items: [{ selector: `[data-goat-product-section-card-v514="${CSS.escape(item.section)}"] > summary`,
+      label: `Заполните блок «${item.title}»` }], unresolved: [],
+  };
   const assessment = nowGuideGate1Assessment(item);
   const template = document.createElement("template");
   template.innerHTML = nowGuideGate1EditorHtml(item);
@@ -438,20 +459,27 @@ function nowGuideGate2Missing(item) {
 function nowGuideGate1Node(item) {
   const root = document.getElementById("contentArea");
   if (!root) return null;
+  if (item.kind === "product-card-section") return root.querySelector(
+    `[data-card="card-24"] [data-goat-product-section-card-v514="${CSS.escape(item.section)}"] > summary`)
+    || root.querySelector('[data-card="card-24"] > .g1-card-header');
   if (item.kind === "card") return root.querySelector(`[data-card="${CSS.escape(item.id)}"] > .g1-card-header`);
   if (item.kind === "gate1-tool") return root.querySelector("[data-g1-seo-interactive-tool-v305] > header");
   if (item.kind === "gate1-section") return root.querySelector(`[data-gate1-toggle-section="${CSS.escape(item.id)}"]`);
+  if (item.kind === "product-comparison") return root.querySelector("[data-project-comparison-product-toggle]");
   if (item.kind === "unit") return root.querySelector('[data-gate1-toggle-section="unit_economics"]');
   return root.querySelector(item.kind === "comparison" ? "[data-project-comparison-toggle]" : "[data-target-audience-toggle]");
 }
 
-function nowGuideGate1Refresh(items = nowGuideGate1Items(state.gates.find((gate) => gate.id === "gate-1"))) {
+function nowGuideGate1Refresh(items, assessed = false) {
   if (activeGateId !== "gate-1") return;
+  if (!nowGuideReadPass) return nowGuideWithReadPass(() => nowGuideGate1Refresh(items, assessed));
+  items ||= nowGuideGate1Items(state.gates.find((gate) => gate.id === "gate-1"));
   for (const item of items) {
+    if (item.kind === "product-card-section") continue;
     const header = nowGuideGate1Node(item);
     const badge = header?.querySelector(".status-pill");
     if (!badge) continue;
-    const status = nowGuideGate1Assessment(item).status;
+    const status = assessed ? item.status : nowGuideGate1Assessment(item).status;
     if (!status) continue;
     badge.className = `status-pill status-${guruNormBlockStatus(status)}`;
     badge.textContent = item.kind === "card" ? g1CardStatusLabel({ ...findCard(item.id), status })
@@ -462,16 +490,22 @@ function nowGuideGate1Refresh(items = nowGuideGate1Items(state.gates.find((gate)
 // Guide disclosure is DOM state. Legacy accordion preferences and project
 // data are not written when the guide opens a lazily rendered editor.
 function nowGuideGate1Reveal(item) {
-  const header = nowGuideGate1Node(item);
+  let header = nowGuideGate1Node(item);
   if (!header) return false;
   const article = header.closest("[data-card]");
   if (article && !article.querySelector(":scope > .g1-card-body")) {
     const html = nowGuideGate12Read((workspace) => {
-      const card = workspace.gates.find((gate) => gate.id === "gate-1").cards.find((card) => card.id === item.id);
+      const cardId = item.kind === "product-card-section" ? "card-24" : item.id;
+      const card = workspace.gates.find((gate) => gate.id === "gate-1").cards.find((card) => card.id === cardId);
       return `<div class="g1-card-body">${instructionToggleHtml(card)}<div class="card-fields">${cardUserFieldsHtml(card)}</div></div>`;
     }).status;
     if (html) article.insertAdjacentHTML("beforeend", html);
     bindCardInputs();
+  }
+  if (item.kind === "product-card-section") {
+    const block = article?.querySelector(
+      `[data-goat-product-section-card-v514="${CSS.escape(item.section)}"]`);
+    if (block) { block.open = true; header = block.querySelector(":scope > summary"); }
   }
   const section = header.closest(".g1-section");
   if (section && !section.querySelector(":scope > .g1-section-body") && item.kind === "gate1-section") {
@@ -490,6 +524,7 @@ function nowGuideGate1Reveal(item) {
     section.insertAdjacentHTML("beforeend", `<div class="g1-section-body">${html}</div>`);
     bindUnitEconomicsRouteEvents();
   }
+  window.GuruBlockTitles?.refresh(section || article || els.contentArea);
   for (let parent = header.parentElement; parent && parent !== els.contentArea; parent = parent.parentElement) {
     if (parent.matches(".g1-section, .analytics-subblock, .g1-card")) {
       parent.classList.add("is-open");
@@ -507,6 +542,35 @@ function nowGuideGate1Reveal(item) {
 // render/input cycle and are never written to the workspace.
 let nowGuideReadPass = null;
 let nowGuideRegistryCache = null;
+let nowGuideWorkspaceRevision = 0;
+let nowGuideNavigationSnapshot = null;
+let nowGuideNavigationSnapshotActive = false;
+let nowGuideNextWorkspaceId = 0;
+const nowGuideWorkspaceIds = new WeakMap();
+function nowGuideMarkWorkspaceChanged() {
+  nowGuideWorkspaceRevision += 1;
+  nowGuideNavigationSnapshot = null;
+  nowGuideReadPass?.delete("data-versions");
+}
+// A revision belongs to the screen, not the project. Input, saves and
+// programmatic changes all invalidate the guide without serializing a large
+// workspace just to decide whether its cached assessment is still current.
+for (const type of ["input", "change"])
+  window.addEventListener(type, event => {
+    if (!event.target?.closest?.("#contentArea") ||
+        event.target.closest("[data-company-competitor-form], [data-company-filter-search], [data-company-query-search], [data-mega-platform-picker]")) return;
+    nowGuideMarkWorkspaceChanged();
+  }, true);
+const nowGuidePreviousFlashSaving = flashSaving;
+flashSaving = function (...args) {
+  nowGuideMarkWorkspaceChanged();
+  return nowGuidePreviousFlashSaving.apply(this, args);
+};
+const nowGuidePreviousSaveState = saveState;
+saveState = function (...args) {
+  nowGuideMarkWorkspaceChanged();
+  return nowGuidePreviousSaveState.apply(this, args);
+};
 // Product selection or input inside a temporary projection also invalidates
 // its private view before the next assessment in the same read pass.
 for (const type of ["input", "change"]) document.addEventListener(type, (event) => {
@@ -523,9 +587,30 @@ function nowGuideWithReadPass(calculate) {
   try { return calculate(); }
   finally { nowGuideReadPass = null; guruRenderReadCacheV470 = previousCache; }
 }
+function nowGuidePrivateView(workspace) {
+  if (nowGuideNavigationSnapshot?.view === workspace) return workspace;
+  if (nowGuideReadPass.get("gate12-private-views")?.has(workspace)) return workspace;
+  let views = nowGuideReadPass.get("gate12-views");
+  if (!views) nowGuideReadPass.set("gate12-views", views = new WeakMap());
+  const ui = workspace?.project?.gate0ScopeUiV194;
+  const context = `${ui?.selectedProductId || ""}:${ui?.selectedCategoryId || ""}:${nowGuideWorkspaceRevision}`;
+  if (nowGuideNavigationSnapshotActive &&
+      nowGuideNavigationSnapshot?.workspace === workspace &&
+      nowGuideNavigationSnapshot.context === context)
+    return nowGuideNavigationSnapshot.view;
+  let entry = views.get(workspace);
+  if (!entry || entry.context !== context) {
+    entry = { context, view: guruExportDiagnosticCloneV223(workspace) };
+    views.set(workspace, entry);
+    views.set(entry.view, entry);
+  }
+  if (nowGuideNavigationSnapshotActive && workspace === state)
+    nowGuideNavigationSnapshot = { workspace, context, view: entry.view };
+  return entry.view;
+}
 function nowGuidePlainRead(calculate) {
   return nowGuideWithReadPass(() => guruExportWithoutPersistenceV223(() => nowGuideGate12WithView(calculate,
-    guruExportDiagnosticCloneV223(state))));
+    nowGuidePrivateView(state))));
 }
 
 function nowGuidePlainAssessment(calculate) {
@@ -545,11 +630,13 @@ function nowGuideDataVersion() {
   let versions = nowGuideReadPass?.get("data-versions");
   if (!versions && nowGuideReadPass) nowGuideReadPass.set("data-versions", versions = new WeakMap());
   const ui = state?.project?.gate0ScopeUiV194;
-  const context = `${activeProjectId || ""}:${ui?.selectedProductId || ""}:${ui?.selectedCategoryId || ""}:${state?.updatedAt || ""}`;
+  const context = `${activeProjectId || ""}:${ui?.selectedProductId || ""}:${ui?.selectedCategoryId || ""}:${nowGuideWorkspaceRevision}`;
+  if (!state || typeof state !== "object") return `empty:${context}`;
   const previous = versions?.get(state);
-  if (previous?.context === context && previous.readinessCache === guruGateReadinessCache) return previous.version;
-  const version = `${activeProjectId || ""}:${JSON.stringify(state)}`;
-  versions?.set(state, { context, version, readinessCache: guruGateReadinessCache });
+  if (previous?.context === context) return previous.version;
+  if (!nowGuideWorkspaceIds.has(state)) nowGuideWorkspaceIds.set(state, ++nowGuideNextWorkspaceId);
+  const version = `${nowGuideWorkspaceIds.get(state)}:${context}`;
+  versions?.set(state, { context, version });
   return version;
 }
 
@@ -567,7 +654,10 @@ function nowGuideGroupMissing(items) {
       if (table && cell) {
         tables ||= [...document.querySelectorAll("#contentArea table")];
         const column = [...row.children].indexOf(cell);
-        const label = table.querySelector("thead tr")?.children[column]?.textContent.trim();
+        const heading = table.querySelector("thead tr")?.children[column];
+        // Comparison headers contain edit controls and a Delete button. Only
+        // the competitor name belongs in the guide's missing-field summary.
+        const label = (heading?.querySelector(".g1bp-head-actions-v543 strong") || heading)?.textContent.trim();
         if (label) group = { key: `table-${tables.indexOf(table)}-${column}`, label: `${label}: не заполнено`,
           row: [...table.rows].indexOf(row), total: table.querySelectorAll("tbody tr").length };
       }
@@ -686,7 +776,7 @@ function nowGuideGate4Items() {
     const productId = state?.project?.gate0ScopeUiV194?.selectedProductId || "";
     const channels = g4LaunchChannels();
     const seen = new Set(), result = [];
-    for (const node of template.content.querySelectorAll('[data-g4five-tool-v523], [data-g4-readiness-card], [data-g4camp-toggle]')) {
+    for (const node of template.content.querySelectorAll('[data-g4five-tool-v523], [data-g4-readiness-card], [data-g4camp-toggle], [data-gate4-blog-scope]')) {
       // A host and its inner card may carry the same tool marker. Campaign
       // hosts are represented by their own existing header, once per key.
       if (node.matches('[data-g4five-tool-v523]') && (node.matches('.g4five-campaign-host-v523') || node.querySelector('[data-g4camp-toggle]'))) continue;
@@ -697,16 +787,17 @@ function nowGuideGate4Items() {
       if (!badge) continue;
       const channel = node.matches('[data-g4camp-toggle]') ? channels.find(channel => g4CampaignStateKey(productId, channel.key) === node.dataset.g4campToggle) : null;
       if (node.matches('[data-g4camp-toggle]') && !channel) continue;
-      const scope = node.closest('[data-g4five-company-v523]') ? 'company' : 'product';
-      const kind = channel ? 'channel' : node.hasAttribute('data-g4-readiness-card') ? 'gate4-readiness' : 'gate4-tool';
-      const id = channel?.key || node.dataset.g4ReadinessCard || node.dataset.g4fiveToolV523;
+      const blog = node.dataset.gate4BlogScope;
+      const scope = blog || (node.closest('[data-g4five-company-v523]') ? 'company' : 'product');
+      const kind = blog ? 'gate4-blog' : channel ? 'channel' : node.hasAttribute('data-g4-readiness-card') ? 'gate4-readiness' : 'gate4-tool';
+      const id = blog ? `gate1-blog-v304-${blog}` : channel?.key || node.dataset.g4ReadinessCard || node.dataset.g4fiveToolV523;
       const identity = `${scope}:${kind}:${id}`;
       if (seen.has(identity)) continue;
       seen.add(identity);
       const raw = [...badge.classList].find(name => name.startsWith('status-') && name !== 'status-pill')?.slice(7);
       const status = guruNormBlockStatus(raw);
-      const title = header.querySelector('.g1-card-title')?.textContent.trim() || id;
-      const selector = channel ? `[data-g4camp-toggle="${CSS.escape(node.dataset.g4campToggle)}"]`
+      const title = header.querySelector('.g1-card-title, .g1-section-title')?.textContent.trim() || id;
+      const selector = blog ? `[data-gate4-blog-scope="${blog}"] > summary` : channel ? `[data-g4camp-toggle="${CSS.escape(node.dataset.g4campToggle)}"]`
         : kind === 'gate4-readiness' ? `[data-g4-readiness-card="${CSS.escape(id)}"] > summary`
         : `[data-g4five-${scope === 'company' ? 'company' : 'product'}-v523] [data-g4five-tool-v523="${CSS.escape(id)}"]${linked ? ' > .g1-card' : ''} > .g1-card-header-static`;
       result.push({ id, title, kind, scope, productId: scope === 'product' ? productId : '', status,
@@ -719,6 +810,7 @@ function nowGuideGate4Items() {
   return items;
 }
 function nowGuideGate4Missing(item) {
+  if (item.kind === "gate4-blog") return nowGuideGate1Missing({ ...item, calculate: `blog-${item.scope}` });
   if (item.kind !== 'channel') {
     // These source blocks already own their status calculators. Manual
     // readiness rows emit targets in that same calculator below.
@@ -830,6 +922,7 @@ function nowGuideReveal34(item) {
     });
   }
   nowGuideOpenAncestors(header);
+  if (item.kind === "gate4-blog") guruAutosizeProgressively(header.parentElement);
 }
 function nowGuideGate4EditorTemplate(item, revealSteps = false) {
   const html = nowGuidePlainRead(() => {
@@ -974,6 +1067,20 @@ function nowGuideSafeText(value) {
     .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}]/gu, "").trim();
 }
 
+function nowGuideDisplayTitle(item) {
+  const title = nowGuideSafeText(item.title);
+  if (!window.GuruBlockTitles || !item.gateId || ["gate-6", "gate-7"].includes(item.gateId))
+    return title;
+  let scope = item.scope || (item.productId ? "product" : "company");
+  if (item.gateId === "gate-0") {
+    const card = state?.gates?.find((gate) => gate.id === "gate-0")?.cards?.find((entry) => entry.id === item.id);
+    scope = GATE0_PRODUCT_SECTION_TITLES.includes(item.title) || card && gate0DiagnosticScope(card) === "product"
+      ? "product" : "company";
+  } else if (["gate-3", "gate-5", "gate-8"].includes(item.gateId)) scope = "product";
+  else if (/·\s*Продукт\s*[\/-]\s*Услуга\s*$/u.test(title)) scope = "product";
+  return window.GuruBlockTitles.displayName(title, scope);
+}
+
 function nowGuideDescriptors(gate, statuses) {
   const id = gate.id;
   const card = (item) => ({ id: item.id, title: item.title, kind: "card", status: item.status });
@@ -1018,8 +1125,8 @@ function nowGuideDescriptors(gate, statuses) {
 
 function nowGuideBuildAllBlocks() {
   if (!state?.gates) return [];
-  // The complete snapshot is the data version, including unsaved edits and
-  // product_id. No revision field is written to the project. Keep one entry.
+  // The screen revision includes unsaved edits and product selection. It is
+  // kept outside the project so guide caching never changes source data.
   const version = nowGuideDataVersion();
   if (nowGuideRegistryCache?.version === version)
     return nowGuideRegistryCache.items.map(item => ({ ...item }));
@@ -1097,7 +1204,7 @@ function nowGuideSetGateExpanded(button, expanded) {
   button.title = label;
 }
 
-function nowGuideRender(path, registry) {
+function nowGuideRender(path, registry, options = {}) {
   const panel = document.getElementById("nowGuide");
   if (!panel || !state?.gates) return;
   return nowGuideWithReadPass(() => {
@@ -1121,7 +1228,7 @@ function nowGuideRender(path, registry) {
        ${progress}${finished
     ? `<strong class="now-guide-finished">Можно запускать рекламу</strong><button type="button" class="now-guide-link" data-now-launch>К кампаниям выбранного продукта</button>
        <div class="now-guide-gate">После запуска: ${after.length} блоков не готово</div>${after.length ? `<button type="button" class="now-guide-link" data-now-after>К первому неготовому после запуска</button>` : ""}`
-    : current ? `<div class="now-guide-block">${escapeHtml(nowGuideSafeText(current.title))}</div>
+    : current ? `<div class="now-guide-block">${escapeHtml(nowGuideDisplayTitle(current))}</div>
        ${nowGuideMissingHtml(current, missingDetails)}
        <div class="now-guide-gate">Gate ${current.gateId.replace("gate-", "")} · ${escapeHtml(NOW_GATE_NAMES[current.gateId] || "")}</div>`
     : `<div class="now-guide-block">Предполётный путь пока пуст</div>`}
@@ -1129,9 +1236,12 @@ function nowGuideRender(path, registry) {
        <button type="button" class="now-guide-link" data-now-current>К текущему</button>` : ""}`;
   const nav = document.getElementById("gateNav");
   if (!nav) return;
-  nav.querySelectorAll("[data-now-children]").forEach((node) => node.remove());
+  nav.querySelectorAll("[data-now-children]").forEach((node) => {
+    if (!options.onlyGateId || node.dataset.nowChildren === options.onlyGateId) node.remove();
+  });
   nav.querySelectorAll(".gate-btn[data-gate-id]").forEach((button) => {
     const gateId = button.dataset.gateId;
+    if (options.onlyGateId && gateId !== options.onlyGateId) return;
     const children = all.filter((item) => item.gateId === gateId);
     // Navigation and disclosure are separate sibling buttons. The existing
     // gate button retains its original navigation listener and identity.
@@ -1164,7 +1274,7 @@ function nowGuideRender(path, registry) {
     list.id = `now-guide-children-${gateId}`;
     list.className = "now-guide-children";
     list.dataset.nowChildren = gateId;
-    list.innerHTML = children.map((item) => `<button type="button" class="now-guide-child ${item.key === current?.key ? "is-current" : ""}" data-now-step="${escapeAttr(item.key)}" title="${escapeAttr(nowGuideSafeText(item.title))}"><span class="now-guide-dot ${item.status === "ready" || item.status === "not_required" ? "is-done" : ""}"></span><span>${escapeHtml(nowGuideSafeText(item.title))}${nowGuideIsPreflight(item) ? "" : " · После запуска"}</span></button>`).join("");
+    list.innerHTML = children.map((item) => `<button type="button" class="now-guide-child ${item.key === current?.key ? "is-current" : ""}" data-now-step="${escapeAttr(item.key)}" title="${escapeAttr(nowGuideDisplayTitle(item))}"><span class="now-guide-dot ${item.status === "ready" || item.status === "not_required" ? "is-done" : ""}"></span><span>${escapeHtml(nowGuideDisplayTitle(item))}${nowGuideIsPreflight(item) ? "" : " · После запуска"}</span></button>`).join("");
     row.insertAdjacentElement("afterend", list);
     disclosure.setAttribute("aria-controls", list.id);
     nowGuideSetGateExpanded(disclosure, expanded);
@@ -1174,6 +1284,12 @@ function nowGuideRender(path, registry) {
 
 function nowGuideSelect(item, path = nowGuideBuildPath()) {
   if (!item) return;
+  // Establish the project/product context before choosing the requested
+  // step. The first render after a product switch otherwise resets the key
+  // and leaves the guide on a different block from the one scrolled into view.
+  nowGuideCurrent(path);
+  nowGuideNavigationSnapshotActive = true;
+  nowGuideNavigationSnapshot = null;
   nowGuideReviewKey = item.key;
   nowGuideExpanded.add(item.gateId);
   nowGuideRender(path, path === nowGuideDisplayedPath ? nowGuideDisplayedAllBlocks : undefined);
@@ -1218,7 +1334,9 @@ function nowGuideFindNode(item) {
   if (item.kind === "comparison") return root.querySelector("[data-project-comparison-toggle]");
   if (item.kind === "audience") return root.querySelector("[data-target-audience-toggle]");
   const candidates = [...root.querySelectorAll("h2,h3,h4,.g1-card-title,.subblock-title,.work-card-title")];
-  return candidates.find((node) => nowGuideSafeText(node.textContent) === nowGuideSafeText(item.title)) || null;
+  return candidates.find((node) => nowGuideSafeText(
+    node.dataset.guruBlockTitleOriginal || node.textContent,
+  ) === nowGuideSafeText(item.title)) || null;
 }
 
 function nowGuideReveal(item) {
@@ -1296,6 +1414,10 @@ function nowGuideReveal(item) {
 function nowGuideOpen(item, missing = null) {
   if (!item) return;
   if (missing?.sourceItem) return nowGuideOpen(missing.sourceItem, { ...missing, sourceItem: null });
+  if (!nowGuideNavigationSnapshotActive) {
+    nowGuideNavigationSnapshotActive = true;
+    nowGuideNavigationSnapshot = null;
+  }
   nowGuideProtectedGate = item.gateId;
   const ticket = ++nowGuideNavigationTicket;
   nowGuideGate1NavigationPending = item.gateId === "gate-1";
@@ -1311,10 +1433,17 @@ function nowGuideOpen(item, missing = null) {
   const started = performance.now();
   let renderedAt = 0;
   const seek = () => {
-    if (ticket !== nowGuideNavigationTicket || activeGateId !== item.gateId) return;
+    if (ticket !== nowGuideNavigationTicket) return;
+    if (activeGateId !== item.gateId) {
+      nowGuideNavigationSnapshotActive = false;
+      nowGuideNavigationSnapshot = null;
+      return;
+    }
     if (guruRenderedGateId === item.gateId && !renderedAt) renderedAt = performance.now();
     if (renderedAt && nowGuideReveal(item)) {
       nowGuideGate1NavigationPending = false;
+      nowGuideNavigationSnapshotActive = false;
+      nowGuideNavigationSnapshot = null;
       if (missing && !missing.fallback) {
         if (item.gateId === "gate-4") nowGuideGate4RevealMissing(item, missing);
         const field = nowGuideMissingNode(missing);
@@ -1322,7 +1451,7 @@ function nowGuideOpen(item, missing = null) {
           for (let parent = field.parentElement; parent && parent !== els.contentArea; parent = parent.parentElement) {
             if (["gate-1", "gate-2", "gate-3", "gate-4"].includes(item.gateId)) {
               if (parent.hidden) parent.hidden = false;
-              if (parent.matches(".target-audience-card, .uv130-item, .g1-card, .unit-direction-group")) {
+              if (parent.matches(".target-audience-panel, .uv130-item, .g1-card, .unit-direction-group")) {
                 parent.classList.add("is-open"); parent.classList.remove("is-collapsed");
               }
             }
@@ -1360,12 +1489,22 @@ function nowGuideOpen(item, missing = null) {
     }
     if ((renderedAt && performance.now() - renderedAt < 15000) ||
         (!renderedAt && performance.now() - started < 120000)) setTimeout(seek, 75);
+    else {
+      nowGuideNavigationSnapshotActive = false;
+      nowGuideNavigationSnapshot = null;
+    }
   };
   setTimeout(seek, 0);
 }
 
 const nowGuidePreviousRenderGateNav = renderGateNav;
 renderGateNav = function (...args) {
+  // Gate 1 input and blur share the deferred assessment below. Rebuilding
+  // navigation here would synchronously assess every gate between cells.
+  if (activeGateId === "gate-1" && guruUserEditDispatchActive) return;
+  // Fast Gate transitions only change the selected menu button. Entering a
+  // read pass here used to prepare an entire workspace view for that toggle.
+  if (guruFastGateNavigation) return nowGuidePreviousRenderGateNav.apply(this, args);
   const renderNavigation = () => {
     const result = nowGuidePreviousRenderGateNav.apply(this, args);
     if (!(guruUserEditDispatchActive && guruUserEditEventType === "input") && !guruFastGateNavigation)
@@ -1404,15 +1543,26 @@ document.getElementById("nowGuide")?.addEventListener("click", (event) => {
   }
 });
 
-let nowGuideMissingRefreshQueued = false;
+let nowGuideMissingRefreshTimer = 0;
+let nowGuideMissingRefreshIdle = 0;
+let nowGuideMissingRefreshEpoch = 0;
 function nowGuideScheduleMissingRefresh(event) {
+  if (event.target?.matches?.("[data-goat-product-implemented-v554], [data-goat-product-exclude-v553]")) return;
   // Product-picker drafts stay outside project data until Save is pressed.
   if (event.target?.closest?.("[data-mega-platform-picker]")) return;
   if (!event.target?.closest?.("#contentArea") || nowGuideCurrent(nowGuideDisplayedPath)?.gateId !== "gate-0") return;
-  if (nowGuideMissingRefreshQueued) return;
-  nowGuideMissingRefreshQueued = true;
-  queueMicrotask(() => nowGuideWithReadPass(() => {
-    nowGuideMissingRefreshQueued = false;
+  const workspace = state;
+  const projectId = activeProjectId;
+  const gateId = activeGateId;
+  const epoch = ++nowGuideMissingRefreshEpoch;
+  clearTimeout(nowGuideMissingRefreshTimer);
+  if (nowGuideMissingRefreshIdle && typeof cancelIdleCallback === "function")
+    cancelIdleCallback(nowGuideMissingRefreshIdle);
+  nowGuideMissingRefreshIdle = 0;
+  const refresh = () => nowGuideWithReadPass(() => {
+    nowGuideMissingRefreshIdle = 0;
+    if (epoch !== nowGuideMissingRefreshEpoch || state !== workspace ||
+        activeProjectId !== projectId || activeGateId !== gateId) return;
     const gate = state?.gates?.find((gate) => gate.id === "gate-0");
     if (!gate) return;
     const statuses = guruGateBlockStatuses(gate);
@@ -1442,18 +1592,68 @@ function nowGuideScheduleMissingRefresh(event) {
       const current = document.querySelector("#nowGuide .now-guide-missing");
       if (current && current.outerHTML !== html) current.outerHTML = html;
     }
-  }));
+  });
+  nowGuideMissingRefreshTimer = setTimeout(() => {
+    nowGuideMissingRefreshTimer = 0;
+    if (epoch !== nowGuideMissingRefreshEpoch) return;
+    if (typeof requestIdleCallback === "function")
+      nowGuideMissingRefreshIdle = requestIdleCallback(refresh, { timeout: 800 });
+    else setTimeout(refresh, 0);
+  }, event.type === "change" ? 150 : 350);
 }
-let nowGuideGate12RefreshQueued = false;
+let nowGuideGate12RefreshTimer = 0;
+let nowGuideGate12RefreshIdle = 0;
+let nowGuideGate12RefreshEpoch = 0;
+let nowGuideGate1RefreshTimer = 0;
+let nowGuideGate1RefreshIdle = 0;
+let nowGuideGate1RefreshTask = null;
+function nowGuideQueueGate1Refresh(task = nowGuideGate1RefreshTask) {
+  nowGuideGate1RefreshTask = task;
+  clearTimeout(nowGuideGate1RefreshTimer);
+  if (nowGuideGate1RefreshIdle && typeof cancelIdleCallback === "function")
+    cancelIdleCallback(nowGuideGate1RefreshIdle);
+  nowGuideGate1RefreshIdle = 0;
+  if (!task) return;
+  nowGuideGate1RefreshTimer = setTimeout(() => {
+    nowGuideGate1RefreshTimer = 0;
+    const run = () => {
+      nowGuideGate1RefreshIdle = 0;
+      if (Date.now() - guruLastUserEditAt < 400) {
+        nowGuideQueueGate1Refresh();
+        return;
+      }
+      const pending = nowGuideGate1RefreshTask;
+      nowGuideGate1RefreshTask = null;
+      pending?.();
+    };
+    if (typeof requestIdleCallback === "function")
+      nowGuideGate1RefreshIdle = requestIdleCallback(run, { timeout: 1000 });
+    else nowGuideGate1RefreshTimer = setTimeout(run, 0);
+  }, 400);
+}
+for (const type of ["pointerdown", "keydown", "focusin"])
+  document.addEventListener(type, event => {
+    if (activeGateId === "gate-1" && nowGuideGate1RefreshTask && event.target?.closest?.("#contentArea"))
+      nowGuideQueueGate1Refresh();
+  }, true);
 function nowGuideScheduleGate12Refresh(event) {
+  // Product-card decisions already publish their own section status and
+  // update the cached guide registry. Reassessing every Gate 1 block here
+  // clones the full workspace and delays the next interaction.
+  if (event.target?.matches?.("[data-goat-product-implemented-v554], [data-goat-product-exclude-v553]")) return;
   if (event.target?.closest?.("[data-mega-platform-picker]")) return;
+  // The add-competitor form is only a draft until submit. Its keystrokes do
+  // not alter readiness and must not start a costly Gate 1 assessment.
+  if (event.target?.closest?.("[data-company-competitor-form]")) return;
   if (!event.target?.closest?.("#contentArea") ||
       (!["gate-1", "gate-2", "gate-3", "gate-4"].includes(activeGateId) &&
        !(activeGateId === "gate-0" && nowGuideCurrent(nowGuideDisplayedPath)?.gateId === "gate-3"))) return;
-  if (nowGuideGate12RefreshQueued) return;
-  nowGuideGate12RefreshQueued = true;
-  queueMicrotask(() => {
-    nowGuideGate12RefreshQueued = false;
+  const workspace = state, gateId = activeGateId;
+  const productId = state?.project?.gate0ScopeUiV194?.selectedProductId;
+  const refresh = () => nowGuideWithReadPass(() => {
+    nowGuideGate12RefreshIdle = 0;
+    if (state !== workspace || activeGateId !== gateId ||
+        state?.project?.gate0ScopeUiV194?.selectedProductId !== productId) return;
     const gate = state.gates.find((gate) => gate.id === activeGateId);
     if (!gate || !["gate-0", "gate-1", "gate-2", "gate-3", "gate-4"].includes(gate.id)) return;
     const { statuses, descriptors } = nowGuideWithReadPass(() => {
@@ -1468,7 +1668,7 @@ function nowGuideScheduleGate12Refresh(event) {
     guruGateReadinessCache.set(gate.id, summary);
     const menu = document.querySelector(`[data-gate-id="${gate.id}"] .small`);
     if (menu) menu.textContent = `${summary.total} блоков, прогресс ${summary.percent}%`;
-    if (gate.id === "gate-1") nowGuideGate1Refresh();
+    if (gate.id === "gate-1") nowGuideGate1Refresh(descriptors, true);
     if (gate.id === "gate-4") descriptors.forEach(item => {
       // A canonical campaign can be shown in two funnel rows. Both views
       // display the same assessment; the path still contains it only once.
@@ -1496,21 +1696,88 @@ function nowGuideScheduleGate12Refresh(event) {
       : item.gateId === "gate-3" ? { ...item, status: journeyById.get(item.id) || item.status } : item);
     nowGuideRender(updated, registry);
   });
+  if (activeGateId === "gate-1") nowGuideQueueGate1Refresh(refresh);
+  else {
+    const epoch = ++nowGuideGate12RefreshEpoch;
+    clearTimeout(nowGuideGate12RefreshTimer);
+    if (nowGuideGate12RefreshIdle && typeof cancelIdleCallback === "function")
+      cancelIdleCallback(nowGuideGate12RefreshIdle);
+    nowGuideGate12RefreshIdle = 0;
+    nowGuideGate12RefreshTimer = setTimeout(() => {
+      nowGuideGate12RefreshTimer = 0;
+      if (epoch !== nowGuideGate12RefreshEpoch) return;
+      const run = () => {
+        if (epoch === nowGuideGate12RefreshEpoch) refresh();
+      };
+      if (typeof requestIdleCallback === "function")
+        nowGuideGate12RefreshIdle = requestIdleCallback(run, { timeout: 800 });
+      else setTimeout(run, 0);
+    }, event.type === "change" ? 150 : 350);
+  }
 }
 document.addEventListener("input", nowGuideScheduleGate12Refresh);
 document.addEventListener("change", nowGuideScheduleGate12Refresh);
+
+let nowGuideProductDecisionRenderQueuedV554 = false;
+function nowGuideProductDecisionChangedV554(productId, section, status) {
+  if (!productId || !GOAT_PRODUCT_COUNTED_SECTION_SET_V553.has(section) ||
+      state?.project?.gate0ScopeUiV194?.selectedProductId !== productId ||
+      !nowGuideDisplayedAllBlocks.length) return;
+  const key = `gate-1:product-card-section:${productId}:card-24:${section}`;
+  const all = nowGuideDisplayedAllBlocks.slice();
+  const currentIndex = all.findIndex((item) => item.key === key);
+  if (status === "excluded") {
+    if (currentIndex >= 0) all.splice(currentIndex, 1);
+  } else if (currentIndex >= 0) {
+    all[currentIndex] = { ...all[currentIndex], status };
+  } else {
+    const order = GOAT_PRODUCT_COUNTED_SECTIONS_V553.indexOf(section);
+    const item = { id: `card-24:${section}`, title: GOAT_PRODUCT_COUNTED_SECTION_TITLES_V553[order], kind: "product-card-section",
+      section, productId, gateId: "gate-1", key, status };
+    let insert = all.findIndex((entry) => entry.gateId === "gate-1" &&
+      entry.kind === "product-card-section" && entry.productId === productId &&
+      GOAT_PRODUCT_COUNTED_SECTIONS_V553.indexOf(entry.section) > order);
+    if (insert < 0) {
+      let before = -1;
+      for (let index = 0; index < all.length; index++) {
+        const entry = all[index];
+        if (entry.gateId === "gate-1" && entry.kind === "product-card-section" &&
+            entry.productId === productId) before = index;
+      }
+      insert = before >= 0 ? before + 1 : all.findIndex((entry) =>
+        (entry.gateId === "gate-1" && entry.id === "unit-economics") ||
+        Number(entry.gateId?.slice(5)) > 1);
+    }
+    all.splice(insert < 0 ? all.length : insert, 0, item);
+  }
+  nowGuideDisplayedAllBlocks = all;
+  nowGuideDisplayedPath = nowGuidePreflightPath(all);
+  nowGuideRegistryCache = { version: nowGuideDataVersion(), items: all };
+  if (nowGuideProductDecisionRenderQueuedV554) return;
+  nowGuideProductDecisionRenderQueuedV554 = true;
+  const workspace = state;
+  const projectId = activeProjectId;
+  requestAnimationFrame(() => setTimeout(() => {
+    nowGuideProductDecisionRenderQueuedV554 = false;
+    if (state !== workspace || activeProjectId !== projectId) return;
+    const nav = document.getElementById("gateNav");
+    const scrollTop = nav?.scrollTop || 0;
+    nowGuideRender(nowGuideDisplayedPath, nowGuideDisplayedAllBlocks, { onlyGateId: "gate-1" });
+    if (nav) nav.scrollTop = scrollTop;
+  }, 0));
+}
 const nowGuidePreviousRenderGate1 = renderGate1Accordion;
 renderGate1Accordion = function (...args) {
   let result;
   if (nowGuideGate1NavigationPending) {
     // Some legacy rendering migrations use structuredClone. A plain private
     // workspace supports them while keeping the live project unchanged.
-    const html = guruExportWithoutPersistenceV223(() => nowGuideGate12WithView((workspace) => {
+    const html = nowGuideWithReadPass(() => guruExportWithoutPersistenceV223(() => nowGuideGate12WithView((workspace) => {
       const gate = workspace.gates.find((gate) => gate.id === "gate-1");
       const ids = new Set((args[1] || gate.cards).map((card) => card.id));
       nowGuidePreviousRenderGate1.call(this, gate, gate.cards.filter((card) => ids.has(card.id)));
       return els.contentArea.innerHTML;
-    }, guruExportDiagnosticCloneV223(state)));
+    }, nowGuidePrivateView(state))));
     if (html) {
       // Rebind controls against the live workspace after rendering the
       // private view; no event handler retains a scratch model.

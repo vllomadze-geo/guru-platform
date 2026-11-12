@@ -78,6 +78,7 @@ function gate1SeoGuideLinkedLabelV310(container, selector, kind, text, source) {
 function gate1SeoGuideCardV307(root, title) {
   return [...(root?.querySelectorAll?.("[data-card]") || [])].find(
     (node) => gate1SeoGuideTextV307(
+      findCard(node.dataset.card)?.title ||
       node.querySelector(":scope > .g1-card-header .g1-card-title")?.textContent,
     ) === title,
   ) || null;

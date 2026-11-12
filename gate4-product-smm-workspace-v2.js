@@ -296,7 +296,7 @@ function g4ProductSmmNativePreviewV532(row, value, product, format, topic, idea)
   return `<div class="g4-product-smm-social-post-v2 g4-smm-native-preview-v532 is-${escapeAttr(row.preview_model)} is-platform-${escapeAttr(row.platform_id)}" data-g4-product-smm-social-preview-v2="${escapeAttr(idea.id)}" data-g4-smm-preview-renderer-v532="${escapeAttr(row.preview_renderer)}">${body}${followUp || link ? `<div class="g4-smm-native-followup-v532">${followUp}${link}</div>` : ""}</div>`;
 }
 
-function g4ProductSmmPreviewCardsV529(idea, strategy, product, ctaListId = "") {
+function g4ProductSmmPreviewCardsV529(idea, strategy, product) {
   const format = (strategy.formats || []).find((row) => row.id === idea.primaryTaskFormatId);
   const topic = (strategy.topics || []).find((row) => row.id === idea.topicId);
   const readiness = g4SmmIdeaReadinessV529(idea);
@@ -309,7 +309,7 @@ function g4ProductSmmPreviewCardsV529(idea, strategy, product, ctaListId = "") {
       const attributes = `data-g4-product-smm-override-field-v529="${key}" data-g4-product-smm-idea-id-v529="${escapeAttr(idea.id)}" data-g4-product-smm-platform-id-v529="${escapeAttr(row.platform_id)}"`;
       return `<label>${escapeHtml(label)}${multiline
         ? `<textarea rows="3" placeholder="${escapeAttr(placeholder)}" ${attributes}>${escapeHtml(override[key] ?? "")}</textarea>`
-        : `<input type="text" value="${escapeAttr(override[key] ?? "")}" placeholder="${escapeAttr(placeholder)}" ${key === "cta" && ctaListId ? `list="${escapeAttr(ctaListId)}"` : ""} ${attributes}>`}</label>`;
+        : `<input type="text" value="${escapeAttr(override[key] ?? "")}" placeholder="${escapeAttr(placeholder)}" ${attributes}>`}</label>`;
     };
     return `<article class="g4-smm-pair-card-v529" data-g4-product-smm-pair-card-v529="${escapeAttr(row.platform_id)}" data-g4-smm-pair-format-v532="${escapeAttr(row.format_id)}">
       <header><strong>${escapeHtml(row.display_name)}</strong><span>${escapeHtml(row.native_format)}</span><em class="${ready ? "is-ready" : "is-pending"}">${ready ? "Готово" : reason}</em></header>
@@ -329,46 +329,26 @@ function g4ProductSmmPreviewCardsV529(idea, strategy, product, ctaListId = "") {
   }).join("") || '<p class="g4-product-smm-empty-v2">Выберите площадки для этой идеи.</p>';
 }
 
-function g4ProductSmmCtaSuggestionsV531(product, workspace = state) {
-  if (!product?.id) return [];
-  // Match the offer record shown by the strategic foundation, while reading
-  // the existing Gate 0 records without creating or copying a data source.
-  const offers = g4SmmScopedRecordsReadOnlyV299(product, "offers", workspace);
-  const record = guruStrategicCurrentRecordV286({ scoped: { offers } }, "offers");
-  const seen = new Set();
-  return guruStrategicOfferCtasV286(guruV194OfferParts(record || {})).filter(({ value }) => {
-    const key = value.toLocaleLowerCase("ru-RU");
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
 function g4ProductSmmSocialPreviewV2(idea, content, strategy, product) {
   const format = (strategy.formats || []).find((row) => row.id === idea.primaryTaskFormatId);
   const selected = new Set(idea.selectedPlatformIds || []);
   const readiness = g4SmmIdeaReadinessV529(idea);
   const base = idea.base || {};
   const initial = g4SmmIdeaEffectiveContentV529(idea);
-  const ctaSuggestions = g4ProductSmmCtaSuggestionsV531(product);
-  const ctaListId = `g4-product-smm-cta-v531-${idea.id}`;
   const field = (key, label, multiline = false) => `<label>${escapeHtml(label)}${multiline
     ? `<textarea rows="5" data-g4-product-smm-base-field-v529="${key}" data-g4-product-smm-idea-id-v529="${escapeAttr(idea.id)}">${escapeHtml(initial[key] || "")}</textarea>`
-    : `<input type="text" value="${escapeAttr(initial[key] || "")}" ${key === "cta" && ctaSuggestions.length ? `list="${escapeAttr(ctaListId)}"` : ""} data-g4-product-smm-base-field-v529="${key}" data-g4-product-smm-idea-id-v529="${escapeAttr(idea.id)}">`}</label>`;
-  const ctaSuggestionsHtml = ctaSuggestions.length
-    ? `<div class="g4-smm-cta-suggestions-v531" aria-label="CTA из стратегической основы"><small>Из стратегической основы · Продукт/Услуга</small><div>${ctaSuggestions.map(({ key, label, value }) => `<button type="button" class="g4-smm-cta-suggestion-v531 ${value === initial.cta ? "is-selected" : ""}" data-g4-product-smm-cta-suggestion-v531="${escapeAttr(value)}" aria-pressed="${value === initial.cta}"><small>${escapeHtml(label)}</small><span>${escapeHtml(value)}</span></button>`).join("")}</div><datalist id="${escapeAttr(ctaListId)}">${ctaSuggestions.map(({ label, value }) => `<option value="${escapeAttr(value)}" label="${escapeAttr(label)}"></option>`).join("")}</datalist></div>`
-    : '<small class="g4-smm-cta-empty-v531">CTA для этого продукта пока не зафиксированы в стратегической основе.</small>';
+    : `<input type="text" value="${escapeAttr(initial[key] || "")}" data-g4-product-smm-base-field-v529="${key}" data-g4-product-smm-idea-id-v529="${escapeAttr(idea.id)}">`}</label>`;
   return `<div class="g4-smm-pair-workspace-v529" data-g4-product-smm-pair-workspace-v529="${escapeAttr(idea.id)}">
     <div class="g4-smm-pair-editor-v529"><h4>Общий редактор</h4><small>Один исходный материал для всех выбранных площадок</small>
       ${field("title", "Заголовок")}${field("text", "Текст", true)}
       <label class="g4-smm-pair-media-label-v529">Фото / видео<input type="file" accept="image/*,video/*" data-g4-product-smm-media-upload-v529 data-g4-product-smm-idea-id-v529="${escapeAttr(idea.id)}"></label>
       ${base.media ? `<small>${escapeHtml(base.media.name || "Медиа загружено")} · ${base.media.width || "?"}×${base.media.height || "?"}${base.media.duration ? ` · ${Math.round(base.media.duration)} сек` : ""}</small>` : ""}
-      ${field("cta", "CTA")}${ctaSuggestionsHtml}${field("link", "Ссылка")}
+      ${field("cta", "CTA")}${field("link", "Ссылка")}
       <div class="g4-smm-pair-picker-v529 g4-smm-platform-chips-v335"><strong>Площадки идеи</strong>${g4SmmMatrixRowsV529(idea.primaryTaskFormatId).map((row) => `<label class="g4-smm-platform-option-v530"><input type="checkbox" data-g4-product-smm-idea-platform-v529="${escapeAttr(row.platform_id)}" data-g4-product-smm-idea-id-v529="${escapeAttr(idea.id)}" ${selected.has(row.platform_id) ? "checked" : ""}><span>${escapeHtml(row.display_name)}</span></label>`).join("") || "Сначала выберите формат"}</div>
       ${idea.legacyPlatforms?.length ? `<small>Сохранённые старые площадки: ${escapeHtml(idea.legacyPlatforms.join(", "))}. Проверьте совместимость.</small>` : ""}
     </div>
     <div class="g4-smm-pair-previews-v529"><div class="g4-smm-pair-toolbar-v529"><strong data-g4-product-smm-readiness-v529>Готово ${readiness.ready} из ${readiness.total} площадок</strong><span><button type="button" data-g4-product-smm-preview-shift-v529="-1" aria-label="Предыдущая площадка">‹</button><button type="button" data-g4-product-smm-preview-shift-v529="1" aria-label="Следующая площадка">›</button></span></div>
-      <div class="g4-smm-pair-rail-v529" data-g4-product-smm-preview-rail-v529>${g4ProductSmmPreviewCardsV529(idea, strategy, product, ctaSuggestions.length ? ctaListId : "")}</div>
+      <div class="g4-smm-pair-rail-v529" data-g4-product-smm-preview-rail-v529>${g4ProductSmmPreviewCardsV529(idea, strategy, product)}</div>
     </div>
   </div>`;
 }

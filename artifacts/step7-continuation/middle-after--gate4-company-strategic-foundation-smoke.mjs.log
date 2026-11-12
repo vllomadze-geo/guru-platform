@@ -1,0 +1,9 @@
+file:///private/tmp/guru-step7-after-middle/scripts/gate4-company-strategic-foundation-smoke.mjs:9
+  if (!condition) throw new Error(message);
+                        ^
+
+Error: Company/product selector/foundation/launch order is wrong
+    at assert (file:///private/tmp/guru-step7-after-middle/scripts/gate4-company-strategic-foundation-smoke.mjs:9:25)
+    at file:///private/tmp/guru-step7-after-middle/scripts/gate4-company-strategic-foundation-smoke.mjs:289:3
+
+Node.js v22.14.0

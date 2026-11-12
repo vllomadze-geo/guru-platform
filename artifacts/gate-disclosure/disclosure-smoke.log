@@ -1,0 +1,104 @@
+{
+  "fixture": "/private/tmp/guru-now-korich-workspace.json",
+  "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+  "toggles": [
+    {
+      "open": true,
+      "gate": "gate-0",
+      "rootSame": true,
+      "focused": true,
+      "width": 44,
+      "height": 44,
+      "gateId": "gate-0"
+    },
+    {
+      "open": true,
+      "gate": "gate-0",
+      "rootSame": true,
+      "focused": true,
+      "width": 44,
+      "height": 44,
+      "gateId": "gate-1"
+    },
+    {
+      "open": true,
+      "gate": "gate-0",
+      "rootSame": true,
+      "focused": true,
+      "width": 44,
+      "height": 44,
+      "gateId": "gate-2"
+    },
+    {
+      "open": true,
+      "gate": "gate-0",
+      "rootSame": true,
+      "focused": true,
+      "width": 44,
+      "height": 44,
+      "gateId": "gate-3"
+    },
+    {
+      "open": true,
+      "gate": "gate-0",
+      "rootSame": true,
+      "focused": true,
+      "width": 44,
+      "height": 44,
+      "gateId": "gate-4"
+    },
+    {
+      "open": true,
+      "gate": "gate-0",
+      "rootSame": true,
+      "focused": true,
+      "width": 44,
+      "height": 44,
+      "gateId": "gate-5"
+    },
+    {
+      "open": true,
+      "gate": "gate-0",
+      "rootSame": true,
+      "focused": true,
+      "width": 44,
+      "height": 44,
+      "gateId": "gate-6"
+    },
+    {
+      "open": true,
+      "gate": "gate-0",
+      "rootSame": true,
+      "focused": true,
+      "width": 44,
+      "height": 44,
+      "gateId": "gate-8"
+    }
+  ],
+  "disclosureOnly": {
+    "gate": "gate-0",
+    "rendered": "gate-0",
+    "expanded": [],
+    "counts": {
+      "guruNavigateToGate": 0,
+      "renderGate": 0,
+      "nowGuideRender": 0,
+      "nowGuideBuildAllBlocks": 0,
+      "saveState": 0
+    }
+  },
+  "exportUnchanged": true,
+  "navigationIndependent": true,
+  "keyboard": true,
+  "refresh": true,
+  "mobile": {
+    "drawerStaysOpen": true,
+    "noNavigationOrRender": true,
+    "navigationClosesDrawer": true
+  },
+  "stableDisclosurePosition": true,
+  "build": "2.3.526+4076b861d779",
+  "errors": [],
+  "passed": true
+}
+now-guide-disclosure-smoke: PASS

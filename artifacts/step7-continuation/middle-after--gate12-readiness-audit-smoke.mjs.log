@@ -1,0 +1,7 @@
+Коричное яблоко: тестовая копия загружена
+Списки рассчитаны [{"id":"gate-1","total":30,"done":5,"ready":5,"notRequired":0,"inProgress":6,"problem":4,"notStarted":15,"percent":33},{"id":"gate-2","total":19,"done":4,"ready":0,"notRequired":4,"inProgress":1,"problem":0,"notStarted":14,"percent":24}]
+Проверена видимость заголовков
+Продукт catalog-item-1790860377305-388c56 [{"id":"gate-1","total":30,"done":3,"ready":3,"notRequired":0,"inProgress":6,"problem":3,"notStarted":18,"percent":25},{"id":"gate-2","total":19,"done":4,"ready":0,"notRequired":4,"inProgress":1,"problem":0,"notStarted":14,"percent":24}]
+Продукт catalog-item-1786792591872-c8b1e9 [{"id":"gate-1","total":30,"done":4,"ready":4,"notRequired":0,"inProgress":7,"problem":3,"notStarted":16,"percent":30},{"id":"gate-2","total":19,"done":4,"ready":0,"notRequired":4,"inProgress":1,"problem":0,"notStarted":14,"percent":24}]
+Продукт catalog-item-1786792591872-98358d [{"id":"gate-1","total":30,"done":3,"ready":3,"notRequired":0,"inProgress":7,"problem":3,"notStarted":17,"percent":27},{"id":"gate-2","total":19,"done":4,"ready":0,"notRequired":4,"inProgress":1,"problem":0,"notStarted":14,"percent":24}]
+Продукт catalog-item-1786792591872-5f848a [{"id":"gate-1","total":30,"done":3,"ready":3,"notRequired":0,"inProgress":7,"problem":3,"notStarted":17,"percent":27},{"id":"gate-2","total":19,"done":4,"ready":0,"notRequired":4,"inProgress":1,"problem":0,"notStarted":14,"percent":24}]

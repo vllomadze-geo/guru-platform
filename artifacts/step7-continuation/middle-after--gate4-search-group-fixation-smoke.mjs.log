@@ -1,0 +1,11 @@
+file:///private/tmp/guru-step7-after-middle/scripts/gate4-search-group-fixation-smoke.mjs:73
+    throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
+          ^
+
+Error: Error: No ready Cinnamon Apple draft: [{"key":"primary:catalog-item-1786792591872-51f503","assessment":{"ready":false,"missing":["ключевых фраз (0 из 1)"],"phrases":0,"completeAds":3,"calloutsReady":true,"calloutLength":43,"filledCallouts":4,"errors":[],"enabled":false}},{"key":"additional-jtbd-1788609074828-88a3f1","assessment":null},{"key":"additional-jtbd-1788615285799-9a35ef","assessment":null}]
+    at <anonymous>:36:23
+    at <anonymous>:49:5
+    at evaluate (file:///private/tmp/guru-step7-after-middle/scripts/gate4-search-group-fixation-smoke.mjs:73:11)
+    at async file:///private/tmp/guru-step7-after-middle/scripts/gate4-search-group-fixation-smoke.mjs:155:17
+
+Node.js v22.14.0

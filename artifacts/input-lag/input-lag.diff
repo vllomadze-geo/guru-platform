@@ -1,0 +1,314 @@
+--- before/app.js
++++ after/app.js
+@@ -150,6 +150,15 @@
+ const STORAGE_BACKUP_PREFIX = "guru-backup-";
+ const STORAGE_RESCUE_PREFIX = "guru-rescue-";
+ let _storageWarningShown = false;
++// Save ordering is transient. It never adds metadata to a project or storage.
++const guruStorageWriteVersions = new Map();
++const guruWorkspaceSaveFeedback = new Set();
++
++function guruInvalidateQueuedWorkspaceSave(key) {
++  const version = (guruStorageWriteVersions.get(key) || 0) + 1;
++  guruStorageWriteVersions.set(key, version);
++  return version;
++}
+ 
+ function reportStorageFailure(key, err) {
+   console.error("Хранилище браузера переполнено, запись не удалась:", key, err);
+@@ -170,6 +179,7 @@
+ }
+ 
+ function safeStorageSet(key, value, options = {}) {
++  guruInvalidateQueuedWorkspaceSave(key);
+   try {
+     localStorage.setItem(key, value);
+     return true;
+@@ -178,6 +188,13 @@
+     return false;
+   }
+ }
++
++window.addEventListener("storage", (event) => {
++  if (event.key)
++    guruInvalidateQueuedWorkspaceSave(event.key);
++  else
++    for (const key of guruStorageWriteVersions.keys()) guruInvalidateQueuedWorkspaceSave(key);
++});
+ 
+ let projects = loadProjects();
+ let activeProjectId = null;
+@@ -33689,12 +33706,13 @@
+     _saveTimerSkipsDerivedRefresh = false;
+     guruAutosaveStateSmooth({ skipDerivedRefresh });
+   }, saveDelay);
+-  // Полный пересчёт Gate 0 во время набора текста выполняется общим
+-  // отложенным проходом после паузы. Клики и выборы обновляют статус сразу.
+-  const isTyping =
++  // Ввод и завершающий его change используют один отложенный пересчёт.
++  // Структурные действия кнопок сохраняют немедленное обновление.
++  const isFieldEdit =
+     typeof guruUserEditDispatchActive !== "undefined" &&
+-    guruUserEditDispatchActive && guruUserEditEventType === "input";
+-  if (activeGateId === "gate-0" && !isTyping && !_gate0RefreshPending) {
++    guruUserEditDispatchActive &&
++    (guruUserEditEventType === "input" || guruUserEditEventType === "change");
++  if (activeGateId === "gate-0" && !isFieldEdit && !_gate0RefreshPending) {
+     _gate0RefreshPending = true;
+     requestAnimationFrame(() => {
+       _gate0RefreshPending = false;
+@@ -36264,6 +36282,8 @@
+ const __guruPrevFlashSavingDirty = flashSaving;
+ flashSaving = function () {
+   _guruTabDirty = true;
++  if (activeProjectId)
++    guruInvalidateQueuedWorkspaceSave(WORKSPACE_STORAGE_PREFIX + activeProjectId);
+   __guruPrevFlashSavingDirty.apply(this, arguments);
+   // The v1.21 debounced autosave replaced earlier flashSaving wrappers, so
+   // refresh the visible product diagnosis from this final save path.
+@@ -42497,10 +42517,15 @@
+ // must see the edit guard before they touch the active field.
+ function guruBeginUserEditDispatch(event, type) {
+   if (!event.target?.closest?.("#contentArea")) return;
++  if (activeProjectId && !event.target.closest("[data-mega-platform-picker]"))
++    guruInvalidateQueuedWorkspaceSave(WORKSPACE_STORAGE_PREFIX + activeProjectId);
+   guruCancelDerivedRefresh();
+   guruLastUserEditAt = Date.now();
+   guruUserEditDispatchActive = true;
+   guruUserEditEventType = type;
++  // Draft-only controls may never call flashSaving. Resume an older pending
++  // refresh after their input too, rather than abandoning that work forever.
++  if (guruDerivedRefreshRequired) guruScheduleDerivedRefresh();
+   const token = ++guruUserEditDispatchToken;
+   setTimeout(() => {
+     if (token !== guruUserEditDispatchToken) return;
+@@ -42515,11 +42540,17 @@
+   guruBeginUserEditDispatch(event, "change");
+ }, true);
+ 
+-function guruPersistStateFast(options = {}) {
+-  const workspace = options.workspace || state;
+-  const projectId = options.projectId || activeProjectId;
+-  if (!workspace || !projectId) return false;
+-  const isActiveSnapshot = workspace === state && projectId === activeProjectId;
++// Moving between editors is still active work, even before a new value is
++// entered. Pause derived calculations during the focus handoff.
++for (const type of ["pointerdown", "keydown", "focusin"])
++  window.addEventListener(type, (event) => {
++    if (!event.target?.closest?.("#contentArea") ||
++        !event.target.closest("input, textarea, select, [contenteditable='true']")) return;
++    guruLastUserEditAt = Date.now();
++    if (guruDerivedRefreshRequired) guruScheduleDerivedRefresh();
++  }, true);
++
++function guruPrepareWorkspaceSave(workspace, options) {
+   workspace.updatedAt = new Date().toISOString();
+   if (options.durable === true) {
+     workspace._guruDurableMutationAt = workspace.updatedAt;
+@@ -42527,11 +42558,13 @@
+   }
+   workspace.schemaVersion = PLATFORM_VERSION;
+   if (typeof GURU_TAB_ID !== "undefined") workspace._guruTabId = GURU_TAB_ID;
+-  const saved = safeStorageSet(
+-    WORKSPACE_STORAGE_PREFIX + projectId,
+-    JSON.stringify(workspace),
+-  );
+-  if (saved && options.quiet !== true && isActiveSnapshot) {
++}
++
++function guruCommitWorkspaceSave(workspace, projectId, serialized, options) {
++  const feedback = options.quiet !== true || guruWorkspaceSaveFeedback.has(projectId);
++  const saved = safeStorageSet(WORKSPACE_STORAGE_PREFIX + projectId, serialized);
++  if (saved) guruWorkspaceSaveFeedback.delete(projectId);
++  if (saved && feedback && workspace === state && projectId === activeProjectId) {
+     els.saveStatus.textContent =
+       "Сохранено локально: " +
+       new Date().toLocaleTimeString("ru-RU", {
+@@ -42541,6 +42574,78 @@
+     els.autosaveDot.style.background = "#82d48d";
+   }
+   return saved;
++}
++
++function guruPersistStateFast(options = {}) {
++  const workspace = options.workspace || state;
++  const projectId = options.projectId || activeProjectId;
++  if (!workspace || !projectId) return false;
++  if (typeof options.serialized === "string")
++    return guruCommitWorkspaceSave(workspace, projectId, options.serialized, options);
++  guruPrepareWorkspaceSave(workspace, options);
++  return guruCommitWorkspaceSave(workspace, projectId, JSON.stringify(workspace), options);
++}
++
++let guruWorkspaceSaveWorker = null;
++let guruWorkspaceSaveWorkerFailed = false;
++let guruWorkspaceSaveJobId = 0;
++const guruWorkspaceSaveJobs = new Map();
++
++function guruCompleteWorkspaceSaveJob(id, serialized) {
++  const job = guruWorkspaceSaveJobs.get(id);
++  if (!job) return;
++  guruWorkspaceSaveJobs.delete(id);
++  clearTimeout(job.timer);
++  if (guruStorageWriteVersions.get(job.key) !== job.version ||
++      typeof projects !== "undefined" && !projects.some(project => project.id === job.projectId)) {
++    job.resolve(false);
++    return;
++  }
++  job.resolve(typeof serialized === "string"
++    ? guruPersistStateFast({ ...job.options, workspace: job.workspace, projectId: job.projectId, serialized })
++    : guruPersistStateFast({ ...job.options, workspace: job.workspace, projectId: job.projectId }));
++}
++
++function guruFailWorkspaceSaveWorker(event) {
++  event?.preventDefault?.();
++  guruWorkspaceSaveWorker?.terminate();
++  guruWorkspaceSaveWorker = null;
++  guruWorkspaceSaveWorkerFailed = true;
++  for (const id of [...guruWorkspaceSaveJobs.keys()]) guruCompleteWorkspaceSaveJob(id);
++}
++
++function guruQueueWorkspaceSave(options = {}) {
++  const workspace = options.workspace || state;
++  const projectId = options.projectId || activeProjectId;
++  if (!workspace || !projectId) return Promise.resolve(false);
++  if (typeof Worker !== "function" || guruWorkspaceSaveWorkerFailed)
++    return Promise.resolve(guruPersistStateFast(options));
++  if (!guruWorkspaceSaveWorker) {
++    try {
++      const source = document.querySelector('script[src*="app.js"]')?.src || location.href;
++      const url = new URL("workspace-save-worker.js", source);
++      if (typeof GURU_BUILD_INFO !== "undefined") url.searchParams.set("v", GURU_BUILD_INFO.version);
++      guruWorkspaceSaveWorker = new Worker(url);
++      guruWorkspaceSaveWorker.addEventListener("message", event =>
++        guruCompleteWorkspaceSaveJob(event.data.id, event.data.serialized));
++      guruWorkspaceSaveWorker.addEventListener("error", guruFailWorkspaceSaveWorker);
++      guruWorkspaceSaveWorker.addEventListener("messageerror", guruFailWorkspaceSaveWorker);
++    } catch (_) {
++      guruWorkspaceSaveWorkerFailed = true;
++      return Promise.resolve(guruPersistStateFast(options));
++    }
++  }
++  guruPrepareWorkspaceSave(workspace, options);
++  if (options.quiet !== true) guruWorkspaceSaveFeedback.add(projectId);
++  const key = WORKSPACE_STORAGE_PREFIX + projectId;
++  const version = guruInvalidateQueuedWorkspaceSave(key);
++  const id = ++guruWorkspaceSaveJobId;
++  return new Promise(resolve => {
++    const timer = setTimeout(() => guruCompleteWorkspaceSaveJob(id), 15000);
++    guruWorkspaceSaveJobs.set(id, { workspace, projectId, key, version, options, resolve, timer });
++    try { guruWorkspaceSaveWorker.postMessage({ id, workspace }); }
++    catch (_) { guruCompleteWorkspaceSaveJob(id); }
++  });
+ }
+ 
+ function guruCancelDerivedRefresh() {
+@@ -42578,7 +42683,7 @@
+   try {
+     syncEvidenceTexts();
+     guruGateReadinessCache = new Map();
+-    guruPersistStateFast({ quiet: true });
++    guruQueueWorkspaceSave({ quiet: true });
+     syncActiveProjectMeta();
+     guruRefreshReadiness({ statusesReady: true });
+     if (activeGateId === "gate-0")
+@@ -42631,6 +42736,11 @@
+ function guruScheduleDerivedRefresh() {
+   guruDerivedRefreshRequired = true;
+   guruCancelDerivedRefresh();
++  const quietDelay = 700 - (Date.now() - guruLastUserEditAt);
++  if (quietDelay > 0) {
++    guruDerivedRefreshTimer = setTimeout(guruScheduleDerivedRefresh, quietDelay);
++    return;
++  }
+   if (typeof requestIdleCallback === "function") {
+     guruDerivedRefreshHandle = requestIdleCallback(guruRunDerivedRefresh, {
+       timeout: 2400,
+@@ -42642,7 +42752,7 @@
+ 
+ function guruAutosaveStateSmooth(options = {}) {
+   if (!state || !activeProjectId) return;
+-  guruPersistStateFast();
++  guruQueueWorkspaceSave();
+   if (options.skipDerivedRefresh !== true || guruDerivedRefreshRequired)
+     guruScheduleDerivedRefresh();
+ }
+--- before/now-guide.js
++++ after/now-guide.js
+@@ -951,7 +951,11 @@
+ guruGateBlockStatuses = function (gate) {
+   // Gate 8 also reads these aggregates. Reuse their canonical assessment
+   // instead of rendering Gate 4 or recalculating every Gate 1 editor again.
+-  if (nowGuideRegistryCache && ["gate-0", "gate-1", "gate-3", "gate-4"].includes(gate?.id) &&
++  // Input/change already tells us that the snapshot is dirty. Comparing its
++  // complete JSON here blocks every keystroke and blur before the next paint.
++  // Read the live canonical assessment instead; full snapshots are reused
++  // outside the edit dispatch, when the ordinary refresh publishes them.
++  if (!guruUserEditDispatchActive && nowGuideRegistryCache && ["gate-0", "gate-1", "gate-3", "gate-4"].includes(gate?.id) &&
+       nowGuideRegistryCache.version === nowGuideDataVersion())
+     return nowGuideRegistryCache.items.filter(item => item.gateId === gate.id).map(item => item.status);
+   if (gate?.id === "gate-0") {
+@@ -1402,10 +1406,12 @@
+ 
+ let nowGuideMissingRefreshQueued = false;
+ function nowGuideScheduleMissingRefresh(event) {
++  // Product-picker drafts stay outside project data until Save is pressed.
++  if (event.target?.closest?.("[data-mega-platform-picker]")) return;
+   if (!event.target?.closest?.("#contentArea") || nowGuideCurrent(nowGuideDisplayedPath)?.gateId !== "gate-0") return;
+   if (nowGuideMissingRefreshQueued) return;
+   nowGuideMissingRefreshQueued = true;
+-  queueMicrotask(() => {
++  queueMicrotask(() => nowGuideWithReadPass(() => {
+     nowGuideMissingRefreshQueued = false;
+     const gate = state?.gates?.find((gate) => gate.id === "gate-0");
+     if (!gate) return;
+@@ -1427,17 +1433,20 @@
+     const path = nowGuideDisplayedPath.map((item) => item.gateId === "gate-0"
+       ? { ...item, status: guruNormBlockStatus(statuses[ids.indexOf(item.id)]) } : item);
+     if (path.some((item, index) => item.status !== nowGuideDisplayedPath[index]?.status)) {
+-      nowGuideRender(path);
++      const registry = nowGuideDisplayedAllBlocks.map((item) => item.gateId === gate.id
++        ? { ...item, status: guruNormBlockStatus(statuses[ids.indexOf(item.id)]) } : item);
++      nowGuideRender(path, registry);
+     } else {
+       nowGuideDisplayedPath = path;
+       const html = nowGuideMissingHtml(nowGuideCurrent(path));
+       const current = document.querySelector("#nowGuide .now-guide-missing");
+       if (current && current.outerHTML !== html) current.outerHTML = html;
+     }
+-  });
++  }));
+ }
+ let nowGuideGate12RefreshQueued = false;
+ function nowGuideScheduleGate12Refresh(event) {
++  if (event.target?.closest?.("[data-mega-platform-picker]")) return;
+   if (!event.target?.closest?.("#contentArea") ||
+       (!["gate-1", "gate-2", "gate-3", "gate-4"].includes(activeGateId) &&
+        !(activeGateId === "gate-0" && nowGuideCurrent(nowGuideDisplayedPath)?.gateId === "gate-3"))) return;
+@@ -1480,7 +1489,12 @@
+     const journeyById = new Map(nowGuideGate3Stages().map((stage, index) => [stage.key, guruNormBlockStatus(journeyStatuses[index])]));
+     const updated = path.map(item => item.gateId === "gate-3"
+       ? { ...item, status: journeyById.get(item.id) || item.status } : item);
+-    nowGuideRender(updated);
++    // The edited gate and its journey dependency were assessed above. Publish
++    // those results instead of rebuilding every other gate on each character.
++    const registry = nowGuideDisplayedAllBlocks.map(item => item.gateId === gate.id
++      ? { ...item, ...byId.get(identity(item)) }
++      : item.gateId === "gate-3" ? { ...item, status: journeyById.get(item.id) || item.status } : item);
++    nowGuideRender(updated, registry);
+   });
+ }
+ document.addEventListener("input", nowGuideScheduleGate12Refresh);
+--- /dev/null
++++ after/workspace-save-worker.js
+@@ -0,0 +1,10 @@
++/* Prepare the existing workspace JSON without blocking the editing thread.
++   This worker has no storage or network access. The main thread owns commits. */
++self.addEventListener("message", ({ data }) => {
++  try {
++    self.postMessage({ id: data.id, serialized: JSON.stringify(data.workspace) });
++  } catch (_) {
++    // The existing synchronous save is the fallback for unsupported data.
++    self.postMessage({ id: data.id });
++  }
++});

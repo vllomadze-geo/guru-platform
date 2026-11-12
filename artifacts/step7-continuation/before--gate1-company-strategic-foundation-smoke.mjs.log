@@ -1,0 +1,9 @@
+file:///private/tmp/guru-step7-before/scripts/gate1-company-strategic-foundation-smoke.mjs:9
+  if (!condition) throw new Error(message);
+                        ^
+
+Error: Company foundation must contain five rows
+    at assert (file:///private/tmp/guru-step7-before/scripts/gate1-company-strategic-foundation-smoke.mjs:9:25)
+    at file:///private/tmp/guru-step7-before/scripts/gate1-company-strategic-foundation-smoke.mjs:271:3
+
+Node.js v22.14.0

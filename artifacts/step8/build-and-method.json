@@ -1,0 +1,23 @@
+{
+  "baselineCommit": "bc42b5b058983ae74231649be035c5e066c80b1d",
+  "initialCommit": "ceffa020e25db24df9e4ca8e5a3a3460eb7d9e95",
+  "version": "2.3.526+9a629b16fd7c",
+  "buildSha256": "9a629b16fd7c83fa3299b3abf5eab218273002f66230f2c12c60d0265284cf24",
+  "node": "v22.14.0",
+  "browser": "Chrome/146.0.7680.154",
+  "viewport": {
+    "width": 1440,
+    "height": 1000,
+    "deviceScaleFactor": 1
+  },
+  "runs": 3,
+  "statistic": "median",
+  "source": "/Users/vl/Downloads/guru-project-korichnoe-yabloko-all.json",
+  "productId": "catalog-item-1786792591872-51f503",
+  "products": 14,
+  "screenMethod": "Fresh migrated workspace copy and cold DOM cache per sample. Real gate menu click; guruRenderedGateId plus two animation frames and layout. Fixture parsing, migration and initial navigation excluded. One Chrome, one tab, sequential samples.",
+  "saveMethod": "Edit existing gate8Forecast.resultMetric; normal synchronous saveState including full JSON serialization and in-memory Storage.setItem. Cloud and disk I/O excluded on all versions. Stored value verified.",
+  "build": "npm run build: PASS in isolated build copy, 42 matching assets",
+  "publication": false,
+  "localCommit": "86515d9b3ad8738508f8eb67c615de42620b20e3"
+}

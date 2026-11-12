@@ -1,0 +1,152 @@
+{
+  "build": "2.3.526+689b8c6f275b",
+  "head": "4486bf9a78f1d482f69ad435fd1c5a2c96c890e6",
+  "runtimeFilesChangedThisTask": [
+    "app.js"
+  ],
+  "testFilesChangedThisTask": [
+    "scripts/platform-legal-structure-smoke.mjs"
+  ],
+  "rootCauses": [
+    "Delivery rendered twice: fundamental editor and legal readonly reference",
+    "Legal source column was empty",
+    "Audit navigation opened source section but not regrouped legal section"
+  ],
+  "dataPreserved": {
+    "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+    "currentSourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+    "renderReadOnly": true,
+    "urlDuplicateSaveSuppressed": {
+      "saves": 0,
+      "unchanged": true
+    }
+  },
+  "currentGate0": {
+    "answers": [
+      {
+        "key": "collectsPersonalDataV1",
+        "present": false,
+        "value": null
+      },
+      {
+        "key": "siteCheckoutV1",
+        "present": false,
+        "value": null
+      }
+    ],
+    "readiness": {
+      "total": 9,
+      "done": 8,
+      "ready": 8,
+      "notRequired": 0,
+      "inProgress": 1,
+      "problem": 0,
+      "notStarted": 0,
+      "percent": 94
+    },
+    "step": 8,
+    "M": 95,
+    "current": "gate-0:card::card-7",
+    "rows": [
+      {
+        "id": "card-1",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-project-goal",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-brand-purpose",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-segmentation",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-positioning",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-offer",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-keyword-foundation",
+        "status": "ready"
+      },
+      {
+        "id": "card-7",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-2",
+        "status": "ready"
+      }
+    ],
+    "missing": [
+      "Доставка и оплата: URL"
+    ]
+  },
+  "modelComparison": "9 answer combinations identical before and after, including all readiness checks",
+  "auditLinks": [
+    {
+      "id": "delivery",
+      "target": "card-28",
+      "opened": true
+    },
+    {
+      "id": "company_details",
+      "target": "card-27",
+      "opened": true
+    },
+    {
+      "id": "privacy",
+      "target": "card-29",
+      "opened": true
+    },
+    {
+      "id": "cookie_banner",
+      "target": "card-35",
+      "opened": true
+    },
+    {
+      "id": "data_consent",
+      "target": "card-37",
+      "opened": true
+    },
+    {
+      "id": "offer",
+      "target": "card-28",
+      "opened": true
+    },
+    {
+      "id": "returns",
+      "target": "card-28",
+      "opened": true
+    }
+  ],
+  "limitations": [
+    "Full two-build browser comparison timed out in fixture initialization. Replaced by isolated UI validation and direct before/after pure-model comparison.",
+    "Other projects, mobile devices and cloud save were not tested."
+  ],
+  "published": false,
+  "requiredSmokeTests": [
+    {
+      "test": "gate0-merged-readiness",
+      "status": "PASS",
+      "seconds": 29.09
+    },
+    {
+      "test": "gate0-now-missing",
+      "status": "PASS",
+      "seconds": 39.378
+    },
+    {
+      "test": "gate0-unified-readiness",
+      "status": "PASS",
+      "seconds": 39.568
+    }
+  ]
+}

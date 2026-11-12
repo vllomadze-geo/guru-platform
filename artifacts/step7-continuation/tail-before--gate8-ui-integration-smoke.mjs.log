@@ -1,0 +1,253 @@
+{
+  "initial": {
+    "scopes": [
+      "company",
+      "product"
+    ],
+    "startsWithCompany": true,
+    "redundantHeader": false,
+    "toolbar": "hidden",
+    "scenarioOpen": "true",
+    "scenarioCards": 5,
+    "questions": [
+      [
+        "company",
+        7
+      ],
+      [
+        "product",
+        7
+      ]
+    ],
+    "companyGoalAudit": "5 продаж до 31.10.2026.",
+    "productGoalAudit": "Продукт не выбран.",
+    "productBudgetAudit": "Продукт не выбран.",
+    "goal": "5 продаж",
+    "productGoal": "Выберите продукт",
+    "companyOrder": [
+      "heading",
+      "goal",
+      "audit",
+      "model"
+    ],
+    "productOrder": [
+      "goal",
+      "audit",
+      "model"
+    ],
+    "productSelectors": 1,
+    "auditOpen": 0,
+    "auditSummaryFirst": true,
+    "companyScenarios": 5,
+    "companyOpen": [
+      [
+        "expect",
+        true
+      ],
+      [
+        "action",
+        true
+      ],
+      [
+        "scenario",
+        true
+      ]
+    ]
+  },
+  "gateExport": {
+    "visible": true,
+    "downloaded": true,
+    "gateId": "gate-8",
+    "runtimeModel": "gate8_visible_scenarios_workbench_v5"
+  },
+  "scope": {
+    "collapsed": true,
+    "reopened": true,
+    "sameRoot": true
+  },
+  "details": {
+    "before": true,
+    "open": true,
+    "rows": [
+      {
+        "key": "data",
+        "open": true,
+        "expanded": "true",
+        "hidden": false,
+        "length": 2911
+      },
+      {
+        "key": "history",
+        "open": true,
+        "expanded": "true",
+        "hidden": false,
+        "length": 371
+      }
+    ],
+    "sameRoot": true
+  },
+  "moreRecommendations": {
+    "visible": true,
+    "expanded": "true",
+    "parentOpen": true
+  },
+  "expanded": {
+    "sameRoot": true,
+    "cards": 5,
+    "fields": 7,
+    "open": "true"
+  },
+  "mobile": {
+    "overflow": false,
+    "wideCards": 0
+  },
+  "edit": {
+    "rootStillMounted": true,
+    "active": true
+  },
+  "afterEdit": {
+    "root": true,
+    "value": "15000",
+    "focus": "budget",
+    "persisted": "15000",
+    "persistedScenarioOpen": true
+  },
+  "rerendered": {
+    "cards": 5,
+    "budget": "15000"
+  },
+  "twoProducts": {
+    "initial": {
+      "sales": 16,
+      "spend": 30000,
+      "cpa": 1875,
+      "complete": true,
+      "goal": 4,
+      "productSales": 4,
+      "unassigned": 5000,
+      "contributions": 2
+    },
+    "selection": {
+      "companySales": 16,
+      "productSales": 12,
+      "productGoalValid": false,
+      "selectedId": "g8-b"
+    },
+    "changed": {
+      "companySales": 20,
+      "spend": 30000
+    },
+    "factualHistory": {
+      "available": true,
+      "value": 12,
+      "complete": true,
+      "included": 2,
+      "total": 2
+    },
+    "historyBefore": 0,
+    "historyAfter": 1,
+    "export": {
+      "downloaded": true,
+      "gateCompanySales": 20,
+      "gateProductId": "g8-b",
+      "companyAuditCount": 7,
+      "productAuditCount": 7,
+      "fullCompanySales": 20,
+      "fullContributions": 2
+    },
+    "view": {
+      "companyCards": 5,
+      "productCards": 5,
+      "productName": "Продукт А",
+      "auditCompanyBudgetStatus": "problem",
+      "auditProductGoalStatus": "not_started",
+      "auditProductGoalAnswer": "Отдельная измеримая цель продукта в Gate 5 не задана.",
+      "productGoalCard": "Отдельная цель продукта не задана",
+      "companyOpen": [
+        [
+          "expect",
+          true
+        ],
+        [
+          "action",
+          true
+        ],
+        [
+          "scenario",
+          true
+        ]
+      ],
+      "storedOpen": {
+        "expect": true,
+        "action": true,
+        "scenario": true,
+        "data": false,
+        "history": true
+      }
+    }
+  },
+  "conflictingGoals": {
+    "status": "problem",
+    "notice": "Для этого product_id сохранены несовпадающие цели или сроки Gate 5."
+  },
+  "companyDisclosure": {
+    "stored": false,
+    "rerendered": false,
+    "reopened": true
+  },
+  "selector": {
+    "shared": true,
+    "selected": "g8-a",
+    "companySales": 20,
+    "productSales": 4,
+    "productGoalCard": "4 продажи"
+  },
+  "twoProductMobile": {
+    "overflow": false,
+    "wideCompanyCards": 0
+  },
+  "missingSource": {
+    "partial": true,
+    "remainingSales": 4,
+    "status": "Частичный прогноз",
+    "missingKeys": [
+      "budget",
+      "leadToSale"
+    ],
+    "budgetTarget": {
+      "gateId": "gate-4",
+      "kind": "gate4-forecast-input-v3",
+      "field": "budget",
+      "productId": "g8-b",
+      "campaignId": "g8-campaign-b"
+    },
+    "productBudgetAnswer": "Бюджет продукта: не указан; прогноз: не рассчитан."
+  },
+  "goalSource": {
+    "gateId": "gate-0",
+    "kind": "gate0-company-goal",
+    "cardId": "gate0-project-goal",
+    "goalId": "main",
+    "field": "goalTargetValue",
+    "reached": true
+  },
+  "auditGoalLink": {
+    "target": {
+      "gateId": "gate-5",
+      "kind": "gate5-goal-v1",
+      "block": "input",
+      "productId": "g8-a",
+      "recordId": "goal-a"
+    },
+    "gate": "gate-5",
+    "exactRecord": true,
+    "registry": true
+  },
+  "comparisonLink": {
+    "gate": "gate-1",
+    "product": "g8-b",
+    "source": true,
+    "opened": true
+  },
+  "otherGate": "visible"
+}

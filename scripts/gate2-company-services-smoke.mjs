@@ -108,7 +108,6 @@ try {
     const step = (id) => domain.querySelectorAll('.g2sb-step')[['address','platform','provider','dns_source','dns_set','open','https','redirect'].indexOf(id)];
     const fields = (id) => [...step(id).querySelectorAll('[data-g2w-field]')].map((node) => node.dataset.g2wField);
     const label = (id, key) => step(id).querySelector('[data-g2w-field="' + key + '"]')?.closest('label')?.querySelector('span')?.textContent;
-    const help = webmaster.querySelector('.g2sb-step:first-child .g2sb-help');
     return { projectId: state.project.id, homeUrl, displayedUrl: step('address').textContent,
       headerUrl: domain.querySelector('.g2sb-header a')?.href,
       before, after, providerFields: fields('provider'), sourceFields: fields('dns_source'),
@@ -116,11 +115,16 @@ try {
       sourceLabel: label('dns_source','dnsRecord'), providerWhere: step('provider').querySelectorAll('.g2sb-copy p')[0]?.textContent,
       platformWhere: step('platform').querySelectorAll('.g2sb-copy p')[0]?.textContent,
       dnsSetCheckbox: Boolean(step('dns_set').querySelector('[data-g2sb-step="dns_set"]')),
-      webmasterHelpColumn: getComputedStyle(help).gridColumnStart,
-      webmasterHelpUrl: help.href, hasEmDash: domain.textContent.includes('\\u2014'),
+      webmasterFirstSteps: webmaster.querySelectorAll('[data-g2wm-step]').length === 4 &&
+        webmaster.querySelector('[data-g2wm-step="s11"] h5')?.textContent === 'Основной адрес сайта' &&
+        webmaster.querySelector('[data-g2wm-step="s12"] h5')?.textContent === 'Подтверждение прав' &&
+        webmaster.querySelector('[data-g2wm-step="s21"] h5')?.textContent === 'Проверка доступности страниц' &&
+        webmaster.querySelector('[data-g2wm-step="s22"] h5')?.textContent === 'Проверка Sitemap',
+      webmasterServiceUrl: webmaster.querySelector('.g2sb-header a')?.href,
+      hasEmDash: domain.textContent.includes('\\u2014'),
       emptyBackground: getComputedStyle(step('dns_source').querySelector('input')).backgroundColor };
   })()`);
-  assert.equal(real.projectId, gate0Fixture.project.id);
+  assert.equal(real.projectId, fixture.project.id);
   assert.equal(real.homeUrl, gate0Fixture.gate.cards.find((card) => card.megaMarketing)
     .megaMarketing.platformV2.urlsV1.fixed.home);
   assert.equal(real.headerUrl, real.homeUrl);
@@ -134,8 +138,8 @@ try {
   assert.equal(real.providerWhere, 'Заполните поля справа.');
   assert.equal(real.dnsSetCheckbox, true);
   assert.ok(real.platformOptions > 2);
-  assert.equal(real.webmasterHelpColumn, '2');
-  assert.equal(real.webmasterHelpUrl, 'https://yandex.ru/support/webmaster/ru/service/quick-start');
+  assert.equal(real.webmasterFirstSteps, true);
+  assert.equal(real.webmasterServiceUrl, 'https://webmaster.yandex.ru/');
   assert.equal(real.hasEmDash, false);
   assert.equal(real.emptyBackground, 'rgb(255, 255, 255)');
   if (process.env.GURU_CAPTURE_SCREENSHOTS === '1') {
@@ -236,7 +240,8 @@ try {
       legacyCards: document.querySelectorAll('.g2w-workspace [data-card]').length,
       productUnits: document.querySelectorAll('[data-g2w-scope="product"] .g2w-card').length,
       businessSteps: document.querySelectorAll('[data-g2sb-id="company-yandex-business"] .g2sb-step').length,
-      directSteps: document.querySelectorAll('[data-g2sb-id="company-yandex-direct"] .g2sb-step').length,
+      directSteps: document.querySelectorAll('[data-g2sb-id="company-yandex-direct"] [data-g2sb-step-id]').length,
+      directLegacy: JSON.stringify(g2directRecord()?.steps?.account || null),
       addressInputs: document.querySelectorAll('[data-g2sb-id="company-domain"] [data-g2sb-step="address"][type=text], [data-g2sb-id="company-domain"] [data-g2w-field="homeUrl"]').length,
       platformOptions: document.querySelectorAll('[data-g2sb-id="company-domain"] [data-g2w-field="platform"] option').length,
       emptyBackground: getComputedStyle(document.querySelector('[data-g2sb-id="company-domain"] [data-g2w-field="dnsRecord"]')).backgroundColor,
@@ -251,10 +256,10 @@ try {
   ]);
   assert.equal(setup.sourceCards, 71);
   assert.equal(setup.keptCards, 71);
-  assert.equal(setup.legacyCards, 71);
+  assert.equal(setup.legacyCards, 62);
   assert.equal(setup.productUnits, 0);
   assert.equal(setup.businessSteps, 5);
-  assert.equal(setup.directSteps, 6);
+  assert.equal(setup.directSteps, 2);
   assert.equal(setup.addressInputs, 0);
   assert.ok(setup.platformOptions > 2);
   assert.equal(setup.emptyBackground, 'rgb(255, 255, 255)');
@@ -275,25 +280,30 @@ try {
   assert.ok(!setup.unconfirmed.includes('Справка: требует уточнения'));
 
   for (const [blockId, stepId] of [
-    ['company-yandex-business', 'add'], ['company-yandex-direct', 'account'],
-    ['company-webmaster', 'advice'], ['company-domain', 'dns_set'],
+    ['company-yandex-business', 'add'],
+    ['company-domain', 'dns_set'],
   ]) await evaluate(`(() => {
     const control = document.querySelector('[data-g2sb-id="${blockId}"] [data-g2sb-step="${stepId}"]');
     control.checked = true; control.dispatchEvent(new Event('change', { bubbles: true }));
     return control.checked;
+  })()`);
+  await evaluate(`(() => {
+    const row = document.querySelector('[data-g2sb-id="company-yandex-direct"] [data-g2direct-step="s11"]');
+    row.querySelector('[data-g2direct-review="passed"]').click();
   })()`);
   const saved = await evaluate(`(() => {
     const gate = state.gates.find((item) => item.id === 'gate-2');
     const step = (id, name) => gate.cards.find((card) => card.id === id).fields.g2SetupWizardV1.company.steps[name];
     return { business: step('g2-service-company-yandex-business', 'add'),
       direct: step('g2-service-company-yandex-direct', 'account'),
-      advice: step('card-107', 'advice'), domain: step('card-96', 'dns_set'),
+      directReview: g2directReview('s11')?.result,
+      domain: step('card-96', 'dns_set'),
       homeUrl: megaPlatformUrl('fixed', 'home') };
   })()`);
   assert.equal(saved.business.result, 'done');
   assert.equal(saved.business.product_id, '');
-  assert.equal(saved.direct.result, 'done');
-  assert.equal(saved.advice.result, 'done');
+  assert.equal(JSON.stringify(saved.direct || null), setup.directLegacy);
+  assert.equal(saved.directReview, 'passed');
   assert.equal(saved.domain.result, 'done');
   assert.equal(saved.homeUrl, 'https://example.org/');
   await wait(700);
@@ -320,10 +330,12 @@ try {
     return [...document.querySelectorAll('.g2sb-block')].slice(0, 4).map((block) => ({
       id: block.dataset.g2sbId, gray: block.classList.contains('is-not-needed'),
       label: block.querySelector('[data-g2sb-status]').textContent,
-      steps: block.querySelectorAll('.g2sb-step').length }));
+      steps: block.querySelectorAll('.g2sb-step, [data-g2wm-step]').length }));
   })()`);
   assert.equal(skipped.length, 4);
-  assert.ok(skipped.every((item) => item.gray && item.label === 'Не требуется по Gate 0' && item.steps > 0));
+  assert.ok(skipped.every((item) => item.gray &&
+    (item.id === 'company-webmaster' ? item.label === 'Не требуется' && item.steps === 5
+      : item.label === 'Не требуется по Gate 0' && item.steps > 0)));
 
   const cleanProjects = [];
   for (const name of ['Коричное яблоко', 'SIVRCE', 'ГУРУ']) {
@@ -348,7 +360,7 @@ try {
     realDomainRecordUnchanged: real.before === real.after,
     realDomainRecordPresent: real.before !== 'null',
     savedFieldValuesPreserved: preserved.before === preserved.after,
-    webmasterHelpRight: real.webmasterHelpColumn === '2', platformsChecked: 4,
+    webmasterFirstSteps: real.webmasterFirstSteps, platformsChecked: 4,
     order: setup.order, recordsUnchanged: true,
     oldCards: setup.keptCards, helpLinks: setup.help.length, liveSaved: true,
     grayBlocks: skipped.length, cleanProjects, browserErrors: page.exceptions.length }));

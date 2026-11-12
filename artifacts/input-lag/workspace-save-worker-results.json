@@ -1,0 +1,18 @@
+{
+  "sameJsonFormat": true,
+  "outOfOrderResponses": true,
+  "synchronousSaveWins": true,
+  "newEditInvalidatesSnapshot": true,
+  "confirmedSaveClearsUnloadDirtyFlag": true,
+  "externalWriteWins": true,
+  "externalClearWins": true,
+  "deletedProjectNotRestored": true,
+  "projectIsolation": true,
+  "feedbackAfterCoalescing": true,
+  "workerFailureFallback": true,
+  "unavailableWorkerFallback": true,
+  "workerContract": true,
+  "idbMigrationVerifiedOnce": true,
+  "idbRepeatWritesAvoidReadback": true,
+  "passed": true
+}

@@ -1,0 +1,1 @@
+DUPLICATE_ALREADY_TESTED {"test":"gate3-product-journey-smoke.mjs","label":"after","result":{"status":"TIMEOUT","seconds":120.12,"exit_code":-9,"log":"artifacts/step7-continuation/middle-after--gate3-product-journey-smoke.mjs.log"}}

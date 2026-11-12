@@ -227,7 +227,8 @@ function gate1SeoCentralizeV298() {
 
   const product = guruV194SelectedProduct(state);
   const productPage = gate1SeoSelectedPageV298(product);
-  const productFoundation = gate1SeoProductFoundationNodeV298(product);
+  const productFoundation = productPage.card?.id === "card-24"
+    ? null : gate1SeoProductFoundationNodeV298(product);
   const companyDivider = gate1SeoFindDividerV298(root, "Компания");
   const productDivider = gate1SeoFindDividerV298(root, "Продукт / Услуга");
   const auditToggle = root.querySelector('[data-gate1-toggle-section="site_audit"]');
@@ -283,13 +284,8 @@ function gate1SeoCentralizeV298() {
     if (pageNode) {
       const sections = pageNode.querySelector(":scope > .route-sections");
       if (sections) {
-        const keywordSlot = productPage.card.id === "card-24"
-          ? sections.querySelector("[data-goat-product-foundation-slot-v517]") : null;
-        const webmasterSlot = productPage.card.id === "card-24"
-          ? sections.querySelector("[data-goat-product-webmaster-slot-v517]") : null;
-        if (keywordSlot && webmasterSlot) {
-          if (productFoundation) keywordSlot.append(productFoundation);
-          if (productWebmaster) webmasterSlot.append(productWebmaster);
+        if (productPage.card.id === "card-24") {
+          productWebmaster?.remove();
         } else {
           let cursor = sections;
           [productFoundation, productWebmaster].filter(Boolean).forEach((node) => {
@@ -385,9 +381,9 @@ function gate1SeoCentralizeV298() {
       companyDemandPositioning || companyDemandHeading,
       ...(companyDemandPositioning ? [] : [companySemantics]),
       seoAudit,
+      targetAudience,
       structureAudit,
       legalAudit,
-      targetAudience,
     ]);
   else {
     root.prepend(legalAudit);

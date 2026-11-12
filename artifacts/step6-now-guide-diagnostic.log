@@ -1,0 +1,4 @@
+icleaning [{"id":"gate-0","total":9,"done":2,"path":9,"all":9},{"id":"gate-1","total":31,"done":4,"path":31,"all":31},{"id":"gate-2","total":19,"done":2,"path":19,"all":19},{"id":"gate-3","total":5,"done":2,"path":5,"all":5},{"id":"gate-4","total":50,"done":12,"path":32,"all":50},{"id":"gate-5","total":6,"done":0,"path":0,"all":6},{"id":"gate-6","total":27,"done":0,"path":0,"all":27},{"id":"gate-7","total":41,"done":20,"path":0,"all":41},{"id":"gate-8","total":1,"done":0,"path":0,"all":1}]
+icleaning: initial checks complete
+icleaning: M=96, done=18, diagnostics=189/42
+now-guide-smoke: OK

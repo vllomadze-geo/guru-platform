@@ -63,14 +63,7 @@ const G2W_CARDS = [
     ["receive", "Убедитесь, что обращение получено и сохранено."],
     ["storage", "Проверьте срок хранения заявок."],
   ] },
-  { id: "webmaster", scope: "company", cardId: "card-107", title: "Яндекс Вебмастер", purpose: "Поисковые страницы доступны роботу, если используется SEO.", optional: "seo", steps: [
-    ["open", "Откройте Яндекс Вебмастер и добавьте сайт или выберите существующий.", null, null, null, G2W_DOC.webmaster],
-    ["rights", "Подтвердите права на сайт доступным способом.", null, null, null, G2W_DOC.webmaster],
-    ["robots", "Проверьте robots.txt в анализаторе.", null, null, null, G2W_DOC.robots],
-    ["sitemap", "Найдите sitemap.xml и передайте его в Вебмастер, если используется.", null, null, null, G2W_DOC.sitemap],
-    ["pages", "Проверьте доступность важных коммерческих страниц для робота.", null, null, null, G2W_DOC.webmaster],
-    ["advice", "Откройте рекомендации по оптимизации.", null, null, null, "https://yandex.ru/support/webmaster/ru/service/quick-start"],
-  ] },
+  { id: "webmaster", scope: "company", cardId: "card-107", title: "Яндекс Вебмастер", purpose: "Поисковые страницы доступны роботу, если используется SEO.", optional: "seo", steps: [] },
   { id: "safety", scope: "company", cardId: "card-134", title: "Безопасность и персональные данные", purpose: "Формы защищены, необходимые документы опубликованы.", steps: [
     ["https", "Проверьте HTTPS на рабочем сайте."],
     ["policy", "Откройте опубликованную политику обработки данных.", "privacyUrl", "URL политики", "url"],
@@ -263,9 +256,11 @@ function g2wUpstreamIds(def) {
 // The visible service workflow and the wizard share the same completion
 // checks. Configuration describes existing controls; no result is persisted.
 function g2wStepChecks(def, productId = "", workspace = state) {
-  const config = typeof G2_SERVICE_BLOCK_CONFIGS !== "undefined"
+  if (typeof g2StepWizardDef === "function") def = g2StepWizardDef(def, productId, workspace);
+  const baseConfig = typeof G2_SERVICE_BLOCK_CONFIGS !== "undefined"
     ? [...G2_SERVICE_BLOCK_CONFIGS.values()].find((config) => config.wizardUnitId === def.id && config.scope === def.scope)
     : null;
+  const config = typeof g2StepServiceConfig === "function" ? g2StepServiceConfig(baseConfig, productId, workspace) : baseConfig;
   const record = g2wRecord(def, productId, false, workspace);
   const visibleSteps = config?.steps || def.steps;
   const fieldOwners = new Map();
@@ -314,6 +309,7 @@ function g2wStatus(def, productId = "", workspace = state) {
   return checked || verification || Object.values(record.values || {}).some(Boolean) ? "in_progress" : "not_started";
 }
 function g2wProgress(def, productId = "") {
+  if (typeof g2StepWizardDef === "function") def = g2StepWizardDef(def, productId);
   const record = g2wRecord(def, productId);
   const done = def.steps.filter((step) => record?.steps?.[step[0]]?.result === "done").length;
   return `${done} из ${def.steps.length} шагов`;
@@ -413,10 +409,10 @@ function g2wStepHtml(def, productId, step, index) {
   return `<li class="g2w-step ${checked ? "is-done" : ""}"><label class="g2w-step-label"><input type="checkbox" data-g2w-step="${escapeAttr(step[0])}" data-g2w-card="${escapeAttr(def.id)}" data-g2w-product="${escapeAttr(productId)}" ${checked ? "checked" : ""}><span class="g2w-step-index">${String(index + 1).padStart(2, "0")}</span><span>${escapeHtml(step[1])}</span></label>
     <div class="g2w-step-tools">${g2wFieldHtml(def, productId, step)}${g2wHasOpenStep(def, step) ? `<a data-g2w-open-step="${escapeAttr(step[0])}" ${openUrl ? `href="${escapeAttr(openUrl)}"` : "hidden"} target="_blank" rel="noopener noreferrer">${def.id === "counter" ? "Открыть с отладкой" : def.id === "crm" ? "Открыть сервис" : "Открыть адрес"} ↗</a>` : ""}<a data-g2w-doc-step="${escapeAttr(step[0])}" ${doc ? `href="${escapeAttr(doc)}"` : "hidden"} target="_blank" rel="noopener noreferrer">${[G2W_DOC.metrika, G2W_DOC.vk, G2W_DOC.webmaster].includes(doc) ? "Открыть сервис" : "Инструкция"} ↗</a>${step[5] === "auto" ? `<button type="button" data-g2w-auto="${escapeAttr(def.id)}" data-g2w-product="${escapeAttr(productId)}">Проверить URL</button>` : ""}</div></li>`;
 }
-function g2wCardHtml(def, productId = "") {
+function g2wCardHtml(def, productId = "", knownStatus = "") {
   const applicable = g2wApplicability(def, productId);
   const record = g2wRecord(def, productId);
-  const status = g2wStatus(def, productId);
+  const status = knownStatus || g2wStatus(def, productId);
   const verification = record?.verification;
   const stale = verification && verification.fingerprint !== g2wInputs(def, productId);
   const summary = g2wStatusLabel(status);
@@ -438,14 +434,20 @@ function g2wCardHtml(def, productId = "") {
 }
 function g2wScopeHtml(scope, productId = "") {
   const defs = G2W_CARDS.filter((def) => def.scope === scope);
-  const ready = defs.filter((def) => g2wStatus(def, productId) === "ready").length;
-  const skipped = defs.filter((def) => g2wStatus(def, productId) === "not_needed").length;
-  return `<div class="g2w-scope" data-g2w-scope="${scope}"><div class="g2w-scope-summary"><strong>${scope === "company" ? "Техническая основа компании" : "Готовность выбранного продукта"}</strong><span>${ready} из ${defs.length - skipped} готово${skipped ? ` · ${skipped} не требуется` : ""}</span></div>${defs.map((def) => g2wCardHtml(def, productId)).join("")}</div>`;
+  const statuses = Object.fromEntries(defs.map((def) => [def.id, g2wStatus(def, productId)]));
+  const ready = Object.values(statuses).filter((status) => status === "ready").length;
+  const skipped = Object.values(statuses).filter((status) => status === "not_needed").length;
+  return `<div class="g2w-scope" data-g2w-scope="${scope}" data-g2w-statuses="${escapeAttr(JSON.stringify(statuses))}"><div class="g2w-scope-summary"><strong>${scope === "company" ? "Техническая основа компании" : "Готовность выбранного продукта"}</strong><span>${ready} из ${defs.length - skipped} готово${skipped ? ` · ${skipped} не требуется` : ""}</span></div>${defs.map((def) => g2wCardHtml(def, productId, statuses[def.id])).join("")}</div>`;
 }
 function g2wLegacyHtml(gate, scope, visibleIds) {
-  const sections = g2GetSections(gate, visibleIds);
+  const retired = gate?.id === "gate-2" && typeof G2YP_OLD_CARDS !== "undefined" ? G2YP_OLD_CARDS : new Set();
+  const hiddenVkAdsCard = gate?.id === "gate-2" && scope === "company";
+  const omit = (card) => retired.has(card.id) || (hiddenVkAdsCard && card.id === "g2-marketing-vk-ads");
+  const sections = g2GetSections(gate, visibleIds).map((section) => ({
+    ...section, cards: section.cards.filter((card) => !omit(card)),
+  })).filter((section) => section.cards.length);
   const rendered = new Set(sections.flatMap((section) => section.cards.map((card) => card.id)));
-  const hidden = (gate.cards || []).filter((card) => !rendered.has(card.id) && g2CardScopeV267(card).scope === scope);
+  const hidden = (gate.cards || []).filter((card) => !omit(card) && !rendered.has(card.id) && g2CardScopeV267(card).scope === scope);
   return `<details class="g2w-additional" data-ui-keeper-key="g2w:additional:${scope}"><summary>Дополнительные настройки <span>${sections.reduce((sum, section) => sum + section.cards.length, 0) + hidden.length} карточек</span></summary><div class="g2w-additional-body">${sections.map((section) => g2CompanySectionHtmlV226(section, scope)).join("")}${hidden.length ? `<section class="g2w-legacy-list"><h3>Ранее сохранённые карточки</h3>${hidden.map((card) => g2CardHtml(card)).join("")}</section>` : ""}</div></details>`;
 }
 function g2wOpenHash() {
@@ -472,6 +474,12 @@ function g2wOpenHash() {
   const target = document.getElementById(id) ||
     els.contentArea.querySelector(`[data-card="${CSS.escape(id)}"]`);
   if (!target) return;
+  if (target.matches?.("details[data-g2mu-section]")) {
+    target.open = true;
+    for (const parent of [target.closest("[data-g2mu-block]"), target.closest("[data-g2y-company]")]) {
+      if (parent) parent.open = true;
+    }
+  }
   const additional = target.closest(".g2w-additional");
   if (additional) {
     guruDisclosureOpenStateV512()[guruDisclosureKeyV512(additional)] = true;
@@ -593,22 +601,91 @@ renderGateNav = function () {
   g2wUpdateNav();
   return result;
 };
-function g2wSave() {
-  guruGateReadinessCache.delete("gate-2");
-  guruPersistStateFast({ durable: true });
+let g2wPendingStepSave = null;
+function g2wFlushPendingStepSave(synchronous = false) {
+  const pending = g2wPendingStepSave;
+  if (!pending) return;
+  g2wPendingStepSave = null;
+  if (pending.frame !== null) cancelAnimationFrame(pending.frame);
+  clearTimeout(pending.timer);
+  const options = { durable: true, workspace: pending.workspace, projectId: pending.projectId };
+  if (synchronous) guruPersistStateFast(options);
+  else guruQueueWorkspaceSave(options);
 }
-function g2wRefresh() {
+function g2wSave(options = {}) {
+  guruGateReadinessCache.delete("gate-2");
+  if (!options.afterPaint) {
+    if (g2wPendingStepSave) g2wFlushPendingStepSave();
+    guruQueueWorkspaceSave({ durable: true });
+    return;
+  }
+  // Let the checked state paint before cloning a large workspace for the save
+  // worker. beforeunload/pagehide retain a synchronous durability fallback.
+  if (typeof _guruTabDirty !== "undefined") _guruTabDirty = true;
+  if (g2wPendingStepSave?.workspace === state && g2wPendingStepSave.projectId === activeProjectId) {
+    clearTimeout(g2wPendingStepSave.timer);
+    g2wPendingStepSave.timer = setTimeout(() => g2wFlushPendingStepSave(), 180);
+    return;
+  }
+  if (g2wPendingStepSave) g2wFlushPendingStepSave();
+  const pending = { workspace: state, projectId: activeProjectId, frame: null, timer: null };
+  g2wPendingStepSave = pending;
+  pending.frame = requestAnimationFrame(() => {
+    if (g2wPendingStepSave !== pending) return;
+    pending.frame = null;
+    clearTimeout(pending.timer);
+    pending.timer = setTimeout(() => g2wFlushPendingStepSave(), 180);
+  });
+}
+window.addEventListener("pagehide", () => g2wFlushPendingStepSave(true));
+function g2wAffectedIds(changedCardId, field = "") {
+  if (!changedCardId) return null;
+  const affected = new Set([changedCardId]);
+  // These fields feed the setup of other cards even without a verification
+  // dependency. Follow explicit verification dependencies transitively.
+  if (changedCardId === "domain") affected.add("safety");
+  if (changedCardId === "domain" && field === "platform")
+    ["counter", "vk", "crm"].forEach((id) => affected.add(id));
+  if (changedCardId === "landing" && ["route", "productUrl"].includes(field))
+    ["productCounter", "productGoal", "productVk", "lead"].forEach((id) => affected.add(id));
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const def of G2W_CARDS) {
+      if (!affected.has(def.id) && g2wUpstreamIds(def).some((id) => affected.has(id))) {
+        affected.add(def.id);
+        changed = true;
+      }
+    }
+  }
+  return affected;
+}
+function g2wAffectsProductReadiness(changedCardId, field = "") {
+  const affected = g2wAffectedIds(changedCardId, field);
+  return affected && G2W_CARDS.some((def) => def.scope === "product" && affected.has(def.id));
+}
+function g2wRefreshProductSelectorIfNeeded(changedCardId, field = "") {
+  if (g2wAffectsProductReadiness(changedCardId, field) &&
+      typeof guruV194ScheduleProductSelectorRefreshV1 === "function")
+    guruV194ScheduleProductSelectorRefreshV1();
+}
+function g2wRefresh(options = {}) {
   if (activeGateId !== "gate-2") return;
+  const affected = g2wAffectedIds(options.changedCardId, options.field);
   const product = guruV194SelectedProduct(state);
   for (const scope of ["company", "product"]) {
     const productId = scope === "product" ? product?.id || "" : "";
     const defs = G2W_CARDS.filter((def) => def.scope === scope);
     const scopeNode = els.contentArea.querySelector(`[data-g2w-scope="${scope}"]`);
     if (!scopeNode) continue;
+    let statuses = {};
+    try { statuses = JSON.parse(scopeNode.dataset.g2wStatuses || "{}"); } catch { /* Rebuild below. */ }
     for (const def of defs) {
+      if (affected && !affected.has(def.id)) continue;
+      const status = g2wStatus(def, productId);
+      statuses[def.id] = status;
       const cardNode = scopeNode.querySelector(`[data-g2w-card-view="${def.id}"]`);
       if (!cardNode) continue;
-      const status = g2wStatus(def, productId);
       const pill = cardNode.querySelector(":scope > summary .status-pill");
       if (pill) { pill.className = `status-pill status-${status}`; pill.textContent = g2wStatusLabel(status); }
       const progress = cardNode.querySelector(":scope > summary .g2w-card-meta > span:first-child");
@@ -642,8 +719,13 @@ function g2wRefresh() {
         productVk: `Пиксель компании: ${g2wValue(G2W_CARDS[3], "", "pixelId") || "не указан"}`,
       })[def.id] || "";
     }
-    const ready = defs.filter((def) => g2wStatus(def, productId) === "ready").length;
-    const skipped = defs.filter((def) => g2wStatus(def, productId) === "not_needed").length;
+    // A focused edit changes only its source and explicit dependants. Keep
+    // the other status results from the last render instead of recalculating
+    // the entire (potentially large) project on every character.
+    for (const def of defs) if (!statuses[def.id]) statuses[def.id] = g2wStatus(def, productId);
+    scopeNode.dataset.g2wStatuses = JSON.stringify(statuses);
+    const ready = defs.filter((def) => statuses[def.id] === "ready").length;
+    const skipped = defs.filter((def) => statuses[def.id] === "not_needed").length;
     const summary = scopeNode.querySelector(".g2w-scope-summary > span");
     if (summary) summary.textContent = `${ready} из ${defs.length - skipped} готово${skipped ? ` · ${skipped} не требуется` : ""}`;
   }
@@ -661,8 +743,9 @@ document.addEventListener("input", (event) => {
   if (!g2wCanEdit(def, productId)) return;
   g2wSetValue(def, productId, target.dataset.g2wField, target.value);
   guruGateReadinessCache.delete("gate-2");
-  flashSaving();
-  g2wRefresh();
+  // The model and autosave update on every keystroke. Verification and
+  // dependant cards update on change, when the field has been committed.
+  flashSaving({ skipProductSelectorRefresh: true });
 });
 document.addEventListener("change", (event) => {
   const target = event.target;
@@ -671,12 +754,15 @@ document.addEventListener("change", (event) => {
     const productId = g2wProductFrom(target);
     if (!g2wCanEdit(def, productId)) return;
     const record = g2wRecord(def, productId, true);
-    const step = def.steps.find((item) => item[0] === target.dataset.g2wStep);
+    const effectiveDef = typeof g2StepWizardDef === "function" ? g2StepWizardDef(def, productId) : def;
+    const step = effectiveDef.steps.find((item) => item[0] === target.dataset.g2wStep);
     if (!step) return;
     record.steps[step[0]] = { step_id: step[0], scope: def.scope, project_id: guruV194ProjectId(),
-      product_id: productId, result: target.checked ? "done" : "pending", params: step[2] ? { [step[2]]: g2wValue(def, productId, step[2]) } : {},
+      product_id: productId, result: target.checked ? "done" : "pending", params: { ...(step[2] ? { [step[2]]: g2wValue(def, productId, step[2]) } : {}),
+        ...(record.steps[step[0]]?.params?.customFields ? { customFields: record.steps[step[0]].params.customFields } : {}) },
       verification_type: "self_reported_action", checked_at: new Date().toISOString(), source_url: g2wDocForStep(step, state, def) || g2wOpenUrl(def, productId, step) || "" };
-    g2wSave(); g2wRefresh();
+    g2wSave({ afterPaint: true }); g2wRefresh({ changedCardId: def.id, stepToggle: true });
+    g2wRefreshProductSelectorIfNeeded(def.id);
     return;
   }
   if (target.matches?.("[data-g2w-field]") && target.tagName === "SELECT") {
@@ -686,18 +772,23 @@ document.addEventListener("change", (event) => {
     g2wSetValue(def, productId, target.dataset.g2wField, target.value);
     g2wSave();
     if (["platform", "route", "crmName"].includes(target.dataset.g2wField)) renderGate();
-    else g2wRefresh();
+    else {
+      g2wRefresh({ changedCardId: def.id, field: target.dataset.g2wField });
+      g2wRefreshProductSelectorIfNeeded(def.id, target.dataset.g2wField);
+    }
     return;
   }
   if (target.matches?.("[data-g2w-field]")) {
     g2wSave();
-    g2wRefresh();
+    g2wRefresh({ changedCardId: target.dataset.g2wCard, field: target.dataset.g2wField });
+    g2wRefreshProductSelectorIfNeeded(target.dataset.g2wCard, target.dataset.g2wField);
     return;
   }
   if (target.matches?.("[data-g2w-use]")) {
     const def = g2wDef(target.dataset.g2wUse === "seo" ? "webmaster" : "vk");
     g2wRecord(def, "", true).values.used = target.value;
-    g2wSave(); g2wRefresh();
+    g2wSave(); g2wRefresh({ changedCardId: def.id });
+    g2wRefreshProductSelectorIfNeeded(def.id);
   }
 });
 function g2wVerify(def, productId, result, type, source) {
@@ -712,7 +803,8 @@ function g2wVerify(def, productId, result, type, source) {
   if (def.id === "goal") g2MetrikaCompanyDataV374("goals").primaryGoal.state = result === "passed" ? "works" : result === "failed" ? "not_works" : "";
   if (def.id === "productCounter" && result === "passed") g2MetrikaProductRowV367(g2wCard(def), productId, true).visitAt = new Date().toISOString().slice(0, 16);
   if (def.id === "productGoal" && result === "passed") g2MetrikaProductRowV367(g2wCard(def), productId, true).testConversionAt = new Date().toISOString().slice(0, 16);
-  g2wSave(); g2wRefresh();
+  g2wSave(); g2wRefresh({ changedCardId: def.id });
+  g2wRefreshProductSelectorIfNeeded(def.id);
 }
 document.addEventListener("click", async (event) => {
   const button = event.target?.closest?.("[data-g2w-verify], [data-g2w-auto]");
@@ -740,5 +832,6 @@ document.addEventListener("click", async (event) => {
     checked_at: new Date().toISOString(), source_url: url, fingerprint: g2wInputs(def, productId) };
   // URL availability is one check; HTTPS, redirects, mobile CTA and lead flow
   // still require the separate final confirmation.
-  g2wSave(); g2wRefresh();
+  g2wSave(); g2wRefresh({ changedCardId: def.id });
+  g2wRefreshProductSelectorIfNeeded(def.id);
 });

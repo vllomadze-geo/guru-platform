@@ -1,0 +1,13 @@
+{
+  "head": "ceffa020e25db24df9e4ca8e5a3a3460eb7d9e95",
+  "runtimeFilesChanged": [],
+  "trackedUncommittedChanges": [],
+  "testRows": 137,
+  "actualVersionTestCombinations": 259,
+  "allOriginalFixtureHashesIdentical": true,
+  "reportHasAllRows": true,
+  "sourceChangeFiles": [
+    "scripts/project-passport-baseline-smoke.mjs"
+  ],
+  "publicationPerformed": false
+}

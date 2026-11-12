@@ -1,0 +1,41 @@
+ 80:     companyDiagnostic.querySelector('summary').click();
+ 81:     card('card-12').querySelector('summary').click();
+ 82:     const open = card('card-12').open;
+ 83:     const date = card('card-12').querySelector('[data-control-fixation-key]');
+ 84:     date.value = '2026-10-15';
+ 85:     date.dispatchEvent(new Event('input', { bubbles: true }));
+ 86:     const resultOwner = card('card-10').querySelector('[data-cr-meta-field="positionId"]');
+ 87:     resultOwner.value = 'passport-product-a';
+ 88:     resultOwner.dispatchEvent(new Event('change', { bubbles: true }));
+ 89:     const product = baseline().querySelector('[data-gate0-scope-product-select]');
+ 90:     product.value = 'passport-product-b';
+ 91:     product.dispatchEvent(new Event('change', { bubbles: true }));
+ 92:     const switched = activeView === 'project' &&
+ 93:       guruV194Ui(state).selectedProductId === 'passport-product-b' &&
+ 94:       card('gate0-landing-check-v215').textContent.includes('Лиса') &&
+ 95:       card('card-12').open;
+ 96:     const companyUnaffectedByProduct = card('card-11').open &&
+ 97:       card('card-11').querySelector('.diag-5a')?.textContent === companyContent;
+ 98:     const diagnosticFollowsProduct = card('gate0-product-diagnostic')
+ 99:       .querySelector('[data-gate0-diagnostic-product-id]')?.dataset.gate0DiagnosticProductId === 'passport-product-b';
+100:     renderProject();
+101:     const rerendered = card('card-11').open && card('card-12').open &&
+102:       card('card-12').querySelector('[data-control-fixation-key]').value === '2026-10-15' &&
+103:       card('card-10').querySelector('[data-cr-meta-field="positionId"]').value === 'passport-product-a';
+104:     const gate0 = state.gates.find((gate) => gate.id === 'gate-0');
+105:     const progressMoved = __guruPassportPrevGateBlockStatusesV527(gate0).length -
+106:       guruGateBlockStatuses(gate0).length === ids.length;
+107:     renderGate();
+108:     const absentFromGate0 = ids.every((id) => !document.querySelector('.gate0-vertical [data-card-row="' + id + '"]'));
+109:     await new Promise((resolve) => setTimeout(resolve, 350));
+110:     const saved = JSON.parse(localStorage.getItem(WORKSPACE_STORAGE_PREFIX + project.id));
+111:     return { inPassport, companyBeforeProductSelector, companyScopeOnly,
+112:       companyUnaffectedByProduct, open, switched, diagnosticFollowsProduct,
+113:       rerendered, progressMoved, absentFromGate0,
+114:       dataPreserved: saved?.project?.controlFixationDate === '2026-10-15' &&
+115:         saved?.gates?.find((gate) => gate.id === 'gate-0')?.cards?.find((entry) => entry.id === 'card-10')
+116:           ?.currentResultsMeta?.positionId === 'passport-product-a',
+117:       errors: window.__guruErrors };
+118:   })()`);
+119:   console.log(JSON.stringify(report, null, 2));
+120:   for (const [key, value] of Object.entries(report)) {

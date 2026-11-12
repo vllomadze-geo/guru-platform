@@ -789,7 +789,7 @@ try {
           v267AdditionalJtbdsDom?.lastElementChild?.matches?.(
             "[data-pv181-jtbd-add]",
           ) === true,
-        pendingTitle: v273PendingCard.querySelector("header strong")?.textContent.trim() || "",
+        pendingTitle: v273PendingCard.querySelector("summary strong")?.textContent.trim() || "",
         pendingRows: v273PendingRows.length,
         pendingComputed: v273Pending.phrases.length,
         pendingPhrases: v273PendingPhrases,

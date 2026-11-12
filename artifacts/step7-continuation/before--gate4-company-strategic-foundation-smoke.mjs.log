@@ -1,0 +1,19 @@
+file:///private/tmp/guru-step7-before/scripts/gate4-company-strategic-foundation-smoke.mjs:53
+    throw new Error(
+          ^
+
+Error: TypeError: Cannot read properties of undefined (reading 'map')
+    at ensureMegaMarketing (http://127.0.0.1:9500/app.js?v=2.3.526%2B3f52d3b9d9c5:21232:37)
+    at ensureMegaMarketing (http://127.0.0.1:9500/gate1-webmaster-qa.js?v=2.3.526%2B3f52d3b9d9c5:228:60)
+    at g3Gate0Marketing (http://127.0.0.1:9500/app.js?v=2.3.526%2B3f52d3b9d9c5:29851:13)
+    at g4LaunchChannels (http://127.0.0.1:9500/app.js?v=2.3.526%2B3f52d3b9d9c5:32665:13)
+    at g4LaunchChannels (http://127.0.0.1:9500/app.js?v=2.3.526%2B3f52d3b9d9c5:35081:16)
+    at g4FiveToolCardHtmlV523 (http://127.0.0.1:9500/gate4-five-a.js?v=2.3.526%2B3f52d3b9d9c5:236:23)
+    at http://127.0.0.1:9500/gate4-five-a.js?v=2.3.526%2B3f52d3b9d9c5:486:7
+    at Array.map (<anonymous>)
+    at http://127.0.0.1:9500/gate4-five-a.js?v=2.3.526%2B3f52d3b9d9c5:485:61
+    at Array.map (<anonymous>)
+    at evaluate (file:///private/tmp/guru-step7-before/scripts/gate4-company-strategic-foundation-smoke.mjs:53:11)
+    at async file:///private/tmp/guru-step7-before/scripts/gate4-company-strategic-foundation-smoke.mjs:188:19
+
+Node.js v22.14.0

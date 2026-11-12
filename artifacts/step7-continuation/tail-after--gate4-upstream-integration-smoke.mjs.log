@@ -1,0 +1,11 @@
+file:///private/tmp/guru-step7-after-tail/scripts/gate4-upstream-integration-smoke.mjs:55
+  if (response.exceptionDetails) throw new Error(
+                                       ^
+
+Error: Error: Fixture has no Gate 4-only phrase
+    at <anonymous>:41:32
+    at <anonymous>:134:5
+    at evaluate (file:///private/tmp/guru-step7-after-tail/scripts/gate4-upstream-integration-smoke.mjs:55:40)
+    at async file:///private/tmp/guru-step7-after-tail/scripts/gate4-upstream-integration-smoke.mjs:82:18
+
+Node.js v22.14.0

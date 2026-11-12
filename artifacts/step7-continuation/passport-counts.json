@@ -1,0 +1,249 @@
+{
+  "ids": [
+    "card-11",
+    "gate0-landing-check-v215",
+    "card-10",
+    "gate0-product-diagnostic",
+    "card-12"
+  ],
+  "before": [
+    {
+      "id": "card-1",
+      "title": "Проект: базовые сведения"
+    },
+    {
+      "id": "gate0-project-goal",
+      "title": "Цель проекта и ограничения"
+    },
+    {
+      "id": "gate0-company-brand-purpose",
+      "title": "Цель бренда"
+    },
+    {
+      "id": "gate0-company-segmentation",
+      "title": "Сегментация · Компания"
+    },
+    {
+      "id": "gate0-company-positioning",
+      "title": "Позиционирование · Компания"
+    },
+    {
+      "id": "gate0-company-offer",
+      "title": "Оффер и CTA · Компания"
+    },
+    {
+      "id": "gate0-company-keyword-foundation",
+      "title": "Фундамент ключевых слов · Компания"
+    },
+    {
+      "id": "card-7",
+      "title": "Текущее состояние маркетинговой системы · Компания"
+    },
+    {
+      "id": "card-11",
+      "title": "Диагностика точки отсчёта · Компания"
+    },
+    {
+      "id": "card-2",
+      "title": "Продукт, сегмент и задача клиента"
+    },
+    {
+      "id": "gate0-product-diagnostic",
+      "title": "Диагностика точки отсчёта · Продукт/Услуга"
+    },
+    {
+      "id": "gate0-landing-check-v215",
+      "title": "Проверь — у каждого продукта должна быть своя посадочная"
+    },
+    {
+      "id": "card-10",
+      "title": "Текущие результаты"
+    },
+    {
+      "id": "card-12",
+      "title": "Контрольная дата фиксации"
+    }
+  ],
+  "after": [
+    {
+      "id": "card-1",
+      "title": "Проект: базовые сведения"
+    },
+    {
+      "id": "gate0-project-goal",
+      "title": "Цель проекта и ограничения"
+    },
+    {
+      "id": "gate0-company-brand-purpose",
+      "title": "Цель бренда"
+    },
+    {
+      "id": "gate0-company-segmentation",
+      "title": "Сегментация · Компания"
+    },
+    {
+      "id": "gate0-company-positioning",
+      "title": "Позиционирование · Компания"
+    },
+    {
+      "id": "gate0-company-offer",
+      "title": "Оффер и CTA · Компания"
+    },
+    {
+      "id": "gate0-company-keyword-foundation",
+      "title": "Фундамент ключевых слов · Компания"
+    },
+    {
+      "id": "card-7",
+      "title": "Текущее состояние маркетинговой системы · Компания"
+    },
+    {
+      "id": "card-2",
+      "title": "Продукт, сегмент и задача клиента"
+    }
+  ],
+  "legacy": 20,
+  "current": 9,
+  "all": [
+    {
+      "id": "card-1",
+      "title": "Проект: базовые сведения",
+      "merged": false,
+      "psych": false,
+      "moved": false
+    },
+    {
+      "id": "card-2",
+      "title": "Продукт, сегмент и задача клиента",
+      "merged": false,
+      "psych": false,
+      "moved": false
+    },
+    {
+      "id": "gate0-project-goal",
+      "title": "Цель проекта и ограничения",
+      "merged": false,
+      "psych": false,
+      "moved": false
+    },
+    {
+      "id": "gate0-landing-check-v215",
+      "title": "Проверь — у каждого продукта должна быть своя посадочная",
+      "merged": false,
+      "psych": false,
+      "moved": true
+    },
+    {
+      "id": "gate0-company-brand-purpose",
+      "title": "Цель бренда",
+      "merged": false,
+      "psych": false,
+      "moved": false
+    },
+    {
+      "id": "gate0-company-segmentation",
+      "title": "Сегментация · Компания",
+      "merged": false,
+      "psych": false,
+      "moved": false
+    },
+    {
+      "id": "gate0-company-positioning",
+      "title": "Позиционирование · Компания",
+      "merged": false,
+      "psych": false,
+      "moved": false
+    },
+    {
+      "id": "gate0-company-offer",
+      "title": "Оффер и CTA · Компания",
+      "merged": false,
+      "psych": false,
+      "moved": false
+    },
+    {
+      "id": "gate0-company-keyword-foundation",
+      "title": "Фундамент ключевых слов · Компания",
+      "merged": false,
+      "psych": false,
+      "moved": false
+    },
+    {
+      "id": "card-3",
+      "title": "Психологическая декомпозиция оффера",
+      "merged": false,
+      "psych": true,
+      "moved": false
+    },
+    {
+      "id": "card-4",
+      "title": "Текущее позиционирование, УТП, офферы и CTA — внешнее сообщение",
+      "merged": true,
+      "psych": false,
+      "moved": false
+    },
+    {
+      "id": "card-5",
+      "title": "Текущие офферы и CTA",
+      "merged": true,
+      "psych": false,
+      "moved": false
+    },
+    {
+      "id": "card-6",
+      "title": "Текущая семантика и поисковый фокус",
+      "merged": true,
+      "psych": false,
+      "moved": false
+    },
+    {
+      "id": "card-7",
+      "title": "Текущее состояние маркетинговой системы · Компания",
+      "merged": false,
+      "psych": false,
+      "moved": false
+    },
+    {
+      "id": "card-11",
+      "title": "Диагностика точки отсчёта · Компания",
+      "merged": false,
+      "psych": false,
+      "moved": true
+    },
+    {
+      "id": "card-8",
+      "title": "Текущая инфраструктура маркетинга",
+      "merged": true,
+      "psych": false,
+      "moved": false
+    },
+    {
+      "id": "card-9",
+      "title": "Текущие каналы и рекламные материалы",
+      "merged": true,
+      "psych": false,
+      "moved": false
+    },
+    {
+      "id": "card-10",
+      "title": "Текущие результаты",
+      "merged": false,
+      "psych": false,
+      "moved": true
+    },
+    {
+      "id": "gate0-product-diagnostic",
+      "title": "Диагностика точки отсчёта · Продукт/Услуга",
+      "merged": false,
+      "psych": false,
+      "moved": true
+    },
+    {
+      "id": "card-12",
+      "title": "Контрольная дата фиксации",
+      "merged": false,
+      "psych": false,
+      "moved": true
+    }
+  ]
+}

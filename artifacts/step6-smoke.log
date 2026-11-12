@@ -1,0 +1,72 @@
+Загружен iCleaning
+Матрица icleaning catalog-item-1786885522653-759ff6
+Матрица завершена icleaning {
+  total: 96,
+  done: 11,
+  ready: 6,
+  notRequired: 5,
+  inProgress: 19,
+  problem: 3,
+  notStarted: 63,
+  percent: 23
+} ошибок 0
+Матрица icleaning catalog-item-1786885522654-b437c0
+Матрица завершена icleaning {
+  total: 96,
+  done: 11,
+  ready: 6,
+  notRequired: 5,
+  inProgress: 19,
+  problem: 3,
+  notStarted: 63,
+  percent: 23
+} ошибок 0
+Матрица icleaning catalog-item-1786885522654-b659e1
+Матрица завершена icleaning {
+  total: 96,
+  done: 18,
+  ready: 13,
+  notRequired: 5,
+  inProgress: 27,
+  problem: 2,
+  notStarted: 49,
+  percent: 34
+} ошибок 0
+Матрица icleaning catalog-item-1786885522654-a3955f
+Матрица завершена icleaning {
+  total: 96,
+  done: 19,
+  ready: 14,
+  notRequired: 5,
+  inProgress: 26,
+  problem: 2,
+  notStarted: 49,
+  percent: 34
+} ошибок 0
+Итог icleaning true []
+Загружен SIVRCE
+Матрица sivrce нет продукта
+Матрица завершена sivrce {
+  total: 51,
+  done: 7,
+  ready: 0,
+  notRequired: 7,
+  inProgress: 7,
+  problem: 1,
+  notStarted: 36,
+  percent: 22
+} ошибок 0
+Итог sivrce true []
+Загружен УНИВЕРСАЛ / ГУРУ
+Матрица guru нет продукта
+Матрица завершена guru {
+  total: 51,
+  done: 0,
+  ready: 0,
+  notRequired: 0,
+  inProgress: 3,
+  problem: 1,
+  notStarted: 47,
+  percent: 4
+} ошибок 0
+Итог guru true []

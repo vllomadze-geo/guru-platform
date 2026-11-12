@@ -60,6 +60,7 @@ async function waitFor(page, expression, timeoutMs = 20000) {
     if (await evaluate(page, `Boolean(${expression})`)) return;
     await wait(100);
   }
+  console.error(await evaluate(page, `({gate:activeGateId,rendered:guruRenderedGateId,errors:window.__guruErrors,blog:document.querySelectorAll('[data-gate4-blog-scope]').length,selected:state?.project?.gate0ScopeUiV194,body:document.querySelector('#contentArea')?.textContent.slice(0,1000)})`));
   throw new Error(`Timed out waiting for ${expression}`);
 }
 
@@ -81,6 +82,7 @@ await page.ready;
 try {
   await page.call("Runtime.enable");
   await page.call("Page.enable");
+  await page.call("Page.bringToFront");
   await page.call("Page.addScriptToEvaluateOnNewDocument", {
     source: `{
       const nativeFetch = window.fetch.bind(window);
@@ -143,6 +145,9 @@ try {
       createdAt: new Date().toISOString()
     };
     products.push(goat, horse);
+    const membership = megaPlatformCategoryStore(state).categoryIdsByProduct;
+    membership[goat.id] = [category.id];
+    membership[horse.id] = [category.id];
     const records = guruV194Records(state);
     records.push(
       {
@@ -167,7 +172,7 @@ try {
     const ui = guruV194Ui(state);
     ui.selectedCategoryId = category.id;
     ui.selectedProductId = goat.id;
-    activeGateId = "gate-1";
+    activeGateId = "gate-4";
     renderGate();
     return { goatId: goat.id, horseId: horse.id, count: gate1.cards.length };
   })()`);
@@ -238,20 +243,14 @@ try {
   })()`);
 
   const result = await evaluate(page, `(() => {
-    const root = document.querySelector(".g1-redesign");
+    const root = document.querySelector(".g4-launch-workspace");
     const gate1 = state.gates.find((gate) => gate.id === "gate-1");
     const card25 = gate1.cards.find((card) => card.id === "card-25");
-    const companyBlog = root.querySelector(":scope > [data-gate1-blog-company-v304]");
-    const productBlog = root.querySelector(":scope > [data-gate1-blog-product-v304]");
-    const productDivider = [...root.querySelectorAll(":scope > .gate0-section-heading")].find(
-      (node) => node.querySelector(".gate0-section-heading-title")?.textContent.trim() === "Продукт / Услуга",
-    );
-    const selector = root.querySelector(':scope > [data-guru-product-context="gate1-product-pages"]');
-    const productCard = root.querySelector(':scope > [data-card="card-24"]');
-    const seo = root.querySelector(':scope > [data-g1-seo-central-v298="product"]');
-    const demand = root.querySelector(':scope > .g1-section > [data-gate1-toggle-section="pain_jtbd_offer"]')?.closest('.g1-section');
-    const economics = root.querySelector(':scope > .g1-section > [data-gate1-toggle-section="unit_economics"]')?.closest('.g1-section');
-    const productComparison = root.querySelector(':scope > .project-comparison-product-v309');
+    const companyScope = root.querySelector('[data-gate-scope="company"]');
+    const productScope = root.querySelector('[data-gate-scope="product"]');
+    const companyBlog = companyScope.querySelector('[data-gate1-blog-company-v304]');
+    const productBlog = productScope.querySelector('[data-gate1-blog-product-v304]');
+    const selector = productScope.querySelector('[data-guru-product-context="gate4-launch"]');
     const article = gate1BlogStoreV304(state).articles.find(
       (item) => item.id === ${JSON.stringify(createdId)},
     );
@@ -269,20 +268,9 @@ try {
       ),
       separateStorage: Boolean(state.gate1BlogV304) &&
         !Object.prototype.hasOwnProperty.call(card25 || {}, "gate1BlogV304"),
-      companyBeforeProductDivider: Boolean(
-        companyBlog && productDivider &&
-        (companyBlog.compareDocumentPosition(productDivider) & Node.DOCUMENT_POSITION_FOLLOWING),
-      ),
-      productOrder: Boolean(
-        productDivider?.nextElementSibling === selector &&
-        selector?.querySelector('[data-guru-strategic-foundation]') &&
-        selector?.nextElementSibling === productCard &&
-        productCard?.nextElementSibling === seo &&
-        seo?.nextElementSibling === demand &&
-        demand?.nextElementSibling === productBlog &&
-        productBlog?.nextElementSibling === economics &&
-        economics?.nextElementSibling === productComparison,
-      ),
+      companyBeforeProductDivider: Boolean(companyScope.compareDocumentPosition(productScope) & Node.DOCUMENT_POSITION_FOLLOWING),
+      productOrder: Boolean(selector && productBlog &&
+        (selector.compareDocumentPosition(productBlog) & Node.DOCUMENT_POSITION_FOLLOWING)),
       blocks: Boolean(companyBlog && productBlog),
       hubRow: Boolean(companyBlog.querySelector(
         '[data-gate1-blog-hub-article-v304="${createdId}"]',
@@ -304,12 +292,35 @@ try {
   assert(result.card25Unchanged && result.card25Title === "СТАТЬЯ БЛОГА", "card-25 changed while adding the separate Blog system");
   assert(result.otherGatesUnchanged, "A non-Gate-1 gate changed during Blog interactions");
   assert(result.separateStorage, "Blog data crossed into the existing Audit card storage");
-  assert(result.blocks && result.companyBeforeProductDivider && result.productOrder, "Blog Company/Product blocks are missing or mounted in the wrong Gate 1 positions");
+  assert(result.blocks && result.companyBeforeProductDivider && result.productOrder, "Blog Company/Product blocks are missing or mounted in the wrong Gate 4 scopes");
   assert(result.hubRow && result.requiredTemplate && result.faqCount >= 1, "The article template or hub reference row is incomplete");
   assert(JSON.stringify(result.productIds) === JSON.stringify([setup.goatId, setup.horseId].sort()), "Many-to-many product links were not preserved");
   assert(result.goatStatus === "published" && result.linkedVisible, "The Goat article/status is not visible in the Product Blog block");
   assert(result.contextText.includes("памятный подарок") && result.contextText.includes("Покупатели необычных подарков"), "Live JTBD/Segment context is missing from Product Blog");
   assert(result.errors.length === 0, `Runtime errors: ${result.errors.join(" | ")}`);
+  // Native disclosure and typing keep the same editor and save through the
+  // existing autosave, without migrating the blog storage or product links.
+  await evaluate(page, `(() => {
+    const input = document.querySelector('[data-gate1-blog-article-id-v304="${createdId}"][data-gate1-blog-article-field-v304="title"]');
+    window.__blogTypingNode = input;
+    nowGuideOpenAncestors(input);
+    input.focus();
+    if (document.activeElement !== input) throw new Error("Blog editor could not receive focus"); input.value = "Статья после переноса в Реализацию";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    return true;
+  })()`);
+  await waitFor(page, `JSON.parse(localStorage.getItem(WORKSPACE_STORAGE_PREFIX + activeProjectId) || '{}').gate1BlogV304?.articles?.some(a=>a.id==='${createdId}'&&a.title==='Статья после переноса в Реализацию')`);
+  assert(await evaluate(page, 'window.__blogTypingNode.isConnected && document.activeElement === window.__blogTypingNode'), "Autosave replaced the focused blog editor");
+  await evaluate(page, `(() => {
+    const selector = document.querySelector('[data-gate0-scope-product-select="gate4-launch"]');
+    selector.value = '${setup.horseId}'; selector.dispatchEvent(new Event('change',{bubbles:true}));return true;
+  })()`);
+  await waitFor(page, `document.querySelector('[data-gate1-blog-link-status-v304][data-gate1-blog-product-id-v304="${setup.horseId}"]')`);
+  assert(await evaluate(page, `document.querySelector('[data-gate1-blog-link-status-v304][data-gate1-blog-product-id-v304="${setup.horseId}"]').value === 'not_started'`), "Article status leaked between products");
+  await evaluate(page, 'saveState(); location.reload();');
+  await waitFor(page, `typeof state !== 'undefined' && Boolean(state?.gate1BlogV304?.articles?.some(a=>a.id==='${createdId}'&&a.title==='Статья после переноса в Реализацию'))`);
+  console.log('PASS: Gate 4 blog, autosave, focus, product isolation, reload');
+
 } finally {
   page.close();
   await browser.call("Target.disposeBrowserContext", { browserContextId });

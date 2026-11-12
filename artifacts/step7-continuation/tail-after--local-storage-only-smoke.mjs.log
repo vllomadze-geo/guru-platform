@@ -1,0 +1,9 @@
+file:///private/tmp/guru-step7-after-tail/scripts/local-storage-only-smoke.mjs:51
+  throw new Error(`Timed out waiting for: ${expression}`);
+        ^
+
+Error: Timed out waiting for: document.readyState === "complete" && typeof openProject === "function" && !document.getElementById("projectLauncher").hidden
+    at waitFor (file:///private/tmp/guru-step7-after-tail/scripts/local-storage-only-smoke.mjs:51:9)
+    at async file:///private/tmp/guru-step7-after-tail/scripts/local-storage-only-smoke.mjs:135:1
+
+Node.js v22.14.0

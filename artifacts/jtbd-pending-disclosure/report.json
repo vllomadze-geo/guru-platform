@@ -1,0 +1,240 @@
+{
+  "beforeHash": "8b769083c938f6cddbb6192809754ccbb800e827c030c7184f8e328ec0b81832",
+  "beforeReadiness": {
+    "gate1": [
+      [
+        "company_demand_positioning",
+        "in_progress"
+      ],
+      [
+        "project-comparison",
+        "in_progress"
+      ],
+      [
+        "target-audience",
+        "ready"
+      ],
+      [
+        "card-21",
+        "ready"
+      ],
+      [
+        "card-22-hub",
+        "in_progress"
+      ],
+      [
+        "card-22",
+        "in_progress"
+      ],
+      [
+        "card-25",
+        "in_progress"
+      ],
+      [
+        "card-26",
+        "not_started"
+      ],
+      [
+        "card-27",
+        "not_started"
+      ],
+      [
+        "card-28",
+        "not_started"
+      ],
+      [
+        "card-30",
+        "not_started"
+      ],
+      [
+        "card-31",
+        "not_started"
+      ],
+      [
+        "card-32",
+        "not_started"
+      ],
+      [
+        "card-site-header-v497",
+        "not_started"
+      ],
+      [
+        "card-site-footer-v497",
+        "not_started"
+      ],
+      [
+        "card-29",
+        "not_started"
+      ],
+      [
+        "card-35",
+        "not_started"
+      ],
+      [
+        "card-36",
+        "not_started"
+      ],
+      [
+        "card-37",
+        "not_started"
+      ],
+      [
+        "card-24",
+        "ready"
+      ],
+      [
+        "pain_jtbd_offer",
+        "ready"
+      ],
+      [
+        "project-comparison-product",
+        "not_started"
+      ],
+      [
+        "unit-economics",
+        "not_started"
+      ]
+    ],
+    "path": {
+      "total": 88,
+      "done": 28,
+      "ready": 24,
+      "notRequired": 4,
+      "inProgress": 24,
+      "problem": 4,
+      "notStarted": 32,
+      "percent": 48
+    },
+    "current": "card-7"
+  },
+  "initial": {
+    "open": true,
+    "product": "catalog-item-1786792591872-51f503",
+    "rows": 37,
+    "count": "37 фраз"
+  },
+  "afterHash": "8b769083c938f6cddbb6192809754ccbb800e827c030c7184f8e328ec0b81832",
+  "afterReadiness": {
+    "gate1": [
+      [
+        "company_demand_positioning",
+        "in_progress"
+      ],
+      [
+        "project-comparison",
+        "in_progress"
+      ],
+      [
+        "target-audience",
+        "ready"
+      ],
+      [
+        "card-21",
+        "ready"
+      ],
+      [
+        "card-22-hub",
+        "in_progress"
+      ],
+      [
+        "card-22",
+        "in_progress"
+      ],
+      [
+        "card-25",
+        "in_progress"
+      ],
+      [
+        "card-26",
+        "not_started"
+      ],
+      [
+        "card-27",
+        "not_started"
+      ],
+      [
+        "card-28",
+        "not_started"
+      ],
+      [
+        "card-30",
+        "not_started"
+      ],
+      [
+        "card-31",
+        "not_started"
+      ],
+      [
+        "card-32",
+        "not_started"
+      ],
+      [
+        "card-site-header-v497",
+        "not_started"
+      ],
+      [
+        "card-site-footer-v497",
+        "not_started"
+      ],
+      [
+        "card-29",
+        "not_started"
+      ],
+      [
+        "card-35",
+        "not_started"
+      ],
+      [
+        "card-36",
+        "not_started"
+      ],
+      [
+        "card-37",
+        "not_started"
+      ],
+      [
+        "card-24",
+        "ready"
+      ],
+      [
+        "pain_jtbd_offer",
+        "ready"
+      ],
+      [
+        "project-comparison-product",
+        "not_started"
+      ],
+      [
+        "unit-economics",
+        "not_started"
+      ]
+    ],
+    "path": {
+      "total": 88,
+      "done": 28,
+      "ready": 24,
+      "notRequired": 4,
+      "inProgress": 24,
+      "problem": 4,
+      "notStarted": 32,
+      "percent": 48
+    },
+    "current": "card-7"
+  },
+  "navigationHash": "8b769083c938f6cddbb6192809754ccbb800e827c030c7184f8e328ec0b81832",
+  "drag": {
+    "removed": true,
+    "returned": true,
+    "closed": true,
+    "count": 37,
+    "before": 37
+  },
+  "empty": {
+    "message": "Все ключевые слова распределены по JTBD.",
+    "closed": true,
+    "opened": true,
+    "separateKey": true
+  },
+  "build": "2.3.526+435075fed0eb",
+  "passed": true
+}

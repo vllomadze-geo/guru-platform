@@ -426,13 +426,12 @@ function g2MetrikaCompanyCardHtmlV374(card) {
       ${g2MetrikaCompanySelectV374(card, "strictFiltering", "Строгая фильтрация", data.strictFiltering || "", G2_METRIKA_COMPANY_YES_NO_V374)}
       ${data.strictFiltering === "yes" ? g2MetrikaCompanyFieldV374(card, "strictReason", "Основание строгой фильтрации", data.strictReason) : ""}`,
   }[kind]();
-  return `<article id="${escapeAttr(card.id)}" class="g2-check-row g2-mp-card-v367 g2-mc-card-v374" data-card="${escapeAttr(card.id)}" data-g2-scope-kind="company">
-    <div class="g2-check-title"><span>${escapeHtml(definition.title)}</span><span class="status-pill status-${status}">${escapeHtml(STATUS_LABELS[status] || status)}</span></div>
-    <div class="g2-mc-fields-v374">
+  const body = `<div class="g2-mc-fields-v374">
       ${specific}
       ${data.migrationNotice ? `<p class="g2-mc-notice-v374">${escapeHtml(data.migrationNotice)}</p>` : ""}
-    </div>
-  </article>`;
+    </div>`;
+  return g2UnifiedCardPanelHtml({ card, scope: "company", status, title: definition.title,
+    body, className: "g2-mp-card-v367 g2-mc-card-v374 g2u-company-audit" });
 }
 
 const __g2MetrikaCompanyPrevCardHtmlV374 = g2CardHtml;

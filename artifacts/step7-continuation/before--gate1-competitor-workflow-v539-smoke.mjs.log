@@ -1,0 +1,9 @@
+file:///private/tmp/guru-step7-before/scripts/gate1-competitor-table-v540-smoke.mjs:70
+    throw Error(`Timed out waiting for ${expression}`);
+          ^
+
+Error: Timed out waiting for document.querySelector(".g1ct-table-v540")
+    at waitFor (file:///private/tmp/guru-step7-before/scripts/gate1-competitor-table-v540-smoke.mjs:70:11)
+    at async file:///private/tmp/guru-step7-before/scripts/gate1-competitor-table-v540-smoke.mjs:113:3
+
+Node.js v22.14.0

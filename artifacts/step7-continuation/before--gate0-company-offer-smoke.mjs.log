@@ -1,0 +1,19 @@
+file:///private/tmp/guru-step7-before/scripts/gate0-company-offer-smoke.mjs:55
+    throw new Error(
+          ^
+
+Error: TypeError: m.infra is not iterable
+    at megaMarketingStatus (http://127.0.0.1:9500/app.js?v=2.3.526%2B3f52d3b9d9c5:23678:10)
+    at recalculateStatusForCard (http://127.0.0.1:9500/app.js?v=2.3.526%2B3f52d3b9d9c5:23793:19)
+    at recalculateStatusForCard (http://127.0.0.1:9500/app.js?v=2.3.526%2B3f52d3b9d9c5:24684:10)
+    at recalculateStatusForCard (http://127.0.0.1:9500/app.js?v=2.3.526%2B3f52d3b9d9c5:25016:10)
+    at recalculateStatusForCard (http://127.0.0.1:9500/app.js?v=2.3.526%2B3f52d3b9d9c5:25257:10)
+    at recalculateStatusForCard (http://127.0.0.1:9500/app.js?v=2.3.526%2B3f52d3b9d9c5:25547:10)
+    at recalculateStatusForCard (http://127.0.0.1:9500/app.js?v=2.3.526%2B3f52d3b9d9c5:26136:10)
+    at recalculateStatusForCard (http://127.0.0.1:9500/app.js?v=2.3.526%2B3f52d3b9d9c5:26263:10)
+    at recalculateStatusForCard (http://127.0.0.1:9500/app.js?v=2.3.526%2B3f52d3b9d9c5:26399:10)
+    at recalculateStatusForCard (http://127.0.0.1:9500/app.js?v=2.3.526%2B3f52d3b9d9c5:26575:10)
+    at evaluate (file:///private/tmp/guru-step7-before/scripts/gate0-company-offer-smoke.mjs:55:11)
+    at async file:///private/tmp/guru-step7-before/scripts/gate0-company-offer-smoke.mjs:144:19
+
+Node.js v22.14.0

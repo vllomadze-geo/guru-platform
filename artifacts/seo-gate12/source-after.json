@@ -1,0 +1,18 @@
+{
+  "apple": {
+    "file": "/private/tmp/guru-now-korich-workspace.json",
+    "sha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37"
+  },
+  "icleaning": {
+    "file": "/private/tmp/guru-step6-icleaning-workspace.json",
+    "sha256": "a1baa877f77727f7813f80cc0749763bd5122f8f56d48136fa1527542ea19c71"
+  },
+  "sivrce": {
+    "file": "/private/tmp/guru-step6-sivrce-workspace.json",
+    "sha256": "59c7656d64ab0f86da8791c2531768249d6feb64b40673ed174654ea650c413c"
+  },
+  "guru": {
+    "file": "/private/tmp/guru-step6-guru-workspace.json",
+    "sha256": "847765127374ca95d9db93631e5c416b1d1b2518e56f6754a6b7b6ae058a2360"
+  }
+}

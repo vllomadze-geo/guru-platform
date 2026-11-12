@@ -1,0 +1,231 @@
+[
+  {
+    "label": "before",
+    "migrated": {
+      "counterId": "12345",
+      "primaryGoal": {
+        "entryId": "company-goal-1",
+        "name": "THANK YOU PAGE",
+        "type": "page_visit",
+        "goalId": "573230679",
+        "state": "works"
+      },
+      "goalCount": 2,
+      "oldGoalList": true,
+      "oldGoalState": "works",
+      "oldChecklist": "old checklist answer",
+      "companyWebvisor": 1,
+      "productWebvisor": 1,
+      "productAnswer": "yes",
+      "oldCardsVisible": 2,
+      "initialStatus": "not_started"
+    },
+    "verified": {
+      "ready": "ready",
+      "stale": "in_progress",
+      "check": "",
+      "previousVerification": "Яндекс Метрика → Проверка счётчика",
+      "checklist": "old checklist answer",
+      "exportModel": "gate2_setup_wizard",
+      "exportUnits": 7
+    },
+    "propagation": {
+      "ready": {
+        "ready": true,
+        "total": 7,
+        "done": 7
+      },
+      "stale": {
+        "ready": false,
+        "total": 7,
+        "done": 5
+      },
+      "optional": [
+        "not_needed",
+        "not_needed"
+      ]
+    },
+    "units": {
+      "summary": {
+        "total": 7,
+        "done": 5,
+        "ready": 3,
+        "notRequired": 2,
+        "inProgress": 2,
+        "problem": 0,
+        "notStarted": 0,
+        "percent": 86
+      },
+      "model": "gate2_setup_wizard",
+      "units": [
+        {
+          "id": "g2w-domain",
+          "title": "Домен и хостинг",
+          "status": "ready"
+        },
+        {
+          "id": "g2w-counter",
+          "title": "Яндекс Метрика · счётчик",
+          "status": "in_progress"
+        },
+        {
+          "id": "g2w-goal",
+          "title": "Яндекс Метрика · конверсионная цель",
+          "status": "in_progress"
+        },
+        {
+          "id": "g2w-vk",
+          "title": "VK Реклама и пиксель",
+          "status": "not_needed"
+        },
+        {
+          "id": "g2w-crm",
+          "title": "CRM и получение обращений",
+          "status": "ready"
+        },
+        {
+          "id": "g2w-webmaster",
+          "title": "Яндекс Вебмастер",
+          "status": "not_needed"
+        },
+        {
+          "id": "g2w-safety",
+          "title": "Безопасность и персональные данные",
+          "status": "ready"
+        }
+      ]
+    }
+  },
+  {
+    "label": "after",
+    "migrated": {
+      "counterId": "12345",
+      "primaryGoal": {
+        "entryId": "company-goal-1",
+        "name": "THANK YOU PAGE",
+        "type": "page_visit",
+        "goalId": "573230679",
+        "state": "works"
+      },
+      "goalCount": 2,
+      "oldGoalList": true,
+      "oldGoalState": "works",
+      "oldChecklist": "old checklist answer",
+      "companyWebvisor": 1,
+      "productWebvisor": 1,
+      "productAnswer": "yes",
+      "oldCardsVisible": 2,
+      "initialStatus": "not_started"
+    },
+    "verified": {
+      "ready": "ready",
+      "stale": "in_progress",
+      "check": "",
+      "previousVerification": "Яндекс Метрика → Проверка счётчика",
+      "checklist": "old checklist answer",
+      "exportModel": "gate2_service_readiness",
+      "exportUnits": 14
+    },
+    "propagation": {
+      "ready": {
+        "ready": false,
+        "total": 14,
+        "done": 4
+      },
+      "stale": {
+        "ready": false,
+        "total": 14,
+        "done": 2
+      },
+      "optional": [
+        "in_progress",
+        "in_progress"
+      ]
+    },
+    "units": {
+      "summary": {
+        "total": 14,
+        "done": 2,
+        "ready": 2,
+        "notRequired": 0,
+        "inProgress": 5,
+        "problem": 0,
+        "notStarted": 7,
+        "percent": 32
+      },
+      "model": "gate2_service_readiness",
+      "units": [
+        {
+          "id": "g2sb-company-domain",
+          "title": "Домен и HTTPS",
+          "status": "ready"
+        },
+        {
+          "id": "g2w-counter",
+          "title": "Яндекс Метрика · счётчик",
+          "status": "in_progress"
+        },
+        {
+          "id": "g2w-goal",
+          "title": "Яндекс Метрика · конверсионная цель",
+          "status": "in_progress"
+        },
+        {
+          "id": "g2sb-company-webmaster",
+          "title": "Яндекс Вебмастер",
+          "status": "in_progress"
+        },
+        {
+          "id": "g2sb-company-yandex-business",
+          "title": "Яндекс Бизнес",
+          "status": "not_started"
+        },
+        {
+          "id": "g2sb-company-yandex-direct",
+          "title": "Яндекс Директ · кабинет",
+          "status": "not_started"
+        },
+        {
+          "id": "g2sb-company-vk",
+          "title": "VK Реклама и пиксель",
+          "status": "in_progress"
+        },
+        {
+          "id": "g2sb-company-telegram-ads",
+          "title": "Telegram Ads · кабинет",
+          "status": "not_started"
+        },
+        {
+          "id": "g2sb-company-meta-ads",
+          "title": "Meta Ads · кабинет и пиксель",
+          "status": "not_started"
+        },
+        {
+          "id": "g2sb-company-ga4",
+          "title": "Google Analytics 4",
+          "status": "not_started"
+        },
+        {
+          "id": "g2sb-company-gsc",
+          "title": "Google Search Console",
+          "status": "not_started"
+        },
+        {
+          "id": "g2sb-company-google-ads",
+          "title": "Google Ads · конверсии",
+          "status": "not_started"
+        },
+        {
+          "id": "g2sb-company-leads",
+          "title": "Приём заявок",
+          "status": "in_progress"
+        },
+        {
+          "id": "g2sb-company-safety",
+          "title": "Юридическая защита",
+          "status": "ready"
+        }
+      ]
+    }
+  }
+]

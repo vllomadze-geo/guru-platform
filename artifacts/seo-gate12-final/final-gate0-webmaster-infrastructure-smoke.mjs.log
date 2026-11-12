@@ -1,0 +1,79 @@
+{
+  "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+  "statuses": [
+    {
+      "status": "works",
+      "label": "РаботаетВыбратьРаботаетТребует улучшенияНе работаетОтсутствуетНе требуется",
+      "gate1Unchanged": true,
+      "othersUnchanged": true,
+      "commentUnchanged": true,
+      "stored": "{\"name\":\"Яндекс Вебмастер\",\"hint\":\"сайт подтверждён, sitemap отправлен, ошибки проверены\",\"group\":\"SEO-инфраструктура\",\"status\":\"works\",\"comment\":\"Gate 1 · Яндекс Вебмастер: 0 из 14 посадочных товаров проиндексировано; текущих ошибок: 0\",\"_derivedFromGate1WebmasterV295\":true}"
+    },
+    {
+      "status": "needs_improvement",
+      "label": "Требует улучшенияВыбратьРаботаетТребует улучшенияНе работаетОтсутствуетНе требуется",
+      "gate1Unchanged": true,
+      "othersUnchanged": true,
+      "commentUnchanged": true,
+      "stored": "{\"name\":\"Яндекс Вебмастер\",\"hint\":\"сайт подтверждён, sitemap отправлен, ошибки проверены\",\"group\":\"SEO-инфраструктура\",\"status\":\"needs_improvement\",\"comment\":\"Gate 1 · Яндекс Вебмастер: 0 из 14 посадочных товаров проиндексировано; текущих ошибок: 0\",\"_derivedFromGate1WebmasterV295\":true}"
+    },
+    {
+      "status": "broken",
+      "label": "Не работаетВыбратьРаботаетТребует улучшенияНе работаетОтсутствуетНе требуется",
+      "gate1Unchanged": true,
+      "othersUnchanged": true,
+      "commentUnchanged": true,
+      "stored": "{\"name\":\"Яндекс Вебмастер\",\"hint\":\"сайт подтверждён, sitemap отправлен, ошибки проверены\",\"group\":\"SEO-инфраструктура\",\"status\":\"broken\",\"comment\":\"Gate 1 · Яндекс Вебмастер: 0 из 14 посадочных товаров проиндексировано; текущих ошибок: 0\",\"_derivedFromGate1WebmasterV295\":true}"
+    },
+    {
+      "status": "missing",
+      "label": "ОтсутствуетВыбратьРаботаетТребует улучшенияНе работаетОтсутствуетНе требуется",
+      "gate1Unchanged": true,
+      "othersUnchanged": true,
+      "commentUnchanged": true,
+      "stored": "{\"name\":\"Яндекс Вебмастер\",\"hint\":\"сайт подтверждён, sitemap отправлен, ошибки проверены\",\"group\":\"SEO-инфраструктура\",\"status\":\"missing\",\"comment\":\"Gate 1 · Яндекс Вебмастер: 0 из 14 посадочных товаров проиндексировано; текущих ошибок: 0\",\"_derivedFromGate1WebmasterV295\":true}"
+    },
+    {
+      "status": "not_needed",
+      "label": "Не требуетсяВыбратьРаботаетТребует улучшенияНе работаетОтсутствуетНе требуется",
+      "gate1Unchanged": true,
+      "othersUnchanged": true,
+      "commentUnchanged": true,
+      "stored": "{\"name\":\"Яндекс Вебмастер\",\"hint\":\"сайт подтверждён, sitemap отправлен, ошибки проверены\",\"group\":\"SEO-инфраструктура\",\"status\":\"not_needed\",\"comment\":\"Gate 1 · Яндекс Вебмастер: 0 из 14 посадочных товаров проиндексировано; текущих ошибок: 0\",\"_derivedFromGate1WebmasterV295\":true}"
+    }
+  ],
+  "initial": {
+    "build": "2.3.526+b7f15c203e87",
+    "before": "{\"name\":\"Яндекс Вебмастер\",\"hint\":\"сайт подтверждён, sitemap отправлен, ошибки проверены\",\"group\":\"SEO-инфраструктура\",\"status\":\"broken\",\"comment\":\"Gate 1 · Яндекс Вебмастер: 0 из 14 посадочных товаров проиндексировано; текущих ошибок: 0\",\"_derivedFromGate1WebmasterV295\":true}",
+    "after": "{\"name\":\"Яндекс Вебмастер\",\"hint\":\"сайт подтверждён, sitemap отправлен, ошибки проверены\",\"group\":\"SEO-инфраструктура\",\"status\":\"broken\",\"comment\":\"Gate 1 · Яндекс Вебмастер: 0 из 14 посадочных товаров проиндексировано; текущих ошибок: 0\",\"_derivedFromGate1WebmasterV295\":true}",
+    "pure": true,
+    "g1Status": "broken"
+  },
+  "render": {
+    "unchanged": true,
+    "value": "broken",
+    "options": [
+      "",
+      "works",
+      "needs_improvement",
+      "broken",
+      "missing",
+      "not_needed"
+    ],
+    "source": {
+      "gate": "gate-2",
+      "card": "card-107",
+      "label": "Яндекс Вебмастер"
+    },
+    "noGate1Link": true
+  },
+  "roundTrip": true,
+  "navigation": {
+    "open": true,
+    "visible": true,
+    "highlighted": true,
+    "status": "not_needed"
+  },
+  "passed": true
+}
+Gate 0 Webmaster infrastructure smoke: PASS

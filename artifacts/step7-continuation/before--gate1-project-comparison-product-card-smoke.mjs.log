@@ -1,0 +1,76 @@
+{
+  "setup": {
+    "cardCount": 84,
+    "productId": "comparison-goat-v306"
+  },
+  "initial": {
+    "insideSeoCompany": true,
+    "adjacentBeforeTable": false,
+    "majorityCount": 7,
+    "rows": [
+      {
+        "key": "productHeroV253",
+        "title": "Герой товара",
+        "own": "У нас: карточка не выбрана"
+      },
+      {
+        "key": "productGalleryV253",
+        "title": "Галерея изделия",
+        "own": "У нас: карточка не выбрана"
+      },
+      {
+        "key": "productDeliveryGuaranteeV253",
+        "title": "Доставка / оплата / гарантия",
+        "own": "У нас: карточка не выбрана"
+      },
+      {
+        "key": "productMeaningV253",
+        "title": "Смысл товара",
+        "own": "У нас: карточка не выбрана"
+      },
+      {
+        "key": "productCreationV253",
+        "title": "Как создаётся",
+        "own": "У нас: карточка не выбрана"
+      },
+      {
+        "key": "productFinalCtaImplementedV253",
+        "title": "Финальный CTA",
+        "own": "У нас: карточка не выбрана"
+      },
+      {
+        "key": "productRelatedImplementedV253",
+        "title": "Похожие изделия",
+        "own": "У нас: карточка не выбрана"
+      }
+    ],
+    "text": "Состав карточки товара по конкурентамУ конкурентов чаще всего есть: сопоставление со всеми 7 существующими блокамиТовар не выбран Герой товараУ 1 из 1 · первый экран, H1 + цена + CTA, кнопка покупки У нас: карточка не выбрана Галерея изделияУ 1 из 1 · галерея, фото товара, видео товара У нас: карточка не выбрана Доставка / оплата / гарантияУ 1 из 1 · доставка, оплата, гарантия, возврат У нас: карточка не выбрана Смысл товараУ 1 из 1 · описание товара, выгоды / преимущества У нас: карточка не выбрана Как создаётсяУ 1 из 1 · процесс изготовления, мастерская / производство, ручная работа У нас: карточка не выбрана Финальный CTAУ 1 из 1 · финальный CTA У нас: карточка не выбрана Похожие изделияУ 1 из 1 · похожие товары, с этим покупают У нас: карточка не выбрана Стоит проверить/добавить: сначала выберите товар Read-only вывод по текстам projectComparison. Карточка товара автоматически не изменяется.",
+    "productBlocks": 0,
+    "readOnly": true,
+    "analysisReadOnly": true
+  },
+  "live": {
+    "stored": "Нет галереи товара",
+    "majorityCount": 6,
+    "galleryVisible": false,
+    "instanceCount": 1
+  },
+  "finalResult": {
+    "cardCount": 84,
+    "cardsUnchanged": true,
+    "otherGatesUnchanged": false,
+    "errors": [
+      "Uncaught TypeError: m.infra is not iterable",
+      "Uncaught TypeError: m.infra is not iterable"
+    ]
+  }
+}
+file:///private/tmp/guru-step7-before/scripts/gate1-project-comparison-product-card-smoke.mjs:6
+  if (!condition) throw new Error(message);
+                        ^
+
+Error: Summary is not beside projectComparison inside SEO Company: {"insideSeoCompany":true,"adjacentBeforeTable":false,"majorityCount":7,"rows":[{"key":"productHeroV253","title":"Герой товара","own":"У нас: карточка не выбрана"},{"key":"productGalleryV253","title":"Галерея изделия","own":"У нас: карточка не выбрана"},{"key":"productDeliveryGuaranteeV253","title":"Доставка / оплата / гарантия","own":"У нас: карточка не выбрана"},{"key":"productMeaningV253","title":"Смысл товара","own":"У нас: карточка не выбрана"},{"key":"productCreationV253","title":"Как создаётся","own":"У нас: карточка не выбрана"},{"key":"productFinalCtaImplementedV253","title":"Финальный CTA","own":"У нас: карточка не выбрана"},{"key":"productRelatedImplementedV253","title":"Похожие изделия","own":"У нас: карточка не выбрана"}],"text":"Состав карточки товара по конкурентамУ конкурентов чаще всего есть: сопоставление со всеми 7 существующими блокамиТовар не выбран Герой товараУ 1 из 1 · первый экран, H1 + цена + CTA, кнопка покупки У нас: карточка не выбрана Галерея изделияУ 1 из 1 · галерея, фото товара, видео товара У нас: карточка не выбрана Доставка / оплата / гарантияУ 1 из 1 · доставка, оплата, гарантия, возврат У нас: карточка не выбрана Смысл товараУ 1 из 1 · описание товара, выгоды / преимущества У нас: карточка не выбрана Как создаётсяУ 1 из 1 · процесс изготовления, мастерская / производство, ручная работа У нас: карточка не выбрана Финальный CTAУ 1 из 1 · финальный CTA У нас: карточка не выбрана Похожие изделияУ 1 из 1 · похожие товары, с этим покупают У нас: карточка не выбрана Стоит проверить/добавить: сначала выберите товар Read-only вывод по текстам projectComparison. Карточка товара автоматически не изменяется.","productBlocks":0,"readOnly":true,"analysisReadOnly":true}
+    at assert (file:///private/tmp/guru-step7-before/scripts/gate1-project-comparison-product-card-smoke.mjs:6:25)
+    at file:///private/tmp/guru-step7-before/scripts/gate1-project-comparison-product-card-smoke.mjs:250:3
+
+Node.js v22.14.0

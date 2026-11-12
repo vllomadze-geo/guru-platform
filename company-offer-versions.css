@@ -1,0 +1,28 @@
+.company-offer-history{color:var(--muted);font-size:12px;min-width:0}
+.company-offer-history>summary{align-items:center;border-radius:var(--r-sm);cursor:pointer;display:inline-flex;height:28px;justify-content:center;list-style:none;width:28px}
+.company-offer-history>summary::-webkit-details-marker{display:none}
+.company-offer-history>summary:hover,.company-offer-history>summary:focus-visible{background:var(--surface-soft);color:var(--text)}
+.company-offer-history>ol{border-top:.5px solid var(--line);list-style:none;margin:8px 0 0;padding:0}
+.company-offer-history li{border-bottom:.5px solid var(--line);padding:10px 0}
+.company-offer-history-head{align-items:baseline;display:flex;flex-wrap:wrap;gap:10px}
+.company-offer-history-head strong{color:var(--text);font-weight:500}
+.company-offer-history p{color:var(--text);font-size:14px;line-height:1.4;margin:5px 0;overflow-wrap:anywhere}
+.company-offer-history li>small{display:block;line-height:1.4;margin-top:4px;overflow-wrap:anywhere}
+.company-offer-evidence{margin-top:6px}
+.company-offer-evidence>summary{cursor:pointer}
+.company-offer-evidence dl{display:grid;grid-template-columns:minmax(90px,130px) minmax(0,1fr);gap:5px 10px;margin:8px 0 0}
+.company-offer-evidence dt{color:var(--muted)}
+.company-offer-evidence dd{color:var(--text);margin:0;overflow-wrap:anywhere}
+.company-offer-history .company-offer-legacy{color:var(--muted);font-size:12px;margin:8px 0;overflow-wrap:anywhere}
+.gate0-company-foundation-offer-v360{position:relative}
+.gate0-company-foundation-offer-v360 .company-offer-history{width:100%}
+.gate0-company-foundation-offer-v360 .company-offer-history>summary{position:absolute;right:8px;top:8px}
+.gate0-company-foundation-offer-v360 .guru-strategic-offer-cta-v286{align-items:center;flex-wrap:wrap}
+.gate0-company-foundation-offer-v360 .guru-strategic-offer-cta-v286>span{flex:1;min-width:0;overflow-wrap:anywhere}
+.gate0-company-foundation-offer-v360 .guru-strategic-offer-cta-v286 .company-cta-history{width:auto}
+.gate0-company-foundation-offer-v360 .guru-strategic-offer-cta-v286 .company-cta-history[open]{flex-basis:100%}
+.gate0-company-foundation-offer-v360 .guru-strategic-offer-cta-v286 .company-cta-history>summary{position:static}
+.gate0-company-foundation-offer-v360 .guru-strategic-row-meta-v286{padding-right:24px}
+.gate0-company-foundation-offer-v360 .company-offer-history[open]>ol{margin-bottom:10px}
+.company-offer-current{background:none;border:0;color:var(--text);cursor:pointer;font:inherit;font-size:14px;font-weight:var(--w-bold);line-height:1.42;padding:0;text-align:left}
+.company-offer-current:hover{text-decoration:underline;text-underline-offset:2px}

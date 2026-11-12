@@ -1,0 +1,103 @@
+--- before/app.js
++++ after/app.js
+@@ -22845,8 +22845,8 @@
+ // These answers belong to the project Platform, never to a selected product.
+ // Reading an older project does not create defaults or migrate its data.
+ const MEGA_PLATFORM_LEGAL_QUESTIONS = [
+-  { key: "collectsPersonalDataV1", label: "Сайт собирает персональные данные (формы, заказ, подписка)" },
+-  { key: "siteCheckoutV1", label: "Заказ и оплата проходят на сайте" },
++  { key: "collectsPersonalDataV1", label: "Сайт собирает персональные данные?", hint: "Формы, заказ или подписка. Определяет необходимость согласия." },
++  { key: "siteCheckoutV1", label: "Заказ и оплата проходят на сайте?", hint: "Определяет необходимость оферты и условий возврата." },
+ ];
+ const MEGA_PLATFORM_LEGAL_HELP = {
+   company_details: ["Продавец указывает наименование, адрес, телефон и email (ст. 26.1 Закона о защите прав потребителей). Для сайта без продаж физлицам требует уточнения.", "https://44.rospotrebnadzor.ru/zacshita_prav_potreb/1671/"],
+@@ -22861,7 +22861,7 @@
+     : ["offer", "returns"].includes(id) ? "siteCheckoutV1" : null;
+   const answer = key ? pv2[key] : true;
+   return { id, needed: answer !== false, label: !key ? "Обязательна"
+-    : answer === true ? "Нужна" : answer === false ? "Не нужна" : "Нет данных" };
++    : answer === true ? "Нужна" : answer === false ? "Не нужна" : "Зависит от ответа" };
+ }
+ function megaPlatformLegalSummary(pv2, workspace = state) {
+   if (MEGA_PLATFORM_LEGAL_QUESTIONS.some(({ key }) => typeof pv2[key] !== "boolean")) return "Ответьте на вопросы";
+@@ -22870,9 +22870,9 @@
+   return `Нужно страниц: ${rows.length} · URL указан: ${filled} из ${rows.length}`;
+ }
+ function megaPlatformLegalQuestionsHtml(cardId, pv2) {
+-  return `<div class="mega-platform-legal-questions">${MEGA_PLATFORM_LEGAL_QUESTIONS.map(({ key, label }) =>
+-    `<div class="mega-platform-legal-question"><span>${escapeHtml(label)}</span><div class="mega-platform-legal-segments" role="group" aria-label="${escapeAttr(label)}">${[true, false].map(value =>
+-      `<button type="button" data-mega-card="${escapeAttr(cardId)}" data-mega-legal-answer="${key}" data-mega-legal-value="${value}" aria-pressed="${pv2[key] === value}">${value ? "Да" : "Нет"}</button>`).join("")}</div></div>`).join("")}</div><div class="mega-platform-legal-summary" aria-live="polite">${megaPlatformLegalSummary(pv2)}</div>`;
++  return `<div class="mega-platform-legal-setup"><p class="mega-platform-legal-intro">Условия работы сайта</p><div class="mega-platform-legal-questions">${MEGA_PLATFORM_LEGAL_QUESTIONS.map(({ key, label, hint }) =>
++    `<div class="mega-platform-legal-question"><div class="mega-platform-legal-question-copy"><span id="legal-question-${escapeAttr(cardId)}-${key}">${escapeHtml(label)}</span><small id="legal-hint-${escapeAttr(cardId)}-${key}">${escapeHtml(hint)}</small></div><div class="mega-platform-legal-segments" role="group" aria-labelledby="legal-question-${escapeAttr(cardId)}-${key}" aria-describedby="legal-hint-${escapeAttr(cardId)}-${key}">${[true, false].map(value =>
++      `<button type="button" data-mega-card="${escapeAttr(cardId)}" data-mega-legal-answer="${key}" data-mega-legal-value="${value}" aria-pressed="${pv2[key] === value}">${value ? "Да" : "Нет"}</button>`).join("")}</div></div>`).join("")}</div></div><div class="mega-platform-legal-summary" aria-live="polite">${megaPlatformLegalSummary(pv2)}</div>`;
+ }
+ function megaPlatformRefreshLegal(card, workspace = state) {
+   const pv2 = card?.megaMarketing?.platformV2;
+@@ -22896,7 +22896,17 @@
+   if (help) {
+     event.preventDefault();
+     const panel = document.getElementById(help.getAttribute("aria-controls"));
+-    if (panel) { panel.hidden = !panel.hidden; help.setAttribute("aria-expanded", String(!panel.hidden)); }
++    if (panel) {
++      const opening = panel.hidden;
++      const block = help.closest("[data-mega-legal-block]");
++      block?.querySelectorAll("[data-mega-legal-help]").forEach(button => {
++        const content = document.getElementById(button.getAttribute("aria-controls"));
++        if (content) content.hidden = true;
++        button.setAttribute("aria-expanded", "false");
++      });
++      panel.hidden = !opening;
++      help.setAttribute("aria-expanded", String(opening));
++    }
+     return;
+   }
+   const button = event.target.closest("[data-mega-legal-answer]");
+@@ -22921,7 +22931,7 @@
+   const legal = group === "legal" && pv2 ? megaPlatformLegalRequirement(item, pv2) : null;
+   const help = legal ? MEGA_PLATFORM_LEGAL_HELP[legal.id] : null;
+   const helpId = `legal-help-${cardId}-${urlId}`;
+-  const legalNote = legal ? `<div class="mega-platform-legal-meta"><span data-mega-legal-status>${legal.label}</span> · <button type="button" data-mega-legal-help aria-expanded="false" aria-controls="${escapeAttr(helpId)}">Когда нужна</button></div><div class="mega-platform-legal-explanation" id="${escapeAttr(helpId)}" hidden>${escapeHtml(help[0])} <a href="${escapeAttr(help[1])}" target="_blank" rel="noopener noreferrer">Источник</a></div>` : "";
++  const legalNote = legal ? `<div class="mega-platform-legal-meta"><span data-mega-legal-status>${legal.label}</span> · <button type="button" data-mega-legal-help aria-label="${escapeAttr(`Когда нужна страница «${item.name}»`)}" aria-expanded="false" aria-controls="${escapeAttr(helpId)}">Когда нужна</button></div><div class="mega-platform-legal-explanation" id="${escapeAttr(helpId)}" hidden>${escapeHtml(help[0])} <a href="${escapeAttr(help[1])}" target="_blank" rel="noopener noreferrer">Источник</a></div>` : "";
+   return `<tr${legal ? ` data-mega-legal-row="${escapeAttr(urlId)}" class="${legal.needed ? "" : "mega-platform-legal-unneeded"}"` : ""}>
+     <td class="cr-label"><div class="mega-platform-page-name">${escapeHtml(item.name)}${removable ? `<button type="button" class="v116-multi-remove" data-mega-card="${escapeAttr(cardId)}" data-mega-pv2-remove="${index}" title="Удалить">×</button>` : ""}</div>${legalNote}${note ? `<small class="mega-platform-note">${escapeHtml(note)}</small>` : ""}</td>
+     <td>${megaPlatformUrlInput(cardId, urlGroup, urlId, item.name)}</td>
+--- before/styles.css
++++ after/styles.css
+@@ -24168,14 +24168,26 @@
+ .g3-product-journey-cell.is-empty { background: #f4f3f0; border-left-color: #aaa69e; }
+ .g3-product-journey-cell.is-empty > b { color: #68645e; }
+ 
+-/* Additions scoped to the existing five-row legal table. */
+-.mega-platform-legal-question { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 7px 0; font-size: 12px; color: var(--muted, #77736c); }
+-.mega-platform-legal-segments { display: inline-flex; flex-shrink: 0; padding: 2px; border: 1px solid var(--line, #e7e4df); border-radius: 8px; }
+-.mega-platform-legal-segments button { background: transparent; color: inherit; border: 0; border-radius: 5px; min-width: 44px; min-height: 30px; font: inherit; cursor: pointer; }
+-.mega-platform-legal-segments button[aria-pressed="true"] { background: #33312d; color: #fff; font-weight: 600; }
+-.mega-platform-legal-summary { font-size: 12px; color: var(--muted, #77736c); margin: 8px 0; }
+-.mega-platform-legal-meta, .mega-platform-legal-explanation { font-size: 11px; font-weight: 400; color: var(--muted, #77736c); margin-top: 4px; line-height: 1.5; }
+-.mega-platform-legal-meta button { border: 0; background: none; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
+-.mega-platform-legal-explanation a { color: inherit; text-decoration: underline; }
+-.mega-platform-legal-unneeded { opacity: .72; }
+-[data-mega-legal-block] .mega-platform-legal-explanation { white-space: normal; overflow-wrap: anywhere; }
++/* Legal setup stays close to its questions; the existing table keeps its layout. */
++[data-mega-legal-block] .mega-platform-legal-setup { max-width: 780px; margin: 12px 0 16px; padding: 14px 16px 2px; border: 1px solid var(--line, #e7e4df); border-radius: 12px; background: #faf9f7; }
++[data-mega-legal-block] .mega-platform-legal-intro { margin: 0 0 4px; font-size: 12px; color: var(--muted, #77736c); }
++[data-mega-legal-block] .mega-platform-legal-question { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 12px 0; }
++[data-mega-legal-block] .mega-platform-legal-question + .mega-platform-legal-question { border-top: 1px solid var(--line, #e7e4df); }
++[data-mega-legal-block] .mega-platform-legal-question-copy { flex: 1; min-width: 0; font-size: 13px; line-height: 1.4; color: var(--text, #33312d); }
++[data-mega-legal-block] .mega-platform-legal-question-copy small { display: block; margin-top: 3px; font-size: 11px; color: var(--muted, #77736c); }
++[data-mega-legal-block] .mega-platform-legal-segments { display: inline-flex; flex-shrink: 0; padding: 2px; border: 1px solid var(--line, #e7e4df); border-radius: 8px; background: #fff; }
++[data-mega-legal-block] .mega-platform-legal-segments button { background: transparent; color: var(--text, #33312d); border: 0; border-radius: 5px; min-width: 48px; min-height: 34px; font: inherit; font-size: 12px; cursor: pointer; }
++[data-mega-legal-block] .mega-platform-legal-segments button[aria-pressed="true"] { background: #33312d; color: #fff; font-weight: 600; }
++[data-mega-legal-block] .mega-platform-legal-summary { font-size: 12px; font-weight: 600; color: var(--text, #33312d); margin: 8px 0 12px; }
++[data-mega-legal-block] .mega-platform-legal-meta, [data-mega-legal-block] .mega-platform-legal-explanation { font-size: 11px; font-weight: 400; color: var(--muted, #77736c); margin-top: 4px; line-height: 1.5; }
++[data-mega-legal-block] .mega-platform-legal-meta button { border: 0; background: none; padding: 2px 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
++[data-mega-legal-block] .mega-platform-legal-meta button::before { content: ""; display: inline-block; width: 5px; height: 5px; margin: 0 6px 1px 2px; border-right: 1px solid currentColor; border-bottom: 1px solid currentColor; transform: rotate(-45deg); }
++[data-mega-legal-block] .mega-platform-legal-meta button[aria-expanded="true"]::before { transform: rotate(45deg); }
++[data-mega-legal-block] .mega-platform-legal-explanation { white-space: normal; overflow-wrap: anywhere; padding: 6px 0 4px; }
++[data-mega-legal-block] .mega-platform-legal-explanation a { color: inherit; text-decoration: underline; }
++[data-mega-legal-block] .mega-platform-legal-unneeded { opacity: .72; }
++[data-mega-legal-block] button:focus-visible { outline: 2px solid var(--text, #33312d); outline-offset: 3px; }
++@media (max-width: 600px) {
++  [data-mega-legal-block] .mega-platform-legal-question { gap: 12px; align-items: flex-start; }
++  [data-mega-legal-block] .mega-platform-legal-segments button { min-height: 44px; min-width: 44px; }
++}

@@ -1,0 +1,165 @@
+{
+  "source": {
+    "gate1_exportedAt": "2026-10-27T16:43:22.304Z",
+    "gate2_exportedAt": "2026-11-05T08:03:41.780Z",
+    "project_id": "project-1783243907480-ec7d8c",
+    "gate2_card_count": 76
+  },
+  "copies": [
+    {
+      "host": "card-96",
+      "id": "card-16",
+      "differences": [
+        {
+          "key": "displayScope",
+          "original_present": true,
+          "embedded_present": false,
+          "original_hash": "7e749627a955",
+          "embedded_hash": "74234e98afe7"
+        },
+        {
+          "key": "resolvedContent",
+          "original_present": true,
+          "embedded_present": false,
+          "original_hash": "4db37dcc502c",
+          "embedded_hash": "74234e98afe7"
+        }
+      ]
+    },
+    {
+      "host": "card-96",
+      "id": "card-20",
+      "differences": [
+        {
+          "key": "displayScope",
+          "original_present": true,
+          "embedded_present": false,
+          "original_hash": "7e749627a955",
+          "embedded_hash": "74234e98afe7"
+        },
+        {
+          "key": "resolvedContent",
+          "original_present": true,
+          "embedded_present": false,
+          "original_hash": "09462f3e4529",
+          "embedded_hash": "74234e98afe7"
+        }
+      ]
+    },
+    {
+      "host": "card-107",
+      "id": "card-13",
+      "differences": [
+        {
+          "key": "displayScope",
+          "original_present": true,
+          "embedded_present": false,
+          "original_hash": "7e749627a955",
+          "embedded_hash": "74234e98afe7"
+        },
+        {
+          "key": "resolvedContent",
+          "original_present": true,
+          "embedded_present": false,
+          "original_hash": "ff7e39597bf0",
+          "embedded_hash": "74234e98afe7"
+        }
+      ]
+    },
+    {
+      "host": "card-107",
+      "id": "card-14",
+      "differences": [
+        {
+          "key": "displayScope",
+          "original_present": true,
+          "embedded_present": false,
+          "original_hash": "7e749627a955",
+          "embedded_hash": "74234e98afe7"
+        },
+        {
+          "key": "resolvedContent",
+          "original_present": true,
+          "embedded_present": false,
+          "original_hash": "844faeb529da",
+          "embedded_hash": "74234e98afe7"
+        }
+      ]
+    },
+    {
+      "host": "card-107",
+      "id": "card-17",
+      "differences": [
+        {
+          "key": "displayScope",
+          "original_present": true,
+          "embedded_present": false,
+          "original_hash": "7e749627a955",
+          "embedded_hash": "74234e98afe7"
+        },
+        {
+          "key": "evidenceFields",
+          "original_present": true,
+          "embedded_present": true,
+          "original_hash": "a2d63bacbf75",
+          "embedded_hash": "2c95347ab1f1"
+        },
+        {
+          "key": "resolvedContent",
+          "original_present": true,
+          "embedded_present": false,
+          "original_hash": "ad8db533d8e6",
+          "embedded_hash": "74234e98afe7"
+        }
+      ]
+    },
+    {
+      "host": "card-107",
+      "id": "card-18",
+      "differences": [
+        {
+          "key": "displayScope",
+          "original_present": true,
+          "embedded_present": false,
+          "original_hash": "7e749627a955",
+          "embedded_hash": "74234e98afe7"
+        },
+        {
+          "key": "resolvedContent",
+          "original_present": true,
+          "embedded_present": false,
+          "original_hash": "f64588654458",
+          "embedded_hash": "74234e98afe7"
+        }
+      ]
+    },
+    {
+      "host": "card-107",
+      "id": "card-19",
+      "differences": [
+        {
+          "key": "displayScope",
+          "original_present": true,
+          "embedded_present": false,
+          "original_hash": "7e749627a955",
+          "embedded_hash": "74234e98afe7"
+        },
+        {
+          "key": "evidenceFields",
+          "original_present": true,
+          "embedded_present": true,
+          "original_hash": "8f025dfe8fba",
+          "embedded_hash": "2c95347ab1f1"
+        },
+        {
+          "key": "resolvedContent",
+          "original_present": true,
+          "embedded_present": false,
+          "original_hash": "c4ae1afc3943",
+          "embedded_hash": "74234e98afe7"
+        }
+      ]
+    }
+  ],
+  "page_copy_count": 17
+}

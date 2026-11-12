@@ -1,0 +1,150 @@
+--- app.js (до задачи)
++++ app.js (после задачи)
+@@ -54651,7 +54651,30 @@
+   </section>`;
+ }
+ 
++// The product editor reads legacy settings through a private view. Existing
++// ensure helpers may fill defaults there, but rendering never persists them.
++let guruV194ReadViewActive = false;
++function guruV194RenderReadOnly(render) {
++  const live = state;
++  let failure;
++  try {
++    const result = guruReadinessInspect(live, (workspace) => {
++      state = workspace;
++      guruV194ReadViewActive = true;
++      try { return render(); }
++      catch (error) { failure = error; return ""; }
++    });
++    if (failure) throw failure;
++    return result.status || "";
++  } finally {
++    state = live;
++    guruV194ReadViewActive = false;
++  }
++}
++
+ function guruV194FieldHtml(field, product) {
++  if (!guruV194ReadViewActive)
++    return guruV194RenderReadOnly(() => guruV194FieldHtml(field, guruV194Product(product.id, state) || product));
+   if (field === "keyword_foundation") return guruV247KeywordFoundationHtml(product);
+   const definition = GURU_GATE0_SCOPE_FIELDS_V194.find(([key]) => key === field);
+   const label = definition?.[1] || field;
+@@ -54667,16 +54690,17 @@
+     ? resolved : null;
+   const categoryName = guruV185ProductById(product.categoryId, state)?.name || "без категории";
+   const repeatable = GATE0_STRATEGY_REPEATABLE[field];
+-  const limit = guruV194StrategyLimit(field, chosenScope);
+-  const canOverride = inherited && chosenScope === "product" &&
++  const productRecords = guruV194ExactRecords(field, "product", product, state);
++  const limit = guruV194StrategyLimit(field, "product");
++  const canOverride = inherited &&
+     guruV194CanCreateStrategyRecords(field, "product", product, state, field, inherited.records.length);
+-  const draft = !exact.length && (field === "positioning" || field === "usp")
++  const draft = !exact.length && !productRecords.length && (field === "positioning" || field === "usp")
+     ? guruV194RecordHtml({ id: `gate0-draft-${field}`, field, value: "" }, product, true)
+     : "";
+   const addControl = repeatable
+-    ? exact.length < limit
+-      ? `<div class="gate0-strategy-add-v194"><button type="button" class="v116-multi-add" data-gate0-scope-add="${escapeAttr(field)}" data-gate0-scope-add-level="${escapeAttr(chosenScope)}">${escapeHtml(repeatable.add)}</button>${field !== "jtbd" && exact.length ? `<small>${escapeHtml(repeatable.count)} · ${exact.length} из ${limit}</small>` : ""}</div>`
+-      : `<small class="gate0-strategy-limit-v194">${field === "segments" && chosenScope === "project" ? "Максимум 5 активных сегментов" : `Лимит: ${escapeHtml(repeatable.limit)}`}</small>`
++    ? productRecords.length < limit
++      ? `<div class="gate0-strategy-add-v194"><button type="button" class="v116-multi-add" data-gate0-scope-add="${escapeAttr(field)}" data-gate0-scope-add-level="product">${escapeHtml(repeatable.add)}</button>${field !== "jtbd" && productRecords.length ? `<small>${escapeHtml(repeatable.count)} · ${productRecords.length} из ${limit}</small>` : ""}</div>`
++      : `<small class="gate0-strategy-limit-v194">Лимит: ${escapeHtml(repeatable.limit)}</small>`
+     : "";
+   return `<section class="gate0-scope-field-v194" data-gate0-scope-field-row="${escapeAttr(field)}">
+     <div class="gate0-scope-field-head-v194"><div><strong>${escapeHtml(label)}</strong><small>${escapeHtml(hint)}</small></div>${field === "jtbd" ? `<small>JTBD · ${resolved.records.length} из ${GATE0_STRATEGY_LIMITS.jtbd}</small>` : ""}</div>
+@@ -54689,9 +54713,11 @@
+ }
+ 
+ function guruV194FieldsHtml(fields, blockKey, includeContext = true) {
++  if (!guruV194ReadViewActive)
++    return guruV194RenderReadOnly(() => guruV194FieldsHtml(fields, blockKey, includeContext));
+   const selected = guruV194SelectedProduct(state);
+   return `${includeContext ? guruV194ProductSelectHtml(blockKey) : ""}${selected
+-    ? `<div class="gate0-scoped-fields-v194">${fields.map((field) => guruV194FieldHtml(field, selected)).join("")}</div>${guruV194CommonMetaHtml(selected)}`
++    ? `<div class="gate0-scoped-fields-v194">${fields.map((field) => guruV194FieldHtml(field, selected)).join("")}</div>`
+     : '<div class="guru-catalog-empty">Добавьте продукт и выберите его, чтобы фиксировать связанные данные.</div>'}`;
+ }
+ 
+@@ -56460,15 +56486,14 @@
+   if (draft) {
+     const draftField = draft.dataset.gate0ScopeDraft;
+     if (!["positioning", "usp"].includes(draftField) || !guruV185Text(input.value)) return;
+-    const commonMeta = guruV194CommonMeta(product, state);
+     const now = new Date().toISOString();
+     const newRecord = {
+       id: makeId("gate0-value"),
+-      ...guruV194RecordLocation(commonMeta.scope, product),
++      ...guruV194RecordLocation("product", product),
+       field: draftField,
+       value: "",
+-      source: { type: "manual", label: commonMeta.source },
+-      confirmation_status: commonMeta.confirmation_status,
++      source: { type: "manual", label: "Введено вручную" },
++      confirmation_status: "confirmed",
+       created_at: now,
+       updated_at: now,
+     };
+@@ -56722,6 +56747,7 @@
+   const product = guruV194SelectedProduct(state);
+   if (!product) return;
+   let changedField = add?.dataset.gate0ScopeAdd || override?.dataset.gate0ScopeOverride || "";
++  let addedRecordId = "";
+   let companySegmentChanged = false;
+   if (remove) {
+     const records = guruV194Records(state);
+@@ -56740,17 +56766,17 @@
+   if (add) {
+     const field = add.dataset.gate0ScopeAdd;
+     if (!Object.hasOwn(GATE0_STRATEGY_REPEATABLE, field)) return;
+-    const commonMeta = guruV194CommonMeta(product, state);
+-    const scope = commonMeta.scope;
++    const scope = "product";
+     if (add.dataset.gate0ScopeAddLevel !== scope) return;
+     const now = new Date().toISOString();
++    addedRecordId = makeId("gate0-value");
+     if (!guruV194InsertStrategyRecords([{
+-      id: makeId("gate0-value"),
++      id: addedRecordId,
+       ...guruV194RecordLocation(scope, product),
+       field,
+       value: "",
+-      source: { type: "manual", label: commonMeta.source },
+-      confirmation_status: commonMeta.confirmation_status,
++      source: { type: "manual", label: "Введено вручную" },
++      confirmation_status: "confirmed",
+       created_at: now,
+       updated_at: now,
+     }], product, state)) {
+@@ -56764,7 +56790,6 @@
+     if (!Object.hasOwn(GATE0_STRATEGY_LIMITS, field)) return;
+     const inherited = guruV194Resolve(field, product, state);
+     if (!inherited.records.length || inherited.scope === "product") return;
+-    const commonMeta = guruV194CommonMeta(product, state);
+     const now = new Date().toISOString();
+     const copies = inherited.records.map((sourceRecord) => ({
+       id: makeId("gate0-value"),
+@@ -56778,10 +56803,10 @@
+       ...(sourceRecord.offer && typeof sourceRecord.offer === "object" ? { offer: { ...sourceRecord.offer } } : {}),
+       source: {
+         type: "inheritance_override",
+-        label: commonMeta.source,
++        label: "Введено вручную",
+         inherited_from_id: sourceRecord.id,
+       },
+-      confirmation_status: commonMeta.confirmation_status,
++      confirmation_status: "confirmed",
+       created_at: now,
+       updated_at: now,
+     }));
+@@ -56810,7 +56835,7 @@
+   renderGateNav();
+   guruStrategicFoundationRefreshV245(product.id);
+   if (companySegmentChanged) guruCompanyStrategyRefreshV360();
+-  if (add) setTimeout(() => document.querySelector(`[data-gate0-scope-field-row="${CSS.escape(add.dataset.gate0ScopeAdd)}"] > .gate0-scope-values-v194 > .gate0-scope-value-v194:last-child textarea`)?.focus(), 0);
++  if (addedRecordId) setTimeout(() => document.querySelector(`[data-gate0-scope-record-row="${CSS.escape(addedRecordId)}"] textarea`)?.focus(), 0);
+ }, true);
+ 
+ /* Gate 0 / Фундамент ключевых слов: самостоятельный product-scoped список.

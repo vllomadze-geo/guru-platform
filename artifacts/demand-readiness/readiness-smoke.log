@@ -1,0 +1,58 @@
+Коричное яблоко: PASS
+iCleaning: PASS
+SIVRCE: PASS
+УНИВЕРСАЛ / ГУРУ: PASS
+{
+  "passed": true,
+  "build": "2.3.526+9ad4f0a3167c",
+  "live": {
+    "before": {
+      "status": "ready",
+      "completed": 16,
+      "total": 16,
+      "demandReady": true,
+      "demandRows": 16
+    },
+    "after": {
+      "status": "ready",
+      "completed": 16,
+      "total": 16,
+      "demandReady": true,
+      "demandRows": 16
+    },
+    "path": "ready",
+    "retained": true,
+    "incomplete": {
+      "status": "in_progress",
+      "completed": 15,
+      "total": 16,
+      "demandReady": false,
+      "demandRows": 16
+    },
+    "filledHeader": "\n      \n        Спрос\n        Метрики заполнены: 16 из 16 слов\n      \n      Готово\n      Закрыть\n    ",
+    "incompleteHeader": "\n      \n        Спрос\n        Метрики заполнены: 15 из 16 слов\n      \n      В работе\n      Закрыть\n    ",
+    "missing": [
+      {
+        "label": "Спрос: авторские изделия ручной работы, Объём показов/мес",
+        "targetExists": true
+      }
+    ],
+    "readyHeader": "Готово"
+  },
+  "import": {
+    "matched": 1,
+    "issues": [
+      [
+        "Ошибка метрики",
+        "invalid_metrics"
+      ],
+      [
+        "Новая фраза из файла",
+        "not_current_confirmed_company_candidate"
+      ]
+    ],
+    "zero": "0",
+    "originalSame": true,
+    "originalHistory": 15
+  }
+}

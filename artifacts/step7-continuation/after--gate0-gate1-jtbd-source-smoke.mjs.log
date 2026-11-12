@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "blank": 1,
+  "filled": 3,
+  "inherited": 2,
+  "sibling": 1,
+  "group": 2,
+  "archivedBlankDrafts": 2,
+  "reloadProductId": "jtbd-source-group-0",
+  "reloadProjectId": "jtbd-source-smoke-group",
+  "errors": [],
+  "hardReload": {
+    "count": 2,
+    "additional": 1,
+    "main": "Основной из Gate 0",
+    "countVisible": true,
+    "errors": []
+  },
+  "sourceJump": {
+    "gate": "gate-0",
+    "selectedProductId": "jtbd-source-group-0",
+    "errors": [],
+    "fieldRendered": true
+  }
+}

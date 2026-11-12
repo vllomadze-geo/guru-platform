@@ -2,9 +2,9 @@
    v2.3.95 — единый источник Яндекс Вебмастера в Gate 1 и
    продуктовая проверка цели Метрики в card-167.
 
-   Gate 0 сохраняет прежнюю строку «Яндекс Вебмастер», но она теперь
-   является только производной проекцией этой модели. Пять карточек
-   Gate 2 читают пять разных проверок, а не один общий флаг.
+   Gate 0 хранит редактируемое состояние подключения инфраструктуры.
+   Аудит Gate 1 не перезаписывает его статус и комментарий.
+   Проверки Gate 2 продолжают использовать свои источники.
    ================================================================ */
 
 const GATE1_WEBMASTER_MODEL_V295 = "gate1-webmaster-v295";
@@ -209,21 +209,9 @@ function gate1WebmasterDerivedCommentV295(workspace = state) {
 }
 
 function gate1WebmasterApplyDerivedGate0V295(workspace, mega) {
-  const store = gate1WebmasterStoreV295(workspace);
-  const row = mega?.infra?.find((item) => item?.name === "Яндекс Вебмастер");
-  if (!store || !row) return null;
-  if (!Object.prototype.hasOwnProperty.call(store, "legacyGate0Flag")) {
-    store.legacyGate0Flag = {
-      status: row.status || "",
-      comment: row.comment || "",
-      capturedAt: new Date().toISOString(),
-    };
-  }
-  const overall = gate1WebmasterOverallV295(workspace);
-  row.status = overall.infraStatus;
-  row.comment = gate1WebmasterDerivedCommentV295(workspace);
-  row._derivedFromGate1WebmasterV295 = true;
-  return row;
+  // Compatibility accessor: historical flags and backups remain untouched.
+  // Reading or auditing Gate 1 must not overwrite the user's infrastructure status.
+  return mega?.infra?.find((item) => item?.name === "Яндекс Вебмастер") || null;
 }
 
 const __gate1WebmasterPrevEnsureMegaMarketingV295 = ensureMegaMarketing;
@@ -231,38 +219,6 @@ ensureMegaMarketing = function (card, workspace = state) {
   const mega = __gate1WebmasterPrevEnsureMegaMarketingV295.apply(this, arguments);
   if (mega) gate1WebmasterApplyDerivedGate0V295(workspace, mega);
   return mega;
-};
-
-const __gate1WebmasterPrevMegaInfraSectionHtmlV295 = megaInfraSectionHtml;
-megaInfraSectionHtml = function (cardId, items) {
-  const html = __gate1WebmasterPrevMegaInfraSectionHtmlV295.apply(this, arguments);
-  const index = (items || []).findIndex((item) => item?.name === "Яндекс Вебмастер");
-  if (index < 0 || typeof document === "undefined") return html;
-  const template = document.createElement("template");
-  template.innerHTML = html;
-  const statusSelect = template.content.querySelector(
-    `[data-mega-section="infra"][data-mega-idx="${index}"][data-mega-field="status"]`,
-  );
-  const row = statusSelect?.closest("tr");
-  if (!row) return html;
-  const overall = gate1WebmasterOverallV295(state);
-  const statusCell = statusSelect.closest("td");
-  const commentInput = row.querySelector(
-    `[data-mega-section="infra"][data-mega-idx="${index}"][data-mega-field="comment"]`,
-  );
-  if (statusCell) {
-    statusCell.innerHTML = `<span class="status-pill status-${escapeAttr(overall.readiness)}">${escapeHtml(
-      overall.readiness === "not_started"
-        ? "Не начато"
-        : guruStatusLabel(overall.infraStatus),
-    )}</span><small class="g1-webmaster-derived-note-v295">автоматически из Gate 1</small>`;
-  }
-  const commentCell = commentInput?.closest("td");
-  if (commentCell) {
-    commentCell.innerHTML = `<button type="button" class="g1-webmaster-source-link-v295" data-g1-webmaster-open-v295="company">← Открыть источник в Gate 1 · Яндекс Вебмастер</button>`;
-  }
-  row.dataset.g1WebmasterDerivedV295 = "1";
-  return template.innerHTML;
 };
 
 function gate1WebmasterStatusOptionsV295(current) {

@@ -1,0 +1,17 @@
+[
+  {
+    "test": "gate1-company-brand-demand",
+    "build": "before",
+    "status": "FAIL"
+  },
+  {
+    "test": "gate1-seo-central",
+    "build": "before",
+    "status": "FAIL"
+  },
+  {
+    "test": "gate1-company-brand-demand-copy",
+    "build": "after",
+    "status": "PASS"
+  }
+]

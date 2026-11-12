@@ -1,0 +1,14 @@
+{
+  "inPassport": true,
+  "companyBeforeProductSelector": true,
+  "companyScopeOnly": true,
+  "companyUnaffectedByProduct": true,
+  "open": true,
+  "switched": true,
+  "diagnosticFollowsProduct": true,
+  "rerendered": true,
+  "progressMoved": true,
+  "absentFromGate0": true,
+  "dataPreserved": true,
+  "errors": []
+}

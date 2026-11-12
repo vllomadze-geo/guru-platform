@@ -1,0 +1,137 @@
+[
+  {
+    "version": "before",
+    "instrumentedElapsedMs": 348,
+    "functions": {
+      "guruReadinessInspect": {
+        "available": false,
+        "calls": 0,
+        "ms": 0,
+        "guideCalls": 0,
+        "guideMs": 0,
+        "directCallers": {}
+      },
+      "guruV194Records": {
+        "available": true,
+        "calls": 390,
+        "ms": 37.59999990463257,
+        "guideCalls": 0,
+        "guideMs": 0,
+        "directCallers": {
+          "at guruV194MigrateOfferCtaV2": {
+            "calls": 1,
+            "ms": 0.19999998807907104
+          },
+          "at guruV194Ensure": {
+            "calls": 1,
+            "ms": 0.09999999403953552
+          },
+          "at guruV194ExactRecords": {
+            "calls": 388,
+            "ms": 37.29999992251396
+          }
+        }
+      }
+    }
+  },
+  {
+    "version": "current",
+    "instrumentedElapsedMs": 7866.200000017881,
+    "functions": {
+      "guruReadinessInspect": {
+        "available": true,
+        "calls": 47,
+        "ms": 5389.499999970198,
+        "guideCalls": 47,
+        "guideMs": 5389.499999970198,
+        "directCallers": {
+          "at guruGate0BlockReadiness": {
+            "calls": 10,
+            "ms": 29.499999970197678
+          },
+          "at nowGuideGate12Read": {
+            "calls": 37,
+            "ms": 5360.0
+          }
+        }
+      },
+      "guruV194Records": {
+        "available": true,
+        "calls": 3828,
+        "ms": 3273.799998998642,
+        "guideCalls": 3438,
+        "guideMs": 3231.699998855591,
+        "directCallers": {
+          "at guruV194ExactRecords": {
+            "calls": 3788,
+            "ms": 3236.5999989509583
+          },
+          "at guruCompanySegmentNameConflictV360": {
+            "calls": 6,
+            "ms": 3.9999999701976776
+          },
+          "at guruCompanyKeywordFoundationRecordV351": {
+            "calls": 6,
+            "ms": 6.699999988079071
+          },
+          "at guruV194MigrateOfferCtaV2": {
+            "calls": 13,
+            "ms": 13.500000029802322
+          },
+          "at guruV194Ensure": {
+            "calls": 13,
+            "ms": 11.500000089406967
+          },
+          "at guruV247KeywordFoundationRecord": {
+            "calls": 1,
+            "ms": 1.399999976158142
+          },
+          "at guruStrategicFoundationContextCompanyV310": {
+            "calls": 1,
+            "ms": 0.09999999403953552
+          }
+        }
+      }
+    }
+  },
+  {
+    "version": "fixed",
+    "instrumentedElapsedMs": 1256.0999999940395,
+    "functions": {
+      "guruReadinessInspect": {
+        "available": true,
+        "calls": 1,
+        "ms": 2.0999999940395355,
+        "guideCalls": 1,
+        "guideMs": 2.0999999940395355,
+        "directCallers": {
+          "at guruGate0BlockReadiness": {
+            "calls": 1,
+            "ms": 2.0999999940395355
+          }
+        }
+      },
+      "guruV194Records": {
+        "available": true,
+        "calls": 932,
+        "ms": 114.9000001847744,
+        "guideCalls": 813,
+        "guideMs": 99.80000019073486,
+        "directCallers": {
+          "at guruV194MigrateOfferCtaV2": {
+            "calls": 3,
+            "ms": 0.800000011920929
+          },
+          "at guruV194Ensure": {
+            "calls": 3,
+            "ms": 0.5000000298023224
+          },
+          "at guruV194ExactRecords": {
+            "calls": 926,
+            "ms": 113.60000014305115
+          }
+        }
+      }
+    }
+  }
+]

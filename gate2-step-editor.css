@@ -1,0 +1,45 @@
+.g2step-heading-actions { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 20px; margin-left: auto; }
+.g2step-header-button, .g2step-text-button, .g2step-toast button { display: inline-flex; align-items: center; justify-content: center; min-height: 32px; padding: 2px 4px; border: 0; background: transparent; color: var(--g2u-ink, var(--text)); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
+.g2step-header-button:hover, .g2step-text-button:hover, .g2step-toast button:hover { text-decoration: underline; }
+.g2step-header-button:focus-visible, .g2step-text-button:focus-visible, .g2step-toast button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.g2step-danger { color: var(--danger); }
+.g2step-edit-group ol { list-style: none; margin: 0; padding: 0; }
+.g2step-compact { display: grid; grid-template-columns: 28px 32px minmax(0,1fr) auto; align-items: center; gap: 12px; min-width: 0; padding: 12px 0; border-bottom: 1px solid var(--g2u-line); }
+.g2step-compact .g2u-index { padding-top: 0; }
+.g2step-compact .g2u-step-circle { opacity: .7; }
+.g2step-compact-copy { display: grid; gap: 3px; min-width: 0; }
+.g2step-compact-copy strong { color: var(--g2u-ink); font-size: 14px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+.g2step-compact-copy small, .g2step-empty, .g2step-field-editor p { color: var(--g2u-muted); font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+.g2step-compact-actions, .g2step-confirm > span:last-child, .g2step-form-actions { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.g2step-add { margin: 10px 0 4px 72px; }
+.g2step-empty { margin: 12px 0 0 72px; }
+.g2step-confirm { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0 10px 72px; border-bottom: 1px solid var(--g2u-line); color: var(--g2u-ink); font-size: 13px; }
+.g2step-editor-row { padding: 18px 0 18px 72px; border-bottom: 1px solid var(--g2u-line); }
+.g2step-editor-form { display: grid; gap: 16px; width: min(100%, 780px); }
+.g2step-editor-form h5, .g2step-field-editor strong { margin: 0; color: var(--g2u-ink); font-size: 14px; }
+.g2step-form-field, .g2step-field-row label, .g2step-value { display: grid; gap: 5px; min-width: 0; color: var(--g2u-muted); font-size: 12px; font-weight: 700; }
+.g2step-form-field input, .g2step-form-field textarea, .g2step-field-row input, .g2step-field-row select, .g2step-value input { box-sizing: border-box; width: 100%; min-height: 40px; padding: 9px 12px; border: 1px solid var(--g2u-line); border-radius: var(--r-sm); background: var(--g2u-surface); color: var(--g2u-ink); font: inherit; font-size: 14px; font-weight: 400; }
+.g2step-form-field textarea { min-height: 48px; resize: vertical; line-height: 1.45; }
+.g2step-instruction-fields { display: grid; gap: 12px; }
+.g2step-field-editor { display: grid; gap: 10px; }
+.g2step-field-editor p { margin: 0; }
+.g2step-field-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(120px,180px) auto; align-items: end; gap: 10px; margin-bottom: 10px; }
+.g2step-field-row .g2step-text-button { align-self: end; }
+.g2step-error { color: var(--g2u-ink); font-size: 12px; font-weight: 700; }
+.g2step-form-actions { justify-content: flex-end; }
+.g2step-save { font-weight: 700; }
+.g2step-values { display: grid; gap: 10px; width: min(100%, 420px); }
+.g2step-value:has(input[inputmode="numeric"]) { max-width: 180px; }
+.g2step-toast { position: fixed; z-index: 3000; bottom: max(20px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; max-width: calc(100vw - 32px); padding: 10px 16px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel); color: var(--text); box-shadow: 0 8px 28px var(--shadow); font-size: 13px; white-space: nowrap; }
+.g2step-toast button { min-height: 32px; text-decoration: underline; }
+@media (max-width: 560px) {
+  .g2step-heading-actions { width: 100%; justify-content: flex-start; gap: 8px; }
+  .g2step-header-button, .g2step-text-button, .g2step-toast button { min-height: 44px; }
+  .g2step-compact { grid-template-columns: 22px 24px minmax(0,1fr); gap: 8px; }
+  .g2step-compact-actions { grid-column: 3; justify-content: flex-start; }
+  .g2step-editor-row, .g2step-confirm { padding-left: 0; }
+  .g2step-add, .g2step-empty { margin-left: 0; }
+  .g2step-field-row { grid-template-columns: minmax(0,1fr) minmax(110px, 40%); }
+  .g2step-field-row .g2step-text-button { grid-column: 1 / -1; justify-self: start; }
+  .g2step-form-field input, .g2step-form-field textarea, .g2step-field-row input, .g2step-field-row select, .g2step-value input { min-height: 44px; }
+}

@@ -1,0 +1,132 @@
+{
+  "steps": [
+    {
+      "label": "first-name",
+      "type": "focus",
+      "ms": 66
+    },
+    {
+      "label": "type-name",
+      "type": "input",
+      "ms": 78
+    },
+    {
+      "label": "name-to-url",
+      "type": "focus",
+      "ms": 86
+    },
+    {
+      "label": "type-url",
+      "type": "input",
+      "ms": 48
+    },
+    {
+      "label": "url-to-next-name",
+      "type": "focus",
+      "ms": 74
+    },
+    {
+      "label": "type-next-name",
+      "type": "input",
+      "ms": 44
+    },
+    {
+      "label": "focus-after-autosave",
+      "type": "focus",
+      "ms": 125
+    },
+    {
+      "label": "new-product-draft",
+      "type": "focus",
+      "ms": 39
+    },
+    {
+      "label": "draft-Н",
+      "type": "input",
+      "ms": 27
+    },
+    {
+      "label": "draft-о",
+      "type": "input",
+      "ms": 20
+    },
+    {
+      "label": "draft-в",
+      "type": "input",
+      "ms": 17
+    },
+    {
+      "label": "draft-ы",
+      "type": "input",
+      "ms": 16
+    },
+    {
+      "label": "draft-й",
+      "type": "input",
+      "ms": 18
+    }
+  ],
+  "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+  "duringInput": {
+    "versionInDispatch": 0,
+    "registryInDispatch": 0,
+    "gate0FullInDispatch": 0
+  },
+  "workerUsed": true,
+  "integrity": {
+    "name": true,
+    "url": true,
+    "next": true,
+    "draft": true,
+    "focused": true,
+    "connected": true,
+    "gate": "gate-0"
+  },
+  "events": [
+    {
+      "ms": 60.299999952316284,
+      "connected": true,
+      "value": "Рубашка Upcycling с кружевом тест"
+    },
+    {
+      "ms": 33.30000001192093,
+      "connected": true,
+      "value": "https://k-apple.ru/polka#rec797841767463-test"
+    },
+    {
+      "ms": 32.10000002384186,
+      "connected": true,
+      "value": "Летнее платье «Исландка» тест"
+    },
+    {
+      "ms": 3.599999964237213,
+      "connected": true,
+      "value": "Н"
+    },
+    {
+      "ms": 12.799999952316284,
+      "connected": true,
+      "value": "Но"
+    },
+    {
+      "ms": 10.099999964237213,
+      "connected": true,
+      "value": "Нов"
+    },
+    {
+      "ms": 10,
+      "connected": true,
+      "value": "Новы"
+    },
+    {
+      "ms": 10.699999988079071,
+      "connected": true,
+      "value": "Новый"
+    }
+  ],
+  "medianInputMs": 27,
+  "medianFocusMs": 74,
+  "build": "2.3.526+ddb7af1eaa9a",
+  "errors": [],
+  "passed": true
+}

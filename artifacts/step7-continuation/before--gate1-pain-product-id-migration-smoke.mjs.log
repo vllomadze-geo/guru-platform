@@ -1,0 +1,9 @@
+file:///private/tmp/guru-step7-before/scripts/gate1-pain-product-id-migration-smoke.mjs:17
+  if (!condition) throw new Error(message);
+                        ^
+
+Error: Expected 10 legacy page items, got 22
+    at assert (file:///private/tmp/guru-step7-before/scripts/gate1-pain-product-id-migration-smoke.mjs:17:25)
+    at file:///private/tmp/guru-step7-before/scripts/gate1-pain-product-id-migration-smoke.mjs:88:1
+
+Node.js v22.14.0

@@ -1,0 +1,53 @@
+{
+  "project": "Коричное яблоко",
+  "companies": 119,
+  "bytes": 23938462,
+  "measures": [
+    {
+      "label": "json",
+      "ms": 152.3,
+      "value": 23896744
+    },
+    {
+      "label": "guideVersion",
+      "ms": 0.2,
+      "value": 95
+    },
+    {
+      "label": "companyHtml119",
+      "ms": 31,
+      "value": 908967
+    },
+    {
+      "label": "companyVisibleColumns119",
+      "ms": 1.6,
+      "value": 3
+    },
+    {
+      "label": "companySuggestionRefresh119",
+      "ms": 36,
+      "value": true
+    },
+    {
+      "label": "draftInput119",
+      "ms": 7,
+      "value": true
+    }
+  ],
+  "draft": {
+    "unchanged": true,
+    "guideVersionUnchanged": true,
+    "foundCalls": 0,
+    "queuedGuide": false,
+    "draftFocused": true
+  },
+  "missingLabel": "Проверочный конкурент: не заполнено у 2 из 2 записей",
+  "competitorHeading": "Проверочный конкурент",
+  "save": {
+    "ok": true,
+    "stored": true,
+    "pending": 0
+  },
+  "sourceUnchanged": true,
+  "passed": true
+}

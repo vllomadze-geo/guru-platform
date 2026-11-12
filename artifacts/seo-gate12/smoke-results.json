@@ -1,0 +1,5074 @@
+{
+  "projects": {
+    "apple": {
+      "archiveEqual": true,
+      "idempotent": true,
+      "pure": true,
+      "sourceUntouched": true,
+      "historicalIgnored": true,
+      "history": [
+        {
+          "id": "card-97",
+          "g2Check": ""
+        },
+        {
+          "id": "card-98",
+          "g2Check": ""
+        },
+        {
+          "id": "card-107",
+          "g2Check": ""
+        },
+        {
+          "id": "card-108",
+          "g2Check": ""
+        },
+        {
+          "id": "card-109",
+          "g2Check": ""
+        },
+        {
+          "id": "card-110",
+          "g2Check": ""
+        },
+        {
+          "id": "card-111",
+          "g2Check": ""
+        },
+        {
+          "id": "g2-cwv",
+          "g2Check": ""
+        },
+        {
+          "id": "g2-canonical",
+          "g2Check": ""
+        }
+      ],
+      "calc": {
+        "g1": [
+          {
+            "id": "company_demand_positioning",
+            "status": "in_progress"
+          },
+          {
+            "id": "project-comparison",
+            "status": "in_progress"
+          },
+          {
+            "id": "interactive-tool",
+            "status": "not_started"
+          },
+          {
+            "id": "card-21",
+            "status": "ready"
+          },
+          {
+            "id": "card-22-hub",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-22",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-25",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-26",
+            "status": "not_started"
+          },
+          {
+            "id": "card-27",
+            "status": "not_started"
+          },
+          {
+            "id": "card-28",
+            "status": "not_started"
+          },
+          {
+            "id": "card-30",
+            "status": "not_started"
+          },
+          {
+            "id": "card-31",
+            "status": "not_started"
+          },
+          {
+            "id": "card-32",
+            "status": "not_started"
+          },
+          {
+            "id": "card-site-header-v497",
+            "status": "not_started"
+          },
+          {
+            "id": "card-site-footer-v497",
+            "status": "not_started"
+          },
+          {
+            "id": "card-29",
+            "status": "not_started"
+          },
+          {
+            "id": "card-35",
+            "status": "not_started"
+          },
+          {
+            "id": "card-36",
+            "status": "not_started"
+          },
+          {
+            "id": "card-37",
+            "status": "not_started"
+          },
+          {
+            "id": "target-audience",
+            "status": "ready"
+          },
+          {
+            "id": "gate1-blog-v304-company",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-24",
+            "status": "ready"
+          },
+          {
+            "id": "pain_jtbd_offer",
+            "status": "ready"
+          },
+          {
+            "id": "gate1-blog-v304-product",
+            "status": "not_started"
+          },
+          {
+            "id": "unit-economics",
+            "status": "not_started"
+          }
+        ],
+        "g2": [
+          {
+            "id": "company-domain",
+            "status": "problem"
+          },
+          {
+            "id": "company-counter",
+            "status": "not_started"
+          },
+          {
+            "id": "company-goal",
+            "status": "not_started"
+          },
+          {
+            "id": "company-webmaster",
+            "status": "problem"
+          },
+          {
+            "id": "company-yandex-business",
+            "status": "not_needed"
+          },
+          {
+            "id": "company-yandex-direct",
+            "status": "not_started"
+          },
+          {
+            "id": "company-vk",
+            "status": "in_progress"
+          },
+          {
+            "id": "company-telegram-ads",
+            "status": "not_started"
+          },
+          {
+            "id": "company-meta-ads",
+            "status": "not_needed"
+          },
+          {
+            "id": "company-ga4",
+            "status": "not_started"
+          },
+          {
+            "id": "company-gsc",
+            "status": "not_needed"
+          },
+          {
+            "id": "company-google-ads",
+            "status": "not_needed"
+          },
+          {
+            "id": "company-leads",
+            "status": "not_started"
+          },
+          {
+            "id": "company-safety",
+            "status": "not_started"
+          },
+          {
+            "id": "product-landing",
+            "status": "problem"
+          },
+          {
+            "id": "product-counter",
+            "status": "not_started"
+          },
+          {
+            "id": "product-goal",
+            "status": "not_started"
+          },
+          {
+            "id": "product-vk",
+            "status": "not_started"
+          },
+          {
+            "id": "product-lead",
+            "status": "not_started"
+          }
+        ],
+        "summary1": {
+          "total": 25,
+          "done": 4,
+          "ready": 4,
+          "notRequired": 0,
+          "inProgress": 6,
+          "problem": 0,
+          "notStarted": 15,
+          "percent": 28
+        },
+        "summary2": {
+          "total": 19,
+          "done": 4,
+          "ready": 0,
+          "notRequired": 4,
+          "inProgress": 1,
+          "problem": 3,
+          "notStarted": 11,
+          "percent": 32
+        },
+        "path": [
+          {
+            "id": "card-1",
+            "gateId": "gate-0",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-project-goal",
+            "gateId": "gate-0",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-brand-purpose",
+            "gateId": "gate-0",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-segmentation",
+            "gateId": "gate-0",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-positioning",
+            "gateId": "gate-0",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-offer",
+            "gateId": "gate-0",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-keyword-foundation",
+            "gateId": "gate-0",
+            "status": "ready"
+          },
+          {
+            "id": "card-7",
+            "gateId": "gate-0",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-2",
+            "gateId": "gate-0",
+            "status": "ready"
+          },
+          {
+            "id": "company_demand_positioning",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "project-comparison",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "interactive-tool",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-21",
+            "gateId": "gate-1",
+            "status": "ready"
+          },
+          {
+            "id": "card-22-hub",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-22",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-25",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-26",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-27",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-28",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-30",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-31",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-32",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-site-header-v497",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-site-footer-v497",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-29",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-35",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-36",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-37",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "target-audience",
+            "gateId": "gate-1",
+            "status": "ready"
+          },
+          {
+            "id": "gate1-blog-v304-company",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-24",
+            "gateId": "gate-1",
+            "status": "ready"
+          },
+          {
+            "id": "pain_jtbd_offer",
+            "gateId": "gate-1",
+            "status": "ready"
+          },
+          {
+            "id": "gate1-blog-v304-product",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "unit-economics",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "company-domain",
+            "gateId": "gate-2",
+            "status": "problem",
+            "productId": ""
+          },
+          {
+            "id": "company-counter",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-goal",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-webmaster",
+            "gateId": "gate-2",
+            "status": "problem",
+            "productId": ""
+          },
+          {
+            "id": "company-yandex-business",
+            "gateId": "gate-2",
+            "status": "not_required",
+            "productId": ""
+          },
+          {
+            "id": "company-yandex-direct",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-vk",
+            "gateId": "gate-2",
+            "status": "in_progress",
+            "productId": ""
+          },
+          {
+            "id": "company-telegram-ads",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-meta-ads",
+            "gateId": "gate-2",
+            "status": "not_required",
+            "productId": ""
+          },
+          {
+            "id": "company-ga4",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-gsc",
+            "gateId": "gate-2",
+            "status": "not_required",
+            "productId": ""
+          },
+          {
+            "id": "company-google-ads",
+            "gateId": "gate-2",
+            "status": "not_required",
+            "productId": ""
+          },
+          {
+            "id": "company-leads",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-safety",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "product-landing",
+            "gateId": "gate-2",
+            "status": "problem",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "product-counter",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "product-goal",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "product-vk",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "product-lead",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "aware",
+            "gateId": "gate-3",
+            "status": "ready",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "appeal",
+            "gateId": "gate-3",
+            "status": "ready",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "ask",
+            "gateId": "gate-3",
+            "status": "ready",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "act",
+            "gateId": "gate-3",
+            "status": "ready",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "advocate",
+            "gateId": "gate-3",
+            "status": "problem",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-148",
+            "gateId": "gate-4",
+            "status": "not_started",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-151",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-152",
+            "gateId": "gate-4",
+            "status": "ready",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-153",
+            "gateId": "gate-4",
+            "status": "ready",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-154",
+            "gateId": "gate-4",
+            "status": "ready",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-155",
+            "gateId": "gate-4",
+            "status": "ready",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-156",
+            "gateId": "gate-4",
+            "status": "ready",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-157",
+            "gateId": "gate-4",
+            "status": "ready",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-158",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-159",
+            "gateId": "gate-4",
+            "status": "ready",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-160",
+            "gateId": "gate-4",
+            "status": "not_started",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-161",
+            "gateId": "gate-4",
+            "status": "not_started",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-162",
+            "gateId": "gate-4",
+            "status": "not_started",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-163",
+            "gateId": "gate-4",
+            "status": "not_started",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-164",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-165",
+            "gateId": "gate-4",
+            "status": "not_started",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-166",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-167",
+            "gateId": "gate-4",
+            "status": "not_started",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-168",
+            "gateId": "gate-4",
+            "status": "ready",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "card-169",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "smm_vk_контент_11",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "smm_telegram_контент_посевы_12",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "smm_instagram_reels_stories_13",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "smm_youtube_shorts_pre_roll_14",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "платная_реклама_vk_ads_таргет_5",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "платная_реклама_telegram_ads_посевы_ads_7",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "платная_реклама_meta_ads_feed_reels_6",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "платная_реклама_яндекс_директ_рся_1",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "платная_реклама_яндекс_директ_мастер_кампаний_2",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "платная_реклама_google_ads_display_4",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "платная_реклама_яндекс_директ_поиск_0",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          },
+          {
+            "id": "платная_реклама_google_ads_search_3",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786792591872-51f503"
+          }
+        ],
+        "products": [
+          {
+            "id": "catalog-item-1790860377305-388c56",
+            "name": "Коза & Ёлка"
+          },
+          {
+            "id": "catalog-item-1786792591872-c8b1e9",
+            "name": "Рубашка Upcycling с кружевом"
+          },
+          {
+            "id": "catalog-item-1786792591872-98358d",
+            "name": "Летнее платье «Исландка»"
+          },
+          {
+            "id": "catalog-item-1786792591872-5f848a",
+            "name": "Платье из льна"
+          },
+          {
+            "id": "catalog-item-1786792591872-3be8f9",
+            "name": "Лонгслив «Мак» с аппликацией"
+          },
+          {
+            "id": "catalog-item-1786792591872-1d1d3c",
+            "name": "Свитшот с медведем для Михаила"
+          },
+          {
+            "id": "catalog-item-1786792591872-c45ce3",
+            "name": "Свитшот «Яра» с авторской аппликацией"
+          },
+          {
+            "id": "catalog-item-1786792591872-52046c",
+            "name": "Льняное демисезонное пальто"
+          },
+          {
+            "id": "catalog-item-1786792591872-51f503",
+            "name": "Символ 2027 года «Коза»"
+          },
+          {
+            "id": "catalog-item-1790936932674-197964",
+            "name": "Шапка Коза"
+          },
+          {
+            "id": "catalog-item-1790937546522-78edcc",
+            "name": "ТЕРМОС в свитере"
+          },
+          {
+            "id": "catalog-item-1790937556174-6ad07b",
+            "name": "ТЕРМОС в чехле"
+          },
+          {
+            "id": "catalog-item-1790937575672-8f423f",
+            "name": "Текстильная ёлочка"
+          },
+          {
+            "id": "catalog-item-1790937587589-b751ba",
+            "name": "Новогодние подарочные наборы"
+          }
+        ]
+      },
+      "conflictAtomic": true,
+      "conflicts": [
+        {
+          "path": "company-domain.company.technicalSeoV1.cards.card-20.sslV130.domain",
+          "gate2": "conflict.invalid",
+          "gate1": "source.invalid"
+        }
+      ],
+      "sourceSha256": "4df7d838dca5e8ea2d9112e5bf1a8ba69799d6a453546bd346c4bc7e4a76cc37",
+      "matrix": [
+        {
+          "productId": "catalog-item-1790860377305-388c56",
+          "summary": {
+            "total": 19,
+            "done": 4,
+            "ready": 0,
+            "notRequired": 4,
+            "inProgress": 1,
+            "problem": 2,
+            "notStarted": 12,
+            "percent": 29
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "in_progress",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1790860377305-388c56"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1790860377305-388c56"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1790860377305-388c56"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1790860377305-388c56"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1790860377305-388c56"
+            }
+          ]
+        },
+        {
+          "productId": "catalog-item-1786792591872-c8b1e9",
+          "summary": {
+            "total": 19,
+            "done": 4,
+            "ready": 0,
+            "notRequired": 4,
+            "inProgress": 1,
+            "problem": 2,
+            "notStarted": 12,
+            "percent": 29
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "in_progress",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-c8b1e9"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-c8b1e9"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-c8b1e9"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-c8b1e9"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-c8b1e9"
+            }
+          ]
+        },
+        {
+          "productId": "catalog-item-1786792591872-98358d",
+          "summary": {
+            "total": 19,
+            "done": 4,
+            "ready": 0,
+            "notRequired": 4,
+            "inProgress": 1,
+            "problem": 2,
+            "notStarted": 12,
+            "percent": 29
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "in_progress",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-98358d"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-98358d"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-98358d"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-98358d"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-98358d"
+            }
+          ]
+        },
+        {
+          "productId": "catalog-item-1786792591872-5f848a",
+          "summary": {
+            "total": 19,
+            "done": 4,
+            "ready": 0,
+            "notRequired": 4,
+            "inProgress": 1,
+            "problem": 2,
+            "notStarted": 12,
+            "percent": 29
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "in_progress",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-5f848a"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-5f848a"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-5f848a"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-5f848a"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-5f848a"
+            }
+          ]
+        },
+        {
+          "productId": "catalog-item-1786792591872-3be8f9",
+          "summary": {
+            "total": 19,
+            "done": 4,
+            "ready": 0,
+            "notRequired": 4,
+            "inProgress": 1,
+            "problem": 2,
+            "notStarted": 12,
+            "percent": 29
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "in_progress",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-3be8f9"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-3be8f9"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-3be8f9"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-3be8f9"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-3be8f9"
+            }
+          ]
+        },
+        {
+          "productId": "catalog-item-1786792591872-1d1d3c",
+          "summary": {
+            "total": 19,
+            "done": 4,
+            "ready": 0,
+            "notRequired": 4,
+            "inProgress": 1,
+            "problem": 2,
+            "notStarted": 12,
+            "percent": 29
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "in_progress",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-1d1d3c"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-1d1d3c"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-1d1d3c"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-1d1d3c"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-1d1d3c"
+            }
+          ]
+        },
+        {
+          "productId": "catalog-item-1786792591872-c45ce3",
+          "summary": {
+            "total": 19,
+            "done": 4,
+            "ready": 0,
+            "notRequired": 4,
+            "inProgress": 1,
+            "problem": 2,
+            "notStarted": 12,
+            "percent": 29
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "in_progress",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-c45ce3"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-c45ce3"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-c45ce3"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-c45ce3"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-c45ce3"
+            }
+          ]
+        },
+        {
+          "productId": "catalog-item-1786792591872-52046c",
+          "summary": {
+            "total": 19,
+            "done": 4,
+            "ready": 0,
+            "notRequired": 4,
+            "inProgress": 1,
+            "problem": 2,
+            "notStarted": 12,
+            "percent": 29
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "in_progress",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-52046c"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-52046c"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-52046c"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-52046c"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-52046c"
+            }
+          ]
+        },
+        {
+          "productId": "catalog-item-1786792591872-51f503",
+          "summary": {
+            "total": 19,
+            "done": 4,
+            "ready": 0,
+            "notRequired": 4,
+            "inProgress": 1,
+            "problem": 3,
+            "notStarted": 11,
+            "percent": 32
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "in_progress",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "problem",
+              "productId": "catalog-item-1786792591872-51f503"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-51f503"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-51f503"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-51f503"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1786792591872-51f503"
+            }
+          ]
+        },
+        {
+          "productId": "catalog-item-1790936932674-197964",
+          "summary": {
+            "total": 19,
+            "done": 4,
+            "ready": 0,
+            "notRequired": 4,
+            "inProgress": 1,
+            "problem": 2,
+            "notStarted": 12,
+            "percent": 29
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "in_progress",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1790936932674-197964"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1790936932674-197964"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1790936932674-197964"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1790936932674-197964"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1790936932674-197964"
+            }
+          ]
+        },
+        {
+          "productId": "catalog-item-1790937546522-78edcc",
+          "summary": {
+            "total": 19,
+            "done": 4,
+            "ready": 0,
+            "notRequired": 4,
+            "inProgress": 1,
+            "problem": 2,
+            "notStarted": 12,
+            "percent": 29
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "in_progress",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1790937546522-78edcc"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1790937546522-78edcc"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1790937546522-78edcc"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1790937546522-78edcc"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1790937546522-78edcc"
+            }
+          ]
+        },
+        {
+          "productId": "catalog-item-1790937556174-6ad07b",
+          "summary": {
+            "total": 19,
+            "done": 4,
+            "ready": 0,
+            "notRequired": 4,
+            "inProgress": 1,
+            "problem": 2,
+            "notStarted": 12,
+            "percent": 29
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "in_progress",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1790937556174-6ad07b"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1790937556174-6ad07b"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1790937556174-6ad07b"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1790937556174-6ad07b"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1790937556174-6ad07b"
+            }
+          ]
+        },
+        {
+          "productId": "catalog-item-1790937575672-8f423f",
+          "summary": {
+            "total": 19,
+            "done": 4,
+            "ready": 0,
+            "notRequired": 4,
+            "inProgress": 1,
+            "problem": 2,
+            "notStarted": 12,
+            "percent": 29
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "in_progress",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1790937575672-8f423f"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1790937575672-8f423f"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1790937575672-8f423f"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1790937575672-8f423f"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1790937575672-8f423f"
+            }
+          ]
+        },
+        {
+          "productId": "catalog-item-1790937587589-b751ba",
+          "summary": {
+            "total": 19,
+            "done": 4,
+            "ready": 0,
+            "notRequired": 4,
+            "inProgress": 1,
+            "problem": 2,
+            "notStarted": 12,
+            "percent": 29
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "in_progress",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1790937587589-b751ba"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1790937587589-b751ba"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1790937587589-b751ba"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1790937587589-b751ba"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1790937587589-b751ba"
+            }
+          ]
+        }
+      ],
+      "rendering": {
+        "missing": [],
+        "badges": [
+          {
+            "id": "company-domain",
+            "status": "problem",
+            "badge": "Проблема"
+          },
+          {
+            "id": "company-webmaster",
+            "status": "problem",
+            "badge": "Проблема"
+          },
+          {
+            "id": "company-yandex-business",
+            "status": "not_needed",
+            "badge": "Не требуется по Gate 0"
+          },
+          {
+            "id": "company-yandex-direct",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-vk",
+            "status": "in_progress",
+            "badge": "В работе"
+          },
+          {
+            "id": "company-telegram-ads",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-meta-ads",
+            "status": "not_needed",
+            "badge": "Не требуется: все каналы отмечены «Не требуется» в Gate 0"
+          },
+          {
+            "id": "company-ga4",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-gsc",
+            "status": "not_needed",
+            "badge": "Не требуется по Gate 0"
+          },
+          {
+            "id": "company-google-ads",
+            "status": "not_needed",
+            "badge": "Не требуется: все каналы отмечены «Не требуется» в Gate 0"
+          },
+          {
+            "id": "company-leads",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-safety",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "product-landing",
+            "status": "problem",
+            "badge": "Проблема"
+          },
+          {
+            "id": "product-counter",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "product-goal",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "product-vk",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "product-lead",
+            "status": "not_started",
+            "badge": "Не начато"
+          }
+        ],
+        "archived": true,
+        "oldVisible": 0,
+        "technicalPreserved": true,
+        "editorCount": 14
+      },
+      "edits": {
+        "value": "https://example.test/ssl-proof",
+        "archive": true,
+        "connected": true
+      },
+      "gate1Render": {
+        "old": [],
+        "technical": 0,
+        "archive": true,
+        "structure": true
+      }
+    },
+    "icleaning": {
+      "archiveEqual": true,
+      "idempotent": true,
+      "pure": true,
+      "sourceUntouched": true,
+      "historicalIgnored": true,
+      "history": [
+        {
+          "id": "card-97",
+          "g2Check": "works"
+        },
+        {
+          "id": "card-98",
+          "g2Check": "works"
+        },
+        {
+          "id": "card-107",
+          "g2Check": "needs_improvement"
+        },
+        {
+          "id": "card-108",
+          "g2Check": "works"
+        },
+        {
+          "id": "card-109",
+          "g2Check": "works"
+        },
+        {
+          "id": "card-110",
+          "g2Check": "works"
+        },
+        {
+          "id": "card-111",
+          "g2Check": "works"
+        },
+        {
+          "id": "g2-cwv",
+          "g2Check": ""
+        },
+        {
+          "id": "g2-canonical",
+          "g2Check": "works"
+        }
+      ],
+      "calc": {
+        "g1": [
+          {
+            "id": "company_demand_positioning",
+            "status": "in_progress"
+          },
+          {
+            "id": "project-comparison",
+            "status": "not_started"
+          },
+          {
+            "id": "interactive-tool",
+            "status": "not_started"
+          },
+          {
+            "id": "card-21",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-22-hub",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-22",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-25",
+            "status": "not_required"
+          },
+          {
+            "id": "card-26",
+            "status": "not_started"
+          },
+          {
+            "id": "card-27",
+            "status": "not_started"
+          },
+          {
+            "id": "card-28",
+            "status": "not_required"
+          },
+          {
+            "id": "card-30",
+            "status": "not_started"
+          },
+          {
+            "id": "card-31",
+            "status": "not_started"
+          },
+          {
+            "id": "card-32",
+            "status": "not_required"
+          },
+          {
+            "id": "card-site-header-v497",
+            "status": "not_started"
+          },
+          {
+            "id": "card-site-footer-v497",
+            "status": "not_started"
+          },
+          {
+            "id": "card-29",
+            "status": "not_started"
+          },
+          {
+            "id": "card-35",
+            "status": "not_started"
+          },
+          {
+            "id": "card-36",
+            "status": "not_started"
+          },
+          {
+            "id": "card-37",
+            "status": "not_started"
+          },
+          {
+            "id": "target-audience",
+            "status": "in_progress"
+          },
+          {
+            "id": "gate1-blog-v304-company",
+            "status": "not_started"
+          },
+          {
+            "id": "card-23",
+            "status": "ready"
+          },
+          {
+            "id": "card-24",
+            "status": "not_started"
+          },
+          {
+            "id": "pain_jtbd_offer",
+            "status": "in_progress"
+          },
+          {
+            "id": "gate1-blog-v304-product",
+            "status": "not_started"
+          },
+          {
+            "id": "unit-economics",
+            "status": "not_started"
+          }
+        ],
+        "g2": [
+          {
+            "id": "company-domain",
+            "status": "problem"
+          },
+          {
+            "id": "company-counter",
+            "status": "not_started"
+          },
+          {
+            "id": "company-goal",
+            "status": "not_started"
+          },
+          {
+            "id": "company-webmaster",
+            "status": "not_started"
+          },
+          {
+            "id": "company-yandex-business",
+            "status": "not_started"
+          },
+          {
+            "id": "company-yandex-direct",
+            "status": "not_started"
+          },
+          {
+            "id": "company-vk",
+            "status": "not_started"
+          },
+          {
+            "id": "company-telegram-ads",
+            "status": "not_started"
+          },
+          {
+            "id": "company-meta-ads",
+            "status": "not_needed"
+          },
+          {
+            "id": "company-ga4",
+            "status": "not_started"
+          },
+          {
+            "id": "company-gsc",
+            "status": "not_started"
+          },
+          {
+            "id": "company-google-ads",
+            "status": "not_needed"
+          },
+          {
+            "id": "company-leads",
+            "status": "not_started"
+          },
+          {
+            "id": "company-safety",
+            "status": "not_started"
+          },
+          {
+            "id": "product-landing",
+            "status": "not_started"
+          },
+          {
+            "id": "product-counter",
+            "status": "not_started"
+          },
+          {
+            "id": "product-goal",
+            "status": "not_started"
+          },
+          {
+            "id": "product-vk",
+            "status": "not_started"
+          },
+          {
+            "id": "product-lead",
+            "status": "not_started"
+          }
+        ],
+        "summary1": {
+          "total": 26,
+          "done": 4,
+          "ready": 1,
+          "notRequired": 3,
+          "inProgress": 6,
+          "problem": 0,
+          "notStarted": 16,
+          "percent": 27
+        },
+        "summary2": {
+          "total": 19,
+          "done": 2,
+          "ready": 0,
+          "notRequired": 2,
+          "inProgress": 0,
+          "problem": 1,
+          "notStarted": 16,
+          "percent": 13
+        },
+        "path": [
+          {
+            "id": "card-1",
+            "gateId": "gate-0",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-project-goal",
+            "gateId": "gate-0",
+            "status": "ready"
+          },
+          {
+            "id": "gate0-company-brand-purpose",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "gate0-company-segmentation",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "gate0-company-positioning",
+            "gateId": "gate-0",
+            "status": "in_progress"
+          },
+          {
+            "id": "gate0-company-offer",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "gate0-company-keyword-foundation",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "card-7",
+            "gateId": "gate-0",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-2",
+            "gateId": "gate-0",
+            "status": "in_progress"
+          },
+          {
+            "id": "company_demand_positioning",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "project-comparison",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "interactive-tool",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-21",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-22-hub",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-22",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-25",
+            "gateId": "gate-1",
+            "status": "not_required"
+          },
+          {
+            "id": "card-26",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-27",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-28",
+            "gateId": "gate-1",
+            "status": "not_required"
+          },
+          {
+            "id": "card-30",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-31",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-32",
+            "gateId": "gate-1",
+            "status": "not_required"
+          },
+          {
+            "id": "card-site-header-v497",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-site-footer-v497",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-29",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-35",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-36",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-37",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "target-audience",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "gate1-blog-v304-company",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-23",
+            "gateId": "gate-1",
+            "status": "ready"
+          },
+          {
+            "id": "card-24",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "pain_jtbd_offer",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "gate1-blog-v304-product",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "unit-economics",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "company-domain",
+            "gateId": "gate-2",
+            "status": "problem",
+            "productId": ""
+          },
+          {
+            "id": "company-counter",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-goal",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-webmaster",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-yandex-business",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-yandex-direct",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-vk",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-telegram-ads",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-meta-ads",
+            "gateId": "gate-2",
+            "status": "not_required",
+            "productId": ""
+          },
+          {
+            "id": "company-ga4",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-gsc",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-google-ads",
+            "gateId": "gate-2",
+            "status": "not_required",
+            "productId": ""
+          },
+          {
+            "id": "company-leads",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-safety",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "product-landing",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "product-counter",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "product-goal",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "product-vk",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "product-lead",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "aware",
+            "gateId": "gate-3",
+            "status": "ready",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "appeal",
+            "gateId": "gate-3",
+            "status": "ready",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "ask",
+            "gateId": "gate-3",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "act",
+            "gateId": "gate-3",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "advocate",
+            "gateId": "gate-3",
+            "status": "problem",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-148",
+            "gateId": "gate-4",
+            "status": "not_started",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-151",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-152",
+            "gateId": "gate-4",
+            "status": "ready",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-153",
+            "gateId": "gate-4",
+            "status": "ready",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-154",
+            "gateId": "gate-4",
+            "status": "ready",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-155",
+            "gateId": "gate-4",
+            "status": "ready",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-156",
+            "gateId": "gate-4",
+            "status": "ready",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-157",
+            "gateId": "gate-4",
+            "status": "ready",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-158",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-159",
+            "gateId": "gate-4",
+            "status": "ready",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-160",
+            "gateId": "gate-4",
+            "status": "not_started",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-161",
+            "gateId": "gate-4",
+            "status": "not_started",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-162",
+            "gateId": "gate-4",
+            "status": "not_started",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-163",
+            "gateId": "gate-4",
+            "status": "not_started",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-164",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-165",
+            "gateId": "gate-4",
+            "status": "not_started",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-166",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-167",
+            "gateId": "gate-4",
+            "status": "not_started",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-168",
+            "gateId": "gate-4",
+            "status": "ready",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "card-169",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "smm_vk_контент_11",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "smm_telegram_контент_посевы_12",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "smm_instagram_reels_stories_13",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "smm_youtube_shorts_pre_roll_14",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "платная_реклама_vk_ads_таргет_5",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "платная_реклама_telegram_ads_посевы_ads_7",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "платная_реклама_meta_ads_feed_reels_6",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "платная_реклама_яндекс_директ_рся_1",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "платная_реклама_яндекс_директ_мастер_кампаний_2",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "платная_реклама_google_ads_display_4",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "платная_реклама_яндекс_директ_поиск_0",
+            "gateId": "gate-4",
+            "status": "not_started",
+            "productId": "catalog-item-1786885522654-b659e1"
+          },
+          {
+            "id": "платная_реклама_google_ads_search_3",
+            "gateId": "gate-4",
+            "status": "in_progress",
+            "productId": "catalog-item-1786885522654-b659e1"
+          }
+        ],
+        "products": [
+          {
+            "id": "catalog-item-1786885522653-759ff6",
+            "name": "Без названия"
+          },
+          {
+            "id": "catalog-item-1786885522654-b437c0",
+            "name": "Без названия"
+          },
+          {
+            "id": "catalog-item-1786885522654-b659e1",
+            "name": "направление - Обувь - Химчистка, ремонт и реставрация обуви"
+          },
+          {
+            "id": "catalog-item-1786885522654-a3955f",
+            "name": "Уход за вашими любимыми аксессуарами: от шелкового платка до брендовой сумки"
+          }
+        ]
+      },
+      "conflictAtomic": true,
+      "conflicts": [
+        {
+          "path": "company-domain.company.technicalSeoV1.cards.card-20.sslV130.domain",
+          "gate2": "conflict.invalid",
+          "gate1": "source.invalid"
+        }
+      ],
+      "sourceSha256": "a1baa877f77727f7813f80cc0749763bd5122f8f56d48136fa1527542ea19c71",
+      "matrix": [
+        {
+          "productId": "catalog-item-1786885522653-759ff6",
+          "summary": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 1,
+            "notStarted": 16,
+            "percent": 13
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522653-759ff6"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522653-759ff6"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522653-759ff6"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522653-759ff6"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522653-759ff6"
+            }
+          ]
+        },
+        {
+          "productId": "catalog-item-1786885522654-b437c0",
+          "summary": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 1,
+            "notStarted": 16,
+            "percent": 13
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522654-b437c0"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522654-b437c0"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522654-b437c0"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522654-b437c0"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522654-b437c0"
+            }
+          ]
+        },
+        {
+          "productId": "catalog-item-1786885522654-b659e1",
+          "summary": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 1,
+            "notStarted": 16,
+            "percent": 13
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522654-b659e1"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522654-b659e1"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522654-b659e1"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522654-b659e1"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522654-b659e1"
+            }
+          ]
+        },
+        {
+          "productId": "catalog-item-1786885522654-a3955f",
+          "summary": {
+            "total": 19,
+            "done": 2,
+            "ready": 0,
+            "notRequired": 2,
+            "inProgress": 0,
+            "problem": 1,
+            "notStarted": 16,
+            "percent": 13
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "product-landing",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522654-a3955f"
+            },
+            {
+              "id": "product-counter",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522654-a3955f"
+            },
+            {
+              "id": "product-goal",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522654-a3955f"
+            },
+            {
+              "id": "product-vk",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522654-a3955f"
+            },
+            {
+              "id": "product-lead",
+              "status": "not_started",
+              "productId": "catalog-item-1786885522654-a3955f"
+            }
+          ]
+        }
+      ],
+      "rendering": {
+        "missing": [],
+        "badges": [
+          {
+            "id": "company-domain",
+            "status": "problem",
+            "badge": "Проблема"
+          },
+          {
+            "id": "company-webmaster",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-yandex-business",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-yandex-direct",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-vk",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-telegram-ads",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-meta-ads",
+            "status": "not_needed",
+            "badge": "Не требуется: все каналы отмечены «Не требуется» в Gate 0"
+          },
+          {
+            "id": "company-ga4",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-gsc",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-google-ads",
+            "status": "not_needed",
+            "badge": "Не требуется: все каналы отмечены «Не требуется» в Gate 0"
+          },
+          {
+            "id": "company-leads",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-safety",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "product-landing",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "product-counter",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "product-goal",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "product-vk",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "product-lead",
+            "status": "not_started",
+            "badge": "Не начато"
+          }
+        ],
+        "archived": true,
+        "oldVisible": 0,
+        "technicalPreserved": true,
+        "editorCount": 14
+      }
+    },
+    "sivrce": {
+      "archiveEqual": true,
+      "idempotent": true,
+      "pure": true,
+      "sourceUntouched": true,
+      "historicalIgnored": true,
+      "history": [
+        {
+          "id": "card-97",
+          "g2Check": ""
+        },
+        {
+          "id": "card-98",
+          "g2Check": ""
+        },
+        {
+          "id": "card-107",
+          "g2Check": ""
+        },
+        {
+          "id": "card-108",
+          "g2Check": ""
+        },
+        {
+          "id": "card-109",
+          "g2Check": ""
+        },
+        {
+          "id": "card-110",
+          "g2Check": ""
+        },
+        {
+          "id": "card-111",
+          "g2Check": ""
+        },
+        {
+          "id": "g2-cwv",
+          "g2Check": ""
+        },
+        {
+          "id": "g2-canonical",
+          "g2Check": ""
+        }
+      ],
+      "calc": {
+        "g1": [
+          {
+            "id": "company_demand_positioning",
+            "status": "in_progress"
+          },
+          {
+            "id": "project-comparison",
+            "status": "not_started"
+          },
+          {
+            "id": "interactive-tool",
+            "status": "not_started"
+          },
+          {
+            "id": "card-21",
+            "status": "not_started"
+          },
+          {
+            "id": "card-22-hub",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-22",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-25",
+            "status": "not_started"
+          },
+          {
+            "id": "card-26",
+            "status": "not_started"
+          },
+          {
+            "id": "card-27",
+            "status": "not_started"
+          },
+          {
+            "id": "card-28",
+            "status": "not_started"
+          },
+          {
+            "id": "card-30",
+            "status": "not_started"
+          },
+          {
+            "id": "card-31",
+            "status": "not_started"
+          },
+          {
+            "id": "card-32",
+            "status": "not_started"
+          },
+          {
+            "id": "card-site-header-v497",
+            "status": "not_started"
+          },
+          {
+            "id": "card-site-footer-v497",
+            "status": "not_started"
+          },
+          {
+            "id": "card-29",
+            "status": "not_started"
+          },
+          {
+            "id": "card-35",
+            "status": "not_started"
+          },
+          {
+            "id": "card-36",
+            "status": "not_started"
+          },
+          {
+            "id": "card-37",
+            "status": "not_started"
+          },
+          {
+            "id": "target-audience",
+            "status": "in_progress"
+          },
+          {
+            "id": "gate1-blog-v304-company",
+            "status": "not_started"
+          },
+          {
+            "id": "card-23",
+            "status": "not_started"
+          },
+          {
+            "id": "card-24",
+            "status": "not_started"
+          },
+          {
+            "id": "unit-economics",
+            "status": "not_started"
+          }
+        ],
+        "g2": [
+          {
+            "id": "company-domain",
+            "status": "problem"
+          },
+          {
+            "id": "company-counter",
+            "status": "not_started"
+          },
+          {
+            "id": "company-goal",
+            "status": "not_started"
+          },
+          {
+            "id": "company-webmaster",
+            "status": "not_needed"
+          },
+          {
+            "id": "company-yandex-business",
+            "status": "not_needed"
+          },
+          {
+            "id": "company-yandex-direct",
+            "status": "not_needed"
+          },
+          {
+            "id": "company-vk",
+            "status": "not_needed"
+          },
+          {
+            "id": "company-telegram-ads",
+            "status": "not_needed"
+          },
+          {
+            "id": "company-meta-ads",
+            "status": "not_needed"
+          },
+          {
+            "id": "company-ga4",
+            "status": "not_started"
+          },
+          {
+            "id": "company-gsc",
+            "status": "not_started"
+          },
+          {
+            "id": "company-google-ads",
+            "status": "not_needed"
+          },
+          {
+            "id": "company-leads",
+            "status": "not_started"
+          },
+          {
+            "id": "company-safety",
+            "status": "not_started"
+          }
+        ],
+        "summary1": {
+          "total": 24,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 4,
+          "problem": 0,
+          "notStarted": 20,
+          "percent": 8
+        },
+        "summary2": {
+          "total": 14,
+          "done": 7,
+          "ready": 0,
+          "notRequired": 7,
+          "inProgress": 0,
+          "problem": 1,
+          "notStarted": 6,
+          "percent": 54
+        },
+        "path": [
+          {
+            "id": "card-1",
+            "gateId": "gate-0",
+            "status": "in_progress"
+          },
+          {
+            "id": "gate0-project-goal",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "gate0-company-brand-purpose",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "gate0-company-segmentation",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "gate0-company-positioning",
+            "gateId": "gate-0",
+            "status": "in_progress"
+          },
+          {
+            "id": "gate0-company-offer",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "gate0-company-keyword-foundation",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "card-7",
+            "gateId": "gate-0",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-2",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "company_demand_positioning",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "project-comparison",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "interactive-tool",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-21",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-22-hub",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-22",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-25",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-26",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-27",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-28",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-30",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-31",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-32",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-site-header-v497",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-site-footer-v497",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-29",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-35",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-36",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-37",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "target-audience",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "gate1-blog-v304-company",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-23",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-24",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "unit-economics",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "company-domain",
+            "gateId": "gate-2",
+            "status": "problem",
+            "productId": ""
+          },
+          {
+            "id": "company-counter",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-goal",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-webmaster",
+            "gateId": "gate-2",
+            "status": "not_required",
+            "productId": ""
+          },
+          {
+            "id": "company-yandex-business",
+            "gateId": "gate-2",
+            "status": "not_required",
+            "productId": ""
+          },
+          {
+            "id": "company-yandex-direct",
+            "gateId": "gate-2",
+            "status": "not_required",
+            "productId": ""
+          },
+          {
+            "id": "company-vk",
+            "gateId": "gate-2",
+            "status": "not_required",
+            "productId": ""
+          },
+          {
+            "id": "company-telegram-ads",
+            "gateId": "gate-2",
+            "status": "not_required",
+            "productId": ""
+          },
+          {
+            "id": "company-meta-ads",
+            "gateId": "gate-2",
+            "status": "not_required",
+            "productId": ""
+          },
+          {
+            "id": "company-ga4",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-gsc",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-google-ads",
+            "gateId": "gate-2",
+            "status": "not_required",
+            "productId": ""
+          },
+          {
+            "id": "company-leads",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-safety",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          }
+        ],
+        "products": []
+      },
+      "conflictAtomic": true,
+      "conflicts": [
+        {
+          "path": "company-domain.company.technicalSeoV1.cards.card-20.sslV130.domain",
+          "gate2": "conflict.invalid",
+          "gate1": "source.invalid"
+        }
+      ],
+      "sourceSha256": "59c7656d64ab0f86da8791c2531768249d6feb64b40673ed174654ea650c413c",
+      "matrix": [
+        {
+          "productId": "",
+          "summary": {
+            "total": 14,
+            "done": 7,
+            "ready": 0,
+            "notRequired": 7,
+            "inProgress": 0,
+            "problem": 1,
+            "notStarted": 6,
+            "percent": 54
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_needed",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            }
+          ]
+        }
+      ],
+      "rendering": {
+        "missing": [],
+        "badges": [
+          {
+            "id": "company-domain",
+            "status": "problem",
+            "badge": "Проблема"
+          },
+          {
+            "id": "company-webmaster",
+            "status": "not_needed",
+            "badge": "Не требуется по Gate 0"
+          },
+          {
+            "id": "company-yandex-business",
+            "status": "not_needed",
+            "badge": "Не требуется по Gate 0"
+          },
+          {
+            "id": "company-yandex-direct",
+            "status": "not_needed",
+            "badge": "Не требуется по Gate 0"
+          },
+          {
+            "id": "company-vk",
+            "status": "not_needed",
+            "badge": "Не требуется по Gate 0"
+          },
+          {
+            "id": "company-telegram-ads",
+            "status": "not_needed",
+            "badge": "Не требуется по Gate 0"
+          },
+          {
+            "id": "company-meta-ads",
+            "status": "not_needed",
+            "badge": "Не требуется: все каналы отмечены «Не требуется» в Gate 0"
+          },
+          {
+            "id": "company-ga4",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-gsc",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-google-ads",
+            "status": "not_needed",
+            "badge": "Не требуется: все каналы отмечены «Не требуется» в Gate 0"
+          },
+          {
+            "id": "company-leads",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-safety",
+            "status": "not_started",
+            "badge": "Не начато"
+          }
+        ],
+        "archived": true,
+        "oldVisible": 0,
+        "technicalPreserved": true,
+        "editorCount": 10
+      }
+    },
+    "guru": {
+      "archiveEqual": true,
+      "idempotent": true,
+      "pure": true,
+      "sourceUntouched": true,
+      "historicalIgnored": true,
+      "history": [
+        {
+          "id": "card-97"
+        },
+        {
+          "id": "card-98"
+        },
+        {
+          "id": "card-107"
+        },
+        {
+          "id": "card-108"
+        },
+        {
+          "id": "card-109"
+        },
+        {
+          "id": "card-110"
+        },
+        {
+          "id": "card-111"
+        },
+        {
+          "id": "g2-cwv"
+        },
+        {
+          "id": "g2-canonical"
+        }
+      ],
+      "calc": {
+        "g1": [
+          {
+            "id": "company_demand_positioning",
+            "status": "not_started"
+          },
+          {
+            "id": "project-comparison",
+            "status": "not_started"
+          },
+          {
+            "id": "interactive-tool",
+            "status": "not_started"
+          },
+          {
+            "id": "card-21",
+            "status": "not_started"
+          },
+          {
+            "id": "card-22-hub",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-22",
+            "status": "not_started"
+          },
+          {
+            "id": "card-25",
+            "status": "not_started"
+          },
+          {
+            "id": "card-26",
+            "status": "not_started"
+          },
+          {
+            "id": "card-27",
+            "status": "not_started"
+          },
+          {
+            "id": "card-28",
+            "status": "not_started"
+          },
+          {
+            "id": "card-30",
+            "status": "not_started"
+          },
+          {
+            "id": "card-31",
+            "status": "not_started"
+          },
+          {
+            "id": "card-32",
+            "status": "not_started"
+          },
+          {
+            "id": "card-site-header-v497",
+            "status": "not_started"
+          },
+          {
+            "id": "card-site-footer-v497",
+            "status": "not_started"
+          },
+          {
+            "id": "card-29",
+            "status": "not_started"
+          },
+          {
+            "id": "card-35",
+            "status": "not_started"
+          },
+          {
+            "id": "card-36",
+            "status": "not_started"
+          },
+          {
+            "id": "card-37",
+            "status": "not_started"
+          },
+          {
+            "id": "target-audience",
+            "status": "not_started"
+          },
+          {
+            "id": "gate1-blog-v304-company",
+            "status": "not_started"
+          },
+          {
+            "id": "card-23",
+            "status": "not_started"
+          },
+          {
+            "id": "card-24",
+            "status": "not_started"
+          },
+          {
+            "id": "unit-economics",
+            "status": "not_started"
+          }
+        ],
+        "g2": [
+          {
+            "id": "company-domain",
+            "status": "problem"
+          },
+          {
+            "id": "company-counter",
+            "status": "not_started"
+          },
+          {
+            "id": "company-goal",
+            "status": "not_started"
+          },
+          {
+            "id": "company-webmaster",
+            "status": "not_started"
+          },
+          {
+            "id": "company-yandex-business",
+            "status": "not_started"
+          },
+          {
+            "id": "company-yandex-direct",
+            "status": "not_started"
+          },
+          {
+            "id": "company-vk",
+            "status": "not_started"
+          },
+          {
+            "id": "company-telegram-ads",
+            "status": "not_started"
+          },
+          {
+            "id": "company-meta-ads",
+            "status": "not_started"
+          },
+          {
+            "id": "company-ga4",
+            "status": "not_started"
+          },
+          {
+            "id": "company-gsc",
+            "status": "not_started"
+          },
+          {
+            "id": "company-google-ads",
+            "status": "not_started"
+          },
+          {
+            "id": "company-leads",
+            "status": "not_started"
+          },
+          {
+            "id": "company-safety",
+            "status": "not_started"
+          }
+        ],
+        "summary1": {
+          "total": 24,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 1,
+          "problem": 0,
+          "notStarted": 23,
+          "percent": 2
+        },
+        "summary2": {
+          "total": 14,
+          "done": 0,
+          "ready": 0,
+          "notRequired": 0,
+          "inProgress": 0,
+          "problem": 1,
+          "notStarted": 13,
+          "percent": 4
+        },
+        "path": [
+          {
+            "id": "card-1",
+            "gateId": "gate-0",
+            "status": "in_progress"
+          },
+          {
+            "id": "gate0-project-goal",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "gate0-company-brand-purpose",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "gate0-company-segmentation",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "gate0-company-positioning",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "gate0-company-offer",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "gate0-company-keyword-foundation",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "card-7",
+            "gateId": "gate-0",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-2",
+            "gateId": "gate-0",
+            "status": "not_started"
+          },
+          {
+            "id": "company_demand_positioning",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "project-comparison",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "interactive-tool",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-21",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-22-hub",
+            "gateId": "gate-1",
+            "status": "in_progress"
+          },
+          {
+            "id": "card-22",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-25",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-26",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-27",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-28",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-30",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-31",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-32",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-site-header-v497",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-site-footer-v497",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-29",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-35",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-36",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-37",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "target-audience",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "gate1-blog-v304-company",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-23",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "card-24",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "unit-economics",
+            "gateId": "gate-1",
+            "status": "not_started"
+          },
+          {
+            "id": "company-domain",
+            "gateId": "gate-2",
+            "status": "problem",
+            "productId": ""
+          },
+          {
+            "id": "company-counter",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-goal",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-webmaster",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-yandex-business",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-yandex-direct",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-vk",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-telegram-ads",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-meta-ads",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-ga4",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-gsc",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-google-ads",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-leads",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          },
+          {
+            "id": "company-safety",
+            "gateId": "gate-2",
+            "status": "not_started",
+            "productId": ""
+          }
+        ],
+        "products": []
+      },
+      "conflictAtomic": true,
+      "conflicts": [
+        {
+          "path": "company-domain.company.technicalSeoV1.cards.card-20.sslV130.domain",
+          "gate2": "conflict.invalid",
+          "gate1": "source.invalid"
+        }
+      ],
+      "sourceSha256": "847765127374ca95d9db93631e5c416b1d1b2518e56f6754a6b7b6ae058a2360",
+      "matrix": [
+        {
+          "productId": "",
+          "summary": {
+            "total": 14,
+            "done": 0,
+            "ready": 0,
+            "notRequired": 0,
+            "inProgress": 0,
+            "problem": 1,
+            "notStarted": 13,
+            "percent": 4
+          },
+          "units": [
+            {
+              "id": "company-domain",
+              "status": "problem",
+              "productId": ""
+            },
+            {
+              "id": "company-counter",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-goal",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-webmaster",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-business",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-yandex-direct",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-vk",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-telegram-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-meta-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-ga4",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-gsc",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-google-ads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-leads",
+              "status": "not_started",
+              "productId": ""
+            },
+            {
+              "id": "company-safety",
+              "status": "not_started",
+              "productId": ""
+            }
+          ]
+        }
+      ],
+      "rendering": {
+        "missing": [],
+        "badges": [
+          {
+            "id": "company-domain",
+            "status": "problem",
+            "badge": "Проблема"
+          },
+          {
+            "id": "company-webmaster",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-yandex-business",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-yandex-direct",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-vk",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-telegram-ads",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-meta-ads",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-ga4",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-gsc",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-google-ads",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-leads",
+            "status": "not_started",
+            "badge": "Не начато"
+          },
+          {
+            "id": "company-safety",
+            "status": "not_started",
+            "badge": "Не начато"
+          }
+        ],
+        "archived": true,
+        "oldVisible": 0,
+        "technicalPreserved": true,
+        "editorCount": 10
+      }
+    }
+  },
+  "checks": [],
+  "errors": [],
+  "build": "2.3.526+e25f559a49a2"
+}

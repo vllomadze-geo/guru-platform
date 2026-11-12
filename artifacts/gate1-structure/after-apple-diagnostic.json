@@ -1,0 +1,2720 @@
+{
+  "project": "apple",
+  "baseline": false,
+  "beforeHash": "f9607fe86dde2bdd97fb22ca6b58c682791780b3840abc3ef30ea0c01a0348ab",
+  "snapshot": {
+    "blocks": [
+      {
+        "id": "card-1",
+        "gateId": "gate-0",
+        "title": "Проект: базовые сведения",
+        "kind": "card",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-project-goal",
+        "gateId": "gate-0",
+        "title": "Цель проекта и ограничения",
+        "kind": "card",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-brand-purpose",
+        "gateId": "gate-0",
+        "title": "Цель бренда",
+        "kind": "card",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-segmentation",
+        "gateId": "gate-0",
+        "title": "Сегментация · Компания",
+        "kind": "card",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-positioning",
+        "gateId": "gate-0",
+        "title": "Позиционирование · Компания",
+        "kind": "card",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-offer",
+        "gateId": "gate-0",
+        "title": "Оффер и CTA · Компания",
+        "kind": "card",
+        "status": "ready"
+      },
+      {
+        "id": "gate0-company-keyword-foundation",
+        "gateId": "gate-0",
+        "title": "Фундамент ключевых слов · Компания",
+        "kind": "card",
+        "status": "ready"
+      },
+      {
+        "id": "card-7",
+        "gateId": "gate-0",
+        "title": "Текущее состояние маркетинговой системы · Компания",
+        "kind": "card",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-2",
+        "gateId": "gate-0",
+        "title": "Продукт, сегмент и задача клиента",
+        "kind": "card",
+        "status": "ready"
+      },
+      {
+        "id": "company_demand_positioning",
+        "gateId": "gate-1",
+        "title": "Спрос",
+        "kind": "gate1-section",
+        "status": "in_progress"
+      },
+      {
+        "id": "project-comparison",
+        "gateId": "gate-1",
+        "title": "Конкуренты (Сравнение проектов)",
+        "kind": "comparison",
+        "status": "in_progress"
+      },
+      {
+        "id": "target-audience",
+        "gateId": "gate-1",
+        "title": "Целевая аудитория",
+        "kind": "audience",
+        "status": "ready"
+      },
+      {
+        "id": "card-21",
+        "gateId": "gate-1",
+        "title": "ГЛАВНАЯ",
+        "kind": "card",
+        "status": "ready"
+      },
+      {
+        "id": "card-22-hub",
+        "gateId": "gate-1",
+        "title": "КАТАЛОГ (ХАБ)",
+        "kind": "card",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-22",
+        "gateId": "gate-1",
+        "title": "КАТЕГОРИЯ",
+        "kind": "card",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-25",
+        "gateId": "gate-1",
+        "title": "СТАТЬЯ БЛОГА",
+        "kind": "card",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-26",
+        "gateId": "gate-1",
+        "title": "О НАС",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-27",
+        "gateId": "gate-1",
+        "title": "КОНТАКТЫ",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-28",
+        "gateId": "gate-1",
+        "title": "ДОСТАВКА / ГАРАНТИИ",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-30",
+        "gateId": "gate-1",
+        "title": "404",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-31",
+        "gateId": "gate-1",
+        "title": "THANK YOU PAGE ⚠️",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-32",
+        "gateId": "gate-1",
+        "title": "ЛЕНДИНГ",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-site-header-v497",
+        "gateId": "gate-1",
+        "title": "ХЕДЕР",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-site-footer-v497",
+        "gateId": "gate-1",
+        "title": "Футер: навигация, доверие и юридическая база",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-29",
+        "gateId": "gate-1",
+        "title": "ПОЛИТИКА",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-35",
+        "gateId": "gate-1",
+        "title": "Cookie-баннер: уведомление и согласие",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-36",
+        "gateId": "gate-1",
+        "title": "Футер: навигация, доверие и юридическая база",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-37",
+        "gateId": "gate-1",
+        "title": "Согласие в формах",
+        "kind": "card",
+        "status": "not_started"
+      },
+      {
+        "id": "card-24",
+        "gateId": "gate-1",
+        "title": "КАРТОЧКА ТОВАРА",
+        "kind": "card",
+        "status": "ready"
+      },
+      {
+        "id": "pain_jtbd_offer",
+        "gateId": "gate-1",
+        "title": "Спрос, ценность, позиционирование · Продукт/Услуга",
+        "kind": "gate1-section",
+        "status": "ready"
+      },
+      {
+        "id": "project-comparison-product",
+        "gateId": "gate-1",
+        "title": "Сравнение проектов · Продукт/Услуга",
+        "kind": "product-comparison",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "unit-economics",
+        "gateId": "gate-1",
+        "title": "Юнит-экономика",
+        "kind": "unit",
+        "status": "not_started"
+      },
+      {
+        "id": "company-domain",
+        "gateId": "gate-2",
+        "title": "Домен и HTTPS",
+        "kind": "service",
+        "productId": "",
+        "status": "problem"
+      },
+      {
+        "id": "company-counter",
+        "gateId": "gate-2",
+        "title": "Яндекс Метрика · счётчик",
+        "kind": "wizard",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "company-goal",
+        "gateId": "gate-2",
+        "title": "Яндекс Метрика · конверсионная цель",
+        "kind": "wizard",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "company-webmaster",
+        "gateId": "gate-2",
+        "title": "Яндекс Вебмастер",
+        "kind": "service",
+        "productId": "",
+        "status": "problem"
+      },
+      {
+        "id": "company-yandex-business",
+        "gateId": "gate-2",
+        "title": "Яндекс Бизнес",
+        "kind": "service",
+        "productId": "",
+        "status": "not_required"
+      },
+      {
+        "id": "company-yandex-direct",
+        "gateId": "gate-2",
+        "title": "Яндекс Директ · кабинет",
+        "kind": "service",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "company-vk",
+        "gateId": "gate-2",
+        "title": "VK Реклама и пиксель",
+        "kind": "service",
+        "productId": "",
+        "status": "in_progress"
+      },
+      {
+        "id": "company-telegram-ads",
+        "gateId": "gate-2",
+        "title": "Telegram Ads · кабинет",
+        "kind": "service",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "company-meta-ads",
+        "gateId": "gate-2",
+        "title": "Meta Ads · кабинет и пиксель",
+        "kind": "service",
+        "productId": "",
+        "status": "not_required"
+      },
+      {
+        "id": "company-ga4",
+        "gateId": "gate-2",
+        "title": "Google Analytics 4",
+        "kind": "service",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "company-gsc",
+        "gateId": "gate-2",
+        "title": "Google Search Console",
+        "kind": "service",
+        "productId": "",
+        "status": "not_required"
+      },
+      {
+        "id": "company-google-ads",
+        "gateId": "gate-2",
+        "title": "Google Ads · конверсии",
+        "kind": "service",
+        "productId": "",
+        "status": "not_required"
+      },
+      {
+        "id": "company-leads",
+        "gateId": "gate-2",
+        "title": "Приём заявок",
+        "kind": "service",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "company-safety",
+        "gateId": "gate-2",
+        "title": "Юридическая защита",
+        "kind": "service",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "product-landing",
+        "gateId": "gate-2",
+        "title": "Посадочная товара",
+        "kind": "service",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "problem"
+      },
+      {
+        "id": "product-counter",
+        "gateId": "gate-2",
+        "title": "Метрика продукта · визит",
+        "kind": "service",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "product-goal",
+        "gateId": "gate-2",
+        "title": "Метрика продукта · цель",
+        "kind": "service",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "product-vk",
+        "gateId": "gate-2",
+        "title": "События VK Рекламы",
+        "kind": "service",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "product-lead",
+        "gateId": "gate-2",
+        "title": "Сквозная проверка заявки",
+        "kind": "service",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "aware",
+        "gateId": "gate-3",
+        "title": "Узнал (Aware)",
+        "kind": "stage",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "ready"
+      },
+      {
+        "id": "appeal",
+        "gateId": "gate-3",
+        "title": "Понравился (Appeal)",
+        "kind": "stage",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "ready"
+      },
+      {
+        "id": "ask",
+        "gateId": "gate-3",
+        "title": "Изучает (Ask)",
+        "kind": "stage",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "ready"
+      },
+      {
+        "id": "act",
+        "gateId": "gate-3",
+        "title": "Покупает (Act)",
+        "kind": "stage",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "ready"
+      },
+      {
+        "id": "advocate",
+        "gateId": "gate-3",
+        "title": "Рекомендует (Advocate)",
+        "kind": "stage",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "problem"
+      },
+      {
+        "id": "pr_publications",
+        "gateId": "gate-4",
+        "title": "PR-публикации · Сервис требует выбора",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "articles_cases",
+        "gateId": "gate-4",
+        "title": "Статьи / кейсы · Tilda Потоки",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "yandex_organization",
+        "gateId": "gate-4",
+        "title": "Карточка организации · Яндекс Бизнес / Яндекс Карты",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "google_organization",
+        "gateId": "gate-4",
+        "title": "Карточка организации · Google Business Profile",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "online_chat",
+        "gateId": "gate-4",
+        "title": "Онлайн-чат · JivoChat (виджет Tilda)",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "online_payment",
+        "gateId": "gate-4",
+        "title": "Онлайн-оплата · ЮKassa / CloudPayments / Т-Банк / Робокасса",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "abandoned_cart",
+        "gateId": "gate-4",
+        "title": "Письма о брошенной корзине · Внешний сервис — требует выбора",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "email_crm",
+        "gateId": "gate-4",
+        "title": "Email-рассылки · Unisender",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "review_collection",
+        "gateId": "gate-4",
+        "title": "Сбор отзывов · Яндекс Отзывы и Яндекс Карты",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "referral",
+        "gateId": "gate-4",
+        "title": "Реферальная программа · Промокоды Tilda",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "in_progress"
+      },
+      {
+        "id": "loyalty",
+        "gateId": "gate-4",
+        "title": "Программа лояльности · Внешний сервис — требует выбора",
+        "kind": "gate4-tool",
+        "productId": "",
+        "status": "not_started"
+      },
+      {
+        "id": "gate1-blog-v304-company",
+        "gateId": "gate-4",
+        "title": "Блог · Компания",
+        "kind": "gate4-blog",
+        "productId": "",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-148",
+        "gateId": "gate-4",
+        "title": "Единая карта запуска",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "card-151",
+        "gateId": "gate-4",
+        "title": "Целевое действие выбрано",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-152",
+        "gateId": "gate-4",
+        "title": "Посадочная страница собрана под сегмент",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "ready"
+      },
+      {
+        "id": "card-153",
+        "gateId": "gate-4",
+        "title": "Смысловой каркас страницы собран",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "ready"
+      },
+      {
+        "id": "card-154",
+        "gateId": "gate-4",
+        "title": "Архитектура психослоев на посадочной",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "ready"
+      },
+      {
+        "id": "card-155",
+        "gateId": "gate-4",
+        "title": "Формы и контакты работают",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "ready"
+      },
+      {
+        "id": "card-156",
+        "gateId": "gate-4",
+        "title": "Мобильная версия не ломает конверсию",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "ready"
+      },
+      {
+        "id": "card-157",
+        "gateId": "gate-4",
+        "title": "Метрика и базовые цели подключены",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "ready"
+      },
+      {
+        "id": "card-158",
+        "gateId": "gate-4",
+        "title": "UTM и разметка готовы",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-159",
+        "gateId": "gate-4",
+        "title": "Передача лидов и статусов не теряется",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "ready"
+      },
+      {
+        "id": "card-160",
+        "gateId": "gate-4",
+        "title": "Креативная рамка зафиксирована",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "card-161",
+        "gateId": "gate-4",
+        "title": "Креативная матрица 3×3",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "card-162",
+        "gateId": "gate-4",
+        "title": "Собран минимальный пакет креативов",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "card-163",
+        "gateId": "gate-4",
+        "title": "Креативы связаны со страницей",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "card-164",
+        "gateId": "gate-4",
+        "title": "Стартовые рекламные сущности собраны",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-165",
+        "gateId": "gate-4",
+        "title": "Посадки привязаны к типу спроса",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "card-166",
+        "gateId": "gate-4",
+        "title": "Бюджет и критерий остановки заданы",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "card-167",
+        "gateId": "gate-4",
+        "title": "Предзапусковый QA пройден",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "card-168",
+        "gateId": "gate-4",
+        "title": "Менеджерская обработка готова",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "ready"
+      },
+      {
+        "id": "card-169",
+        "gateId": "gate-4",
+        "title": "Запусковая готовность подтверждена",
+        "kind": "gate4-readiness",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "smm_vk_контент_11",
+        "gateId": "gate-4",
+        "title": "Контент · VK",
+        "kind": "channel",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "smm_telegram_контент_посевы_12",
+        "gateId": "gate-4",
+        "title": "Канал и посевы · Telegram",
+        "kind": "channel",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "smm_instagram_reels_stories_13",
+        "gateId": "gate-4",
+        "title": "Контент · Instagram / Reels / Stories",
+        "kind": "channel",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "smm_youtube_shorts_pre_roll_14",
+        "gateId": "gate-4",
+        "title": "Видео · YouTube / Shorts / Pre-roll",
+        "kind": "channel",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "платная_реклама_vk_ads_таргет_5",
+        "gateId": "gate-4",
+        "title": "Таргет · VK Реклама",
+        "kind": "channel",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "платная_реклама_telegram_ads_посевы_ads_7",
+        "gateId": "gate-4",
+        "title": "Telegram Ads · Telegram Ads",
+        "kind": "channel",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "платная_реклама_meta_ads_feed_reels_6",
+        "gateId": "gate-4",
+        "title": "Таргет · Meta Ads / Feed / Reels",
+        "kind": "channel",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "платная_реклама_яндекс_директ_рся_1",
+        "gateId": "gate-4",
+        "title": "Яндекс Директ / РСЯ",
+        "kind": "channel",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "платная_реклама_яндекс_директ_мастер_кампаний_2",
+        "gateId": "gate-4",
+        "title": "Яндекс Директ / Мастер кампаний",
+        "kind": "channel",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "платная_реклама_google_ads_display_4",
+        "gateId": "gate-4",
+        "title": "Медийная реклама · Google Ads / Display",
+        "kind": "channel",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "content_creatives",
+        "gateId": "gate-4",
+        "title": "Контент и креативы · Яндекс Директ / РСЯ",
+        "kind": "gate4-tool",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "ready"
+      },
+      {
+        "id": "promo_landing",
+        "gateId": "gate-4",
+        "title": "ПромоСтраница / контентная посадочная · Tilda",
+        "kind": "gate4-tool",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "платная_реклама_яндекс_директ_поиск_0",
+        "gateId": "gate-4",
+        "title": "Яндекс Директ / Поиск",
+        "kind": "channel",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "product_gallery",
+        "gateId": "gate-4",
+        "title": "Товарная галерея · Яндекс Директ, ЕПК с товарными объявлениями",
+        "kind": "gate4-tool",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "платная_реклама_google_ads_search_3",
+        "gateId": "gate-4",
+        "title": "Поисковая реклама · Google Ads / Search",
+        "kind": "channel",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "in_progress"
+      },
+      {
+        "id": "seo",
+        "gateId": "gate-4",
+        "title": "SEO / Страницы сайта · Яндекс Вебмастер",
+        "kind": "gate4-tool",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "ready"
+      },
+      {
+        "id": "retargeting",
+        "gateId": "gate-4",
+        "title": "Ретаргетинг · Яндекс Директ",
+        "kind": "gate4-tool",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "ready"
+      },
+      {
+        "id": "vk_retargeting",
+        "gateId": "gate-4",
+        "title": "Ретаргетинг · VK Реклама",
+        "kind": "gate4-tool",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "buyer_retargeting",
+        "gateId": "gate-4",
+        "title": "Ретаргетинг на покупателей · Яндекс Директ / VK Реклама",
+        "kind": "gate4-tool",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "gate1-blog-v304-product",
+        "gateId": "gate-4",
+        "title": "Блог · Продукт/Услуга",
+        "kind": "gate4-blog",
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started"
+      },
+      {
+        "id": "setup",
+        "gateId": "gate-5",
+        "title": "Настройка отчётности",
+        "kind": "gate5",
+        "status": "not_started"
+      },
+      {
+        "id": "input",
+        "gateId": "gate-5",
+        "title": "Импорт данных и снимки периодов",
+        "kind": "gate5",
+        "status": "not_started"
+      },
+      {
+        "id": "ad",
+        "gateId": "gate-5",
+        "title": "Рекламная оценка",
+        "kind": "gate5",
+        "status": "not_started"
+      },
+      {
+        "id": "bridge",
+        "gateId": "gate-5",
+        "title": "Связка с бизнесом",
+        "kind": "gate5",
+        "status": "not_started"
+      },
+      {
+        "id": "finance",
+        "gateId": "gate-5",
+        "title": "Финансовая оценка",
+        "kind": "gate5",
+        "status": "not_started"
+      },
+      {
+        "id": "journal",
+        "gateId": "gate-5",
+        "title": "Журнал изменений",
+        "kind": "gate5",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__new_year",
+        "gateId": "gate-6",
+        "title": "Новый год",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__christmas",
+        "gateId": "gate-6",
+        "title": "Рождество",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__old_new_year",
+        "gateId": "gate-6",
+        "title": "Старый Новый год",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__epiphany",
+        "gateId": "gate-6",
+        "title": "Крещение",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__tatiana",
+        "gateId": "gate-6",
+        "title": "Татьянин день",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__valentine",
+        "gateId": "gate-6",
+        "title": "День святого Валентина",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__maslenitsa_q1",
+        "gateId": "gate-6",
+        "title": "Масленица",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__defender_day",
+        "gateId": "gate-6",
+        "title": "День защитника Отечества",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q1__march_8",
+        "gateId": "gate-6",
+        "title": "Международный женский день",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q2__april_1",
+        "gateId": "gate-6",
+        "title": "День смеха",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q2__cosmonautics",
+        "gateId": "gate-6",
+        "title": "День космонавтики",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q2__easter_q2",
+        "gateId": "gate-6",
+        "title": "Пасха",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q2__may_1",
+        "gateId": "gate-6",
+        "title": "Праздник Весны и Труда",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q2__may_9",
+        "gateId": "gate-6",
+        "title": "День Победы",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q2__russia_day",
+        "gateId": "gate-6",
+        "title": "День России",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q2__june_22",
+        "gateId": "gate-6",
+        "title": "День памяти и скорби",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q2__youth_day",
+        "gateId": "gate-6",
+        "title": "День молодёжи",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q3__family_day",
+        "gateId": "gate-6",
+        "title": "День семьи, любви и верности",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q3__flag_day",
+        "gateId": "gate-6",
+        "title": "День флага России",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q3__knowledge_day",
+        "gateId": "gate-6",
+        "title": "День знаний",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q3__icleaning_birthday",
+        "gateId": "gate-6",
+        "title": "День рождения iCleaning",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q3__moscow_day",
+        "gateId": "gate-6",
+        "title": "День города Москвы",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q4__autumn_control",
+        "gateId": "gate-6",
+        "title": "Подготовка к зимнему сезону",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q4__unity_day",
+        "gateId": "gate-6",
+        "title": "День народного единства",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q4__black_friday",
+        "gateId": "gate-6",
+        "title": "Чёрная пятница",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q4__constitution_day",
+        "gateId": "gate-6",
+        "title": "День Конституции РФ",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "q4__new_year_preparation",
+        "gateId": "gate-6",
+        "title": "Подготовка к Новому году",
+        "kind": "event",
+        "status": "not_started"
+      },
+      {
+        "id": "0",
+        "gateId": "gate-8",
+        "title": "Прогноз проекта",
+        "kind": "forecast",
+        "status": "in_progress"
+      }
+    ],
+    "readiness": {
+      "gate-0": {
+        "total": 9,
+        "done": 8,
+        "ready": 8,
+        "notRequired": 0,
+        "inProgress": 1,
+        "problem": 0,
+        "notStarted": 0,
+        "percent": 94
+      },
+      "gate-1": {
+        "total": 23,
+        "done": 4,
+        "ready": 4,
+        "notRequired": 0,
+        "inProgress": 5,
+        "problem": 0,
+        "notStarted": 14,
+        "percent": 28
+      },
+      "gate-2": {
+        "total": 19,
+        "done": 4,
+        "ready": 0,
+        "notRequired": 4,
+        "inProgress": 1,
+        "problem": 3,
+        "notStarted": 11,
+        "percent": 32
+      },
+      "gate-3": {
+        "total": 5,
+        "done": 4,
+        "ready": 4,
+        "notRequired": 0,
+        "inProgress": 0,
+        "problem": 1,
+        "notStarted": 0,
+        "percent": 90
+      },
+      "gate-4": {
+        "total": 52,
+        "done": 11,
+        "ready": 11,
+        "notRequired": 0,
+        "inProgress": 19,
+        "problem": 0,
+        "notStarted": 22,
+        "percent": 39
+      },
+      "gate-5": {
+        "total": 6,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 0,
+        "problem": 0,
+        "notStarted": 6,
+        "percent": 0
+      },
+      "gate-6": {
+        "total": 27,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 0,
+        "problem": 0,
+        "notStarted": 27,
+        "percent": 0
+      },
+      "gate-7": {
+        "total": 0,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 0,
+        "problem": 0,
+        "notStarted": 0,
+        "percent": 0
+      },
+      "gate-8": {
+        "total": 1,
+        "done": 0,
+        "ready": 0,
+        "notRequired": 0,
+        "inProgress": 1,
+        "problem": 0,
+        "notStarted": 0,
+        "percent": 50
+      }
+    },
+    "path": {
+      "total": 88,
+      "done": 28,
+      "ready": 24,
+      "notRequired": 4,
+      "inProgress": 24,
+      "problem": 4,
+      "notStarted": 32,
+      "percent": 48
+    },
+    "current": "card-7",
+    "step": 8,
+    "productId": "catalog-item-1786792591872-51f503",
+    "blog": {
+      "version": "gate1-blog-system-v304",
+      "hub": {
+        "title": "Блог",
+        "path": "/blog",
+        "description": ""
+      },
+      "articles": [
+        {
+          "id": "gate1-blog-article-1789069674650-bab623",
+          "title": "",
+          "summary": "",
+          "publication_date": "",
+          "updated_date": "",
+          "reading_minutes": "",
+          "toc": [
+            {
+              "id": "gate1-blog-toc-1789069674650-5d64dd",
+              "title": ""
+            }
+          ],
+          "faq": [
+            {
+              "id": "gate1-blog-faq-1789069674650-e5e190",
+              "question": "",
+              "answer": ""
+            }
+          ],
+          "author": {
+            "name": "",
+            "role": "",
+            "credentials": "",
+            "social_url": ""
+          },
+          "product_links": []
+        }
+      ]
+    }
+  },
+  "dom": [
+    {
+      "key": "",
+      "title": "Компания",
+      "blog": false
+    },
+    {
+      "key": "",
+      "title": "",
+      "blog": false
+    },
+    {
+      "key": "company_demand_positioning",
+      "title": "Спрос",
+      "blog": false
+    },
+    {
+      "key": "project-comparison",
+      "title": "Конкуренты (Сравнение проектов)",
+      "blog": false
+    },
+    {
+      "key": "target-audience",
+      "title": "",
+      "blog": false
+    },
+    {
+      "key": "site-structure-audit",
+      "title": "Структура сайта — аудит",
+      "blog": false
+    },
+    {
+      "key": "legal-audit",
+      "title": "Юриспруденция — аудит",
+      "blog": false
+    },
+    {
+      "key": "",
+      "title": "Продукт / Услуга",
+      "blog": false
+    },
+    {
+      "key": "gate1-product-pages",
+      "title": "",
+      "blog": false
+    },
+    {
+      "key": "card-24",
+      "title": "КАРТОЧКА ТОВАРА",
+      "blog": false
+    },
+    {
+      "key": "pain_jtbd_offer",
+      "title": "Спрос, ценность, позиционирование · Продукт/Услуга",
+      "blog": false
+    },
+    {
+      "key": "catalog-item-1786792591872-51f503",
+      "title": "Сравнение проектов · Продукт/Услуга",
+      "blog": false
+    },
+    {
+      "key": "unit_economics",
+      "title": "Юнит-экономика: целевые CPA/DRR, AOV/LTV, маржинальность",
+      "blog": false
+    }
+  ],
+  "products": [
+    {
+      "productId": "catalog-item-1790860377305-388c56",
+      "gate1": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress"
+        },
+        {
+          "id": "project-comparison",
+          "status": "in_progress"
+        },
+        {
+          "id": "target-audience",
+          "status": "ready"
+        },
+        {
+          "id": "card-21",
+          "status": "ready"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-25",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started"
+        },
+        {
+          "id": "card-24",
+          "status": "ready"
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "status": "ready"
+        },
+        {
+          "id": "project-comparison-product",
+          "status": "not_started"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started"
+        }
+      ],
+      "blog": {
+        "productId": "catalog-item-1790860377305-388c56",
+        "status": "not_started",
+        "rendered": true
+      }
+    },
+    {
+      "productId": "catalog-item-1786792591872-c8b1e9",
+      "gate1": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress"
+        },
+        {
+          "id": "project-comparison",
+          "status": "in_progress"
+        },
+        {
+          "id": "target-audience",
+          "status": "ready"
+        },
+        {
+          "id": "card-21",
+          "status": "ready"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-25",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started"
+        },
+        {
+          "id": "card-24",
+          "status": "ready"
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "status": "ready"
+        },
+        {
+          "id": "project-comparison-product",
+          "status": "not_started"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started"
+        }
+      ],
+      "blog": {
+        "productId": "catalog-item-1786792591872-c8b1e9",
+        "status": "not_started",
+        "rendered": true
+      }
+    },
+    {
+      "productId": "catalog-item-1786792591872-98358d",
+      "gate1": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress"
+        },
+        {
+          "id": "project-comparison",
+          "status": "in_progress"
+        },
+        {
+          "id": "target-audience",
+          "status": "ready"
+        },
+        {
+          "id": "card-21",
+          "status": "ready"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-25",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started"
+        },
+        {
+          "id": "card-24",
+          "status": "ready"
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "status": "ready"
+        },
+        {
+          "id": "project-comparison-product",
+          "status": "not_started"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started"
+        }
+      ],
+      "blog": {
+        "productId": "catalog-item-1786792591872-98358d",
+        "status": "not_started",
+        "rendered": true
+      }
+    },
+    {
+      "productId": "catalog-item-1786792591872-5f848a",
+      "gate1": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress"
+        },
+        {
+          "id": "project-comparison",
+          "status": "in_progress"
+        },
+        {
+          "id": "target-audience",
+          "status": "ready"
+        },
+        {
+          "id": "card-21",
+          "status": "ready"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-25",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started"
+        },
+        {
+          "id": "card-24",
+          "status": "ready"
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "status": "ready"
+        },
+        {
+          "id": "project-comparison-product",
+          "status": "not_started"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started"
+        }
+      ],
+      "blog": {
+        "productId": "catalog-item-1786792591872-5f848a",
+        "status": "not_started",
+        "rendered": true
+      }
+    },
+    {
+      "productId": "catalog-item-1786792591872-3be8f9",
+      "gate1": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress"
+        },
+        {
+          "id": "project-comparison",
+          "status": "in_progress"
+        },
+        {
+          "id": "target-audience",
+          "status": "ready"
+        },
+        {
+          "id": "card-21",
+          "status": "ready"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-25",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started"
+        },
+        {
+          "id": "card-24",
+          "status": "ready"
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "status": "ready"
+        },
+        {
+          "id": "project-comparison-product",
+          "status": "not_started"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started"
+        }
+      ],
+      "blog": {
+        "productId": "catalog-item-1786792591872-3be8f9",
+        "status": "not_started",
+        "rendered": true
+      }
+    },
+    {
+      "productId": "catalog-item-1786792591872-1d1d3c",
+      "gate1": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress"
+        },
+        {
+          "id": "project-comparison",
+          "status": "in_progress"
+        },
+        {
+          "id": "target-audience",
+          "status": "ready"
+        },
+        {
+          "id": "card-21",
+          "status": "ready"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-25",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started"
+        },
+        {
+          "id": "card-24",
+          "status": "ready"
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "status": "ready"
+        },
+        {
+          "id": "project-comparison-product",
+          "status": "not_started"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started"
+        }
+      ],
+      "blog": {
+        "productId": "catalog-item-1786792591872-1d1d3c",
+        "status": "not_started",
+        "rendered": true
+      }
+    },
+    {
+      "productId": "catalog-item-1786792591872-c45ce3",
+      "gate1": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress"
+        },
+        {
+          "id": "project-comparison",
+          "status": "in_progress"
+        },
+        {
+          "id": "target-audience",
+          "status": "ready"
+        },
+        {
+          "id": "card-21",
+          "status": "ready"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-25",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started"
+        },
+        {
+          "id": "card-24",
+          "status": "ready"
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "status": "ready"
+        },
+        {
+          "id": "project-comparison-product",
+          "status": "not_started"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started"
+        }
+      ],
+      "blog": {
+        "productId": "catalog-item-1786792591872-c45ce3",
+        "status": "not_started",
+        "rendered": true
+      }
+    },
+    {
+      "productId": "catalog-item-1786792591872-52046c",
+      "gate1": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress"
+        },
+        {
+          "id": "project-comparison",
+          "status": "in_progress"
+        },
+        {
+          "id": "target-audience",
+          "status": "ready"
+        },
+        {
+          "id": "card-21",
+          "status": "ready"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-25",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started"
+        },
+        {
+          "id": "card-24",
+          "status": "ready"
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "status": "ready"
+        },
+        {
+          "id": "project-comparison-product",
+          "status": "not_started"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started"
+        }
+      ],
+      "blog": {
+        "productId": "catalog-item-1786792591872-52046c",
+        "status": "not_started",
+        "rendered": true
+      }
+    },
+    {
+      "productId": "catalog-item-1786792591872-51f503",
+      "gate1": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress"
+        },
+        {
+          "id": "project-comparison",
+          "status": "in_progress"
+        },
+        {
+          "id": "target-audience",
+          "status": "ready"
+        },
+        {
+          "id": "card-21",
+          "status": "ready"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-25",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started"
+        },
+        {
+          "id": "card-24",
+          "status": "ready"
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "status": "ready"
+        },
+        {
+          "id": "project-comparison-product",
+          "status": "not_started"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started"
+        }
+      ],
+      "blog": {
+        "productId": "catalog-item-1786792591872-51f503",
+        "status": "not_started",
+        "rendered": true
+      }
+    },
+    {
+      "productId": "catalog-item-1790936932674-197964",
+      "gate1": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress"
+        },
+        {
+          "id": "project-comparison",
+          "status": "in_progress"
+        },
+        {
+          "id": "target-audience",
+          "status": "ready"
+        },
+        {
+          "id": "card-21",
+          "status": "ready"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-25",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started"
+        },
+        {
+          "id": "card-24",
+          "status": "ready"
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "status": "ready"
+        },
+        {
+          "id": "project-comparison-product",
+          "status": "not_started"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started"
+        }
+      ],
+      "blog": {
+        "productId": "catalog-item-1790936932674-197964",
+        "status": "not_started",
+        "rendered": true
+      }
+    },
+    {
+      "productId": "catalog-item-1790937546522-78edcc",
+      "gate1": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress"
+        },
+        {
+          "id": "project-comparison",
+          "status": "in_progress"
+        },
+        {
+          "id": "target-audience",
+          "status": "ready"
+        },
+        {
+          "id": "card-21",
+          "status": "ready"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-25",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started"
+        },
+        {
+          "id": "card-24",
+          "status": "ready"
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "status": "ready"
+        },
+        {
+          "id": "project-comparison-product",
+          "status": "not_started"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started"
+        }
+      ],
+      "blog": {
+        "productId": "catalog-item-1790937546522-78edcc",
+        "status": "not_started",
+        "rendered": true
+      }
+    },
+    {
+      "productId": "catalog-item-1790937556174-6ad07b",
+      "gate1": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress"
+        },
+        {
+          "id": "project-comparison",
+          "status": "in_progress"
+        },
+        {
+          "id": "target-audience",
+          "status": "ready"
+        },
+        {
+          "id": "card-21",
+          "status": "ready"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-25",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started"
+        },
+        {
+          "id": "card-24",
+          "status": "ready"
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "status": "ready"
+        },
+        {
+          "id": "project-comparison-product",
+          "status": "not_started"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started"
+        }
+      ],
+      "blog": {
+        "productId": "catalog-item-1790937556174-6ad07b",
+        "status": "not_started",
+        "rendered": true
+      }
+    },
+    {
+      "productId": "catalog-item-1790937575672-8f423f",
+      "gate1": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress"
+        },
+        {
+          "id": "project-comparison",
+          "status": "in_progress"
+        },
+        {
+          "id": "target-audience",
+          "status": "ready"
+        },
+        {
+          "id": "card-21",
+          "status": "ready"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-25",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started"
+        },
+        {
+          "id": "card-24",
+          "status": "ready"
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "status": "ready"
+        },
+        {
+          "id": "project-comparison-product",
+          "status": "not_started"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started"
+        }
+      ],
+      "blog": {
+        "productId": "catalog-item-1790937575672-8f423f",
+        "status": "not_started",
+        "rendered": true
+      }
+    },
+    {
+      "productId": "catalog-item-1790937587589-b751ba",
+      "gate1": [
+        {
+          "id": "company_demand_positioning",
+          "status": "in_progress"
+        },
+        {
+          "id": "project-comparison",
+          "status": "in_progress"
+        },
+        {
+          "id": "target-audience",
+          "status": "ready"
+        },
+        {
+          "id": "card-21",
+          "status": "ready"
+        },
+        {
+          "id": "card-22-hub",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-22",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-25",
+          "status": "in_progress"
+        },
+        {
+          "id": "card-26",
+          "status": "not_started"
+        },
+        {
+          "id": "card-27",
+          "status": "not_started"
+        },
+        {
+          "id": "card-28",
+          "status": "not_started"
+        },
+        {
+          "id": "card-30",
+          "status": "not_started"
+        },
+        {
+          "id": "card-31",
+          "status": "not_started"
+        },
+        {
+          "id": "card-32",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-header-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-site-footer-v497",
+          "status": "not_started"
+        },
+        {
+          "id": "card-29",
+          "status": "not_started"
+        },
+        {
+          "id": "card-35",
+          "status": "not_started"
+        },
+        {
+          "id": "card-36",
+          "status": "not_started"
+        },
+        {
+          "id": "card-37",
+          "status": "not_started"
+        },
+        {
+          "id": "card-24",
+          "status": "ready"
+        },
+        {
+          "id": "pain_jtbd_offer",
+          "status": "ready"
+        },
+        {
+          "id": "project-comparison-product",
+          "status": "not_started"
+        },
+        {
+          "id": "unit-economics",
+          "status": "not_started"
+        }
+      ],
+      "blog": {
+        "productId": "catalog-item-1790937587589-b751ba",
+        "status": "not_started",
+        "rendered": true
+      }
+    }
+  ]
+}

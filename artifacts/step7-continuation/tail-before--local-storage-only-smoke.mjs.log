@@ -1,0 +1,12 @@
+file:///private/tmp/guru-step7-before-tail/scripts/local-storage-only-smoke.mjs:40
+    throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
+          ^
+
+Error: TypeError: Cannot read properties of null (reading 'click')
+    at <anonymous>:2:46
+    at <anonymous>:6:5
+    at evaluate (file:///private/tmp/guru-step7-before-tail/scripts/local-storage-only-smoke.mjs:40:11)
+    at async createProject (file:///private/tmp/guru-step7-before-tail/scripts/local-storage-only-smoke.mjs:88:3)
+    at async file:///private/tmp/guru-step7-before-tail/scripts/local-storage-only-smoke.mjs:106:17
+
+Node.js v22.14.0

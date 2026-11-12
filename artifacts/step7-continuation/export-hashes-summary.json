@@ -1,0 +1,70 @@
+{
+  "sourceFilesUnchanged": {
+    "icleaning": {
+      "before": "a1baa877f77727f7813f80cc0749763bd5122f8f56d48136fa1527542ea19c71",
+      "after": "a1baa877f77727f7813f80cc0749763bd5122f8f56d48136fa1527542ea19c71",
+      "identical": true
+    },
+    "sivrce": {
+      "before": "59c7656d64ab0f86da8791c2531768249d6feb64b40673ed174654ea650c413c",
+      "after": "59c7656d64ab0f86da8791c2531768249d6feb64b40673ed174654ea650c413c",
+      "identical": true
+    },
+    "guru": {
+      "before": "847765127374ca95d9db93631e5c416b1d1b2518e56f6754a6b7b6ae058a2360",
+      "after": "847765127374ca95d9db93631e5c416b1d1b2518e56f6754a6b7b6ae058a2360",
+      "identical": true
+    }
+  },
+  "viewFlowHashes": [
+    {
+      "version": "before",
+      "label": "icleaning",
+      "sourceExportSha256": "3cc4e6ea19ea6c9ea24dc7fad46beb311f43512ffb30b2aec2dddcc994a9036f",
+      "initialSha256": "138bda181100d3e5dfa2e3c99179d0e879be17f0850694b7acf7e31d715c13e7",
+      "finalSha256": "d955c1e1dc0c04d7ca304e349c5ccc729acfbc59969c9470c5fcff9b2f30c893",
+      "identical": false
+    },
+    {
+      "version": "before",
+      "label": "sivrce",
+      "sourceExportSha256": "07e7383db4b5d341002b59206b0dbc630287a248a01c9015fa7ad1e17e7f1298",
+      "initialSha256": "69bddc543e064236b0b409ab4861c949b7bf964bdc2efafc045ce293642e2e7a",
+      "finalSha256": "afbe57adef7a2cd1a29f27e242caa41fb3cda1078aec69fbb78fceee65c33aaf",
+      "identical": false
+    },
+    {
+      "version": "before",
+      "label": "guru",
+      "sourceExportSha256": "f7925d4287d091ffaa1963a513fe019d8706b98fb42c09c57f4655aaf5e9c34e",
+      "initialSha256": "fce1d421afe51529d75cba1444e436ca8d9dab6e176ccde4a088e496659c40f5",
+      "finalSha256": "e910f77caa87b8ed7ef05e36a53da9cd282ed0cb128b72f8da860243ea6f53ac",
+      "identical": false
+    },
+    {
+      "version": "after",
+      "label": "icleaning",
+      "sourceExportSha256": "3cc4e6ea19ea6c9ea24dc7fad46beb311f43512ffb30b2aec2dddcc994a9036f",
+      "initialSha256": "b43ae957191c5b1773881308f1b056bd7a3c12389038b63583d98ff4a59c2f84",
+      "finalSha256": "0005da5facbf38e4998df3ccdbaf45378f5d7a5b571bffbe139dc5b7d7df01e1",
+      "identical": false
+    },
+    {
+      "version": "after",
+      "label": "sivrce",
+      "sourceExportSha256": "07e7383db4b5d341002b59206b0dbc630287a248a01c9015fa7ad1e17e7f1298",
+      "initialSha256": "1459f3f26b3b76a68a53def8268ebd8bfd80b1c46e55dfabb40bf4c8d8cae170",
+      "finalSha256": "ad51f1c93b20960d006823adb042a3c463fd88c732098286cdb854573f4973e7",
+      "identical": false
+    },
+    {
+      "version": "after",
+      "label": "guru",
+      "sourceExportSha256": "f7925d4287d091ffaa1963a513fe019d8706b98fb42c09c57f4655aaf5e9c34e",
+      "initialSha256": "e36f63a6bd01c4061b667c69f13ccafe80d8b9bdf907cf0cd0c9ee4424d47243",
+      "finalSha256": "9104f3cea988d467e6a577a6979e5f54fac3fa675f8df7efe6427140e176318c",
+      "identical": false
+    }
+  ],
+  "scope": "Full workspace including every updated_at field. Migration precedes view-flow comparison; no field is excluded."
+}

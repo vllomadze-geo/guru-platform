@@ -1,0 +1,11 @@
+file:///private/tmp/guru-step7-after/scripts/gate0-company-keyword-foundation-smoke.mjs:57
+    throw new Error(
+          ^
+
+Error: TypeError: Cannot read properties of null (reading 'dataset')
+    at <anonymous>:112:25
+    at <anonymous>:616:5
+    at evaluate (file:///private/tmp/guru-step7-after/scripts/gate0-company-keyword-foundation-smoke.mjs:57:11)
+    at async file:///private/tmp/guru-step7-after/scripts/gate0-company-keyword-foundation-smoke.mjs:144:18
+
+Node.js v22.14.0

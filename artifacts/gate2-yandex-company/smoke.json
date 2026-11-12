@@ -1,0 +1,139 @@
+{
+  "initial": {
+    "groupCount": 1,
+    "groupTag": "DETAILS",
+    "groupOpen": true,
+    "titles": [
+      "Метрика",
+      "Поиск и карты",
+      "Реклама"
+    ],
+    "unitTitles": [
+      "Яндекс Метрика · счётчик · Компания",
+      "Яндекс Метрика · конверсионная цель · Компания",
+      "Яндекс Метрика · Компания",
+      "Яндекс Вебмастер · Компания",
+      "Яндекс Бизнес · Компания",
+      "Яндекс Директ · кабинет · Компания"
+    ],
+    "unitIds": [
+      "counter",
+      "goal",
+      "quality",
+      "webmaster",
+      "business",
+      "direct"
+    ],
+    "outside": 0,
+    "allBlocks": 19,
+    "numberedSteps": 108,
+    "cardCount": 76,
+    "uniqueCardIds": 76,
+    "dataUnchangedByRemount": true,
+    "allToolsPresent": true,
+    "editButtons": 5,
+    "metrikaHeaderLinks": 1,
+    "summary": "0 из 6 разделов готово",
+    "statuses": [
+      "in_progress",
+      "not_started",
+      "in_progress",
+      "problem",
+      "not_started",
+      "not_started"
+    ],
+    "sourceKeys": [
+      "steps",
+      "values",
+      "history",
+      "technicalSeoV1"
+    ]
+  },
+  "rerender": {
+    "groups": 1,
+    "open": true,
+    "units": [
+      "counter",
+      "goal",
+      "quality",
+      "webmaster",
+      "business",
+      "direct"
+    ],
+    "serviceBlocks": 19
+  },
+  "disclosure": {
+    "startOpen": true,
+    "afterClickOpen": false,
+    "openHeight": 851.875,
+    "closedHeight": 98,
+    "closed": true,
+    "stayedClosed": true,
+    "reopened": true,
+    "units": 6,
+    "dataUnchanged": true
+  },
+  "toggled": {
+    "before": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "changed": [
+      false,
+      true,
+      true,
+      true,
+      true
+    ],
+    "restored": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "badgeBefore": "g2sb-status status-pill status-in_progress",
+    "statusBefore": "in_progress",
+    "beforeSummary": "0 из 6 разделов готово",
+    "observedSummary": "1 из 6 разделов готово",
+    "restoredSummary": "0 из 6 разделов готово"
+  },
+  "screenshots": [
+    {
+      "path": "artifacts/gate2-yandex-company/yandex-1440.png",
+      "closedPath": "artifacts/gate2-yandex-company/yandex-collapsed-1440.png",
+      "dimensions": {
+        "x": 41,
+        "y": 551.28125,
+        "width": 1358,
+        "height": 851.875,
+        "pageWidth": 1440,
+        "viewport": 1440,
+        "surface": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "path": "artifacts/gate2-yandex-company/yandex-390.png",
+      "closedPath": "artifacts/gate2-yandex-company/yandex-collapsed-390.png",
+      "dimensions": {
+        "x": 21,
+        "y": 800.671875,
+        "width": 348,
+        "height": 1441.375,
+        "pageWidth": 390,
+        "viewport": 390,
+        "surface": "rgb(255, 255, 255)"
+      }
+    }
+  ],
+  "dark": {
+    "surface": "rgb(31, 31, 31)",
+    "text": "rgb(245, 245, 245)",
+    "pageWidth": 390,
+    "viewport": 390
+  },
+  "errors": []
+}

@@ -168,7 +168,7 @@ try {
   })()`);
   assert.equal(first.before, first.after, "render must preserve product wizard records");
   assert.equal(first.allBefore, first.allAfter, "render must preserve every original wizard record");
-  assert.equal(first.oldCards, 71); assert.equal(first.oldDom, 71);
+  assert.equal(first.oldCards, 71); assert.equal(first.oldDom, 62);
   assert.equal(first.overviewCount, 0);
   assert.equal(first.servicesClosed, true);
   assert.equal(first.metrikaOutsideArchive, true);
@@ -177,20 +177,22 @@ try {
     ['card-89', 'card-95', 'card-99', 'card-106', 'card-112', 'card-115',
       'card-121', 'card-125', 'card-130', 'card-133'].sort());
   assert.ok(first.contextual.includes('card-96') && first.contextual.includes('card-90'));
-  assert.ok(first.contextual.includes('card-107') && first.contextual.includes('card-116'));
+  assert.ok(!first.contextual.includes('card-107') && first.contextual.includes('card-116'));
   assert.ok(first.contextual.includes('g2-marketing-meta-ads'));
   assert.equal(first.companyBlocks, 12); assert.equal(first.productBlocks, 5);
   assert.equal(first.productWizard, 0);
   assert.deepEqual(first.productIds, Array(5).fill(first.products[0].id));
   assert.equal(first.selected, first.products[0].id);
   assert.equal(first.urlInputs, 0); assert.equal(first.goalInputs, 0);
-  assert.equal(first.marked, 28); assert.equal(first.replacedExport, 28);
+  assert.equal(first.marked, 21); assert.equal(first.replacedExport, 28);
   assert.equal(first.diagnosticUnits, 19);
   assert.equal(first.diagnosticSteps, true);
   assert.equal(first.includedUnits, first.formula.denominator);
   assert.equal(first.formula.denominator, first.statuses.length);
-  assert.equal(first.nav, `0 из ${first.formula.denominator} блоков готово · 0%`);
-  assert.equal(first.companyNumber, first.nav);
+  const expectedPercent = Math.round(100 * first.formula.numerator / first.formula.denominator);
+  assert.equal(first.nav, `${first.formula.denominator} блоков, прогресс ${expectedPercent}%`);
+  const expectedDone = first.statuses.filter(([, status]) => ['ready', 'not_needed'].includes(status)).length;
+  assert.equal(first.companyNumber, `${expectedDone} из ${first.formula.denominator} блоков готово · ${expectedPercent}%`);
   assert.equal(first.noEmDash, true);
   assert.ok(!first.markedIds.includes('card-103'));
   assert.ok(!first.markedIds.includes('g2-metrika-company-counter'));

@@ -547,12 +547,14 @@ gate4ProductionHtml = function () {
         ${gate0SectionHeadingHtml("Компания", "Общая стратегическая основа проекта — без привязки к конкретному продукту или кампании.")}
         ${guruStrategicFoundationCompanyHtmlV310(state)}
         ${g4FiveCompanyHtmlV523()}
+        ${gate4BlogHtmlV304("company")}
       </section>
       <section class="guru-gate-scope-v230" data-gate-scope="product">
         ${gate0SectionHeadingHtml("Продукт / Услуга", "Селектор и стратегическая основа относятся к выбранной позиции каталога.")}
         ${guruV194ProductSelectHtml("gate4-launch")}
         ${product ? guruStrategicFoundationHtmlV237(product) : ""}
         ${g4FiveProductHtmlV523(product)}
+        ${gate4BlogHtmlV304("product", product)}
       </section>
     </div>`);
   });
@@ -575,7 +577,10 @@ document.addEventListener("input", (event) => {
   const service = input.value.trim() || tool?.service || "Сервис требует выбора";
   const title = card?.querySelector(".g1-card-title");
   const caption = card?.querySelector(".g4five-service-v523");
-  if (title && tool) title.textContent = `${tool.title} · ${service}`;
+  if (title && tool) {
+    title.textContent = `${tool.title} · ${service}`;
+    window.GuruBlockTitles?.refresh(card);
+  }
   if (caption) caption.textContent = service;
   input.classList.toggle("is-empty", !input.value.trim());
   input.classList.toggle("is-filled", Boolean(input.value.trim()));

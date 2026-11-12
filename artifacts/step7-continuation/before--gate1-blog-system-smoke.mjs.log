@@ -1,0 +1,11 @@
+file:///private/tmp/guru-step7-before/scripts/gate1-blog-system-smoke.mjs:50
+    throw new Error(
+          ^
+
+Error: TypeError: Cannot set properties of null (setting 'value')
+    at <anonymous>:24:18
+    at <anonymous>:28:5
+    at evaluate (file:///private/tmp/guru-step7-before/scripts/gate1-blog-system-smoke.mjs:50:11)
+    at async file:///private/tmp/guru-step7-before/scripts/gate1-blog-system-smoke.mjs:196:3
+
+Node.js v22.14.0

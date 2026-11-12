@@ -1,10 +1,6 @@
 /* Gate 2 company service configs. The existing wizard records stay canonical. */
 const G2C2_TILDA_DOMAIN = "https://help-ru.tilda.cc/customdomain";
 const G2C2_TILDA_HTTPS = "https://tilda.cc/ru/answers/a/https/";
-const G2C2_WEBMASTER_START = "https://yandex.ru/support/webmaster/ru/service/quick-start";
-const G2C2_WEBMASTER_RIGHTS = "https://yandex.ru/support/webmaster/ru/service/rights";
-const G2C2_WEBMASTER_ROBOTS = "https://yandex.ru/support/webmaster/ru/indexing-options/robots-txt-analyzer";
-const G2C2_WEBMASTER_SITEMAP = "https://yandex.ru/support/webmaster/ru/controlling-robot/sitemap";
 const G2C2_BUSINESS_HELP = "https://yandex.ru/support/business-priority/ru/";
 const G2C2_BUSINESS_RIGHTS = "https://www.yandex.ru/support/business-priority/ru/manage/verify";
 const G2C2_BUSINESS_SITE = "https://www.yandex.ru/support/business-priority/ru/manage/contacts";
@@ -70,6 +66,12 @@ function g2c2DomainStep(id, details) {
 
 g2ServiceBlockRegister({
   id: "company-domain", cardId: "card-96", scope: "company", wizardUnitId: "domain",
+  layout: "unified",
+  stepGroups: [
+    { title: "Адрес и платформа", steps: ["address", "platform", "provider"] },
+    { title: "DNS и доступность", steps: ["dns_source", "dns_set", "open"] },
+    { title: "Защита и переадресация", steps: ["https", "redirect"] },
+  ],
   title: "Домен и HTTPS", beforeUnit: "counter",
   serviceUrl: () => g2c2DomainWebsite(), serviceLabel: "Открыть сайт",
   serviceUnavailableLabel: "URL не указан",
@@ -113,30 +115,10 @@ g2ServiceBlockRegister({
 g2ServiceBlockRegister({
   id: "company-webmaster", cardId: "card-107", scope: "company", wizardUnitId: "webmaster",
   title: "Яндекс Вебмастер", afterUnit: "goal", serviceUrl: "https://webmaster.yandex.ru/",
+  emptyStepScaffold: true,
   gate0Applicability: ({ workspace }) => g2c2Applicability("webmaster", workspace),
   statusResolver: () => g2wStatus(g2wDef("webmaster")),
-  steps: [
-    { step_id: "open", what: "Добавьте сайт (только сайт с собственным доменом; адрес с http или https, с www или без).",
-      where: "Вебмастер → добавление сайта.", how: "Сайт виден в списке.", source_url: G2C2_WEBMASTER_START,
-      helpColumn: "right",
-      context: () => ({ label: "Адрес сайта из Gate 0", value: g2c2Website(), href: g2c2Website() || "" }) },
-    { step_id: "rights", what: "Подтвердите права. Рекомендуемый способ: HTML-файл в корне сайта. Другие: метатег в head главной, TXT-запись в DNS, менеджер тегов, регистратор, конструктор сайтов. Адрес с www и без www считаются разными сайтами.",
-      where: "Вебмастер → «Права доступа».", how: "Статус «права подтверждены».", source_url: G2C2_WEBMASTER_RIGHTS },
-    { step_id: "robots", what: "Проверьте robots.txt.", where: "Вебмастер → Инструменты → Анализ robots.txt.",
-      how: "На вкладке «Ошибки» пусто, «Правила обхода» не закрывают нужные страницы.", source_url: G2C2_WEBMASTER_ROBOTS,
-      troubleshooting: "адрес страницы должен принадлежать тому же домену, что и файл. Версии с www и без www считаются разными адресами." },
-    { step_id: "sitemap", what: "Передайте sitemap.xml.",
-      where: "Вебмастер → «Файлы Sitemap» или ссылка в robots.txt. Сначала проверьте файл: webmaster.yandex.ru/tools/sitemap/.",
-      how: "Файл отвечает кодом 200, ошибок в анализе нет. Обработка обычно до двух недель.", source_url: G2C2_WEBMASTER_SITEMAP,
-      troubleshooting: "проверьте, совпадает ли адрес сайта в Вебмастере с адресом sitemap (протокол http или https, www); не запрещён ли файл в robots.txt; отвечает ли сервер кодом 200; нет ли ошибок в «Анализ файлов Sitemap».",
-      reconciliation: "обработка обычно занимает до двух недель после добавления." },
-    { step_id: "pages", what: "Проверьте, что важные коммерческие страницы разрешены роботу.",
-      where: "Анализатор robots.txt → блок «Доступ к страницам» → вставить адреса → «Проверить».",
-      how: "Для каждой страницы «разрешено».", source_url: G2C2_WEBMASTER_ROBOTS },
-    { step_id: "advice", what: "Откройте рекомендации по оптимизации.",
-      where: "Вебмастер → Оптимизация сайта → Советы по оптимизации.",
-      how: "Критичных ошибок нет.", source_url: G2C2_WEBMASTER_START },
-  ],
+  steps: [],
 });
 
 g2ServiceBlockRegister({
@@ -222,7 +204,9 @@ guruExportRuntimeModelV223 = function (gateId) {
   if (gateId !== "gate-2") return model;
   const units = [...model.units, ...[...G2_SERVICE_BLOCK_CONFIGS.values()]
     .filter((config) => config.includeInReadiness)
-    .map((config) => guruExportModelUnitV223({
+    .map((baseConfig) => {
+      const config = typeof g2StepServiceConfig === "function" ? g2StepServiceConfig(baseConfig) : baseConfig;
+      return guruExportModelUnitV223({
       unitId: `g2sb-${config.id}`, gateId, title: config.title,
       status: g2ServiceBlockStatus(config), sourceType: "gate2_service_block",
       path: `state.gates[gate-2].cards[${g2ServiceBlockCardId(config)}].fields.g2SetupWizardV1.company`,
@@ -233,7 +217,7 @@ guruExportRuntimeModelV223 = function (gateId) {
           g2ServiceBlockRecord(config)?.steps?.[step.step_id]?.result === "done").length,
         total: config.steps.length,
       },
-    }))];
+    }); })];
   return { ...model, units,
     displayedStatus: guruExportDiagnosticOverallV223(units.map((unit) => unit.status)) };
 };
