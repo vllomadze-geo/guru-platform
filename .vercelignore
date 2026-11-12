@@ -3,3 +3,4 @@ scripts/*
 !scripts/verify-build-bundle.mjs
 !scripts/stamp-build.mjs
 !scripts/build-version.cjs
+!scripts/check-interface-color-policy.mjs
