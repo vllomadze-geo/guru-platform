@@ -52,6 +52,7 @@ const statusMarkers = [
   /\.g4-smm-readiness-v529\s*>\s*span\.is-(?:pending|ready)/,
   /\.gate1-comparison-product-list-v306\s+article[^,]*>\s*b/,
   /\.g4-rsya-image-limit-warning/, /\.g4five-nav-status-v545/,
+  /\.mega-platform-picker-new\s+input\[aria-invalid="true"\]/,
   /\.g2sb-status\[data-status=/, /\.g2u-step-badge\[data-status=/,
 ];
 
